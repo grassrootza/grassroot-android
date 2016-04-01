@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!--styles-->
+    <color name="primaryColor">#4aca85</color>
+    <color name="primaryColorDark">#339661</color>
+    <color name="windowBackground">#fafafa</color>
+
+
+    <color name="white">#fff</color>
+    <color name="black">#000</color>
+    <color name="transparent">#00000000</color>
+    <color name="buttoncolor">#4aca85</color>
+    <color name="background">#eeeeee</color>
+    <color name="dark_background">#ddd</color>
+    <color name="red">#FF0000</color>
+     <color name="orange">#FFBF00</color>
+    <color name="list_background">#fafafa</color>
+    <color name="list_background_pressed">#eeeeee</color>
+    <color name="textbg">#efefef</color>
+    <color name="textcolor">#b4b4b4</color>
+     <color name="yellow">#F0ED0F</color>
+
+    <!--RateUs Scree-->
+    <color name="grey_dialog_bg">#fff5f5f5</color>
+    <color name="grey">#ff3e3e3e</color>
+
+     <color name="cg_title">#999999</color>
+
+
+
+</resources>

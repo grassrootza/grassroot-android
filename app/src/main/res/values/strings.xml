@@ -1,0 +1,113 @@
+<resources>
+    <string name="app_name">Grassroot</string>
+
+    <string name="hello_world">Hello world!</string>
+    <string name="action_settings">Settings</string>
+    <string name="title_activity_homescreen">Homescreen</string>
+    <string name="title_activity_join__request">Join_Request</string>
+
+    <string name="register"><u>Forgot password?</u></string>
+
+     <!--container Welcome-->
+    <string name="bt_log">LOGIN</string>
+    <string name="bt_register">REGISTER</string>
+
+    <!--container Otp-->
+    <string name="et_otp">Otp</string>
+    <string name="bt_submit_otp">SUBMIT</string>
+    <string name="txtresend">Verification code not received?\n Resend</string>
+    
+    
+    
+    <!--container Register-->
+    <string name="et_userName">Name</string>
+    <string name="et_mobile_register">Cellphone number</string>
+
+    <!--container Login-->
+    <string name="et_mobile_login"></string>
+
+
+    <!--Alerts-->
+    <string name="No_network">No network</string>
+    <string name="Retry">RETRY</string>
+    <string name="Unknown_error">Oops, an error occurred. Try again later.</string>
+    <string name="Either_field_empty">Please enter all fields to proceed.</string>
+    <string name="Cellphone_number_invalid">Please enter a valid cellphone number</string>
+    <string name="Cellphone_number_empty">Please enter cellphone number to proceed.</string>
+    <string name="User_not_registered">User not registered. Please register to proceed.</string>
+    <string name="OTP_empty">Please enter OTP to proceed</string>
+    <string name="OTP_invalid">Please enter the correct OTP to proceed.</string>
+    <string name="USER_DOES_NOT_EXIST">User not registered.Please register to proceed.</string>
+    <string name="USER_ALREADY_EXISTS">User Already Exist</string>
+    <string name="Otp_success">Please Enter Verification code sent by SMS</string>
+    <string name="INVALID_TOKEN">invalid token</string>
+
+    <!-- Draweritem name-->
+    <string name="Profile">Profile</string>
+    <string name="Settings">Settings</string>
+    <string name="FAQs">FAQs</string>
+    <string name="Support">Support</string>
+    <string name="Logout">Logout</string>
+    <string name="Share">Share</string>
+    <string name="Rate_App">Rate App</string>
+
+    <string name="open">open</string>
+    <string name="close">close</string>
+<!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    
+
+    <!--welcome content-->
+
+    <!--title-->
+    <string name="o_title">Welcome to Grassroot</string>
+    <string name="t_title">Groups</string>
+    <string name="th_title">Meet</string>
+    <string name="four_title">Vote</string>
+    <string name="five_title">Act</string>
+
+    <!--content-->
+    <string name="o_content">Meet, vote, act</string>
+    <string name="t_content">Create, join, and connect groups, as many and as large as you’d like</string>
+    <string name="th_content">Call meetings, with notices sent to any kind of phone, responses, and reminders</string>
+    <string name="four_content">Take simple polls, lasting five minutes or five weeks, of five or five thousand members</string>
+    <string name="five_content">Record shared to-dos, automatically reminding the group until they are done</string>
+
+    <!--button-->
+    <string name="joingroup">REQUEST TO JOIN A GROUP</string>
+    <string name="startgroup">START A GROUP</string>
+
+    <!-- -&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;-->
+
+
+    <!--RateUs Screen-->
+    <string name="RateUs">RateUs</string>
+    <string name="rate_us_text">If you enjoy using Grassroot, would you mind taking a moment to rate it? Thank You for your support.</string>
+
+
+    <string name="share_app_text">Meet, Vote and Act with the Grassroot App. Download it now from the Android Play Store -https://play.google.com/store/apps/details?id=com.techmorphosis.grassroot</string>
+
+    <!--Logout-->
+    <string name="Logout_text">Are you sure you want to Log out?</string>
+
+    <!--Join_Request-->
+    <string name="search">search</string>
+    <string name="search_box">Enter Group name</string>
+    <string name="alertbox">Are you sure you want to send a group join request ?</string>
+    <string name="title_activity_create__group">Create_Group</string>
+
+
+    <!--    Create Group--><!--cg-->
+    <string name="cg_title">Create new group</string>
+    <string name="cg_group_name">Group name</string>
+    <string name="cg_group_description">Group description</string>
+    <string name="cg_Save">Save</string>
+    <string name="cg_title_contact">Current group members</string>
+
+    
+    
+    
+
+
+
+</resources>

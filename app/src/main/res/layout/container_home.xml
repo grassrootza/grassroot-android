@@ -1,0 +1,52 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:paddingLeft="16dp"
+    android:paddingRight="16dp"
+    tools:context="com.techmorphosis.macbee.ui.activities.LoginActivity"
+    android:background="#00000000"
+    android:layout_centerInParent="true"
+
+    >
+
+
+
+
+    <View android:layout_width="fill_parent" android:layout_height="0.0dip" android:layout_weight="0.25" />
+
+
+    <Button
+        android:id="@+id/bt_login"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textAllCaps="false"
+        android:textColor="@drawable/white_txt"
+        android:background="@drawable/login"
+        android:layout_marginBottom="15dp"
+
+        android:textSize="@dimen/txt_medium"
+        android:text="@string/bt_log"
+
+
+        />
+
+
+<Button
+    android:id="@+id/bt_register"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+    android:textAllCaps="false"
+    android:text="@string/bt_register"
+    android:textSize="@dimen/txt_medium"
+    android:layout_marginBottom="20dp"
+    android:textColor="@drawable/green_txt"
+    android:background="@drawable/register"
+
+    />
+
+
+
+
+</LinearLayout>
+
