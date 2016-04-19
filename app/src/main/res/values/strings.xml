@@ -8,7 +8,7 @@
 
     <string name="register"><u>Forgot password?</u></string>
 
-     <!--container Welcome-->
+    <!--container Welcome-->
     <string name="bt_log">LOGIN</string>
     <string name="bt_register">REGISTER</string>
 
@@ -16,9 +16,8 @@
     <string name="et_otp">Otp</string>
     <string name="bt_submit_otp">SUBMIT</string>
     <string name="txtresend">Verification code not received?\n Resend</string>
-    
-    
-    
+
+
     <!--container Register-->
     <string name="et_userName">Name</string>
     <string name="et_mobile_register">Cellphone number</string>
@@ -53,9 +52,9 @@
 
     <string name="open">open</string>
     <string name="close">close</string>
-<!-- TODO: Remove or change this placeholder text -->
+    <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
-    
+
 
     <!--welcome content-->
 
@@ -93,21 +92,68 @@
     <!--Join_Request-->
     <string name="search">search</string>
     <string name="search_box">Enter Group name</string>
+    <string name="validate_search_box">Please search for a group</string>
     <string name="alertbox">Are you sure you want to send a group join request ?</string>
     <string name="title_activity_create__group">Create_Group</string>
 
 
     <!--    Create Group--><!--cg-->
+    <string name="Add">Add</string>
     <string name="cg_title">Create new group</string>
     <string name="cg_group_name">Group name</string>
     <string name="cg_group_description">Group description</string>
     <string name="cg_Save">Save</string>
     <string name="cg_title_contact">Current group members</string>
 
-    
-    
-    
+    <string name="action_search">Search...</string>
+    <string name="cg_dialog_title">Select any one number</string>
+    <string name="title_activity_dilog">DilogActivity</string>
+    <string name="cg_valid_number">The number selected is not a valid South Africa number. Please select a different number</string>
+    <string name="title_activity_alert_dialog">AlertDialogActivity</string>
+    <string name="title_activity_add_contact_manually">AddContactManually</string>
+    <string name="contact_manually">The number selected is not a valid South Africa number. Please select a different number</string>
+    <string name="prg_message">Please wait...</string>
+    <string name="et_groupname">Please enter Group name</string>
+    <string name="GROUP_CREATED">Group created successfully</string>
+    <string name="empty_contact">Selected name does not have contact number</string>
+    <string name="title_activity_group__homepage">Group_Homepage</string>
 
+    <!--Group_Home_page--><!--ghp-->
+    <string name="ghp_toolbar_title">Yours groups</string>
+    <string name="ghp_search_group_name">Group name</string>
+
+    <!--GroupActivty_dialog-->
+    <string name="tv_dialog_bottom_title">Quick Add</string>
+    <string name="title_activity_blank">Blank</string>
+
+    <!--Sort dilaog-->
+    <string name="sort_title">Sort By</string>
+    <string name="date">Date</string>
+    <string name="role">Role</string>
+    <string name="Default">Clear</string>
+
+    <!--&#45;&#45;&#45;&#45;&#45;&#45;End-&#45;&#45;&#45;&#45;-->
+
+    <!--Group ativities-> <!-ga- -->
+    <string name="ga_tv_toolbar">Name of group</string>
+
+    <string name="ga_Votesend">Vote sent successfully</string>
+    <string name="ga_Meetingsend">RSVP sent</string>
+
+    <string name="ga_VoteFailure">User has already  Voted</string>
+
+    <string name="ga_no_activities">No Group Activities</string>
+
+    <string name="ga_ToDocompleted">ToDo Completed</string>
+    <string name="ga_ToDoFailure">ToDo already Completed</string>
+
+    <string name="ga_noVote">No Vote Activities</string>
+    <string name="ga_noMeeting">No meeting Activities</string>
+    <string name="ga_noToDo">No ToDo Activities</string>
+
+    <string name="ga_newVote">NEW VOTE</string>
+    <string name="ga_newMeeting">NEW MEETING</string>
+    <string name="ga_newToDo">NEW ACTION TODO</string>
 
 
 </resources>

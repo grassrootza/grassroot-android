@@ -59,7 +59,7 @@
 
                 >
                 <EditText
-                    android:id="@+id/et_groupnames"
+                    android:id="@+id/et_group_description"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:hint="@string/cg_group_description"

@@ -2,24 +2,24 @@ package com.techmorphosis.grassroot.ui.fragments;
 
 import android.app.Activity;
 import android.app.Fragment;
-import android.content.Context;
 import android.os.Bundle;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
-import android.view.GestureDetector;
 import android.view.LayoutInflater;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
 import com.techmorphosis.grassroot.BuildConfig;
+import com.techmorphosis.grassroot.Interface.ClickListener;
 import com.techmorphosis.grassroot.R;
+import com.techmorphosis.grassroot.RecyclerView.RecyclerTouchListener;
 import com.techmorphosis.grassroot.adapters.NavigationDrawerAdapter;
 import com.techmorphosis.grassroot.models.NavDrawerItem;
+import com.techmorphosis.grassroot.utils.SettingPreffrence;
 
 import java.util.ArrayList;
 
@@ -42,6 +42,7 @@ public class NavigationDrawerFragment extends Fragment {
     private NavigationDrawerAdapter drawerAdapter;
     private DrawerLayout mDrawerLayout;
     private TextView txtVersion;
+    private TextView displayName;
 
 
     public NavigationDrawerFragment() {
@@ -117,6 +118,8 @@ public class NavigationDrawerFragment extends Fragment {
 
         mDrawerRecyclerView = (RecyclerView) view.findViewById(R.id.rv_nav_items);
         txtVersion = (TextView) view.findViewById(R.id.txt_version);
+        displayName = (TextView) view.findViewById(R.id.displayName);
+        displayName.setText(SettingPreffrence.getuser_name(getActivity()));
     }
 
     public  void Adapter()
@@ -182,56 +185,8 @@ public class NavigationDrawerFragment extends Fragment {
         }
     }
 
-    public static interface ClickListener {
-        public void onClick(View view, int position);
-
-        public void onLongClick(View view, int position);
-    }
 
 
-    static class RecyclerTouchListener implements RecyclerView.OnItemTouchListener {
 
-        private GestureDetector gestureDetector;
-        private ClickListener clickListener;
-
-        public RecyclerTouchListener(Context context, final RecyclerView recyclerView, final ClickListener clickListener) {
-            this.clickListener = clickListener;
-            gestureDetector = new GestureDetector(context, new GestureDetector.SimpleOnGestureListener() {
-                @Override
-                public boolean onSingleTapUp(MotionEvent e) {
-                    return true;
-                }
-
-                @Override
-                public void onLongPress(MotionEvent e) {
-                    View child = recyclerView.findChildViewUnder(e.getX(), e.getY());
-                    if (child != null && clickListener != null) {
-                        clickListener.onLongClick(child, recyclerView.getChildPosition(child));
-                    }
-                }
-            });
-        }
-
-        @Override
-        public boolean onInterceptTouchEvent(RecyclerView rv, MotionEvent e) {
-
-            View child = rv.findChildViewUnder(e.getX(), e.getY());
-            if (child != null && clickListener != null && gestureDetector.onTouchEvent(e)) {
-                clickListener.onClick(child, rv.getChildPosition(child));
-            }
-            return false;
-        }
-
-        @Override
-        public void onTouchEvent(RecyclerView rv, MotionEvent e) {
-        }
-
-        @Override
-        public void onRequestDisallowInterceptTouchEvent(boolean disallowIntercept) {
-
-        }
-
-
-    }
 
 }

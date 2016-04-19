@@ -10,7 +10,6 @@ import android.support.v7.widget.Toolbar;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
-import android.view.GestureDetector;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.View;
@@ -25,9 +24,11 @@ import android.widget.TextView;
 import com.android.volley.NoConnectionError;
 import com.android.volley.TimeoutError;
 import com.android.volley.VolleyError;
+import com.techmorphosis.grassroot.Interface.ClickListener;
 import com.techmorphosis.grassroot.Network.AllLinsks;
 import com.techmorphosis.grassroot.Network.NetworkCall;
 import com.techmorphosis.grassroot.R;
+import com.techmorphosis.grassroot.RecyclerView.RecyclerTouchListener;
 import com.techmorphosis.grassroot.adapters.JoinRequestAdapter;
 import com.techmorphosis.grassroot.models.Join_RequestModel;
 import com.techmorphosis.grassroot.ui.fragments.AlertDialogFragment;
@@ -219,7 +220,16 @@ public class Join_Request extends PortraitActivity implements OnClickListener{
                         e.printStackTrace();
                     }
 
-                    Group_SearchWS();
+                    if (et_searchbox.getText().toString().trim().isEmpty())
+                    {
+                        showSnackBar(getString(R.string.validate_search_box),"",Snackbar.LENGTH_SHORT);
+
+                    }
+                    else
+                    {
+                        Group_SearchWS();
+                    }
+
 
 
                 }
@@ -234,7 +244,7 @@ public class Join_Request extends PortraitActivity implements OnClickListener{
     {
 
         Log.e(TAG, "Group_SearchWS");
-
+        joinrequestList.clear();
         jrRecyclerView.setVisibility(View.INVISIBLE);
         errorLayout.setVisibility(View.INVISIBLE);
         imNOInternet.setVisibility(View.INVISIBLE);
@@ -294,20 +304,22 @@ public class Join_Request extends PortraitActivity implements OnClickListener{
                                         model.setCount(count);
                                         joinrequestList.add(model);
 
-                                        Log.e(TAG, "i is " + i);
+                                  /*      Log.e(TAG, "i is " + i);
                                         Log.e(TAG, "id is " + uid);
                                         Log.e(TAG, "groupName is " + groupName);
                                         Log.e(TAG, "description is " + description);
                                         Log.e(TAG, "groupCreator is " + groupCreator);
-                                        Log.e(TAG, "count is " + count);
+                                        Log.e(TAG, "count is " + count);*/
 
 
                                     }
 
-                                    Log.e(TAG, "status is " + status);
+                                  /*  Log.e(TAG, "status is " + status);
                                     Log.e(TAG, "code is " + code);
-                                    Log.e(TAG, "message is " + message);
+                                    Log.e(TAG, "message is " + message);*/
 
+                                    //pre-execute
+                                    joinrequestAdapter.clearApplications();
 
                                     jrRecyclerView.setVisibility(View.VISIBLE);
 
@@ -493,7 +505,7 @@ public class Join_Request extends PortraitActivity implements OnClickListener{
     }
 
     private void setUpToolbar() {
-        toolbar.setNavigationIcon(R.drawable.btn_back);
+        toolbar.setNavigationIcon(R.drawable.btn_back_wt);
         toolbar.setNavigationOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v)
@@ -530,55 +542,5 @@ public class Join_Request extends PortraitActivity implements OnClickListener{
 
     }
 
-    public static interface ClickListener
-    {
-        public void onClick(View view, int position);
 
-        public void onLongClick(View view, int position);
-    }
-
-    static class RecyclerTouchListener implements RecyclerView.OnItemTouchListener {
-        private GestureDetector gestureDetector;
-        private ClickListener clickListener;
-
-
-        public RecyclerTouchListener(Context context, final RecyclerView jrRecyclerView, final ClickListener clickListener)
-        {
-            this.clickListener=clickListener;
-            gestureDetector = new GestureDetector(context, new GestureDetector.SimpleOnGestureListener() {
-                @Override
-                public boolean onSingleTapUp(MotionEvent e) {
-                    return true;
-                }
-
-                @Override
-                public void onLongPress(MotionEvent e) {
-                    View child = jrRecyclerView.findChildViewUnder(e.getX(), e.getY());
-                    if (child != null && clickListener != null) {
-                        clickListener.onLongClick(child, jrRecyclerView.getChildPosition(child));
-                    }
-                }
-            });
-        }
-
-        @Override
-        public boolean onInterceptTouchEvent(RecyclerView rv, MotionEvent e)
-        {
-            View child = rv.findChildViewUnder(e.getX(), e.getY());
-            if (child != null && clickListener != null && gestureDetector.onTouchEvent(e)) {
-                clickListener.onClick(child, rv.getChildPosition(child));
-            }
-            return false;
-        }
-
-        @Override
-        public void onTouchEvent(RecyclerView rv, MotionEvent e) {
-
-        }
-
-        @Override
-        public void onRequestDisallowInterceptTouchEvent(boolean disallowIntercept) {
-
-        }
-    }
 }

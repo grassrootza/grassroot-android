@@ -1,40 +1,73 @@
 package com.techmorphosis.grassroot.adapters;
 
+import android.content.Context;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CheckBox;
+import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.techmorphosis.grassroot.R;
-import com.techmorphosis.grassroot.models.Create_GroupModel;
+import com.techmorphosis.grassroot.models.ContactsModel;
 import com.techmorphosis.grassroot.models.ItemTouchHelperCallback;
+import com.techmorphosis.grassroot.ui.activities.Create_Group;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.zip.Inflater;
 
 public class CreateGroupAdapter extends
 		RecyclerView.Adapter<CreateGroupAdapter.ViewHolder>  implements ItemTouchHelperCallback.ItemTouchHelperAdapter {
 
-	private List<Create_GroupModel> stList;
+	private static final String TAG = CreateGroupAdapter.class.getSimpleName();
+	private ArrayList<ContactsModel> data;
+	private LayoutInflater inflater;
 
-	public CreateGroupAdapter(List<Create_GroupModel> students) {
-		this.stList = students;
+	public CreateGroupAdapter(ArrayList<ContactsModel> contact,Context context)
+	{
+		this.data = contact;
+		inflater=LayoutInflater.from(context);
 
+
+	}
+
+	@Override
+	public int getItemViewType(int position) {
+
+		if (position==0)
+		{
+			return 0;
+		}
+		else
+		{
+			return 1;
+		}
 	}
 
 	// Create new views
 	@Override
-	public ViewHolder onCreateViewHolder(ViewGroup parent,
-			int viewType) {
+	public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
 		// create a new view
-		View itemLayoutView = LayoutInflater.from(parent.getContext()).inflate(
-				R.layout.cardview_row, null);
+		View v;
+		/*if (viewType==0)
+		{
+			 v=inflater.inflate(R.layout.vh_item_header, parent, false);
 
+		}
+		else
+		{
+			 v=inflater.inflate(R.layout.cardview_row, parent, false);
+
+		}
+		*/
+		v=inflater.inflate(R.layout.cardview_row, parent, false);
 		// create ViewHolder
 
-		ViewHolder viewHolder = new ViewHolder(itemLayoutView);
+		ViewHolder viewHolder = new ViewHolder(v);
 
 		return viewHolder;
 	}
@@ -42,41 +75,26 @@ public class CreateGroupAdapter extends
 	@Override
 	public void onBindViewHolder(ViewHolder viewHolder, int position) {
 
-		final int pos = position;
+		ContactsModel model= data.get(position);
+		Log.e(TAG,"model.name is " + model.name);
 
-		if (position==0)
+		viewHolder.tv_person_name.setText(model.name);
+
+		if (model.isSelected)
 		{
-			viewHolder.tv_cg_title.setVisibility(View.VISIBLE);
+			viewHolder.iv_Selected.setImageResource(R.drawable.btn_checked);
 		}
-		else {
-			viewHolder.tv_cg_title.setVisibility(View.GONE);
+		else
+		{
+			viewHolder.iv_Selected.setImageResource(R.drawable.btn_unchecked);
 		}
-		viewHolder.tvName.setText(stList.get(position).getName());
-
-
-		viewHolder.chkSelected.setChecked(stList.get(position).isSelected());
-
-		viewHolder.chkSelected.setTag(stList.get(position));
-
-
-		viewHolder.chkSelected.setOnClickListener(new View.OnClickListener() {
-			public void onClick(View v) {
-				CheckBox cb = (CheckBox) v;
-				Create_GroupModel contact = (Create_GroupModel) cb.getTag();
-
-				contact.setSelected(cb.isChecked());
-				stList.get(pos).setSelected(cb.isChecked());
-
-
-			}
-		});
 
 	}
 
 	// Return the size arraylist
 	@Override
 	public int getItemCount() {
-		return stList.size();
+		return data.size();
 	}
 
 	@Override
@@ -84,34 +102,26 @@ public class CreateGroupAdapter extends
 
 	}
 
-	public static class ViewHolder extends RecyclerView.ViewHolder {
+	public static   class ViewHolder extends RecyclerView.ViewHolder {
 
-		public TextView tvName,tv_cg_title;
+		  TextView tv_person_name;
 
-		public RelativeLayout rl_row;
+		ImageView iv_Selected;
+		  TextView tv_cg_title;
 
-		public CheckBox chkSelected;
 
-		public Create_GroupModel singlestudent;
-
-		public ViewHolder(View itemLayoutView) {
+		public ViewHolder(View itemLayoutView)
+		{
 			super(itemLayoutView);
 
-			tvName = (TextView) itemLayoutView.findViewById(R.id.tvName);
-
 			tv_cg_title = (TextView) itemLayoutView.findViewById(R.id.tv_cg_title);
-
-			rl_row = (RelativeLayout) itemLayoutView.findViewById(R.id.rl_row);
-
-			chkSelected = (CheckBox) itemLayoutView.findViewById(R.id.chkSelected);
+			tv_person_name = (TextView) itemLayoutView.findViewById(R.id.tv_person_name_cr);
+			iv_Selected= (ImageView) itemLayoutView.findViewById(R.id.iv_Selected_cr);
 
 		}
 
 	}
 
-	// method to access in activity after updating selection
-	public List<Create_GroupModel> getStudentist() {
-		return stList;
-	}
+
 
 }

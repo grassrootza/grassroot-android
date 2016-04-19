@@ -4,12 +4,5 @@
     android:layout_height="wrap_content"
     android:orientation="vertical">
 
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="center"
-        android:padding="16dp"
-        android:text="Header View"
-        android:textColor="@color/black"
-        />
+    <TextView android:id="@+id/tv_cg_title" android:layout_width="match_parent" android:layout_height="wrap_content" android:padding="16dp" android:text="@string/cg_title_contact" android:textColor="@color/cg_title" android:textSize="@dimen/txt_small" android:visibility="visible"/>
 </LinearLayout>

@@ -11,7 +11,6 @@ import com.techmorphosis.grassroot.R;
 import com.techmorphosis.grassroot.models.Join_RequestModel;
 
 import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Created by admin on 26-Mar-16.
@@ -56,6 +55,17 @@ public class JoinRequestAdapter extends RecyclerView.Adapter<JoinRequestAdapter.
     @Override
     public int getItemCount() {
         return data.size();
+    }
+
+    public void clearApplications() {
+        int size = this.data.size();
+        if (size > 0) {
+            for (int i = 0; i < size; i++) {
+                data.remove(0);
+            }
+
+            this.notifyItemRangeRemoved(0, size);
+        }
     }
 
     public static class JoinRequestViewHolder extends  RecyclerView.ViewHolder

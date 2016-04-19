@@ -2,6 +2,9 @@
     <!-- Default screen margins, per the Android Design guidelines. -->
     <dimen name="activity_horizontal_margin">16dp</dimen>
     <dimen name="activity_vertical_margin">16dp</dimen>
+    <dimen name="padding">16dp</dimen>
+    <dimen name="halfpadding">8dp</dimen>
+
     <dimen name="ForgotpasswordTextsize">12.3sp</dimen>
 
     <dimen name="txt_small">13sp</dimen>
@@ -12,5 +15,9 @@
     <dimen name="drawer_width">260dp</dimen>
     <dimen name="shape_size">56dp</dimen>
     <dimen name="detail_backdrop_height">256dp</dimen>
+
+    <dimen name="list_item__contact_imageview_size">55dp</dimen>
+    <dimen name="fab_margin">16dp</dimen>
+
 
 </resources>

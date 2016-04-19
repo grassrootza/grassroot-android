@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:background="@color/white"
+    >
+
+    <TextView
+        android:id="@+id/tv_dialog_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/cg_dialog_title"
+        android:textSize="@dimen/txt_large"
+        android:layout_centerHorizontal="true"
+        android:padding="5dp"
+        />
+    <View
+        android:id="@+id/view"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/textcolor"
+        android:layout_below="@+id/tv_dialog_title"
+        />
+
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/rcv_dialog"
+        android:layout_width="match_parent"
+        android:layout_height="120dp"
+        tools:listitem="@layout/row_dialog"
+        android:layout_below="@+id/view"
+        android:scrollbars="vertical"
+        android:background="@color/RecyclerView_background"
+
+        >
+
+    </android.support.v7.widget.RecyclerView>
+
+    <View
+        android:id="@+id/view2"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/textcolor"
+        android:layout_below="@+id/rcv_dialog"
+        />
+
+    <RelativeLayout
+        android:id="@+id/ll_dialog"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_below="@+id/view2"
+
+        >
+
+        <TextView
+            android:id="@+id/bt_right"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/dark_background"
+            android:textSize="@dimen/txt_medium"
+            android:textColor="@color/primaryColor"
+            android:textAllCaps="true"
+            android:text="CANCEL"
+            android:gravity="center"
+            android:padding="10dp"
+            android:layout_toLeftOf="@+id/view4"
+            />
+
+        <TextView
+            android:id="@+id/view4"
+            android:layout_width="1dp"
+            android:layout_height="wrap_content"
+            android:background="@color/textcolor"
+            android:layout_centerHorizontal="true"
+            android:layout_centerVertical="true"
+            />
+
+
+
+        <TextView
+            android:id="@+id/bt_left"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/dark_background"
+            android:textColor="@color/primaryColor"
+            android:textSize="@dimen/txt_medium"
+            android:textAllCaps="true"
+            android:text="ADD"
+            android:padding="10dp"
+            android:gravity="center"
+            android:layout_toRightOf="@+id/view4"
+            />
+
+
+    </RelativeLayout>
+
+    <View
+        android:id="@+id/view3"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/textcolor"
+        android:layout_below="@+id/ll_dialog"
+        />
+
+</RelativeLayout>

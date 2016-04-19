@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".ui.activities.NewActivities"
+    android:background="@color/primaryColor"
+    >
+
+    <ImageView
+        android:id="@+id/iv_back"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/btn_close_white"
+        android:padding="@dimen/padding"
+        android:background="@drawable/button_alpha_rlsimple"
+
+        />
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+    android:paddingLeft="@dimen/padding"
+    android:paddingRight="@dimen/padding"
+        >
+        <Button
+            android:id="@+id/bt_vote"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/white"
+            android:text="@string/ga_newVote"
+            android:layout_marginBottom="10dp"
+            android:textColor="@color/primaryColor"
+            />
+
+        <Button
+            android:id="@+id/bt_meeting"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/white"
+            android:text="@string/ga_newMeeting"
+            android:layout_marginBottom="10dp"
+            android:layout_below="@+id/bt_vote"
+            android:textColor="@color/primaryColor"
+
+            />
+
+
+        <Button
+            android:id="@+id/bt_todo"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/white"
+            android:text="@string/ga_newToDo"
+            android:layout_below="@+id/bt_meeting"
+            android:textColor="@color/primaryColor"
+
+            />
+
+    </RelativeLayout>
+</RelativeLayout>

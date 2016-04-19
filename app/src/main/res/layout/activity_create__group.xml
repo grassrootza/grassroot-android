@@ -6,6 +6,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:id="@+id/rl_cg_root"
     >
 
 
@@ -23,15 +24,17 @@
             android:layout_height="?android:actionBarSize"
             android:orientation="horizontal"
             android:background="@color/primaryColor"
-            android:paddingLeft="16dp"
             >
 
             <ImageView
+                android:id="@+id/iv_crossimage"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:layout_height="match_parent"
                 android:src="@drawable/btn_close_white"
                 android:layout_gravity="center_vertical"
                 android:paddingRight="16dp"
+                android:paddingLeft="16dp"
+                android:background="@drawable/button_alpha_rlsimple"
                 />
 
             <TextView
@@ -40,7 +43,7 @@
                 android:layout_height="wrap_content"
                 android:textSize="@dimen/txt_large"
                 android:layout_gravity="center_vertical"
-                android:text="@string/cg_title_contact"
+                android:text="@string/cg_title"
                 android:textColor="@color/white"
                 />
 
@@ -138,7 +141,7 @@
 
                                 >
                                 <EditText
-                                    android:id="@+id/et_groupnames"
+                                    android:id="@+id/et_group_description"
                                     android:layout_width="match_parent"
                                     android:layout_height="wrap_content"
                                     android:hint="@string/cg_group_description"
@@ -151,7 +154,7 @@
                                     android:lines="3"
                                     android:minLines="3"
                                     android:maxLines="10"
-                                    android:inputType="textMultiLine"
+                                    android:inputType="textMultiLine|textNoSuggestions"
                                     android:gravity="top"
                                     android:maxLength="160"
                                     android:scrollbars="vertical"
@@ -187,17 +190,46 @@
             </android.support.design.widget.AppBarLayout>
 
 
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                app:layout_behavior="@string/appbar_scrolling_view_behavior"
+                >
+
+                <TextView
+                    android:id="@+id/tv_cg_title"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:paddingTop="10dp"
+                    android:paddingLeft="16dp"
+                    android:paddingRight="10dp"
+                    android:paddingBottom="10dp"
+                    android:text="@string/cg_title_contact"
+                    android:textColor="@color/cg_title"
+                    android:textSize="@dimen/txt_small"
+                    android:visibility="visible"
+                    android:layout_marginTop="16dp"
+
+                    />
+
+
                 <android.support.v7.widget.RecyclerView
                     android:id="@+id/rc_contacts"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:scrollbars="none"
+                    android:scrollbars="vertical"
                     android:clipToPadding="false"
-                    app:layout_behavior="@string/appbar_scrolling_view_behavior"
-                    android:layout_margin="16dp"
+                    android:layout_marginTop="0dp"
+                    android:layout_marginLeft="16dp"
+                    android:layout_marginRight="16dp"
+                    android:layout_marginBottom="16dp"
+                    android:layout_below="@+id/tv_cg_title"
                     >
 
                 </android.support.v7.widget.RecyclerView>
+
+
+            </RelativeLayout>
 
 
 
@@ -229,17 +261,17 @@
                 >
 
                 <com.github.clans.fab.FloatingActionButton
-                    android:id="@+id/fab12"
+                    android:id="@+id/ic_edit"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:src="@drawable/ic_edit"
+                    android:src="@drawable/ic_fab_edit"
                     fab:fab_label="Add Manually"
                     style="@style/MenuButtonsStyle"
                     android:visibility="gone"
                     />
 
                 <com.github.clans.fab.FloatingActionButton
-                    android:id="@+id/fab22"
+                    android:id="@+id/ic_fab_call"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:src="@drawable/ic_fab_call"

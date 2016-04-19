@@ -19,7 +19,12 @@
     <color name="list_background_pressed">#eeeeee</color>
     <color name="textbg">#efefef</color>
     <color name="textcolor">#b4b4b4</color>
+    <color name="view">#b4b4b4</color>
+    <color name="RecyclerView_background">#ECEFF1</color>
+
+
      <color name="yellow">#F0ED0F</color>
+    <color name="white_transparent">#20FFFFFF</color>
 
     <!--RateUs Scree-->
     <color name="grey_dialog_bg">#fff5f5f5</color>
@@ -27,6 +32,29 @@
 
      <color name="cg_title">#999999</color>
 
+    <!-- used as background colors for contacts that don't have photos -->
+    <integer-array name="contacts_text_background_colors">
+        <item>0xFF757575</item>
+        <item>0xFF757575</item>
+        <item>0xFF757575</item>
+        <item>0xFF757575</item>
+        <item>0xFF757575</item>
+        <item>0xFF757575</item>
+        <item>0xFF757575</item>
+        <item>0xFF757575</item>
+        <item>0xFF757575</item>
+        <item>0xFF757575</item>
+    </integer-array>
+    <!--++++++++++++++++++++-->
+    <!--listview item colors-->
+    <!--++++++++++++++++++++-->
+    <color name="listview_pressed">#FFdddddd</color>
+    <color name="listview_focused">#FF7dbcd3</color>
+    <color name="listview_checked">#FFededed</color>
+
+    <color name="pinned_header_text">#FF3c3c3c</color>
+
+    <color name="grey_divider">#7e7e7e</color>
 
 
 </resources>

@@ -9,6 +9,8 @@ import android.app.FragmentTransaction;
 import android.content.Context;
 import android.os.Build;
 import android.os.Bundle;
+import android.support.design.widget.Snackbar;
+import android.view.View;
 import android.widget.Toast;
 
 import com.techmorphosis.grassroot.ui.fragments.AlertDialogFragment;
@@ -24,6 +26,7 @@ public class UtilClass
     public static String MODEL;
     public static String OS;
     FragmentTransaction mTransaction;
+    public Snackbar snackBar;
 
     public UtilClass()
     {
@@ -37,6 +40,13 @@ public class UtilClass
     public void showToast(Context context, String s)
     {
         Toast.makeText(context, s, Toast.LENGTH_SHORT).show();
+    }
+
+    public void showsnackBar(View v,Context applicationContext, String message)
+    {
+
+        snackBar= Snackbar.make(v, message, Snackbar.LENGTH_SHORT);
+        snackBar.show();
     }
 
     public AlertDialogFragment showAlerDialog(FragmentManager manager,String message,String left,String right,Boolean flag,AlertDialogListener alertDialogListener)
@@ -53,6 +63,8 @@ public class UtilClass
         return ss2;
 
     }
+
+
 
 
 

@@ -10,6 +10,7 @@ import android.view.Gravity;
 
 import com.techmorphosis.grassroot.R;
 import com.techmorphosis.grassroot.ui.fragments.AlertDialogFragment;
+import com.techmorphosis.grassroot.ui.fragments.Group_Homepage;
 import com.techmorphosis.grassroot.ui.fragments.NavigationDrawerFragment;
 import com.techmorphosis.grassroot.ui.fragments.RateUsFragment;
 import com.techmorphosis.grassroot.ui.fragments.WelcomeFragment;
@@ -17,7 +18,7 @@ import com.techmorphosis.grassroot.utils.SettingPreffrence;
 import com.techmorphosis.grassroot.utils.UtilClass;
 import com.techmorphosis.grassroot.utils.listener.AlertDialogListener;
 
-public class HomeScreen extends PortraitActivity implements NavigationDrawerFragment.NavigationDrawerCallbacks,WelcomeFragment.FragmentCallbacks{
+public class HomeScreen extends PortraitActivity implements NavigationDrawerFragment.NavigationDrawerCallbacks,WelcomeFragment.FragmentCallbacks,Group_Homepage.FragmentCallbacks{
 
     private DrawerLayout drawer;
    android.support.v4.app.Fragment fragment = null;
@@ -93,8 +94,19 @@ public class HomeScreen extends PortraitActivity implements NavigationDrawerFrag
             {
                 case 0:
                   //Profile
-                    fragment = new WelcomeFragment();
-                    openFragment="WelcomeFragment";
+
+                    if (SettingPreffrence.getisHasgroup(HomeScreen.this))
+                    {
+                        fragment = new Group_Homepage();
+                        openFragment="Group_Homepage";
+                    }
+                    else
+                    {
+                        fragment = new WelcomeFragment();
+                        openFragment="WelcomeFragment";
+
+                    }
+
 
                 break;
 
@@ -109,18 +121,24 @@ public class HomeScreen extends PortraitActivity implements NavigationDrawerFrag
                 case 3:
                     //Logout
 
-                    alertDialogFragment =utilClass.showAlerDialog(getFragmentManager(), getString(R.string.Logout_text), "Yes","No",false, new AlertDialogListener()
+                    alertDialogFragment =utilClass.showAlerDialog(getFragmentManager(), getString(R.string.Logout_text), "Yes","No",true, new AlertDialogListener()
                     {
                         @Override
                         public void setRightButton()
-                        {
+                        {//no
+
+
                             alertDialogFragment.dismiss();
                         }
 
                         @Override
                         public void setLeftButton()
                         {
+                            //Yes
                             SettingPreffrence.clearAll(getApplicationContext());
+                            Intent open= new Intent(HomeScreen.this,StartActivity.class);
+                            startActivity(open);
+
                             alertDialogFragment.dismiss();
 
                         }
@@ -180,4 +198,45 @@ public class HomeScreen extends PortraitActivity implements NavigationDrawerFrag
         if (drawer != null) drawer.openDrawer(Gravity.START);
     }
 
+    @Override
+    protected void onResume()
+    {
+        super.onResume();
+
+        if (SettingPreffrence.getPrefHasSaveClicked(this)){
+
+            SettingPreffrence.setPrefHasSaveClicked(this, false);
+
+            if (SettingPreffrence.getisHasgroup(HomeScreen.this))
+            {
+                Log.e("onResume", "Error in creating fragment");
+
+                fragment = new Group_Homepage();
+                openFragment="Group_Homepage";
+            }
+            else
+            {
+                fragment = new WelcomeFragment();
+                openFragment="WelcomeFragment";
+
+            }
+            if (fragment != null)
+            {
+
+                android.support.v4.app.FragmentManager fragmentManager1 = getSupportFragmentManager();
+                android.support.v4.app.FragmentTransaction ft1 = fragmentManager1.beginTransaction();
+                ft1.replace(R.id.fragment_container, fragment);
+                ft1.commit();
+
+            } else
+            {
+                Log.e("Error", "Error in creating fragment");
+            }
+
+        }
+
+
+
+
+    }
 }

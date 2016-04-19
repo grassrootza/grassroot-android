@@ -7,7 +7,6 @@ import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.design.widget.Snackbar;
-import android.support.v7.app.AppCompatActivity;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.View;
@@ -126,8 +125,21 @@ public class StartActivity extends PortraitActivity {
             new Handler().postDelayed(new Runnable() {
                 @Override
                 public void run() {
+                    Intent intent;
+                    intent = new Intent(StartActivity.this, HomeScreen.class);
 
-                    Intent intent = new Intent(StartActivity.this, HomeScreen.class);
+/*
+                    if (SettingPreffrence.getisHasgroup(StartActivity.this))
+                    {
+                         intent = new Intent(StartActivity.this, Group_Homepage.class);
+
+                    }
+                    else
+                    {
+                        intent = new Intent(StartActivity.this, HomeScreen.class);
+
+                    }
+*/
                     startActivity(intent);
                     finish();
 
@@ -950,7 +962,6 @@ public class StartActivity extends PortraitActivity {
 
 
 
-
                                 Log.e(TAG, "code is " + code);
                                 Log.e(TAG, "message is " + message);
                                 Log.e(TAG, "customData is " + data);
@@ -963,23 +974,50 @@ public class StartActivity extends PortraitActivity {
                                 {
                                     SettingPreffrence.setuser_token(StartActivity.this, token_code);
                                     SettingPreffrence.setuser_mobilenumber(StartActivity.this, et_mobile_register.getText().toString());
-                                    SettingPreffrence.setisLoggedIn(StartActivity.this,true);
+                                    SettingPreffrence.setisLoggedIn(StartActivity.this, true);
+                                    SettingPreffrence.setuser_phonetoken(StartActivity.this, et_mobile_register.getText().toString() + "/" + token_code);
+                                    SettingPreffrence.setuser_name(StartActivity.this, et_userName.getText().toString());
+
+                                    Log.e(TAG, "getPREF_Phone_Token is " + SettingPreffrence.getPREF_Phone_Token(StartActivity.this));
+
+                                    Intent intent = new Intent(StartActivity.this, HomeScreen.class);
+                                    startActivity(intent);
+                                    finish();
 
                                 } else if (loginscreen) {
 
                                     SettingPreffrence.setuser_token(StartActivity.this, token_code);
                                     SettingPreffrence.setuser_mobilenumber(StartActivity.this, et_mobile_login.getText().toString());
                                     SettingPreffrence.setisLoggedIn(StartActivity.this, true);
-                                    String hasGroups = jsonobject.getString("hasGroups");
+                                    SettingPreffrence.setuser_phonetoken(StartActivity.this, et_mobile_login.getText().toString() + "/" + token_code);
+                                    Log.e(TAG, "getPREF_Phone_Token is " + SettingPreffrence.getPREF_Phone_Token(StartActivity.this));
+
+                                    Boolean hasGroups = jsonobject.getBoolean("hasGroups");
+                                    String displayname= jsonobject.getString("displayName");
+
                                     Log.e(TAG, "hasGroups is " + hasGroups);
+                                    Log.e(TAG, "displayname is " + displayname);
+                                    if (hasGroups)
+                                    {
+                                        SettingPreffrence.setisHasgroup(StartActivity.this,true);
+                                        SettingPreffrence.setuser_name(StartActivity.this,displayname);
+                                        Intent intent = new Intent(StartActivity.this, HomeScreen.class);
+                                        startActivity(intent);
+                                        finish();
+
+                                    }
+                                    else
+                                    {
+                                        Intent intent = new Intent(StartActivity.this, HomeScreen.class);
+                                        startActivity(intent);
+                                        finish();
+
+                                    }
 
                                 }
 
                                 // et_otp.setText("");
 
-                                Intent intent = new Intent(StartActivity.this, HomeScreen.class);
-                                startActivity(intent);
-                                finish();
 
                             }/* else if (status.equalsIgnoreCase("Failure")) {
                                 Log.e(TAG, "failure");

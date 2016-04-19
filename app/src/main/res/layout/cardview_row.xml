@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:card_view="http://schemas.android.com/apk/res-auto"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:id="@+id/rl_row"
+    android:layout_height="match_parent"
+    android:orientation="horizontal"
+    tools:ignore="UnusedAttribute"
     >
 
     <TextView
@@ -17,17 +18,21 @@
         android:visibility="gone"
         />
 
+    <!--just a background view for the header, so that it won't interfere with the headers changes and row-clicking-->
+
     <RelativeLayout
 
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:paddingTop="16dp"
         android:paddingLeft="16dp"
-        android:paddingRight="16dp"
+        android:paddingBottom="16dp"
+        android:paddingRight="26dp"
         android:layout_below="@+id/tv_cg_title"
         >
 
         <TextView
-            android:id="@+id/tvName"
+            android:id="@+id/tv_person_name_cr"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_alignParentTop="true"
@@ -36,13 +41,14 @@
             android:textSize="18sp" />
 
 
-        <CheckBox
-            android:id="@+id/chkSelected"
+        <ImageView
+            android:id="@+id/iv_Selected_cr"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignParentRight="true"
             android:layout_centerVertical="true"
+            android:src="@drawable/btn_unchecked"
             />
     </RelativeLayout>
 
-</RelativeLayout>
+</LinearLayout>
