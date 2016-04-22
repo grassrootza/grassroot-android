@@ -269,7 +269,7 @@ public class Create_Group extends PortraitActivity {
     private void validate_allFields()
     {
 
-        if ( !(TextUtils.isEmpty(et_groupname.getText().toString().trim().replaceAll("[^a-zA-Z0-9]", "")) ))
+        if ( !(TextUtils.isEmpty(et_groupname.getText().toString().trim().replaceAll("[^a-zA-Z0-9 ]", "")) ))
         {
             Group_CreationWS();
         }
@@ -284,7 +284,7 @@ public class Create_Group extends PortraitActivity {
     private void Group_CreationWS()
     {
 
-        NetworkCall networkCall= new NetworkCall(Create_Group.this, new ResponseListenerVolley()
+        NetworkCall networkCall = new NetworkCall(Create_Group.this, new ResponseListenerVolley()
         {
             @Override
             public void onSuccess(String s)
@@ -347,25 +347,18 @@ public class Create_Group extends PortraitActivity {
                         }
                     }
 
-                }
+                },
 
-                ,
+                AllLinsks.groupcreation + SettingPreffrence.getuser_mobilenumber(Create_Group.this) + "/" +  SettingPreffrence.getuser_token(Create_Group.this),
 
-                AllLinsks.groupcreation + SettingPreffrence.getuser_mobilenumber(Create_Group.this) + "/" +  SettingPreffrence.getuser_token(Create_Group.this)
-                ,
-
-                getResources().getString(R.string.prg_message)
-                ,
+                getResources().getString(R.string.prg_message),
 
                 true
-
-
-
-
         );
+
         HashMap<String,String> hashMap= new HashMap<>();
-        hashMap.put("groupName" ,et_groupname.getText().toString().trim().replaceAll("[^a-zA-Z0-9]", ""));
-        hashMap.put("description" ,et_group_description.getText().toString().trim().replaceAll("[^a-zA-Z0-9]", ""));
+        hashMap.put("groupName" ,et_groupname.getText().toString().trim().replaceAll("[^a-zA-Z0-9 ]", ""));
+        hashMap.put("description" ,et_group_description.getText().toString().trim().replaceAll("[^a-zA-Z0-9 ]", ""));
         for (int i = 0; i <  mergeList.size(); i++)
         {
             ContactsModel numbers= mergeList.get(i);
@@ -377,8 +370,8 @@ public class Create_Group extends PortraitActivity {
         }
         networkCall.makeStringRequest_POST(hashMap);
 
-        Log.e(TAG, "groupName is " + et_groupname.getText().toString().trim().replaceAll("[^a-zA-Z0-9]", ""));
-        Log.e(TAG,"description is " + et_group_description.getText().toString().trim().replaceAll("[^a-zA-Z0-9]", ""));
+        Log.e(TAG, "groupName is " + et_groupname.getText().toString().trim().replaceAll("[^a-zA-Z0-9 ]", ""));
+        Log.e(TAG,"description is " + et_group_description.getText().toString().trim().replaceAll("[^a-zA-Z0-9 ]", ""));
 
     }
 

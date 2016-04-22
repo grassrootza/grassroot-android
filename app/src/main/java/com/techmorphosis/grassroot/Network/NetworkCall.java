@@ -33,7 +33,9 @@ public class NetworkCall {
     UtilClass utilClass;
 
 
-    public NetworkCall(Context mContext, ResponseListenerVolley responseListenerVolley,ErrorListenerVolley errorListenerVolley, String link, String prgMessage, boolean showProgress) {
+    public NetworkCall(Context mContext, ResponseListenerVolley responseListenerVolley,
+                       ErrorListenerVolley errorListenerVolley, String link, String prgMessage, boolean showProgress) {
+
         this.mContext = mContext;
         this.responseListenerVolley = responseListenerVolley;
         this.errorListenerVolley = errorListenerVolley;

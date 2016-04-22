@@ -1,1 +1,13 @@
 /build
+
+### JetBrains template
+*.iml
+*.ipr
+*.iws
+
+## Plugin-specific files:
+out/
+.idea/
+.idea_modules/
+atlassian-ide-plugin.xml
+
