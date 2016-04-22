@@ -1,3 +1,30 @@
+### Java Compiled Files
+*.class
+
+### Java Package Files
+*.jar
+*.war
+*.ear
+*.apk
+
+### General temp files
+*.tmp
+*.bak
+*.swp
+tmp/
+
+### JetBrains template
+*.iml
+*.ipr
+*.iws
+
+### Plugin-specific files:
+out/
+.idea/
+.idea_modules/
+atlassian-ide-plugin.xml
+
+### Gradle files
 .gradle
 /local.properties
 /.idea/workspace.xml
