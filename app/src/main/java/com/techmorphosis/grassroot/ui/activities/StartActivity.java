@@ -202,10 +202,8 @@ public class StartActivity extends PortraitActivity implements HomeScreenViewFra
         registerscreen = false;
         homeScreenViewFragment = new HomeScreenViewFragment();
 
-        getSupportFragmentManager().beginTransaction().add(R.id.fl_content, homeScreenViewFragment).
-                setCustomAnimations(R.anim.a_slide_in_left, R.anim.a_slide_in_right
-                        , R.anim.a_slide_in_left,
-                        R.anim.a_slide_in_right).commit();
+        getSupportFragmentManager().beginTransaction().add(R.id.fl_content,
+                homeScreenViewFragment).commit();
 
     }
 
@@ -219,8 +217,8 @@ public class StartActivity extends PortraitActivity implements HomeScreenViewFra
         loginscreen = false;
         ivBack.setVisibility(View.VISIBLE);
         registerScreenFragment = new RegisterScreenFragment();
-        getSupportFragmentManager().beginTransaction().replace(R.id.fl_content, registerScreenFragment)
-                .addToBackStack(registerScreenFragment.getClass().getName()).commit();
+        switchFragments(registerScreenFragment);
+
 
 
     }
@@ -234,10 +232,8 @@ public class StartActivity extends PortraitActivity implements HomeScreenViewFra
         registerscreen = false;
         loginscreen = true;
         ivBack.setVisibility(View.VISIBLE);
-
         loginScreenView = new LoginScreenView();
-        getSupportFragmentManager().beginTransaction()
-                .replace(R.id.fl_content, loginScreenView).addToBackStack(LoginScreenView.class.getName()).commit();
+        switchFragments(loginScreenView);
     }
 
     private void setUpOtpScreen() {
@@ -250,7 +246,7 @@ public class StartActivity extends PortraitActivity implements HomeScreenViewFra
         ivBack.setVisibility(View.VISIBLE);
 
         OtpScreenFragment otpScreenFragment = OtpScreenFragment.newInstance(data);
-        getSupportFragmentManager().beginTransaction().replace(R.id.fl_content, otpScreenFragment).addToBackStack(OtpScreenFragment.class.getName()).commit();
+        switchFragments(otpScreenFragment);
         if (registerscreen) {
             otpscreen = true;
 
@@ -346,32 +342,6 @@ public class StartActivity extends PortraitActivity implements HomeScreenViewFra
     }
 
 
-    private View.OnClickListener LoginScreenClickListener() {
-        return new View.OnClickListener() {
-
-
-            public void onClick(View view) {
-
-
-                rl_homelogo.animate()
-                        .translationY((float) (-height / 3.5))
-                        .scaleX((float) 0.7)
-                        .scaleY((float) 0.7);
-
-                defaultHandler.postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        setUpLoginScreen();
-
-                    }
-                }, 500L);
-
-            }
-
-
-        };
-    }
-
 
     @Optional
     @OnClick(R.id.iv_back)
@@ -395,7 +365,7 @@ public class StartActivity extends PortraitActivity implements HomeScreenViewFra
             }
 
             getSupportFragmentManager().popBackStack();
-            if (loginscreen || registerscreen) {
+            if(getSupportFragmentManager().getBackStackEntryCount() == 1){
                 ivBack.setVisibility(View.INVISIBLE);
             }
 
@@ -934,5 +904,13 @@ public class StartActivity extends PortraitActivity implements HomeScreenViewFra
             }
         }
         return null;
+    }
+
+    private void switchFragments(Fragment fragment){
+        getSupportFragmentManager().beginTransaction().setCustomAnimations(R.anim.a_slide_in_right,
+                R.anim.a_slide_out_left,
+                R.anim.a_slide_in_left, R.anim.a_slide_out_right).replace(R.id.fl_content, fragment)
+                .addToBackStack(fragment.getClass().getName()).commit();
+
     }
 }
