@@ -149,6 +149,7 @@ public class ContactsAdapter extends SearchablePinnedHeaderListViewAdapter<Conta
         }
         notifyDataSetChanged();
 
+
     }
 }
 

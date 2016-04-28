@@ -114,7 +114,7 @@
                                 android:padding="10dp"
                                 android:singleLine="true"
                                 android:ems="10"
-                                android:maxLength="10"
+                                android:maxLength="20"
                                 android:imeOptions="actionNext"
                                 android:textSize="34sp"
                                 android:textColor="@color/white"

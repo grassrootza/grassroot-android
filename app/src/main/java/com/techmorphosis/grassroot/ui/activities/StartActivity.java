@@ -6,7 +6,11 @@ import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
+import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentTransaction;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.View;
@@ -14,6 +18,7 @@ import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
@@ -32,6 +37,9 @@ import com.techmorphosis.grassroot.Network.AllLinsks;
 import com.techmorphosis.grassroot.Network.NetworkCall;
 import com.techmorphosis.grassroot.Network.NetworkCheck;
 import com.techmorphosis.grassroot.R;
+import com.techmorphosis.grassroot.ui.fragments.HomeScreenViewFragment;
+import com.techmorphosis.grassroot.ui.fragments.LoginScreenView;
+import com.techmorphosis.grassroot.ui.fragments.RegisterScreenFragment;
 import com.techmorphosis.grassroot.utils.AnimUtils;
 import com.techmorphosis.grassroot.utils.SettingPreffrence;
 import com.techmorphosis.grassroot.utils.UIUtils;
@@ -44,29 +52,31 @@ import org.json.JSONObject;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
+import java.util.List;
 
+import butterknife.BindView;
+import butterknife.ButterKnife;
+import butterknife.OnClick;
 import io.fabric.sdk.android.Fabric;
 
 /**
  * Created by admin on 22-Dec-15.
  */
-public class StartActivity extends PortraitActivity {
+public class StartActivity extends PortraitActivity implements HomeScreenViewFragment.OnHomeScreenInteractionListener,
+        RegisterScreenFragment.OnRegisterScreenInteractionListener, LoginScreenView.OnLoginScreenInteractionListener {
+       //will fix once we star with mvp implementation
+
     public boolean exit;
     public static int SCREEN_TIMEOUT = 2000;
     private Handler defaultHandler;
+    @BindView(R.id.fl_content)
+    public FrameLayout flContainer;
+    @BindView(R.id.iv_back)
+    public ImageView ivBack;
 
-    private FrameLayout flContainer;
-    private ImageView ivBack;
-
-    UtilClass utilClass;
-    private ProgressDialog pDialog;
-    private View vRegisterScreen;
-    private View vLoginScreen;
     private String TAG = StartActivity.class.getSimpleName();
 
-    private View vHomeScreen;
-
-    Snackbar snackBar;
+    private Snackbar snackBar;
     private DisplayMetrics displayMetrics;
     private int width;
     private int height;
@@ -75,16 +85,31 @@ public class StartActivity extends PortraitActivity {
     private boolean homescreen = false;
     private boolean registerscreen = false;
     public boolean loginscreen = false;
-    private EditText et_mobile_register;
-    private EditText et_userName;
-    private ImageView iv_splashlogo;
-    private ImageView iv_splashbg;
-    private RelativeLayout rl_homelogo;
-    private EditText et_otp;
-    private EditText et_mobile_login;
-    //    private int notificationSnackbar=0;
-    private RelativeLayout rlStart;
-    private TextView txtResend;
+    // @BindView(R.id.et_mobile_register)
+    EditText et_mobile_register;
+    //   @BindView(R.id.et_userName)
+    EditText et_userName;
+    @Nullable
+    @BindView(R.id.iv_splashlogo)
+    ImageView iv_splashlogo;
+    @BindView(R.id.rl_homelogo)
+    RelativeLayout rl_homelogo;
+
+    EditText et_otp;
+
+    EditText et_mobile_login;
+    @BindView(R.id.rl_start)
+    RelativeLayout rlStart;
+    //  @BindView(R.id.txt_resend)
+    TextView txtResend;
+
+
+    private FragmentManager fragmentManager = getSupportFragmentManager();
+
+    private HomeScreenViewFragment homeScreenViewFragment;
+    private RegisterScreenFragment registerScreenFragment;
+    private LoginScreenView loginScreenView;
+
     private String data;
 
 
@@ -93,15 +118,11 @@ public class StartActivity extends PortraitActivity {
         Fabric.with(this, new Crashlytics());
         if (!SettingPreffrence.getisLoggedIn(this)) {
             setContentView(R.layout.start);
-
+            ButterKnife.bind(this);
             if (NetworkCheck.isNetworkAvailable(StartActivity.this)) {
-                //     callParse();
             } else {
                 SettingPreffrence.setisLoggedIn(this, false);
-
             }
-
-            findViews();
             init();
             displayMetrics = getApplicationContext().getResources().getDisplayMetrics();
             width = displayMetrics.widthPixels;
@@ -109,18 +130,13 @@ public class StartActivity extends PortraitActivity {
             start();
 
         } else {
-
             setContentView(R.layout.spashscreen);
-            iv_splashlogo = (ImageView) findViewById(R.id.iv_splashlogo);
-            iv_splashbg = (ImageView) findViewById(R.id.iv_splashbg);
-
-
+            ButterKnife.bind(this);
             iv_splashlogo.setVisibility(View.VISIBLE);
 
             Animation animFadeIn;
             animFadeIn = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.fade_in);
             iv_splashlogo.startAnimation(animFadeIn);
-
 
             new Handler().postDelayed(new Runnable() {
                 @Override
@@ -128,18 +144,6 @@ public class StartActivity extends PortraitActivity {
                     Intent intent;
                     intent = new Intent(StartActivity.this, HomeScreen.class);
 
-/*
-                    if (SettingPreffrence.getisHasgroup(StartActivity.this))
-                    {
-                         intent = new Intent(StartActivity.this, Group_Homepage.class);
-
-                    }
-                    else
-                    {
-                        intent = new Intent(StartActivity.this, HomeScreen.class);
-
-                    }
-*/
                     startActivity(intent);
                     finish();
 
@@ -148,31 +152,21 @@ public class StartActivity extends PortraitActivity {
 
         }
 
+
     }
-
-    private void findViews() {
-
-        rl_homelogo = (RelativeLayout) findViewById(R.id.rl_homelogo);
-        rlStart = (RelativeLayout) findViewById(R.id.rl_start);
-
-        flContainer = (FrameLayout) findViewById(R.id.fl_content);
-        }
 
 
     private void init() {
         defaultHandler = new Handler();
-        utilClass = new UtilClass();
 
     }
 
-    private void start()
-    {
+    private void start() {
 
         showHomeScreen();
     }
 
-    private void showHomeScreen()
-    {
+    private void showHomeScreen() {
 
         if (SettingPreffrence.getisLoggedIn(this)) {
 
@@ -182,9 +176,6 @@ public class StartActivity extends PortraitActivity {
                     Intent intent = new Intent(StartActivity.this, HomeScreen.class);
                     startActivity(intent);
                     finish();
-                    //   new ArrayAdapter<>(this, android.R.layout.simple_spinner_item)
-
-                    //Toast.makeText(SplashScreen.this,"Message",Toast.LENGTH_SHORT).show();
                 }
             }, SCREEN_TIMEOUT);
 
@@ -226,14 +217,9 @@ public class StartActivity extends PortraitActivity {
         otpscreen = false;
         loginscreen = false;
         registerscreen = false;
-
-        vHomeScreen = getLayoutInflater().inflate(R.layout.container_home, null);
-        vHomeScreen.setLayoutParams(new ViewGroup.LayoutParams(-1, -1));
-        vHomeScreen.findViewById(R.id.bt_register).setOnClickListener(setUpRegisterScreenClick());
-        vHomeScreen.findViewById(R.id.bt_login).setOnClickListener(LoginScreenClickListener());
-
-        flContainer.addView(vHomeScreen);
-        vHomeScreen.startAnimation(AnimationUtils.loadAnimation(StartActivity.this, R.anim.fade_in));
+        homeScreenViewFragment = new HomeScreenViewFragment();
+        ;
+        fragmentManager.beginTransaction().add(R.id.fl_content, homeScreenViewFragment).commit();
 
 
     }
@@ -248,23 +234,15 @@ public class StartActivity extends PortraitActivity {
         loginscreen = false;
 
 
-        vRegisterScreen = getLayoutInflater().inflate(R.layout.container_register, null);
-        vRegisterScreen.setLayoutParams(new ViewGroup.LayoutParams(-1, -1));
-        et_userName = (EditText) vRegisterScreen.findViewById(R.id.et_userName);
-        et_mobile_register = (EditText) vRegisterScreen.findViewById(R.id.et_mobile_register);
-
-
-        vRegisterScreen.findViewById(R.id.bt_register).setOnClickListener(buttonRegisterClickListener(et_userName, et_mobile_register));
-
-
-        ivBack = (ImageView) findViewById(R.id.iv_back);
+//        vRegisterScreen.findViewById(R.id.bt_register).setOnClickListener(buttonRegisterClickListener(et_userName, et_mobile_register));
         ivBack.setVisibility(View.VISIBLE);
-        ivBack.setOnClickListener(backPressListener());
-        //flContainer.addView(vRegisterScreen);
-        // vRegisterScreen.startAnimation(AnimationUtils.loadAnimation(StartActivity.this, R.anim.fade_in));
-        flContainer.addView(vRegisterScreen);
-        flContainer.removeView(vHomeScreen);
-        AnimUtils.forwardAnimation(this, vRegisterScreen, vHomeScreen);
+
+        registerScreenFragment = new RegisterScreenFragment();
+        fragmentManager.beginTransaction().replace(R.id.fl_content, registerScreenFragment).commit();
+
+        // fragmentTransaction.commit();
+
+        //   AnimUtils.forwardAnimation(this, vRegisterScreen, vHomeScreen);
 
     }
 
@@ -277,22 +255,14 @@ public class StartActivity extends PortraitActivity {
         registerscreen = false;
         loginscreen = true;
 
-
-        vLoginScreen = getLayoutInflater().inflate(R.layout.container_login, null);
-        vLoginScreen.setLayoutParams(new ViewGroup.LayoutParams(-1, -1));
-        et_mobile_login = (EditText) vLoginScreen.findViewById(R.id.et_mobile_login);
-
-        ivBack = (ImageView) findViewById(R.id.iv_back);
         ivBack.setVisibility(View.VISIBLE);
-        ivBack.setOnClickListener(backPressListener());
-        vLoginScreen.findViewById(R.id.bt_login).setOnClickListener(buttonLoginClickListener(et_mobile_login));
-        flContainer.addView(vLoginScreen);
-        flContainer.removeView(vHomeScreen);
-        AnimUtils.forwardAnimation(this, vLoginScreen, vHomeScreen);
+        //  vLoginScreen.findViewById(R.id.bt_login).setOnClickListener(buttonLoginClickListener(et_mobile_login));
+        //   AnimUtils.forwardAnimation(this, vLoginScreen, vHomeScreen);
+        loginScreenView = new LoginScreenView();
+        fragmentManager.beginTransaction().replace(R.id.fl_content, loginScreenView).commit();
     }
 
-    private void setUpOtpScreen()
-    {
+    private void setUpOtpScreen() {
 
 
         exit = false;//
@@ -303,10 +273,10 @@ public class StartActivity extends PortraitActivity {
         et_otp = (EditText) vOtpScreen.findViewById(R.id.et_otp);
         txtResend = (TextView) vOtpScreen.findViewById(R.id.txt_resend);
         et_otp.setText(data);
-        ivBack = (ImageView) findViewById(R.id.iv_back);
+
         ivBack.setVisibility(View.VISIBLE);
-        ivBack.setOnClickListener(backPressListener());
-        vOtpScreen.findViewById(R.id.bt_submit_otp).setOnClickListener(buttonOtpsubmitClickListener(data));
+
+       //vOtpScreen.findViewById(R.id.bt_submit_otp).setOnClickListener(buttonOtpsubmitClickListener(data));
         txtResend.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -320,16 +290,15 @@ public class StartActivity extends PortraitActivity {
 
         flContainer.addView(vOtpScreen);
         if (registerscreen) {
-            flContainer.removeView(vRegisterScreen);
-            AnimUtils.forwardAnimation(this, vOtpScreen, vRegisterScreen);
+            // flContainer.removeView(vRegisterScreen);
+            //AnimUtils.forwardAnimation(this, vOtpScreen, vRegisterScreen);
             otpscreen = true;
 
         } else if (loginscreen) {
-            flContainer.removeView(vLoginScreen);
-            AnimUtils.forwardAnimation(this, vOtpScreen, vLoginScreen);
+            //  flContainer.removeView(vLoginScreen);
+            //   AnimUtils.forwardAnimation(this, vOtpScreen, vLoginScreen);
             otpscreen = true;
         }
-
 
 
     }
@@ -358,15 +327,12 @@ public class StartActivity extends PortraitActivity {
         };
     }
 
-    private View.OnClickListener buttonOtpsubmitClickListener(final String data) {
-        return new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
+
+    private void buttonOtpsubmitClickListener() {
 
                 otpFormValidation();
 
-            }
-        };
+
 
     }
 
@@ -503,6 +469,7 @@ public class StartActivity extends PortraitActivity {
         };
     }
 
+
     private View.OnClickListener setUpRegisterScreenClick() {
         return new View.OnClickListener() {
 
@@ -536,7 +503,8 @@ public class StartActivity extends PortraitActivity {
         };
     }
 
-    private View.OnClickListener backPressListener() {
+
+ /*   private View.OnClickListener backPressListener() {
         return new View.OnClickListener() {
 
 
@@ -561,25 +529,45 @@ public class StartActivity extends PortraitActivity {
 
 
         };
-    }
+    }*/
 
+  /*  @OnClick(R.id.iv_back)
+    public void onBackPress() {
+        try {
+            InputMethodManager im = (InputMethodManager) getApplicationContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+            im.hideSoftInputFromWindow(getCurrentFocus().getWindowToken(), 0);
+            snackBar.dismiss();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        onBackPressed();
+
+    }*/
+
+    @OnClick(R.id.iv_back)
     public void onBackPressed() {
 
-        if (exit) {
+        try {
+            InputMethodManager im = (InputMethodManager) getApplicationContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+            im.hideSoftInputFromWindow(getCurrentFocus().getWindowToken(), 0);
+            snackBar.dismiss();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
+        if (exit) {
             super.onBackPressed();
 
         } else {
 
-
             if (otpscreen) {
                 if (registerscreen) {
-                    UIUtils.replaceView(flContainer, vRegisterScreen, vOtpScreen);
-                    AnimUtils.backwardAnimation(StartActivity.this, vRegisterScreen, vOtpScreen);
+                    //  UIUtils.replaceView(flContainer, vRegisterScreen, vOtpScreen);
+                    //  AnimUtils.backwardAnimation(StartActivity.this, vRegisterScreen, vOtpScreen);
                     otpscreen = false;
                 } else if (loginscreen) {
-                    UIUtils.replaceView(flContainer, vLoginScreen, vOtpScreen);
-                    AnimUtils.backwardAnimation(StartActivity.this, vLoginScreen, vOtpScreen);
+                    //  UIUtils.replaceView(flContainer, vLoginScreen, vOtpScreen);
+                    //  AnimUtils.backwardAnimation(StartActivity.this, vLoginScreen, vOtpScreen);
                     otpscreen = false;
 
                 }
@@ -587,8 +575,8 @@ public class StartActivity extends PortraitActivity {
 
             } else if (loginscreen) {
                 rl_homelogo.animate().translationY((float) (-height / 6)).scaleX(1).scaleY(1);
-                UIUtils.replaceView(flContainer, vHomeScreen, vLoginScreen);
-                AnimUtils.backwardAnimation(StartActivity.this, vHomeScreen, vLoginScreen);
+                //   UIUtils.replaceView(flContainer, vHomeScreen, vLoginScreen);
+                //  AnimUtils.backwardAnimation(StartActivity.this, vHomeScreen, vLoginScreen);
                 ivBack.setVisibility(View.INVISIBLE);
                 exit = true;
 
@@ -596,14 +584,27 @@ public class StartActivity extends PortraitActivity {
 
 
                 rl_homelogo.animate().translationY((float) (-height / 6)).scaleX(1).scaleY(1);
-                UIUtils.replaceView(flContainer, vHomeScreen, vRegisterScreen);
-                AnimUtils.backwardAnimation(StartActivity.this, vHomeScreen, vRegisterScreen);
+                // UIUtils.replaceView(flContainer, vHomeScreen, vRegisterScreen);
+                //    AnimUtils.backwardAnimation(StartActivity.this, vHomeScreen, vRegisterScreen);
                 ivBack.setVisibility(View.INVISIBLE);
                 exit = true;
             }
 
 
         }
+    }
+
+
+    private Fragment getVisibleFragment() {
+        FragmentManager fragmentManager = getSupportFragmentManager();
+        List<Fragment> fragments = fragmentManager.getFragments();
+        if (fragments != null) {
+            for (Fragment fragment : fragments) {
+                if (fragment != null && fragment.isVisible())
+                    return fragment;
+            }
+        }
+        return null;
     }
 
     private void RegisterWS() {
@@ -654,14 +655,11 @@ public class StartActivity extends PortraitActivity {
                                    /* et_userName.setText("");
                                     et_mobile_register.setText("");*/
 
-                                    if (otpscreen)
-                                    {
+                                    if (otpscreen) {
                                         Log.e(TAG, "not calling setUpOtpScreen");
                                         et_otp.setText(data);
 
-                                    }
-                                    else
-                                    {
+                                    } else {
                                         Log.e(TAG, "calling setUpOtpScreen");
                                         setUpOtpScreen();
                                     }
@@ -687,53 +685,47 @@ public class StartActivity extends PortraitActivity {
                         public void onError(VolleyError volleyError) {
 
 
-                            if( volleyError instanceof NetworkError)
-                            {
+                            if (volleyError instanceof NetworkError) {
                                 Log.e(TAG, "NetworkError");
 
-                            }
-                            else if( volleyError instanceof ServerError) {
+                            } else if (volleyError instanceof ServerError) {
 
                                 Log.e(TAG, "ServerError");
 
-                            } else if( volleyError instanceof AuthFailureError) {
+                            } else if (volleyError instanceof AuthFailureError) {
                                 Log.e(TAG, "AuthFailureError");
 
-                            } else if( volleyError instanceof ParseError) {
+                            } else if (volleyError instanceof ParseError) {
                                 Log.e(TAG, "ParseError");
 
-                            } else if( volleyError instanceof NoConnectionError) {
+                            } else if (volleyError instanceof NoConnectionError) {
                                 Log.e(TAG, "NoConnectionError");
 
-                            } else if( volleyError instanceof TimeoutError) {
+                            } else if (volleyError instanceof TimeoutError) {
                                 Log.e(TAG, "TimeoutError");
 
                             }
 
 
-                            if ((volleyError instanceof NoConnectionError) || (volleyError instanceof TimeoutError))
-                            {
+                            if ((volleyError instanceof NoConnectionError) || (volleyError instanceof TimeoutError)) {
                                 showSnackBar(getApplicationContext(), "RegisterWS", getResources().getString(R.string.No_network), getString(R.string.Retry), 0, Snackbar.LENGTH_INDEFINITE);
-                            }
-                            else
-                            {
+                            } else {
                                 try {
-                                    String responseBody = new String(volleyError.networkResponse.data, "utf-8" );
+                                    String responseBody = new String(volleyError.networkResponse.data, "utf-8");
                                     Log.e(TAG, "responseBody " + responseBody);
                                     String status, message, code = null;
                                     JSONObject register = new JSONObject(responseBody);
                                     status = register.getString("status");
                                     message = register.getString("message");
 
-                                    if (status.equalsIgnoreCase("Failure"))
-                                    {
+                                    if (status.equalsIgnoreCase("Failure")) {
                                         Log.e(TAG, "failure");
                                         Log.e(TAG, "code is " + code);
                                         Log.e(TAG, "message is " + message);
                                         showSnackBar(getApplicationContext(), "", getResources().getString(R.string.USER_ALREADY_EXISTS), "", 0, Snackbar.LENGTH_SHORT);
                                     }
 
-                                }  catch (UnsupportedEncodingException error){
+                                } catch (UnsupportedEncodingException error) {
 
                                 } catch (JSONException e) {
                                     e.printStackTrace();
@@ -816,13 +808,11 @@ public class StartActivity extends PortraitActivity {
                                     et_mobile_login.setText("");*/
                                     showSnackBar(getApplicationContext(), "", getResources().getString(R.string.Otp_success), "", 0, Snackbar.LENGTH_SHORT);
 
-                                    if (otpscreen)
-                                    {
+                                    if (otpscreen) {
                                         Log.e(TAG, "not calling setUpOtpScreen");
                                         et_otp.setText(data);
 
-                                    }
-                                    else {
+                                    } else {
                                         Log.e(TAG, "calling setUpOtpScreen");
 
                                         setUpOtpScreen();
@@ -848,14 +838,11 @@ public class StartActivity extends PortraitActivity {
                         @Override
                         public void onError(VolleyError volleyError) {
 
-                            if ((volleyError instanceof NoConnectionError) || (volleyError instanceof TimeoutError))
-                            {
+                            if ((volleyError instanceof NoConnectionError) || (volleyError instanceof TimeoutError)) {
                                 showSnackBar(getApplicationContext(), "LoginWS", getResources().getString(R.string.No_network), getString(R.string.Retry), 0, Snackbar.LENGTH_INDEFINITE);
-                            }
-                            else
-                            {
+                            } else {
                                 try {
-                                    String responseBody = new String(volleyError.networkResponse.data, "utf-8" );
+                                    String responseBody = new String(volleyError.networkResponse.data, "utf-8");
                                     Log.e(TAG, "responseBody " + responseBody);
                                     String status, message, code = null;
                                     JSONObject login = new JSONObject(responseBody);
@@ -871,7 +858,7 @@ public class StartActivity extends PortraitActivity {
 
                                     }
 
-                                }  catch (UnsupportedEncodingException error){
+                                } catch (UnsupportedEncodingException error) {
 
                                 } catch (JSONException e) {
                                     e.printStackTrace();
@@ -917,7 +904,7 @@ public class StartActivity extends PortraitActivity {
         if (registerscreen) {
             try {
                 Log.e(TAG, "link is " + AllLinsks.verify + URLEncoder.encode(StartActivity.this.et_mobile_register.getText().toString(), "UTF-8") + "/" + data);
-                OTPLink=AllLinsks.verify + URLEncoder.encode(StartActivity.this.et_mobile_register.getText().toString(), "UTF-8") + "/" + data;
+                OTPLink = AllLinsks.verify + URLEncoder.encode(StartActivity.this.et_mobile_register.getText().toString(), "UTF-8") + "/" + data;
             } catch (UnsupportedEncodingException e) {
                 e.printStackTrace();
             }
@@ -925,7 +912,7 @@ public class StartActivity extends PortraitActivity {
         } else if (loginscreen) {
             try {
                 Log.e(TAG, "link is " + AllLinsks.authenticate + URLEncoder.encode(StartActivity.this.et_mobile_login.getText().toString(), "UTF-8") + "/" + data);
-                OTPLink=AllLinsks.authenticate + URLEncoder.encode(StartActivity.this.et_mobile_login.getText().toString(), "UTF-8") + "/" + data;
+                OTPLink = AllLinsks.authenticate + URLEncoder.encode(StartActivity.this.et_mobile_login.getText().toString(), "UTF-8") + "/" + data;
             } catch (UnsupportedEncodingException e) {
                 e.printStackTrace();
             }
@@ -961,7 +948,6 @@ public class StartActivity extends PortraitActivity {
                                 String expiryDateTime = jsonObject2.getString("expiryDateTime");
 
 
-
                                 Log.e(TAG, "code is " + code);
                                 Log.e(TAG, "message is " + message);
                                 Log.e(TAG, "customData is " + data);
@@ -970,8 +956,7 @@ public class StartActivity extends PortraitActivity {
                                 Log.e(TAG, "expiryDateTime is " + expiryDateTime);
 
 
-                                if (registerscreen)
-                                {
+                                if (registerscreen) {
                                     SettingPreffrence.setuser_token(StartActivity.this, token_code);
                                     SettingPreffrence.setuser_mobilenumber(StartActivity.this, et_mobile_register.getText().toString());
                                     SettingPreffrence.setisLoggedIn(StartActivity.this, true);
@@ -993,21 +978,18 @@ public class StartActivity extends PortraitActivity {
                                     Log.e(TAG, "getPREF_Phone_Token is " + SettingPreffrence.getPREF_Phone_Token(StartActivity.this));
 
                                     Boolean hasGroups = jsonobject.getBoolean("hasGroups");
-                                    String displayname= jsonobject.getString("displayName");
+                                    String displayname = jsonobject.getString("displayName");
 
                                     Log.e(TAG, "hasGroups is " + hasGroups);
                                     Log.e(TAG, "displayname is " + displayname);
-                                    if (hasGroups)
-                                    {
-                                        SettingPreffrence.setisHasgroup(StartActivity.this,true);
-                                        SettingPreffrence.setuser_name(StartActivity.this,displayname);
+                                    if (hasGroups) {
+                                        SettingPreffrence.setisHasgroup(StartActivity.this, true);
+                                        SettingPreffrence.setuser_name(StartActivity.this, displayname);
                                         Intent intent = new Intent(StartActivity.this, HomeScreen.class);
                                         startActivity(intent);
                                         finish();
 
-                                    }
-                                    else
-                                    {
+                                    } else {
                                         Intent intent = new Intent(StartActivity.this, HomeScreen.class);
                                         startActivity(intent);
                                         finish();
@@ -1041,26 +1023,23 @@ public class StartActivity extends PortraitActivity {
 
                         if ((volleyError instanceof NoConnectionError) || (volleyError instanceof TimeoutError)) {
                             showSnackBar(getApplicationContext(), "OtpWS", getResources().getString(R.string.No_network), getString(R.string.Retry), 0, Snackbar.LENGTH_INDEFINITE);
-                        }
-                        else
-                        {
+                        } else {
                             try {
-                                String responseBody = new String(volleyError.networkResponse.data, "utf-8" );
+                                String responseBody = new String(volleyError.networkResponse.data, "utf-8");
                                 Log.e(TAG, "responseBody " + responseBody);
                                 String status, message, code = null;
                                 JSONObject otp = new JSONObject(responseBody);
                                 status = otp.getString("status");
                                 message = otp.getString("message");
 
-                                if (status.equalsIgnoreCase("Failure"))
-                                {
+                                if (status.equalsIgnoreCase("Failure")) {
                                     Log.e(TAG, "failure");
                                     Log.e(TAG, "code is " + code);
                                     Log.e(TAG, "message is " + message);
                                     showSnackBar(getApplicationContext(), "", getResources().getString(R.string.INVALID_TOKEN), "", 0, Snackbar.LENGTH_SHORT);
                                 }
 
-                            }  catch (UnsupportedEncodingException error){
+                            } catch (UnsupportedEncodingException error) {
 
                             } catch (JSONException e) {
                                 e.printStackTrace();
@@ -1132,5 +1111,48 @@ public class StartActivity extends PortraitActivity {
 
         snackBar.show();
     }
+
+    @Override
+    public void onRegisterButtonClick() {
+
+        defaultHandler.postDelayed(new Runnable() {
+            public void run() {
+                rl_homelogo.animate().translationY((float) (-height / 3.5)).scaleX((float) 0.7).scaleY((float) 0.7);
+
+                defaultHandler.postDelayed(
+                        new Runnable() {
+
+                            public void run() {
+                                setUpRegisterScreen();
+                            }
+
+                        }, 500L);
+            }
+
+        }, 500L);
+    }
+
+
+    @Override
+    public void onLoginButtonRegisterClick() {
+        defaultHandler.postDelayed(new Runnable() {
+            public void run() {
+                rl_homelogo.animate().translationY((float) (-height / 3.5)).scaleX((float) 0.7).scaleY((float) 0.7);
+
+                defaultHandler.postDelayed(
+                        new Runnable() {
+
+                            public void run() {
+
+                                setUpLoginScreen();
+                            }
+
+
+                        }, 500L);
+            }
+
+        }, 500L);
+    }
+
 
 }
