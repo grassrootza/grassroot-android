@@ -23,7 +23,7 @@ import butterknife.OnClick;
  */
 public class OtpScreenFragment extends Fragment {
 
-    @BindView(R.id.et_otp)
+
     EditText et_otp;
 
     @BindView(R.id.txt_resend)
