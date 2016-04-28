@@ -1,6 +1,5 @@
 package com.techmorphosis.grassroot.ui.activities;
 
-import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
@@ -10,7 +9,6 @@ import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentTransaction;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.View;
@@ -18,12 +16,10 @@ import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.view.inputmethod.InputMethodManager;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
-import android.widget.TextView;
 
 import com.android.volley.AuthFailureError;
 import com.android.volley.NetworkError;
@@ -39,11 +35,9 @@ import com.techmorphosis.grassroot.Network.NetworkCheck;
 import com.techmorphosis.grassroot.R;
 import com.techmorphosis.grassroot.ui.fragments.HomeScreenViewFragment;
 import com.techmorphosis.grassroot.ui.fragments.LoginScreenView;
+import com.techmorphosis.grassroot.ui.fragments.OtpScreenFragment;
 import com.techmorphosis.grassroot.ui.fragments.RegisterScreenFragment;
-import com.techmorphosis.grassroot.utils.AnimUtils;
 import com.techmorphosis.grassroot.utils.SettingPreffrence;
-import com.techmorphosis.grassroot.utils.UIUtils;
-import com.techmorphosis.grassroot.utils.UtilClass;
 import com.techmorphosis.grassroot.utils.listener.ErrorListenerVolley;
 import com.techmorphosis.grassroot.utils.listener.ResponseListenerVolley;
 
@@ -57,23 +51,19 @@ import java.util.List;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
+import butterknife.Optional;
 import io.fabric.sdk.android.Fabric;
 
 /**
  * Created by admin on 22-Dec-15.
  */
 public class StartActivity extends PortraitActivity implements HomeScreenViewFragment.OnHomeScreenInteractionListener,
-        RegisterScreenFragment.OnRegisterScreenInteractionListener, LoginScreenView.OnLoginScreenInteractionListener {
-       //will fix once we star with mvp implementation
+        RegisterScreenFragment.OnRegisterScreenInteractionListener, LoginScreenView.OnLoginScreenInteractionListener, OtpScreenFragment.OnOtpScreenFragmentListener {
+    //will fix once we start with mvp implementation
 
     public boolean exit;
     public static int SCREEN_TIMEOUT = 2000;
     private Handler defaultHandler;
-    @BindView(R.id.fl_content)
-    public FrameLayout flContainer;
-    @BindView(R.id.iv_back)
-    public ImageView ivBack;
-
     private String TAG = StartActivity.class.getSimpleName();
 
     private Snackbar snackBar;
@@ -85,31 +75,32 @@ public class StartActivity extends PortraitActivity implements HomeScreenViewFra
     private boolean homescreen = false;
     private boolean registerscreen = false;
     public boolean loginscreen = false;
-    // @BindView(R.id.et_mobile_register)
-    EditText et_mobile_register;
-    //   @BindView(R.id.et_userName)
-    EditText et_userName;
+
+    @Nullable
+    @BindView(R.id.fl_content)
+    public FrameLayout flContainer;
+
+    @Nullable
+    @BindView(R.id.iv_back)
+    public ImageView ivBack;
+
     @Nullable
     @BindView(R.id.iv_splashlogo)
-    ImageView iv_splashlogo;
+    public ImageView iv_splashlogo;
+
+    @Nullable
     @BindView(R.id.rl_homelogo)
     RelativeLayout rl_homelogo;
 
-    EditText et_otp;
-
-    EditText et_mobile_login;
+    @Nullable
     @BindView(R.id.rl_start)
     RelativeLayout rlStart;
-    //  @BindView(R.id.txt_resend)
-    TextView txtResend;
-
-
-    private FragmentManager fragmentManager = getSupportFragmentManager();
 
     private HomeScreenViewFragment homeScreenViewFragment;
     private RegisterScreenFragment registerScreenFragment;
     private LoginScreenView loginScreenView;
-
+    private String userName;
+    private String mobileNumber;
     private String data;
 
 
@@ -162,7 +153,6 @@ public class StartActivity extends PortraitActivity implements HomeScreenViewFra
     }
 
     private void start() {
-
         showHomeScreen();
     }
 
@@ -191,23 +181,16 @@ public class StartActivity extends PortraitActivity implements HomeScreenViewFra
 
                             defaultHandler.postDelayed(
                                     new Runnable() {
-
                                         public void run() {
-
                                             setUpHomeScreen();
                                         }
 
-
                                     }, 1000L);
-
-
                         }
 
 
                     }, 500L);
         }
-
-
     }
 
     private void setUpHomeScreen() {
@@ -218,9 +201,11 @@ public class StartActivity extends PortraitActivity implements HomeScreenViewFra
         loginscreen = false;
         registerscreen = false;
         homeScreenViewFragment = new HomeScreenViewFragment();
-        ;
-        fragmentManager.beginTransaction().add(R.id.fl_content, homeScreenViewFragment).commit();
 
+        getSupportFragmentManager().beginTransaction().add(R.id.fl_content, homeScreenViewFragment).
+                setCustomAnimations(R.anim.a_slide_in_left, R.anim.a_slide_in_right
+                        , R.anim.a_slide_in_left,
+                        R.anim.a_slide_in_right).commit();
 
     }
 
@@ -232,17 +217,11 @@ public class StartActivity extends PortraitActivity implements HomeScreenViewFra
         otpscreen = false;
         registerscreen = true;
         loginscreen = false;
-
-
-//        vRegisterScreen.findViewById(R.id.bt_register).setOnClickListener(buttonRegisterClickListener(et_userName, et_mobile_register));
         ivBack.setVisibility(View.VISIBLE);
-
         registerScreenFragment = new RegisterScreenFragment();
-        fragmentManager.beginTransaction().replace(R.id.fl_content, registerScreenFragment).commit();
+        getSupportFragmentManager().beginTransaction().replace(R.id.fl_content, registerScreenFragment)
+                .addToBackStack(registerScreenFragment.getClass().getName()).commit();
 
-        // fragmentTransaction.commit();
-
-        //   AnimUtils.forwardAnimation(this, vRegisterScreen, vHomeScreen);
 
     }
 
@@ -254,89 +233,44 @@ public class StartActivity extends PortraitActivity implements HomeScreenViewFra
         otpscreen = false;
         registerscreen = false;
         loginscreen = true;
-
         ivBack.setVisibility(View.VISIBLE);
-        //  vLoginScreen.findViewById(R.id.bt_login).setOnClickListener(buttonLoginClickListener(et_mobile_login));
-        //   AnimUtils.forwardAnimation(this, vLoginScreen, vHomeScreen);
+
         loginScreenView = new LoginScreenView();
-        fragmentManager.beginTransaction().replace(R.id.fl_content, loginScreenView).commit();
+        getSupportFragmentManager().beginTransaction()
+                .replace(R.id.fl_content, loginScreenView).addToBackStack(LoginScreenView.class.getName()).commit();
     }
 
     private void setUpOtpScreen() {
 
 
         exit = false;//
-
-
         vOtpScreen = getLayoutInflater().inflate(R.layout.container_otp, null);
         vOtpScreen.setLayoutParams(new ViewGroup.LayoutParams(-1, -1));
-        et_otp = (EditText) vOtpScreen.findViewById(R.id.et_otp);
-        txtResend = (TextView) vOtpScreen.findViewById(R.id.txt_resend);
-        et_otp.setText(data);
 
         ivBack.setVisibility(View.VISIBLE);
 
-       //vOtpScreen.findViewById(R.id.bt_submit_otp).setOnClickListener(buttonOtpsubmitClickListener(data));
-        txtResend.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (registerscreen) {
-                    RegisterWS();
-                } else if (loginscreen) {
-                    LoginWS();
-                }
-            }
-        });
-
-        flContainer.addView(vOtpScreen);
+        OtpScreenFragment otpScreenFragment = OtpScreenFragment.newInstance(data);
+        getSupportFragmentManager().beginTransaction().replace(R.id.fl_content, otpScreenFragment).addToBackStack(OtpScreenFragment.class.getName()).commit();
         if (registerscreen) {
-            // flContainer.removeView(vRegisterScreen);
-            //AnimUtils.forwardAnimation(this, vOtpScreen, vRegisterScreen);
             otpscreen = true;
 
         } else if (loginscreen) {
-            //  flContainer.removeView(vLoginScreen);
-            //   AnimUtils.forwardAnimation(this, vOtpScreen, vLoginScreen);
             otpscreen = true;
         }
 
 
     }
 
-
-    private View.OnClickListener buttonRegisterClickListener(final EditText et_userName, final EditText et_mobile_register) {
-        return new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-
-
-                //setUpOtpScreen();
-                registerFormValidation();
-            }
-        };
-    }
-
-    private View.OnClickListener buttonLoginClickListener(final EditText et_mobile_login) {
-        return new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-
-                //setUpOtpScreen();
-                LoginFormValidation(et_mobile_login);
-            }
-        };
+    private void textResend() {
+        if (registerscreen) {
+            RegisterWS(userName, mobileNumber);
+        } else if (loginscreen) {
+            loginWS(mobileNumber);
+        }
     }
 
 
-    private void buttonOtpsubmitClickListener() {
-
-                otpFormValidation();
-
-
-
-    }
-
-    private void otpFormValidation() {
+    private void otpFormValidation(EditText et_otp) {
 
         if (et_otp.getText().toString().isEmpty()) {
             // utilClass.showToast(getApplicationContext(),"empty");
@@ -352,7 +286,7 @@ public class StartActivity extends PortraitActivity implements HomeScreenViewFra
 
     }
 
-    private void LoginFormValidation(EditText et_mobile_login) {
+    private void loginFormValidation(EditText et_mobile_login) {
 
         if (et_mobile_login.getText().toString().isEmpty()) {
             //utilClass.showToast(getApplicationContext(),"et_mobile_login");
@@ -360,6 +294,7 @@ public class StartActivity extends PortraitActivity implements HomeScreenViewFra
 
         } else {
             if (et_mobile_login.getText().toString().length() != 10 && et_mobile_login.getText().toString().length() < 10) {
+
                 //utilClass.showToast(getApplicationContext(),"not valid");
                 showSnackBar(getApplicationContext(), "", getResources().getString(R.string.Cellphone_number_invalid), "", 0, Snackbar.LENGTH_SHORT);
 
@@ -373,19 +308,14 @@ public class StartActivity extends PortraitActivity implements HomeScreenViewFra
                     showSnackBar(getApplicationContext(), "", getResources().getString(R.string.Cellphone_number_invalid), "", 0, Snackbar.LENGTH_SHORT);
 
                 } else {
-
-                    //utilClass.showToast(getApplicationContext(),"Register WS");
-                    // showSnackBar(getApplicationContext(), "", "Login success", "", 0, Snackbar.LENGTH_SHORT);
-                    // setUpOtpScreen();
-                    //   RegisterWS(et_userName,et_mobile_login);
-                    LoginWS();
+                    loginWS(et_mobile_login.getText().toString());
                 }
             }
 
         }
     }
 
-    private void registerFormValidation() {
+    private void registerFormValidation(EditText et_userName, EditText et_mobile_register) {
 
 
         if (et_userName.getText().toString().trim().isEmpty() || et_mobile_register.getText().toString().isEmpty()) {
@@ -408,13 +338,7 @@ public class StartActivity extends PortraitActivity implements HomeScreenViewFra
 
                 } else {
 
-                    //utilClass.showToast(getApplicationContext(),"Register WS");
-                    //showSnackBar(getApplicationContext(), "", "Register success", "", 0, Snackbar.LENGTH_SHORT);
-                    //setUpOtpScreen();
-
-                    /*Replace all spaces from name */
-                    /*RegisterWS(et_userName.getText().toString().replaceAll(" ", "%20"), et_mobile_register.getText().toString());*/
-                    RegisterWS();
+                    RegisterWS(et_userName.getText().toString(), et_mobile_register.getText().toString());
 
                 }
             }
@@ -433,27 +357,6 @@ public class StartActivity extends PortraitActivity implements HomeScreenViewFra
                         .translationY((float) (-height / 3.5))
                         .scaleX((float) 0.7)
                         .scaleY((float) 0.7);
-                       /* .setListener(new Animator.AnimatorListener() {
-                            @Override
-                            public void onAnimationStart(Animator animation) {
-
-                            }
-
-                            @Override
-                            public void onAnimationEnd(Animator animation) {
-                                setUpLoginScreen();
-                            }
-
-                            @Override
-                            public void onAnimationCancel(Animator animation) {
-
-                            }
-
-                            @Override
-                            public void onAnimationRepeat(Animator animation) {
-
-                            }
-                        });*/
 
                 defaultHandler.postDelayed(new Runnable() {
                     @Override
@@ -470,80 +373,7 @@ public class StartActivity extends PortraitActivity implements HomeScreenViewFra
     }
 
 
-    private View.OnClickListener setUpRegisterScreenClick() {
-        return new View.OnClickListener() {
-
-
-            public void onClick(View view) {
-                defaultHandler.postDelayed(new Runnable() {
-
-
-                    public void run() {
-                        rl_homelogo.animate().translationY((float) (-height / 3.5)).scaleX((float) 0.7).scaleY((float) 0.7);
-
-                        defaultHandler.postDelayed(
-                                new Runnable() {
-
-                                    public void run() {
-
-                                        setUpRegisterScreen();
-                                    }
-
-
-                                }, 500L);
-
-
-                    }
-
-
-                }, 500L);
-            }
-
-
-        };
-    }
-
-
- /*   private View.OnClickListener backPressListener() {
-        return new View.OnClickListener() {
-
-
-            public void onClick(View view) {
-
-
-                try {
-                    InputMethodManager im = (InputMethodManager) getApplicationContext().getSystemService(Context.INPUT_METHOD_SERVICE);
-                    im.hideSoftInputFromWindow(getCurrentFocus().getWindowToken(), 0);
-
-                    snackBar.dismiss();
-
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-
-
-                onBackPressed();
-
-
-            }
-
-
-        };
-    }*/
-
-  /*  @OnClick(R.id.iv_back)
-    public void onBackPress() {
-        try {
-            InputMethodManager im = (InputMethodManager) getApplicationContext().getSystemService(Context.INPUT_METHOD_SERVICE);
-            im.hideSoftInputFromWindow(getCurrentFocus().getWindowToken(), 0);
-            snackBar.dismiss();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        onBackPressed();
-
-    }*/
-
+    @Optional
     @OnClick(R.id.iv_back)
     public void onBackPressed() {
 
@@ -555,68 +385,41 @@ public class StartActivity extends PortraitActivity implements HomeScreenViewFra
             e.printStackTrace();
         }
 
-        if (exit) {
+        if (getSupportFragmentManager().getBackStackEntryCount() < 1 || exit) {
             super.onBackPressed();
 
         } else {
 
-            if (otpscreen) {
-                if (registerscreen) {
-                    //  UIUtils.replaceView(flContainer, vRegisterScreen, vOtpScreen);
-                    //  AnimUtils.backwardAnimation(StartActivity.this, vRegisterScreen, vOtpScreen);
-                    otpscreen = false;
-                } else if (loginscreen) {
-                    //  UIUtils.replaceView(flContainer, vLoginScreen, vOtpScreen);
-                    //  AnimUtils.backwardAnimation(StartActivity.this, vLoginScreen, vOtpScreen);
-                    otpscreen = false;
-
-                }
-
-
-            } else if (loginscreen) {
+            if (!(getVisibleFragment() instanceof OtpScreenFragment)) {
                 rl_homelogo.animate().translationY((float) (-height / 6)).scaleX(1).scaleY(1);
-                //   UIUtils.replaceView(flContainer, vHomeScreen, vLoginScreen);
-                //  AnimUtils.backwardAnimation(StartActivity.this, vHomeScreen, vLoginScreen);
-                ivBack.setVisibility(View.INVISIBLE);
-                exit = true;
-
-            } else if (registerscreen) {
-
-
-                rl_homelogo.animate().translationY((float) (-height / 6)).scaleX(1).scaleY(1);
-                // UIUtils.replaceView(flContainer, vHomeScreen, vRegisterScreen);
-                //    AnimUtils.backwardAnimation(StartActivity.this, vHomeScreen, vRegisterScreen);
-                ivBack.setVisibility(View.INVISIBLE);
-                exit = true;
             }
+
+            getSupportFragmentManager().popBackStack();
+            if (loginscreen || registerscreen) {
+                ivBack.setVisibility(View.INVISIBLE);
+            }
+
+            exit = true;
 
 
         }
     }
 
 
-    private Fragment getVisibleFragment() {
-        FragmentManager fragmentManager = getSupportFragmentManager();
-        List<Fragment> fragments = fragmentManager.getFragments();
-        if (fragments != null) {
-            for (Fragment fragment : fragments) {
-                if (fragment != null && fragment.isVisible())
-                    return fragment;
-            }
-        }
-        return null;
-    }
 
-    private void RegisterWS() {
 
+    private void RegisterWS(String et_userName, String et_mobile_register) {
         Log.e(TAG, "RegisterWS");
 
 
         String prgMessage = "Please Wait..";
         boolean prgboolean = true;
+        userName = et_userName;
+        mobileNumber = et_mobile_register;
+
 
         try {
-            Log.e(TAG, "link is " + AllLinsks.register + URLEncoder.encode(StartActivity.this.et_mobile_register.getText().toString(), "UTF-8") + "/" + URLEncoder.encode(StartActivity.this.et_userName.getText().toString(), "UTF-8"));
+            Log.e(TAG, "link is " + AllLinsks.register + URLEncoder.encode(et_mobile_register, "UTF-8") + "/" + URLEncoder.encode(et_userName, "UTF-8"));
         } catch (UnsupportedEncodingException e) {
             e.printStackTrace();
         }
@@ -652,27 +455,18 @@ public class StartActivity extends PortraitActivity implements HomeScreenViewFra
 
                                     showSnackBar(getApplicationContext(), "", getResources().getString(R.string.Otp_success), "", 0, Snackbar.LENGTH_SHORT);
 
-                                   /* et_userName.setText("");
-                                    et_mobile_register.setText("");*/
 
                                     if (otpscreen) {
                                         Log.e(TAG, "not calling setUpOtpScreen");
-                                        et_otp.setText(data);
+                                        OtpScreenFragment otpScreenFragment = (OtpScreenFragment) getVisibleFragment();
+                                        otpScreenFragment.et_otp.setText(data);
 
                                     } else {
                                         Log.e(TAG, "calling setUpOtpScreen");
                                         setUpOtpScreen();
                                     }
 
-                                } /*else if (status.equalsIgnoreCase("Failure")) {
-                                    Log.e(TAG, "failure");
-                                    Log.e(TAG, "code is " + code);
-                                    Log.e(TAG, "message is " + message);
-                                    showSnackBar(getApplicationContext(), "", message, "", 0, Snackbar.LENGTH_SHORT);
-
-
-                                }*/
-
+                                }
 
                             } catch (JSONException e) {
                                 e.printStackTrace();
@@ -746,7 +540,7 @@ public class StartActivity extends PortraitActivity implements HomeScreenViewFra
 
                         }
                     },
-                    AllLinsks.register + URLEncoder.encode(StartActivity.this.et_mobile_register.getText().toString(), "UTF-8") + "/" + URLEncoder.encode(StartActivity.this.et_userName.getText().toString(), "UTF-8"),
+                    AllLinsks.register + URLEncoder.encode(et_mobile_register, "UTF-8") + "/" + URLEncoder.encode(et_userName, "UTF-8"),
                     prgMessage,
                     prgboolean
             );
@@ -760,21 +554,18 @@ public class StartActivity extends PortraitActivity implements HomeScreenViewFra
 
     }
 
-    private void LoginWS() {
+    private void loginWS(String mobile_number) {
 
-
-        Log.e(TAG, "LoginWS");
-
-
+        Log.e(TAG, "loginWS");
         String prgMessage = "Please Wait..";
         boolean prgboolean = true;
+        mobileNumber = mobile_number;
 
         try {
-            Log.e(TAG, "link is " + AllLinsks.login + URLEncoder.encode(StartActivity.this.et_mobile_login.getText().toString(), "UTF-8"));
+            Log.e(TAG, "link is " + AllLinsks.login + URLEncoder.encode(mobile_number, "UTF-8"));
         } catch (UnsupportedEncodingException e) {
             e.printStackTrace();
         }
-
 
         NetworkCall networkCall = null;
         try {
@@ -804,13 +595,13 @@ public class StartActivity extends PortraitActivity implements HomeScreenViewFra
                                     Log.e(TAG, "message is " + message);
                                     Log.e(TAG, "data is " + data);
 
-                                   /* et_userName.setText("");
-                                    et_mobile_login.setText("");*/
                                     showSnackBar(getApplicationContext(), "", getResources().getString(R.string.Otp_success), "", 0, Snackbar.LENGTH_SHORT);
 
                                     if (otpscreen) {
                                         Log.e(TAG, "not calling setUpOtpScreen");
-                                        et_otp.setText(data);
+                                        OtpScreenFragment otpScreenFragment = (OtpScreenFragment) getVisibleFragment();
+                                        otpScreenFragment.et_otp.setText(data);
+
 
                                     } else {
                                         Log.e(TAG, "calling setUpOtpScreen");
@@ -818,15 +609,7 @@ public class StartActivity extends PortraitActivity implements HomeScreenViewFra
                                         setUpOtpScreen();
                                     }
 
-                                } /*else if (status.equalsIgnoreCase("Failure")) {
-                                    Log.e(TAG, "failure");
-                                    Log.e(TAG, "code is " + code);
-                                    Log.e(TAG, "message is " + message);
-                                    showSnackBar(getApplicationContext(), "", message, "", 0, Snackbar.LENGTH_SHORT);
-
-
-                                }*/
-
+                                }
 
                             } catch (JSONException e) {
                                 e.printStackTrace();
@@ -839,7 +622,7 @@ public class StartActivity extends PortraitActivity implements HomeScreenViewFra
                         public void onError(VolleyError volleyError) {
 
                             if ((volleyError instanceof NoConnectionError) || (volleyError instanceof TimeoutError)) {
-                                showSnackBar(getApplicationContext(), "LoginWS", getResources().getString(R.string.No_network), getString(R.string.Retry), 0, Snackbar.LENGTH_INDEFINITE);
+                                showSnackBar(getApplicationContext(), "loginWS", getResources().getString(R.string.No_network), getString(R.string.Retry), 0, Snackbar.LENGTH_INDEFINITE);
                             } else {
                                 try {
                                     String responseBody = new String(volleyError.networkResponse.data, "utf-8");
@@ -866,19 +649,9 @@ public class StartActivity extends PortraitActivity implements HomeScreenViewFra
                             }
 
 
-                           /* if ((volleyError instanceof NoConnectionError) || (volleyError instanceof TimeoutError))
-                            {
-                                showSnackBar(getApplicationContext(), "LoginWS", getResources().getString(R.string.No_network), getString(R.string.Retry), 0, Snackbar.LENGTH_INDEFINITE);
-
-                            }
-                            else if ((volleyError instanceof ServerError) || (volleyError instanceof AuthFailureError))
-                            {
-                                showSnackBar(getApplicationContext(), "", getResources().getString(R.string.Unknown_error), "", 0, Snackbar.LENGTH_SHORT);
-                            }*/
-
                         }
                     },
-                    AllLinsks.login + URLEncoder.encode(StartActivity.this.et_mobile_login.getText().toString(), "UTF-8"),
+                    AllLinsks.login + URLEncoder.encode(mobile_number, "UTF-8"),
                     prgMessage,
                     prgboolean
             );
@@ -903,16 +676,16 @@ public class StartActivity extends PortraitActivity implements HomeScreenViewFra
 
         if (registerscreen) {
             try {
-                Log.e(TAG, "link is " + AllLinsks.verify + URLEncoder.encode(StartActivity.this.et_mobile_register.getText().toString(), "UTF-8") + "/" + data);
-                OTPLink = AllLinsks.verify + URLEncoder.encode(StartActivity.this.et_mobile_register.getText().toString(), "UTF-8") + "/" + data;
+                Log.e(TAG, "link is " + AllLinsks.verify + URLEncoder.encode(userName, "UTF-8") + "/" + data);
+                OTPLink = AllLinsks.verify + URLEncoder.encode(mobileNumber, "UTF-8") + "/" + data;
             } catch (UnsupportedEncodingException e) {
                 e.printStackTrace();
             }
 
         } else if (loginscreen) {
             try {
-                Log.e(TAG, "link is " + AllLinsks.authenticate + URLEncoder.encode(StartActivity.this.et_mobile_login.getText().toString(), "UTF-8") + "/" + data);
-                OTPLink = AllLinsks.authenticate + URLEncoder.encode(StartActivity.this.et_mobile_login.getText().toString(), "UTF-8") + "/" + data;
+                Log.e(TAG, "link is " + AllLinsks.authenticate + URLEncoder.encode(mobileNumber, "UTF-8") + "/" + data);
+                OTPLink = AllLinsks.authenticate + URLEncoder.encode(mobileNumber, "UTF-8") + "/" + data;
             } catch (UnsupportedEncodingException e) {
                 e.printStackTrace();
             }
@@ -958,10 +731,10 @@ public class StartActivity extends PortraitActivity implements HomeScreenViewFra
 
                                 if (registerscreen) {
                                     SettingPreffrence.setuser_token(StartActivity.this, token_code);
-                                    SettingPreffrence.setuser_mobilenumber(StartActivity.this, et_mobile_register.getText().toString());
+                                    SettingPreffrence.setuser_mobilenumber(StartActivity.this, mobileNumber);
                                     SettingPreffrence.setisLoggedIn(StartActivity.this, true);
-                                    SettingPreffrence.setuser_phonetoken(StartActivity.this, et_mobile_register.getText().toString() + "/" + token_code);
-                                    SettingPreffrence.setuser_name(StartActivity.this, et_userName.getText().toString());
+                                    SettingPreffrence.setuser_phonetoken(StartActivity.this, mobileNumber + "/" + token_code);
+                                    SettingPreffrence.setuser_name(StartActivity.this, userName);
 
                                     Log.e(TAG, "getPREF_Phone_Token is " + SettingPreffrence.getPREF_Phone_Token(StartActivity.this));
 
@@ -972,9 +745,9 @@ public class StartActivity extends PortraitActivity implements HomeScreenViewFra
                                 } else if (loginscreen) {
 
                                     SettingPreffrence.setuser_token(StartActivity.this, token_code);
-                                    SettingPreffrence.setuser_mobilenumber(StartActivity.this, et_mobile_login.getText().toString());
+                                    SettingPreffrence.setuser_mobilenumber(StartActivity.this, mobileNumber);
                                     SettingPreffrence.setisLoggedIn(StartActivity.this, true);
-                                    SettingPreffrence.setuser_phonetoken(StartActivity.this, et_mobile_login.getText().toString() + "/" + token_code);
+                                    SettingPreffrence.setuser_phonetoken(StartActivity.this, mobileNumber + "/" + token_code);
                                     Log.e(TAG, "getPREF_Phone_Token is " + SettingPreffrence.getPREF_Phone_Token(StartActivity.this));
 
                                     Boolean hasGroups = jsonobject.getBoolean("hasGroups");
@@ -998,18 +771,7 @@ public class StartActivity extends PortraitActivity implements HomeScreenViewFra
 
                                 }
 
-                                // et_otp.setText("");
-
-
-                            }/* else if (status.equalsIgnoreCase("Failure")) {
-                                Log.e(TAG, "failure");
-                                Log.e(TAG, "code is " + code);
-                                Log.e(TAG, "message is " + message);
-                                showSnackBar(getApplicationContext(), "", message, "", 0, Snackbar.LENGTH_SHORT);
-
-
                             }
-*/
 
                         } catch (JSONException e) {
                             e.printStackTrace();
@@ -1046,17 +808,6 @@ public class StartActivity extends PortraitActivity implements HomeScreenViewFra
                             }
                         }
 
-
-                      /*  if ((volleyError instanceof NoConnectionError) || (volleyError instanceof TimeoutError))
-                        {
-                            showSnackBar(getApplicationContext(), "OtpWS", getResources().getString(R.string.No_network), getString(R.string.Retry), 0, Snackbar.LENGTH_INDEFINITE);
-
-                        }
-                        else if ((volleyError instanceof ServerError) || (volleyError instanceof AuthFailureError))
-                        {
-                            showSnackBar(getApplicationContext(), "", getResources().getString(R.string.Unknown_error), "", 0, Snackbar.LENGTH_SHORT);
-                        }
-*/
                     }
                 },
                 OTPLink,
@@ -1075,9 +826,6 @@ public class StartActivity extends PortraitActivity implements HomeScreenViewFra
 
         snackBar = Snackbar.make(rlStart, message, length);
         View view = snackBar.getView();
-        //  view.setBackgroundColor(getResources().getColor(R.color.red));
-      /*  TextView tv=(TextView)view.findViewById(android.support.design.R.id.snackbar_text);
-        tv.setTextColor(getResources().getColor(R.color.red));*/
 
         snackBar.setActionTextColor(Color.RED);
         if (!textLabel.isEmpty())//show action button depending on Label
@@ -1087,13 +835,13 @@ public class StartActivity extends PortraitActivity implements HomeScreenViewFra
                 public void onClick(View v) {
                     if (type.equals("RegisterWS"))//take action depending on type
                     {
-                        RegisterWS();
+                        // RegisterWS();
                         snackBar.dismiss();
                         // getNotification();
 
-                    } else if (type.equals("LoginWS")) {
+                    } else if (type.equals("loginWS")) {
 
-                        LoginWS();
+                        //  loginWS(et_mobile_register);
                         snackBar.dismiss();
 
                     } else if (type.equals("OtpWS")) {
@@ -1107,7 +855,6 @@ public class StartActivity extends PortraitActivity implements HomeScreenViewFra
 
         }
         Log.e(TAG, "show");
-        //utilClass.showToast(getApplicationContext(),"showSnackBar");
 
         snackBar.show();
     }
@@ -1154,5 +901,38 @@ public class StartActivity extends PortraitActivity implements HomeScreenViewFra
         }, 500L);
     }
 
+    @Override
+    public void register(EditText user_name, EditText mobile_number) {
+        registerFormValidation(user_name, mobile_number);
 
+    }
+
+    @Override
+    public void onTextResendClick() {
+        textResend();
+
+    }
+
+    @Override
+    public void onOtpSubmitButtonClick(EditText et_otp) {
+        otpFormValidation(et_otp);
+
+    }
+
+    @Override
+    public void login(EditText et_mobile_login) {
+        loginFormValidation(et_mobile_login);
+    }
+
+    private Fragment getVisibleFragment() {
+        FragmentManager fragmentManager = getSupportFragmentManager();
+        List<Fragment> fragments = fragmentManager.getFragments();
+        if (fragments != null) {
+            for (Fragment fragment : fragments) {
+                if (fragment != null && fragment.isVisible())
+                    return fragment;
+            }
+        }
+        return null;
+    }
 }

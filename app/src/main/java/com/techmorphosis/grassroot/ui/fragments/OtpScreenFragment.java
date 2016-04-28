@@ -3,7 +3,6 @@ package com.techmorphosis.grassroot.ui.fragments;
 import android.app.Activity;
 import android.content.Context;
 import android.os.Bundle;
-import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -24,6 +23,7 @@ import butterknife.OnClick;
 public class OtpScreenFragment extends Fragment {
 
 
+    @BindView(R.id.et_otp)
     EditText et_otp;
 
     @BindView(R.id.txt_resend)
@@ -33,6 +33,17 @@ public class OtpScreenFragment extends Fragment {
     Button bt_submit_otp;
 
     private OnOtpScreenFragmentListener onOtpScreenFragmentListener;
+
+
+    public static OtpScreenFragment newInstance(String data){
+        OtpScreenFragment otpScreenFragment = new OtpScreenFragment();
+        Bundle args = new Bundle();
+        args.putString("verification_code", data);
+        otpScreenFragment.setArguments(args);
+
+        return otpScreenFragment;
+    }
+
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -45,6 +56,7 @@ public class OtpScreenFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater,  ViewGroup container,  Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.container_otp, container, false);
         ButterKnife.bind(this, view);
+        et_otp.setText(getArguments().getString("verification_code"));
         return view;
     }
 
@@ -55,6 +67,7 @@ public class OtpScreenFragment extends Fragment {
         Activity activity =(Activity)context;
         try{
             onOtpScreenFragmentListener = (OnOtpScreenFragmentListener)activity;
+
         }catch (ClassCastException e){
 
         }
@@ -63,10 +76,10 @@ public class OtpScreenFragment extends Fragment {
 
     @OnClick(R.id.bt_submit_otp)
     public void submitButtonClicked(){
-        onOtpScreenFragmentListener.onSubmitClick();
+        onOtpScreenFragmentListener.onOtpSubmitButtonClick(et_otp);
     }
 
-    @OnClick
+    @OnClick(R.id.txt_resend)
     public void textResendClicked(){
         onOtpScreenFragmentListener.onTextResendClick();
     }
@@ -78,9 +91,9 @@ public class OtpScreenFragment extends Fragment {
 
     public interface OnOtpScreenFragmentListener {
 
-         void onTextResendClick();
+        void onTextResendClick();
 
-         void onSubmitClick();
+        void onOtpSubmitButtonClick(EditText et_otp);
 
 
 

@@ -8,12 +8,14 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.AnimationUtils;
+import android.widget.Button;
 import android.widget.EditText;
 
 import com.techmorphosis.grassroot.R;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import butterknife.OnClick;
 
 /**
  * Created by paballo on 2016/04/26.
@@ -22,6 +24,9 @@ public class LoginScreenView extends Fragment {
 
     @BindView(R.id.et_mobile_login)
     EditText et_mobile_login;
+
+    @BindView(R.id.bt_login)
+    Button bt_register;
 
 
     private OnLoginScreenInteractionListener onLoginScreenInteractionListener;
@@ -64,7 +69,14 @@ public class LoginScreenView extends Fragment {
     }
 
 
+    @OnClick(R.id.bt_login)
+    public void onRegisterButtonClick(){
+        onLoginScreenInteractionListener.login(et_mobile_login);
+    }
+
     public interface OnLoginScreenInteractionListener {
+
+        void login(EditText et_mobile_login);
 
     }
 }

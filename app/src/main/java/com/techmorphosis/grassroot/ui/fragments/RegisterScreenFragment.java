@@ -15,6 +15,7 @@ import com.techmorphosis.grassroot.R;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import butterknife.OnClick;
 
 /**
  * Created by paballo on 2016/04/26.
@@ -68,8 +69,15 @@ public class RegisterScreenFragment extends Fragment {
         super.onDetach();
     }
 
+    @OnClick(R.id.bt_register)
+    public void onRegisteButtonClick(){
+        onRegisterScreenInteractionListener.register(et_userName,et_mobile_register);
+
+    }
+
 
     public interface OnRegisterScreenInteractionListener {
+        void register(EditText user_name, EditText mobile_number);
 
     }
 }
