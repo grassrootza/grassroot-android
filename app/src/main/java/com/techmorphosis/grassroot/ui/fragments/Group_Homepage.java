@@ -37,7 +37,7 @@ import com.techmorphosis.grassroot.ui.activities.Group_Activities;
 import com.techmorphosis.grassroot.ui.activities.Join_Request;
 import com.techmorphosis.grassroot.ui.activities.SwipeableRecyclerViewTouchListener;
 import com.techmorphosis.grassroot.utils.L;
-import com.techmorphosis.grassroot.utils.SettingPreffrence;
+import com.techmorphosis.grassroot.utils.SettingPreference;
 import com.techmorphosis.grassroot.utils.UtilClass;
 import com.techmorphosis.grassroot.utils.listener.ErrorListenerVolley;
 import com.techmorphosis.grassroot.utils.listener.ResponseListenerVolley;
@@ -279,7 +279,7 @@ public class Group_Homepage extends android.support.v4.app.Fragment implements V
 
                             }
                         },
-                        AllLinsks.usergroups + SettingPreffrence.getuser_mobilenumber(getActivity()) + "/" + SettingPreffrence.getuser_token(getActivity())
+                        AllLinsks.usergroups + SettingPreference.getuser_mobilenumber(getActivity()) + "/" + SettingPreference.getuser_token(getActivity())
                         ,
                         getString(R.string.prg_message)
                         ,

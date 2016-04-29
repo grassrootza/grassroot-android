@@ -19,7 +19,7 @@ import com.techmorphosis.grassroot.R;
 import com.techmorphosis.grassroot.RecyclerView.RecyclerTouchListener;
 import com.techmorphosis.grassroot.adapters.NavigationDrawerAdapter;
 import com.techmorphosis.grassroot.models.NavDrawerItem;
-import com.techmorphosis.grassroot.utils.SettingPreffrence;
+import com.techmorphosis.grassroot.utils.SettingPreference;
 
 import java.util.ArrayList;
 
@@ -119,7 +119,7 @@ public class NavigationDrawerFragment extends Fragment {
         mDrawerRecyclerView = (RecyclerView) view.findViewById(R.id.rv_nav_items);
         txtVersion = (TextView) view.findViewById(R.id.txt_version);
         displayName = (TextView) view.findViewById(R.id.displayName);
-        displayName.setText(SettingPreffrence.getuser_name(getActivity()));
+        displayName.setText(SettingPreference.getuser_name(getActivity()));
     }
 
     public  void Adapter()

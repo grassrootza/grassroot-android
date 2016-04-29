@@ -17,6 +17,8 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 
+;
+
 /**
  * Created by paballo on 2016/04/26.
  */

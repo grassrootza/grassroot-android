@@ -32,7 +32,7 @@ import com.techmorphosis.grassroot.RecyclerView.RecyclerTouchListener;
 import com.techmorphosis.grassroot.adapters.JoinRequestAdapter;
 import com.techmorphosis.grassroot.models.Join_RequestModel;
 import com.techmorphosis.grassroot.ui.fragments.AlertDialogFragment;
-import com.techmorphosis.grassroot.utils.SettingPreffrence;
+import com.techmorphosis.grassroot.utils.SettingPreference;
 import com.techmorphosis.grassroot.utils.UtilClass;
 import com.techmorphosis.grassroot.utils.listener.AlertDialogListener;
 import com.techmorphosis.grassroot.utils.listener.ErrorListenerVolley;
@@ -405,7 +405,7 @@ public class Join_Request extends PortraitActivity implements OnClickListener{
         Log.e(TAG, "Join_RequestWS");
 
 
-        Log.e(TAG,"Join_RequestWS link is "  + AllLinsks.joinrequest+SettingPreffrence.getuser_mobilenumber(Join_Request.this)+"/"+ SettingPreffrence.getuser_token(Join_Request.this));
+        Log.e(TAG,"Join_RequestWS link is "  + AllLinsks.joinrequest+ SettingPreference.getuser_mobilenumber(Join_Request.this)+"/"+ SettingPreference.getuser_token(Join_Request.this));
 
         NetworkCall networkCall = new NetworkCall(
                 //context
@@ -491,7 +491,7 @@ public class Join_Request extends PortraitActivity implements OnClickListener{
                     }
                 },
 
-                AllLinsks.joinrequest+SettingPreffrence.getuser_mobilenumber(Join_Request.this)+"/"+ SettingPreffrence.getuser_token(Join_Request.this),
+                AllLinsks.joinrequest+ SettingPreference.getuser_mobilenumber(Join_Request.this)+"/"+ SettingPreference.getuser_token(Join_Request.this),
                 prgMessage,
                 prgboolean
 
