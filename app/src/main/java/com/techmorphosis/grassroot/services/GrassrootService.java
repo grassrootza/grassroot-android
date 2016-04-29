@@ -2,18 +2,12 @@ package com.techmorphosis.grassroot.services;
 
 import com.google.gson.GsonBuilder;
 import com.techmorphosis.grassroot.services.model.GenericResponse;
-import com.techmorphosis.grassroot.services.model.token.TokenResponse;
-
-import org.w3c.dom.Comment;
-
-import java.util.List;
+import com.techmorphosis.grassroot.services.model.TokenResponse;
 
 import retrofit.RequestInterceptor;
 import retrofit.RestAdapter;
 import retrofit.converter.GsonConverter;
-import retrofit.http.POST;
 import retrofit.http.Path;
-import retrofit.http.Query;
 import retrofit.http.GET;
 import rx.Observable;
 

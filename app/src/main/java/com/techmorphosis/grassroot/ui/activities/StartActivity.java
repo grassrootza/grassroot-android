@@ -25,8 +25,8 @@ import com.techmorphosis.grassroot.Network.NetworkCheck;
 import com.techmorphosis.grassroot.R;
 import com.techmorphosis.grassroot.services.GrassrootService;
 import com.techmorphosis.grassroot.services.model.GenericResponse;
-import com.techmorphosis.grassroot.services.model.token.Data;
-import com.techmorphosis.grassroot.services.model.token.TokenResponse;
+import com.techmorphosis.grassroot.services.model.Token;
+import com.techmorphosis.grassroot.services.model.TokenResponse;
 import com.techmorphosis.grassroot.ui.fragments.HomeScreenViewFragment;
 import com.techmorphosis.grassroot.ui.fragments.LoginScreenView;
 import com.techmorphosis.grassroot.ui.fragments.OtpScreenFragment;
@@ -63,7 +63,6 @@ public class StartActivity extends PortraitActivity implements HomeScreenViewFra
     private DisplayMetrics displayMetrics;
     private int height;
     private boolean otpscreen = false;
-    private boolean homescreen = false;
     private boolean registerscreen = false;
     public boolean loginscreen = false;
     private ProgressDialog progressDialog;
@@ -187,7 +186,6 @@ public class StartActivity extends PortraitActivity implements HomeScreenViewFra
 
     private void setUpHomeScreen() {
 
-        homescreen = true;
         otpscreen = false;
         loginscreen = false;
         registerscreen = false;
@@ -199,7 +197,6 @@ public class StartActivity extends PortraitActivity implements HomeScreenViewFra
 
     private void setUpRegisterScreen() {
         data = "";
-        homescreen = false;
         otpscreen = false;
         registerscreen = true;
         loginscreen = false;
@@ -210,7 +207,6 @@ public class StartActivity extends PortraitActivity implements HomeScreenViewFra
 
     private void setUpLoginScreen() {
         data = "";
-        homescreen = false;
         otpscreen = false;
         registerscreen = false;
         loginscreen = true;
@@ -291,14 +287,12 @@ public class StartActivity extends PortraitActivity implements HomeScreenViewFra
                     @Override
                     public void onCompleted() {
                         progressDialog.dismiss();
-
                     }
                     @Override
                     public void onError(Throwable e) {
                         progressDialog.dismiss();
                         showSnackBar(getApplicationContext(), "", getResources().getString(R.string.User_not_registered), "", 0, Snackbar.LENGTH_SHORT);
                     }
-
                     @Override
                     public void onNext(GenericResponse response) {
                         if(response.getStatus().contentEquals("SUCCESS")){
@@ -315,12 +309,8 @@ public class StartActivity extends PortraitActivity implements HomeScreenViewFra
                             setUpOtpScreen();
                         }
 
-
-
                     }
                 });
-
-
 
     }
 
@@ -376,12 +366,12 @@ public class StartActivity extends PortraitActivity implements HomeScreenViewFra
                     @Override
                     public void onError(Throwable e) {
                         progressDialog.dismiss();
-                        showSnackBar(getApplicationContext(), "", getResources().getString(R.string.User_not_registered), "", 0, Snackbar.LENGTH_SHORT);
+                        showSnackBar(getApplicationContext(), "", getResources().getString(R.string.INVALID_TOKEN), "", 0, Snackbar.LENGTH_SHORT);
                     }
                     @Override
                     public void onNext(TokenResponse response) {
                         if(response.getStatus().contentEquals("SUCCESS")){
-                            Data token = response.getData();
+                            Token token = response.getToken();
                             SettingPreference.setuser_token(StartActivity.this, token.getCode());
                             SettingPreference.setuser_mobilenumber(StartActivity.this, mobileNumber);
                             SettingPreference.setisLoggedIn(StartActivity.this, true);
@@ -414,13 +404,13 @@ public class StartActivity extends PortraitActivity implements HomeScreenViewFra
                         RetrofitError error = (RetrofitError)e;
                         Log.e(TAG, String.valueOf(error.getResponse().getStatus()));
                         progressDialog.dismiss();
-                        showSnackBar(getApplicationContext(), "", getResources().getString(R.string.User_not_registered), "", 0, Snackbar.LENGTH_SHORT);
+                        showSnackBar(getApplicationContext(), "", getResources().getString(R.string.INVALID_TOKEN), "", 0, Snackbar.LENGTH_SHORT);
                     }
 
                     @Override
                     public void onNext(TokenResponse response) {
                         if(response.getStatus().contentEquals("SUCCESS")){
-                            Data token = response.getData();
+                            Token token = response.getToken();
                             SettingPreference.setuser_token(StartActivity.this, token.getCode());
                             SettingPreference.setuser_mobilenumber(StartActivity.this, mobileNumber);
                             SettingPreference.setisLoggedIn(StartActivity.this, true);
@@ -453,8 +443,6 @@ public class StartActivity extends PortraitActivity implements HomeScreenViewFra
                 });
 
     }
-
-
 
     public void showSnackBar(Context context, final String type, String message, String textLabel, int color, int length) {
 
