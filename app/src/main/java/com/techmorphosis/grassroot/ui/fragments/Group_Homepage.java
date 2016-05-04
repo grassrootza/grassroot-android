@@ -54,6 +54,7 @@ import rx.schedulers.Schedulers;
 public class Group_Homepage extends android.support.v4.app.Fragment {
 
     UtilClass utilClass;
+    private LinearLayoutManager mLayoutManager;
 
     @BindView(R.id.rl_ghp_root)
     RelativeLayout rlGhpRoot;
@@ -73,7 +74,6 @@ public class Group_Homepage extends android.support.v4.app.Fragment {
     ImageView imServerError;
     @BindView(R.id.im_no_internet)
     ImageView imNoInternet;
-    private LinearLayoutManager mLayoutManager;
     @BindView(R.id.menu1)
     FloatingActionMenu menu1;
     @BindView(R.id.ic_fab_join_group)
@@ -91,10 +91,13 @@ public class Group_Homepage extends android.support.v4.app.Fragment {
     RelativeLayout rlSimple;
     @BindView(R.id.progressBar)
     ProgressBar mProgressBar;
+
+
+    private Group_homepageAdapter group_homepageAdapter;
+
     private ArrayList<Group> sortedList;
     private ArrayList<Group> organizerList;
     private ArrayList<Group> memberList;
-    private Group_homepageAdapter group_homepageAdapter;
     private ArrayList<Group> groupList;
     private ArrayList<Group> groupListclone;
 
@@ -106,6 +109,7 @@ public class Group_Homepage extends android.support.v4.app.Fragment {
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        Log.d(TAG, "Inside group homepage on create view ... onCreateView");
         View view = inflater.inflate(R.layout.activity_group__homepage, container, false);
         ButterKnife.bind(this, view);
         return view;
@@ -113,15 +117,21 @@ public class Group_Homepage extends android.support.v4.app.Fragment {
 
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
+        Log.d(TAG, "Inside group homepage on create view ... onActivityCreated");
         super.onCreate(savedInstanceState);
         context = getActivity();
         findAllViews();
         init();
-        Recylerview();
+        RecylerView();
         userGroupWS();
     }
 
+    /**
+     * Method executed to retrieve and populate list of groups. Note: this does not handle the absence
+     * of a connection very well, at all. Will probably need to rethink.
+     */
     private void userGroupWS() {
+        Log.d(TAG, "Inside group homepage on create view ... userGroupWS");
         //preExecute
         mProgressBar.setVisibility(View.VISIBLE);
         rcGhp.setVisibility(View.INVISIBLE);
@@ -132,6 +142,7 @@ public class Group_Homepage extends android.support.v4.app.Fragment {
 
         String mobileNumber = SettingPreference.getuser_mobilenumber(getActivity());
         String code = SettingPreference.getuser_token(getActivity());
+
         grassrootRestService.getApi().getUserGroups(mobileNumber, code)
                 .subscribeOn(Schedulers.newThread())
                 .observeOn(AndroidSchedulers.mainThread())
@@ -148,14 +159,13 @@ public class Group_Homepage extends android.support.v4.app.Fragment {
                         if (((RetrofitError) e).getKind().equals(RetrofitError.Kind.NETWORK)) {
                             errorLayout.setVisibility(View.VISIBLE);
                             imNoInternet.setVisibility(View.VISIBLE);
-
                         } else {
                             errorLayout.setVisibility(View.VISIBLE);
                             imNoInternet.setVisibility(View.VISIBLE);
                             Snackbar.make(rlGhpRoot, getString(R.string.Unknown_error), Snackbar.LENGTH_INDEFINITE).show();
                         }
-
                     }
+
                     @Override
                     public void onNext(GroupResponse response) {
                         groupList.addAll(response.getGroups());
@@ -164,15 +174,14 @@ public class Group_Homepage extends android.support.v4.app.Fragment {
                         group_homepageAdapter.addData(groupList);
                         ivGhpSearch.setEnabled(true);
                         ivGhpSort.setEnabled(true);
-
                     }
-
                 });
-
     }
 
 
-    private void Recylerview() {
+    private void RecylerView() {
+
+        Log.d(TAG, "Inside group homepage on create view ... RecyclerView");
         mLayoutManager = new LinearLayoutManager(getActivity());
         rcGhp.setLayoutManager(mLayoutManager);
         rcGhp.setItemAnimator(new CustomItemAnimator());
@@ -184,6 +193,7 @@ public class Group_Homepage extends android.support.v4.app.Fragment {
                 rcGhp,
                 R.id.main_view,
                 R.id.main_background_view,
+
                 new SwipeableRecyclerViewTouchListener.SwipeListener() {
                     @Override
                     public boolean canSwipe(int position) {
@@ -193,13 +203,11 @@ public class Group_Homepage extends android.support.v4.app.Fragment {
                         } catch (Exception e) {
                             e.printStackTrace();
                         }
-
                         Intent blank = new Intent(getActivity(), Group_Activities.class);
                         blank.putExtra("groupid", groupList.get(position).getId());
                         blank.putExtra("groupName", groupList.get(position).getGroupName());
                         startActivity(blank);
                         return false;
-
                     }
 
                     @Override
@@ -214,6 +222,7 @@ public class Group_Homepage extends android.support.v4.app.Fragment {
     }
 
     private void init() {
+        Log.d(TAG, "Inside group homepage on create view ... init method");
         utilClass = new UtilClass();
         groupList = new ArrayList<>();
         groupListclone = new ArrayList<>();
@@ -223,7 +232,7 @@ public class Group_Homepage extends android.support.v4.app.Fragment {
     }
 
     private void findAllViews() {
-
+        Log.d(TAG, "Inside group homepage on create view ... findAllViews");
         ivGhpSort.setOnClickListener(ivGhpSort());
         menu1.setOnMenuToggleListener(new FloatingActionMenu.OnMenuToggleListener() {
             @Override
@@ -240,7 +249,6 @@ public class Group_Homepage extends android.support.v4.app.Fragment {
                     icFabJoinGroup.setVisibility(View.GONE);
                     text = "Menu closed";
                     // menu2.removeMenuButton(programFab2);
-
                 }
             }
         });
@@ -271,7 +279,6 @@ public class Group_Homepage extends android.support.v4.app.Fragment {
         //convert to Lowercase and then pass to adapter
         String searchwords = s.toLowerCase(Locale.getDefault());
         group_homepageAdapter.filter(searchwords);
-
     }
 
     @OnClick(R.id.iv_ghp_drawer)
@@ -496,31 +503,29 @@ public class Group_Homepage extends android.support.v4.app.Fragment {
         button.setOnLongClickListener(new View.OnLongClickListener() {
             @Override
             public boolean onLongClick(View v) {
-                Log.e(TAG, "onLongClick ");
-
-
+                Log.e(TAG, "Inside group homepage ... onLongClick at position ... " + position);
                 Boolean Meeting = false, ToDo = false, Vote = false;
                 Group dialog_model = groupList.get(position);
 
+                // todo: refactor this. turn permissions into a hashsetset and use contains, instead of loop.
                 if (dialog_model.getPermissions().size() > 0) {
                     for (int i = 0; i < dialog_model.getPermissions().size(); i++) {
                         switch (dialog_model.getPermissions().get(i)) {
                             case "GROUP_PERMISSION_CREATE_GROUP_VOTE":
                                 Vote = true;
                                 break;
-
                             case "GROUP_PERMISSION_CREATE_LOGBOOK_ENTRY":
                                 ToDo = true;
                                 break;
-
                             case "GROUP_PERMISSION_CREATE_GROUP_MEETING":
                                 Meeting = true;
                                 break;
                         }
-
                     }
                 }
+
                 Group_ActivityMenuDialog dialog = new Group_ActivityMenuDialog();
+
                 Bundle args = new Bundle();
                 args.putBoolean("Meeting", Meeting);
                 args.putBoolean("Vote", Vote);

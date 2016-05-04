@@ -2,6 +2,7 @@ package com.techmorphosis.grassroot.adapters;
 
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -23,12 +24,11 @@ public class Group_ActivitiesAdapter extends RecyclerView.Adapter<Group_Activiti
     private final Group_Activities activity;
     private  ArrayList<Group_ActivitiesModel> data;
     private Group_ActivitiesModel model;
-    private static final String TAG = "Group_ActivitiesAdapter";
+    private static final String TAG = Group_ActivitiesAdapter.class.getCanonicalName();
 
-    public Group_ActivitiesAdapter(ArrayList<Group_ActivitiesModel> arrayList, Group_Activities group_activities)
-    {
+    public Group_ActivitiesAdapter(ArrayList<Group_ActivitiesModel> arrayList, Group_Activities group_activities) {
         this.data = arrayList;
-        this.activity  = group_activities;
+        this.activity = group_activities;
      }
 
     @Override
@@ -39,61 +39,30 @@ public class Group_ActivitiesAdapter extends RecyclerView.Adapter<Group_Activiti
     }
 
     @Override
-    public void onBindViewHolder(GA_ViewHolder holder, int position)
-    {
-        Group_ActivitiesModel model=data.get(position);
+    public void onBindViewHolder(GA_ViewHolder holder, int position) {
+        Log.d(TAG, "Inside onBindViewHolder ... at position = " + position);
 
+        Group_ActivitiesModel model = data.get(position);
 
-           holder.txtTiltle.setText(model.title );
-      holder.txtGroupownername.setText("Posted by " + model.name);
-       holder.txtGroupdesc.setText(model.description);
+        holder.txtTiltle.setText(model.title );
+        holder.txtGroupownername.setText("Posted by " + model.name);
+        holder.txtGroupdesc.setText(model.description);
         holder.datetime.setText(model.deadline);
-
-
-
 
         if (model.type.equalsIgnoreCase("vote")){
             holder.iv_type.setImageResource(R.drawable.ic_home_vote_active);
             votemeeting(holder, model,position);
         }
+
         else if (model.type.equalsIgnoreCase("meeting")){
             holder.iv_type.setImageResource(R.drawable.ic_home_call_meeting_active);
-        votemeeting(holder, model, position);
+            votemeeting(holder, model, position);
         }
+
         else if (model.type.equalsIgnoreCase("todo")){
             holder.iv_type.setImageResource(R.drawable.ic_home_to_do_active);
             ToDo(holder, model,position);
         }
-
-
-
-
-//        switch (model.type.toLowerCase())
-//        {
-//            case "vote" :
-//                holder.iv_type.setImageResource(R.drawable.ic_home_vote_active);
-//                votemeeting(holder, model);
-//                break;
-//
-//
-//            case "meeting" :
-//                holder.iv_type.setImageResource(R.drawable.ic_home_call_meeting_active);
-//                votemeeting(holder, model);
-//                break;
-//
-//
-//            case "todo" :
-//                holder.iv_type.setImageResource(R.drawable.ic_home_to_do_active);
-//                ToDo(holder, model);
-//                break;
-//            default:
-//
-//                break;
-//
-//        }
-
-
-
     }
 
 //    private void setData(int position, GA_ViewHolder holder)
@@ -189,95 +158,84 @@ public class Group_ActivitiesAdapter extends RecyclerView.Adapter<Group_Activiti
 
     }
 
-    private void votemeeting(GA_ViewHolder holder, Group_ActivitiesModel model1, int position)
-    {
-       // model=data.get(position);
-        Group_ActivitiesModel model=model1;
+    private void votemeeting(GA_ViewHolder holder, Group_ActivitiesModel model1, int position) {
 
-        if (model.hasResponded)
-        {
-
+        Group_ActivitiesModel model = model1;
+        if (model.hasResponded) {
             holder.iv1.setImageResource(R.drawable.ic_vote_tick_active);
             canAction(holder, model,position);
-        }
-        else if (!model.hasResponded)
-        {
-
-            //hasResponded is false
+        } else if (!model.hasResponded) {
             holder.iv1.setImageResource(R.drawable.ic_vote_tick_inactive);
             canAction(holder, model, position);
         }
-
-
     }
 
     private void canAction(GA_ViewHolder holder, Group_ActivitiesModel model1, int position) {
-
        // model=data.get(position);
-
         Group_ActivitiesModel model=model1;
-
         if (model.canAction) {
-
-
-            if (model.hasResponded)
-            {  //hasResponded is true
-
-
-
-                //canAction is true
-                canActionIsTrue(holder, model,position);
+            if (model.hasResponded) {
+                hasRespondedAndCanAction(holder, model,position);
+            } else {
+                hasNotRespondedButCanAction(holder, model,position);
             }
-            else
-            {
-                //hasResponded is false
-
-
-
-                //canAction2 is true
-                canActionIsTrue2(holder, model,position);
-
-            }
-
-
-
-        }
-        else if (!model.canAction)
-        {
-
-            //canAction is false
+        } else if (!model.canAction) {
             canActionIsFalse(holder, model, position);
-
-
         }
     }
 
-    private void canActionIsTrue2(GA_ViewHolder holder, Group_ActivitiesModel model, int position)
-    {
+    private void hasRespondedAndCanAction(GA_ViewHolder holder, Group_ActivitiesModel model1, int position) {
+        Group_ActivitiesModel model= model1;
 
-        //all grey
+        if (model.reply.equalsIgnoreCase("yes")) {
+            holder.iv2.setImageResource(R.drawable.ic_vote_active); // thumbs up
+            holder.iv3.setImageResource(R.drawable.ic_no_vote_inactive); // thumbs down
+
+            if (model.Thumpsup.equalsIgnoreCase("enableclick")) {
+                activity.thumps_Up(holder.iv2,position);
+            } else {
+                holder.iv2.setEnabled(false);
+            }
+
+            if (model.Thumpsdown.equalsIgnoreCase("enableclick")) {
+                activity.thumps_Down(holder.iv3, position);
+            } else {
+                holder.iv3.setEnabled(false);
+            }
+        }  else  if (model.reply.equalsIgnoreCase("no")) {
+            holder.iv2.setImageResource(R.drawable.ic_vote_inactive); // thumbs up
+            holder.iv3.setImageResource(R.drawable.ic_no_vote_active); // thumbs down
+
+            if (model.Thumpsup.equalsIgnoreCase("enableclick")) {
+                activity.thumps_Up(holder.iv2,position);
+            } else {
+                holder.iv2.setEnabled(false);
+            }
+
+            if (model.Thumpsdown.equalsIgnoreCase("enableclick")) {
+                activity.thumps_Down(holder.iv3, position);
+            } else {
+                holder.iv3.setEnabled(false);
+            }
+        }
+    }
+
+    private void hasNotRespondedButCanAction(GA_ViewHolder holder, Group_ActivitiesModel model, int position)
+    { //all grey
         //Thumbs down
         holder.iv3.setImageResource(R.drawable.ic_no_vote_inactive);
         //Thumbs up
         holder.iv2.setImageResource(R.drawable.ic_vote_inactive);
 
-        if (model.Thumpsup.equalsIgnoreCase("enableclick"))
-        {
-
+        if (model.Thumpsup.equalsIgnoreCase("enableclick")) {
             activity.thumps_Up(holder.iv2,position);
-        }
-        else
-        {
+        } else {
             holder.iv2.setEnabled(false);
         }
 
-        if (model.Thumpsdown.equalsIgnoreCase("enableclick"))
-        {
+        if (model.Thumpsdown.equalsIgnoreCase("enableclick")) {
             activity.thumps_Down(holder.iv3, position);
-
-        }
-        else
-        {
+        } else {
             holder.iv3.setEnabled(false);
         }
 
@@ -379,84 +337,10 @@ public class Group_ActivitiesAdapter extends RecyclerView.Adapter<Group_Activiti
             {
                 holder.iv3.setEnabled(false);
             }
-
         }
-
-
-
-
     }
 
-    private void  canActionIsTrue(GA_ViewHolder holder, Group_ActivitiesModel model1, int position)
-    {
 
-       // model=data.get(position);
-        Group_ActivitiesModel model=model1;
-
-        if (model.reply.equalsIgnoreCase("Yes"))
-        {
-
-
-            //Thumbs up
-            holder.iv2.setImageResource(R.drawable.ic_vote_active);
-
-            //Thumbs down
-            holder.iv3.setImageResource(R.drawable.ic_no_vote_inactive);
-
-            if (model.Thumpsup.equalsIgnoreCase("enableclick"))
-            {
-
-                activity.thumps_Up(holder.iv2,position);
-            }
-            else
-            {
-                holder.iv2.setEnabled(false);
-            }
-
-            if (model.Thumpsdown.equalsIgnoreCase("enableclick"))
-            {
-                activity.thumps_Down(holder.iv3, position);
-
-            }
-            else
-            {
-                holder.iv3.setEnabled(false);
-            }
-
-
-        }
-        else  if (model.reply.equalsIgnoreCase("No"))
-        {
-
-
-            //Thumbs up
-            holder.iv2.setImageResource(R.drawable.ic_vote_inactive);
-            //Thumbs down
-            holder.iv3.setImageResource(R.drawable.ic_no_vote_active);
-
-            if (model.Thumpsup.equalsIgnoreCase("enableclick"))
-            {
-
-                activity.thumps_Up(holder.iv2,position);
-            }
-            else
-            {
-                holder.iv2.setEnabled(false);
-            }
-
-            if (model.Thumpsdown.equalsIgnoreCase("enableclick"))
-            {
-                activity.thumps_Down(holder.iv3, position);
-
-            }
-            else
-            {
-                holder.iv3.setEnabled(false);
-            }
-
-        }
-
-    }
 
 
     @Override

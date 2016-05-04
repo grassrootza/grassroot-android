@@ -35,6 +35,7 @@
     <string name="Cellphone_number_invalid">Please enter a valid cellphone number</string>
     <string name="Cellphone_numbr_empty">Please enter cellphone number to proceed.</string>
     <string name="User_not_registered">User not registered. Please register to proceed.</string>
+    <string name="User_already_registered">Sorry, that phone number is already registered on Grassroot. Please login.</string>
     <string name="OTP_empty">Please enter OTP to proceed</string>
     <string name="OTP_invalid">Please enter the correct OTP to proceed.</string>
     <string name="USER_DOES_NOT_EXIST">User not registered.Please register to proceed.</string>
@@ -88,11 +89,11 @@
     <string name="share_app_text">Meet, Vote and Act with the Grassroot App. Download it now from the Android Play Store -https://play.google.com/store/apps/details?id=com.techmorphosis.grassroot</string>
 
     <!--Logout-->
-    <string name="Logout_text">Are you sure you want to Log out?</string>
+    <string name="Logout_text">Are you sure you want to logout?</string>
 
     <!--Join_Request-->
     <string name="search">search</string>
-    <string name="search_box">Enter Group name</string>
+    <string name="search_box">Enter group name</string>
     <string name="validate_search_box">Please search for a group</string>
     <string name="alertbox">Are you sure you want to send a group join request ?</string>
     <string name="title_activity_create__group">Create_Group</string>
@@ -109,10 +110,10 @@
     <string name="action_search">Search...</string>
     <string name="cg_dialog_title">Select any one number</string>
     <string name="title_activity_dilog">DilogActivity</string>
-    <string name="cg_valid_number">The number selected is not a valid South Africa number. Please select a different number</string>
+    <string name="cg_valid_number">The number selected is not a valid South African phone number. Please select a different number</string>
     <string name="title_activity_alert_dialog">AlertDialogActivity</string>
     <string name="title_activity_add_contact_manually">AddContactManually</string>
-    <string name="contact_manually">The number selected is not a valid South Africa number. Please select a different number</string>
+    <string name="contact_manually">The number selected is not a valid South African phone number. Please select a different number</string>
     <string name="prg_message">Please wait...</string>
     <string name="et_groupname">Please enter Group name</string>
     <string name="GROUP_CREATED">Group created successfully</string>

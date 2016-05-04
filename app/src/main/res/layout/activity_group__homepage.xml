@@ -20,122 +20,102 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal">
 
-        <RelativeLayout
-            android:id="@+id/rl_simple"
-            android:layout_width="match_parent"
-            android:layout_height="?actionBarSize"
-            android:background="@color/primaryColor"
+            <RelativeLayout
+                android:id="@+id/rl_simple"
+                android:layout_width="match_parent"
+                android:layout_height="?actionBarSize"
+                android:background="@color/primaryColor"
+                android:layout_gravity="center_vertical"
+                android:visibility="visible">
 
-            android:layout_gravity="center_vertical"
-            android:visibility="visible">
+                <ImageView
+                    android:id="@+id/iv_ghp_drawer"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:src="@drawable/btn_navigation"
+                    android:layout_alignParentLeft="true"
+                    android:layout_centerVertical="true"
+                    android:paddingRight="16dp"
+                    android:paddingLeft="16dp"
+                    android:background="@drawable/button_alpha_rlsimple" />
 
-            <ImageView
-                android:id="@+id/iv_ghp_drawer"
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:src="@drawable/btn_navigation"
-                android:layout_alignParentLeft="true"
-                android:layout_centerVertical="true"
-                android:paddingRight="16dp"
-                android:paddingLeft="16dp"
-                android:background="@drawable/button_alpha_rlsimple"
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/ghp_toolbar_title"
+                    android:layout_centerVertical="true"
+                    android:textColor="@color/white"
+                    android:layout_toRightOf="@id/iv_ghp_drawer"
+                    android:textSize="@dimen/txt_large" />
 
-                />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/ghp_toolbar_title"
-                android:layout_centerVertical="true"
-                android:textColor="@color/white"
-                android:layout_toRightOf="@id/iv_ghp_drawer"
-                android:textSize="@dimen/txt_large"
-
-                />
-
-            <ImageView
-                android:id="@+id/iv_ghp_search"
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:src="@drawable/btn_search"
-                android:layout_centerVertical="true"
-                android:layout_toLeftOf="@+id/iv_ghp_sort"
-                android:paddingRight="16dp"
-                android:paddingLeft="16dp"
-                android:background="@drawable/button_alpha_rlsimple"
-                />
+                <ImageView
+                    android:id="@+id/iv_ghp_search"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:src="@drawable/btn_search"
+                    android:layout_centerVertical="true"
+                    android:layout_toLeftOf="@+id/iv_ghp_sort"
+                    android:paddingRight="16dp"
+                    android:paddingLeft="16dp"
+                    android:background="@drawable/button_alpha_rlsimple" />
 
 
-            <ImageView
-                android:id="@+id/iv_ghp_sort"
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:src="@drawable/btn_sort"
-                android:layout_alignParentRight="true"
-                android:layout_centerVertical="true"
-                android:paddingRight="16dp"
-                android:paddingLeft="16dp"
-                android:background="@drawable/button_alpha_rlsimple"
+                <ImageView
+                    android:id="@+id/iv_ghp_sort"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:src="@drawable/btn_sort"
+                    android:layout_alignParentRight="true"
+                    android:layout_centerVertical="true"
+                    android:paddingRight="16dp"
+                    android:paddingLeft="16dp"
+                    android:background="@drawable/button_alpha_rlsimple" />
 
-                />
+            </RelativeLayout>
 
-        </RelativeLayout>
+            <RelativeLayout
+                android:id="@+id/rl_search"
+                android:layout_width="match_parent"
+                android:layout_height="?actionBarSize"
+                android:background="@color/white"
+                android:visibility="gone">
 
-        <RelativeLayout
-            android:id="@+id/rl_search"
-            android:layout_width="match_parent"
-            android:layout_height="?actionBarSize"
-            android:background="@color/white"
-            android:visibility="gone"
-            >
+                <ImageView
+                    android:id="@+id/iv_rl_search"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:src="@drawable/btn_search_gray"
+                    android:paddingLeft="15dp"
+                    android:layout_centerVertical="true"
+                    android:background="@drawable/button_alpha"
+                    android:layout_alignParentLeft="true" />
 
+                <EditText
+                    android:id="@+id/et_search"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_toLeftOf="@+id/iv_cross"
+                    android:layout_toRightOf="@+id/iv_rl_search"
+                    android:background="@drawable/edittext_border"
+                    android:layout_centerVertical="true"
+                    android:paddingLeft="5dp"
+                    android:paddingRight="5dp"
+                    android:singleLine="true"
+                    android:imeOptions="actionSearch"
+                    android:hint="@string/ghp_search_group_name" />
 
+                <ImageView
+                    android:id="@+id/iv_cross"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:src="@drawable/btn_close"
+                    android:paddingRight="15dp"
+                    android:layout_centerVertical="true"
+                    android:background="@drawable/button_alpha"
+                    android:layout_alignParentRight="true"  />
 
-            <ImageView
-                android:id="@+id/iv_rl_search"
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:src="@drawable/btn_search_gray"
-                android:paddingLeft="15dp"
-                android:layout_centerVertical="true"
-                android:background="@drawable/button_alpha"
-                android:layout_alignParentLeft="true"
-
-                />
-
-            <EditText
-                android:id="@+id/et_search"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_toLeftOf="@+id/iv_cross"
-                android:layout_toRightOf="@+id/iv_rl_search"
-                android:background="@drawable/edittext_border"
-                android:layout_centerVertical="true"
-                android:paddingLeft="5dp"
-                android:paddingRight="5dp"
-                android:singleLine="true"
-                android:imeOptions="actionSearch"
-                android:hint="@string/ghp_search_group_name"
-                />
-
-            <ImageView
-                android:id="@+id/iv_cross"
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:src="@drawable/btn_close"
-                android:paddingRight="15dp"
-                android:layout_centerVertical="true"
-                android:background="@drawable/button_alpha"
-                android:layout_alignParentRight="true"
-                />
-        </RelativeLayout>
-
-
-
-
-    </FrameLayout>
-
-
+            </RelativeLayout>
+        </FrameLayout>
     </RelativeLayout>
 
 
@@ -149,8 +129,7 @@
         android:clipToPadding="false"
         tools:listitem="@layout/row_group_homepage"
         android:layout_below="@+id/rl_container"
-        android:visibility="gone"
-        >
+        android:visibility="gone">
 
     </android.support.v7.widget.RecyclerView>
 
@@ -160,10 +139,7 @@
         android:layout_height="wrap_content"
         android:layout_centerInParent="true"
         android:indeterminateDrawable="@drawable/custom_progress_background"
-        android:visibility="gone"
-        />
-
-
+        android:visibility="gone" />
 
     <include
         android:id="@+id/error_layout"
@@ -191,33 +167,25 @@
         fab:menu_shadowColor="#444"
         fab:menu_colorNormal="#FFB805"
         fab:menu_colorPressed="#F2AB00"
-        fab:menu_colorRipple="#D99200"
-
-        >
+        fab:menu_colorRipple="#D99200" >
 
         <com.github.clans.fab.FloatingActionButton
             android:id="@+id/ic_fab_join_group"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:src="@drawable/ic_fab_join_group"
-            fab:fab_label="Join Group"
+            fab:fab_label="Join a group"
             style="@style/MenuButtonsStyle"
-            android:visibility="gone"
-            />
+            android:visibility="gone" />
 
         <com.github.clans.fab.FloatingActionButton
             android:id="@+id/ic_fab_start_group"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:src="@drawable/ic_fab_start_group"
-            fab:fab_label="Start Group"
+            fab:fab_label="Start a group"
             style="@style/MenuButtonsStyle"
-            android:visibility="gone"
-            />
-
-
+            android:visibility="gone" />
 
     </com.github.clans.fab.FloatingActionMenu>
-
-
-    </RelativeLayout>
+</RelativeLayout>

@@ -57,7 +57,7 @@ public class NetworkCall {
         {
             @Override
             public void onResponse(String response) {
-                Log.e(TAG, " makeRequest() onResponse " + response);
+                Log.e(TAG, "VOLLEY : makeRequest() onResponse " + response);
                 responseListenerVolley.onSuccess(response);
                 prgDialog.dismiss();
                 requestQueue.stop();
@@ -90,7 +90,7 @@ public class NetworkCall {
         {
             @Override
             public void onResponse(String response) {
-                Log.e(TAG, "makeRequest() onResponse " + response);
+                Log.e(TAG, "VOLLEY : makeRequest() onResponse " + response);
                 responseListenerVolley.onSuccess(response);
                 prgDialog.dismiss();
                 requestQueue.stop();

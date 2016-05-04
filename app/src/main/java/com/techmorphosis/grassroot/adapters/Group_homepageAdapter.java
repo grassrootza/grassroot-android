@@ -21,7 +21,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.Locale;
 
-import butterknife.BindView;
 import butterknife.ButterKnife;
 
 /**P
@@ -70,26 +69,14 @@ public class Group_homepageAdapter  extends RecyclerView.Adapter<Group_homepageA
         int height = holder.profileV1.getDrawable().getIntrinsicWidth();
         int width = holder.profileV1.getDrawable().getIntrinsicHeight();
 
-        RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) holder.profileV3.getLayoutParams();
+        RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) holder.profileV2.getLayoutParams();
         params.height = height;
         params.width=width;
-        holder.profileV3.setLayoutParams(params);
 
-        if (group.getGroupMemberCount() == 1)
-        {
-            holder.profileV1.setVisibility(View.VISIBLE);
-        }
-        else if (group.getGroupMemberCount() == 2)
-        {
-            holder.profileV1.setVisibility(View.VISIBLE);
-            holder.profileV2.setVisibility(View.VISIBLE);
-        }
-        else if (group.getGroupMemberCount() > 2)
-        {
-            holder.profileV2.setVisibility(View.VISIBLE);
-            holder.profileV3.setVisibility(View.VISIBLE);
-            holder.profileV3.setText("+" + String.valueOf(group.getGroupMemberCount() - 2));
-        }
+        holder.profileV2.setLayoutParams(params);
+        holder.profileV1.setVisibility(View.VISIBLE);
+        holder.profileV2.setVisibility(View.VISIBLE);
+        holder.profileV2.setText("+" + String.valueOf(group.getGroupMemberCount()));
 
         String displayDateTime;
 
@@ -114,16 +101,12 @@ public class Group_homepageAdapter  extends RecyclerView.Adapter<Group_homepageA
         return groups.size();
     }
 
-
     public void addData(ArrayList<Group> groupList){
         oldGroupModel = new ArrayList<>();
         groups.addAll(groupList);
         oldGroupModel.addAll(groupList);
         this.notifyItemRangeInserted(0, groupList.size() - 1);
-
     }
-
-
 
     public void filter(String searchwords)
     {
@@ -184,22 +167,20 @@ public class Group_homepageAdapter  extends RecyclerView.Adapter<Group_homepageA
         private TextView txtGroupdesc;
 
         private ImageView profileV1;
-        private ImageView profileV2;
-        private TextView profileV3;
-        private  TextView datetime;
+        private TextView profileV2;
+        private TextView datetime;
 
 
         public GHP_ViewHolder(View view) {
             super(view);
 
-           cardView = (CardView) view.findViewById(R.id.main_view);
+            cardView = (CardView) view.findViewById(R.id.main_view);
             txtGroupname = (TextView) view.findViewById(R.id.txt_groupname);
             txtGroupownername = (TextView) view.findViewById(R.id.txt_groupownername);
             txtGroupdesc = (TextView) view.findViewById(R.id.txt_groupdesc);
 
             profileV1 = (ImageView) view.findViewById(R.id.profile_v1);
-            profileV2 = (ImageView) view.findViewById(R.id.profile_v2);
-            profileV3 = (TextView) view.findViewById(R.id.profile_v3);
+            profileV2 = (TextView) view.findViewById(R.id.profile_v2);
             datetime = (TextView) view.findViewById(R.id.datetime);
 
         }

@@ -12,8 +12,6 @@ import android.support.v4.app.Fragment;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.View;
-import android.view.animation.Animation;
-import android.view.animation.AnimationUtils;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.FrameLayout;
@@ -55,7 +53,6 @@ public class StartActivity extends PortraitActivity implements HomeScreenViewFra
         OtpScreenFragment.OnOtpScreenFragmentListener {
     //will fix once we start with mvp implementation
 
-    public boolean exit;
     public static int SCREEN_TIMEOUT = 2000;
     private Handler defaultHandler;
     private String TAG = StartActivity.class.getSimpleName();
@@ -98,91 +95,60 @@ public class StartActivity extends PortraitActivity implements HomeScreenViewFra
 
 
     protected void onCreate(Bundle bundle) {
+
+        Log.d(TAG, "inside StartActivity ... calling onCreate()");
         super.onCreate(bundle);
         Fabric.with(this, new Crashlytics());
+
         if (!SettingPreference.getisLoggedIn(this)) {
             setContentView(R.layout.start);
             progressDialog = new ProgressDialog(this);
             progressDialog.setMessage("Please Wait..");
             ButterKnife.bind(this);
             if (NetworkCheck.isNetworkAvailable(StartActivity.this)) {
+                // todo: put meaning inside here or delete it, unless required for some other reason
             } else {
                 SettingPreference.setisLoggedIn(this, false);
             }
             init();
             displayMetrics = getApplicationContext().getResources().getDisplayMetrics();
             height = displayMetrics.heightPixels;
-            start();
+            showHomeScreen();
         } else {
-            setContentView(R.layout.spashscreen);
+            setContentView(R.layout.splashscreen);
             ButterKnife.bind(this);
             iv_splashlogo.setVisibility(View.VISIBLE);
-            // Animation animFadeIn;
-            // animFadeIn = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.fade_in);
-            // iv_splashlogo.startAnimation(animFadeIn);
-
             new Handler().postDelayed(new Runnable() {
                 @Override
                 public void run() {
                     Intent intent;
                     intent = new Intent(StartActivity.this, HomeScreen.class);
-
                     startActivity(intent);
                     finish();
-
                 }
             }, 300L);
-
         }
-
-
     }
 
 
     private void init() {
         defaultHandler = new Handler();
-
-    }
-
-    private void start() {
-        showHomeScreen();
     }
 
     private void showHomeScreen() {
 
-        if (SettingPreference.getisLoggedIn(this)) {
-
-            new Handler().postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    Intent intent = new Intent(StartActivity.this, HomeScreen.class);
-                    startActivity(intent);
-                    finish();
-                }
-            }, SCREEN_TIMEOUT);
-
-
-        } else {
-            defaultHandler.postDelayed(
-                    new Runnable() {
-
-
-                        public void run() {
-
-                            rl_homelogo.animate().translationY((float) (-height / 6)).setDuration(500);
-
-                            defaultHandler.postDelayed(
-                                    new Runnable() {
-                                        public void run() {
-                                            setUpHomeScreen();
-                                        }
-
-                                    }, 1000L);
-                        }
-
-
-                    }, 500L);
-        }
+        Log.d(TAG, "inside StartActivity ... inside method showHomeScreen");
+        defaultHandler.postDelayed(
+                new Runnable() {
+                    public void run() {
+                        rl_homelogo.animate().translationY((float) (-height / 6)).setDuration(500);
+                        defaultHandler.postDelayed(
+                                new Runnable() {
+                                    public void run() {setUpHomeScreen();
+                                    }
+                                }, 1000L);
+                    }
+                }, 500L);
     }
 
     private void setUpHomeScreen() {
@@ -190,6 +156,7 @@ public class StartActivity extends PortraitActivity implements HomeScreenViewFra
         otpscreen = false;
         loginscreen = false;
         registerscreen = false;
+
         HomeScreenViewFragment homeScreenViewFragment = new HomeScreenViewFragment();
         getSupportFragmentManager().beginTransaction().add(R.id.fl_content,
                 homeScreenViewFragment).commit();
@@ -225,6 +192,7 @@ public class StartActivity extends PortraitActivity implements HomeScreenViewFra
             otpscreen = true;
         }
     }
+
     private void textResend() {
         if (registerscreen) {
             registerWS(userName, mobileNumber);
@@ -238,12 +206,10 @@ public class StartActivity extends PortraitActivity implements HomeScreenViewFra
             et_otp.setError(getResources().getString(R.string.OTP_empty));
         } else {
             if(loginscreen) {
-                authenticate(mobileNumber, et_otp.getText().toString());
+                authenticateLogin(mobileNumber, et_otp.getText().toString());
+            } else {
+                verifyRegistration(mobileNumber,et_otp.getText().toString());
             }
-            else{
-                verify(mobileNumber,et_otp.getText().toString());
-            }
-
         }
     }
 
@@ -274,12 +240,18 @@ public class StartActivity extends PortraitActivity implements HomeScreenViewFra
 
         }
     }
+
+    /**
+     * Method that calls the registration REST service, and then shows the one time pin screen, or an error message
+     * todo: just skip straight to login if the number exists
+     * @param et_userName The name the user has entered
+     * @param et_mobile_register The phone number they wish to register
+     */
     private void registerWS(final String et_userName, final String et_mobile_register) {
 
-
-        Log.e(TAG, "loginWS");
+        Log.d(TAG, "inside StartActivity ... calling registerWS");
         progressDialog.show();
-        registerscreen =true;
+        registerscreen = true;
         grassrootRestService.getApi()
                 .addUser(et_mobile_register,et_userName)
                 .subscribeOn(Schedulers.newThread())
@@ -292,35 +264,40 @@ public class StartActivity extends PortraitActivity implements HomeScreenViewFra
                     @Override
                     public void onError(Throwable e) {
                         progressDialog.dismiss();
-                        showSnackBar(getApplicationContext(), "", getResources().getString(R.string.User_not_registered), "", 0, Snackbar.LENGTH_SHORT);
+                        showSnackBar(getApplicationContext(), "", getResources().getString(R.string.User_already_registered), "", 0, Snackbar.LENGTH_SHORT);
                     }
                     @Override
                     public void onNext(GenericResponse response) {
                         if(response.getStatus().contentEquals("SUCCESS")){
-                            data = (String)response.getData();
+                            data = (String) response.getData();
                             mobileNumber = et_mobile_register;
                         }
                         if (otpscreen) {
-                            Log.e(TAG, "not calling setUpOtpScreen");
+                            Log.d(TAG, "not calling setUpOtpScreen");
                             OtpScreenFragment otpScreenFragment = (OtpScreenFragment) getVisibleFragment();
                             otpScreenFragment.et_otp.setText(data);
-
                         } else {
                             Log.e(TAG, "calling setUpOtpScreen");
                             setUpOtpScreen();
                         }
-
                     }
                 });
 
     }
 
+
+    /**
+     * Call the login web service, sending the mobile number to the server and generating an OTP
+     * todo: if the user is not registered, redirect to registration screen instead of just error
+     * @param mobile_number The number the user entered
+     */
     private void loginWS(String mobile_number) {
 
-        Log.e(TAG, "loginWS");
+        Log.d(TAG, "inside StartActivity ... calling loginWS");
+
         mobileNumber = mobile_number;
         progressDialog.show();
-        loginscreen =true;
+        loginscreen = true;
 
         grassrootRestService.getApi()
                 .login(mobile_number)
@@ -340,7 +317,7 @@ public class StartActivity extends PortraitActivity implements HomeScreenViewFra
                     public void onNext(GenericResponse response) {
                         if(response.getStatus().contentEquals("SUCCESS")){
                             data = (String)response.getData();
-                        }
+                        } // todo: handle cases of the error failing, otherwise this sets up a null pointer below
                         if (otpscreen) {
                             Log.e(TAG, "not calling setUpOtpScreen");
                             OtpScreenFragment otpScreenFragment = (OtpScreenFragment) getVisibleFragment();
@@ -353,7 +330,12 @@ public class StartActivity extends PortraitActivity implements HomeScreenViewFra
                 });
     }
 
-    private void verify(final String mobileNumber, String tokenCode){
+    /**
+     * Verify that the code received by SMS is the OTP, for verification and hence registration
+     * @param mobileNumber Phone number attempting to log in or register
+     * @param tokenCode The token code entered by the user
+     */
+    private void verifyRegistration(final String mobileNumber, String tokenCode){
         progressDialog.show();
         grassrootRestService.getApi()
                 .verify(mobileNumber,tokenCode)
@@ -379,7 +361,7 @@ public class StartActivity extends PortraitActivity implements HomeScreenViewFra
                             SettingPreference.setuser_phonetoken(StartActivity.this, mobileNumber + "/" + token.getCode());
                             SettingPreference.setuser_name(StartActivity.this, userName);
 
-                            Log.e(TAG, "getPREF_Phone_Token is " + SettingPreference.getPREF_Phone_Token(StartActivity.this));
+                            Log.d(TAG, "getPREF_Phone_Token is " + SettingPreference.getPREF_Phone_Token(StartActivity.this));
                             Intent intent = new Intent(StartActivity.this, HomeScreen.class);
                             startActivity(intent);
                             finish();
@@ -389,7 +371,12 @@ public class StartActivity extends PortraitActivity implements HomeScreenViewFra
                 });
     }
 
-    private void authenticate(final String mobileNumber, String code){
+    /**
+     * Authenticate a login, that the user with this mobile number should have this code (tbc)
+     * @param mobileNumber The mobile number entered
+     * @param code The code entered by the user
+     */
+    private void authenticateLogin(final String mobileNumber, String code){
         progressDialog.show();
         grassrootRestService.getApi()
                 .authenticate(mobileNumber,code)
@@ -416,16 +403,17 @@ public class StartActivity extends PortraitActivity implements HomeScreenViewFra
                             SettingPreference.setuser_mobilenumber(StartActivity.this, mobileNumber);
                             SettingPreference.setisLoggedIn(StartActivity.this, true);
                             SettingPreference.setuser_phonetoken(StartActivity.this, mobileNumber + "/" + token.getCode());
-                            Log.e(TAG, "getPREF_Phone_Token is " + SettingPreference.getPREF_Phone_Token(StartActivity.this));
+                            Log.i(TAG, "getPREF_Phone_Token is " + SettingPreference.getPREF_Phone_Token(StartActivity.this));
 
                             Boolean hasGroups = response.getHasGroups();
                             String displayname = response.getDisplayName();
 
-                            Log.e(TAG, "hasGroups is " + hasGroups);
-                            Log.e(TAG, "displayname is " + displayname);
+                            Log.i(TAG, "inside StartActivity ... user has logged on ... hasGroups is " + hasGroups);
+                            Log.i(TAG, "inside StartActivity ... user has logged on ... displayname is " + displayname);
+
                             if (hasGroups) {
                                 SettingPreference.setisHasgroup(StartActivity.this, true);
-                               SettingPreference.setuser_name(StartActivity.this, displayname);
+                                SettingPreference.setuser_name(StartActivity.this, displayname);
                                 Intent intent = new Intent(StartActivity.this, HomeScreen.class);
                                 startActivity(intent);
                                 finish();
@@ -434,51 +422,46 @@ public class StartActivity extends PortraitActivity implements HomeScreenViewFra
                                 Intent intent = new Intent(StartActivity.this, HomeScreen.class);
                                 startActivity(intent);
                                 finish();
-
                             }
-
                         }
-                        }
-
-
+                    }
                 });
 
     }
 
+    /**
+     * Displays snack bar with some text, and possibility to link to an action
+     * @param context Context in which it is called
+     * @param type The type (currently "" in most calls...)
+     * @param message The message to display
+     * @param textLabel A text label for taking an action
+     * @param color The color of the snackbar
+     * @param length The length of the snackbar
+     */
     public void showSnackBar(Context context, final String type, String message, String textLabel, int color, int length) {
 
         snackBar = Snackbar.make(rlStart, message, length);
-        View view = snackBar.getView();
-
         snackBar.setActionTextColor(Color.RED);
-        if (!textLabel.isEmpty())//show action button depending on Label
-        {
+
+        if (!textLabel.isEmpty()) { //show action button depending on Label
             snackBar.setAction(textLabel, new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    if (type.equals("registerWS"))//take action depending on type
-                    {
-                         registerWS(userName,mobileNumber);
+                    if (type.equals("registerWS")) {
+                        registerWS(userName,mobileNumber);
                         snackBar.dismiss();
                         // getNotification();
-
                     } else if (type.equals("loginWS")) {
-
-                          loginWS(mobileNumber);
+                        loginWS(mobileNumber);
                         snackBar.dismiss();
-
                     } else if (type.equals("OtpWS")) {
-                     //   OT
                         snackBar.dismiss();
-
                     }
-
                 }
             });
-
         }
-        Log.e(TAG, "show");
 
+        Log.i(TAG, "showing the snackbar! with this type= " + type);
         snackBar.show();
     }
 
@@ -489,17 +472,13 @@ public class StartActivity extends PortraitActivity implements HomeScreenViewFra
                 rl_homelogo.animate().translationY((float) (-height / 3.5)).scaleX((float) 0.7).scaleY((float) 0.7);
                 defaultHandler.postDelayed(
                         new Runnable() {
-
                             public void run() {
                                 setUpRegisterScreen();
                             }
-
-                        }, 500L);
+                        }, 300L); // todo: create central constants for these animation timings and scales
             }
-
-        }, 500L);
+        }, 300L);
     }
-
 
     @Override
     public void onLoginButtonRegisterClick() {
@@ -511,11 +490,9 @@ public class StartActivity extends PortraitActivity implements HomeScreenViewFra
                             public void run() {
                                 setUpLoginScreen();
                             }
-
-                        }, 500L);
+                        }, 300L);
             }
-
-        }, 500L);
+        }, 300L);
     }
 
     @Override
@@ -531,7 +508,6 @@ public class StartActivity extends PortraitActivity implements HomeScreenViewFra
     @Override
     public void onOtpSubmitButtonClick(EditText et_otp) {
         otpFormValidation(et_otp);
-
     }
 
     @Override
@@ -551,11 +527,10 @@ public class StartActivity extends PortraitActivity implements HomeScreenViewFra
     }
     
     private void switchFragments(Fragment fragment){
-        getSupportFragmentManager().beginTransaction().setCustomAnimations(R.anim.a_slide_in_right,
-                R.anim.a_slide_out_left,
-                R.anim.a_slide_in_left, R.anim.a_slide_out_right).replace(R.id.fl_content, fragment)
+        getSupportFragmentManager().beginTransaction()
+                .setCustomAnimations(R.anim.a_slide_in_right, R.anim.a_slide_out_left, R.anim.a_slide_in_left, R.anim.a_slide_out_right)
+                .replace(R.id.fl_content, fragment)
                 .addToBackStack(fragment.getClass().getName()).commit();
-
     }
 
     private void loginFormValidation(EditText et_mobile_login) {
@@ -570,16 +545,13 @@ public class StartActivity extends PortraitActivity implements HomeScreenViewFra
                 if (Integer.parseInt(String.valueOf(et_mobile_login.getText().toString().charAt(0))) != 0) {
                     et_mobile_login.requestFocus();
                     et_mobile_login.setError(getResources().getString(R.string.Cellphone_number_invalid));
-
                 } else if (Integer.parseInt(String.valueOf(et_mobile_login.getText().toString().charAt(1))) == 0 || Integer.parseInt(String.valueOf(et_mobile_login.getText().toString().charAt(1))) == 9) {
                     et_mobile_login.requestFocus();
                     et_mobile_login.setError(getResources().getString(R.string.Cellphone_number_invalid));
                 } else {
                     loginWS(et_mobile_login.getText().toString());
-
                 }
             }
-
         }
     }
 
@@ -588,38 +560,30 @@ public class StartActivity extends PortraitActivity implements HomeScreenViewFra
             if(et_userName.getText().toString().trim().isEmpty() && !et_mobile_register.getText().toString().isEmpty()) {
                 et_userName.requestFocus();
                 et_userName.setError(getResources().getString(R.string.Name_Empty));
-            }else if(et_mobile_register.getText().toString().isEmpty()  &&  !et_userName.getText().toString().isEmpty()){
+            } else if(et_mobile_register.getText().toString().isEmpty()  &&  !et_userName.getText().toString().isEmpty()) {
                 et_mobile_register.requestFocus();
                 et_mobile_register.setError(getResources().getString(R.string.Cellphone_numbr_empty));
-            }
-            else{
+            } else {
                 et_userName.setError(getResources().getString(R.string.Name_Empty));
                 et_mobile_register.setError(getResources().getString(R.string.Cellphone_numbr_empty));
                 showSnackBar(getApplicationContext(), "", getResources().getString(R.string.Either_field_empty), "", 0, Snackbar.LENGTH_SHORT);
             }
-
         } else {
             if (et_mobile_register.getText().toString().length() != 10 && et_mobile_register.getText().toString().length() < 10) {
                 et_mobile_register.requestFocus();
                 et_mobile_register.setError(getResources().getString(R.string.Cellphone_number_invalid));
             } else {
-
                 if (Integer.parseInt(String.valueOf(et_mobile_register.getText().toString().charAt(0))) != 0) {
                     et_mobile_register.requestFocus();
                     et_mobile_register.setError(getResources().getString(R.string.Cellphone_number_invalid));
-
                 } else if (Integer.parseInt(String.valueOf(et_mobile_register.getText().toString().charAt(1))) == 0 ||
                         Integer.parseInt(String.valueOf(et_mobile_register.getText().toString().charAt(1))) == 9) {
                     et_mobile_register.requestFocus();
                     et_mobile_register.setError(getResources().getString(R.string.Cellphone_number_invalid));
-
                 } else {
                    registerWS(et_userName.getText().toString(), et_mobile_register.getText().toString());
-
-
                 }
             }
         }
     }
-
 }

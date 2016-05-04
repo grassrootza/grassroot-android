@@ -61,8 +61,8 @@ public class GrassrootRestService {
                                                    @Path("code") String code);
 
             @GET("/user/verify/{phoneNumber}/{code}")
-            Observable<TokenResponse> verify(@Path("phoneNumber") String phoneNumber,@Path("code")
-            String code);
+            Observable<TokenResponse> verify(@Path("phoneNumber") String phoneNumber,
+                                             @Path("code") String code);
 
 
             @POST("/group/create/{phoneNumber}/{code}")

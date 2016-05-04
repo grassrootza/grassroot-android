@@ -78,59 +78,41 @@ public class Group_Activities extends PortraitActivity {
             groupName = extras.getString("groupName");
         }
 
-
-
         findAllViews();
         init();
         recyclerview();
         Group_Activities_WS();
     }
 
-    private void recyclerview()
-    {
-
+    private void recyclerview() {
         mLayoutManager = new LinearLayoutManager(Group_Activities.this);
         rcGa.setLayoutManager(mLayoutManager);
         rcGa.setItemAnimator(new CustomItemAnimator());
         group_activitiesAdapter = new Group_ActivitiesAdapter(new ArrayList<Group_ActivitiesModel>(),Group_Activities.this);
         rcGa.setAdapter(group_activitiesAdapter);
-
     }
 
-    private void Group_Activities_WS()
-    {
+    private void Group_Activities_WS() {
 
         //preExecute
         activitiesList = new ArrayList<>();
 
-        
-
         //doInBackground
-        NetworkCall networkCall = new NetworkCall
-                (
-                        Group_Activities.this,
-
-                        new ResponseListenerVolley() {
+        NetworkCall networkCall = new NetworkCall (Group_Activities.this, new ResponseListenerVolley() {
                             @Override
                             public void onSuccess(String s)
                             {
-
                                 //parse string to json
-
                                 try {
                                     JSONObject jsonObject= new JSONObject(s);
-                                    if (jsonObject.getString("status").equalsIgnoreCase("SUCCESS"))
-                                    {
+                                    if (jsonObject.getString("status").equalsIgnoreCase("SUCCESS")) {
                                         //proceed
                                         JSONArray jsonArray = jsonObject.getJSONArray("data");
+                                        if (jsonArray.length()>0) {
+                                            for (int i = 0; i < jsonArray.length(); i++) {
 
-                                        if (jsonArray.length()>0)
-                                        {
-
-                                            for (int i = 0; i < jsonArray.length(); i++)
-                                            {
-                                            JSONObject array_jsonobject= (JSONObject) jsonArray.get(i);
-                                            Group_ActivitiesModel model = new Group_ActivitiesModel();
+                                                JSONObject array_jsonobject= (JSONObject) jsonArray.get(i);
+                                                Group_ActivitiesModel model = new Group_ActivitiesModel();
                                                 model.id=array_jsonobject.getString("id");
                                                 model.title = array_jsonobject.getString("title");
                                                 model.description = array_jsonobject.getString("description");
@@ -140,6 +122,7 @@ public class Group_Activities extends PortraitActivity {
                                                 model.hasResponded = array_jsonobject.getBoolean("hasResponded");
                                                 model.canAction = array_jsonobject.getBoolean("canAction");
                                                 model.reply = array_jsonobject.getString("reply");
+
                                                 if (model.type.equalsIgnoreCase("VOTE")){
                                                     votemeeting(model);
                                                 }
@@ -259,90 +242,50 @@ public class Group_Activities extends PortraitActivity {
         }
     }
 
-    private void votemeeting(Group_ActivitiesModel model)
-    {
+    private void votemeeting(Group_ActivitiesModel model) {
         canAction(model);
-
     }
 
     private void canAction(Group_ActivitiesModel model)
     {
-        if (model.canAction)
-        {
-
-            if (model.hasResponded)
-            {  //model.hasResponded is true
-
-                //model.canAction is true
+        if (model.canAction) {
+            if (model.hasResponded) {
                 canActionIsTrue(model);
-            }
-            else
-            {
-                //model.hasResponded is false
-
-
-                //model.canAction2 is true
+            } else {
                 canActionIsTrue2(model);
-
             }
-
-
-
-        }
-        else if (!model.canAction)
-        {
-
+        } else if (!model.canAction) {
             //model.canAction is false
             canActionIsFalse(model);
-
-
         }
-
     }
 
-    private void canActionIsTrue2(Group_ActivitiesModel model)
-    {
+    private void canActionIsTrue2(Group_ActivitiesModel model) {
         model.Thumpsup="enableclick";
         model.Thumpsdown="enableclick";
-
     }
 
-    private void canActionIsFalse(Group_ActivitiesModel model)
-    {
-
+    private void canActionIsFalse(Group_ActivitiesModel model) {
         model.Thumpsup="disableclick";
         model.Thumpsdown="disableclick";
-
     }
 
-    private void canActionIsTrue(Group_ActivitiesModel model)
-    {
-        if (model.reply.equalsIgnoreCase("Yes"))
-        {
-
+    private void canActionIsTrue(Group_ActivitiesModel model) {
+        if (model.reply.equalsIgnoreCase("Yes")) {
             model.Thumpsup="disableclick";
             model.Thumpsdown="enableclick";
-
-
-        }
-        else  if (model.reply.equalsIgnoreCase("NO_RESPONSE"))
-        {
-
+        } else if (model.reply.equalsIgnoreCase("NO_RESPONSE")) {
             model.Thumpsup="enableclick";
             model.Thumpsdown="disableclick";
-
         }
     }
 
-    private void init()
-    {
+    private void init() {
 //        activitiesList = new ArrayList<>();
         utilclass = new UtilClass();
-
     }
 
-    private void findAllViews()
-    {
+    private void findAllViews() {
         rlActivityRoot = (RelativeLayout) findViewById(R.id.rl_activity_root);
         gaToolbar = (RelativeLayout) findViewById(R.id.ga_toolbar);
         ivGaBack = (ImageView) findViewById(R.id.iv_ga_back);
@@ -364,7 +307,6 @@ public class Group_Activities extends PortraitActivity {
         fabbutton.setOnMenuToggleListener(new FloatingActionMenu.OnMenuToggleListener() {
             @Override
             public void onMenuToggle(boolean opened) {
-                String text = "";
                 if (opened) {
                     fabbutton.toggle(false);
                     Intent open= new Intent(Group_Activities.this,NewActivities.class);
