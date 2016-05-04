@@ -24,7 +24,7 @@ import com.techmorphosis.grassroot.R;
 import com.techmorphosis.grassroot.adapters.Group_ActivitiesAdapter;
 import com.techmorphosis.grassroot.models.Group_ActivitiesModel;
 import com.techmorphosis.grassroot.ui.fragments.FilterFragment;
-import com.techmorphosis.grassroot.utils.SettingPreffrence;
+import com.techmorphosis.grassroot.utils.SettingPreference;
 import com.techmorphosis.grassroot.utils.UtilClass;
 import com.techmorphosis.grassroot.utils.listener.ErrorListenerVolley;
 import com.techmorphosis.grassroot.utils.listener.ResponseListenerVolley;
@@ -232,7 +232,7 @@ public class Group_Activities extends PortraitActivity {
 
                             }
                         },
-                        AllLinsks.groupactivities + groupid + "/" + SettingPreffrence.getPREF_Phone_Token(Group_Activities.this),
+                        AllLinsks.groupactivities + groupid + "/" + SettingPreference.getPREF_Phone_Token(Group_Activities.this),
                         getString(R.string.prg_message),
                         true
 
@@ -642,7 +642,7 @@ public class Group_Activities extends PortraitActivity {
                 response="Yes";
 
             }*/
-            Url=AllLinsks.Vote + activitiesList.get(position).id + "/" + SettingPreffrence.getPREF_Phone_Token(Group_Activities.this) + "?response=" + response;
+            Url=AllLinsks.Vote + activitiesList.get(position).id + "/" + SettingPreference.getPREF_Phone_Token(Group_Activities.this) + "?response=" + response;
             Log.e(TAG,"VoteUrl is " + Url );
 
         }
@@ -661,7 +661,7 @@ public class Group_Activities extends PortraitActivity {
                 response="Yes";
 
             }*/
-            Url=AllLinsks.Meeting + activitiesList.get(position).id + "/" + SettingPreffrence.getPREF_Phone_Token(Group_Activities.this) + "?response=" + response;
+            Url=AllLinsks.Meeting + activitiesList.get(position).id + "/" + SettingPreference.getPREF_Phone_Token(Group_Activities.this) + "?response=" + response;
             Log.e(TAG,"MeetingUrl is " + Url );
 
         }
@@ -907,7 +907,7 @@ public class Group_Activities extends PortraitActivity {
                             }
                         },
 
-                        AllLinsks.ToDo + activitiesList.get(position).id + "/" + SettingPreffrence.getPREF_Phone_Token(Group_Activities.this),
+                        AllLinsks.ToDo + activitiesList.get(position).id + "/" + SettingPreference.getPREF_Phone_Token(Group_Activities.this),
                         getString(R.string.prg_message),
                         true
 

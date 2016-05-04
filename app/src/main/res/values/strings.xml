@@ -31,8 +31,9 @@
     <string name="Retry">RETRY</string>
     <string name="Unknown_error">Oops, an error occurred. Try again later.</string>
     <string name="Either_field_empty">Please enter all fields to proceed.</string>
+    <string name="Name_Empty">Name cannot be empty.</string>
     <string name="Cellphone_number_invalid">Please enter a valid cellphone number</string>
-    <string name="Cellphone_number_empty">Please enter cellphone number to proceed.</string>
+    <string name="Cellphone_numbr_empty">Please enter cellphone number to proceed.</string>
     <string name="User_not_registered">User not registered. Please register to proceed.</string>
     <string name="OTP_empty">Please enter OTP to proceed</string>
     <string name="OTP_invalid">Please enter the correct OTP to proceed.</string>

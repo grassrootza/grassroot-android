@@ -6,7 +6,7 @@ import android.content.SharedPreferences;
 /**
  * Created by user on 09-Oct-15.
  */
-public class SettingPreffrence {
+public class SettingPreference {
 
     // Shared Preferences
     SharedPreferences pref;

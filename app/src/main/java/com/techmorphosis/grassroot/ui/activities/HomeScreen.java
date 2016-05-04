@@ -4,6 +4,7 @@ import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.util.Log;
 import android.view.Gravity;
@@ -14,7 +15,7 @@ import com.techmorphosis.grassroot.ui.fragments.Group_Homepage;
 import com.techmorphosis.grassroot.ui.fragments.NavigationDrawerFragment;
 import com.techmorphosis.grassroot.ui.fragments.RateUsFragment;
 import com.techmorphosis.grassroot.ui.fragments.WelcomeFragment;
-import com.techmorphosis.grassroot.utils.SettingPreffrence;
+import com.techmorphosis.grassroot.utils.SettingPreference;
 import com.techmorphosis.grassroot.utils.UtilClass;
 import com.techmorphosis.grassroot.utils.listener.AlertDialogListener;
 
@@ -33,27 +34,27 @@ public class HomeScreen extends PortraitActivity implements NavigationDrawerFrag
         setContentView(R.layout.activity_homescreen);
         drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         utilClass = new UtilClass();
-        hasUserRatedApp();
+     //   hasUserRatedApp();
     }
 
     private void hasUserRatedApp()
     {
 
-        if (!SettingPreffrence.getisRateus(getApplicationContext()))
+        if (!SettingPreference.getisRateus(getApplicationContext()))
         {
             //if user does not do rate us yet
 
-            int rateuscount = SettingPreffrence.getIsRateuscounter(getApplicationContext());
+            int rateuscount = SettingPreference.getIsRateuscounter(getApplicationContext());
             if (rateuscount == -1)
             {
-                SettingPreffrence.setIsRateuscounter(HomeScreen.this, 1);
+                SettingPreference.setIsRateuscounter(HomeScreen.this, 1);
                 Log.e(TAG, "counter is firsttime");
 
             }
             else
             {
                 rateuscount++;
-                SettingPreffrence.setIsRateuscounter(HomeScreen.this, rateuscount);
+                SettingPreference.setIsRateuscounter(HomeScreen.this, rateuscount);
 
                 if (rateuscount%15==0)
                 {
@@ -87,7 +88,7 @@ public class HomeScreen extends PortraitActivity implements NavigationDrawerFrag
     @Override
     public void onNavigationDrawerItemSelected(int position) {
 
-        if (drawer != null) drawer.closeDrawer(Gravity.START);
+        if (drawer != null) drawer.closeDrawer(GravityCompat.START);
         fragment=null;
 
             switch(position)
@@ -95,7 +96,7 @@ public class HomeScreen extends PortraitActivity implements NavigationDrawerFrag
                 case 0:
                   //Profile
 
-                    if (SettingPreffrence.getisHasgroup(HomeScreen.this))
+                    if (SettingPreference.getisHasgroup(HomeScreen.this))
                     {
                         fragment = new Group_Homepage();
                         openFragment="Group_Homepage";
@@ -135,9 +136,10 @@ public class HomeScreen extends PortraitActivity implements NavigationDrawerFrag
                         public void setLeftButton()
                         {
                             //Yes
-                            SettingPreffrence.clearAll(getApplicationContext());
+                            SettingPreference.clearAll(getApplicationContext());
                             Intent open= new Intent(HomeScreen.this,StartActivity.class);
                             startActivity(open);
+                            finish();
 
                             alertDialogFragment.dismiss();
 
@@ -195,7 +197,7 @@ public class HomeScreen extends PortraitActivity implements NavigationDrawerFrag
 
     @Override
     public void menuClick() { // Getting data from fragment
-        if (drawer != null) drawer.openDrawer(Gravity.START);
+        if (drawer != null) drawer.openDrawer(GravityCompat.START);
     }
 
     @Override
@@ -203,11 +205,11 @@ public class HomeScreen extends PortraitActivity implements NavigationDrawerFrag
     {
         super.onResume();
 
-        if (SettingPreffrence.getPrefHasSaveClicked(this)){
+        if (SettingPreference.getPrefHasSaveClicked(this)){
 
-            SettingPreffrence.setPrefHasSaveClicked(this, false);
+            SettingPreference.setPrefHasSaveClicked(this, false);
 
-            if (SettingPreffrence.getisHasgroup(HomeScreen.this))
+            if (SettingPreference.getisHasgroup(HomeScreen.this))
             {
                 Log.e("onResume", "Error in creating fragment");
 

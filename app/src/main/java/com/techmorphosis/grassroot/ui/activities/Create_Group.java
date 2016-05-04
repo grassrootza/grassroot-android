@@ -33,7 +33,7 @@ import com.techmorphosis.grassroot.RecyclerView.RecyclerTouchListener;
 import com.techmorphosis.grassroot.adapters.CreateGroupAdapter;
 import com.techmorphosis.grassroot.models.ContactsModel;
 import com.techmorphosis.grassroot.utils.Constant;
-import com.techmorphosis.grassroot.utils.SettingPreffrence;
+import com.techmorphosis.grassroot.utils.SettingPreference;
 import com.techmorphosis.grassroot.utils.UtilClass;
 import com.techmorphosis.grassroot.utils.listener.ErrorListenerVolley;
 import com.techmorphosis.grassroot.utils.listener.ResponseListenerVolley;
@@ -297,9 +297,9 @@ public class Create_Group extends PortraitActivity {
                     status=jsonsuccess.getString("status");
                     if (status.equalsIgnoreCase("SUCCESS"))
                     {
-                        SettingPreffrence.setPrefHasSaveClicked(Create_Group.this, true);
+                        SettingPreference.setPrefHasSaveClicked(Create_Group.this, true);
                         snackBar(Create_Group.this,getResources().getString(R.string.GROUP_CREATED),"",Snackbar.LENGTH_SHORT);
-                        SettingPreffrence.setisHasgroup(Create_Group.this,true);
+                        SettingPreference.setisHasgroup(Create_Group.this,true);
                         finish();
                     }
 
@@ -349,7 +349,7 @@ public class Create_Group extends PortraitActivity {
 
                 },
 
-                AllLinsks.groupcreation + SettingPreffrence.getuser_mobilenumber(Create_Group.this) + "/" +  SettingPreffrence.getuser_token(Create_Group.this),
+                AllLinsks.groupcreation + SettingPreference.getuser_mobilenumber(Create_Group.this) + "/" +  SettingPreference.getuser_token(Create_Group.this),
 
                 getResources().getString(R.string.prg_message),
 
