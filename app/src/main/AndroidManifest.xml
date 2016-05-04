@@ -50,7 +50,7 @@
             android:name=".contact.MainActivity"
             android:label="@string/title_activity_join__request" />
         <activity
-            android:name=".ui.activities.DilogActivity"
+            android:name=".ui.activities.DialogActivity"
             android:label="@string/title_activity_dilog"
             android:theme="@style/MyDialog" />
         <activity

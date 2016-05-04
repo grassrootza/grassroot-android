@@ -1,21 +1,19 @@
-package com.techmorphosis.grassroot.services.model.token;
+package com.techmorphosis.grassroot.services.model;
 
-import com.techmorphosis.grassroot.services.model.token.Data;
+import com.google.gson.annotations.SerializedName;
 
+import java.util.ArrayList;
+import java.util.List;
 
-public class TokenResponse {
-
+/**
+ * Created by paballo on 2016/05/04.
+ */
+public class GroupResponse {
     private String status;
     private Integer code;
     private String message;
-    private Data data;
-    private Boolean hasGroups;
-    private String displayName;
-
-
-    public TokenResponse() {
-
-    }
+    @SerializedName("data")
+    private List<Group> groups = new ArrayList<Group>();
 
     /**
      *
@@ -74,37 +72,20 @@ public class TokenResponse {
     /**
      *
      * @return
-     * The data
+     * groups
      */
-    public Data getData() {
-        return data;
+    public List<Group> getGroups() {
+        return groups;
     }
 
     /**
      *
-     * @param data
-     * The data
+     * @param groups
+     * Set groups
      */
-    public void setData(Data data) {
-        this.data = data;
+    public void setGroups(List<Group> groups) {
+        this.groups = groups;
     }
 
-
-    public Boolean getHasGroups() {
-        return hasGroups;
-    }
-
-    public void setHasGroups(Boolean hasGroups) {
-        this.hasGroups = hasGroups;
-    }
-
-    public String getDisplayName() {
-        return displayName;
-    }
-
-    public void setDisplayName(String displayName) {
-        this.displayName = displayName;
-    }
 }
-
 

@@ -149,6 +149,7 @@
         android:clipToPadding="false"
         tools:listitem="@layout/row_group_homepage"
         android:layout_below="@+id/rl_container"
+        android:visibility="gone"
         >
 
     </android.support.v7.widget.RecyclerView>

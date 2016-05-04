@@ -1,19 +1,12 @@
 package com.techmorphosis.grassroot.ui.activities;
 
-import android.app.FragmentManager;
-import android.app.FragmentTransaction;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
-import android.content.pm.PackageManager;
-import android.database.Cursor;
-import android.net.Uri;
 import android.os.Bundle;
 import android.os.Parcelable;
-import android.provider.ContactsContract;
 import android.support.v7.widget.Toolbar;
 import android.text.Editable;
-import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.util.Log;
 import android.view.View;
@@ -21,9 +14,7 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.EditText;
 import android.widget.ImageView;
-import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
-import android.widget.Toast;
 
 import com.techmorphosis.grassroot.ContactLib.PinnedHeaderListView;
 import com.techmorphosis.grassroot.Interface.GetContactList;
@@ -31,14 +22,10 @@ import com.techmorphosis.grassroot.R;
 import com.techmorphosis.grassroot.adapters.ContactsAdapter;
 import com.techmorphosis.grassroot.adapters.GetContactListAsync;
 import com.techmorphosis.grassroot.models.ContactsModel;
-import com.techmorphosis.grassroot.ui.fragments.MyDialogFragment;
-import com.techmorphosis.grassroot.ui.fragments.RateUsFragment;
 import com.techmorphosis.grassroot.utils.Constant;
-import com.techmorphosis.grassroot.utils.ContactUtil.ContactsQuery;
 import com.techmorphosis.grassroot.utils.UtilClass;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 
@@ -99,7 +86,7 @@ public class PhoneBookContacts extends PortraitActivity implements GetContactLis
 
           if (contact_position.numbers.size() > 1) {//show dialog
 
-            Intent i = new Intent(PhoneBookContacts.this, DilogActivity.class);
+            Intent i = new Intent(PhoneBookContacts.this, DialogActivity.class);
             i.putStringArrayListExtra("numberList", (ArrayList<String>) contact_position.numbers);
             i.putExtra("selectedNumber", contact_position.selectedNumber);
             startActivityForResult(i, 1);

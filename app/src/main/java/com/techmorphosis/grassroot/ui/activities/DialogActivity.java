@@ -21,19 +21,24 @@ import com.techmorphosis.grassroot.utils.UtilClass;
 import java.util.ArrayList;
 import java.util.List;
 
-public class DilogActivity extends Activity implements  View.OnClickListener {
+import butterknife.BindView;
+import butterknife.OnClick;
 
-    private RecyclerView mRecyclerView;
+public class DialogActivity extends Activity implements  View.OnClickListener {
+
+
+    @BindView(R.id.rcv_dialog)
+    public RecyclerView mRecyclerView;
     private MyRecyclerAdapter adapter;
-    View v;
     private ArrayList<String> numberlist;
-    private String TAG=DilogActivity.class.getSimpleName();
-
+    private String TAG = DialogActivity.class.getSimpleName();
     private List<String> list;
-    private TextView bt_cg_right;
-    private TextView bt_cg_left;
-    public  ArrayList<ContactsModel> multiplenumbers;
-    public  String selectednumber;
+    @BindView(R.id.bt_cg_right)
+    public TextView bt_cg_right;
+    @BindView(R.id.bt_cg_left)
+    public TextView bt_cg_left;
+    public ArrayList<ContactsModel> multiplenumbers;
+    public String selectednumber;
     private UtilClass utilClass;
     private AlertDialogFragment alertDialogFragment;
 
@@ -43,39 +48,28 @@ public class DilogActivity extends Activity implements  View.OnClickListener {
         super.onCreate(savedInstanceState);
         requestWindowFeature(1);
         setContentView(R.layout.activity_dilog);
-
         this.setFinishOnTouchOutside(false);
-        findAllViews();
         init();
-        multiplenumbers= new ArrayList<>();
+        multiplenumbers = new ArrayList<>();
         Bundle bundle = getIntent().getExtras();
         numberlist = bundle.getStringArrayList("numberList");
         selectednumber = bundle.getString("selectedNumber");
         Log.e(TAG, "selectedNumber is " + selectednumber);
 
-        if (!TextUtils.isEmpty(selectednumber))
-        {
+        if (!TextUtils.isEmpty(selectednumber)) {
             bt_cg_right.setEnabled(true);
-        }
-        else
-        {
+        } else {
             bt_cg_right.setEnabled(false);
-
         }
-
-        for (int i = 0; i < numberlist.size(); i++)
-        {
+        for (int i = 0; i < numberlist.size(); i++) {
             ContactsModel contactsModel = new ContactsModel();
-            contactsModel.selectedNumber=numberlist.get(i);
-            if (selectednumber.equals(numberlist.get(i)))
-            {
-                contactsModel.isSelected=true;
+            contactsModel.selectedNumber = numberlist.get(i);
+            if (selectednumber.equals(numberlist.get(i))) {
+                contactsModel.isSelected = true;
 
 
-            }
-            else
-            {
-                contactsModel.isSelected=false;
+            } else {
+                contactsModel.isSelected = false;
 
             }
 
@@ -87,17 +81,15 @@ public class DilogActivity extends Activity implements  View.OnClickListener {
         mRecyclerView();
 
 
-
     }
 
     private void init() {
-         utilClass= new UtilClass();
+        utilClass = new UtilClass();
 
     }
 
 
-    private void mRecyclerView()
-    {
+    private void mRecyclerView() {
         mRecyclerView.setLayoutManager(new LinearLayoutManager(getApplicationContext()));
         adapter = new MyRecyclerAdapter(getApplicationContext(), multiplenumbers);
         mRecyclerView.setAdapter(adapter);
@@ -178,8 +170,6 @@ public class DilogActivity extends Activity implements  View.OnClickListener {
 */
 
 
-
-
             }
 
             @Override
@@ -190,40 +180,31 @@ public class DilogActivity extends Activity implements  View.OnClickListener {
 
     }
 
-    private boolean validnumber(String selectedNumber)
-    {
-        selectedNumber= selectedNumber.trim();
-        Log.e(TAG,"selectedNumber is aftr trim " + selectedNumber);
+    private boolean validnumber(String selectedNumber) {
+        selectedNumber = selectedNumber.trim();
+        Log.e(TAG, "selectedNumber is aftr trim " + selectedNumber);
 
-        selectedNumber=selectedNumber.replaceAll("[-.^:,]", "");
-        Log.e(TAG,"selectedNumber is aftr replace " + selectedNumber);
+        selectedNumber = selectedNumber.replaceAll("[-.^:,]", "");
+        Log.e(TAG, "selectedNumber is aftr replace " + selectedNumber);
 
-        selectedNumber=selectedNumber.replaceAll("\\s","");
-        Log.e(TAG,"selectedNumber is aftr replace " + selectedNumber);
+        selectedNumber = selectedNumber.replaceAll("\\s", "");
+        Log.e(TAG, "selectedNumber is aftr replace " + selectedNumber);
 
-        selectedNumber=selectedNumber.replace("+91", "");
-        Log.e(TAG,"selectedNumber is aftr +91 " + selectedNumber);
-
+        selectedNumber = selectedNumber.replace("+91", "");
+        Log.e(TAG, "selectedNumber is aftr +91 " + selectedNumber);
 
 
-        if (selectedNumber.length() != 10 && selectedNumber.length() < 10)
-        {
+        if (selectedNumber.length() != 10 && selectedNumber.length() < 10) {
             return false;
-        }
-        else
-        {
+        } else {
 
-            if (Integer.parseInt(String.valueOf(selectedNumber.charAt(0))) != 0)
-            {
-                        return false;
-
-            } else if (Integer.parseInt(String.valueOf(selectedNumber.charAt(1))) == 0 || Integer.parseInt(String.valueOf(selectedNumber.charAt(1))) == 9)
-            {
+            if (Integer.parseInt(String.valueOf(selectedNumber.charAt(0))) != 0) {
                 return false;
 
-            }
-            else
-            {
+            } else if (Integer.parseInt(String.valueOf(selectedNumber.charAt(1))) == 0 || Integer.parseInt(String.valueOf(selectedNumber.charAt(1))) == 9) {
+                return false;
+
+            } else {
                 return true;
 
             }
@@ -231,29 +212,15 @@ public class DilogActivity extends Activity implements  View.OnClickListener {
 
     }
 
-    public  void findAllViews()
-    {
-        mRecyclerView = (RecyclerView) findViewById(R.id.rcv_dialog);
-        bt_cg_right = (TextView) findViewById(R.id.bt_cg_right);
-        bt_cg_left = (TextView) findViewById(R.id.bt_cg_left);
 
-        bt_cg_left.setOnClickListener(this);
-        bt_cg_right.setOnClickListener(this);
-
-    }
-
-
-    @Override
+    @OnClick({R.id.bt_cg_left, R.id.bt_cg_right})
     public void onClick(View v)
     {
-
         if (v==bt_cg_left)
-        {//cancel button
-           // Log.e(TAG,"Cancel Button");
-
+        {
             Intent intent=new Intent();
             setResult(2, intent);
-            finish();//finishing activity
+            finish();
         }
         else
         {//add button
@@ -263,10 +230,7 @@ public class DilogActivity extends Activity implements  View.OnClickListener {
             intent.putExtra("selectednumber", selectednumber);
             setResult(1, intent);
             finish();//finishing activity
-
         }
-
     }
-
 
 }

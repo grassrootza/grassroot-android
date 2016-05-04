@@ -23,7 +23,7 @@ import android.widget.RelativeLayout;
 import com.crashlytics.android.Crashlytics;
 import com.techmorphosis.grassroot.Network.NetworkCheck;
 import com.techmorphosis.grassroot.R;
-import com.techmorphosis.grassroot.services.GrassrootService;
+import com.techmorphosis.grassroot.services.GrassrootRestService;
 import com.techmorphosis.grassroot.services.model.GenericResponse;
 import com.techmorphosis.grassroot.services.model.Token;
 import com.techmorphosis.grassroot.services.model.TokenResponse;
@@ -51,7 +51,8 @@ import rx.schedulers.Schedulers;
  * Created by admin on 22-Dec-15.
  */
 public class StartActivity extends PortraitActivity implements HomeScreenViewFragment.OnHomeScreenInteractionListener,
-        RegisterScreenFragment.OnRegisterScreenInteractionListener, LoginScreenView.OnLoginScreenInteractionListener, OtpScreenFragment.OnOtpScreenFragmentListener {
+        RegisterScreenFragment.OnRegisterScreenInteractionListener, LoginScreenView.OnLoginScreenInteractionListener,
+        OtpScreenFragment.OnOtpScreenFragmentListener {
     //will fix once we start with mvp implementation
 
     public boolean exit;
@@ -88,7 +89,7 @@ public class StartActivity extends PortraitActivity implements HomeScreenViewFra
     @BindView(R.id.rl_start)
     RelativeLayout rlStart;
 
-    GrassrootService grassrootService = new GrassrootService();
+    GrassrootRestService grassrootRestService = new GrassrootRestService();
 
 
     private String userName;
@@ -279,7 +280,7 @@ public class StartActivity extends PortraitActivity implements HomeScreenViewFra
         Log.e(TAG, "loginWS");
         progressDialog.show();
         registerscreen =true;
-        grassrootService.getApi()
+        grassrootRestService.getApi()
                 .addUser(et_mobile_register,et_userName)
                 .subscribeOn(Schedulers.newThread())
                 .observeOn(AndroidSchedulers.mainThread())
@@ -321,7 +322,7 @@ public class StartActivity extends PortraitActivity implements HomeScreenViewFra
         progressDialog.show();
         loginscreen =true;
 
-        grassrootService.getApi()
+        grassrootRestService.getApi()
                 .login(mobile_number)
                 .subscribeOn(Schedulers.newThread())
                 .observeOn(AndroidSchedulers.mainThread())
@@ -354,7 +355,7 @@ public class StartActivity extends PortraitActivity implements HomeScreenViewFra
 
     private void verify(final String mobileNumber, String tokenCode){
         progressDialog.show();
-        grassrootService.getApi()
+        grassrootRestService.getApi()
                 .verify(mobileNumber,tokenCode)
                 .subscribeOn(Schedulers.newThread())
                 .observeOn(AndroidSchedulers.mainThread())
@@ -390,7 +391,7 @@ public class StartActivity extends PortraitActivity implements HomeScreenViewFra
 
     private void authenticate(final String mobileNumber, String code){
         progressDialog.show();
-        grassrootService.getApi()
+        grassrootRestService.getApi()
                 .authenticate(mobileNumber,code)
                 .subscribeOn(Schedulers.newThread())
                 .observeOn(AndroidSchedulers.mainThread())
@@ -614,7 +615,6 @@ public class StartActivity extends PortraitActivity implements HomeScreenViewFra
 
                 } else {
                    registerWS(et_userName.getText().toString(), et_mobile_register.getText().toString());
-                   // register(et_userName.getText().toString(), et_mobile_register.getText().toString());
 
 
                 }
