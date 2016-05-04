@@ -20,15 +20,13 @@ tmp/
 
 ### Plugin-specific files:
 out/
-.idea/
-.idea_modules/
+**/.idea/**
+**/.idea_modules/**
 atlassian-ide-plugin.xml
 
 ### Gradle files
-.gradle
-/local.properties
-/.idea/workspace.xml
-/.idea/libraries
-.DS_Store
-/build
-/captures
+**/.gradle
+**/build
+**/.DS_Store
+local.properties
+captures
