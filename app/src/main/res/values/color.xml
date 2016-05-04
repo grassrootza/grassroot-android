@@ -2,7 +2,7 @@
 <resources>
 
     <!--styles-->
-    <color name="primaryColor">#4aca85</color>
+    <color name="primaryColor">#207A33</color>
     <color name="primaryColorDark">#339661</color>
     <color name="windowBackground">#fafafa</color>
 
@@ -10,7 +10,7 @@
     <color name="white">#fff</color>
     <color name="black">#000</color>
     <color name="transparent">#00000000</color>
-    <color name="buttoncolor">#4aca85</color>
+    <color name="buttoncolor">#207A33</color>
     <color name="background">#eeeeee</color>
     <color name="dark_background">#ddd</color>
     <color name="red">#FF0000</color>

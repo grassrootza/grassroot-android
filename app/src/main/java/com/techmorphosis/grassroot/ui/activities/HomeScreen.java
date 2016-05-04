@@ -34,6 +34,7 @@ public class HomeScreen extends PortraitActivity implements NavigationDrawerFrag
         setContentView(R.layout.activity_homescreen);
         drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         utilClass = new UtilClass();
+        Log.e(TAG, "ZOG: Called the onCreate method!");
      //   hasUserRatedApp();
     }
 

@@ -190,14 +190,12 @@ public class Group_Homepage extends android.support.v4.app.Fragment implements V
                                                // Log.e(TAG,"model.permissionsList.size() is  " + model.permissionsList.size());
                                             }
 
-
                                             groupListclone.add(model);
                                             groupList.add(model);
 
                                         }
 
                                         rcGhp.setVisibility(View.VISIBLE);
-
 
                                         group_homepageAdapter.addApplications(groupList);
 
@@ -388,9 +386,6 @@ public class Group_Homepage extends android.support.v4.app.Fragment implements V
                             public void onDismissedBySwipe(RecyclerView recyclerView, int[] reverseSortedPositions) {
                                 //Toast.makeText(getActivity(),"onDismissedBySwipe",Toast.LENGTH_LONG).show();
                             }
-
-
-
 
                         });
         rcGhp.addOnItemTouchListener(swipeDeleteTouchListener);

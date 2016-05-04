@@ -16,7 +16,9 @@ import com.techmorphosis.grassroot.R;
 import com.techmorphosis.grassroot.models.Group_Homepage_Model;
 import com.techmorphosis.grassroot.ui.fragments.Group_Homepage;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Locale;
 
 /**
@@ -32,6 +34,8 @@ public class Group_homepageAdapter  extends RecyclerView.Adapter<Group_homepageA
     private String TAG= Group_homepageAdapter.class.getSimpleName();
     private ArrayList<Group_Homepage_Model> olddata;
 
+    private static final SimpleDateFormat inputSDF = new SimpleDateFormat("dd-MM-yyyy");
+    private static final SimpleDateFormat outputSDF = new SimpleDateFormat("EEE, d MMM, ''yy");
 
     public Group_homepageAdapter(Context context,ArrayList<Group_Homepage_Model> data,Group_Homepage activity)
     {
@@ -52,9 +56,7 @@ public class Group_homepageAdapter  extends RecyclerView.Adapter<Group_homepageA
     }
 
     @Override
-    public void onBindViewHolder(GHP_ViewHolder holder, int position)
-    {
-
+    public void onBindViewHolder(GHP_ViewHolder holder, int position) {
 
         holder.itemView.setLongClickable(true);
         Group_Homepage_Model model= data.get(position);
@@ -86,15 +88,20 @@ public class Group_homepageAdapter  extends RecyclerView.Adapter<Group_homepageA
             holder.profileV3.setText("+" + String.valueOf(Integer.parseInt(model.groupMemberCount) - 2));
         }
 
+        String displayDateTime;
 
-        holder.datetime.setText(model.dateTimeshort);
-       /* SimpleDateFormat formatter = new SimpleDateFormat("dd-MM-yyyy");
-        String dateString = formatter.format(new Date(Long.parseLong(model.dateTime)));
- */
+        try {
+            // todo: move this into the Model constructor instead (oh for Java 8)
+            Date date = inputSDF.parse(model.dateTimeshort);
+            displayDateTime = date.after(new Date()) ? "Next event: " + outputSDF.format(date) : "Last event: " + outputSDF.format(date);
+        } catch (Exception e) {
+            displayDateTime = model.dateTimeshort;
+        }
+
+        holder.datetime.setText(displayDateTime);
 
         activity.addLongClickStringAction(context, holder.cardView, position);
         activity.addClickStringAction(context, holder.cardView, position);
-
 
     }
 
@@ -104,7 +111,7 @@ public class Group_homepageAdapter  extends RecyclerView.Adapter<Group_homepageA
     }
 
     public  void addApplications(ArrayList<Group_Homepage_Model> groupList) {
-        olddata = new ArrayList<Group_Homepage_Model>();
+        olddata = new ArrayList<>();
         data.addAll(groupList);
         olddata.addAll(groupList);
         this.notifyItemRangeInserted(0, groupList.size() - 1);

@@ -13,15 +13,12 @@
         android:layout_width="match_parent"
         android:layout_height="?android:actionBarSize"
         android:background="@color/primaryColor"
-        android:elevation="5dp"
-
-        >
+        android:elevation="5dp">
 
         <FrameLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_gravity="center_horizontal"
-            >
+            android:layout_gravity="center_horizontal">
 
         <RelativeLayout
             android:id="@+id/rl_simple"
@@ -30,8 +27,7 @@
             android:background="@color/primaryColor"
 
             android:layout_gravity="center_vertical"
-            android:visibility="visible"
-            >
+            android:visibility="visible">
 
             <ImageView
                 android:id="@+id/iv_ghp_drawer"

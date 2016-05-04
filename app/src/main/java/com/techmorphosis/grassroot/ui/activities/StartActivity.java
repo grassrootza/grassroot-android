@@ -113,14 +113,13 @@ public class StartActivity extends PortraitActivity implements HomeScreenViewFra
             displayMetrics = getApplicationContext().getResources().getDisplayMetrics();
             height = displayMetrics.heightPixels;
             start();
-
         } else {
             setContentView(R.layout.spashscreen);
             ButterKnife.bind(this);
             iv_splashlogo.setVisibility(View.VISIBLE);
-            Animation animFadeIn;
-            animFadeIn = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.fade_in);
-            iv_splashlogo.startAnimation(animFadeIn);
+            // Animation animFadeIn;
+            // animFadeIn = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.fade_in);
+            // iv_splashlogo.startAnimation(animFadeIn);
 
             new Handler().postDelayed(new Runnable() {
                 @Override
@@ -132,7 +131,7 @@ public class StartActivity extends PortraitActivity implements HomeScreenViewFra
                     finish();
 
                 }
-            }, 2000L);
+            }, 300L);
 
         }
 
