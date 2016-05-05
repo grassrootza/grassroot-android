@@ -15,6 +15,5 @@ public class PortraitActivity extends AppCompatActivity {
     {
         super.onCreate(savedInstanceState);
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
-
     }
 }

@@ -1,12 +1,15 @@
 package com.techmorphosis.grassroot.adapters;
 
+import android.Manifest;
 import android.content.ContentResolver;
 import android.content.Context;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.os.AsyncTask;
 import android.provider.ContactsContract;
 import android.provider.ContactsContract.CommonDataKinds.Phone;
 import android.provider.ContactsContract.Contacts;
+import android.support.v4.content.ContextCompat;
 
 import com.techmorphosis.grassroot.Interface.GetContactList;
 import com.techmorphosis.grassroot.models.ContactsModel;
@@ -15,6 +18,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class GetContactListAsync extends AsyncTask<Void, Void, List<ContactsModel>> {
+
     private ContentResolver contactResolver;
     private Context context;
     private GetContactList getList;
@@ -27,14 +31,16 @@ public class GetContactListAsync extends AsyncTask<Void, Void, List<ContactsMode
     private ContactsModel contactsModel;
 
 
-    public GetContactListAsync(Context context, GetContactList getList)
-    {
+    public GetContactListAsync(Context context, GetContactList getList) {
         this.context = context;
         this.getList = getList;
         this.listContacts = new ArrayList();
         this.listPhones = new ArrayList();
     }
 
+    public boolean havePermissionToReadContacts(Context context) {
+        return (ContextCompat.checkSelfPermission(context, Manifest.permission.READ_CONTACTS) == PackageManager.PERMISSION_DENIED);
+    }
 
     @Override
     protected List<ContactsModel> doInBackground(Void... params) {
@@ -86,9 +92,6 @@ public class GetContactListAsync extends AsyncTask<Void, Void, List<ContactsMode
         return this.listContacts;
 
     }
-
-
-
 
     protected void onPostExecute(List<ContactsModel> contactsModels)
     {

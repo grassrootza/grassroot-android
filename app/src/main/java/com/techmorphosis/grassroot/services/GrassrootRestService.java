@@ -3,6 +3,7 @@ package com.techmorphosis.grassroot.services;
 import com.google.gson.GsonBuilder;
 import com.techmorphosis.grassroot.services.model.GenericResponse;
 import com.techmorphosis.grassroot.services.model.GroupResponse;
+import com.techmorphosis.grassroot.services.model.MemberList;
 import com.techmorphosis.grassroot.services.model.TokenResponse;
 
 import retrofit.RequestInterceptor;
@@ -43,7 +44,6 @@ public class GrassrootRestService {
         }
 
         public RestApi getApi() {
-
             return mRestApi;
         }
 
@@ -73,6 +73,11 @@ public class GrassrootRestService {
 
             @GET("/group/list/{phoneNumber}/{code}")
             Observable<GroupResponse> getUserGroups(@Path("phoneNumber") String phoneNumber, @Path("code") String code);
+
+            // todo : think about paging (groups can be big)
+            @GET("/group/members/{id}/{phoneNumber}/{code}")
+            Observable<MemberList> getGroupMembers(@Path("id") String groupUid, @Path("phoneNumber") String phoneNumber,
+                                                   @Path("code") String code);
 
     }
 

@@ -73,7 +73,7 @@ public class HomeScreen extends PortraitActivity implements NavigationDrawerFrag
             case 3:
                 //Logout
 
-                alertDialogFragment = utilClass.showAlerDialog(getFragmentManager(), getString(R.string.Logout_text), "Yes", "No", true, new AlertDialogListener() {
+                alertDialogFragment = utilClass.showAlertDialog(getFragmentManager(), getString(R.string.Logout_text), "Yes", "No", true, new AlertDialogListener() {
                     @Override
                     public void setRightButton() {//no
 
@@ -154,7 +154,6 @@ public class HomeScreen extends PortraitActivity implements NavigationDrawerFrag
 
             if (SettingPreference.getisHasgroup(HomeScreen.this)) {
                 Log.e("onResume", "Error in creating fragment");
-
                 fragment = new Group_Homepage();
                 openFragment = "Group_Homepage";
             } else {

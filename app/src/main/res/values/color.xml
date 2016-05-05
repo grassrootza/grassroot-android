@@ -2,8 +2,9 @@
 <resources>
 
     <!--styles-->
-    <color name="primaryColor">#207A33</color>
+    <color name="primaryColor">#207a33</color>
     <color name="primaryColorDark">#339661</color>
+    <color name="textSecondaryColorDark">#8A000000</color>
     <color name="windowBackground">#fafafa</color>
 
 

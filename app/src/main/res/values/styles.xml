@@ -61,7 +61,7 @@
         <item name="android:textStyle">bold</item>
     </style>
 
-    <style name="animation_slide_from_right">
+    <style name="animation_fast_flyinout">
         <item name="android:windowEnterAnimation">@anim/flyin_fast</item>
         <item name="android:windowExitAnimation">@anim/flyout_fast</item>
     </style>

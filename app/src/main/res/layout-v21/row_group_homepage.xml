@@ -86,6 +86,7 @@
 
                     >
                     <RelativeLayout
+                        android:id="@+id/member_icons"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:paddingBottom="10dp"

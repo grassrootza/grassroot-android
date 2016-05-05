@@ -6,44 +6,32 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.CheckBox;
 import android.widget.ImageView;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.techmorphosis.grassroot.R;
 import com.techmorphosis.grassroot.models.ContactsModel;
 import com.techmorphosis.grassroot.models.ItemTouchHelperCallback;
-import com.techmorphosis.grassroot.ui.activities.Create_Group;
 
 import java.util.ArrayList;
-import java.util.List;
-import java.util.zip.Inflater;
 
-public class CreateGroupAdapter extends
-		RecyclerView.Adapter<CreateGroupAdapter.ViewHolder>  implements ItemTouchHelperCallback.ItemTouchHelperAdapter {
+public class MemberListAdapter extends
+		RecyclerView.Adapter<MemberListAdapter.ViewHolder>  implements ItemTouchHelperCallback.ItemTouchHelperAdapter {
 
-	private static final String TAG = CreateGroupAdapter.class.getSimpleName();
+	private static final String TAG = MemberListAdapter.class.getSimpleName();
 	private ArrayList<ContactsModel> data;
 	private LayoutInflater inflater;
 
-	public CreateGroupAdapter(ArrayList<ContactsModel> contact,Context context)
-	{
+	public MemberListAdapter(ArrayList<ContactsModel> contact, Context context) {
 		this.data = contact;
 		inflater=LayoutInflater.from(context);
-
-
 	}
 
 	@Override
 	public int getItemViewType(int position) {
-
-		if (position==0)
-		{
+		if (position==0) {
 			return 0;
-		}
-		else
-		{
+		} else {
 			return 1;
 		}
 	}

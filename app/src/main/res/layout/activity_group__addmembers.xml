@@ -6,9 +6,8 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:id="@+id/rl_cg_root"
-    >
-
+    android:id="@+id/rl_am_root"
+    style="@style/AppTheme">
 
     <RelativeLayout
         android:id="@+id/relative_root"
@@ -39,7 +38,7 @@
                 android:layout_height="wrap_content"
                 android:textSize="@dimen/txt_large"
                 android:layout_gravity="center_vertical"
-                android:text="@string/cg_title"
+                android:text="@string/am_title"
                 android:textColor="@color/white" />
 
         </LinearLayout>
@@ -47,7 +46,6 @@
 
         <android.support.design.widget.CoordinatorLayout
             android:id="@+id/CoordinatorLayout"
-
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_below="@+id/toolbar_home">
@@ -85,86 +83,19 @@
                         app:layout_collapseMode="parallax"
                         app:layout_scrollFlags="scroll|enterAlways" >
 
-                        <android.support.design.widget.TextInputLayout
+                        <TextView
+                            android:id="@+id/am_tv_groupname"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:theme="@style/TextLabel"
-                            android:id="@+id/et1" >
-
-                            <EditText
-                                android:id="@+id/et_groupname"
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:hint="@string/cg_group_name"
-                                android:padding="10dp"
-                                android:singleLine="true"
-                                android:ems="10"
-                                android:maxLength="20"
-                                android:imeOptions="actionNext"
-                                android:textSize="34sp"
-                                android:textColor="@color/white"
-                                android:textStyle="normal"
-                                android:textCursorDrawable="@drawable/color_cursor" />
-
-                        </android.support.design.widget.TextInputLayout>
-
-                        <RelativeLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_below="@+id/et1"
-
-                            >
-                            <android.support.design.widget.TextInputLayout
-
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:theme="@style/TextLabel"
-                                android:id="@+id/et2"
-
-                                >
-                                <EditText
-                                    android:id="@+id/et_group_description"
-                                    android:layout_width="match_parent"
-                                    android:layout_height="wrap_content"
-                                    android:hint="@string/cg_group_description"
-                                    android:padding="10dp"
-                                    android:singleLine="true"
-                                    android:imeOptions="actionDone"
-                                    android:textSize="@dimen/txt_medium"
-                                    android:textColor="@color/white"
-                                    android:textStyle="bold"
-                                    android:lines="3"
-                                    android:minLines="3"
-                                    android:maxLines="10"
-                                    android:inputType="textMultiLine|textNoSuggestions"
-                                    android:gravity="top"
-                                    android:maxLength="160"
-                                    android:scrollbars="vertical"
-                                    android:textCursorDrawable="@drawable/color_cursor"
-
-                                    />
-
-                            </android.support.design.widget.TextInputLayout>
-
-
-                            <TextView
-                                android:id="@+id/tv_counter"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_alignParentRight="true"
-                                android:layout_below="@+id/et2"
-                                android:textColor="@color/white"
-                                android:text="0/160"
-                                />
-                        </RelativeLayout>
-
-
-
+                            android:text="@string/cg_group_name"
+                            android:padding="10dp"
+                            android:singleLine="true"
+                            android:maxEms="10"
+                            android:elegantTextHeight="true"
+                            android:textSize="34sp"
+                            android:textColor="@color/white" />
 
                     </RelativeLayout>
-
-
-
 
                 </android.support.design.widget.CollapsingToolbarLayout>
 
@@ -196,7 +127,7 @@
 
 
                 <android.support.v7.widget.RecyclerView
-                    android:id="@+id/rc_members_list"
+                    android:id="@+id/am_members_list"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:scrollbars="vertical"
@@ -210,23 +141,14 @@
 
                 </android.support.v7.widget.RecyclerView>
 
-
             </RelativeLayout>
 
-
-
-
-
             <com.github.clans.fab.FloatingActionMenu
-                android:id="@+id/add_member_options"
+                android:id="@+id/am_add_member_options"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-
                 android:layout_alignParentRight="true"
-
                 android:layout_margin="16dp"
-
-
 
                 fab:menu_shadowColor="#444"
                 fab:menu_colorNormal="#FFB805"
@@ -273,7 +195,7 @@
 
 
     <Button
-        android:id="@+id/bt_save"
+        android:id="@+id/am_bt_save"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:textAllCaps="true"

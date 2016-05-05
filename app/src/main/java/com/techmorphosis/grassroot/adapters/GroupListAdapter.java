@@ -25,26 +25,24 @@ import butterknife.ButterKnife;
 
 /**P
  */
-public class Group_homepageAdapter  extends RecyclerView.Adapter<Group_homepageAdapter.GHP_ViewHolder>{
+public class GroupListAdapter extends RecyclerView.Adapter<GroupListAdapter.GHP_ViewHolder>{
 
     private final Group_Homepage activity;
     Context context;
     View v;
+
     ArrayList<Group> groups;
     ArrayList<Group> oldGroupModel;
-    private String TAG= Group_homepageAdapter.class.getSimpleName();
+    private String TAG= GroupListAdapter.class.getSimpleName();
 
 
     private static final SimpleDateFormat inputSDF = new SimpleDateFormat("dd-MM-yyyy");
     private static final SimpleDateFormat outputSDF = new SimpleDateFormat("EEE, d MMM, ''yy");
 
-
-
-    public Group_homepageAdapter(Context context,ArrayList<Group> groups,Group_Homepage activity)
-    {
+    public GroupListAdapter(Context context, ArrayList<Group> groups, Group_Homepage activity) {
         this.context = context;
         this.groups = groups;
-        this.activity=activity;
+        this.activity = activity;
         Log.e(TAG,"Adapter data.size() is " + groups.size());
     }
 
@@ -56,12 +54,14 @@ public class Group_homepageAdapter  extends RecyclerView.Adapter<Group_homepageA
         return holder;
     }
 
-
     @Override
     public void onBindViewHolder(GHP_ViewHolder holder, int position) {
 
+        Log.d(TAG, "Inside group list adapter ... at position = " + position);
+
         holder.itemView.setLongClickable(true);
-        Group group= groups.get(position);
+        Group group = groups.get(position);
+
         holder.txtGroupname.setText(group.getGroupName());
         holder.txtGroupownername.setText(group.getGroupCreator());
         holder.txtGroupdesc.setText(group.getDescription());
@@ -90,9 +90,9 @@ public class Group_homepageAdapter  extends RecyclerView.Adapter<Group_homepageA
 
         holder.datetime.setText(displayDateTime);
 
-        activity.addLongClickStringAction(context, holder.cardView, position);
-        activity.addClickStringAction(context, holder.cardView, position);
-
+        activity.addGroupRowLongClickListener(holder.cardView, position);
+        activity.addGroupRowShortClickListener(holder.cardView, position);
+        activity.addGroupRowMemberNumberClickListener(holder.memberIcons, position);
     }
 
 
@@ -140,12 +140,9 @@ public class Group_homepageAdapter  extends RecyclerView.Adapter<Group_homepageA
 
     }
 
-
-
     public void clearAll() {
         this.notifyDataSetChanged();
     }
-
 
     public void clearGroups() {
         int size = this.groups.size();
@@ -158,7 +155,6 @@ public class Group_homepageAdapter  extends RecyclerView.Adapter<Group_homepageA
         }
     }
 
-
     public class GHP_ViewHolder extends RecyclerView.ViewHolder {
 
         private CardView cardView;
@@ -166,6 +162,7 @@ public class Group_homepageAdapter  extends RecyclerView.Adapter<Group_homepageA
         private TextView txtGroupownername;
         private TextView txtGroupdesc;
 
+        private RelativeLayout memberIcons;
         private ImageView profileV1;
         private TextView profileV2;
         private TextView datetime;
@@ -179,10 +176,12 @@ public class Group_homepageAdapter  extends RecyclerView.Adapter<Group_homepageA
             txtGroupownername = (TextView) view.findViewById(R.id.txt_groupownername);
             txtGroupdesc = (TextView) view.findViewById(R.id.txt_groupdesc);
 
+            memberIcons = (RelativeLayout) view.findViewById(R.id.member_icons);
             profileV1 = (ImageView) view.findViewById(R.id.profile_v1);
             profileV2 = (TextView) view.findViewById(R.id.profile_v2);
             datetime = (TextView) view.findViewById(R.id.datetime);
 
         }
     }
+
 }

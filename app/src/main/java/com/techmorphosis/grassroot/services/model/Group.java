@@ -12,7 +12,7 @@ import java.util.List;
 /**
  * Created by paballo on 2016/05/04.
  */
-public class Group implements Parcelable{
+public class Group implements Parcelable {
 
     private String id;
     private String groupName;
@@ -23,8 +23,7 @@ public class Group implements Parcelable{
     private DateTime dateTime;
     private String dateTimefull;
     private String dateTimeShort;
-    private List<String> permissions = new ArrayList<String>();
-
+    private List<String> permissions = new ArrayList<>(); // todo: convert this to a set so can do fast hashing
 
     /**
      *

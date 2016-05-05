@@ -1,15 +1,19 @@
 package com.techmorphosis.grassroot.utils;
 
-import com.techmorphosis.grassroot.ui.activities.PhoneBookContacts;
-
 /**
  * Created by ravi on 7/4/16.
  */
-public class Constant
-{
-    public  static  final String PhoneBook_list="PhoneBook_list";
-    public  static  final String Manual_list="Manual_list";
-    public static final  String filterdList="filterdList";
+public class Constant {
 
+    public static final String phoneBookList = "phoneBookList";
+    public static final String filteredList = "filteredList";
+
+    public static final String GROUPUID_FIELD = "groupUid";
+    public static final String GROUPNAME_FIELD = "groupName";
+
+    public static final int activityContactSelection = 1;
+    public static final int activityManualMemberEntry = 2;
+
+    public static final int alertAskForContactPermission = 91;
 
 }

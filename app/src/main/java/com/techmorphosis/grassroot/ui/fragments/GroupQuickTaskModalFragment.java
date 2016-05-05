@@ -15,42 +15,35 @@ import com.techmorphosis.grassroot.R;
 import com.techmorphosis.grassroot.ui.activities.Blank;
 
 
-public class Group_ActivityMenuDialog extends android.support.v4.app.DialogFragment {
+public class GroupQuickTaskModalFragment extends android.support.v4.app.DialogFragment {
 
-    public static final String TAG = Group_ActivityMenuDialog.class.getSimpleName();
-    public static final String ARG_ITEM = "item";
-    public static final String ARG_ITEM_POSITION = "position";
+    private static final String TAG = GroupQuickTaskModalFragment.class.getSimpleName();
+
     private View view;
     private ImageView icHomeVoteActive;
     private ImageView icHomeCallMeetingActive;
     private ImageView icHomeToDoActive;
-    public  Boolean Vote=false,Meeting=false,ToDo=false;
+    public boolean votePermitted=false,meetingPermitted=false,todoPermitted=false;
 
-    public Group_ActivityMenuDialog() {
-    }
-
+    // would rather use good practice and not have empty constructor, but Android is Android
+    public GroupQuickTaskModalFragment() { }
 
     @Override
     public void onStart() {
         super.onStart();
-        getDialog().getWindow().setWindowAnimations(R.style.animation_slide_from_right);
+        getDialog().getWindow().setWindowAnimations(R.style.animation_fast_flyinout);
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
-        view =inflater.inflate(R.layout.group_activties, container, false);
-
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        view =inflater.inflate(R.layout.modal_group_tasks_quick, container, false);
         getDialog().getWindow().requestFeature(Window.FEATURE_NO_TITLE);
         getDialog().getWindow().setBackgroundDrawable(new ColorDrawable(0));
-
         return view;
-
     }
 
-    private void findView()
-    {
+    private void findAndSetUpView() {
+
         icHomeVoteActive = (ImageView) view.findViewById(R.id.ic_home_vote_active);
         icHomeCallMeetingActive = (ImageView) view.findViewById(R.id.ic_home_call_meeting_active);
         icHomeToDoActive = (ImageView) view.findViewById(R.id.ic_home_to_do_active);
@@ -59,75 +52,43 @@ public class Group_ActivityMenuDialog extends android.support.v4.app.DialogFragm
         icHomeVoteActive.setOnClickListener(icHomeVoteActive());
         icHomeToDoActive.setOnClickListener(icHomeToDoActive());
 
-        int height = icHomeVoteActive.getDrawable().getIntrinsicWidth();
-        int width = icHomeVoteActive.getDrawable().getIntrinsicHeight();
-
-   /*     Toast.makeText(getActivity(), "height is " + height, Toast.LENGTH_SHORT).show();
-        Toast.makeText(getActivity(), "width is " + width, Toast.LENGTH_SHORT).show();
-
-        L.e(TAG, "height is ", "" + height);
-        L.e(TAG, "width is ", "" + width);
-*/
     }
 
     @Override
-    public void onActivityCreated(Bundle savedInstanceState)
-    {
+    public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
-        findView();
-        Bundle b= getArguments();
 
+        Bundle b = getArguments();
+        if (b == null) { throw new UnsupportedOperationException("Error! Null arguments passed to modal"); }
 
-      if (b!=null)
-        {
-            Meeting = b.getBoolean("Meeting");
-            Vote = b.getBoolean("Vote");
-            ToDo = b.getBoolean("ToDo");
+        Log.d(TAG, "inside quickTaskModal, passed bundle = " + b.toString());
 
-            Log.e(TAG,"Meeting is " + Meeting);
-            Log.e(TAG,"Vote is " + Vote);
-            Log.e(TAG,"ToDo is " + ToDo);
+        findAndSetUpView();
+        meetingPermitted = b.getBoolean("Meeting");
+        votePermitted = b.getBoolean("Vote");
+        todoPermitted = b.getBoolean("ToDo");
 
-        }
-        else
-        {
-            Log.e(TAG, "null is ");
+        int mtgIcon = meetingPermitted ? R.drawable.ic_home_call_meeting_active : R.drawable.ic_home_call_meeting_inactive;
+        int voteIcon = votePermitted ? R.drawable.ic_home_vote_active : R.drawable.ic_home_vote_inactive;
+        int todoIcon = todoPermitted ? R.drawable.ic_home_to_do_active : R.drawable.ic_home_to_do_inactive;
 
-        }
-
-        if (!Meeting)
-        {
-            icHomeCallMeetingActive.setImageResource(R.drawable.ic_home_call_meeting_inactive);
-        }
-        if (!Vote)
-        {
-            icHomeVoteActive.setImageResource(R.drawable.ic_home_vote_inactive);
-        }
-        if (!ToDo)
-        {
-            icHomeToDoActive.setImageResource(R.drawable.ic_home_to_do_inactive);
-        }
-
-
-
+        icHomeCallMeetingActive.setImageResource(mtgIcon);
+        icHomeVoteActive.setImageResource(voteIcon);
+        icHomeToDoActive.setImageResource(todoIcon);
     }
 
     private View.OnClickListener icHomeToDoActive() {
         return new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (ToDo)
-                {
+                if (todoPermitted) {
                     Intent ToDo= new Intent(getActivity(), Blank.class);
                     ToDo.putExtra("title","ToDo");
                     startActivity(ToDo);
                     getDialog().dismiss();
-                }
-                else
-                {
+                } else {
                     getDialog().dismiss();
                 }
-
             }
         };
     }
@@ -136,19 +97,14 @@ public class Group_ActivityMenuDialog extends android.support.v4.app.DialogFragm
         return new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
-                if (Vote)
-                {
+                if (votePermitted) {
                     Intent Vote= new Intent(getActivity(), Blank.class);
-                   Vote.putExtra("title","Vote");
+                    Vote.putExtra("title","Vote");
                     startActivity(Vote);
                     getDialog().dismiss();
-                }
-                else
-                {
+                } else {
                     getDialog().dismiss();
                 }
-
             }
         };
     }
@@ -157,21 +113,14 @@ public class Group_ActivityMenuDialog extends android.support.v4.app.DialogFragm
                 return  new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-
-
-                        if (Meeting)
-                        {
+                        if (meetingPermitted) {
                             Intent Meeting= new Intent(getActivity(), Blank.class);
                             Meeting.putExtra("title","Meeting");
                             startActivity(Meeting);
                             getDialog().dismiss();
-                        }
-                        else
-                        {
+                        } else {
                             getDialog().dismiss();
                         }
-
-
                     }
                 };
     }

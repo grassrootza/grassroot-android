@@ -40,15 +40,19 @@
             android:name=".ui.activities.Join_Request"
             android:label="@string/title_activity_join__request" />
         <activity
-            android:name=".ui.activities.Create_Group"
+            android:name=".ui.activities.CreateGroupActivity"
             android:label="@string/title_activity_create__group"
             android:windowSoftInputMode="adjustPan" />
         <activity
-            android:name=".ui.activities.PhoneBookContacts"
-            android:label="@string/title_activity_join__request" />
+            android:name=".ui.activities.AddMembersActivity"
+            android:label="@string/title_activity_add_members"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".ui.activities.PhoneBookContactsActivity"
+            android:label="@string/title_activity_phone_book_contacts" />
         <activity
             android:name=".contact.MainActivity"
-            android:label="@string/title_activity_join__request" />
+            android:label="@string/title_activity_mainactivity" />
         <activity
             android:name=".ui.activities.DialogActivity"
             android:label="@string/title_activity_dilog"
@@ -57,7 +61,6 @@
             android:name=".ui.activities.AddContactManually"
             android:label="@string/title_activity_add_contact_manually"
             android:theme="@style/AppTheme" />
-
         <activity
             android:name=".ui.activities.Blank"
             android:label="@string/title_activity_blank"

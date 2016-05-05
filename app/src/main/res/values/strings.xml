@@ -1,10 +1,14 @@
 <resources>
     <string name="app_name">Grassroot</string>
 
-    <string name="hello_world">Hello world!</string>
     <string name="action_settings">Settings</string>
-    <string name="title_activity_homescreen">Homescreen</string>
-    <string name="title_activity_join__request">Join_Request</string>
+    <string name="title_activity_homescreen">Home screen</string>
+    <string name="title_activity_mainactivity">Main activity</string>
+    <string name="title_activity_join__request">Join request</string>
+    <string name="title_activity_create__group">Create a group</string>
+    <string name="title_activity_add_members">Add group members</string>
+    <string name="title_activity_phone_book_contacts">Contact list</string>
+    <string name="title_activity_dilog">DialogActivity</string>
 
     <string name="register"><u>Forgot password?</u></string>
 
@@ -96,8 +100,6 @@
     <string name="search_box">Enter group name</string>
     <string name="validate_search_box">Please search for a group</string>
     <string name="alertbox">Are you sure you want to send a group join request ?</string>
-    <string name="title_activity_create__group">Create_Group</string>
-
 
     <!--    Create Group--><!--cg-->
     <string name="Add">Add</string>
@@ -107,9 +109,13 @@
     <string name="cg_Save">Save</string>
     <string name="cg_title_contact">Current group members</string>
 
+    <!-- Add new members -->
+    <string name="am_title">Add members to group</string>
+    <string name="am_title_contact">Current group members</string>
+
+    <!-- Phone book and other strings -->
     <string name="action_search">Search...</string>
     <string name="cg_dialog_title">Select any one number</string>
-    <string name="title_activity_dilog">DilogActivity</string>
     <string name="cg_valid_number">The number selected is not a valid South African phone number. Please select a different number</string>
     <string name="title_activity_alert_dialog">AlertDialogActivity</string>
     <string name="title_activity_add_contact_manually">AddContactManually</string>
@@ -128,13 +134,16 @@
     <string name="tv_dialog_bottom_title">Quick Add</string>
     <string name="title_activity_blank">Blank</string>
 
-    <!--Sort dilaog-->
-    <string name="sort_title">Sort By</string>
-    <string name="date">Date</string>
-    <string name="role">Role</string>
+    <!--Sort dialog -->
+    <string name="sort_title">Sort groups by:</string>
+    <string name="date">Date of last action</string>
+    <string name="role">Your role</string>
     <string name="Default">Clear</string>
 
-    <!--&#45;&#45;&#45;&#45;&#45;&#45;End-&#45;&#45;&#45;&#45;-->
+    <!-- Group additions -->
+    <string name="gm_add_member">ADD MEMBER</string>
+    <string name="gm_view_members">VIEW MEMBERS</string>
+    <string name="gm_edit_settings">EDIT GROUP</string>
 
     <!--Group ativities-> <!-ga- -->
     <string name="ga_tv_toolbar">Name of group</string>
@@ -155,6 +164,6 @@
 
     <string name="ga_newVote">NEW VOTE</string>
     <string name="ga_newMeeting">NEW MEETING</string>
-    <string name="ga_newToDo">NEW ACTION TODO</string>
+    <string name="ga_newToDo">NEW TODO</string>
 
 </resources>

@@ -24,15 +24,16 @@ import com.github.clans.fab.FloatingActionButton;
 import com.github.clans.fab.FloatingActionMenu;
 import com.techmorphosis.grassroot.Interface.SortInterface;
 import com.techmorphosis.grassroot.R;
-import com.techmorphosis.grassroot.adapters.Group_homepageAdapter;
+import com.techmorphosis.grassroot.adapters.GroupListAdapter;
 import com.techmorphosis.grassroot.services.GrassrootRestService;
 import com.techmorphosis.grassroot.services.model.Group;
 import com.techmorphosis.grassroot.services.model.GroupResponse;
-import com.techmorphosis.grassroot.ui.activities.Create_Group;
+import com.techmorphosis.grassroot.ui.activities.CreateGroupActivity;
 import com.techmorphosis.grassroot.ui.activities.CustomItemAnimator;
 import com.techmorphosis.grassroot.ui.activities.Group_Activities;
 import com.techmorphosis.grassroot.ui.activities.Join_Request;
 import com.techmorphosis.grassroot.ui.activities.SwipeableRecyclerViewTouchListener;
+import com.techmorphosis.grassroot.utils.Constant;
 import com.techmorphosis.grassroot.utils.SettingPreference;
 import com.techmorphosis.grassroot.utils.UtilClass;
 
@@ -55,6 +56,7 @@ public class Group_Homepage extends android.support.v4.app.Fragment {
 
     UtilClass utilClass;
     private LinearLayoutManager mLayoutManager;
+    private Context context;
 
     @BindView(R.id.rl_ghp_root)
     RelativeLayout rlGhpRoot;
@@ -80,7 +82,6 @@ public class Group_Homepage extends android.support.v4.app.Fragment {
     FloatingActionButton icFabJoinGroup;
     @BindView(R.id.ic_fab_start_group)
     FloatingActionButton icFabStartGroup;
-    private Context context;
     @BindView(R.id.iv_cross)
     ImageView ivCross;
     @BindView(R.id.et_search)
@@ -92,8 +93,7 @@ public class Group_Homepage extends android.support.v4.app.Fragment {
     @BindView(R.id.progressBar)
     ProgressBar mProgressBar;
 
-
-    private Group_homepageAdapter group_homepageAdapter;
+    private GroupListAdapter groupListRowAdapter;
 
     private ArrayList<Group> sortedList;
     private ArrayList<Group> organizerList;
@@ -171,7 +171,7 @@ public class Group_Homepage extends android.support.v4.app.Fragment {
                         groupList.addAll(response.getGroups());
                         groupListclone.addAll(response.getGroups());
                         rcGhp.setVisibility(View.VISIBLE);
-                        group_homepageAdapter.addData(groupList);
+                        groupListRowAdapter.addData(groupList);
                         ivGhpSearch.setEnabled(true);
                         ivGhpSort.setEnabled(true);
                     }
@@ -185,8 +185,8 @@ public class Group_Homepage extends android.support.v4.app.Fragment {
         mLayoutManager = new LinearLayoutManager(getActivity());
         rcGhp.setLayoutManager(mLayoutManager);
         rcGhp.setItemAnimator(new CustomItemAnimator());
-        group_homepageAdapter = new Group_homepageAdapter(getActivity(), new ArrayList<Group>(), Group_Homepage.this);
-        rcGhp.setAdapter(group_homepageAdapter);
+        groupListRowAdapter = new GroupListAdapter(getActivity(), new ArrayList<Group>(), Group_Homepage.this);
+        rcGhp.setAdapter(groupListRowAdapter);
 
         SwipeableRecyclerViewTouchListener swipeDeleteTouchListener = new SwipeableRecyclerViewTouchListener(
                 context,
@@ -278,7 +278,7 @@ public class Group_Homepage extends android.support.v4.app.Fragment {
     private void Filter(String s) {
         //convert to Lowercase and then pass to adapter
         String searchwords = s.toLowerCase(Locale.getDefault());
-        group_homepageAdapter.filter(searchwords);
+        groupListRowAdapter.filter(searchwords);
     }
 
     @OnClick(R.id.iv_ghp_drawer)
@@ -317,10 +317,10 @@ public class Group_Homepage extends android.support.v4.app.Fragment {
                         Collections.sort(groupListclone, byDatebigger);
                         rcGhp.setVisibility(View.GONE);
                         mProgressBar.setVisibility(View.VISIBLE);
-                        group_homepageAdapter.clearGroups();
+                        groupListRowAdapter.clearGroups();
                         rcGhp.setVisibility(View.VISIBLE);
                         mProgressBar.setVisibility(View.GONE);
-                        group_homepageAdapter.addData(groupListclone);
+                        groupListRowAdapter.addData(groupListclone);
 
                     }
 
@@ -357,13 +357,13 @@ public class Group_Homepage extends android.support.v4.app.Fragment {
                         Collections.sort(memberList, byDatebigger);
                         sortedList.addAll(organizerList);
                         sortedList.addAll(memberList);
-                        group_homepageAdapter.clearGroups();
+                        groupListRowAdapter.clearGroups();
                         rcGhp.setVisibility(View.VISIBLE);
                         mProgressBar.setVisibility(View.GONE);
 
                         //set data for list
 
-                        group_homepageAdapter.addData(sortedList);
+                        groupListRowAdapter.addData(sortedList);
                          groupList.addAll(groupListclone);
 
 
@@ -380,14 +380,14 @@ public class Group_Homepage extends android.support.v4.app.Fragment {
                         rcGhp.setVisibility(View.GONE);
                         mProgressBar.setVisibility(View.VISIBLE);
 
-                        group_homepageAdapter.clearGroups();
+                        groupListRowAdapter.clearGroups();
 
 
                         rcGhp.setVisibility(View.VISIBLE);
                         mProgressBar.setVisibility(View.GONE);
 
                         //set data for list
-                        group_homepageAdapter.addData(groupList);
+                        groupListRowAdapter.addData(groupList);
 
 
                     }
@@ -464,7 +464,7 @@ public class Group_Homepage extends android.support.v4.app.Fragment {
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
-                Intent icFabStartGroup=new Intent(getActivity(), Create_Group.class);
+                Intent icFabStartGroup=new Intent(getActivity(), CreateGroupActivity.class);
                 startActivity(icFabStartGroup);
 
 
@@ -478,65 +478,66 @@ public class Group_Homepage extends android.support.v4.app.Fragment {
 
     }
 
-    public void addClickStringAction(Context context, View cardView, final int position)
-    {
-        cardView.setOnClickListener(new View.OnClickListener() {
+    public void addGroupRowShortClickListener(View element, final int position) {
+        element.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
                 try {
                     menu1.close(true);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
 
-                Intent blank= new Intent(getActivity(),Group_Activities.class);
-                blank.putExtra("groupid",groupList.get(position).getId());
-                blank.putExtra("groupName",groupList.get(position).getGroupName());
-                startActivity(blank);
+                Intent openGroupTasks= new Intent(getActivity(),Group_Activities.class);
+                openGroupTasks.putExtra("groupid",groupList.get(position).getId());
+                openGroupTasks.putExtra("groupName",groupList.get(position).getGroupName());
+                startActivity(openGroupTasks);
+
             }
         });
-
     }
 
-    public void addLongClickStringAction(final Context context, View button, final int position) {
-        button.setOnLongClickListener(new View.OnLongClickListener() {
+    public void addGroupRowLongClickListener(View element, final int position) {
+        element.setOnLongClickListener(new View.OnLongClickListener() {
             @Override
             public boolean onLongClick(View v) {
                 Log.e(TAG, "Inside group homepage ... onLongClick at position ... " + position);
-                Boolean Meeting = false, ToDo = false, Vote = false;
+
                 Group dialog_model = groupList.get(position);
-
-                // todo: refactor this. turn permissions into a hashsetset and use contains, instead of loop.
-                if (dialog_model.getPermissions().size() > 0) {
-                    for (int i = 0; i < dialog_model.getPermissions().size(); i++) {
-                        switch (dialog_model.getPermissions().get(i)) {
-                            case "GROUP_PERMISSION_CREATE_GROUP_VOTE":
-                                Vote = true;
-                                break;
-                            case "GROUP_PERMISSION_CREATE_LOGBOOK_ENTRY":
-                                ToDo = true;
-                                break;
-                            case "GROUP_PERMISSION_CREATE_GROUP_MEETING":
-                                Meeting = true;
-                                break;
-                        }
-                    }
-                }
-
-                Group_ActivityMenuDialog dialog = new Group_ActivityMenuDialog();
+                GroupQuickTaskModalFragment dialog = new GroupQuickTaskModalFragment();
 
                 Bundle args = new Bundle();
-                args.putBoolean("Meeting", Meeting);
-                args.putBoolean("Vote", Vote);
-                args.putBoolean("ToDo", ToDo);
+                args.putBoolean("Meeting", dialog_model.getPermissions().contains("GROUP_PERMISSION_CREATE_GROUP_MEETING"));
+                args.putBoolean("Vote", dialog_model.getPermissions().contains("GROUP_PERMISSION_CREATE_GROUP_VOTE"));
+                args.putBoolean("ToDo", dialog_model.getPermissions().contains("GROUP_PERMISSION_CREATE_LOGBOOK_ENTRY"));
                 dialog.setArguments(args);
-                dialog.show(getFragmentManager(), "Group_ActivityMenuDialog");
+                dialog.show(getFragmentManager(), "GroupQuickTaskModalFragment");
                 return true;
             }
         });
     }
 
+    public void addGroupRowMemberNumberClickListener(View element, final int position) {
+        element.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Log.e(TAG, "Inside group homepage ... clicked on member button! ... at position = " + position);
+                Group grpMembership = groupList.get(position);
+                GroupQuickMemberModalFragment dialog = new GroupQuickMemberModalFragment();
+
+                Bundle args = new Bundle();
+                args.putString(Constant.GROUPUID_FIELD, grpMembership.getId());
+                args.putString(Constant.GROUPNAME_FIELD, grpMembership.getGroupName());
+
+                // args.putBoolean("addMember", grpMembership.getPermissions().contains("GROUP_PERMISSION_ADD_GROUP_MEMBER"));
+                args.putBoolean("addMember", true);
+                args.putBoolean("viewMembers", grpMembership.getPermissions().contains("GROUP_PERMISSION_SEE_MEMBER_DETAILS"));
+                args.putBoolean("editSettings", grpMembership.getPermissions().contains("GROUP_PERMISSION_UPDATE_GROUP_DETAILS"));
+                dialog.setArguments(args);
+                dialog.show(getFragmentManager(), "GroupQuickMemberModalFragment");
+            }
+        });
+    }
 
 
     @Override

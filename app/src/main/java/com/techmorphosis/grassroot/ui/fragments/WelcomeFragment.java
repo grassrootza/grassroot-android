@@ -16,7 +16,7 @@ import android.widget.TextView;
 
 import com.techmorphosis.grassroot.R;
 import com.techmorphosis.grassroot.adapters.MyPagerAdapter;
-import com.techmorphosis.grassroot.ui.activities.Create_Group;
+import com.techmorphosis.grassroot.ui.activities.CreateGroupActivity;
 import com.techmorphosis.grassroot.ui.activities.Join_Request;
 import com.viewpagerindicator.CirclePageIndicator;
 import com.viewpagerindicator.PageIndicator;
@@ -97,7 +97,7 @@ public class WelcomeFragment extends android.support.v4.app.Fragment {
                 @Override
                 public void onClick(View v) {
 
-                    Intent startgroup= new Intent(getActivity(), Create_Group.class);
+                    Intent startgroup= new Intent(getActivity(), CreateGroupActivity.class);
                     startActivity(startgroup);
                 }
             };

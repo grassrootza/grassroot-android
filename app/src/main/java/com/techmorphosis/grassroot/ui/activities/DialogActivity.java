@@ -149,7 +149,7 @@ public class DialogActivity extends Activity implements  View.OnClickListener {
                 {
                     //not a valid number
 
-                    alertDialogFragment=utilClass.showAlerDialog(getFragmentManager(), getString(R.string.cg_valid_number),"","OK",true, new AlertDialogListener() {
+                    alertDialogFragment=utilClass.showAlertDialog(getFragmentManager(), getString(R.string.cg_valid_number),"","OK",true, new AlertDialogListener() {
                         @Override
                         public void setRightButton()
                         {

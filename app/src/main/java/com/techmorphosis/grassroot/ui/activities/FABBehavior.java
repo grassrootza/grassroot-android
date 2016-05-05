@@ -45,11 +45,11 @@ public class FABBehavior extends FloatingActionButton.Behavior {
                 method.setAccessible(true);
                 if(point <= (int) method.invoke(appBarLayout)) {
                     child.hide();
-                     //   Create_Group.menu2.setVisibility(View.INVISIBLE);
+                     //   CreateGroupActivity.menu2.setVisibility(View.INVISIBLE);
                 } else {
                     child.show();
                     //if (child.isShown())
-                   // Create_Group.menu2.setVisibility(View.VISIBLE);
+                   // CreateGroupActivity.menu2.setVisibility(View.VISIBLE);
 
                 }
                 return true;

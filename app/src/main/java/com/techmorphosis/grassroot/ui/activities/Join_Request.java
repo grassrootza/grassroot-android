@@ -104,7 +104,7 @@ public class Join_Request extends PortraitActivity implements OnClickListener{
                 Join_RequestModel model = joinrequestList.get(position);
 //               / Toast.makeText(getApplicationContext(),""+model.getGroupname(),Toast.LENGTH_LONG).show();
 
-                alerdialog = utilclass.showAlerDialog(getFragmentManager(), getString(R.string.alertbox), "NO", "YES", false, new AlertDialogListener() {
+                alerdialog = utilclass.showAlertDialog(getFragmentManager(), getString(R.string.alertbox), "NO", "YES", false, new AlertDialogListener() {
                     @Override
                     public void setRightButton() {
                         Join_RequestWS();
@@ -426,7 +426,7 @@ public class Join_Request extends PortraitActivity implements OnClickListener{
                             {
 
 
-                                alerdialog = utilclass.showAlerDialog(getFragmentManager(),"Your request has been sent " ,"" ,"OK" ,false,new AlertDialogListener() {
+                                alerdialog = utilclass.showAlertDialog(getFragmentManager(),"Your request has been sent " ,"" ,"OK" ,false,new AlertDialogListener() {
                                     @Override
                                     public void setRightButton() {
 

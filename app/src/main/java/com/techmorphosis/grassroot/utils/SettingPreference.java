@@ -11,11 +11,8 @@ public class SettingPreference {
     // Shared Preferences
     SharedPreferences pref;
 
-
     // Shared pref file name
-
     private static final String PREF_NAME = "Grassroot";
-
 
     // All Shared Preferences Keys
     private static final String IS_LOGIN = "IsLoggedIn";
@@ -32,12 +29,7 @@ public class SettingPreference {
     private static final String PREF_Type = "Pref_type";
     private static final String PREF_HAS_SAVE_CLICKED = "Pref_save_clicked";
 
-
-
-
-
     private static final String PREF_Phone_Token = "Pref_phone_token";
-
 
     private static final String PREF_OTP = "Pref_otp";
 

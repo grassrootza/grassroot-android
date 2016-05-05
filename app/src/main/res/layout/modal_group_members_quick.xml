@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@android:color/transparent">
+
+    <RelativeLayout
+        android:id="@+id/rl"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true">
+
+        <ImageView
+            android:id="@+id/ic_home_add_member_active"
+            android:src="@drawable/ic_home_call_meeting_active"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentTop="true"
+            android:layout_marginRight="10dp"
+            android:layout_centerInParent="true" />
+
+        <TextView
+            android:id="@+id/ic_add_member_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/white"
+            android:text="@string/gm_add_member"
+            android:layout_below="@+id/ic_home_add_member_active"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="5dp"
+            android:layout_marginBottom="10dp"
+            />
+
+        <ImageView
+            android:id="@+id/ic_home_view_members_active"
+            android:src="@drawable/ic_home_vote_active"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/ic_add_member_text"
+            android:layout_alignLeft="@+id/ic_home_add_member_active"
+            android:layout_alignStart="@+id/ic_home_add_member_active" />
+
+        <TextView
+            android:id="@+id/ic_view_members_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/white"
+            android:text="@string/gm_view_members"
+            android:layout_below="@+id/ic_home_view_members_active"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="5dp"
+            android:layout_marginBottom="10dp" />
+
+        <ImageView
+            android:id="@+id/ic_edit_group_active"
+            android:src="@drawable/ic_home_to_do_active"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/ic_view_members_text"
+            android:layout_alignLeft="@+id/ic_home_view_members_active"
+            android:layout_alignStart="@+id/ic_home_view_members_active" />
+
+        <TextView
+            android:id="@+id/ic_edit_group_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/white"
+            android:text="@string/gm_edit_settings"
+            android:layout_below="@+id/ic_edit_group_active"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="5dp"
+            android:layout_marginBottom="10dp" />
+
+    </RelativeLayout>
+
+</RelativeLayout>
