@@ -8,9 +8,14 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import com.techmorphosis.grassroot.R;
-import com.techmorphosis.grassroot.models.Join_RequestModel;
+import com.techmorphosis.grassroot.services.model.GroupSearchModel;
+
 
 import java.util.ArrayList;
+import java.util.List;
+
+import butterknife.BindView;
+import butterknife.ButterKnife;
 
 /**
  * Created by admin on 26-Mar-16.
@@ -18,36 +23,34 @@ import java.util.ArrayList;
 public class JoinRequestAdapter extends RecyclerView.Adapter<JoinRequestAdapter.JoinRequestViewHolder> {
 
     private final Context mcontext;
-    private final ArrayList<Join_RequestModel> data;
+    private final List<GroupSearchModel> data;
     LayoutInflater inflater;
 
-    public JoinRequestAdapter(Context context, ArrayList<Join_RequestModel> joinrequestList)
-    {
-        this.mcontext=context;
-        this.data=joinrequestList;
-        inflater=LayoutInflater.from(context);
+    public JoinRequestAdapter(Context context, List<GroupSearchModel> joinrequestList) {
+        this.mcontext = context;
+        this.data = joinrequestList;
+        inflater = LayoutInflater.from(context);
     }
 
-    public void addApplications(ArrayList<Join_RequestModel> applications) {
-        this.data.addAll(applications);
-        this.notifyItemRangeInserted(0, applications.size() - 1);
+    public void addResults(List<GroupSearchModel> groups) {
+        this.data.addAll(groups);
+        this.notifyItemRangeInserted(0, groups.size() - 1);
     }
 
     @Override
     public JoinRequestViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
 
-        View v=inflater.inflate(R.layout.listview_row_joinrequest,parent,false);
+        View v = inflater.inflate(R.layout.listview_row_joinrequest, parent, false);
         JoinRequestViewHolder holder = new JoinRequestViewHolder(v);
         return holder;
     }
 
     @Override
-    public void onBindViewHolder(JoinRequestViewHolder holder, int position)
-    {
-        Join_RequestModel model= data.get(position);
-        holder.txtGroupname.setText(model.getGroupname());
+    public void onBindViewHolder(JoinRequestViewHolder holder, int position) {
+        GroupSearchModel model = data.get(position);
+        holder.txtGroupname.setText(model.getGroupCreator());
         holder.txtGroupownername.setText(model.getGroupCreator());
-        holder.txtGroupdesc.setText(model.getGroup_describe());
+        holder.txtGroupdesc.setText(model.getDescription());
 
     }
 
@@ -68,18 +71,18 @@ public class JoinRequestAdapter extends RecyclerView.Adapter<JoinRequestAdapter.
         }
     }
 
-    public static class JoinRequestViewHolder extends  RecyclerView.ViewHolder
-    {
-
-         TextView txtGroupname;
-         TextView txtGroupownername;
-         TextView txtGroupdesc;
+    public static class JoinRequestViewHolder extends RecyclerView.ViewHolder {
+        @BindView(R.id.txt_groupname)
+        TextView txtGroupname;
+        @BindView(R.id.txt_groupownername)
+        TextView txtGroupownername;
+        @BindView(R.id.txt_groupdesc)
+        TextView txtGroupdesc;
 
         public JoinRequestViewHolder(View view) {
             super(view);
-            txtGroupname = (TextView) view.findViewById(R.id.txt_groupname);
-            txtGroupownername = (TextView) view.findViewById(R.id.txt_groupownername);
-            txtGroupdesc = (TextView) view.findViewById(R.id.txt_groupdesc);
+            ButterKnife.bind(this, view);
+
         }
     }
 

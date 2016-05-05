@@ -20,6 +20,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.zip.Inflater;
 
+import butterknife.BindView;
+import butterknife.ButterKnife;
+
 public class CreateGroupAdapter extends
 		RecyclerView.Adapter<CreateGroupAdapter.ViewHolder>  implements ItemTouchHelperCallback.ItemTouchHelperAdapter {
 
@@ -31,7 +34,6 @@ public class CreateGroupAdapter extends
 	{
 		this.data = contact;
 		inflater=LayoutInflater.from(context);
-
 
 	}
 
@@ -48,25 +50,12 @@ public class CreateGroupAdapter extends
 		}
 	}
 
-	// Create new views
+
 	@Override
 	public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-		// create a new view
-		View v;
-		/*if (viewType==0)
-		{
-			 v=inflater.inflate(R.layout.vh_item_header, parent, false);
 
-		}
-		else
-		{
-			 v=inflater.inflate(R.layout.cardview_row, parent, false);
 
-		}
-		*/
-		v=inflater.inflate(R.layout.cardview_row, parent, false);
-		// create ViewHolder
-
+		View v=inflater.inflate(R.layout.cardview_row, parent, false);
 		ViewHolder viewHolder = new ViewHolder(v);
 
 		return viewHolder;
@@ -104,19 +93,18 @@ public class CreateGroupAdapter extends
 
 	public static   class ViewHolder extends RecyclerView.ViewHolder {
 
-		  TextView tv_person_name;
-
+		@BindView(R.id.tv_cg_title)
+		TextView tv_person_name;
+		@BindView(R.id.tv_person_name)
 		ImageView iv_Selected;
-		  TextView tv_cg_title;
+		@BindView(R.id.iv_Selected_cr)
+		TextView tv_cg_title;
 
 
 		public ViewHolder(View itemLayoutView)
 		{
 			super(itemLayoutView);
-
-			tv_cg_title = (TextView) itemLayoutView.findViewById(R.id.tv_cg_title);
-			tv_person_name = (TextView) itemLayoutView.findViewById(R.id.tv_person_name_cr);
-			iv_Selected= (ImageView) itemLayoutView.findViewById(R.id.iv_Selected_cr);
+			ButterKnife.bind(this, itemLayoutView);
 
 		}
 

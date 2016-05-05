@@ -1,5 +1,6 @@
 package com.techmorphosis.grassroot.ui.activities;
 
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.graphics.Color;
 import android.os.Bundle;
@@ -21,67 +22,78 @@ import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
-import com.android.volley.NoConnectionError;
-import com.android.volley.TimeoutError;
-import com.android.volley.VolleyError;
 import com.techmorphosis.grassroot.Interface.ClickListener;
-import com.techmorphosis.grassroot.Network.AllLinsks;
-import com.techmorphosis.grassroot.Network.NetworkCall;
 import com.techmorphosis.grassroot.R;
 import com.techmorphosis.grassroot.RecyclerView.RecyclerTouchListener;
 import com.techmorphosis.grassroot.adapters.JoinRequestAdapter;
-import com.techmorphosis.grassroot.models.Join_RequestModel;
+import com.techmorphosis.grassroot.services.GrassrootRestService;
+import com.techmorphosis.grassroot.services.model.GenericResponse;
+import com.techmorphosis.grassroot.services.model.GroupSearchModel;
+import com.techmorphosis.grassroot.services.model.GroupSearchResponse;
 import com.techmorphosis.grassroot.ui.fragments.AlertDialogFragment;
 import com.techmorphosis.grassroot.utils.SettingPreference;
 import com.techmorphosis.grassroot.utils.UtilClass;
 import com.techmorphosis.grassroot.utils.listener.AlertDialogListener;
-import com.techmorphosis.grassroot.utils.listener.ErrorListenerVolley;
-import com.techmorphosis.grassroot.utils.listener.ResponseListenerVolley;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.List;
+
+import butterknife.BindView;
+import butterknife.ButterKnife;
+import butterknife.OnClick;
+import retrofit.RetrofitError;
+import rx.Observer;
+import rx.android.schedulers.AndroidSchedulers;
+import rx.schedulers.Schedulers;
 
 public class Join_Request extends PortraitActivity implements OnClickListener{
 
-    private Toolbar toolbar;
-    private TextView txtToolbar;
-    private EditText et_searchbox;
+    @BindView(R.id.toolbar)
+    Toolbar toolbar;
+    @BindView(R.id.txt_toolbar)
+    TextView txtToolbar;
+    @BindView(R.id.et_searchbox)
+    EditText et_searchbox;
     private UtilClass utilclass;
-    private RecyclerView jrRecyclerView;
+    @BindView(R.id.jr_RecyclerView)
+    RecyclerView jrRecyclerView;
+    @BindView(R.id.im_no_results)
+    ImageView imNOResults;
+    @BindView(R.id.im_server_error)
+    ImageView imServerError;
+    @BindView(R.id.im_no_internet)
+    ImageView imNOInternet;
+    @BindView(R.id.rl_root)
+    RelativeLayout rlRoot;
     private LinearLayoutManager mLayoutManager;
     private JoinRequestAdapter joinrequestAdapter;
-            ArrayList<Join_RequestModel>  joinrequestList;
+    private List<GroupSearchModel> joinrequestList;
     private boolean btn_close;
-    private String prgMessage;
-    private boolean prgboolean;
-    private RelativeLayout rlRoot;
     private String TAG=Join_Request.class.getSimpleName();
     private Snackbar snackbar;
-    private View errorLayout;
-    private ImageView imNOResults;
-    private ImageView imServerError;
-    private ImageView imNOInternet;
+    @BindView(R.id.error_layout)
+    View errorLayout;
     private AlertDialogFragment alerdialog;
-    String uid;
+    private String uid;
+    //todo implement dependency injection
+    private GrassrootRestService grassrootRestService = new GrassrootRestService();
+    private ProgressDialog progressDialog;
+    private String prgMessage = "Please Wait..";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_join__request);
-
-        findViews();
+        progressDialog = new ProgressDialog(this);
+        progressDialog.setMessage(prgMessage);
+        ButterKnife.bind(this);
+        setUpSearchBox();
         setUpToolbar();
         init();
-        jrRecyclerView();
+        setUpRecyclerView();
     }
 
-    private void jrRecyclerView()
+    private void setUpRecyclerView()
     {
         // use this setting to improve performance if you know that changes
         // in content do not change the layout size of the RecyclerView
@@ -93,21 +105,20 @@ public class Join_Request extends PortraitActivity implements OnClickListener{
         jrRecyclerView.setItemAnimator(new CustomItemAnimator());
 
         // specify an adapter
-        joinrequestAdapter = new JoinRequestAdapter(getApplicationContext(),new ArrayList<Join_RequestModel>());
+        joinrequestAdapter = new JoinRequestAdapter(getApplicationContext(),new ArrayList<GroupSearchModel>());
         jrRecyclerView.setAdapter(joinrequestAdapter);
 
 
-        // jrRecyclerView.setItemAnimator(new DefaultItemAnimator());
+        // setUpRecyclerView.setItemAnimator(new DefaultItemAnimator());
         jrRecyclerView.addOnItemTouchListener(new RecyclerTouchListener(getApplicationContext(), jrRecyclerView, new ClickListener() {
             @Override
             public void onClick(View view, int position) {
-                Join_RequestModel model = joinrequestList.get(position);
-//               / Toast.makeText(getApplicationContext(),""+model.getGroupname(),Toast.LENGTH_LONG).show();
+                uid = joinrequestList.get(position).getId();
 
                 alerdialog = utilclass.showAlerDialog(getFragmentManager(), getString(R.string.alertbox), "NO", "YES", false, new AlertDialogListener() {
                     @Override
                     public void setRightButton() {
-                        Join_RequestWS();
+                        joinRequestWS();
                         alerdialog.dismiss();
 
                     }
@@ -131,28 +142,15 @@ public class Join_Request extends PortraitActivity implements OnClickListener{
     }
 
 
-
     private void init()
     {
         utilclass= new UtilClass();
         joinrequestList=new ArrayList<>();
     }
 
-    private void findViews()
+    private void setUpSearchBox()
     {
-        toolbar = (Toolbar) findViewById(R.id.toolbar);
-        txtToolbar = (TextView) findViewById(R.id.txt_toolbar);
-        rlRoot = (RelativeLayout) findViewById(R.id.rl_root);
-        errorLayout =  findViewById(R.id.error_layout);
-        imNOResults = (ImageView) errorLayout.findViewById(R.id.im_no_results);
-        imServerError = (ImageView) errorLayout.findViewById(R.id.im_server_error);
-        imNOInternet = (ImageView) errorLayout.findViewById(R.id.im_no_internet);
-        imNOResults.setOnClickListener(this);
-        imServerError.setOnClickListener(this);
-        imNOInternet.setOnClickListener(this);
 
-        jrRecyclerView = (RecyclerView) findViewById(R.id.jr_RecyclerView);
-        et_searchbox=(EditText) findViewById(R.id.et_searchbox);
         et_searchbox.addTextChangedListener(new TextWatcher()
         {
             @Override
@@ -243,6 +241,7 @@ public class Join_Request extends PortraitActivity implements OnClickListener{
     private void Group_SearchWS()
     {
 
+       String searchTerm = et_searchbox.getText().toString().trim();
         Log.e(TAG, "Group_SearchWS");
         joinrequestList.clear();
         jrRecyclerView.setVisibility(View.INVISIBLE);
@@ -250,257 +249,83 @@ public class Join_Request extends PortraitActivity implements OnClickListener{
         imNOInternet.setVisibility(View.INVISIBLE);
         imNOResults.setVisibility(View.INVISIBLE);
         imServerError.setVisibility(View.INVISIBLE);
+        grassrootRestService.getApi().search(searchTerm).subscribeOn(Schedulers.newThread())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe(new Observer<GroupSearchResponse>() {
+                @Override
+                public void onCompleted() {
+                    progressDialog.dismiss();
+                }
+                @Override
+                public void onError(Throwable e) {
+                    progressDialog.dismiss();
+                    jrRecyclerView.setVisibility(View.GONE);
 
-
-        String prgMessage = "Please Wait..";
-        boolean prgboolean = true;
-
-        try {
-            Log.e(TAG, "link is " + AllLinsks.groupsearch + URLEncoder.encode(et_searchbox.getText().toString(), "UTF-8"));
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
-        }
-
-
-        try {
-            NetworkCall networkCall = new NetworkCall(
-                    Join_Request.this,
-
-                    new ResponseListenerVolley() {
-                        @Override
-                        public void onSuccess(String s)
-                        {
-                            Log.e(TAG, " onSuccess " + s);
-
-                            jrRecyclerView.setVisibility(View.VISIBLE);
-
-                            String status,message,code,groupName,description,groupCreator,count;
-                            try {
-                                JSONObject jsonobject= new JSONObject(s);
-                                status= jsonobject.getString("status");
-
-
-                                if (status.equalsIgnoreCase("SUCCESS"))
-                                {
-
-                                    code = jsonobject.getString("code");
-                                    message = jsonobject.getString("message");
-                                    JSONArray jsonarray = jsonobject.getJSONArray("data");
-                                    for (int i = 0; i < jsonarray.length() ; i++)
-                                    {
-                                        JSONObject json=jsonarray.getJSONObject(i);
-                                        uid= json.getString("id");
-                                        groupName = json.getString("groupName");
-                                        description = json.getString("description");
-                                        groupCreator = json.getString("groupCreator");
-                                        count = json.getString("count");
-
-
-                                        Join_RequestModel model = new Join_RequestModel();
-                                        model.setId(uid);
-                                        model.setGroupname(groupName);
-                                        model.setGroup_describe(description);
-                                        model.setGroupCreator(groupCreator);
-                                        model.setCount(count);
-                                        joinrequestList.add(model);
-
-                                  /*      Log.e(TAG, "i is " + i);
-                                        Log.e(TAG, "id is " + uid);
-                                        Log.e(TAG, "groupName is " + groupName);
-                                        Log.e(TAG, "description is " + description);
-                                        Log.e(TAG, "groupCreator is " + groupCreator);
-                                        Log.e(TAG, "count is " + count);*/
-
-
-                                    }
-
-                                  /*  Log.e(TAG, "status is " + status);
-                                    Log.e(TAG, "code is " + code);
-                                    Log.e(TAG, "message is " + message);*/
-
-                                    //pre-execute
-                                    joinrequestAdapter.clearApplications();
-
-                                    jrRecyclerView.setVisibility(View.VISIBLE);
-
-                                    joinrequestAdapter.addApplications(joinrequestList);
-
-                                }
-
-
-
-
-                            }
-                            catch (JSONException e) {
-                                e.printStackTrace();
-                            }
-
-
-
-                        }
+                    RetrofitError error = (RetrofitError)e;
+                    if(error.getKind().equals(RetrofitError.Kind.NETWORK)){
+                        showSnackBar(getString(R.string.No_network),getString(R.string.Retry),Snackbar.LENGTH_INDEFINITE);
+                    }else{
+                        errorLayout.setVisibility(View.VISIBLE);
+                        imNOResults.setVisibility(View.VISIBLE);
                     }
-                    ,
-                    new ErrorListenerVolley() {
-                        @Override
-                        public void onError(VolleyError volleyError) {
 
-                            if ((volleyError instanceof NoConnectionError) || (volleyError instanceof TimeoutError))
-                            {
-                                jrRecyclerView.setVisibility(View.GONE);
-                                errorLayout.setVisibility(View.VISIBLE);
-                                imNOInternet.setVisibility(View.VISIBLE);
+                }
+                @Override
+                public void onNext(GroupSearchResponse response) {
+                    progressDialog.dismiss();
+                    jrRecyclerView.setVisibility(View.VISIBLE);
+                    joinrequestAdapter.clearApplications();
+                    joinrequestList = response.getGroups();
+                    joinrequestAdapter.addResults(joinrequestList);
+                }
+            });
 
-                            }
-                            else
-                            {
-                                try {
-                                    String responseBody = new String(volleyError.networkResponse.data,"utf-8");
-                                    Log.e(TAG, "responseBody " + responseBody);
-                                    String status, message, code = null;
-                                    JSONObject jsonObject = new JSONObject(responseBody);
-                                    status = jsonObject.getString("status");
-                                    message = jsonObject.getString("message");
-
-                                    if (status.equalsIgnoreCase("Failure")) {
-                                        Log.e(TAG, "failure");
-                                        Log.e(TAG, "code is " + code);
-                                        Log.e(TAG, "message is " + message);
-
-                                       jrRecyclerView.setVisibility(View.GONE);
-                                        errorLayout.setVisibility(View.VISIBLE);
-                                        imNOResults.setVisibility(View.VISIBLE);
-
-
-
-                                    }
-
-
-
-                                } catch (UnsupportedEncodingException e) {
-                                    e.printStackTrace();
-                                } catch (JSONException e) {
-                                    e.printStackTrace();
-                                }
-
-                            }
-
-                        }
-                    }
-                    ,AllLinsks.groupsearch + URLEncoder.encode(et_searchbox.getText().toString(), "UTF-8")
-                    ,prgMessage
-                    ,prgboolean
-            );
-
-            networkCall.makeStringRequest_GET();
-
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
-        }
 
 
     }
 
-    private void Join_RequestWS()
+    private void joinRequestWS()
     {
-        Log.e(TAG, "Join_RequestWS");
-
-
-        Log.e(TAG,"Join_RequestWS link is "  + AllLinsks.joinrequest+ SettingPreference.getuser_mobilenumber(Join_Request.this)+"/"+ SettingPreference.getuser_token(Join_Request.this));
-
-        NetworkCall networkCall = new NetworkCall(
-                //context
-                Join_Request.this,
-
-                //response
-                new ResponseListenerVolley() {
+        Log.e(TAG, "joinRequestWS");
+        progressDialog.show();
+        String phoneNumber = SettingPreference.getuser_mobilenumber(this);
+        String code = SettingPreference.getuser_token(this);
+        grassrootRestService.getApi().groupJoinRequest(phoneNumber,code,uid)
+                .subscribeOn(Schedulers.newThread())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Observer<GenericResponse>() {
                     @Override
-                    public void onSuccess(String s)
-                    {
-                        String  status,message;
-                        try {
-                            JSONObject jsonObject= new JSONObject(s);
-                            status=jsonObject.getString("status");
-                            message=jsonObject.getString("message");
-
-                            if (status.equalsIgnoreCase("SUCCESS"))
-                            {
-
-
-                                alerdialog = utilclass.showAlerDialog(getFragmentManager(),"Your request has been sent " ,"" ,"OK" ,false,new AlertDialogListener() {
-                                    @Override
-                                    public void setRightButton() {
-
-                                        finish();
-                                         alerdialog.dismiss();
-
-                                    }
-
-                                    @Override
-                                    public void setLeftButton() {
-
-                                    }
-                                });
-
-                            }
-
-
-
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                        }
-
-
+                    public void onCompleted() {
+                        progressDialog.dismiss();
                     }
-                },
-
-                //error
-                new ErrorListenerVolley()
-                {
                     @Override
-                    public void onError(VolleyError volleyError)
-                    {
-                        if ((volleyError instanceof NoConnectionError)|| (volleyError instanceof TimeoutError))
-                        {
+                    public void onError(Throwable e) {
+                        progressDialog.dismiss();
+                        RetrofitError error = (RetrofitError)e;
+                        if(error.getKind().equals(RetrofitError.Kind.NETWORK)){
                             showSnackBar(getString(R.string.No_network),getString(R.string.Retry),Snackbar.LENGTH_INDEFINITE);
+                        }else{
+                            showSnackBar(getString(R.string.USER_ALREADY_PART),"",snackbar.LENGTH_LONG);
                         }
-                        else
-                        {
-                            try
-                            {
-                                String responsebody = new String(volleyError.networkResponse.data,"utf-8");
-                                Log.e(TAG, "responseBody " + responsebody);
-                                JSONObject jsonObject = new JSONObject(responsebody);
-                                String status = jsonObject.getString("status");
-                                String message = jsonObject.getString("message");
-                                if (status.equalsIgnoreCase("FAILURE"))
-                                {
-                                    Log.e(TAG, "status is" + status);
-                                    Log.e(TAG, "message is" + message);
 
-                                    showSnackBar(getString(R.string.INVALID_TOKEN),"",snackbar.LENGTH_SHORT);
-                                }
-
-
-                            } catch (UnsupportedEncodingException e) {
-                                e.printStackTrace();
-                            } catch (JSONException e) {
-                                e.printStackTrace();
-                            }
-
-                        }
                     }
-                },
+                    @Override
+                    public void onNext(GenericResponse response) {
+                        progressDialog.dismiss();
+                        alerdialog = utilclass.showAlerDialog(getFragmentManager(),"Your request has been sent " ,"" ,"OK" ,false,new AlertDialogListener() {
+                            @Override
+                            public void setRightButton() {
+                                finish();
+                                alerdialog.dismiss();
 
-                AllLinsks.joinrequest+ SettingPreference.getuser_mobilenumber(Join_Request.this)+"/"+ SettingPreference.getuser_token(Join_Request.this),
-                prgMessage,
-                prgboolean
+                            }
+                            @Override
+                            public void setLeftButton() {
 
-        );
-
-        HashMap<String,String> hashMap=new HashMap<String,String>();
-        hashMap.put("uid", uid);
-
-        networkCall.makeStringRequest_POST(hashMap);
+                            }
+                        });
+                    }
+                });
 
     }
 
@@ -526,7 +351,7 @@ public class Join_Request extends PortraitActivity implements OnClickListener{
             snackbar.setAction(buttontext, new OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    Join_RequestWS();
+                    joinRequestWS();
                 }
             });
         }
@@ -534,7 +359,7 @@ public class Join_Request extends PortraitActivity implements OnClickListener{
 
     }
 
-    @Override
+    @OnClick({R.id.im_no_internet, R.id.im_no_results, R.id.im_server_error})
     public void onClick(View v)
     {
         if (v==imNOInternet || v==imNOResults || v==imNOResults )

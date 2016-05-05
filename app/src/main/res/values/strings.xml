@@ -156,5 +156,6 @@
     <string name="ga_newVote">NEW VOTE</string>
     <string name="ga_newMeeting">NEW MEETING</string>
     <string name="ga_newToDo">NEW ACTION TODO</string>
+    <string name="USER_ALREADY_PART">User already part of group.</string>
 
 </resources>
