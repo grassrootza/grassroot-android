@@ -36,7 +36,6 @@ import com.techmorphosis.grassroot.services.model.GenericResponse;
 import com.techmorphosis.grassroot.utils.Constant;
 import com.techmorphosis.grassroot.utils.PermissionUtils;
 import com.techmorphosis.grassroot.utils.SettingPreference;
-import com.techmorphosis.grassroot.utils.UtilClass;
 
 import java.util.ArrayList;
 

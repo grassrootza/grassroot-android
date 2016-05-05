@@ -63,7 +63,10 @@ public class StartActivity extends PortraitActivity implements HomeScreenViewFra
     private boolean otpscreen = false;
     private boolean registerscreen = false;
     public boolean loginscreen = false;
-    private ProgressDialog progressDialog;
+
+    private String userName;
+    private String mobileNumber;
+    private String data;
 
 
     @Nullable
@@ -85,15 +88,11 @@ public class StartActivity extends PortraitActivity implements HomeScreenViewFra
     @Nullable
     @BindView(R.id.rl_start)
     RelativeLayout rlStart;
-
-    GrassrootRestService grassrootRestService = new GrassrootRestService();
-
-
-    private String userName;
-    private String mobileNumber;
-    private String data;
+    private ProgressDialog progressDialog;
+    private GrassrootRestService grassrootRestService = new GrassrootRestService();
 
 
+    @Override
     protected void onCreate(Bundle bundle) {
 
         Log.d(TAG, "inside StartActivity ... calling onCreate()");

@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.Locale;
 
+import butterknife.BindView;
 import butterknife.ButterKnife;
 
 /**P
@@ -29,7 +30,6 @@ public class GroupListAdapter extends RecyclerView.Adapter<GroupListAdapter.GHP_
 
     private final Group_Homepage activity;
     Context context;
-    View v;
 
     ArrayList<Group> groups;
     ArrayList<Group> oldGroupModel;
@@ -157,30 +157,27 @@ public class GroupListAdapter extends RecyclerView.Adapter<GroupListAdapter.GHP_
 
     public class GHP_ViewHolder extends RecyclerView.ViewHolder {
 
-        private CardView cardView;
-        private TextView txtGroupname;
-        private TextView txtGroupownername;
-        private TextView txtGroupdesc;
-
-        private RelativeLayout memberIcons;
-        private ImageView profileV1;
-        private TextView profileV2;
-        private TextView datetime;
+        @BindView(R.id.main_view)
+        CardView cardView;
+        @BindView(R.id.txt_groupname)
+        TextView txtGroupname;
+        @BindView(R.id.txt_groupownername)
+        TextView txtGroupownername;
+        @BindView(R.id.txt_groupdesc)
+        TextView txtGroupdesc;
+        @BindView(R.id.profile_v1)
+        ImageView profileV1;
+        @BindView(R.id.profile_v2)
+        TextView profileV2;
+        @BindView(R.id.datetime)
+        TextView datetime;
+        @BindView(R.id.member_icons)
+        RelativeLayout memberIcons;
 
 
         public GHP_ViewHolder(View view) {
             super(view);
-
-            cardView = (CardView) view.findViewById(R.id.main_view);
-            txtGroupname = (TextView) view.findViewById(R.id.txt_groupname);
-            txtGroupownername = (TextView) view.findViewById(R.id.txt_groupownername);
-            txtGroupdesc = (TextView) view.findViewById(R.id.txt_groupdesc);
-
-            memberIcons = (RelativeLayout) view.findViewById(R.id.member_icons);
-            profileV1 = (ImageView) view.findViewById(R.id.profile_v1);
-            profileV2 = (TextView) view.findViewById(R.id.profile_v2);
-            datetime = (TextView) view.findViewById(R.id.datetime);
-
+            ButterKnife.bind(this, view);
         }
     }
 
