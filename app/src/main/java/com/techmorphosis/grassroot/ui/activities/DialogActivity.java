@@ -14,7 +14,7 @@ import com.techmorphosis.grassroot.Interface.ClickListener;
 import com.techmorphosis.grassroot.R;
 import com.techmorphosis.grassroot.RecyclerView.RecyclerTouchListener;
 import com.techmorphosis.grassroot.adapters.MyRecyclerAdapter;
-import com.techmorphosis.grassroot.models.ContactsModel;
+import com.techmorphosis.grassroot.models.SingleContact;
 import com.techmorphosis.grassroot.ui.fragments.AlertDialogFragment;
 import com.techmorphosis.grassroot.utils.UtilClass;
 
@@ -37,7 +37,7 @@ public class DialogActivity extends Activity implements  View.OnClickListener {
     public TextView bt_cg_right;
     @BindView(R.id.bt_cg_left)
     public TextView bt_cg_left;
-    public ArrayList<ContactsModel> multiplenumbers;
+    public ArrayList<SingleContact> multiplenumbers;
     public String selectednumber;
     private UtilClass utilClass;
     private AlertDialogFragment alertDialogFragment;
@@ -62,18 +62,18 @@ public class DialogActivity extends Activity implements  View.OnClickListener {
             bt_cg_right.setEnabled(false);
         }
         for (int i = 0; i < numberlist.size(); i++) {
-            ContactsModel contactsModel = new ContactsModel();
-            contactsModel.selectedNumber = numberlist.get(i);
+            SingleContact singleContact = new SingleContact();
+            singleContact.selectedNumber = numberlist.get(i);
             if (selectednumber.equals(numberlist.get(i))) {
-                contactsModel.isSelected = true;
+                singleContact.isSelected = true;
 
 
             } else {
-                contactsModel.isSelected = false;
+                singleContact.isSelected = false;
 
             }
 
-            multiplenumbers.add(contactsModel);
+            multiplenumbers.add(singleContact);
 
         }
 
@@ -99,7 +99,7 @@ public class DialogActivity extends Activity implements  View.OnClickListener {
 
                 //proceed
                 for (int i = 0; i < multiplenumbers.size(); i++) {
-                    ContactsModel model = multiplenumbers.get(i);
+                    SingleContact model = multiplenumbers.get(i);
 
                     if (i == position) {
                         //ipdate the selectednumber
@@ -119,13 +119,13 @@ public class DialogActivity extends Activity implements  View.OnClickListener {
                 adapter.notifyDataSetChanged();
 
                 /*
-                ContactsModel validmodel = multiplenumbers.get(position);
+                SingleContact validmodel = multiplenumbers.get(position);
                 if (validnumber(validmodel.selectedNumber))
                 {
                    //valid number
                     //proceed
                     for (int i = 0; i < multiplenumbers.size(); i++) {
-                        ContactsModel model = multiplenumbers.get(i);
+                        SingleContact model = multiplenumbers.get(i);
 
                         if (i == position) {
                             model.isSelected = true;

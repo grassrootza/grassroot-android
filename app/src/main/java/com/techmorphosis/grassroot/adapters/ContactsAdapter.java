@@ -12,7 +12,7 @@ import android.widget.TextView;
 import com.techmorphosis.grassroot.ContactLib.SearchablePinnedHeaderListViewAdapter;
 import com.techmorphosis.grassroot.ContactLib.StringArrayAlphabetIndexer;
 import com.techmorphosis.grassroot.R;
-import com.techmorphosis.grassroot.models.ContactsModel;
+import com.techmorphosis.grassroot.models.SingleContact;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,26 +24,24 @@ import java.util.Locale;
 // ////////////////////////////////////////////////////////////
 // ContactsAdapter //
 // //////////////////
-public class ContactsAdapter extends SearchablePinnedHeaderListViewAdapter<ContactsModel>
+public class ContactsAdapter extends SearchablePinnedHeaderListViewAdapter<SingleContact>
 {
     public  Context mcontext;
     private LayoutInflater mInflater;
-    private ArrayList<ContactsModel> mContacts;
+    private ArrayList<SingleContact> mContacts;
     private final int CONTACT_PHOTO_IMAGE_SIZE;
     private final int[] PHOTO_TEXT_BACKGROUND_COLORS;
     private String TAG= ContactsAdapter.class.getSimpleName();
-    ArrayList<ContactsModel> oldContacts;
+    ArrayList<SingleContact> oldContacts;
     //private final AsyncTaskThreadPool mAsyncTaskThreadPool=new AsyncTaskThreadPool(1,2,10);
 
 
     @Override
-    public CharSequence getSectionTitle(int sectionIndex)
-    {
+    public CharSequence getSectionTitle(int sectionIndex) {
         return ((StringArrayAlphabetIndexer.AlphaBetSection)getSections()[sectionIndex]).getName();
     }
 
-    public ContactsAdapter(final ArrayList<ContactsModel> contacts,Context context)
-    {
+    public ContactsAdapter(final ArrayList<SingleContact> contacts, Context context) {
         mInflater= LayoutInflater.from(context);
         this.mcontext=context;
         setData(contacts);
@@ -52,20 +50,20 @@ public class ContactsAdapter extends SearchablePinnedHeaderListViewAdapter<Conta
                 R.dimen.list_item__contact_imageview_size);
     }
 
-    public void setData(final ArrayList<ContactsModel> contacts)
+    public void setData(final ArrayList<SingleContact> contacts)
     {
         this.mContacts=contacts;
-        oldContacts = new ArrayList<ContactsModel>();
+        oldContacts = new ArrayList<>();
         oldContacts.addAll(contacts);
         final String[] generatedContactNames=generateContactNames(contacts);
         setSectionIndexer(new StringArrayAlphabetIndexer(generatedContactNames,true));
     }
 
-    private String[] generateContactNames(final List<ContactsModel> contacts)
+    private String[] generateContactNames(final List<SingleContact> contacts)
     {
         final ArrayList<String> contactNames=new ArrayList<String>();
         if(contacts!=null)
-            for(final ContactsModel contactEntity : contacts)
+            for(final SingleContact contactEntity : contacts)
                 contactNames.add(contactEntity.name);
         return contactNames.toArray(new String[contactNames.size()]);
     }
@@ -88,9 +86,7 @@ public class ContactsAdapter extends SearchablePinnedHeaderListViewAdapter<Conta
             rootView=convertView;
             holder=(ViewHolder)rootView.getTag();
         }
-        final ContactsModel contact=getItem(position);
-
-        //Log.e(TAG, "iModel.name  is null " +contact.name);
+        final SingleContact contact=getItem(position);
 
         final String displayName=contact.name;
         holder.tv_person_name.setText(displayName);
@@ -107,7 +103,7 @@ public class ContactsAdapter extends SearchablePinnedHeaderListViewAdapter<Conta
     }
 
     @Override
-    public boolean doFilter(final ContactsModel item,final CharSequence constraint)
+    public boolean doFilter(final SingleContact item, final CharSequence constraint)
     {
         if(TextUtils.isEmpty(constraint))
             return true;
@@ -117,7 +113,7 @@ public class ContactsAdapter extends SearchablePinnedHeaderListViewAdapter<Conta
     }
 
     @Override
-    public ArrayList<ContactsModel> getOriginalList()
+    public ArrayList<SingleContact> getOriginalList()
     {
         return mContacts;
     }
@@ -134,7 +130,7 @@ public class ContactsAdapter extends SearchablePinnedHeaderListViewAdapter<Conta
         }
         else
         {
-            for (ContactsModel model:oldContacts)
+            for (SingleContact model:oldContacts)
             {
                 if (model.name.toLowerCase(Locale.getDefault()).contains(search_string))
                 {

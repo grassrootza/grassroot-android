@@ -33,4 +33,14 @@ public class MemberList {
     public List<Member> getMembers() {
         return members;
     }
+
+    public void setMembers(List<Member> members) { this.members = members; }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder("MemberList=");
+        for (Member m : members)
+            sb.append("Member=" + m.toString());
+        return sb.toString();
+    }
 }

@@ -15,7 +15,7 @@ import android.support.design.widget.Snackbar;
 import android.view.View;
 import android.widget.Toast;
 
-import com.techmorphosis.grassroot.models.ContactsModel;
+import com.techmorphosis.grassroot.models.SingleContact;
 import com.techmorphosis.grassroot.ui.activities.PhoneBookContactsActivity;
 import com.techmorphosis.grassroot.ui.fragments.AlertDialogFragment;
 import com.techmorphosis.grassroot.utils.listener.AlertDialogListener;
@@ -62,7 +62,7 @@ public class UtilClass {
         return ss2;
     }
 
-    public static void callPhoneBookActivity(Activity callingActivity, ArrayList<ContactsModel> filterList) {
+    public static void callPhoneBookActivity(Activity callingActivity, ArrayList<SingleContact> filterList) {
         Intent phoneBookIntent = new Intent(callingActivity, PhoneBookContactsActivity.class);
         phoneBookIntent.putParcelableArrayListExtra(Constant.filteredList, filterList);
         callingActivity.startActivityForResult(phoneBookIntent, Constant.activityContactSelection);

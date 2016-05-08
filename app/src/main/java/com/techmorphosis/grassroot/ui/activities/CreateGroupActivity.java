@@ -27,7 +27,7 @@ import com.techmorphosis.grassroot.Interface.ClickListener;
 import com.techmorphosis.grassroot.R;
 import com.techmorphosis.grassroot.RecyclerView.RecyclerTouchListener;
 import com.techmorphosis.grassroot.adapters.MemberListAdapter;
-import com.techmorphosis.grassroot.models.ContactsModel;
+import com.techmorphosis.grassroot.models.SingleContact;
 import com.techmorphosis.grassroot.services.GrassrootRestService;
 import com.techmorphosis.grassroot.services.model.GenericResponse;
 import com.techmorphosis.grassroot.utils.Constant;
@@ -79,10 +79,10 @@ public class CreateGroupActivity extends PortraitActivity {
     ImageView ivCrossimage;
 
     //all phonebooklist
-    private ArrayList<ContactsModel> phoneBookList;
-    private ArrayList<ContactsModel> phoneBookFilteredList;
-    private ArrayList<ContactsModel> manualInputList;
-    private ArrayList<ContactsModel> mergeList;
+    private ArrayList<SingleContact> phoneBookList;
+    private ArrayList<SingleContact> phoneBookFilteredList;
+    private ArrayList<SingleContact> manualInputList;
+    private ArrayList<SingleContact> mergeList;
 
     private Snackbar snackBar;
     private GrassrootRestService grassrootRestService = new GrassrootRestService();
@@ -131,7 +131,7 @@ public class CreateGroupActivity extends PortraitActivity {
             @Override
             public void onClick(View view, int position) {
                 Log.e(TAG, "position is  " + position);
-                ContactsModel click_model = (ContactsModel) CreateGroupActivity.this.mergeList.get(position);
+                SingleContact click_model = (SingleContact) CreateGroupActivity.this.mergeList.get(position);
                 if (click_model == null) {
                     Log.e(CreateGroupActivity.this.TAG, "click_model  is  " + null);
                 } else {
@@ -241,7 +241,7 @@ public class CreateGroupActivity extends PortraitActivity {
 
         ArrayList<String> tempList = new ArrayList<>();
         for (int i = 0; i < mergeList.size(); i++) {
-            ContactsModel numbers = mergeList.get(i);
+            SingleContact numbers = mergeList.get(i);
             if (numbers.isSelected) {
                 tempList.add(numbers.selectedNumber);
             }
@@ -293,7 +293,7 @@ public class CreateGroupActivity extends PortraitActivity {
                 Log.e(this.TAG, "phoneBookList size is " + this.phoneBookList.size());
 
                 for (int i = 0; i < this.phoneBookList.size(); i++) {
-                    ContactsModel sortedmodel = (ContactsModel) this.phoneBookList.get(i);
+                    SingleContact sortedmodel = (SingleContact) this.phoneBookList.get(i);
                     if (sortedmodel == null) {
                         Log.e(this.TAG, "null");
                     } else if (sortedmodel.isSelected) {
@@ -315,11 +315,11 @@ public class CreateGroupActivity extends PortraitActivity {
             Log.d(TAG, "inside createGroupActivity ... came back with result code == " + Constant.activityManualMemberEntry);
             String name = data.getStringExtra("name");
             String selectedNumber = data.getStringExtra("selectedNumber");
-            ContactsModel contactsModel = new ContactsModel();
-            contactsModel.isSelected = true;
-            contactsModel.name = name;
-            contactsModel.selectedNumber = selectedNumber;
-            this.manualInputList.add(contactsModel);
+            SingleContact singleContact = new SingleContact();
+            singleContact.isSelected = true;
+            singleContact.name = name;
+            singleContact.selectedNumber = selectedNumber;
+            this.manualInputList.add(singleContact);
             Log.e(this.TAG, "manualInputList.size() " + this.manualInputList.size());
 
             mergeList.addAll(phoneBookFilteredList);

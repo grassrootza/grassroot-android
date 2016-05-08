@@ -30,6 +30,7 @@ import com.techmorphosis.grassroot.ui.fragments.LoginScreenView;
 import com.techmorphosis.grassroot.ui.fragments.OtpScreenFragment;
 import com.techmorphosis.grassroot.ui.fragments.RegisterScreenFragment;
 import com.techmorphosis.grassroot.utils.SettingPreference;
+import com.techmorphosis.grassroot.utils.TopExceptionHandler;
 
 import java.util.List;
 
@@ -94,10 +95,10 @@ public class StartActivity extends PortraitActivity implements HomeScreenViewFra
 
     @Override
     protected void onCreate(Bundle bundle) {
-
-        Log.d(TAG, "inside StartActivity ... calling onCreate()");
         super.onCreate(bundle);
+        Log.d(TAG, "inside StartActivity ... calling onCreate()");
         Fabric.with(this, new Crashlytics());
+        Thread.setDefaultUncaughtExceptionHandler(new TopExceptionHandler(this));
 
         if (!SettingPreference.getisLoggedIn(this)) {
             setContentView(R.layout.start);
@@ -157,9 +158,9 @@ public class StartActivity extends PortraitActivity implements HomeScreenViewFra
         registerscreen = false;
 
         HomeScreenViewFragment homeScreenViewFragment = new HomeScreenViewFragment();
-        getSupportFragmentManager().beginTransaction().add(R.id.fl_content,
-                homeScreenViewFragment).commit();
-
+        getSupportFragmentManager().beginTransaction()
+                .add(R.id.fl_content, homeScreenViewFragment)
+                .commit();
     }
 
     private void setUpRegisterScreen() {

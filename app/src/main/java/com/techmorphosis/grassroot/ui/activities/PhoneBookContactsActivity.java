@@ -5,7 +5,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Parcelable;
-import android.support.v7.widget.Toolbar;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
@@ -17,11 +16,12 @@ import android.widget.ImageView;
 import android.widget.RelativeLayout;
 
 import com.techmorphosis.grassroot.ContactLib.PinnedHeaderListView;
-import com.techmorphosis.grassroot.Interface.GetContactList;
+import com.techmorphosis.grassroot.Interface.ContactListRequester;
 import com.techmorphosis.grassroot.R;
 import com.techmorphosis.grassroot.adapters.ContactsAdapter;
 import com.techmorphosis.grassroot.adapters.GetContactListAsync;
-import com.techmorphosis.grassroot.models.ContactsModel;
+import com.techmorphosis.grassroot.models.SingleContact;
+import com.techmorphosis.grassroot.services.model.Member;
 import com.techmorphosis.grassroot.utils.Constant;
 import com.techmorphosis.grassroot.utils.PermissionUtils;
 import com.techmorphosis.grassroot.utils.UtilClass;
@@ -30,269 +30,230 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
+import butterknife.BindView;
+import butterknife.ButterKnife;
+import butterknife.OnClick;
+import butterknife.OnItemClick;
+import butterknife.OnTextChanged;
 
-public class PhoneBookContactsActivity extends PortraitActivity implements GetContactList
-{
+
+public class PhoneBookContactsActivity extends PortraitActivity implements ContactListRequester {
 
     public static final String TAG = PhoneBookContactsActivity.class.getSimpleName();
-    private PinnedHeaderListView mListView;
+
     private ContactsAdapter mAdapter;
-    private Toolbar tbPhonebook;
-    private ImageView ivSearch;
-    private RelativeLayout rlSimple;
-    private RelativeLayout rlSearch;
-    private ImageView ivRlSearch;
-    private ImageView ivCross;
-    private EditText et_search;
-    private ImageView ivBack;
-    ArrayList<ContactsModel> contacts_names;
-    ProgressDialog progressBar;
-    private Context context;
-    private ArrayList<String> numberList;
+    ArrayList<SingleContact> contacts_names;
+    private ArrayList<Parcelable> preSelectedList;
     private int multi_number_positons=-1;
     private UtilClass utilClass;
-    private RelativeLayout rlPhonebookRoot;
-    private ArrayList<Parcelable> filteredList;
+
+    @BindView(android.R.id.list) // android.R?
+    PinnedHeaderListView mListView;
+
+    @BindView(R.id.rl_phonebook_root)
+    RelativeLayout rlPhonebookRoot;
+
+    @BindView(R.id.rl_simple)
+    RelativeLayout rlSimple;
+
+    @BindView(R.id.rl_search)
+    RelativeLayout rlSearch;
+    @BindView(R.id.iv_search)
+    ImageView ivSearch;
+    @BindView(R.id.et_search)
+    EditText et_search;
+
+    @BindView(R.id.iv_cross)
+    ImageView ivCross;
+    @BindView(R.id.iv_back)
+    ImageView ivBack;
+
+    ProgressDialog progressBar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.phonebookmain);
-        setUpToolbar();
+        ButterKnife.bind(this);
+        setUpProgressBar();
         init();
 
-        this.context = this;
-        mListView= (PinnedHeaderListView) findViewById(android.R.id.list);
-        rlPhonebookRoot = (RelativeLayout) findViewById(R.id.rl_phonebook_root);
-
-        Log.d(TAG, "inside phoneBookContactsActivity ... about to create progressBar");
-        progressBar = new ProgressDialog(PhoneBookContactsActivity.this);
-        progressBar.setMessage("Searching...");
-        progressBar.setCancelable(false);
-        progressBar.show();
-        Log.d(TAG, "inside phoneBookContactsActivity ... progressBar created");
-
         Bundle b= getIntent().getExtras();
-        filteredList = b.getParcelableArrayList(Constant.filteredList);
+        preSelectedList = b.getParcelableArrayList(Constant.filteredList);
 
-        GetContactListAsync contactListGetter = new GetContactListAsync(this.context, this);
+        GetContactListAsync contactListGetter = new GetContactListAsync(this, this);
 
-        if (PermissionUtils.contactReadPermissionGranted(this.context)) {
+        if (PermissionUtils.contactReadPermissionGranted(this)) {
             contactListGetter.execute(new Void[0]);
         } else {
-            throw new UnsupportedOperationException("Error! Phone book activity called without permission to read contacts");
+            Log.e(TAG, "Error! Phone book activity called without permission to read contacts");
+            finish();
         }
-
-        mListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                multi_number_positons = position;
-                ContactsModel contact_position = contacts_names.get(position);
-
-                if (contact_position.numbers.size() > 1) {//show dialog
-                    Intent i = new Intent(PhoneBookContactsActivity.this, DialogActivity.class);
-                    i.putStringArrayListExtra("numberList", (ArrayList<String>) contact_position.numbers);
-                    i.putExtra("selectedNumber", contact_position.selectedNumber);
-                    startActivityForResult(i, 1);
-                } else {
-                    if (contact_position.isSelected) {//already selected
-                        contact_position.isSelected = false;
-                        contact_position.selectedNumber = "";
-                        mAdapter.notifyDataSetChanged();
-                    } else {
-                        contact_position.isSelected = true;
-                        try {
-                            contact_position.selectedNumber = contact_position.numbers.get(0);
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                            utilClass.showsnackBar(rlPhonebookRoot,PhoneBookContactsActivity.this,getString(R.string.empty_contact));
-                        }
-                        mAdapter.notifyDataSetChanged();
-                    }
-                    Log.e(TAG, "selectedNumber is " + contact_position.selectedNumber);
-                }
-            }
-        });
     }
 
     private void init() {
         utilClass = new UtilClass();
-        filteredList = new ArrayList<>();
+        preSelectedList = new ArrayList<>();
         contacts_names=new ArrayList<>();
     }
 
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (resultCode==1) {
-            // Log.e(TAG,"Add Button");
-            String selectednumber = data.getStringExtra("selectednumber");
-            ContactsModel contact_position = contacts_names.get(multi_number_positons);
-            //not selected
-            contact_position.isSelected = true;
-            contact_position.selectedNumber=selectednumber;
-            mAdapter.notifyDataSetChanged();
-            // Log.e(TAG, "onActivityResult selectedNumber is " + selectednumber);
-            // Log.e(TAG, "onActivityResult model selectedNumber is " + contact_position.selectedNumber);
-        } else if (resultCode==2) {
-            //Cancel Button
-            //Log.e(TAG,"Cancel");
-            ContactsModel contact_position = contacts_names.get(multi_number_positons);
-            contact_position.isSelected = false;
-            contact_position.selectedNumber="";
-            mAdapter.notifyDataSetChanged();
-            multi_number_positons=1;
-        }
-    }
+    public void putContactList(List<SingleContact> returnedContactList) {
 
-    private void setUpToolbar() {
+        Log.d(TAG, "listPhones size is " + returnedContactList.size());
 
-        ivSearch = (ImageView) findViewById(R.id.iv_search);
+        if (preSelectedList != null && preSelectedList.size() > 0) {
 
-        rlSimple = (RelativeLayout) findViewById(R.id.rl_simple);
-        ivSearch = (ImageView) findViewById(R.id.iv_search);
-        ivBack = (ImageView) findViewById(R.id.iv_back);
+            for (int i = 0; i < preSelectedList.size(); i++) {
 
-        rlSearch = (RelativeLayout) findViewById(R.id.rl_search);
-        ivRlSearch = (ImageView) findViewById(R.id.iv_rl_search);
-        ivCross = (ImageView) findViewById(R.id.iv_cross);
-        et_search = (EditText) findViewById(R.id.et_search);
+                SingleContact filteredModel = (SingleContact) preSelectedList.get(i);
 
-        ivSearch.setOnClickListener(ivSearch());
-        ivRlSearch.setOnClickListener(ivRlSearch());
-        ivCross.setOnClickListener(ivCross());
-        ivBack.setOnClickListener(ivBack());
-
-        et_search.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-            }
-
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-            }
-
-            @Override
-            public void afterTextChanged(Editable s) {
-              if (s.length() > 0) {
-                Filter(et_search.getText().toString());
-              } else {
-                Filter("");
-              }
-            }
-        });
-    }
-
-    private void Filter(String s) {
-
-        String search_string= s.toLowerCase(Locale.getDefault());
-        Log.d(TAG, "search_string is " + search_string);
-
-        if (mAdapter.getCount() > 0) {
-            Log.e(TAG, "globalSearchAdapter NOT NULL");
-        } else if (mAdapter.getCount() < 0) {
-            Log.e(TAG, "globalSearchAdapter NULL");
-        }
-
-        mAdapter.filter(search_string);
-    }
-
-    private View.OnClickListener ivBack() {
-        return new View.OnClickListener() {
-      @Override
-      public void onClick(View v) {
-            Intent i=new Intent();
-            i.putParcelableArrayListExtra(Constant.phoneBookList,  contacts_names);
-            setResult(1,i);
-            finish();
-      }
-    };
-  }
-
-    private View.OnClickListener ivCross() {
-        return new View.OnClickListener() {
-      @Override
-      public void onClick(View v) {
-            if (et_search.getText().toString().isEmpty()) {
-                rlSearch.setVisibility(View.GONE);
-                rlSimple.setVisibility(View.VISIBLE);
-                try {
-                    InputMethodManager imm= (InputMethodManager) getApplicationContext().getSystemService(Context.INPUT_METHOD_SERVICE);
-                    imm.hideSoftInputFromWindow(getCurrentFocus().getWindowToken(),0);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            } else {
-                et_search.setText("");
-            }
-      }
-    };
-  }
-
-    private View.OnClickListener ivRlSearch() {
-        return new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-            //perform search
-            }
-        };
-    }
-
-    private View.OnClickListener ivSearch() {
-        return new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                rlSimple.setVisibility(View.GONE);
-                rlSearch.setVisibility(View.VISIBLE);
-            }
-        };
-    }
-
-    @Override
-    protected void onDestroy()
-    {
-    super.onDestroy();
-    }
-
-
-    public void getContactList(List<ContactsModel> list) {
-
-        Log.d(TAG, "listPhones size is " + list.size());
-
-        if (filteredList.size()!=0 && filteredList !=null) {
-            for (int i = 0; i < filteredList.size(); i++) {
-                //keep comparing until filteredList siz only
-                ContactsModel filterdModel = (ContactsModel) filteredList.get(i);
-                Log.e(TAG,"filterdModel " + i + " is " + filterdModel.name);
-
-                for (int j = 0; j < list.size(); j++) {
-                    ContactsModel listModel = (ContactsModel) list.get(j);
-                    if (filterdModel.contact_ID.equals(listModel.contact_ID)) {
-                        Log.d(TAG,"compare " + i + " is " + filterdModel.name);
-                        Log.d(TAG,"compare " + j + " is " + listModel.name);
+                for (int j = 0; j < returnedContactList.size(); j++) {
+                    SingleContact listModel = returnedContactList.get(j);
+                    if (filteredModel.contact_ID.equals(listModel.contact_ID)) {
                         listModel.isSelected = true;
-                        listModel.selectedNumber=filterdModel.selectedNumber;
-                    } else {
-                        Log.e(TAG,"else compare " + i + " is " + filterdModel.name);
-                        Log.e(TAG,"else compare " + j + " is " + listModel.name);
+                        listModel.selectedNumber = filteredModel.selectedNumber;
                     }
                 }
             }
-            contacts_names.addAll(list);
-
-        } else {
-            //dont do nothing
-            contacts_names.addAll(list);
         }
 
+        contacts_names.addAll(returnedContactList);
         mAdapter=new ContactsAdapter(contacts_names,getApplicationContext());
         mListView.setAdapter(mAdapter);
         mListView.setOnScrollListener(mAdapter);
         mListView.setEnableHeaderTransparencyChanges(false);
         progressBar.cancel();
 
+    }
+
+    /**
+     * SECTION: Handle returning to prior page, including sending the results
+     */
+    @OnClick(R.id.iv_back)
+    public void ivBack() {
+        Intent i = new Intent();
+        i.putParcelableArrayListExtra(Constant.selectedContacts, membersToReturn());
+        setResult(RESULT_OK,i);
+        finish();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+    }
+
+    private ArrayList<SingleContact> membersToReturn() {
+        ArrayList<SingleContact> selectedMembers = new ArrayList<>();
+        // oh for Java 8 ... todo: consider holding a sep list so don't have to do this iteration on close
+        for (SingleContact contact : contacts_names) {
+            if (contact.isSelected) {
+                selectedMembers.add(contact);
+            }
+        }
+        return selectedMembers;
+    }
+
+    /**
+     * SECTION : handle clicking on member, including asking to pick one number if multiple
+     */
+
+    @OnItemClick(android.R.id.list)
+    public void selectMember(int position) {
+
+        multi_number_positons = position;
+        SingleContact contactClicked = contacts_names.get(position);
+
+        if (contactClicked.numbers.size() > 1) {//show dialog
+            Intent i = new Intent(PhoneBookContactsActivity.this, DialogActivity.class);
+            i.putStringArrayListExtra("numberList", (ArrayList<String>) contactClicked.numbers);
+            i.putExtra("selectedNumber", contactClicked.selectedNumber);
+            startActivityForResult(i, Constant.activitySelectNumberFromContact);
+        } else {
+            if (contactClicked.isSelected) {
+                contactClicked.isSelected = false;
+                contactClicked.selectedNumber = "";
+            } else {
+                contactClicked.isSelected = true;
+                try {
+                    contactClicked.selectedNumber = contactClicked.numbers.get(0);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    utilClass.showsnackBar(rlPhonebookRoot,PhoneBookContactsActivity.this,getString(R.string.empty_contact));
+                }
+            }
+            mAdapter.notifyDataSetChanged();
+            Log.e(TAG, "selectedNumber is " + contactClicked.selectedNumber);
+        }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (resultCode == 1) { // todo: replace these numbers with meaningful named constants
+            String selectednumber = data.getStringExtra("selectednumber");
+            SingleContact contactAtPosition = contacts_names.get(multi_number_positons);
+            contactAtPosition.isSelected = true;
+            contactAtPosition.selectedNumber = selectednumber;
+            mAdapter.notifyDataSetChanged();
+            Log.e(TAG, "onActivityResult selectedNumber is " + selectednumber);
+        } else if (resultCode == 2) {
+            SingleContact contactAtPosition = contacts_names.get(multi_number_positons);
+            contactAtPosition.isSelected = false;
+            contactAtPosition.selectedNumber="";
+            mAdapter.notifyDataSetChanged();
+            multi_number_positons=1;
+        }
+    }
+
+    /**
+     * SECTION : search bar / handler
+     */
+    // todo: filter as someone types, if device can handle it
+    @OnTextChanged(value = R.id.et_search, callback = OnTextChanged.Callback.AFTER_TEXT_CHANGED)
+    public void onSearchTextChanged(CharSequence s) {
+        Filter (s.length() > 0 ? et_search.getText().toString() : "");
+    }
+
+    private void Filter(String s) {
+        String search_string= s.toLowerCase(Locale.getDefault());
+        Log.d(TAG, "search_string is " + search_string);
+        mAdapter.filter(search_string);
+    }
+
+    @OnClick(R.id.iv_cross)
+    public void onClickCross() {
+        if (et_search.getText().toString().isEmpty()) {
+            rlSearch.setVisibility(View.GONE);
+            rlSimple.setVisibility(View.VISIBLE);
+            try {
+                InputMethodManager imm = (InputMethodManager) getApplicationContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+                imm.hideSoftInputFromWindow(getCurrentFocus().getWindowToken(), 0);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        } else {
+            et_search.setText("");
+        }
+    }
+
+    @OnClick(R.id.iv_rl_search)
+    public void ivRlSearch() {
+        //perform search
+    }
+
+    @OnClick(R.id.iv_search)
+    public void onClickSearch() {
+        rlSimple.setVisibility(View.GONE);
+        rlSearch.setVisibility(View.VISIBLE);
+    }
+
+    private void setUpProgressBar() {
+        progressBar = new ProgressDialog(PhoneBookContactsActivity.this);
+        progressBar.setMessage("Searching...");
+        progressBar.setCancelable(false);
+        progressBar.show();
+        Log.d(TAG, "inside phoneBookContactsActivity ... progressBar created");
     }
 
 }

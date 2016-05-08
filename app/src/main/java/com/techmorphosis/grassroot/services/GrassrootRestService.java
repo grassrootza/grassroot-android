@@ -22,7 +22,7 @@ import rx.Observable;
  */
 public class GrassrootRestService {
 
-        private static final String GRASSROOT_SERVER_URL = "http://staging.grassroot.org.za/api";
+        private static final String GRASSROOT_SERVER_URL = "http://54.229.127.158/api";
         private RestApi mRestApi;
 
         public GrassrootRestService() {
@@ -113,9 +113,8 @@ public class GrassrootRestService {
                                                      @Path("code") String code);
 
 
-
-            @GET("/group/members/{id}/{phoneNumber}/{code}")
-            Observable<MemberList> getGroupMembers(@Path("id") String groupUid, @Path("phoneNumber") String phoneNumber,
+            @GET("/group/members/{phoneNumber}/{code}/{groupUid}")
+            Observable<MemberList> getGroupMembers(@Path("groupUid") String groupUid, @Path("phoneNumber") String phoneNumber,
                                                    @Path("code") String code);
 
         }

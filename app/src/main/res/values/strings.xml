@@ -101,6 +101,11 @@
     <string name="validate_search_box">Please search for a group</string>
     <string name="alertbox">Are you sure you want to send a group join request ?</string>
 
+    <!-- Member list fragment -->
+    <string name="member_list_default_header">Current members</string>
+    <string name="member_list_new_members_header">New members</string>
+    <string name="member_list_default_name">Kwanda D</string>
+
     <!--    Create Group--><!--cg-->
     <string name="Add">Add</string>
     <string name="cg_title">Create new group</string>

@@ -3,14 +3,12 @@ package com.techmorphosis.grassroot.utils;
 import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
-import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
 
-import com.techmorphosis.grassroot.models.ContactsModel;
-import com.techmorphosis.grassroot.ui.activities.PhoneBookContactsActivity;
+import com.techmorphosis.grassroot.models.SingleContact;
 
 import java.util.ArrayList;
 
@@ -33,7 +31,7 @@ public class PermissionUtils {
         ActivityCompat.requestPermissions(callingActivity, new String[]{Manifest.permission.READ_CONTACTS}, Constant.alertAskForContactPermission);
     }
 
-    public static void checkPermGrantedAndLaunchPhoneBook(Activity callingActivity, int grantResult, ArrayList<ContactsModel> filteredList) {
+    public static void checkPermGrantedAndLaunchPhoneBook(Activity callingActivity, int grantResult, ArrayList<SingleContact> filteredList) {
         if (grantResult == PackageManager.PERMISSION_GRANTED) {
             Log.e(TAG, "User granted us permission!");
             UtilClass.callPhoneBookActivity(callingActivity, filteredList);

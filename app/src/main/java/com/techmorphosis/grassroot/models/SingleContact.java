@@ -1,6 +1,5 @@
 package com.techmorphosis.grassroot.models;
 
-import android.net.Uri;
 import android.os.Parcel;
 import android.os.Parcelable;
 
@@ -9,7 +8,7 @@ import java.util.List;
 /**
  * Created by admin on 04-Apr-16.
  */
-public class ContactsModel implements Parcelable {
+public class SingleContact implements Parcelable {
 
     public String addedBy;
     public boolean isSelected;
@@ -34,10 +33,10 @@ public class ContactsModel implements Parcelable {
         dest.writeString(this.contact_ID);
     }
 
-    public ContactsModel() {
+    public SingleContact() {
     }
 
-    protected ContactsModel(Parcel in) {
+    protected SingleContact(Parcel in) {
         this.addedBy = in.readString();
         this.isSelected = in.readByte() != 0;
         this.name = in.readString();
@@ -46,15 +45,23 @@ public class ContactsModel implements Parcelable {
         this.contact_ID = in.readString();
     }
 
-    public static final Parcelable.Creator<ContactsModel> CREATOR = new Parcelable.Creator<ContactsModel>() {
+    public static final Parcelable.Creator<SingleContact> CREATOR = new Parcelable.Creator<SingleContact>() {
         @Override
-        public ContactsModel createFromParcel(Parcel source) {
-            return new ContactsModel(source);
+        public SingleContact createFromParcel(Parcel source) {
+            return new SingleContact(source);
         }
 
         @Override
-        public ContactsModel[] newArray(int size) {
-            return new ContactsModel[size];
+        public SingleContact[] newArray(int size) {
+            return new SingleContact[size];
         }
     };
+
+    @Override
+    public String toString() {
+        return "SingleContact{" +
+                "name='" + name + '\'' +
+                ", numbers=" + numbers +
+                '}';
+    }
 }

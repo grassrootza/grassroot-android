@@ -32,7 +32,6 @@ public class HomeScreenViewFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
     }
 
     @Override
@@ -42,8 +41,6 @@ public class HomeScreenViewFragment extends Fragment {
         ButterKnife.bind(this, view);
         view.startAnimation(AnimationUtils.loadAnimation(getActivity(), R.anim.fade_in));
         view.setLayoutParams(new ViewGroup.LayoutParams(-1, -1));
-
-
         return view;
     }
 

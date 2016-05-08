@@ -9,7 +9,6 @@
     android:id="@+id/rl_cg_root"
     >
 
-
     <RelativeLayout
         android:id="@+id/relative_root"
         android:layout_width="match_parent"
@@ -146,7 +145,6 @@
 
                             </android.support.design.widget.TextInputLayout>
 
-
                             <TextView
                                 android:id="@+id/tv_counter"
                                 android:layout_width="wrap_content"
@@ -154,57 +152,30 @@
                                 android:layout_alignParentRight="true"
                                 android:layout_below="@+id/et2"
                                 android:textColor="@color/white"
-                                android:text="0/160"
-                                />
+                                android:text="0/160" />
+
                         </RelativeLayout>
-
-
-
-
                     </RelativeLayout>
 
-
-
-
                 </android.support.design.widget.CollapsingToolbarLayout>
-
-
             </android.support.design.widget.AppBarLayout>
 
-
+            <!-- List of current members (todo: use the fragment) -->
             <RelativeLayout
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                app:layout_behavior="@string/appbar_scrolling_view_behavior"
-                >
+                app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
                 <TextView
+                    style="@style/MemberListHeader"
                     android:id="@+id/tv_cg_title"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:paddingTop="10dp"
-                    android:paddingLeft="16dp"
-                    android:paddingRight="10dp"
-                    android:paddingBottom="10dp"
                     android:text="@string/cg_title_contact"
-                    android:textColor="@color/cg_title"
-                    android:textSize="@dimen/txt_small"
-                    android:visibility="visible"
-                    android:layout_marginTop="16dp"
-
-                    />
+                    android:visibility="visible" />
 
 
                 <android.support.v7.widget.RecyclerView
+                    style="@style/MemberListRecyclerView"
                     android:id="@+id/rc_members_list"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:scrollbars="vertical"
-                    android:clipToPadding="false"
-                    android:layout_marginTop="0dp"
-                    android:layout_marginLeft="16dp"
-                    android:layout_marginRight="16dp"
-                    android:layout_marginBottom="16dp"
                     android:layout_below="@+id/tv_cg_title"
                     >
 
@@ -214,8 +185,7 @@
             </RelativeLayout>
 
 
-
-
+            <!-- Floating "plus" based menu for adding a member -->
 
             <com.github.clans.fab.FloatingActionMenu
                 android:id="@+id/add_member_options"
@@ -223,10 +193,7 @@
                 android:layout_height="wrap_content"
 
                 android:layout_alignParentRight="true"
-
                 android:layout_margin="16dp"
-
-
 
                 fab:menu_shadowColor="#444"
                 fab:menu_colorNormal="#FFB805"
@@ -264,8 +231,6 @@
 
 
             </com.github.clans.fab.FloatingActionMenu>
-
-
 
         </android.support.design.widget.CoordinatorLayout>
 

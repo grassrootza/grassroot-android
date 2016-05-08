@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/mlist_fragment"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    app:layout_behavior="@string/appbar_scrolling_view_behavior">
+    
+    <TextView
+        style="@style/MemberListHeader"
+        android:id="@+id/mlist_frag_tv_title"
+        android:text="@string/member_list_default_header"/>
+
+    <android.support.v7.widget.RecyclerView
+        style="@style/MemberListRecyclerView"
+        android:id="@+id/mlist_frag_recycler_view"
+        android:layout_below="@id/mlist_frag_tv_title">
+
+    </android.support.v7.widget.RecyclerView>
+    
+
+</RelativeLayout>

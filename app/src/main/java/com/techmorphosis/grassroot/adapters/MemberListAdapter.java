@@ -10,7 +10,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.techmorphosis.grassroot.R;
-import com.techmorphosis.grassroot.models.ContactsModel;
+import com.techmorphosis.grassroot.models.SingleContact;
 import com.techmorphosis.grassroot.models.ItemTouchHelperCallback;
 
 import java.util.ArrayList;
@@ -22,10 +22,10 @@ public class MemberListAdapter extends
 		RecyclerView.Adapter<MemberListAdapter.ViewHolder>  implements ItemTouchHelperCallback.ItemTouchHelperAdapter {
 
 	private static final String TAG = MemberListAdapter.class.getSimpleName();
-	private ArrayList<ContactsModel> data;
+	private ArrayList<SingleContact> data;
 	private LayoutInflater inflater;
 
-	public MemberListAdapter(ArrayList<ContactsModel> contact, Context context) {
+	public MemberListAdapter(ArrayList<SingleContact> contact, Context context) {
 		this.data = contact;
 		inflater=LayoutInflater.from(context);
 	}
@@ -43,7 +43,6 @@ public class MemberListAdapter extends
 	@Override
 	public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
 
-
 		View v=inflater.inflate(R.layout.cardview_row, parent, false);
 		ViewHolder viewHolder = new ViewHolder(v);
 
@@ -53,7 +52,7 @@ public class MemberListAdapter extends
 	@Override
 	public void onBindViewHolder(ViewHolder viewHolder, int position) {
 
-		ContactsModel model= data.get(position);
+		SingleContact model= data.get(position);
 		Log.e(TAG,"model.name is " + model.name);
 
 		viewHolder.tv_person_name.setText(model.name);
