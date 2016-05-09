@@ -35,14 +35,12 @@ public class RegisterScreenFragment extends Fragment {
 
     public static RegisterScreenFragment newInstance(){
         RegisterScreenFragment registerScreenFragment = new RegisterScreenFragment();
-
         return registerScreenFragment;
     }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
     }
 
     @Override
@@ -52,7 +50,6 @@ public class RegisterScreenFragment extends Fragment {
         ButterKnife.bind(this, view);
         view.startAnimation(AnimationUtils.loadAnimation(getActivity(), R.anim.fade_in));
         view.setLayoutParams(new ViewGroup.LayoutParams(-1, -1));
-
         return view;
     }
 

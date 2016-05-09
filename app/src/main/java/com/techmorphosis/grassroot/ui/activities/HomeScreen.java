@@ -24,7 +24,8 @@ public class HomeScreen extends PortraitActivity implements NavigationDrawerFrag
         WelcomeFragment.FragmentCallbacks, Group_Homepage.FragmentCallbacks {
 
     @BindView(R.id.drawer_layout)
-     DrawerLayout drawer;
+    DrawerLayout drawer;
+
     android.support.v4.app.Fragment fragment = null;
     private String openFragment;
     public String TAG = "HomeScreen";
@@ -43,7 +44,10 @@ public class HomeScreen extends PortraitActivity implements NavigationDrawerFrag
     @Override
     public void onNavigationDrawerItemSelected(int position) {
 
-        if (drawer != null) drawer.closeDrawer(GravityCompat.START);
+        if (drawer != null) {
+            drawer.closeDrawer(GravityCompat.START);
+        }
+
         fragment = null;
 
         switch (position) {

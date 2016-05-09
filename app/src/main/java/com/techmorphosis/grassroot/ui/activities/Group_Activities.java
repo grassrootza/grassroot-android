@@ -23,7 +23,6 @@ import com.techmorphosis.grassroot.services.model.TaskModel;
 import com.techmorphosis.grassroot.services.model.TaskResponse;
 import com.techmorphosis.grassroot.ui.fragments.FilterFragment;
 import com.techmorphosis.grassroot.utils.SettingPreference;
-import com.techmorphosis.grassroot.utils.UtilClass;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -44,7 +43,7 @@ public class Group_Activities extends PortraitActivity {
     @BindView(R.id.tv_ga_toolbar_txt)
     TextView tvGaToolbarTxt;
     @BindView(R.id.rc_ga)
-    RecyclerView rcGa;
+    RecyclerView recycleViewGroupActivities;
     @BindView(R.id.iv_ga_filter)
     ImageView ivGaFilter;
 
@@ -60,47 +59,77 @@ public class Group_Activities extends PortraitActivity {
     ProgressBar mProgressBar;
     @BindView(R.id.rl_activity_root)
     RelativeLayout rlActivityRoot;
+
     private String groupid;
+    private String groupName;
+    private String phoneNumber;
+    private String code;
+
     private View errorLayout;
     private LinearLayoutManager mLayoutManager;
     private Group_ActivitiesAdapter group_activitiesAdapter;
     private static final String TAG = "Group_Activities";
     private Snackbar snackbar;
     public boolean vote_click = false, meeting_click = false, todo_click = false;
+    private boolean clear_click = false;
+
     private List<TaskModel> voteList;
     private List<TaskModel> meetingList;
     private List<TaskModel> toDoList;
-    private boolean clear_click = false;
-    private String groupName;
     public List<TaskModel> activitiesList;
-    private GrassrootRestService grassrootRestService = new GrassrootRestService();
-    private String phoneNumber;
-    private String code;
 
+    private GrassrootRestService grassrootRestService = new GrassrootRestService();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_group__activities);
         ButterKnife.bind(this);
+
         Bundle extras = getIntent().getExtras();
-        if (extras != null) {
-            Log.e(TAG, "not null ");
-            groupid = extras.getString("groupid");
-            groupName = extras.getString("groupName");
+
+        if (extras == null) {
+            throw new UnsupportedOperationException("Group activities action called without group Uid!");
         }
-        findAllViews();
+
+        groupid = extras.getString("groupid");
+        groupName = extras.getString("groupName");
         init();
-        recyclerview();
+        setUpViews();
+        initRecyclerView();
         groupActivitiesWS();
     }
 
-    private void recyclerview() {
+    private void init() {
+        phoneNumber = SettingPreference.getuser_mobilenumber(this);
+        code = SettingPreference.getuser_token(this);
+    }
+
+    private void setUpViews() {
+
+        ivGaFilter.setEnabled(false);
+        tvGaToolbarTxt.setText(groupName);
+        fabbutton.setOnMenuToggleListener(new FloatingActionMenu.OnMenuToggleListener() {
+            @Override
+            public void onMenuToggle(boolean opened) {
+                if (opened) {
+                    fabbutton.toggle(false);
+                    Intent open = new Intent(Group_Activities.this, NewActivities.class);
+                    startActivity(open);
+                    overridePendingTransition(R.anim.push_up_in, R.anim.push_up_out);
+                } else {
+
+                }
+            }
+        });
+    }
+
+    private void initRecyclerView() {
         mLayoutManager = new LinearLayoutManager(Group_Activities.this);
-        rcGa.setLayoutManager(mLayoutManager);
-        rcGa.setItemAnimator(new CustomItemAnimator());
+        recycleViewGroupActivities.setLayoutManager(mLayoutManager);
+        recycleViewGroupActivities.setItemAnimator(new CustomItemAnimator());
         group_activitiesAdapter = new Group_ActivitiesAdapter(new ArrayList<TaskModel>(), Group_Activities.this);
-        rcGa.setAdapter(group_activitiesAdapter);
+        recycleViewGroupActivities.setAdapter(group_activitiesAdapter);
     }
 
     private void groupActivitiesWS() {
@@ -117,7 +146,7 @@ public class Group_Activities extends PortraitActivity {
 
                     @Override
                     public void onError(Throwable e) {
-                       mProgressBar.setVisibility(View.INVISIBLE);
+                        mProgressBar.setVisibility(View.INVISIBLE);
                         imNoInternet.setVisibility(View.VISIBLE);
                     }
                     @Override
@@ -125,7 +154,7 @@ public class Group_Activities extends PortraitActivity {
                         activitiesList = response.getTasks();
                         populateCompletionStatus(activitiesList);
                         group_activitiesAdapter.clearTasks();
-                        rcGa.setVisibility(View.VISIBLE);
+                        recycleViewGroupActivities.setVisibility(View.VISIBLE);
                         group_activitiesAdapter.addTasks(activitiesList);
                         ivGaFilter.setEnabled(true);
                     }
@@ -178,30 +207,6 @@ public class Group_Activities extends PortraitActivity {
         }
     }
 
-    private void init() {
-        phoneNumber = SettingPreference.getuser_mobilenumber(this);
-        code = SettingPreference.getuser_token(this);
-    }
-
-    private void findAllViews() {
-
-        ivGaFilter.setEnabled(false);
-        tvGaToolbarTxt.setText(groupName);
-        fabbutton.setOnMenuToggleListener(new FloatingActionMenu.OnMenuToggleListener() {
-            @Override
-            public void onMenuToggle(boolean opened) {
-                if (opened) {
-                    fabbutton.toggle(false);
-                    Intent open = new Intent(Group_Activities.this, NewActivities.class);
-                    startActivity(open);
-                    overridePendingTransition(R.anim.push_up_in, R.anim.push_up_out);
-                } else {
-
-                }
-            }
-        });
-
-    }
 
     @OnClick(R.id.iv_ga_filter)
     public void ivGaFilter() {
@@ -244,7 +249,7 @@ public class Group_Activities extends PortraitActivity {
 
 
                     //show progress
-                    rcGa.setVisibility(View.GONE);
+                    recycleViewGroupActivities.setVisibility(View.GONE);
                     mProgressBar.setVisibility(View.VISIBLE);
 
                     //pre-execute
@@ -256,7 +261,7 @@ public class Group_Activities extends PortraitActivity {
 
                     //postExecute
                     //handle visibility
-                    rcGa.setVisibility(View.VISIBLE);
+                    recycleViewGroupActivities.setVisibility(View.VISIBLE);
                     mProgressBar.setVisibility(View.GONE);
 
                     //set data for list
@@ -293,7 +298,7 @@ public class Group_Activities extends PortraitActivity {
                     clear_click = false;
 
                     //show progress
-                    rcGa.setVisibility(View.GONE);
+                    recycleViewGroupActivities.setVisibility(View.GONE);
                     mProgressBar.setVisibility(View.VISIBLE);
 
 
@@ -310,7 +315,7 @@ public class Group_Activities extends PortraitActivity {
 
                     //postExecute
                     //handle visibility
-                    rcGa.setVisibility(View.VISIBLE);
+                    recycleViewGroupActivities.setVisibility(View.VISIBLE);
                     mProgressBar.setVisibility(View.GONE);
 
                     //set data for list
@@ -348,7 +353,7 @@ public class Group_Activities extends PortraitActivity {
                     clear_click = false;
 
                     //show progress
-                    rcGa.setVisibility(View.GONE);
+                    recycleViewGroupActivities.setVisibility(View.GONE);
                     mProgressBar.setVisibility(View.VISIBLE);
 
 
@@ -361,7 +366,7 @@ public class Group_Activities extends PortraitActivity {
 
                     //postExecute
                     //handle visibility
-                    rcGa.setVisibility(View.VISIBLE);
+                    recycleViewGroupActivities.setVisibility(View.VISIBLE);
                     mProgressBar.setVisibility(View.GONE);
 
                     //set data for list
@@ -390,7 +395,7 @@ public class Group_Activities extends PortraitActivity {
                 clear_click = false;
 
                 //show progress
-                rcGa.setVisibility(View.GONE);
+                recycleViewGroupActivities.setVisibility(View.GONE);
                 mProgressBar.setVisibility(View.VISIBLE);
 
                 voteList = new ArrayList<>();
@@ -399,7 +404,7 @@ public class Group_Activities extends PortraitActivity {
 
                 //pre-execute
                 group_activitiesAdapter.clearTasks();
-                rcGa.setVisibility(View.VISIBLE);
+                recycleViewGroupActivities.setVisibility(View.VISIBLE);
                 mProgressBar.setVisibility(View.GONE);
 
                 //set data for list

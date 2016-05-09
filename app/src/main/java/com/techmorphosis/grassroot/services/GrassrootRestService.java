@@ -33,7 +33,6 @@ public class GrassrootRestService {
 
         public GrassrootRestService() {
 
-
             RequestInterceptor requestInterceptor = new RequestInterceptor() {
                 @Override
                 public void intercept(RequestInterceptor.RequestFacade request) {

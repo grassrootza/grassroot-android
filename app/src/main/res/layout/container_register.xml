@@ -36,7 +36,7 @@
             android:inputType="textPersonName|textCapWords"
             android:textColor="#000"
             android:drawableRight="@drawable/ic_user"
-            android:maxLength="15"
+            android:maxLength="20"
 
             />
 
