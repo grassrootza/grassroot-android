@@ -8,7 +8,7 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
 
-import com.techmorphosis.grassroot.models.SingleContact;
+import com.techmorphosis.grassroot.models.Contact;
 
 import java.util.ArrayList;
 
@@ -31,10 +31,10 @@ public class PermissionUtils {
         ActivityCompat.requestPermissions(callingActivity, new String[]{Manifest.permission.READ_CONTACTS}, Constant.alertAskForContactPermission);
     }
 
-    public static void checkPermGrantedAndLaunchPhoneBook(Activity callingActivity, int grantResult, ArrayList<SingleContact> filteredList) {
+    public static void checkPermGrantedAndLaunchPhoneBook(Activity callingActivity, int grantResult, ArrayList<Contact> filteredList) {
         if (grantResult == PackageManager.PERMISSION_GRANTED) {
             Log.e(TAG, "User granted us permission!");
-            UtilClass.callPhoneBookActivity(callingActivity, filteredList);
+            UtilClass.callPhoneBookActivity(callingActivity, filteredList, null);
         } else {
             Log.e(TAG, "User denied us permission!");
         }

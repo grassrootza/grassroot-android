@@ -3,14 +3,19 @@ package com.techmorphosis.grassroot.services;
 import com.google.gson.GsonBuilder;
 import com.techmorphosis.grassroot.services.model.GenericResponse;
 import com.techmorphosis.grassroot.services.model.GroupResponse;
+import com.techmorphosis.grassroot.services.model.Member;
 import com.techmorphosis.grassroot.services.model.MemberList;
 import com.techmorphosis.grassroot.services.model.GroupSearchResponse;
 import com.techmorphosis.grassroot.services.model.TaskResponse;
 import com.techmorphosis.grassroot.services.model.TokenResponse;
 
+import java.util.List;
+
 import retrofit.RequestInterceptor;
 import retrofit.RestAdapter;
 import retrofit.converter.GsonConverter;
+import retrofit.http.Body;
+import retrofit.http.Headers;
 import retrofit.http.Path;
 import retrofit.http.GET;
 import retrofit.http.POST;
@@ -22,8 +27,9 @@ import rx.Observable;
  */
 public class GrassrootRestService {
 
-        private static final String GRASSROOT_SERVER_URL = "http://54.229.127.158/api";
-        private RestApi mRestApi;
+    // todo: make this an environment variable of some form
+    private static final String GRASSROOT_SERVER_URL = "http://10.0.2.2:8080/api";
+    private RestApi mRestApi;
 
         public GrassrootRestService() {
 
@@ -53,10 +59,10 @@ public class GrassrootRestService {
 
             @GET("/user/add/{phoneNumber}/{displayName}")
             Observable<GenericResponse> addUser(@Path("phoneNumber") String phoneNumber,
-                                                       @Path("displayName") String displayName);
+                                                @Path("displayName") String displayName);
+
             @GET("/user/login/{phoneNumber}")
-            Observable<GenericResponse>
-            login(@Path("phoneNumber") String phoneNumber);
+            Observable<GenericResponse> login(@Path("phoneNumber") String phoneNumber);
 
            //authenticate existing user
             @GET("/user/login/authenticate/{phoneNumber}/{code}")
@@ -74,11 +80,12 @@ public class GrassrootRestService {
                                                     @Path("code") String code,
                                                     @Query("groupName") String groupName,
                                                     @Query("description") String description,
-                                                    @Query("phoneNumbers") String[] phoneNumbers);
+                                                    @Query("phoneNumbers") String[] phoneNumbers); // todo: send names & roles, too
              //user groups
             @GET("/group/list/{phoneNumber}/{code}")
             Observable<GroupResponse> getUserGroups(@Path("phoneNumber") String phoneNumber,
                                                     @Path("code") String code);
+
             //group join request
             @POST("/group/join/request/{phoneNumber}/{code}")
             Observable<GenericResponse> groupJoinRequest(@Path("phoneNumber") String phoneNumber,
@@ -113,9 +120,15 @@ public class GrassrootRestService {
                                                      @Path("code") String code);
 
 
-            @GET("/group/members/{phoneNumber}/{code}/{groupUid}")
+            // retrieve group members
+            @GET("/group/members/list/{phoneNumber}/{code}/{groupUid}")
             Observable<MemberList> getGroupMembers(@Path("groupUid") String groupUid, @Path("phoneNumber") String phoneNumber,
                                                    @Path("code") String code);
+
+            @Headers("Content-Type: application/json")
+            @POST("/group/members/add/{phoneNumber}/{code}/{uid}")
+            Observable<GenericResponse> addGroupMembers(@Path("uid") String groupUid, @Path("phoneNumber") String phoneNumber,
+                                                        @Path("code") String code, @Body List<Member> membersToAdd);
 
         }
 

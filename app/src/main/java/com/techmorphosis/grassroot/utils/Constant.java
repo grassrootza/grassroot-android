@@ -9,6 +9,7 @@ public class Constant {
     public static final String filteredList = "filteredList";
 
     public static final String selectedContacts = "selectedContacts";
+    public static final String doNotDisplayContacts = "doNotDisplayContacts";
 
     public static final String GROUPUID_FIELD = "groupUid";
     public static final String GROUPNAME_FIELD = "groupName";

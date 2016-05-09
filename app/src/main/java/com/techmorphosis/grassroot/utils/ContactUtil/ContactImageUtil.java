@@ -53,7 +53,7 @@ public class ContactImageUtil
           // Log debug message, this is not an error message as this exception is thrown
           // when a contact is legitimately missing a contact photo (which will be quite
           // frequently in a long contacts list).
-//        Log.d(TAG,"SingleContact photo not found for contact "+contactUri.toString()
+//        Log.d(TAG,"Contact photo not found for contact "+contactUri.toString()
 //            +": "+e.toString());
           }
         }
@@ -103,7 +103,7 @@ public class ContactImageUtil
       // Catches file not found exceptions
       if(Boolean.parseBoolean("true"))
         {
-//        Log.d(TAG,"SingleContact photo not found for contact "+contactUri.toString()
+//        Log.d(TAG,"Contact photo not found for contact "+contactUri.toString()
 //            +": "+e.toString());
         }
       }
@@ -135,8 +135,8 @@ public class ContactImageUtil
    * and returns the result as a Bitmap. The column that contains the Uri varies according to the
    * platform version.
    *
-   * @param photoData For platforms prior to Android 3.0, provide the SingleContact._ID column value.
-   *                  For Android 3.0 and later, provide the SingleContact.PHOTO_THUMBNAIL_URI value.
+   * @param photoData For platforms prior to Android 3.0, provide the Contact._ID column value.
+   *                  For Android 3.0 and later, provide the Contact.PHOTO_THUMBNAIL_URI value.
    * @param imageSize The desired target width and height of the output image in pixels.
    * @return A Bitmap containing the contact's image, resized to fit the provided image size. If
    * no thumbnail exists, returns null.
@@ -187,7 +187,7 @@ public class ContactImageUtil
       // FileNotFoundException.
 //      if(BuildConfig.DEBUG)
 //        {
-//        Log.d(TAG,"SingleContact photo thumbnail not found for contact "+photoData
+//        Log.d(TAG,"Contact photo thumbnail not found for contact "+photoData
 //            +": "+e.toString());
 //        }
       }

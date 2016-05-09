@@ -14,37 +14,38 @@ public class Member implements Parcelable {
 
     private static final String TAG = Member.class.getCanonicalName();
 
-    private String memberUid;
-    private String memberPhoneNumber;
-    private String memberDisplayName;
-    private String memberRoleName;
+    private String userUid;
     private String groupUid;
+
+    private String phoneNumber;
+    private String displayName;
+    private String roleName;
 
     @Override
     public int describeContents() { return 0; }
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
-        dest.writeString(this.memberUid);
-        dest.writeString(this.memberPhoneNumber);
-        dest.writeString(this.memberDisplayName);
-        dest.writeString(this.memberRoleName);
+        dest.writeString(this.userUid);
+        dest.writeString(this.phoneNumber);
+        dest.writeString(this.displayName);
+        dest.writeString(this.roleName);
         dest.writeString(this.groupUid);
     }
 
     protected Member(Parcel incoming) {
         Log.d(TAG, "inside Member, constructing with incoming parcel : " + incoming.toString());
-        memberUid = incoming.readString();
-        memberPhoneNumber = incoming.readString();
-        memberDisplayName = incoming.readString();
-        memberRoleName = incoming.readString();
+        userUid = incoming.readString();
+        phoneNumber = incoming.readString();
+        displayName = incoming.readString();
+        roleName = incoming.readString();
         groupUid = incoming.readString();
     }
 
-    public Member(String memberPhoneNumber, String memberDisplayName, String memberRoleName) {
-        this.memberPhoneNumber = memberPhoneNumber;
-        this.memberDisplayName = memberDisplayName;
-        this.memberRoleName = (memberRoleName != null) ? memberRoleName : Constant.ROLE_ORDINARY_MEMBER;
+    public Member(String phoneNumber, String displayName, String roleName) {
+        this.phoneNumber = phoneNumber;
+        this.displayName = displayName;
+        this.roleName = (roleName != null) ? roleName : Constant.ROLE_ORDINARY_MEMBER;
     }
 
     public static final Creator<Member> CREATOR = new Creator<Member>() {
@@ -61,24 +62,24 @@ public class Member implements Parcelable {
 
     // GETTERS
 
-    public String getMemberUid() {
-        return memberUid;
+    public String getUserUid() {
+        return userUid;
     }
 
-    public String getMemberPhoneNumber() {
-        return memberPhoneNumber;
+    public String getPhoneNumber() {
+        return phoneNumber;
     }
 
-    public String getMemberDisplayName() {
-        return memberDisplayName;
+    public String getDisplayName() {
+        return displayName;
     }
 
     public String getGroupUid() {
         return groupUid;
     }
 
-    public String getMemberRoleName() {
-        return memberRoleName;
+    public String getRoleName() {
+        return roleName;
     }
 
     // toString etc
@@ -87,9 +88,9 @@ public class Member implements Parcelable {
     @Override
     public String toString() {
         return "Member{" +
-                "memberUid='" + memberUid + '\'' +
-                ", memberPhoneNumber='" + memberPhoneNumber + '\'' +
-                ", memberDisplayName='" + memberDisplayName + '\'' +
+                "userUid='" + userUid + '\'' +
+                ", phoneNumber='" + phoneNumber + '\'' +
+                ", displayName='" + displayName + '\'' +
                 '}';
     }
 }

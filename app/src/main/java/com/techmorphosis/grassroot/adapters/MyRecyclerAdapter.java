@@ -9,7 +9,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.techmorphosis.grassroot.R;
-import com.techmorphosis.grassroot.models.SingleContact;
+import com.techmorphosis.grassroot.models.Contact;
 
 import java.util.ArrayList;
 
@@ -22,10 +22,10 @@ public class MyRecyclerAdapter extends RecyclerView.Adapter<MyRecyclerAdapter.My
 
     private   String TAG = MyRecyclerAdapter.class.getSimpleName() ;
     private final Context mcontext;
-    private final ArrayList<SingleContact> data;
+    private final ArrayList<Contact> data;
     private final LayoutInflater inflater;
 
-    public MyRecyclerAdapter(Context context, ArrayList<SingleContact> List)
+    public MyRecyclerAdapter(Context context, ArrayList<Contact> List)
     {
         this.mcontext=context;
         this.data=List;
@@ -44,7 +44,7 @@ public class MyRecyclerAdapter extends RecyclerView.Adapter<MyRecyclerAdapter.My
     public void onBindViewHolder(final MyRecyclerAdapter.MyRecyclerAdapter_ViewHolder holder, final int position)
     {
 
-        SingleContact model= data.get(position);
+        Contact model= data.get(position);
 
 
         holder.tv_dialog_person_name.setText(model.selectedNumber);

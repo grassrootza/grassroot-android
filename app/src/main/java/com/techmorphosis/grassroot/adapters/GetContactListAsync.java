@@ -3,21 +3,21 @@ package com.techmorphosis.grassroot.adapters;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.database.Cursor;
-import android.database.DatabaseUtils;
 import android.os.AsyncTask;
 import android.provider.ContactsContract;
 import android.provider.ContactsContract.CommonDataKinds.Phone;
 import android.provider.ContactsContract.Contacts;
+import android.telephony.PhoneNumberUtils;
 import android.util.Log;
 
 import com.techmorphosis.grassroot.Interface.ContactListRequester;
-import com.techmorphosis.grassroot.models.SingleContact;
+import com.techmorphosis.grassroot.models.Contact;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public class GetContactListAsync extends AsyncTask<Void, Void, List<SingleContact>> {
+public class GetContactListAsync extends AsyncTask<Void, Void, List<Contact>> {
 
     public String TAG = GetContactListAsync.class.getSimpleName();
 
@@ -25,7 +25,7 @@ public class GetContactListAsync extends AsyncTask<Void, Void, List<SingleContac
     private Context context;
 
     private ContactListRequester requester;
-    private List<SingleContact> contactsRetrieved;
+    private List<Contact> contactsRetrieved;
 
     public GetContactListAsync(Context context, ContactListRequester requestor) {
         this.context = context;
@@ -34,7 +34,7 @@ public class GetContactListAsync extends AsyncTask<Void, Void, List<SingleContac
     }
 
     @Override
-    protected List<SingleContact> doInBackground(Void... params) {
+    protected List<Contact> doInBackground(Void... params) {
 
         this.contentResolver = context.getContentResolver();
         Cursor cur = contentResolver.query(Contacts.CONTENT_URI, null, null, null, "display_name ASC");
@@ -47,6 +47,8 @@ public class GetContactListAsync extends AsyncTask<Void, Void, List<SingleContac
 
             while (cur.moveToNext()) {
 
+                boolean localNumberFound = false;
+
                 currentId = cur.getString(idIndex);
                 Cursor phoneCursor = this.contentResolver.query(Phone.CONTENT_URI, null,
                         ContactsContract.CommonDataKinds.Phone.CONTACT_ID + " = ?", new String[]{currentId}, null);
@@ -54,25 +56,33 @@ public class GetContactListAsync extends AsyncTask<Void, Void, List<SingleContac
 
                 if (phoneCursor.moveToNext()) {
 
-                    SingleContact contact = new SingleContact();
+                    Contact contact = new Contact();
                     contact.name = cur.getString(cur.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME));
                     contact.contact_ID = currentId;
 
+                    List<String> listPhones;
                     String phoneNo = phoneCursor.getString(phoneIndex);
-                    List<String> listPhones = Collections.singletonList(phoneNo);
 
-                    if (phoneCursor.getCount() > 1) {
-                        while (phoneCursor.moveToNext()) {
-                            phoneNo = phoneCursor.getString(phoneCursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER));
-                            listPhones.add(phoneNo);
-                        }
-                        contact.selectedNumber = "";
+                    if (checkIfLocalNumber(phoneNo)) {
+                        listPhones = Collections.singletonList(phoneNo);
+                        localNumberFound = true;
                     } else {
-                        contact.selectedNumber = phoneNo;
+                        listPhones = new ArrayList<>();
                     }
 
-                    contact.numbers = listPhones;
-                    contactsRetrieved.add(contact);
+                    while (phoneCursor.moveToNext()) {
+                        phoneNo = phoneCursor.getString(phoneCursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER));
+                        if (checkIfLocalNumber(phoneNo)) {
+                            listPhones.add(phoneNo);
+                            localNumberFound = true;
+                        }
+                    }
+
+                    if (localNumberFound) {
+                        contact.numbers = listPhones;
+                        contact.selectedNumber = listPhones.size() == 1 ? listPhones.get(0) : "";
+                        contactsRetrieved.add(contact);
+                    }
                 }
 
                 phoneCursor.close();
@@ -82,8 +92,19 @@ public class GetContactListAsync extends AsyncTask<Void, Void, List<SingleContac
         return contactsRetrieved;
     }
 
-    protected void onPostExecute(List<SingleContact> contactsModels) {
+    protected void onPostExecute(List<Contact> contactsModels) {
         Log.d(TAG, "in async Contact List, calling onPostExecute, with list = " + contactsModels.toString());
         requester.putContactList(contactsModels);
+    }
+
+    private boolean checkIfLocalNumber(String phoneNumber) {
+        // todo: might be able to do this much quicker if use Google overall libPhoneNumber, but whole lib for this is heavy
+        final String normalized = PhoneNumberUtils.stripSeparators(phoneNumber);
+        Log.d(TAG, "inside contact list, normalized number : " + normalized);
+        if (normalized.charAt(0) == '0' && normalized.length() == 10)
+            return true;
+        if (normalized.substring(0,3).equals("+27") || normalized.substring(0,2).equals("27"))
+            return true;
+        return false;
     }
 }

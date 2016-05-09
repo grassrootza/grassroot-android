@@ -50,6 +50,8 @@ public class UserListAdapter extends RecyclerView.Adapter<UserListAdapter.ViewHo
         this.notifyItemRangeInserted(0, memberList.size() - 1);
     }
 
+    public List<Member> getMembers() { return members; }
+
     /**
      * Method to create the view holder that will be filled with content
      * @param parent The view group containing this record
@@ -72,7 +74,7 @@ public class UserListAdapter extends RecyclerView.Adapter<UserListAdapter.ViewHo
     @Override
     public void onBindViewHolder(ViewHolder viewHolder, int position) {
         Member thisMember = members.get(position);
-        viewHolder.tvMemberName.setText(thisMember.getMemberDisplayName());
+        viewHolder.tvMemberName.setText(thisMember.getDisplayName());
     }
 
 }

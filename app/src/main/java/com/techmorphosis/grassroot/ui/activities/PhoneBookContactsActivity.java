@@ -5,12 +5,9 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Parcelable;
-import android.text.Editable;
-import android.text.TextWatcher;
 import android.util.Log;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
-import android.widget.AdapterView;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
@@ -20,8 +17,7 @@ import com.techmorphosis.grassroot.Interface.ContactListRequester;
 import com.techmorphosis.grassroot.R;
 import com.techmorphosis.grassroot.adapters.ContactsAdapter;
 import com.techmorphosis.grassroot.adapters.GetContactListAsync;
-import com.techmorphosis.grassroot.models.SingleContact;
-import com.techmorphosis.grassroot.services.model.Member;
+import com.techmorphosis.grassroot.models.Contact;
 import com.techmorphosis.grassroot.utils.Constant;
 import com.techmorphosis.grassroot.utils.PermissionUtils;
 import com.techmorphosis.grassroot.utils.UtilClass;
@@ -42,8 +38,10 @@ public class PhoneBookContactsActivity extends PortraitActivity implements Conta
     public static final String TAG = PhoneBookContactsActivity.class.getSimpleName();
 
     private ContactsAdapter mAdapter;
-    ArrayList<SingleContact> contacts_names;
+    ArrayList<Contact> listOfContacts;
     private ArrayList<Parcelable> preSelectedList;
+    private ArrayList<Contact> contactsToRemove;
+
     private int multi_number_positons=-1;
     private UtilClass utilClass;
 
@@ -81,6 +79,7 @@ public class PhoneBookContactsActivity extends PortraitActivity implements Conta
 
         Bundle b= getIntent().getExtras();
         preSelectedList = b.getParcelableArrayList(Constant.filteredList);
+        contactsToRemove = b.getParcelableArrayList(Constant.doNotDisplayContacts);
 
         GetContactListAsync contactListGetter = new GetContactListAsync(this, this);
 
@@ -95,31 +94,36 @@ public class PhoneBookContactsActivity extends PortraitActivity implements Conta
     private void init() {
         utilClass = new UtilClass();
         preSelectedList = new ArrayList<>();
-        contacts_names=new ArrayList<>();
+        listOfContacts =new ArrayList<>();
     }
 
-    public void putContactList(List<SingleContact> returnedContactList) {
+    public void putContactList(List<Contact> returnedContactList) {
 
         Log.d(TAG, "listPhones size is " + returnedContactList.size());
+
+        if (contactsToRemove != null && contactsToRemove.size() > 0) {
+            // todo: keep an eye on behavior of contacts with multiple numbers
+            Log.d(TAG, "removing some contacts! these : " + contactsToRemove);
+            Log.d(TAG, "returned contact list looks like: " + returnedContactList.toString());
+            returnedContactList.removeAll(contactsToRemove);
+        }
 
         if (preSelectedList != null && preSelectedList.size() > 0) {
 
             for (int i = 0; i < preSelectedList.size(); i++) {
-
-                SingleContact filteredModel = (SingleContact) preSelectedList.get(i);
-
+                Contact preSelectedContact = (Contact) preSelectedList.get(i);
                 for (int j = 0; j < returnedContactList.size(); j++) {
-                    SingleContact listModel = returnedContactList.get(j);
-                    if (filteredModel.contact_ID.equals(listModel.contact_ID)) {
+                    Contact listModel = returnedContactList.get(j);
+                    if (preSelectedContact.contact_ID.equals(listModel.contact_ID)) {
                         listModel.isSelected = true;
-                        listModel.selectedNumber = filteredModel.selectedNumber;
+                        listModel.selectedNumber = preSelectedContact.selectedNumber;
                     }
                 }
             }
         }
 
-        contacts_names.addAll(returnedContactList);
-        mAdapter=new ContactsAdapter(contacts_names,getApplicationContext());
+        listOfContacts.addAll(returnedContactList);
+        mAdapter=new ContactsAdapter(listOfContacts,getApplicationContext());
         mListView.setAdapter(mAdapter);
         mListView.setOnScrollListener(mAdapter);
         mListView.setEnableHeaderTransparencyChanges(false);
@@ -143,10 +147,10 @@ public class PhoneBookContactsActivity extends PortraitActivity implements Conta
         super.onDestroy();
     }
 
-    private ArrayList<SingleContact> membersToReturn() {
-        ArrayList<SingleContact> selectedMembers = new ArrayList<>();
+    private ArrayList<Contact> membersToReturn() {
+        ArrayList<Contact> selectedMembers = new ArrayList<>();
         // oh for Java 8 ... todo: consider holding a sep list so don't have to do this iteration on close
-        for (SingleContact contact : contacts_names) {
+        for (Contact contact : listOfContacts) {
             if (contact.isSelected) {
                 selectedMembers.add(contact);
             }
@@ -162,7 +166,7 @@ public class PhoneBookContactsActivity extends PortraitActivity implements Conta
     public void selectMember(int position) {
 
         multi_number_positons = position;
-        SingleContact contactClicked = contacts_names.get(position);
+        Contact contactClicked = listOfContacts.get(position);
 
         if (contactClicked.numbers.size() > 1) {//show dialog
             Intent i = new Intent(PhoneBookContactsActivity.this, DialogActivity.class);
@@ -192,13 +196,13 @@ public class PhoneBookContactsActivity extends PortraitActivity implements Conta
         super.onActivityResult(requestCode, resultCode, data);
         if (resultCode == 1) { // todo: replace these numbers with meaningful named constants
             String selectednumber = data.getStringExtra("selectednumber");
-            SingleContact contactAtPosition = contacts_names.get(multi_number_positons);
+            Contact contactAtPosition = listOfContacts.get(multi_number_positons);
             contactAtPosition.isSelected = true;
             contactAtPosition.selectedNumber = selectednumber;
             mAdapter.notifyDataSetChanged();
             Log.e(TAG, "onActivityResult selectedNumber is " + selectednumber);
         } else if (resultCode == 2) {
-            SingleContact contactAtPosition = contacts_names.get(multi_number_positons);
+            Contact contactAtPosition = listOfContacts.get(multi_number_positons);
             contactAtPosition.isSelected = false;
             contactAtPosition.selectedNumber="";
             mAdapter.notifyDataSetChanged();

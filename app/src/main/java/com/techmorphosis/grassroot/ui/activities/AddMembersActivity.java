@@ -12,11 +12,14 @@ import android.widget.TextView;
 import com.github.clans.fab.FloatingActionButton;
 import com.github.clans.fab.FloatingActionMenu;
 import com.techmorphosis.grassroot.R;
-import com.techmorphosis.grassroot.models.SingleContact;
+import com.techmorphosis.grassroot.models.Contact;
+import com.techmorphosis.grassroot.services.GrassrootRestService;
+import com.techmorphosis.grassroot.services.model.GenericResponse;
 import com.techmorphosis.grassroot.services.model.Member;
 import com.techmorphosis.grassroot.ui.fragments.MemberListFragment;
 import com.techmorphosis.grassroot.utils.Constant;
 import com.techmorphosis.grassroot.utils.PermissionUtils;
+import com.techmorphosis.grassroot.utils.SettingPreference;
 import com.techmorphosis.grassroot.utils.UtilClass;
 
 import java.util.ArrayList;
@@ -25,6 +28,9 @@ import java.util.List;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
+import rx.Observer;
+import rx.android.schedulers.AndroidSchedulers;
+import rx.schedulers.Schedulers;
 
 /**
  * Created by luke on 2016/05/05.
@@ -36,6 +42,7 @@ public class AddMembersActivity extends AppCompatActivity {
     private String groupUid;
     private String groupName;
     private List<Member> membersToAdd;
+    private GrassrootRestService grassrootRestService;
 
     private MemberListFragment existingMemberListFragment;
     private MemberListFragment newMemberListFragment;
@@ -120,7 +127,9 @@ public class AddMembersActivity extends AppCompatActivity {
         if (!PermissionUtils.contactReadPermissionGranted(getApplicationContext())) {
             PermissionUtils.requestReadContactsPermission(this);
         } else {
-            UtilClass.callPhoneBookActivity(this, new ArrayList<SingleContact>());
+            // todo: pass back the added members as well
+            UtilClass.callPhoneBookActivity(this, new ArrayList<Contact>(),
+                    new ArrayList<>(Contact.convertFromMembers(existingMemberListFragment.getMemberList(), false)));
         }
     }
 
@@ -134,19 +143,47 @@ public class AddMembersActivity extends AppCompatActivity {
     @OnClick(R.id.am_bt_save)
     public void commitResultsAndExit() {
         if (membersToAdd != null && membersToAdd.size() > 0) {
+            postNewMembersToGroup();
             Log.e(TAG, "Exiting with these members to add: " + membersToAdd.toString());
-
         } else {
             Log.e(TAG, "Exited with no members to add!");
         }
         finish();
     }
 
+    private void postNewMembersToGroup() {
+        grassrootRestService = new GrassrootRestService();
+        String mobileNumber = SettingPreference.getuser_mobilenumber(getApplicationContext());
+        String sessionCode = SettingPreference.getuser_token(getApplicationContext());
+
+        grassrootRestService.getApi()
+                .addGroupMembers(groupUid, mobileNumber, sessionCode, membersToAdd)
+                .subscribeOn(Schedulers.newThread())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Observer<GenericResponse>() {
+                    @Override
+                    public void onCompleted() {
+                        Log.d(TAG, "DONE! All completed");
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+                        Log.d(TAG, "Finished ... but didn't really work");
+                    }
+
+                    @Override
+                    public void onNext(GenericResponse genericResponse) {
+                        // todo: tell the user! also refresh group fragment so number changes
+                        Log.d(TAG, "Succceeded!");
+                    }
+                });
+    }
+
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (requestCode == Constant.alertAskForContactPermission && grantResults.length > 0) {
-            PermissionUtils.checkPermGrantedAndLaunchPhoneBook(this, grantResults[0], new ArrayList<SingleContact>());
+            PermissionUtils.checkPermGrantedAndLaunchPhoneBook(this, grantResults[0], new ArrayList<Contact>());
         }
     }
 
@@ -156,7 +193,7 @@ public class AddMembersActivity extends AppCompatActivity {
 
         if (resultCode == RESULT_OK) {
             if (requestCode == Constant.activityContactSelection && data != null) {
-                ArrayList<SingleContact> returnedContacts = data.getParcelableArrayListExtra(Constant.selectedContacts);
+                ArrayList<Contact> returnedContacts = data.getParcelableArrayListExtra(Constant.selectedContacts);
                 Log.d(TAG, "retrieved contacts from activity! number of user selected = " + returnedContacts.size());
                 addContactsToMembers(returnedContacts);
             } else if (requestCode == Constant.activityManualMemberEntry) {
@@ -171,9 +208,9 @@ public class AddMembersActivity extends AppCompatActivity {
         }
     }
 
-    private void addContactsToMembers(List<SingleContact> contacts) {
+    private void addContactsToMembers(List<Contact> contacts) {
         // todo: handle removal ...
-        for (SingleContact contact : contacts) {
+        for (Contact contact : contacts) {
             Member newMember = new Member(contact.selectedNumber, contact.name, Constant.ROLE_ORDINARY_MEMBER);
             membersToAdd.add(newMember);
         }

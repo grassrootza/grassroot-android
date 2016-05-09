@@ -55,6 +55,8 @@ public class MemberListFragment extends Fragment {
 
     public void setMemberList(List<Member> members) { this.membersToPassAdapter = members; }
 
+    public List<Member> getMemberList() { return this.userListAdapter.getMembers(); }
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);

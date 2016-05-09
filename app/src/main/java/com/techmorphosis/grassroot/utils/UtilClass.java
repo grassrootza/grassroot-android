@@ -12,22 +12,32 @@ import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.design.widget.Snackbar;
+import android.telephony.PhoneNumberUtils;
+import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
 
-import com.techmorphosis.grassroot.models.SingleContact;
+import com.techmorphosis.grassroot.models.Contact;
 import com.techmorphosis.grassroot.ui.activities.PhoneBookContactsActivity;
 import com.techmorphosis.grassroot.ui.fragments.AlertDialogFragment;
 import com.techmorphosis.grassroot.utils.listener.AlertDialogListener;
 
 import java.util.ArrayList;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 // Referenced classes of package com.techmorphosis.Utils:
 //            AlertDialogListener, DeliveryScheduleListner
 
 public class UtilClass {
 
- public static String MAKE;
+    private static final String TAG = UtilClass.class.getCanonicalName();
+
+    private static final Pattern zaPhoneE164 = Pattern.compile("27[6,7,8]\\d{8}");
+    private static final Pattern zaPhoneE164Plus = Pattern.compile("\\+27[6,7,8]\\d{8}");
+    private static final Pattern nationalRegex = Pattern.compile("0[6,7,8]\\d{8}");
+
+    public static String MAKE;
     public static String MODEL;
     public static String OS;
     FragmentTransaction mTransaction;
@@ -62,10 +72,35 @@ public class UtilClass {
         return ss2;
     }
 
-    public static void callPhoneBookActivity(Activity callingActivity, ArrayList<SingleContact> filterList) {
+    public static void callPhoneBookActivity(Activity callingActivity, ArrayList<Contact> preSelectedList,
+                                             ArrayList<Contact> removeList) {
         Intent phoneBookIntent = new Intent(callingActivity, PhoneBookContactsActivity.class);
-        phoneBookIntent.putParcelableArrayListExtra(Constant.filteredList, filterList);
+        if (preSelectedList != null) phoneBookIntent.putParcelableArrayListExtra(Constant.filteredList, preSelectedList);
+        if (removeList != null) phoneBookIntent.putParcelableArrayListExtra(Constant.doNotDisplayContacts, removeList);
         callingActivity.startActivityForResult(phoneBookIntent, Constant.activityContactSelection);
+    }
+
+    // since google's libPhoneNumber is a mammoth 1mb JAR, not including, but hand rolling
+    public static String formatNumberToE164(String phoneNumber) {
+
+        String normalizedNumber = PhoneNumberUtils.stripSeparators(phoneNumber);
+
+        final Matcher alreadyCorrect = zaPhoneE164.matcher(normalizedNumber);
+        if (alreadyCorrect.find()) return normalizedNumber;
+
+        final Matcher removePlus = zaPhoneE164Plus.matcher(normalizedNumber);
+        if (removePlus.find()) {
+            return normalizedNumber.substring(1);
+        }
+
+        final Matcher reformat = nationalRegex.matcher(normalizedNumber);
+        if (reformat.find()) {
+            return "27" + normalizedNumber.substring(1);
+        }
+
+        // todo: throw an error, etc
+        Log.d(TAG, "error! tried to reformat, couldn't, here is phone number = " + normalizedNumber);
+        return normalizedNumber;
     }
 
 }

@@ -12,7 +12,7 @@ import android.widget.TextView;
 import com.techmorphosis.grassroot.ContactLib.SearchablePinnedHeaderListViewAdapter;
 import com.techmorphosis.grassroot.ContactLib.StringArrayAlphabetIndexer;
 import com.techmorphosis.grassroot.R;
-import com.techmorphosis.grassroot.models.SingleContact;
+import com.techmorphosis.grassroot.models.Contact;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,15 +24,15 @@ import java.util.Locale;
 // ////////////////////////////////////////////////////////////
 // ContactsAdapter //
 // //////////////////
-public class ContactsAdapter extends SearchablePinnedHeaderListViewAdapter<SingleContact>
+public class ContactsAdapter extends SearchablePinnedHeaderListViewAdapter<Contact>
 {
     public  Context mcontext;
     private LayoutInflater mInflater;
-    private ArrayList<SingleContact> mContacts;
+    private ArrayList<Contact> mContacts;
     private final int CONTACT_PHOTO_IMAGE_SIZE;
     private final int[] PHOTO_TEXT_BACKGROUND_COLORS;
     private String TAG= ContactsAdapter.class.getSimpleName();
-    ArrayList<SingleContact> oldContacts;
+    ArrayList<Contact> oldContacts;
     //private final AsyncTaskThreadPool mAsyncTaskThreadPool=new AsyncTaskThreadPool(1,2,10);
 
 
@@ -41,7 +41,7 @@ public class ContactsAdapter extends SearchablePinnedHeaderListViewAdapter<Singl
         return ((StringArrayAlphabetIndexer.AlphaBetSection)getSections()[sectionIndex]).getName();
     }
 
-    public ContactsAdapter(final ArrayList<SingleContact> contacts, Context context) {
+    public ContactsAdapter(final ArrayList<Contact> contacts, Context context) {
         mInflater= LayoutInflater.from(context);
         this.mcontext=context;
         setData(contacts);
@@ -50,7 +50,7 @@ public class ContactsAdapter extends SearchablePinnedHeaderListViewAdapter<Singl
                 R.dimen.list_item__contact_imageview_size);
     }
 
-    public void setData(final ArrayList<SingleContact> contacts)
+    public void setData(final ArrayList<Contact> contacts)
     {
         this.mContacts=contacts;
         oldContacts = new ArrayList<>();
@@ -59,11 +59,11 @@ public class ContactsAdapter extends SearchablePinnedHeaderListViewAdapter<Singl
         setSectionIndexer(new StringArrayAlphabetIndexer(generatedContactNames,true));
     }
 
-    private String[] generateContactNames(final List<SingleContact> contacts)
+    private String[] generateContactNames(final List<Contact> contacts)
     {
         final ArrayList<String> contactNames=new ArrayList<String>();
         if(contacts!=null)
-            for(final SingleContact contactEntity : contacts)
+            for(final Contact contactEntity : contacts)
                 contactNames.add(contactEntity.name);
         return contactNames.toArray(new String[contactNames.size()]);
     }
@@ -86,7 +86,7 @@ public class ContactsAdapter extends SearchablePinnedHeaderListViewAdapter<Singl
             rootView=convertView;
             holder=(ViewHolder)rootView.getTag();
         }
-        final SingleContact contact=getItem(position);
+        final Contact contact=getItem(position);
 
         final String displayName=contact.name;
         holder.tv_person_name.setText(displayName);
@@ -103,7 +103,7 @@ public class ContactsAdapter extends SearchablePinnedHeaderListViewAdapter<Singl
     }
 
     @Override
-    public boolean doFilter(final SingleContact item, final CharSequence constraint)
+    public boolean doFilter(final Contact item, final CharSequence constraint)
     {
         if(TextUtils.isEmpty(constraint))
             return true;
@@ -113,7 +113,7 @@ public class ContactsAdapter extends SearchablePinnedHeaderListViewAdapter<Singl
     }
 
     @Override
-    public ArrayList<SingleContact> getOriginalList()
+    public ArrayList<Contact> getOriginalList()
     {
         return mContacts;
     }
@@ -130,7 +130,7 @@ public class ContactsAdapter extends SearchablePinnedHeaderListViewAdapter<Singl
         }
         else
         {
-            for (SingleContact model:oldContacts)
+            for (Contact model:oldContacts)
             {
                 if (model.name.toLowerCase(Locale.getDefault()).contains(search_string))
                 {
