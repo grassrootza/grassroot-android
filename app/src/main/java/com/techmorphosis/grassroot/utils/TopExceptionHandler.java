@@ -4,9 +4,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.util.Log;
 
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.io.IOException;
 
 /**
  * Created by luke on 2016/05/06.
@@ -46,7 +44,7 @@ public class TopExceptionHandler implements Thread.UncaughtExceptionHandler {
             FileOutputStream trace = crashedActivity.openFileOutput("stack.trace", Context.MODE_PRIVATE);
             trace.write(report.getBytes());
             trace.close();
-        } catch (IOException ioe) {
+        } catch (Exception exception) {
             Log.w("GRASSROOT CRASH: ", report);
         }
 

@@ -1,5 +1,6 @@
 package com.techmorphosis.grassroot.ui.activities;
 
+import android.annotation.SuppressLint;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
@@ -29,6 +30,7 @@ import com.techmorphosis.grassroot.ui.fragments.HomeScreenViewFragment;
 import com.techmorphosis.grassroot.ui.fragments.LoginScreenView;
 import com.techmorphosis.grassroot.ui.fragments.OtpScreenFragment;
 import com.techmorphosis.grassroot.ui.fragments.RegisterScreenFragment;
+import com.techmorphosis.grassroot.utils.LocationUtils;
 import com.techmorphosis.grassroot.utils.SettingPreference;
 import com.techmorphosis.grassroot.utils.TopExceptionHandler;
 
@@ -49,6 +51,7 @@ import rx.schedulers.Schedulers;
 /**
  * Created by admin on 22-Dec-15.
  */
+@SuppressLint("NewApi")
 public class StartActivity extends PortraitActivity implements HomeScreenViewFragment.OnHomeScreenInteractionListener,
         RegisterScreenFragment.OnRegisterScreenInteractionListener, LoginScreenView.OnLoginScreenInteractionListener,
         OtpScreenFragment.OnOtpScreenFragmentListener {
@@ -68,6 +71,8 @@ public class StartActivity extends PortraitActivity implements HomeScreenViewFra
     private String userName;
     private String mobileNumber;
     private String data;
+
+    private LocationUtils locationUtils;
 
 
     @Nullable
@@ -118,6 +123,9 @@ public class StartActivity extends PortraitActivity implements HomeScreenViewFra
             setContentView(R.layout.splashscreen);
             ButterKnife.bind(this);
             iv_splashlogo.setVisibility(View.VISIBLE);
+            // todo : move these to somewhere appropriate, and/or put in a separate thread
+            this.locationUtils = new LocationUtils(this);
+            locationUtils.connect();
             new Handler().postDelayed(new Runnable() {
                 @Override
                 public void run() {

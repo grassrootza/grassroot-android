@@ -5,6 +5,13 @@ package com.techmorphosis.grassroot.utils;
  */
 public class Constant {
 
+    // todo: implement good practice and use getters
+
+    public static final String stagingUrl = "http://staging.grassroot.org.za/api";
+    public static final String localUrl = "http://10.0.2.2:8080/api";
+
+    public static final String restUrl = localUrl;
+
     public static final String phoneBookList = "phoneBookList";
     public static final String filteredList = "filteredList";
 
@@ -21,5 +28,8 @@ public class Constant {
     public static final int activitySelectNumberFromContact = 3;
 
     public static final int alertAskForContactPermission = 91;
+
+    public static final double testLongitude = 31.215263;
+    public static final double testLatitude = 121.476291;
 
 }

@@ -103,19 +103,24 @@
 
             <RelativeLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:id="@+id/am_new_member_list_container"
-                android:visibility="invisible">
-
-            </RelativeLayout>
-
-            <RelativeLayout
-                android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:layout_below="@id/am_new_member_list_container"
-                android:id="@+id/am_existing_member_list_container"
-                app:layout_behavior="@string/appbar_scrolling_view_behavior"
-                >
+                app:layout_behavior="@string/appbar_scrolling_view_behavior">
+
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/am_new_member_list_container"
+                    android:visibility="invisible">
+
+                </RelativeLayout>
+
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_below="@id/am_new_member_list_container"
+                    android:id="@+id/am_existing_member_list_container">
+
+                </RelativeLayout>
 
             </RelativeLayout>
 

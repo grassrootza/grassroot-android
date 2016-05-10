@@ -8,6 +8,7 @@ import com.techmorphosis.grassroot.services.model.MemberList;
 import com.techmorphosis.grassroot.services.model.GroupSearchResponse;
 import com.techmorphosis.grassroot.services.model.TaskResponse;
 import com.techmorphosis.grassroot.services.model.TokenResponse;
+import com.techmorphosis.grassroot.utils.Constant;
 
 import java.util.List;
 
@@ -28,7 +29,7 @@ import rx.Observable;
 public class GrassrootRestService {
 
     // todo: make this an environment variable of some form
-    private static final String GRASSROOT_SERVER_URL = "http://10.0.2.2:8080/api";
+    private static final String GRASSROOT_SERVER_URL = Constant.restUrl;
     private RestApi mRestApi;
 
         public GrassrootRestService() {
@@ -72,6 +73,11 @@ public class GrassrootRestService {
             @GET("/user/verify/{phoneNumber}/{code}")
             Observable<TokenResponse> verify(@Path("phoneNumber") String phoneNumber,
                                              @Path("code") String code);
+
+            //store user location
+            @GET("/user/location/{phoneNumber}/{code}/{latitude}/{longitude}")
+            Observable<GenericResponse> logLocation(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
+                                                    @Path("latitude") double latitude, @Path("longitude") double longitude);
 
              //create new group
             @POST("/group/create/{phoneNumber}/{code}")
