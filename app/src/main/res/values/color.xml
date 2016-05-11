@@ -31,7 +31,8 @@
     <color name="grey_dialog_bg">#fff5f5f5</color>
     <color name="grey">#ff3e3e3e</color>
 
-     <color name="cg_title">#999999</color>
+    <color name="cg_title">#999999</color>
+    <color name="mlist_title">#207A33</color>
 
     <!-- used as background colors for contacts that don't have photos -->
     <integer-array name="contacts_text_background_colors">

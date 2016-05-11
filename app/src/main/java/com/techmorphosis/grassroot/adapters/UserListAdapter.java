@@ -32,6 +32,7 @@ public class UserListAdapter extends RecyclerView.Adapter<UserListAdapter.ViewHo
 
         public ViewHolder(View itemLayoutView) {
             super(itemLayoutView);
+            // Log.e(TAG, "userListAdaptor! inside internal viewholder class!");
             tvMemberName = (TextView) itemLayoutView.findViewById(R.id.mlist_tv_member_name);
         }
     }
@@ -60,6 +61,7 @@ public class UserListAdapter extends RecyclerView.Adapter<UserListAdapter.ViewHo
      */
     @Override
     public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+        // Log.e(TAG, "userListAdaptor! creating view holder!");
         View listItem = layoutInflater.inflate(R.layout.member_list_item, parent, false); // todo : switch to getting inflater in here?
         ViewHolder vh = new ViewHolder(listItem);
         return vh;
@@ -75,6 +77,7 @@ public class UserListAdapter extends RecyclerView.Adapter<UserListAdapter.ViewHo
     public void onBindViewHolder(ViewHolder viewHolder, int position) {
         Member thisMember = members.get(position);
         viewHolder.tvMemberName.setText(thisMember.getDisplayName());
+        // Log.e(TAG, "userListAdaptor! binding view holder!");
     }
 
 }

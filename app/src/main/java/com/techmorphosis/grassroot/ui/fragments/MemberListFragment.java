@@ -42,16 +42,10 @@ public class MemberListFragment extends Fragment {
     @BindView(R.id.mlist_frag_recycler_view)
     RecyclerView memberListRecyclerView;
 
-    @BindView(R.id.mlist_frag_tv_title)
-    TextView tvHeading;
-
     // NB: we are not doing checks for null on this because we will use the fragment in create group
     public void setGroupUid(String groupUid) {
         this.groupUid = groupUid;
     }
-
-    // todo: figure out why this is throwing null
-    public void setHeading(String heading) { tvHeading.setText(heading); }
 
     public void setMemberList(List<Member> members) { this.membersToPassAdapter = members; }
 
@@ -71,6 +65,7 @@ public class MemberListFragment extends Fragment {
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        Log.e(TAG, "setting up the fragment!");
         View viewToReturn = inflater.inflate(R.layout.fragment_member_list, container, false);
         ButterKnife.bind(this, viewToReturn);
         setUpRecyclerView();
@@ -78,8 +73,12 @@ public class MemberListFragment extends Fragment {
     }
 
     private void setUpRecyclerView() {
+        Log.e(TAG, "setting up the recycler view!");
         this.memberListRecyclerView.setLayoutManager(new LinearLayoutManager(this.getContext()));
         this.userListAdapter = new UserListAdapter(this.getContext());
+
+        // memberListRecyclerView.setHasFixedSize(true);
+        memberListRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
         memberListRecyclerView.setAdapter(userListAdapter);
 
         if (groupUid != null)
@@ -88,8 +87,8 @@ public class MemberListFragment extends Fragment {
         if (membersToPassAdapter != null && membersToPassAdapter.size() > 0)
             userListAdapter.addMembers(membersToPassAdapter);
 
-        if (userListAdapter.getItemCount() > 0)
-            memberListRecyclerView.setVisibility(View.VISIBLE);
+        memberListRecyclerView.setVisibility(View.VISIBLE);
+        Log.e(TAG, "ZOG : set up view, adaptor has : " + userListAdapter.getItemCount() + " items");
     }
 
     @Override
@@ -115,7 +114,7 @@ public class MemberListFragment extends Fragment {
                     @Override
                     public void onCompleted() {
                         // todo: once progress bar in place, stop it here
-                        Log.d(TAG, "inside MemberListFragment ... finished group control");
+                        Log.d(TAG, "inside MemberListFragment ... userListAdaptor now has X members: " + userListAdapter.getItemCount());
                     }
 
                     @Override

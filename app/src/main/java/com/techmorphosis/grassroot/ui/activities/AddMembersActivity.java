@@ -59,6 +59,13 @@ public class AddMembersActivity extends AppCompatActivity {
 
     @BindView(R.id.am_new_member_list_container)
     RelativeLayout newMemberContainer;
+    @BindView(R.id.tv_am_new_members_title)
+    TextView newMembersTitle;
+
+    @BindView(R.id.am_existing_member_list_container)
+    RelativeLayout existingMemberContainer;
+    @BindView(R.id.tv_am_existing_members_title)
+    TextView existingMembersTitle;
 
     @BindView(R.id.am_bt_save)
     Button btnSave;
@@ -204,7 +211,9 @@ public class AddMembersActivity extends AppCompatActivity {
         // todo: handle duplication & change
         if (membersToAdd.size() > 0) {
             setupNewMemberRecyclerView();
+            newMembersTitle.setVisibility(View.VISIBLE);
             newMemberContainer.setVisibility(View.VISIBLE);
+            existingMemberContainer.setVisibility(View.VISIBLE);
         }
     }
 
