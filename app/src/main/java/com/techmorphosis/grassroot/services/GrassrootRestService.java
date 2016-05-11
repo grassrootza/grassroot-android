@@ -29,7 +29,7 @@ import rx.Observable;
 public class GrassrootRestService {
 
     // todo: make this an environment variable of some form
-    private static final String GRASSROOT_SERVER_URL = Constant.restUrl;
+    private static final String GRASSROOT_SERVER_URL = Constant.stagingUrl;
     private RestApi mRestApi;
 
         public GrassrootRestService() {
@@ -119,7 +119,7 @@ public class GrassrootRestService {
                                                  @Query("response") String response);
 
             //complete logbook
-            @GET("logbook/complete/do/{id}/{phoneNumber}/{code}")
+            @GET("/logbook/complete/do/{id}/{phoneNumber}/{code}")
             Observable<GenericResponse> completeTodo(@Path("id") String todoId,
                                                      @Path("phoneNumber") String phoneNumber,
                                                      @Path("code") String code);
@@ -135,6 +135,10 @@ public class GrassrootRestService {
             Observable<GenericResponse> addGroupMembers(@Path("uid") String groupUid, @Path("phoneNumber") String phoneNumber,
                                                         @Path("code") String code, @Body List<Member> membersToAdd);
 
+            @POST(("/gcm/register/{phoneNumber}/{code}"))
+            Observable<GenericResponse> pushRegistration(@Path("phoneNumber") String phoneNumber,
+                                                         @Path("code") String code,
+                                                         @Query("registration_id") String regId);
         }
 
 }

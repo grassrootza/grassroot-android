@@ -22,6 +22,7 @@ import android.widget.RelativeLayout;
 import com.crashlytics.android.Crashlytics;
 import com.techmorphosis.grassroot.Network.NetworkCheck;
 import com.techmorphosis.grassroot.R;
+import com.techmorphosis.grassroot.services.GcmRegistrationService;
 import com.techmorphosis.grassroot.services.GrassrootRestService;
 import com.techmorphosis.grassroot.services.model.GenericResponse;
 import com.techmorphosis.grassroot.services.model.Token;
@@ -370,8 +371,11 @@ public class StartActivity extends PortraitActivity implements HomeScreenViewFra
                             SettingPreference.setuser_name(StartActivity.this, userName);
 
                             Log.d(TAG, "getPREF_Phone_Token is " + SettingPreference.getPREF_Phone_Token(StartActivity.this));
-                            Intent intent = new Intent(StartActivity.this, HomeScreen.class);
-                            startActivity(intent);
+                            Intent gcmRegistrationIntent = new Intent(StartActivity.this, GcmRegistrationService.class);
+                            gcmRegistrationIntent.putExtra("phoneNumber", mobileNumber);
+                            startService(gcmRegistrationIntent);
+                            Intent homeScreenIntent = new Intent(StartActivity.this, HomeScreen.class);
+                            startActivity(homeScreenIntent);
                             finish();
                         }
 
@@ -418,6 +422,12 @@ public class StartActivity extends PortraitActivity implements HomeScreenViewFra
 
                             Log.i(TAG, "inside StartActivity ... user has logged on ... hasGroups is " + hasGroups);
                             Log.i(TAG, "inside StartActivity ... user has logged on ... displayname is " + displayname);
+                            if(!SettingPreference.getIsGcmEnabled(StartActivity.this)){
+                                 Intent gcmRegistrationIntent = new Intent(StartActivity.this, GcmRegistrationService.class);
+                                 gcmRegistrationIntent.putExtra("phoneNumber", mobileNumber);
+                                 startService(gcmRegistrationIntent);
+                             }
+
 
                             if (hasGroups) {
                                 SettingPreference.setisHasgroup(StartActivity.this, true);

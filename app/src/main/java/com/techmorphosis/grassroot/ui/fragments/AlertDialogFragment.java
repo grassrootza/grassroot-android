@@ -11,21 +11,27 @@ import android.widget.TextView;
 import com.techmorphosis.grassroot.R;
 import com.techmorphosis.grassroot.utils.listener.AlertDialogListener;
 
+import butterknife.BindView;
+import butterknife.ButterKnife;
+import butterknife.OnClick;
+
 /**
  * Created by admin on 25-Mar-16.
  */
-public class AlertDialogFragment extends DialogFragment{
+public class AlertDialogFragment extends DialogFragment {
 
     View v;
+    @BindView(R.id.txt_message)
     TextView txtMessage;
-    private TextView bt_right;
-    private TextView bt_left;
+    @BindView(R.id.bt_right)
+    TextView bt_right;
+    @BindView(R.id.bt_left)
+    TextView bt_left;
     Boolean cancel;
     private AlertDialogListener mAlertDialogListener;
 
     @Override
-    public void onCreate(Bundle savedInstanceState)
-    {
+    public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
 
@@ -33,71 +39,46 @@ public class AlertDialogFragment extends DialogFragment{
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        v=inflater.inflate(R.layout.alertdialog,container,false);
+        View view = inflater.inflate(R.layout.alertdialog, container, false);
+        ButterKnife.bind(this, view);
         getDialog().getWindow().requestFeature(Window.FEATURE_NO_TITLE);
-        return v;
-
-    }
-
-    private void findViews() {
-        txtMessage = (TextView) v.findViewById(R.id.txt_message);
-        bt_right=(TextView)v.findViewById(R.id.bt_right);
-        bt_left=(TextView)v.findViewById(R.id.bt_left);
-        bt_right.setOnClickListener(right());
-        bt_left.setOnClickListener(left());
+        return view;
 
     }
 
 
 
-    private View.OnClickListener left() {
-            return  new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                mAlertDialogListener.setLeftButton();
-
-                }
-            };
+    @OnClick(R.id.bt_left)
+    public void leftButtonListener() {
+        mAlertDialogListener.setLeftButton();
     }
 
-    private View.OnClickListener right() {
-        return new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                mAlertDialogListener.setRightButton();
+    @OnClick(R.id.bt_right)
+    public void rightButtonListener() {
+        mAlertDialogListener.setRightButton();
 
-            }
-        };
     }
 
     @Override
-    public void onActivityCreated(Bundle savedInstanceState)
-    {
+    public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
-        findViews();
-        Bundle b= getArguments();
-        if (b!=null)
-        {
+        Bundle b = getArguments();
+        if (b != null) {
             txtMessage.setText(b.getString("message"));
-            cancel=b.getBoolean("cancelable");
+            cancel = b.getBoolean("cancelable");
             bt_left.setText(b.getString("left"));
             bt_right.setText(b.getString("right"));
             getDialog().setCancelable(cancel);
-        }
-        else
-        {
+        } else {
             txtMessage.setText("error");
         }
 
 
     }
 
-    public void setListener(AlertDialogListener alertdialoglistener)
-    {
-         mAlertDialogListener = alertdialoglistener;
+    public void setListener(AlertDialogListener alertdialoglistener) {
+        mAlertDialogListener = alertdialoglistener;
     }
-
-    
 
 
 }

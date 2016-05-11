@@ -2,9 +2,9 @@ package com.techmorphosis.grassroot.ui.fragments;
 
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.v4.app.FragmentActivity;
 import android.support.v4.view.ViewPager;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
@@ -18,30 +18,35 @@ import com.techmorphosis.grassroot.R;
 import com.techmorphosis.grassroot.adapters.MyPagerAdapter;
 import com.techmorphosis.grassroot.ui.activities.CreateGroupActivity;
 import com.techmorphosis.grassroot.ui.activities.Join_Request;
-import com.viewpagerindicator.CirclePageIndicator;
 import com.viewpagerindicator.PageIndicator;
+
+import butterknife.BindView;
+import butterknife.ButterKnife;
+import butterknife.OnClick;
 
 
 public class WelcomeFragment extends android.support.v4.app.Fragment {
 
-
-
-
-    private ViewPager pager;
-    private MyPagerAdapter adapter;
-    private FragmentActivity ctx;
-    private View view;
-    private Toolbar toolbar;
-    private TextView toolbarText;
+    @BindView(R.id.pager)
+    ViewPager pager;
+    MyPagerAdapter adapter;
+    @BindView(R.id.toolbar)
+    Toolbar toolbar;
+    @BindView(R.id.txt_welcometitle)
+    TextView toolbarText;
+    @BindView(R.id.indicator)
     PageIndicator mIndicator;
+    @BindView(R.id.bt_joingroup)
+    Button bt_joingroup;
+    @BindView(R.id.bt_startgroup)
+    Button bt_startgroup;
     private FragmentCallbacks mCallbacks;
-    private Button bt_joingroup;
-    private Button bt_startgroup;
 
 
     @Override
-    public void onAttach(Activity activity) {
-        super.onAttach(activity);
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        Activity activity = (Activity) context;
         try {
             mCallbacks = (FragmentCallbacks) activity;
             Log.e("onAttach", "Attached");
@@ -51,7 +56,7 @@ public class WelcomeFragment extends android.support.v4.app.Fragment {
     }
 
     @Override
-    public void onActivityCreated(Bundle savedInstanceState)    {
+    public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
 
         adapter = new MyPagerAdapter(getChildFragmentManager());
@@ -61,14 +66,13 @@ public class WelcomeFragment extends android.support.v4.app.Fragment {
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-         view = inflater.inflate(R.layout.welcome, container, false);
-        findView();
+        View view = inflater.inflate(R.layout.welcome, container, false);
+        ButterKnife.bind(this, view);
         setUpToolbar();
         return view;
     }
 
-    private void setUpToolbar()
-    {
+    private void setUpToolbar() {
         toolbarText.setText("Welcome");
         toolbar.setNavigationIcon(getResources().getDrawable(R.drawable.btn_navigation));
         toolbar.setNavigationOnClickListener(new View.OnClickListener() {
@@ -79,38 +83,19 @@ public class WelcomeFragment extends android.support.v4.app.Fragment {
         });
     }
 
-    private void findView()
-    {
-        toolbar = (Toolbar) view.findViewById(R.id.toolbar);
-        toolbarText = (TextView) toolbar.findViewById(R.id.txt_welcometitle);
-        pager = (ViewPager) view.findViewById(R.id.pager);
-        mIndicator = (CirclePageIndicator)view.findViewById(R.id.indicator);
-        bt_joingroup=(Button)view.findViewById(R.id.bt_joingroup);
-        bt_joingroup.setOnClickListener(joingroup());
-        bt_startgroup=(Button)view.findViewById(R.id.bt_startgroup);
-        bt_startgroup.setOnClickListener(startgroup());
+
+    @OnClick(R.id.bt_startgroup)
+    public void startgroup() {
+
+        Intent startgroup = new Intent(getActivity(), CreateGroupActivity.class);
+        startActivity(startgroup);
 
     }
 
-    private View.OnClickListener startgroup() {
-            return  new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-
-                    Intent startgroup= new Intent(getActivity(), CreateGroupActivity.class);
-                    startActivity(startgroup);
-                }
-            };
-    }
-
-    private View.OnClickListener joingroup() {
-        return  new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent joingroup= new Intent(getActivity(), Join_Request.class);
-                startActivity(joingroup);
-            }
-        };
+    @OnClick(R.id.bt_joingroup)
+    public void joingroup() {
+        Intent joingroup = new Intent(getActivity(), Join_Request.class);
+        startActivity(joingroup);
     }
 
 

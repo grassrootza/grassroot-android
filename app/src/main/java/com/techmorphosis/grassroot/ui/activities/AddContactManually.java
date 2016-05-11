@@ -4,7 +4,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.Snackbar;
-import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
@@ -12,50 +11,42 @@ import android.widget.RelativeLayout;
 
 import com.techmorphosis.grassroot.R;
 
+import butterknife.BindView;
+import butterknife.ButterKnife;
+import butterknife.OnClick;
+
 public class AddContactManually extends PortraitActivity {
 
-    private EditText et_userName;
-    private EditText et_mobile_register;
-    private Button bt_register;
+    @BindView(R.id.et_userName)
+    EditText et_userName;
+    @BindView(R.id.et_mobile_register)
+    EditText et_mobile_register;
+    @BindView(R.id.bt_register)
+    Button bt_register;
     private Snackbar snackbar;
-    private RelativeLayout activityRegister;
+    @BindView(R.id.activity_register)
+    RelativeLayout activityRegister;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_add_contact_manually);
-
-        findAllViews();
-    }
-
-    private void findAllViews() {
-
-        activityRegister = (RelativeLayout) findViewById(R.id.activity_register);
-        et_userName = (EditText) findViewById(R.id.et_userName);
-        et_mobile_register = (EditText) findViewById(R.id.et_mobile_register);
-
-        bt_register = (Button) findViewById(R.id.bt_register);
-        bt_register.setOnClickListener(bt_register(et_userName, et_mobile_register));
-
+        ButterKnife.bind(this);
 
     }
 
-    private View.OnClickListener bt_register(EditText et_userName, EditText et_mobile_register)
-    {
-        return new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-
-                try {
-                    InputMethodManager im= (InputMethodManager) getApplicationContext().getSystemService(INPUT_METHOD_SERVICE);
-                    im.hideSoftInputFromWindow(getCurrentFocus().getWindowToken(),0);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-
-                registerFormValidation();
+    @OnClick(R.id.bt_register)
+    public void  register() {
+        {
+            try {
+                InputMethodManager im = (InputMethodManager) getApplicationContext().getSystemService(INPUT_METHOD_SERVICE);
+                im.hideSoftInputFromWindow(getCurrentFocus().getWindowToken(), 0);
+            } catch (Exception e) {
+                e.printStackTrace();
             }
-        };
+            registerFormValidation();
+        }
+
     }
 
     private void registerFormValidation() {
@@ -93,7 +84,6 @@ public class AddContactManually extends PortraitActivity {
 
     private void showSnackBar(Context applicationContext, String s, String string, String s1, int i, int lengthShort)
     {
-
         snackbar=Snackbar.make(activityRegister, string ,lengthShort);
         snackbar.show();
     }

@@ -14,29 +14,34 @@ import android.widget.TextView;
 import com.techmorphosis.grassroot.Interface.FilterInterface;
 import com.techmorphosis.grassroot.R;
 
+import butterknife.BindView;
+import butterknife.ButterKnife;
+import butterknife.OnClick;
+
 /**
  * Created by ravi on 13/4/16.
  */
-public class FilterFragment extends DialogFragment
-{
+public class FilterFragment extends DialogFragment {
 
-    View view;
-    private TextView tvVote;
-    private TextView tvMeeting;
-    private TextView tvtoDo;
+    @BindView(R.id.tv_Vote)
+    TextView tvVote;
+    @BindView(R.id.tv_meeting)
+    TextView tvMeeting;
+    @BindView(R.id.tv_todo)
+    TextView tvtoDo;
+    @BindView(R.id.tv_clear)
+    TextView tvClear;
     private static final String TAG = "FilterFragment";
-    public boolean vote=false,meeting=false,todo=false;
+    public boolean vote = false, meeting = false, todo = false;
     private FilterInterface filterinterface;
-    private TextView tvClear;
     private boolean clear;
 
 
     @Nullable
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)
-    {
-         //super.onCreateView(inflater, container, savedInstanceState);
-        view=inflater.inflate(R.layout.fragment_filter,container,false);
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        View view = inflater.inflate(R.layout.fragment_filter, container, false);
+        ButterKnife.bind(this,view);
         getDialog().getWindow().requestFeature(Window.FEATURE_NO_TITLE);
         return view;
     }
@@ -44,36 +49,30 @@ public class FilterFragment extends DialogFragment
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
-
-        Bundle b= getArguments();
-        if (b!=null)
-        {
-            vote= b.getBoolean("Vote");
-            meeting=b.getBoolean("Meeting");
-        todo=b.getBoolean("ToDo");
-            clear=b.getBoolean("Clear");
+        Bundle b = getArguments();
+        if (b != null) {
+            vote = b.getBoolean("Vote");
+            meeting = b.getBoolean("Meeting");
+            todo = b.getBoolean("ToDo");
+            clear = b.getBoolean("Clear");
 
             Log.e(TAG, "vote is " + vote);
             Log.e(TAG, "meeting is " + meeting);
             Log.e(TAG, "todo is " + todo);
             Log.e(TAG, "clear is " + clear);
 
-        }
-        else
-        {
+        } else {
 
         }
 
-        findAllViews();
+        initViews();
         updateui(vote, meeting, todo);
 
     }
 
-    private void updateui(boolean vote, boolean meeting, boolean todo)
-    {
+    private void updateui(boolean vote, boolean meeting, boolean todo) {
 
-        if (vote)
-        {
+        if (vote) {
 
             tvVote.setTypeface(null, Typeface.BOLD);
 
@@ -83,9 +82,7 @@ public class FilterFragment extends DialogFragment
             tvClear.setTextColor(getResources().getColor(R.color.grey));
 
 
-        }
-        else if (meeting)
-        {
+        } else if (meeting) {
             tvVote.setTextColor(getResources().getColor(R.color.grey));
             tvMeeting.setTextColor(getResources().getColor(R.color.primaryColor));
             tvtoDo.setTextColor(getResources().getColor(R.color.grey));
@@ -94,9 +91,7 @@ public class FilterFragment extends DialogFragment
 
             tvMeeting.setTypeface(null, Typeface.BOLD);
 
-        }
-        else if (todo)
-        {
+        } else if (todo) {
             tvtoDo.setTypeface(null, Typeface.BOLD);
 
             tvVote.setTextColor(getResources().getColor(R.color.grey));
@@ -105,8 +100,7 @@ public class FilterFragment extends DialogFragment
             tvClear.setTextColor(getResources().getColor(R.color.grey));
 
 
-        } else if (clear)
-        {
+        } else if (clear) {
             tvClear.setTypeface(null, Typeface.BOLD);
             tvVote.setTextColor(getResources().getColor(R.color.grey));
             tvMeeting.setTextColor(getResources().getColor(R.color.grey));
@@ -117,28 +111,16 @@ public class FilterFragment extends DialogFragment
         }
     }
 
-    private void findAllViews() {
-
-        tvVote = (TextView) view.findViewById(R.id.tv_Vote);
-        tvMeeting = (TextView) view.findViewById(R.id.tv_meeting);
-        tvtoDo = (TextView) view.findViewById(R.id.tv_todo);
-        tvClear = (TextView) view.findViewById(R.id.tv_clear);
-        
+    private void initViews() {
         tvVote.setText("Vote");
         tvMeeting.setText("Meeting");
         tvtoDo.setText("ToDo");
 
-        tvVote.setOnClickListener(tvVoteClick());
-        tvMeeting.setOnClickListener(meetingClick());
-        tvtoDo.setOnClickListener(toDoClick());
-        tvClear.setOnClickListener(clearClick());
-
     }
 
-    private View.OnClickListener clearClick() {
-                return new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
+    @OnClick(R.id.tv_clear)
+    public void clearClick() {
+
 
 /*
                         vote = false;
@@ -156,18 +138,16 @@ public class FilterFragment extends DialogFragment
 */
 
 
-                        // ((Group_Homepage) getActivity()).tvVoteClick(date,role,defaults);
-                        filterinterface.clear(vote, meeting, todo,clear);
+        // ((Group_Homepage) getActivity()).tvVoteClick(date,role,defaults);
+        filterinterface.clear(vote, meeting, todo, clear);
+        getDialog().dismiss();
 
-                        getDialog().dismiss();
-                    }
-                };
+
     }
 
-    private View.OnClickListener tvVoteClick() {
-        return new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
+    @OnClick(R.id.tv_Vote)
+    public void tvVoteClick() {
+
 
 /*
                 vote = true;
@@ -184,18 +164,17 @@ public class FilterFragment extends DialogFragment
                 tvtoDo.setTextColor(getResources().getColor(R.color.grey));
 */
 
-               // ((Group_Homepage) getActivity()).tvVoteClick(date,role,defaults);
-                filterinterface.vote(vote, meeting, todo,clear);
+        // ((Group_Homepage) getActivity()).tvVoteClick(date,role,defaults);
+        filterinterface.vote(vote, meeting, todo, clear);
 
-                getDialog().dismiss();
-            }
-        };
+        getDialog().dismiss();
+
     }
 
-    private View.OnClickListener meetingClick() {
-        return new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
+
+    @OnClick(R.id.tv_meeting)
+    public void meetingClick() {
+
 
 /*
                 vote = false;
@@ -210,17 +189,15 @@ public class FilterFragment extends DialogFragment
 
                 tvMeeting.setTypeface(null, Typeface.BOLD);*/
 
-               // ((Group_Homepage) getActivity()).meetingClick(date, role, defaults);
-                filterinterface.meeting(vote, meeting, todo,clear);
-                getDialog().dismiss();
-            }
-        };
+        // ((Group_Homepage) getActivity()).meetingClick(date, role, defaults);
+        filterinterface.meeting(vote, meeting, todo, clear);
+        getDialog().dismiss();
+
     }
 
-    private View.OnClickListener toDoClick() {
-        return new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
+    @OnClick(R.id.tv_todo)
+    public void toDoClick() {
+
 
 /*
                 vote = false;
@@ -237,16 +214,15 @@ public class FilterFragment extends DialogFragment
 */
 
 
-               // ((Group_Homepage) getActivity()).defaultsClick(date, role, defaults);
-                filterinterface.todo(vote, meeting, todo,clear);
-                getDialog().dismiss();
-            }
-        };
+        // ((Group_Homepage) getActivity()).defaultsClick(date, role, defaults);
+        filterinterface.todo(vote, meeting, todo, clear);
+        getDialog().dismiss();
+
+
     }
 
 
-    public void setListener(FilterInterface fragmentsCalllistner)
-    {
+    public void setListener(FilterInterface fragmentsCalllistner) {
         filterinterface = fragmentsCalllistner;
     }
 
