@@ -4,71 +4,61 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
+import android.widget.Button;
 import android.widget.ImageView;
 
 import com.techmorphosis.grassroot.R;
 
+import butterknife.BindView;
+import butterknife.ButterKnife;
+import butterknife.OnClick;
+
 public class NewActivities extends AppCompatActivity {
-    private ImageView ivBack;
+    @BindView(R.id.iv_back)
+    ImageView ivBack;
+    @BindView(R.id.bt_vote)
+    Button bt_vote;
+    @BindView(R.id.bt_meeting)
+    Button bt_meeting;
+    @BindView(R.id.bt_todo)
+    Button bt_todo;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_new);
-
-        findAllViews();
+        ButterKnife.bind(this);
     }
 
-    private void findAllViews() {
-        ivBack = (ImageView) findViewById(R.id.iv_back);
-        findViewById(R.id.bt_vote).setOnClickListener(vote());
-        findViewById(R.id.bt_meeting).setOnClickListener(meeting());
-        findViewById(R.id.bt_todo).setOnClickListener(todo());
-        ivBack.setOnClickListener(back());
+
+
+    @OnClick(R.id.iv_back)
+    public void onBackClick() {
+      onBackPressed();
     }
 
-    private View.OnClickListener back() {
-        return new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                onBackPressed();
-
-            }
-        };
-    }
-
-    private View.OnClickListener todo() {
-        return new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
+    @OnClick(R.id.bt_todo)
+    public void onTodoButtonClick() {
                 Intent todo=new Intent(NewActivities.this,Blank.class);
                 todo.putExtra("title","ToDO");
                 startActivity(todo);
-            }
-        };
+
+
     }
 
-    private View.OnClickListener meeting() {
-        return new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
+    @OnClick(R.id.bt_meeting)
+    public void onMeetingButtonClick() {
                 Intent todo=new Intent(NewActivities.this,Blank.class);
                 todo.putExtra("title","Meeting");
                 startActivity(todo);
 
-            }
-        };
+
     }
 
-    private View.OnClickListener vote() {
-        return new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
+    @OnClick(R.id.bt_vote)
+    public void onVoteButtonClick() {
                 Intent todo=new Intent(NewActivities.this,Blank.class);
                 todo.putExtra("title","Vote");
                 startActivity(todo);
-
-            }
-        };
     }
 
     public void onBackPressed() {

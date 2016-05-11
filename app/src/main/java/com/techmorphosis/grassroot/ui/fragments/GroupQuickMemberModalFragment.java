@@ -18,19 +18,23 @@ import com.techmorphosis.grassroot.ui.activities.CreateGroupActivity;
 import com.techmorphosis.grassroot.ui.activities.PhoneBookContactsActivity;
 import com.techmorphosis.grassroot.utils.Constant;
 
+import butterknife.BindView;
+import butterknife.ButterKnife;
+import butterknife.OnClick;
+
 
 public class GroupQuickMemberModalFragment extends android.support.v4.app.DialogFragment {
 
     private static final String TAG = GroupQuickMemberModalFragment.class.getSimpleName();
 
-    private View view;
-    private ImageView icAddMemberIcon;
-    private ImageView icViewMemberIcon;
-    private ImageView icEditSettingsIcon;
-
+    @BindView(R.id.ic_home_add_member_active)
+    ImageView icAddMemberIcon;
+    @BindView(R.id.ic_home_view_members_active)
+    ImageView icViewMemberIcon;
+    @BindView(R.id.ic_edit_group_active)
+    ImageView icEditSettingsIcon;
     private String groupUid;
     private String groupName;
-
     private boolean addMemberPermitted, viewMembersPermitted, editSettingsPermitted;
 
     // would rather use good practice and not have empty constructor, but Android is Android
@@ -44,23 +48,13 @@ public class GroupQuickMemberModalFragment extends android.support.v4.app.Dialog
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        view = inflater.inflate(R.layout.modal_group_members_quick, container, false);
+        View view = inflater.inflate(R.layout.modal_group_members_quick, container, false);
+        ButterKnife.bind(this, view);
         getDialog().getWindow().requestFeature(Window.FEATURE_NO_TITLE);
         getDialog().getWindow().setBackgroundDrawable(new ColorDrawable(0));
         return view;
     }
 
-    private void findAndSetUpView() {
-
-        icAddMemberIcon = (ImageView) view.findViewById(R.id.ic_home_add_member_active);
-        icViewMemberIcon = (ImageView) view.findViewById(R.id.ic_home_view_members_active);
-        icEditSettingsIcon = (ImageView) view.findViewById(R.id.ic_edit_group_active);
-
-        icAddMemberIcon.setOnClickListener(gmAddMemberIconListener());
-        icViewMemberIcon.setOnClickListener(gmViewMembersIconListener());
-        icEditSettingsIcon.setOnClickListener(gmEditSettingsIconListener());
-
-    }
 
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
@@ -71,7 +65,6 @@ public class GroupQuickMemberModalFragment extends android.support.v4.app.Dialog
 
         Log.d(TAG, "inside quickGroupMemberBundle, passed bundle = " + b.toString());
 
-        findAndSetUpView();
         this.groupUid = b.getString(Constant.GROUPUID_FIELD);
         this.groupName = b.getString(Constant.GROUPNAME_FIELD);
 
@@ -88,10 +81,9 @@ public class GroupQuickMemberModalFragment extends android.support.v4.app.Dialog
         icEditSettingsIcon.setImageResource(editIcon);
     }
 
-    private View.OnClickListener gmAddMemberIconListener() {
-        return  new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
+    @OnClick(R.id.ic_home_add_member_active)
+    public void gmAddMemberIconListener() {
+
                 if (addMemberPermitted) {
                     Log.d(TAG, "inside modal ... add member icon clicked! for group with UID = " + groupUid + ", and name = "
                             + groupName);
@@ -103,15 +95,12 @@ public class GroupQuickMemberModalFragment extends android.support.v4.app.Dialog
                 } else {
                     getDialog().dismiss();
                 }
-            }
-        };
+
     }
 
-    private View.OnClickListener gmViewMembersIconListener() {
+    @OnClick(R.id.ic_home_view_members_active)
+    public  void gmViewMembersIconListener() {
         Log.d(TAG, "inside modal ... view member icon clicked!");
-        return new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
                 if (viewMembersPermitted) {
                     Intent viewMembers = new Intent(getActivity(), Blank.class);
                     startActivity(viewMembers);
@@ -119,24 +108,20 @@ public class GroupQuickMemberModalFragment extends android.support.v4.app.Dialog
                 } else {
                     getDialog().dismiss();
                 }
-            }
-        };
+
     }
 
-    private View.OnClickListener gmEditSettingsIconListener() {
+    @OnClick(R.id.ic_edit_group_active)
+    public void gmEditSettingsIconListener() {
         Log.d(TAG, "inside modal ... edit settings icon clicked!");
-        return new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (editSettingsPermitted) {
-                    Intent editGroupSettings = new Intent(getActivity(), Blank.class);
-                    startActivity(editGroupSettings);
-                    getDialog().dismiss();
-                } else {
-                    getDialog().dismiss();
-                }
-            }
-        };
-    }
 
-}
+        if (editSettingsPermitted) {
+            Intent editGroupSettings = new Intent(getActivity(), Blank.class);
+            startActivity(editGroupSettings);
+            getDialog().dismiss();
+        } else {
+            getDialog().dismiss();
+
+
+        }
+    } }

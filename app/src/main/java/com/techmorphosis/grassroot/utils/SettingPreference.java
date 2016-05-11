@@ -19,6 +19,7 @@ public class SettingPreference {
     private static final String IS_RATEUS = "IsRateus";
     private static final String IS_RATEUSCOUNTER = "IsRateuscounter";
     private static final String IS_HASGROUP = "IsHasgroup";
+    private static final String IS_GCM = "IsGCM";
 
 
     private static final String PREF_USER = "Pref_user_id";
@@ -161,4 +162,10 @@ public class SettingPreference {
     }
 
 
+    public static void setIsGcmEnabled(Context context, boolean value) {
+        getPref(context).edit().putBoolean(IS_GCM, value).apply();
+    }
+    public static boolean  getIsGcmEnabled(Context context){
+        return getPref(context).getBoolean(IS_GCM, false);
+    }
 }

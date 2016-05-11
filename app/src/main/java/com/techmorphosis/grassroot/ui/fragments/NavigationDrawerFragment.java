@@ -23,26 +23,26 @@ import com.techmorphosis.grassroot.utils.SettingPreference;
 
 import java.util.ArrayList;
 
+import butterknife.BindView;
+import butterknife.ButterKnife;
+
 
 public class NavigationDrawerFragment extends Fragment {
 
     private View mFragmentContainerView;
     private NavigationDrawerCallbacks mCallbacks;
-
-    private String mParam1;
-    private String mParam2;
-
     private int mCurrentSelectedPosition=0;
     private boolean mFromSavedInstanceState;
     private static final String STATE_SELECTED_POSITION = "selected_navigation_drawer_position";
-    private View view;
-    private RecyclerView mDrawerRecyclerView;
     ArrayList draweritems;
-    //public  static int mSelectedItem=0;
     private NavigationDrawerAdapter drawerAdapter;
     private DrawerLayout mDrawerLayout;
-    private TextView txtVersion;
-    private TextView displayName;
+    @BindView(R.id.rv_nav_items)
+    RecyclerView mDrawerRecyclerView;
+    @BindView(R.id.txt_version)
+    TextView txtVersion;
+    @BindView(R.id.displayName)
+    TextView displayName;
 
 
     public NavigationDrawerFragment() {
@@ -67,9 +67,9 @@ public class NavigationDrawerFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        view= inflater.inflate(R.layout.fragment_navigation_drawer, container, false);
-
-        findView();
+        View view= inflater.inflate(R.layout.fragment_navigation_drawer, container, false);
+        ButterKnife.bind(this, view);
+        initDisplayName();
         txtVersion.setText("v " + BuildConfig.VERSION_NAME);
 
 
@@ -113,18 +113,11 @@ public class NavigationDrawerFragment extends Fragment {
         return view ;
     }
 
-    private void findView()
+    private void initDisplayName()
     {
-
-        mDrawerRecyclerView = (RecyclerView) view.findViewById(R.id.rv_nav_items);
-        txtVersion = (TextView) view.findViewById(R.id.txt_version);
-        displayName = (TextView) view.findViewById(R.id.displayName);
         displayName.setText(SettingPreference.getuser_name(getActivity()));
     }
 
-    public  void Adapter()
-    {
-          }
 
     public  ArrayList<NavDrawerItem> getData()
     {

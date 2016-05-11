@@ -1,7 +1,9 @@
 package com.techmorphosis.grassroot.adapters;
 
+import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
+import android.support.v4.app.ListFragment;
 
 import com.techmorphosis.grassroot.ui.fragments.FiveFragment;
 import com.techmorphosis.grassroot.ui.fragments.FourFragment;
@@ -9,41 +11,35 @@ import com.techmorphosis.grassroot.ui.fragments.OneFragment;
 import com.techmorphosis.grassroot.ui.fragments.ThreeFragment;
 import com.techmorphosis.grassroot.ui.fragments.TwoFragment;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Created by admin on 22-Mar-16.
  */public class MyPagerAdapter extends FragmentPagerAdapter {
 
+    private List<Fragment> fragments;
 
     public MyPagerAdapter(FragmentManager fm) {
         super(fm);
+        initList();
     }
 
     public int getCount() {
-        return 5;
+        return fragments.size();
     }
 
     public android.support.v4.app.Fragment getItem(int index) {
+        return fragments.get(index);
+    }
 
-        switch (index) {
-            case 0:
-                return new OneFragment();
+    private void initList(){
 
-            case 1:
-                return new TwoFragment();
-
-            case 2:
-                return new ThreeFragment();
-
-            case 3:
-
-                return new FourFragment();
-
-            case 4:
-                return new FiveFragment();
-
-
-        }
-
-        return null;
+        fragments = new ArrayList<>();
+        fragments.add(new OneFragment());
+        fragments.add(new TwoFragment());
+        fragments.add(new ThreeFragment());
+        fragments.add(new FourFragment());
+        fragments.add(new FiveFragment());
     }
 }

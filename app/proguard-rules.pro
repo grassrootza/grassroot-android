@@ -28,20 +28,25 @@
 -keep class retrofit2.** { *; }
 -keepattributes Signature
 -keepattributes Exceptions
--keepattributes ​*Annotation*​
+-keepattributes *Annotation*
 
 -keepattributes innerClasses
 -keep class butterknife.** { *; }
 -keep class **$$ViewInjector { *; }
 
 -keepclasseswithmembernames class * {
-   @butterknife.* <fields>;
+    @butterknife.* <fields>;
 }
 -keepclasseswithmembernames class * {
-   @butterknife.* <methods>;
+    @butterknife.* <methods>;
 }
 -keepclasseswithmembers class * {
-   @retrofit.http.* <methods>;
+    @retrofit.http.* <methods>;
 }
 -keepattributes Signature
 -keep class com.google.gson.** { *;}
+
+
+
+
+
