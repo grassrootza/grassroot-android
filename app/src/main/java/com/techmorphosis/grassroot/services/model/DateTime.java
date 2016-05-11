@@ -175,5 +175,20 @@ public class DateTime {
         this.chronology = chronology;
     }
 
-
+    @Override
+    public String toString() {
+        return "DateTime{" +
+                "dayOfWeek='" + dayOfWeek + '\'' +
+                ", dayOfYear=" + dayOfYear +
+                ", monthValue=" + monthValue +
+                ", hour=" + hour +
+                ", minute=" + minute +
+                ", second=" + second +
+                ", nano=" + nano +
+                ", year=" + year +
+                ", month='" + month + '\'' +
+                ", dayOfMonth=" + dayOfMonth +
+                ", chronology=" + chronology +
+                '}';
+    }
 }

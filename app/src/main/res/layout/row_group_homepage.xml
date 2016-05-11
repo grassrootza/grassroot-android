@@ -22,52 +22,30 @@
             android:orientation="vertical"
             card_view:cardCornerRadius="5dp"
             card_view:cardElevation="3dp"
-            card_view:contentPadding="10dp"
-            card_view:cardBackgroundColor="#fff"
-            >
+            card_view:contentPadding="8dp"
+            card_view:cardBackgroundColor="#fff">
 
+            <!-- todo: do we need this? can we flatten view structure? -->
             <LinearLayout
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-
-                >
+                android:orientation="vertical">
 
                 <TextView
                     android:id="@+id/txt_groupname"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:textColor="@color/black"
-                    android:gravity="center_vertical"
-                    android:textSize="@dimen/txt_large"
-                    android:padding="2dp"
-                    android:singleLine="true"
+                    style="@style/CardViewHeader"
                     android:text="Group name"
                     />
 
                 <TextView
                     android:id="@+id/txt_groupownername"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:textColor="@color/black"
-                    android:gravity="center_vertical"
-                    android:textSize="@dimen/txt_medium"
-                    android:padding="2dp"
-                    android:singleLine="true"
+                    style="@style/CardViewSubHeader"
                     android:text="Group  owner name"
                     />
 
                 <TextView
                     android:id="@+id/txt_groupdesc"
-                    android:layout_width="fill_parent"
-                    android:layout_height="wrap_content"
-                    android:textColor="@color/textcolor"
-                    android:gravity="center_vertical"
-                    android:textSize="@dimen/txt_small"
-                    android:padding="2dp"
-                    android:ellipsize = "end"
-                    android:singleLine="true"
-                    android:layout_marginRight="120dp"
+                    style="@style/CardViewFinePrint"
                     android:text="Truncated of description of latest events"
                     />
 

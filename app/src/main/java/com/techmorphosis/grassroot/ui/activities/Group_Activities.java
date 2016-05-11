@@ -22,6 +22,7 @@ import com.techmorphosis.grassroot.services.model.GenericResponse;
 import com.techmorphosis.grassroot.services.model.TaskModel;
 import com.techmorphosis.grassroot.services.model.TaskResponse;
 import com.techmorphosis.grassroot.ui.fragments.FilterFragment;
+import com.techmorphosis.grassroot.utils.Constant;
 import com.techmorphosis.grassroot.utils.SettingPreference;
 
 import java.util.ArrayList;
@@ -37,38 +38,42 @@ import rx.schedulers.Schedulers;
 
 public class Group_Activities extends PortraitActivity {
 
-    private RelativeLayout gaToolbar;
-    @BindView(R.id.iv_ga_back)
-    ImageView ivGaBack;
-    @BindView(R.id.tv_ga_toolbar_txt)
-    TextView tvGaToolbarTxt;
-    @BindView(R.id.rc_ga)
-    RecyclerView recycleViewGroupActivities;
-    @BindView(R.id.iv_ga_filter)
-    ImageView ivGaFilter;
-
-    @BindView(R.id.im_no_results)
-    ImageView imNoResults;
-    @BindView(R.id.im_server_error)
-    ImageView imServerError;
-    @BindView(R.id.im_no_internet)
-    ImageView imNoInternet;
-    @BindView(R.id.fabbutton)
-    FloatingActionMenu fabbutton;
-    @BindView(R.id.progressBar)
-    ProgressBar mProgressBar;
-    @BindView(R.id.rl_activity_root)
-    RelativeLayout rlActivityRoot;
+    private static final String TAG = Group_Activities.class.getCanonicalName();
 
     private String groupid;
     private String groupName;
     private String phoneNumber;
     private String code;
 
-    private View errorLayout;
-    private LinearLayoutManager mLayoutManager;
+    @BindView(R.id.rl_activity_root)
+    RelativeLayout rlActivityRoot;
+
+    @BindView(R.id.iv_ga_back)
+    ImageView ivGaBack;
+    @BindView(R.id.iv_ga_filter)
+    ImageView ivGaFilter;
+
+    @BindView(R.id.tv_ga_toolbar_txt)
+    TextView tvGaToolbarTxt;
+    @BindView(R.id.rc_ga)
+    RecyclerView recycleViewGroupActivities;
+
+    @BindView(R.id.fabbutton)
+    FloatingActionMenu fabbutton;
+    @BindView(R.id.progressBar)
+    ProgressBar mProgressBar;
+
+    @BindView(R.id.error_layout)
+    View errorLayout;
+    @BindView(R.id.im_no_results)
+    ImageView imNoResults;
+    @BindView(R.id.im_server_error)
+    ImageView imServerError;
+    @BindView(R.id.im_no_internet)
+    ImageView imNoInternet;
+
     private Group_ActivitiesAdapter group_activitiesAdapter;
-    private static final String TAG = "Group_Activities";
+
     private Snackbar snackbar;
     public boolean vote_click = false, meeting_click = false, todo_click = false;
     private boolean clear_click = false;
@@ -113,8 +118,11 @@ public class Group_Activities extends PortraitActivity {
             @Override
             public void onMenuToggle(boolean opened) {
                 if (opened) {
+                    // todo: check & pass permissions
                     fabbutton.toggle(false);
                     Intent open = new Intent(Group_Activities.this, NewActivities.class);
+                    open.putExtra(Constant.GROUPUID_FIELD, groupid);
+                    open.putExtra(Constant.GROUPNAME_FIELD, groupName);
                     startActivity(open);
                     overridePendingTransition(R.anim.push_up_in, R.anim.push_up_out);
                 } else {
@@ -125,8 +133,7 @@ public class Group_Activities extends PortraitActivity {
     }
 
     private void initRecyclerView() {
-        mLayoutManager = new LinearLayoutManager(Group_Activities.this);
-        recycleViewGroupActivities.setLayoutManager(mLayoutManager);
+        recycleViewGroupActivities.setLayoutManager(new LinearLayoutManager(Group_Activities.this));
         recycleViewGroupActivities.setItemAnimator(new CustomItemAnimator());
         group_activitiesAdapter = new Group_ActivitiesAdapter(new ArrayList<TaskModel>(), Group_Activities.this);
         recycleViewGroupActivities.setAdapter(group_activitiesAdapter);

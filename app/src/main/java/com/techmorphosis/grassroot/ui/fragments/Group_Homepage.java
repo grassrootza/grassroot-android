@@ -66,22 +66,26 @@ public class Group_Homepage extends android.support.v4.app.Fragment {
     ImageView ivGhpSearch;
     @BindView(R.id.iv_ghp_sort)
     ImageView ivGhpSort;
+
     @BindView(R.id.recycler_view)
-    RecyclerView rcGhp;
+    RecyclerView rcGroupList;
     @BindView(R.id.error_layout)
     View errorLayout;
     @BindView(R.id.im_no_results)
+
     ImageView imNoResults;
     @BindView(R.id.im_server_error)
     ImageView imServerError;
     @BindView(R.id.im_no_internet)
     ImageView imNoInternet;
+
     @BindView(R.id.menu1)
     FloatingActionMenu menu1;
     @BindView(R.id.ic_fab_join_group)
     FloatingActionButton icFabJoinGroup;
     @BindView(R.id.ic_fab_start_group)
     FloatingActionButton icFabStartGroup;
+
     @BindView(R.id.iv_cross)
     ImageView ivCross;
     @BindView(R.id.et_search)
@@ -134,7 +138,7 @@ public class Group_Homepage extends android.support.v4.app.Fragment {
         Log.d(TAG, "Inside group homepage on create view ... userGroupWS");
         //preExecute
         mProgressBar.setVisibility(View.VISIBLE);
-        rcGhp.setVisibility(View.INVISIBLE);
+        rcGroupList.setVisibility(View.INVISIBLE);
         errorLayout.setVisibility(View.GONE);
         imNoInternet.setVisibility(View.GONE);
         imServerError.setVisibility(View.GONE);
@@ -150,7 +154,7 @@ public class Group_Homepage extends android.support.v4.app.Fragment {
                     @Override
                     public void onCompleted() {
                         mProgressBar.setVisibility(View.INVISIBLE);
-                        rcGhp.setVisibility(View.VISIBLE);
+                        rcGroupList.setVisibility(View.VISIBLE);
                     }
 
                     @Override
@@ -170,7 +174,7 @@ public class Group_Homepage extends android.support.v4.app.Fragment {
                     public void onNext(GroupResponse response) {
                         groupList.addAll(response.getGroups());
                         groupListclone.addAll(response.getGroups());
-                        rcGhp.setVisibility(View.VISIBLE);
+                        rcGroupList.setVisibility(View.VISIBLE);
                         groupListRowAdapter.addData(groupList);
                         ivGhpSearch.setEnabled(true);
                         ivGhpSort.setEnabled(true);
@@ -183,14 +187,14 @@ public class Group_Homepage extends android.support.v4.app.Fragment {
 
         Log.d(TAG, "Inside group homepage on create view ... RecyclerView");
         mLayoutManager = new LinearLayoutManager(getActivity());
-        rcGhp.setLayoutManager(mLayoutManager);
-        rcGhp.setItemAnimator(new CustomItemAnimator());
+        rcGroupList.setLayoutManager(mLayoutManager);
+        rcGroupList.setItemAnimator(new CustomItemAnimator());
         groupListRowAdapter = new GroupListAdapter(getActivity(), new ArrayList<Group>(), Group_Homepage.this);
-        rcGhp.setAdapter(groupListRowAdapter);
+        rcGroupList.setAdapter(groupListRowAdapter);
 
         SwipeableRecyclerViewTouchListener swipeDeleteTouchListener = new SwipeableRecyclerViewTouchListener(
                 context,
-                rcGhp,
+                rcGroupList,
                 R.id.main_view,
                 R.id.main_background_view,
 
@@ -216,7 +220,7 @@ public class Group_Homepage extends android.support.v4.app.Fragment {
                     }
 
                 });
-        rcGhp.addOnItemTouchListener(swipeDeleteTouchListener);
+        rcGroupList.addOnItemTouchListener(swipeDeleteTouchListener);
 
 
     }
@@ -315,10 +319,10 @@ public class Group_Homepage extends android.support.v4.app.Fragment {
                         defaults_click = defaults;
 
                         Collections.sort(groupListclone, byDatebigger);
-                        rcGhp.setVisibility(View.GONE);
+                        rcGroupList.setVisibility(View.GONE);
                         mProgressBar.setVisibility(View.VISIBLE);
                         groupListRowAdapter.clearGroups();
-                        rcGhp.setVisibility(View.VISIBLE);
+                        rcGroupList.setVisibility(View.VISIBLE);
                         mProgressBar.setVisibility(View.GONE);
                         groupListRowAdapter.addData(groupListclone);
 
@@ -334,7 +338,7 @@ public class Group_Homepage extends android.support.v4.app.Fragment {
                         date_click = date;
                         role_click = role;
                         defaults_click = defaults;
-                        rcGhp.setVisibility(View.GONE);
+                        rcGroupList.setVisibility(View.GONE);
                         mProgressBar.setVisibility(View.VISIBLE);
                         sortedList = new ArrayList<Group>();
                         organizerList = new ArrayList<Group>();
@@ -358,7 +362,7 @@ public class Group_Homepage extends android.support.v4.app.Fragment {
                         sortedList.addAll(organizerList);
                         sortedList.addAll(memberList);
                         groupListRowAdapter.clearGroups();
-                        rcGhp.setVisibility(View.VISIBLE);
+                        rcGroupList.setVisibility(View.VISIBLE);
                         mProgressBar.setVisibility(View.GONE);
 
                         //set data for list
@@ -377,13 +381,13 @@ public class Group_Homepage extends android.support.v4.app.Fragment {
                         role_click = role;
                         defaults_click = defaults;
 
-                        rcGhp.setVisibility(View.GONE);
+                        rcGroupList.setVisibility(View.GONE);
                         mProgressBar.setVisibility(View.VISIBLE);
 
                         groupListRowAdapter.clearGroups();
 
 
-                        rcGhp.setVisibility(View.VISIBLE);
+                        rcGroupList.setVisibility(View.VISIBLE);
                         mProgressBar.setVisibility(View.GONE);
 
                         //set data for list
@@ -399,8 +403,8 @@ public class Group_Homepage extends android.support.v4.app.Fragment {
                             Date d1 = null;
                             Date d2 = null;
                             try {
-                                d1 = sdf.parse(lhs.getDateTimefull());
-                                d2 = sdf.parse(rhs.getDateTimefull());
+                                d1 = sdf.parse(lhs.getDateTimeFull());
+                                d2 = sdf.parse(rhs.getDateTimeFull());
 
 
                             } catch (ParseException e) {

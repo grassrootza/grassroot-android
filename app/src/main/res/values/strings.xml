@@ -170,6 +170,9 @@
     <string name="ga_newVote">NEW VOTE</string>
     <string name="ga_newMeeting">NEW MEETING</string>
     <string name="ga_newToDo">NEW TODO</string>
+    <string name="ga_addMembers">ADD MEMBERS</string>
+
+
     <string name="USER_ALREADY_PART">User already part of group</string>
     <string name="sender_id">681116473953@gcm.googleapis.com</string>
     <string name="project_id">681116473953</string>

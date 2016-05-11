@@ -14,6 +14,8 @@ import java.util.List;
  */
 public class Group implements Parcelable {
 
+    private static final String TAG = Group.class.getCanonicalName();
+
     private String id;
     private String groupName;
     private String description;
@@ -21,7 +23,7 @@ public class Group implements Parcelable {
     private String role;
     private Integer groupMemberCount;
     private DateTime dateTime;
-    private String dateTimefull;
+    private String dateTimeFull;
     private String dateTimeShort;
     private List<String> permissions = new ArrayList<>(); // todo: convert this to a set so can do fast hashing
 
@@ -169,30 +171,29 @@ public class Group implements Parcelable {
         this.permissions = permissions;
     }
 
-
-
-    public String getDateTimefull() {
-
+    public String getDateTimeFull() {
 
         //get the current date as Calendar object
         Calendar calendar = Calendar.getInstance();
 
+        // NB: because Java 7 datetime is unbelievably bad, and Android still uses it, make sure to set these in order
+
         /*Date*/
-        calendar.set(Calendar.DAY_OF_MONTH, dateTime.getDayOfMonth());
-        calendar.set(Calendar.MONTH, dateTime.getMonthValue() - 1);
         calendar.set(Calendar.YEAR, dateTime.getYear());
+        calendar.set(Calendar.MONTH, dateTime.getMonthValue() - 1);
+        calendar.set(Calendar.DAY_OF_MONTH, dateTime.getDayOfMonth());
 
         /*Time*/
-        calendar.set(Calendar.HOUR, dateTime.getHour());
+        calendar.set(Calendar.HOUR_OF_DAY, dateTime.getHour());
         calendar.set(Calendar.MINUTE, dateTime.getMinute());
         calendar.set(Calendar.SECOND, dateTime.getSecond());
         Date date = calendar.getTime();
 
         SimpleDateFormat formatter = new SimpleDateFormat("dd-MM-yy:HH:mm:SS");
-        dateTimefull = formatter.format(date);
+        dateTimeFull = formatter.format(date);
 
         // Log.e(TAG,"dateString " + dateString);
-        return  dateTimefull;
+        return dateTimeFull;
     }
 
     public String getDateTimeShort() {
@@ -232,7 +233,7 @@ public class Group implements Parcelable {
         dest.writeString(this.groupCreator);
         dest.writeString(this.role);
         dest.writeInt(this.groupMemberCount);
-        dest.writeString(this.dateTimefull);
+        dest.writeString(this.dateTimeFull);
         dest.writeString(this.dateTimeShort);
         dest.writeStringList(this.permissions);
     }
@@ -243,7 +244,7 @@ public class Group implements Parcelable {
         description = in.readString();
         groupCreator = in.readString();
         role = in.readString();
-        dateTimefull = in.readString();
+        dateTimeFull = in.readString();
         dateTimeShort = in.readString();
         permissions = in.createStringArrayList();
     }

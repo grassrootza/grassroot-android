@@ -29,7 +29,7 @@ import rx.Observable;
 public class GrassrootRestService {
 
     // todo: make this an environment variable of some form
-    private static final String GRASSROOT_SERVER_URL = Constant.stagingUrl;
+    private static final String GRASSROOT_SERVER_URL = Constant.restUrl;
     private RestApi mRestApi;
 
         public GrassrootRestService() {

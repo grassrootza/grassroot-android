@@ -35,8 +35,7 @@ public class GroupListAdapter extends RecyclerView.Adapter<GroupListAdapter.GHP_
     ArrayList<Group> oldGroupModel;
     private String TAG= GroupListAdapter.class.getSimpleName();
 
-
-    private static final SimpleDateFormat inputSDF = new SimpleDateFormat("dd-MM-yyyy");
+    private static final SimpleDateFormat inputSDF = new SimpleDateFormat("dd-MM-yy:HH:mm:SS");
     private static final SimpleDateFormat outputSDF = new SimpleDateFormat("EEE, d MMM, ''yy");
 
     public GroupListAdapter(Context context, ArrayList<Group> groups, Group_Homepage activity) {
@@ -57,14 +56,17 @@ public class GroupListAdapter extends RecyclerView.Adapter<GroupListAdapter.GHP_
     @Override
     public void onBindViewHolder(GHP_ViewHolder holder, int position) {
 
-        Log.d(TAG, "Inside group list adapter ... at position = " + position);
-
         holder.itemView.setLongClickable(true);
         Group group = groups.get(position);
 
+        final String groupOrganizerDescription = "Organizer: " + group.getGroupCreator();
+        final String groupDescription = group.getDescription();
+        final int visibility = (groupDescription == null || groupDescription.trim().equals("")) ? View.GONE : View.VISIBLE;
+
         holder.txtGroupname.setText(group.getGroupName());
-        holder.txtGroupownername.setText(group.getGroupCreator());
-        holder.txtGroupdesc.setText(group.getDescription());
+        holder.txtGroupownername.setText(groupOrganizerDescription);
+        holder.txtGroupdesc.setText(groupDescription);
+        holder.txtGroupdesc.setVisibility(visibility);
 
         int height = holder.profileV1.getDrawable().getIntrinsicWidth();
         int width = holder.profileV1.getDrawable().getIntrinsicHeight();
@@ -82,8 +84,9 @@ public class GroupListAdapter extends RecyclerView.Adapter<GroupListAdapter.GHP_
 
         try {
             // todo: move this into the Model constructor instead (oh for Java 8)
-            Date date = inputSDF.parse(group.getDateTimefull());
-            displayDateTime = date.after(new Date()) ? "Next event: " + outputSDF.format(date) : "Last event: " + outputSDF.format(date);
+            Date date = inputSDF.parse(group.getDateTimeFull());
+            displayDateTime = date.after(new Date()) ? "Next event: " + outputSDF.format(date)
+                    : "Last event: " + outputSDF.format(date);
         } catch (Exception e) {
             displayDateTime = group.getDateTimeShort();
         }

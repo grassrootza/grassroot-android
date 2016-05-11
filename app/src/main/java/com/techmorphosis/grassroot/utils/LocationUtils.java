@@ -144,7 +144,7 @@ public class LocationUtils implements GoogleApiClient.ConnectionCallbacks, Googl
 
                     @Override
                     public void onError(Throwable e) {
-                        Log.e(TAG, "ERROR");
+                        Log.e(TAG, "ERROR: " + e.getMessage());
                     }
 
                     @Override

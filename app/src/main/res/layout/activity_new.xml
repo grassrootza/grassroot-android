@@ -13,49 +13,38 @@
         android:layout_height="wrap_content"
         android:src="@drawable/btn_close_white"
         android:padding="@dimen/padding"
-        android:background="@drawable/button_alpha_rlsimple"
+        android:background="@drawable/button_alpha_rlsimple" />
 
-        />
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_centerInParent="true"
-    android:paddingLeft="@dimen/padding"
-    android:paddingRight="@dimen/padding"
-        >
+        android:paddingLeft="@dimen/padding"
+        android:paddingRight="@dimen/padding">
+
         <Button
+            style="@style/NewTaskButton"
             android:id="@+id/bt_vote"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="@color/white"
-            android:text="@string/ga_newVote"
-            android:layout_marginBottom="10dp"
-            android:textColor="@color/primaryColor"
-            />
+            android:text="@string/ga_newVote" />
 
         <Button
+            style="@style/NewTaskButton"
             android:id="@+id/bt_meeting"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="@color/white"
             android:text="@string/ga_newMeeting"
-            android:layout_marginBottom="10dp"
-            android:layout_below="@+id/bt_vote"
-            android:textColor="@color/primaryColor"
-
-            />
+            android:layout_below="@+id/bt_vote" />
 
 
         <Button
+            style="@style/NewTaskButton"
             android:id="@+id/bt_todo"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="@color/white"
             android:text="@string/ga_newToDo"
-            android:layout_below="@+id/bt_meeting"
-            android:textColor="@color/primaryColor"
+            android:layout_below="@+id/bt_meeting" />
 
-            />
+        <Button
+            style="@style/NewTaskButton"
+            android:id="@+id/bt_newmember"
+            android:text="@string/ga_addMembers"
+            android:layout_below="@+id/bt_todo" />
 
     </RelativeLayout>
 </RelativeLayout>
