@@ -1,4 +1,4 @@
-package com.techmorphosis.grassroot.ui.fragments;
+package com.techmorphosis.grassroot.ui.fragments.walkthrough;
 
 import android.app.Activity;
 import android.os.Bundle;
@@ -13,9 +13,9 @@ import com.techmorphosis.grassroot.R;
 /**
  * Created by Ravi on 29/07/15.
  */
-public class OneFragment extends Fragment {
+public class FiveFragment extends Fragment {
 
-    public OneFragment() {
+    public FiveFragment() {
         // Required empty public constructor
     }
 
@@ -28,7 +28,7 @@ public class OneFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        View rootView = inflater.inflate(R.layout.fragment_one, container, false);
+        View rootView = inflater.inflate(R.layout.fragment_five, container, false);
 
 
         // Inflate the layout for this fragment

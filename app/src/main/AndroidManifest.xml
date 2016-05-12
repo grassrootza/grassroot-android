@@ -24,11 +24,11 @@
         android:icon="@drawable/app_icon"
         android:label="@string/app_name"
         android:theme="@style/AppTheme">
-        <activity
-            android:name=".ui.activities.HomeScreen"
-            android:configChanges="keyboardHidden|orientation"
-            android:label="@string/app_name"
-            android:screenOrientation="portrait" />
+
+        <meta-data
+            android:name="io.fabric.ApiKey"
+            android:value="a7c7f0c500c90b9563ff8801718ab0b391792bc3" />
+
         <activity
             android:name=".ui.activities.StartActivity">
             <intent-filter>
@@ -37,13 +37,19 @@
             </intent-filter>
         </activity>
 
-        <meta-data
-            android:name="io.fabric.ApiKey"
-            android:value="a7c7f0c500c90b9563ff8801718ab0b391792bc3" />
+        <activity
+            android:name=".ui.activities.HomeScreen"
+            android:configChanges="keyboardHidden|orientation"
+            android:label="@string/app_name"
+            android:screenOrientation="portrait" />
 
         <activity
-            android:name=".ui.activities.Join_Request"
-            android:label="@string/title_activity_join__request" />
+            android:name=".ui.activities.GroupTasksActivity"
+            android:parentActivityName=".ui.activities.HomeScreen"/>
+
+        <activity
+            android:name=".ui.activities.NewActivities"></activity>
+
         <activity
             android:name=".ui.activities.CreateGroupActivity"
             android:label="@string/title_activity_create__group"
@@ -52,12 +58,13 @@
             android:name=".ui.activities.AddMembersActivity"
             android:label="@string/title_activity_add_members"
             android:screenOrientation="portrait" />
+
+        <activity
+            android:name=".ui.activities.Join_Request"
+            android:label="@string/title_activity_join__request" />
         <activity
             android:name=".ui.activities.PhoneBookContactsActivity"
             android:label="@string/title_activity_phone_book_contacts" />
-        <activity
-            android:name=".contact.MainActivity"
-            android:label="@string/title_activity_mainactivity" />
         <activity
             android:name=".ui.activities.DialogActivity"
             android:label="@string/title_activity_dilog"
@@ -70,8 +77,7 @@
             android:name=".ui.activities.Blank"
             android:label="@string/title_activity_blank"
             android:theme="@style/AppTheme" />
-        <activity android:name=".ui.activities.Group_Activities" />
-        <activity android:name=".ui.activities.NewActivities"></activity>
+
 
         <receiver
             android:name="com.google.android.gms.gcm.GcmReceiver"

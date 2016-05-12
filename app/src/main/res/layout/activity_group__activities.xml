@@ -6,56 +6,18 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/list_background_pressed"
-    tools:context="com.techmorphosis.grassroot.ui.activities.Group_Activities">
+    tools:context=".ui.activities.GroupTasksActivity">
 
-    <RelativeLayout
+    <android.support.v7.widget.Toolbar
         android:id="@+id/ga_toolbar"
         android:layout_width="match_parent"
         android:layout_height="?actionBarSize"
         android:background="@color/primaryColor"
         android:gravity="center_vertical"
-        android:elevation="5dp"
+        android:elevation="4dp"
+        android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar">
 
-        >
-
-        <ImageView
-            android:id="@+id/iv_ga_back"
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:paddingLeft="16dp"
-            android:paddingRight="@dimen/padding"
-            android:background="@drawable/button_alpha_rlsimple"
-            android:src="@drawable/btn_back_wt"
-            />
-            
-        <TextView
-            android:id="@+id/tv_ga_toolbar_txt"
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:paddingLeft="@dimen/padding"
-            android:textSize="@dimen/txt_large"
-            android:text="@string/ga_tv_toolbar"
-            android:textColor="@color/white"
-            android:layout_toRightOf="@+id/iv_ga_back"
-            android:gravity="center_vertical"
-            android:singleLine="true"
-            android:ellipsize="end"
-            android:layout_marginRight="40dp"
-            />
-        
-        <ImageView
-            android:id="@+id/iv_ga_filter"
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:paddingLeft="@dimen/padding"
-            android:paddingRight="@dimen/padding"
-            android:src="@drawable/btn_filter"
-            android:layout_alignParentRight="true"
-
-            />
-        
-        
-    </RelativeLayout>
+    </android.support.v7.widget.Toolbar>
 
     <android.support.v7.widget.RecyclerView
         android:id="@+id/rc_ga"

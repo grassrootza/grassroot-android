@@ -99,7 +99,7 @@ public class SortFragment extends android.support.v4.app.DialogFragment
                 tvrole.setTextColor(ContextCompat.getColor(getActivity(),R.color.grey));
                 tvdefaults.setTextColor(ContextCompat.getColor(getActivity(),R.color.grey));
 
-               // ((Group_Homepage) getActivity()).tvDateClick(date,role,defaults);
+               // ((HomeGroupListFragment) getActivity()).tvDateClick(date,role,defaults);
                 fragmentsCall.tvDateClick(date,role,defaults);
 
                 getDialog().dismiss();

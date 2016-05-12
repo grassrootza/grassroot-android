@@ -1,4 +1,4 @@
-package com.techmorphosis.grassroot.ui.fragments;
+package com.techmorphosis.grassroot.ui.fragments.walkthrough;
 
 import android.app.Activity;
 import android.os.Bundle;

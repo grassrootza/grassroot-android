@@ -1,8 +1,4 @@
-package com.techmorphosis.grassroot.ui.fragments;
-
-/**
- * Created by Ravi on 29/07/15.
- */
+package com.techmorphosis.grassroot.ui.fragments.walkthrough;
 
 import android.app.Activity;
 import android.os.Bundle;
@@ -14,9 +10,12 @@ import android.view.ViewGroup;
 import com.techmorphosis.grassroot.R;
 
 
-public class ThreeFragment extends Fragment {
+/**
+ * Created by Ravi on 29/07/15.
+ */
+public class OneFragment extends Fragment {
 
-    public ThreeFragment() {
+    public OneFragment() {
         // Required empty public constructor
     }
 
@@ -29,7 +28,10 @@ public class ThreeFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        View rootView = inflater.inflate(R.layout.fragment_three, container, false);
+        View rootView = inflater.inflate(R.layout.fragment_one, container, false);
+
+
+        // Inflate the layout for this fragment
         return rootView;
     }
 

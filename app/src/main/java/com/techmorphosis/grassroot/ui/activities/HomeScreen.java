@@ -10,7 +10,7 @@ import android.util.Log;
 
 import com.techmorphosis.grassroot.R;
 import com.techmorphosis.grassroot.ui.fragments.AlertDialogFragment;
-import com.techmorphosis.grassroot.ui.fragments.Group_Homepage;
+import com.techmorphosis.grassroot.ui.fragments.HomeGroupListFragment;
 import com.techmorphosis.grassroot.ui.fragments.NavigationDrawerFragment;
 import com.techmorphosis.grassroot.ui.fragments.WelcomeFragment;
 import com.techmorphosis.grassroot.utils.SettingPreference;
@@ -21,7 +21,7 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 
 public class HomeScreen extends PortraitActivity implements NavigationDrawerFragment.NavigationDrawerCallbacks,
-        WelcomeFragment.FragmentCallbacks, Group_Homepage.FragmentCallbacks {
+        WelcomeFragment.FragmentCallbacks, HomeGroupListFragment.FragmentCallbacks {
 
     @BindView(R.id.drawer_layout)
     DrawerLayout drawer;
@@ -55,8 +55,8 @@ public class HomeScreen extends PortraitActivity implements NavigationDrawerFrag
                 //Profile
 
                 if (SettingPreference.getisHasgroup(HomeScreen.this)) {
-                    fragment = new Group_Homepage();
-                    openFragment = "Group_Homepage";
+                    fragment = new HomeGroupListFragment();
+                    openFragment = "HomeGroupListFragment";
                 } else {
                     fragment = new WelcomeFragment();
                     openFragment = "WelcomeFragment";
@@ -158,8 +158,8 @@ public class HomeScreen extends PortraitActivity implements NavigationDrawerFrag
 
             if (SettingPreference.getisHasgroup(HomeScreen.this)) {
                 Log.e("onResume", "Error in creating fragment");
-                fragment = new Group_Homepage();
-                openFragment = "Group_Homepage";
+                fragment = new HomeGroupListFragment();
+                openFragment = "HomeGroupListFragment";
             } else {
                 fragment = new WelcomeFragment();
                 openFragment = "WelcomeFragment";

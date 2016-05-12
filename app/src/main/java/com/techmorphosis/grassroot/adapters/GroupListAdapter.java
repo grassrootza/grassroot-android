@@ -14,7 +14,7 @@ import android.widget.TextView;
 
 import com.techmorphosis.grassroot.R;
 import com.techmorphosis.grassroot.services.model.Group;
-import com.techmorphosis.grassroot.ui.fragments.Group_Homepage;
+import com.techmorphosis.grassroot.ui.fragments.HomeGroupListFragment;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -28,7 +28,7 @@ import butterknife.ButterKnife;
  */
 public class GroupListAdapter extends RecyclerView.Adapter<GroupListAdapter.GHP_ViewHolder>{
 
-    private final Group_Homepage activity;
+    private final HomeGroupListFragment activity;
     Context context;
 
     ArrayList<Group> groups;
@@ -38,7 +38,7 @@ public class GroupListAdapter extends RecyclerView.Adapter<GroupListAdapter.GHP_
     private static final SimpleDateFormat inputSDF = new SimpleDateFormat("dd-MM-yy:HH:mm:SS");
     private static final SimpleDateFormat outputSDF = new SimpleDateFormat("EEE, d MMM, ''yy");
 
-    public GroupListAdapter(Context context, ArrayList<Group> groups, Group_Homepage activity) {
+    public GroupListAdapter(Context context, ArrayList<Group> groups, HomeGroupListFragment activity) {
         this.context = context;
         this.groups = groups;
         this.activity = activity;

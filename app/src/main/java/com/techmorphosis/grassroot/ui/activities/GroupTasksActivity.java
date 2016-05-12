@@ -6,12 +6,15 @@ import android.os.Bundle;
 import android.support.design.widget.Snackbar;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
-import android.widget.TextView;
 
 import com.github.clans.fab.FloatingActionMenu;
 import com.techmorphosis.grassroot.Interface.FilterInterface;
@@ -30,15 +33,14 @@ import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
-import butterknife.OnClick;
 import retrofit.RetrofitError;
 import rx.Observer;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.schedulers.Schedulers;
 
-public class Group_Activities extends PortraitActivity {
+public class GroupTasksActivity extends PortraitActivity {
 
-    private static final String TAG = Group_Activities.class.getCanonicalName();
+    private static final String TAG = GroupTasksActivity.class.getCanonicalName();
 
     private String groupid;
     private String groupName;
@@ -48,13 +50,9 @@ public class Group_Activities extends PortraitActivity {
     @BindView(R.id.rl_activity_root)
     RelativeLayout rlActivityRoot;
 
-    @BindView(R.id.iv_ga_back)
-    ImageView ivGaBack;
-    @BindView(R.id.iv_ga_filter)
-    ImageView ivGaFilter;
+    @BindView(R.id.ga_toolbar)
+    Toolbar gaToolbar;
 
-    @BindView(R.id.tv_ga_toolbar_txt)
-    TextView tvGaToolbarTxt;
     @BindView(R.id.rc_ga)
     RecyclerView recycleViewGroupActivities;
 
@@ -105,6 +103,32 @@ public class Group_Activities extends PortraitActivity {
         groupActivitiesWS();
     }
 
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        Log.e(TAG, "inside onCreateOptionsMenu!");
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.menu_group_tasks, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.mi_icon_filter:
+                filterTasks();
+                return true;
+            case R.id.mi_add_members:
+                Intent addMember = new Intent(this, AddMembersActivity.class);
+                addMember.putExtra(Constant.GROUPUID_FIELD, groupid);
+                addMember.putExtra(Constant.GROUPNAME_FIELD, groupName);
+                startActivity(addMember);
+                Log.e(TAG, "user wants to add members!");
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+    }
+
     private void init() {
         phoneNumber = SettingPreference.getuser_mobilenumber(this);
         code = SettingPreference.getuser_token(this);
@@ -112,15 +136,18 @@ public class Group_Activities extends PortraitActivity {
 
     private void setUpViews() {
 
-        ivGaFilter.setEnabled(false);
-        tvGaToolbarTxt.setText(groupName);
+        setTitle(groupName);
+        setSupportActionBar(gaToolbar);
+        getSupportActionBar().setHomeButtonEnabled(true);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+
         fabbutton.setOnMenuToggleListener(new FloatingActionMenu.OnMenuToggleListener() {
             @Override
             public void onMenuToggle(boolean opened) {
                 if (opened) {
                     // todo: check & pass permissions
                     fabbutton.toggle(false);
-                    Intent open = new Intent(Group_Activities.this, NewActivities.class);
+                    Intent open = new Intent(GroupTasksActivity.this, NewActivities.class);
                     open.putExtra(Constant.GROUPUID_FIELD, groupid);
                     open.putExtra(Constant.GROUPNAME_FIELD, groupName);
                     startActivity(open);
@@ -133,9 +160,9 @@ public class Group_Activities extends PortraitActivity {
     }
 
     private void initRecyclerView() {
-        recycleViewGroupActivities.setLayoutManager(new LinearLayoutManager(Group_Activities.this));
+        recycleViewGroupActivities.setLayoutManager(new LinearLayoutManager(GroupTasksActivity.this));
         recycleViewGroupActivities.setItemAnimator(new CustomItemAnimator());
-        group_activitiesAdapter = new Group_ActivitiesAdapter(new ArrayList<TaskModel>(), Group_Activities.this);
+        group_activitiesAdapter = new Group_ActivitiesAdapter(new ArrayList<TaskModel>(), GroupTasksActivity.this);
         recycleViewGroupActivities.setAdapter(group_activitiesAdapter);
     }
 
@@ -163,7 +190,7 @@ public class Group_Activities extends PortraitActivity {
                         group_activitiesAdapter.clearTasks();
                         recycleViewGroupActivities.setVisibility(View.VISIBLE);
                         group_activitiesAdapter.addTasks(activitiesList);
-                        ivGaFilter.setEnabled(true);
+                        // filterTasks.setEnabled(true);
                     }
                 });
     }
@@ -214,9 +241,7 @@ public class Group_Activities extends PortraitActivity {
         }
     }
 
-
-    @OnClick(R.id.iv_ga_filter)
-    public void ivGaFilter() {
+    private void filterTasks() {
         Log.e(TAG, "before ");
         Log.e(TAG, "vote is " + vote_click);
         Log.e(TAG, "meeting is " + meeting_click);
@@ -234,6 +259,7 @@ public class Group_Activities extends PortraitActivity {
         sortFragment.setArguments(b);
         sortFragment.show(getFragmentManager(), "FilterFragment");
         sortFragment.setListener(new FilterInterface() {
+
             @Override
             public void vote(boolean vote, boolean meeting, boolean todo, boolean clear) {
                 Log.e(TAG, "vote is ");
@@ -424,14 +450,6 @@ public class Group_Activities extends PortraitActivity {
                 Log.e(TAG, "clear is " + clear_click);
             }
         });
-
-
-    }
-
-    @OnClick(R.id.iv_ga_back)
-    public void ivGaBack() {
-        finish();
-
     }
 
     public void thumbsUp(ImageView iv2, final int position) {

@@ -12,7 +12,7 @@ import android.widget.TextView;
 
 import com.techmorphosis.grassroot.R;
 import com.techmorphosis.grassroot.services.model.TaskModel;
-import com.techmorphosis.grassroot.ui.activities.Group_Activities;
+import com.techmorphosis.grassroot.ui.activities.GroupTasksActivity;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -25,11 +25,11 @@ import butterknife.ButterKnife;
  */
 public class Group_ActivitiesAdapter extends RecyclerView.Adapter<Group_ActivitiesAdapter.GA_ViewHolder> {
 
-    private final Group_Activities activity;
+    private final GroupTasksActivity activity;
     private List<TaskModel> tasks;
     private static final String TAG = Group_ActivitiesAdapter.class.getCanonicalName();
 
-    public Group_ActivitiesAdapter(ArrayList<TaskModel> tasks, Group_Activities group_activities) {
+    public Group_ActivitiesAdapter(ArrayList<TaskModel> tasks, GroupTasksActivity group_activities) {
         this.tasks = tasks;
         this.activity = group_activities;
     }
@@ -43,7 +43,7 @@ public class Group_ActivitiesAdapter extends RecyclerView.Adapter<Group_Activiti
 
     @Override
     public void onBindViewHolder(GA_ViewHolder holder, int position) {
-        Log.d(TAG, "Inside onBindViewHolder ... at position = " + position);
+        // Log.d(TAG, "Inside onBindViewHolder ... at position = " + position);
 
         TaskModel taskModel = tasks.get(position);
 

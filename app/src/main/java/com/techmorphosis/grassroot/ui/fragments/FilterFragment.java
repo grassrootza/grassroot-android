@@ -138,7 +138,7 @@ public class FilterFragment extends DialogFragment {
 */
 
 
-        // ((Group_Homepage) getActivity()).tvVoteClick(date,role,defaults);
+        // ((HomeGroupListFragment) getActivity()).tvVoteClick(date,role,defaults);
         filterinterface.clear(vote, meeting, todo, clear);
         getDialog().dismiss();
 
@@ -164,7 +164,7 @@ public class FilterFragment extends DialogFragment {
                 tvtoDo.setTextColor(getResources().getColor(R.color.grey));
 */
 
-        // ((Group_Homepage) getActivity()).tvVoteClick(date,role,defaults);
+        // ((HomeGroupListFragment) getActivity()).tvVoteClick(date,role,defaults);
         filterinterface.vote(vote, meeting, todo, clear);
 
         getDialog().dismiss();
@@ -189,7 +189,7 @@ public class FilterFragment extends DialogFragment {
 
                 tvMeeting.setTypeface(null, Typeface.BOLD);*/
 
-        // ((Group_Homepage) getActivity()).meetingClick(date, role, defaults);
+        // ((HomeGroupListFragment) getActivity()).meetingClick(date, role, defaults);
         filterinterface.meeting(vote, meeting, todo, clear);
         getDialog().dismiss();
 
@@ -214,7 +214,7 @@ public class FilterFragment extends DialogFragment {
 */
 
 
-        // ((Group_Homepage) getActivity()).defaultsClick(date, role, defaults);
+        // ((HomeGroupListFragment) getActivity()).defaultsClick(date, role, defaults);
         filterinterface.todo(vote, meeting, todo, clear);
         getDialog().dismiss();
 

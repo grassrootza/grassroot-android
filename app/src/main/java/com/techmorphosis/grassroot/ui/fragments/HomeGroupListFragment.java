@@ -30,7 +30,7 @@ import com.techmorphosis.grassroot.services.model.Group;
 import com.techmorphosis.grassroot.services.model.GroupResponse;
 import com.techmorphosis.grassroot.ui.activities.CreateGroupActivity;
 import com.techmorphosis.grassroot.ui.activities.CustomItemAnimator;
-import com.techmorphosis.grassroot.ui.activities.Group_Activities;
+import com.techmorphosis.grassroot.ui.activities.GroupTasksActivity;
 import com.techmorphosis.grassroot.ui.activities.Join_Request;
 import com.techmorphosis.grassroot.ui.activities.SwipeableRecyclerViewTouchListener;
 import com.techmorphosis.grassroot.utils.Constant;
@@ -52,7 +52,7 @@ import rx.Observer;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.schedulers.Schedulers;
 
-public class Group_Homepage extends android.support.v4.app.Fragment {
+public class HomeGroupListFragment extends android.support.v4.app.Fragment {
 
     UtilClass utilClass;
     private LinearLayoutManager mLayoutManager;
@@ -105,7 +105,7 @@ public class Group_Homepage extends android.support.v4.app.Fragment {
     private ArrayList<Group> groupList;
     private ArrayList<Group> groupListclone;
 
-    private String TAG = Group_Homepage.class.getSimpleName();
+    private String TAG = HomeGroupListFragment.class.getSimpleName();
     public boolean date_click = false, role_click = false, defaults_click = false;
     private FragmentCallbacks mCallbacks;
     private GrassrootRestService grassrootRestService = new GrassrootRestService();
@@ -189,7 +189,7 @@ public class Group_Homepage extends android.support.v4.app.Fragment {
         mLayoutManager = new LinearLayoutManager(getActivity());
         rcGroupList.setLayoutManager(mLayoutManager);
         rcGroupList.setItemAnimator(new CustomItemAnimator());
-        groupListRowAdapter = new GroupListAdapter(getActivity(), new ArrayList<Group>(), Group_Homepage.this);
+        groupListRowAdapter = new GroupListAdapter(getActivity(), new ArrayList<Group>(), HomeGroupListFragment.this);
         rcGroupList.setAdapter(groupListRowAdapter);
 
         SwipeableRecyclerViewTouchListener swipeDeleteTouchListener = new SwipeableRecyclerViewTouchListener(
@@ -207,7 +207,7 @@ public class Group_Homepage extends android.support.v4.app.Fragment {
                         } catch (Exception e) {
                             e.printStackTrace();
                         }
-                        Intent blank = new Intent(getActivity(), Group_Activities.class);
+                        Intent blank = new Intent(getActivity(), GroupTasksActivity.class);
                         blank.putExtra("groupid", groupList.get(position).getId());
                         blank.putExtra("groupName", groupList.get(position).getGroupName());
                         startActivity(blank);
@@ -492,7 +492,7 @@ public class Group_Homepage extends android.support.v4.app.Fragment {
                     e.printStackTrace();
                 }
 
-                Intent openGroupTasks= new Intent(getActivity(),Group_Activities.class);
+                Intent openGroupTasks= new Intent(getActivity(),GroupTasksActivity.class);
                 openGroupTasks.putExtra("groupid",groupList.get(position).getId());
                 openGroupTasks.putExtra("groupName",groupList.get(position).getGroupName());
                 startActivity(openGroupTasks);
