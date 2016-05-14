@@ -1,5 +1,7 @@
 package com.techmorphosis.grassroot.utils;
 
+import java.text.SimpleDateFormat;
+
 /**
  * Created by ravi on 7/4/16.
  */
@@ -21,7 +23,14 @@ public class Constant {
     public static final String GROUPUID_FIELD = "groupUid";
     public static final String GROUPNAME_FIELD = "groupName";
 
+    public static final String VOTE = "VOTE";
+    public static final String MEETING = "MEETING";
+    public static final String TODO = "TODO";
+
     public static final String ROLE_ORDINARY_MEMBER = "ROLE_ORDINARY_MEMBER";
+    public static final String NO_GROUP_TASKS = "NO_GROUP_ACTIVITIES";
+
+    public static final SimpleDateFormat isoDateTimeSDF = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
 
     public static final int activityContactSelection = 1;
     public static final int activityManualMemberEntry = 2;

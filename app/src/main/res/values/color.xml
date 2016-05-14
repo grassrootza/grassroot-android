@@ -19,7 +19,7 @@
     <color name="list_background">#fafafa</color>
     <color name="list_background_pressed">#eeeeee</color>
     <color name="textbg">#efefef</color>
-    <color name="textcolor">#b4b4b4</color>
+    <color name="text_grey">#b4b4b4</color>
     <color name="view">#b4b4b4</color>
     <color name="RecyclerView_background">#ECEFF1</color>
 

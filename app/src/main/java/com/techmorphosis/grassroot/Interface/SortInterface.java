@@ -5,10 +5,10 @@ package com.techmorphosis.grassroot.Interface;
  */
 public interface SortInterface {
 
-    public void roleClick(boolean date, boolean role, boolean defaults);
+    void roleClick(boolean date, boolean role, boolean defaults);
 
-    public void defaultsClick(boolean date, boolean role, boolean defaults);
+    void defaultsClick(boolean date, boolean role, boolean defaults);
 
-    public void tvDateClick(boolean date, boolean role, boolean defaults);
+    void tvDateClick(boolean date, boolean role, boolean defaults);
 
 }

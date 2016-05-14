@@ -18,8 +18,9 @@ import android.widget.RelativeLayout;
 
 import com.github.clans.fab.FloatingActionMenu;
 import com.techmorphosis.grassroot.Interface.FilterInterface;
+import com.techmorphosis.grassroot.Interface.TaskListListener;
 import com.techmorphosis.grassroot.R;
-import com.techmorphosis.grassroot.adapters.Group_ActivitiesAdapter;
+import com.techmorphosis.grassroot.adapters.TasksAdapter;
 import com.techmorphosis.grassroot.services.GrassrootRestService;
 import com.techmorphosis.grassroot.services.model.GenericResponse;
 import com.techmorphosis.grassroot.services.model.TaskModel;
@@ -34,11 +35,12 @@ import java.util.List;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import retrofit.RetrofitError;
+import rx.Observable;
 import rx.Observer;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.schedulers.Schedulers;
 
-public class GroupTasksActivity extends PortraitActivity {
+public class GroupTasksActivity extends PortraitActivity implements TaskListListener {
 
     private static final String TAG = GroupTasksActivity.class.getCanonicalName();
 
@@ -70,7 +72,7 @@ public class GroupTasksActivity extends PortraitActivity {
     @BindView(R.id.im_no_internet)
     ImageView imNoInternet;
 
-    private Group_ActivitiesAdapter group_activitiesAdapter;
+    private TasksAdapter group_activitiesAdapter;
 
     private Snackbar snackbar;
     public boolean vote_click = false, meeting_click = false, todo_click = false;
@@ -97,6 +99,7 @@ public class GroupTasksActivity extends PortraitActivity {
 
         groupid = extras.getString("groupid");
         groupName = extras.getString("groupName");
+
         init();
         setUpViews();
         initRecyclerView();
@@ -105,6 +108,7 @@ public class GroupTasksActivity extends PortraitActivity {
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
+        // todo: check for permissions
         Log.e(TAG, "inside onCreateOptionsMenu!");
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.menu_group_tasks, menu);
@@ -122,7 +126,7 @@ public class GroupTasksActivity extends PortraitActivity {
                 addMember.putExtra(Constant.GROUPUID_FIELD, groupid);
                 addMember.putExtra(Constant.GROUPNAME_FIELD, groupName);
                 startActivity(addMember);
-                Log.e(TAG, "user wants to add members!");
+                Log.d(TAG, "user wants to add members!");
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
@@ -141,19 +145,15 @@ public class GroupTasksActivity extends PortraitActivity {
         getSupportActionBar().setHomeButtonEnabled(true);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
+        // todo : check if there is a cleaner way to do this
         fabbutton.setOnMenuToggleListener(new FloatingActionMenu.OnMenuToggleListener() {
             @Override
             public void onMenuToggle(boolean opened) {
                 if (opened) {
                     // todo: check & pass permissions
                     fabbutton.toggle(false);
-                    Intent open = new Intent(GroupTasksActivity.this, NewActivities.class);
-                    open.putExtra(Constant.GROUPUID_FIELD, groupid);
-                    open.putExtra(Constant.GROUPNAME_FIELD, groupName);
-                    startActivity(open);
+                    callNewTaskActivity();
                     overridePendingTransition(R.anim.push_up_in, R.anim.push_up_out);
-                } else {
-
                 }
             }
         });
@@ -162,7 +162,7 @@ public class GroupTasksActivity extends PortraitActivity {
     private void initRecyclerView() {
         recycleViewGroupActivities.setLayoutManager(new LinearLayoutManager(GroupTasksActivity.this));
         recycleViewGroupActivities.setItemAnimator(new CustomItemAnimator());
-        group_activitiesAdapter = new Group_ActivitiesAdapter(new ArrayList<TaskModel>(), GroupTasksActivity.this);
+        group_activitiesAdapter = new TasksAdapter(new ArrayList<TaskModel>(), this, this);
         recycleViewGroupActivities.setAdapter(group_activitiesAdapter);
     }
 
@@ -180,65 +180,31 @@ public class GroupTasksActivity extends PortraitActivity {
 
                     @Override
                     public void onError(Throwable e) {
+                        Log.e(TAG, "Inside getActivities ... Here is the failure! " + e.getMessage());
                         mProgressBar.setVisibility(View.INVISIBLE);
                         imNoInternet.setVisibility(View.VISIBLE);
                     }
+
                     @Override
                     public void onNext(TaskResponse response) {
-                        activitiesList = response.getTasks();
-                        populateCompletionStatus(activitiesList);
-                        group_activitiesAdapter.clearTasks();
-                        recycleViewGroupActivities.setVisibility(View.VISIBLE);
-                        group_activitiesAdapter.addTasks(activitiesList);
-                        // filterTasks.setEnabled(true);
+                        if (Constant.NO_GROUP_TASKS.equals(response.getMessage())) {
+                            Log.e(TAG, "No group activities!");
+                            callNewTaskActivity();
+                        } else {
+                            activitiesList = response.getTasks();
+                            group_activitiesAdapter.clearTasks();
+                            recycleViewGroupActivities.setVisibility(View.VISIBLE);
+                            group_activitiesAdapter.addTasks(activitiesList);
+                        }
                     }
                 });
     }
 
-    private void ToDo(TaskModel model) {
-        if (model.getType().equalsIgnoreCase("COMPLETED")) {
-            model.setCompletedYes("disableclick");
-            model.setCompletedNo("disableclick");
-        } else {
-            model.setCompletedYes("enableclick");
-            model.setCompletedNo("disableclick");
-        }
-    }
-
-    private void votemeeting(TaskModel model) {
-        canAction(model);
-    }
-
-    private void canAction(TaskModel model) {
-        if (model.getCanAction()) {
-            if (model.getHasResponded()) {
-                canActionIsTrue(model);
-            } else {
-                canActionIsTrue2(model);
-            }
-        } else if (!model.getCanAction()) {
-            canActionIsFalse(model);
-        }
-    }
-
-    private void canActionIsTrue2(TaskModel model) {
-        model.setThumbsUp("enableclick");
-        model.setThumbsDown("enableclick");
-    }
-
-    private void canActionIsFalse(TaskModel model) {
-        model.setThumbsUp("disableclick");
-        model.setThumbsDown("disableclick");
-    }
-
-    private void canActionIsTrue(TaskModel model) {
-        if (model.getReply().equalsIgnoreCase("Yes")) {
-            model.setThumbsUp("disableclick");
-            model.setThumbsDown("enableclick");
-        } else if (model.getReply().equalsIgnoreCase("NO_RESPONSE")) {
-            model.setThumbsUp("enableclick");
-            model.setThumbsDown("disableclick");
-        }
+    private void callNewTaskActivity() {
+        Intent open = new Intent(this, NewActivities.class);
+        open.putExtra(Constant.GROUPUID_FIELD, groupid);
+        open.putExtra(Constant.GROUPNAME_FIELD, groupName);
+        startActivity(open);
     }
 
     private void filterTasks() {
@@ -301,7 +267,7 @@ public class GroupTasksActivity extends PortraitActivity {
                     group_activitiesAdapter.addTasks(voteList);
                 } else {
                     vote_click = false;
-                    showSnackBar(getString(R.string.ga_noVote), "", "", "", "", snackbar.LENGTH_SHORT);
+                    showSnackBar(getString(R.string.ga_noVote));
                 }
 
                 Log.e(TAG, "after ");
@@ -452,116 +418,28 @@ public class GroupTasksActivity extends PortraitActivity {
         });
     }
 
-    public void thumbsUp(ImageView iv2, final int position) {
-        iv2.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                callVoteMeetingWS(position, "Yes");
-            }
-        });
+    @Override
+    public void respondToTask(String taskUid, String taskType, String response) {
 
-    }
-
-    private void callVoteMeetingWS(final int position, String response) {
-
-        String id = activitiesList.get(position).getId();
-        if (activitiesList.get(position).getType().equalsIgnoreCase("VOTE")) {
-            grassrootRestService.getApi().castVote(id, phoneNumber, code, response)
-                    .observeOn(AndroidSchedulers.mainThread())
-                    .subscribe(new Observer<GenericResponse>() {
-                        @Override
-                        public void onCompleted() {
-                            mProgressBar.setVisibility(View.INVISIBLE);
-                        }
-
-                        @Override
-                        public void onError(Throwable e) {
-                            mProgressBar.setVisibility(View.INVISIBLE);
-                            errorLayout.setVisibility(View.VISIBLE);
-                            RetrofitError retrofitError = (RetrofitError) e;
-                            if (retrofitError.getKind().equals(RetrofitError.Kind.NETWORK)) {
-                                imNoInternet.setVisibility(View.VISIBLE);
-                            } else if (retrofitError.getResponse().getStatus() == 409) {
-                                showSnackBar(getString(R.string.ga_VoteFailure), "", "", "", "", snackbar.LENGTH_SHORT);
-                            } else {
-                                showSnackBar(getString(R.string.Unknown_error), "", "", "", "", snackbar.LENGTH_SHORT);
-                            }
-
-                        }
-
-                        @Override
-                        public void onNext(GenericResponse response) {
-                            groupActivitiesWS();
-                            showSnackBar(getString(R.string.ga_Votesend), "", "", "", "", Snackbar.LENGTH_SHORT);
-
-
-                        }
-                    });
-
-        } else if (activitiesList.get(position).getType().equalsIgnoreCase("MEETING")) {
-
-            grassrootRestService.getApi().castVote(id, phoneNumber, code, response)
-                    .observeOn(AndroidSchedulers.mainThread())
-                    .subscribe(new Observer<GenericResponse>() {
-                        @Override
-                        public void onCompleted() {
-                            mProgressBar.setVisibility(View.INVISIBLE);
-                        }
-
-                        @Override
-                        public void onError(Throwable e) {
-                            mProgressBar.setVisibility(View.INVISIBLE);
-                            errorLayout.setVisibility(View.VISIBLE);
-                            RetrofitError retrofitError = (RetrofitError) e;
-                            if (retrofitError.getKind().equals(RetrofitError.Kind.NETWORK)) {
-                                imNoInternet.setVisibility(View.VISIBLE);
-
-                            } else if (retrofitError.getResponse().getStatus() == 409) {
-                                showSnackBar(getString(R.string.ga_VoteFailure), "", "", "", "", snackbar.LENGTH_SHORT);
-                            } else {
-                                showSnackBar(getString(R.string.Unknown_error), "", "", "", "", snackbar.LENGTH_SHORT);
-                            }
-                        }
-
-                        @Override
-                        public void onNext(GenericResponse response) {
-                            groupActivitiesWS();
-                            showSnackBar(getString(R.string.ga_Meetingsend), "", "", "", "", Snackbar.LENGTH_SHORT);
-
-                        }
-                    });
-
-
+        Observable<GenericResponse> restCall;
+        final String msgSuccess, msgAlreadyResponded;
+        if (taskType.equals("VOTE")) {
+            restCall = grassrootRestService.getApi().castVote(taskUid, phoneNumber, code, response);
+            msgSuccess = getString(R.string.ga_Votesend);
+            msgAlreadyResponded = getString(R.string.ga_VoteFailure);
+        } else if (taskType.equals("MEETING")) {
+            restCall = grassrootRestService.getApi().rsvp(taskUid, phoneNumber, code, response);
+            msgSuccess = getString(R.string.ga_Meetingsend);
+            msgAlreadyResponded = getString(R.string.ga_VoteFailure);
+        } else if (taskType.equals("TODO")) {
+            restCall = grassrootRestService.getApi().completeTodo(phoneNumber, code, taskUid);
+            msgSuccess = getString(R.string.ga_ToDocompleted);
+            msgAlreadyResponded = getString(R.string.ga_ToDoFailure);
+        } else {
+            throw new UnsupportedOperationException("Responding to neither vote nor meeting! Error somewhere");
         }
 
-    }
-
-    public void thumbsDown(View iv3, final int position) {
-        iv3.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Log.d(TAG, "Voting No");
-                callVoteMeetingWS(position, "No");
-
-            }
-        });
-
-    }
-
-    public void completed(ImageView iv2, final int position, final String response) {
-        iv2.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                callToDoWS(position, response);
-            }
-        });
-
-    }
-    private void callToDoWS(final int position, final String response) {
-
-        String id = activitiesList.get(position).getId();
-        grassrootRestService.getApi().completeTodo(id,phoneNumber,code)
-                .observeOn(AndroidSchedulers.mainThread())
+        restCall.observeOn(AndroidSchedulers.mainThread())
                 .subscribe(new Observer<GenericResponse>() {
                     @Override
                     public void onCompleted() {
@@ -571,60 +449,49 @@ public class GroupTasksActivity extends PortraitActivity {
                     @Override
                     public void onError(Throwable e) {
                         mProgressBar.setVisibility(View.INVISIBLE);
-                        errorLayout.setVisibility(View.VISIBLE);
                         RetrofitError retrofitError = (RetrofitError) e;
                         if (retrofitError.getKind().equals(RetrofitError.Kind.NETWORK)) {
                             imNoInternet.setVisibility(View.VISIBLE);
-
                         } else if (retrofitError.getResponse().getStatus() == 409) {
-                            showSnackBar(getString(R.string.ga_ToDoFailure), "", "", "", "", snackbar.LENGTH_SHORT);
+                            showSnackBar(msgAlreadyResponded);
                         } else {
-                            showSnackBar(getString(R.string.Unknown_error), "", "", "", "", snackbar.LENGTH_SHORT);
+                            showSnackBar(getString(R.string.Unknown_error));
                         }
                     }
 
                     @Override
-                    public void onNext(GenericResponse response) {
+                    public void onNext(GenericResponse genericResponse) {
                         groupActivitiesWS();
-                        showSnackBar(getString(R.string.ga_ToDocompleted), "", "", "", "", Snackbar.LENGTH_SHORT);
-
+                        showSnackBar(msgSuccess);
                     }
                 });
-
-
     }
 
+    private void showSnackBar(String message) {
+        showSnackBar(message, "", "", "", "", snackbar.LENGTH_SHORT);
+    }
 
-    private void showSnackBar(String message, final String actionButtontext, final String type, final String response, final String positions, int length) {
+    private void showSnackBar(String message, final String actionButtontext, final String type,
+                              final String response, final String positions, int length) {
+
         snackbar = Snackbar.make(rlActivityRoot, message, length);
         snackbar.setActionTextColor(Color.RED);
 
-        if (!actionButtontext.isEmpty()) {
+        if (!actionButtontext.isEmpty()) { // not entirely sure why/how this is set up
             snackbar.setAction(actionButtontext, new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
                     if (type.equalsIgnoreCase("VoteMeeting")) {
-                        callVoteMeetingWS(Integer.parseInt(positions), response);
+                        TaskModel task = activitiesList.get(Integer.parseInt(positions));
+                        respondToTask(task.getId(), task.getType(), response);
                     } else {
-                        callToDoWS(Integer.parseInt(positions), response);
-
+                        respondToTask(activitiesList.get(Integer.parseInt(positions)).getId(), "TODO", response);
                     }
                 }
             });
         }
         snackbar.show();
 
-    }
-
-    private void populateCompletionStatus(List<TaskModel> taskModels) {
-        for (TaskModel taskModel : taskModels) {
-            if (taskModel.getType().equalsIgnoreCase("VOTE") || taskModel.getType().equalsIgnoreCase("MEETING")) {
-                votemeeting(taskModel);
-            } else {
-                ToDo(taskModel);
-            }
-
-        }
     }
 
 }

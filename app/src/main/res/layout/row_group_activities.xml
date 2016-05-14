@@ -7,150 +7,131 @@
 
 
         <android.support.v7.widget.CardView
-            android:id="@+id/main_view"
-            xmlns:card_view="http://schemas.android.com/apk/res-auto"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_margin="5dp"
-            android:orientation="vertical"
-            card_view:cardCornerRadius="5dp"
-            card_view:cardElevation="3dp"
-            card_view:contentPadding="10dp"
-            card_view:cardBackgroundColor="#fff"
+            android:id="@+id/task_card_view_root"
+            style="@style/TaskListCard">
 
-            >
+            <!-- todo : flatten this, is going to be a performance problem with many cards on old phone -->
+
             <RelativeLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                >
+                android:layout_height="wrap_content">
 
                 <RelativeLayout
-                android:id="@+id/header"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                    android:layout_marginBottom="@dimen/halfpadding"
+                    android:id="@+id/header"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="@dimen/halfpadding">
+
+                    <ImageView
+                        android:id="@+id/iv_type"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:src="@drawable/ic_home_vote_active" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:layout_toRightOf="@+id/iv_type"
+                        android:layout_marginLeft="10dp">
+
+                        <TextView
+                            android:id="@+id/txt_title"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:textColor="@color/black"
+                            android:gravity="center_vertical"
+                            android:textSize="@dimen/txt_large"
+                            android:padding="2dp"
+                            android:singleLine="true"
+                            android:text="Vote question" />
+
+                        <TextView
+                            android:id="@+id/txt_groupownername"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:textColor="@color/black"
+                            android:gravity="center_vertical"
+                            android:textSize="@dimen/txt_small"
+                            android:padding="2dp"
+                            android:singleLine="true"
+                            android:text="Group  owner name" />
+
+                        <TextView
+                            android:id="@+id/txt_groupdesc"
+                            android:layout_width="fill_parent"
+                            android:layout_height="wrap_content"
+                            android:textColor="@color/black"
+                            android:gravity="center_vertical"
+                            android:textSize="@dimen/txt_medium"
+                            android:padding="2dp"
+                            android:ellipsize = "end"
+                            android:singleLine="true"
+                            tools:text="Truncated of description of latest events" />
+
+                    </LinearLayout>
+
+                </RelativeLayout>
+
+                <View
+                    android:id="@+id/divider"
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:background="@color/black"
+                    android:layout_marginTop="5dp"
+                    android:layout_below="@+id/header"
+                    >
+                </View>
+
+                <RelativeLayout
+                    android:id="@+id/footer"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@+id/divider"
+                    android:paddingBottom="@dimen/halfpadding"
+                    android:paddingTop="@dimen/halfpadding"
                     >
 
-                <ImageView
-                    android:id="@+id/iv_type"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:src="@drawable/ic_home_vote_active"
-                    />
+                    <ImageView
+                        android:id="@+id/iv1"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:paddingRight="@dimen/padding"
+                        />
 
 
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:layout_toRightOf="@+id/iv_type"
-                android:layout_marginLeft="10dp"
+                    <ImageView
+                        android:id="@+id/iv2"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_toRightOf="@+id/iv1"
+                        android:visibility="visible"
+                        android:paddingRight="@dimen/padding"
 
-                >
-
-            <TextView
-                android:id="@+id/txt_title"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textColor="@color/black"
-                android:gravity="center_vertical"
-                android:textSize="@dimen/txt_large"
-                android:padding="2dp"
-                android:singleLine="true"
-                android:text="Vote question"
-                />
-
-            <TextView
-                android:id="@+id/txt_groupownername"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textColor="@color/black"
-                android:gravity="center_vertical"
-                android:textSize="@dimen/txt_small"
-                android:padding="2dp"
-                android:singleLine="true"
-                android:text="Group  owner name"
-                />
-
-            <TextView
-                android:id="@+id/txt_groupdesc"
-                android:layout_width="fill_parent"
-                android:layout_height="wrap_content"
-                android:textColor="@color/black"
-                android:gravity="center_vertical"
-                android:textSize="@dimen/txt_medium"
-                android:padding="2dp"
-                android:ellipsize = "end"
-                android:singleLine="true"
-                tools:text="Truncated of description of latest events"
-                />
-
-            </LinearLayout>
-
-            </RelativeLayout>
+                        />
 
 
-            <View
-                android:id="@+id/divider"
-                android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:background="@color/black"
-                android:layout_marginTop="5dp"
-                android:layout_below="@+id/header"
-                >
-            </View>
-
-            <RelativeLayout
-                android:id="@+id/footer"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_below="@+id/divider"
-                android:paddingBottom="@dimen/halfpadding"
-                android:paddingTop="@dimen/halfpadding"
-                >
-
-                <ImageView
-                    android:id="@+id/iv1"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:paddingRight="@dimen/padding"
-                    />
+                    <ImageView
+                        android:id="@+id/iv3"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_toRightOf="@+id/iv2"
+                        android:visibility="visible"
+                        android:paddingRight="@dimen/padding"
+                        />
 
 
-                <ImageView
-                    android:id="@+id/iv2"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_toRightOf="@+id/iv1"
-                    android:visibility="visible"
-                    android:paddingRight="@dimen/padding"
+                    <TextView
+                        android:id="@+id/datetime"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="10/4/16"
+                        android:layout_alignParentRight="true"
+                        android:layout_centerVertical="true"
+                        android:textColor="@color/black"
+                        />
 
-                    />
-
-
-                <ImageView
-                    android:id="@+id/iv3"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_toRightOf="@+id/iv2"
-                    android:visibility="visible"
-                    android:paddingRight="@dimen/padding"
-                    />
-
-
-                <TextView
-                    android:id="@+id/datetime"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="10/4/16"
-                    android:layout_alignParentRight="true"
-                    android:layout_centerVertical="true"
-                    android:textColor="@color/black"
-                    />
-
-            </RelativeLayout>
-
-
+                </RelativeLayout>
 
             </RelativeLayout>
 

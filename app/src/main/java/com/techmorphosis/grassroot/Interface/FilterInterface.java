@@ -5,12 +5,12 @@ package com.techmorphosis.grassroot.Interface;
  */
 public interface FilterInterface {
 
-    public void vote(boolean vote, boolean meeting, boolean todo,boolean clear);
+    void vote(boolean vote, boolean meeting, boolean todo,boolean clear);
 
-    public void meeting(boolean vote, boolean meeting, boolean todo,boolean clear);
+    void meeting(boolean vote, boolean meeting, boolean todo,boolean clear);
 
-    public void todo(boolean vote, boolean meeting, boolean todo,boolean clear);
+    void todo(boolean vote, boolean meeting, boolean todo,boolean clear);
 
-    public void clear(boolean vote, boolean meeting, boolean todo,boolean clear);
+    void clear(boolean vote, boolean meeting, boolean todo,boolean clear);
 
 }

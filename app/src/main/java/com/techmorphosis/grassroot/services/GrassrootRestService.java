@@ -119,10 +119,10 @@ public class GrassrootRestService {
                                                  @Query("response") String response);
 
             //complete logbook
-            @GET("/logbook/complete/do/{id}/{phoneNumber}/{code}")
-            Observable<GenericResponse> completeTodo(@Path("id") String todoId,
-                                                     @Path("phoneNumber") String phoneNumber,
-                                                     @Path("code") String code);
+            @GET("/logbook/complete/{phoneNumber}/{code}/{id}")
+            Observable<GenericResponse> completeTodo(@Path("phoneNumber") String phoneNumber,
+                                                     @Path("code") String code,
+                                                     @Path("id") String todoId);
 
 
             // retrieve group members

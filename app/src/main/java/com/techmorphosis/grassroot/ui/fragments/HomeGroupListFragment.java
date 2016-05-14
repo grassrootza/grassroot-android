@@ -195,7 +195,7 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment {
         SwipeableRecyclerViewTouchListener swipeDeleteTouchListener = new SwipeableRecyclerViewTouchListener(
                 context,
                 rcGroupList,
-                R.id.main_view,
+                R.id.task_card_view_root,
                 R.id.main_background_view,
 
                 new SwipeableRecyclerViewTouchListener.SwipeListener() {

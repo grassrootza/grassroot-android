@@ -160,7 +160,7 @@ public class GroupListAdapter extends RecyclerView.Adapter<GroupListAdapter.GHP_
 
     public class GHP_ViewHolder extends RecyclerView.ViewHolder {
 
-        @BindView(R.id.main_view)
+        @BindView(R.id.task_card_view_root)
         CardView cardView;
         @BindView(R.id.txt_groupname)
         TextView txtGroupname;
