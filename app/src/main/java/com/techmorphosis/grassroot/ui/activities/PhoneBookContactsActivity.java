@@ -13,7 +13,7 @@ import android.widget.ImageView;
 import android.widget.RelativeLayout;
 
 import com.techmorphosis.grassroot.ContactLib.PinnedHeaderListView;
-import com.techmorphosis.grassroot.Interface.ContactListRequester;
+import com.techmorphosis.grassroot.interfaces.ContactListRequester;
 import com.techmorphosis.grassroot.R;
 import com.techmorphosis.grassroot.adapters.ContactsAdapter;
 import com.techmorphosis.grassroot.adapters.GetContactListAsync;

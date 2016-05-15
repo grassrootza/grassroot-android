@@ -1,5 +1,7 @@
 package com.techmorphosis.grassroot.utils;
 
+import com.techmorphosis.grassroot.BuildConfig;
+
 import java.text.SimpleDateFormat;
 
 /**
@@ -12,7 +14,7 @@ public class Constant {
     public static final String stagingUrl = "http://staging.grassroot.org.za/api";
     public static final String localUrl = "http://10.0.2.2:8080/api";
 
-    public static final String restUrl = localUrl;
+    public static final String restUrl = BuildConfig.BUILD_TYPE.equals("release") ? stagingUrl : localUrl;
 
     public static final String phoneBookList = "phoneBookList";
     public static final String filteredList = "filteredList";
@@ -38,7 +40,6 @@ public class Constant {
 
     public static final int alertAskForContactPermission = 91;
 
-    public static final double testLongitude = 31.215263;
-    public static final double testLatitude = 121.476291;
-
+    public static final double testLatitude = 31.215263;
+    public static final double testLongitude = 121.476291;
 }

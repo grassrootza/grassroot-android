@@ -14,9 +14,9 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import com.techmorphosis.grassroot.BuildConfig;
-import com.techmorphosis.grassroot.Interface.ClickListener;
+import com.techmorphosis.grassroot.interfaces.ClickListener;
 import com.techmorphosis.grassroot.R;
-import com.techmorphosis.grassroot.RecyclerView.RecyclerTouchListener;
+import com.techmorphosis.grassroot.ui.views.RecyclerTouchListener;
 import com.techmorphosis.grassroot.adapters.NavigationDrawerAdapter;
 import com.techmorphosis.grassroot.models.NavDrawerItem;
 import com.techmorphosis.grassroot.utils.SettingPreference;

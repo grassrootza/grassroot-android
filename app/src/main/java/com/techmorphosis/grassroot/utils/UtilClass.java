@@ -20,7 +20,7 @@ import android.widget.Toast;
 import com.techmorphosis.grassroot.models.Contact;
 import com.techmorphosis.grassroot.ui.activities.PhoneBookContactsActivity;
 import com.techmorphosis.grassroot.ui.fragments.AlertDialogFragment;
-import com.techmorphosis.grassroot.utils.listener.AlertDialogListener;
+import com.techmorphosis.grassroot.interfaces.AlertDialogListener;
 
 import java.util.ArrayList;
 import java.util.regex.Matcher;

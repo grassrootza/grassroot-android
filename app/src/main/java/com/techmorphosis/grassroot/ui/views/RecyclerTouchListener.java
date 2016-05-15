@@ -1,4 +1,4 @@
-package com.techmorphosis.grassroot.RecyclerView;
+package com.techmorphosis.grassroot.ui.views;
 
 import android.content.Context;
 import android.support.v7.widget.RecyclerView;
@@ -6,7 +6,7 @@ import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.View;
 
-import com.techmorphosis.grassroot.Interface.ClickListener;
+import com.techmorphosis.grassroot.interfaces.ClickListener;
 
 /**
  * Created by ravi on 6/4/16.

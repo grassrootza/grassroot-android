@@ -1,4 +1,4 @@
-package com.techmorphosis.grassroot.Interface;
+package com.techmorphosis.grassroot.interfaces;
 
 import android.view.View;
 

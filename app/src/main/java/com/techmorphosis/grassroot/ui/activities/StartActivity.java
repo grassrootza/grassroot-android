@@ -20,7 +20,7 @@ import android.widget.ImageView;
 import android.widget.RelativeLayout;
 
 import com.crashlytics.android.Crashlytics;
-import com.techmorphosis.grassroot.Network.NetworkCheck;
+import com.techmorphosis.grassroot.utils.NetworkUtils;
 import com.techmorphosis.grassroot.R;
 import com.techmorphosis.grassroot.services.GcmRegistrationService;
 import com.techmorphosis.grassroot.services.GrassrootRestService;
@@ -111,7 +111,7 @@ public class StartActivity extends PortraitActivity implements HomeScreenViewFra
             progressDialog = new ProgressDialog(this);
             progressDialog.setMessage("Please Wait..");
             ButterKnife.bind(this);
-            if (NetworkCheck.isNetworkAvailable(StartActivity.this)) {
+            if (NetworkUtils.isNetworkAvailable(StartActivity.this)) {
                 // todo: put meaning inside here or delete it, unless required for some other reason
             } else {
                 SettingPreference.setisLoggedIn(this, false);

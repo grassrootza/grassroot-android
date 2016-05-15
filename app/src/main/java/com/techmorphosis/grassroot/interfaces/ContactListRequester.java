@@ -1,4 +1,4 @@
-package com.techmorphosis.grassroot.Interface;
+package com.techmorphosis.grassroot.interfaces;
 
 import com.techmorphosis.grassroot.models.Contact;
 

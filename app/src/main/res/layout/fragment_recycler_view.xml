@@ -14,7 +14,7 @@
         android:paddingTop="@dimen/activity_vertical_margin"
         tools:context=".MainActivity"/>
 
-    <com.techmorphosis.grassroot.contact.RecyclerViewFastScroller
+    <com.techmorphosis.grassroot.ui.views.RecyclerViewFastScroller
         android:id="@+id/fastscroller"
         android:layout_width="wrap_content"
         android:layout_height="match_parent"

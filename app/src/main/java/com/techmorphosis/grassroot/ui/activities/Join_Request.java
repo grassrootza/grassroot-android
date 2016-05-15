@@ -22,9 +22,9 @@ import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
-import com.techmorphosis.grassroot.Interface.ClickListener;
+import com.techmorphosis.grassroot.interfaces.ClickListener;
 import com.techmorphosis.grassroot.R;
-import com.techmorphosis.grassroot.RecyclerView.RecyclerTouchListener;
+import com.techmorphosis.grassroot.ui.views.RecyclerTouchListener;
 import com.techmorphosis.grassroot.adapters.JoinRequestAdapter;
 import com.techmorphosis.grassroot.services.GrassrootRestService;
 import com.techmorphosis.grassroot.services.model.GenericResponse;
@@ -33,7 +33,7 @@ import com.techmorphosis.grassroot.services.model.GroupSearchResponse;
 import com.techmorphosis.grassroot.ui.fragments.AlertDialogFragment;
 import com.techmorphosis.grassroot.utils.SettingPreference;
 import com.techmorphosis.grassroot.utils.UtilClass;
-import com.techmorphosis.grassroot.utils.listener.AlertDialogListener;
+import com.techmorphosis.grassroot.interfaces.AlertDialogListener;
 
 import java.util.ArrayList;
 import java.util.List;

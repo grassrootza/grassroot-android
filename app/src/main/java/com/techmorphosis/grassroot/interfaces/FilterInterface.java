@@ -1,4 +1,4 @@
-package com.techmorphosis.grassroot.Interface;
+package com.techmorphosis.grassroot.interfaces;
 
 /**
  * Created by ravi on 15/4/16.

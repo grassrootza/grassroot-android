@@ -15,7 +15,7 @@ import com.techmorphosis.grassroot.ui.fragments.NavigationDrawerFragment;
 import com.techmorphosis.grassroot.ui.fragments.WelcomeFragment;
 import com.techmorphosis.grassroot.utils.SettingPreference;
 import com.techmorphosis.grassroot.utils.UtilClass;
-import com.techmorphosis.grassroot.utils.listener.AlertDialogListener;
+import com.techmorphosis.grassroot.interfaces.AlertDialogListener;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;

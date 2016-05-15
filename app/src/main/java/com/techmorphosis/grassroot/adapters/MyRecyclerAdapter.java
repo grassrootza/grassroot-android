@@ -16,9 +16,7 @@ import java.util.ArrayList;
 /**
  * Created by ravi on 6/4/16.
  */
-public class MyRecyclerAdapter extends RecyclerView.Adapter<MyRecyclerAdapter.MyRecyclerAdapter_ViewHolder>
-{
-
+public class MyRecyclerAdapter extends RecyclerView.Adapter<MyRecyclerAdapter.MyRecyclerAdapter_ViewHolder> {
 
     private   String TAG = MyRecyclerAdapter.class.getSimpleName() ;
     private final Context mcontext;

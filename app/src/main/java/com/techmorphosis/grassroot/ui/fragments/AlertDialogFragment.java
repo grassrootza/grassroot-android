@@ -9,7 +9,7 @@ import android.view.Window;
 import android.widget.TextView;
 
 import com.techmorphosis.grassroot.R;
-import com.techmorphosis.grassroot.utils.listener.AlertDialogListener;
+import com.techmorphosis.grassroot.interfaces.AlertDialogListener;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;

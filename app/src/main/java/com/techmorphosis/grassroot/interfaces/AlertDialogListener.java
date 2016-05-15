@@ -2,13 +2,13 @@
 // Jad home page: http://www.geocities.com/kpdus/jad.html
 // Decompiler options: braces fieldsfirst space lnc 
 
-package com.techmorphosis.grassroot.utils.listener;
+package com.techmorphosis.grassroot.interfaces;
 
 
 public interface AlertDialogListener
 {
 
-    public abstract void setRightButton();
+    void setRightButton();
 
-    public abstract void setLeftButton();
+    void setLeftButton();
 }

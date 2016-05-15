@@ -17,8 +17,8 @@ import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 
 import com.github.clans.fab.FloatingActionMenu;
-import com.techmorphosis.grassroot.Interface.FilterInterface;
-import com.techmorphosis.grassroot.Interface.TaskListListener;
+import com.techmorphosis.grassroot.interfaces.FilterInterface;
+import com.techmorphosis.grassroot.interfaces.TaskListListener;
 import com.techmorphosis.grassroot.R;
 import com.techmorphosis.grassroot.adapters.TasksAdapter;
 import com.techmorphosis.grassroot.services.GrassrootRestService;

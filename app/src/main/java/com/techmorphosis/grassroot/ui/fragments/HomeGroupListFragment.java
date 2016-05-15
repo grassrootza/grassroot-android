@@ -22,7 +22,7 @@ import android.widget.RelativeLayout;
 
 import com.github.clans.fab.FloatingActionButton;
 import com.github.clans.fab.FloatingActionMenu;
-import com.techmorphosis.grassroot.Interface.SortInterface;
+import com.techmorphosis.grassroot.interfaces.SortInterface;
 import com.techmorphosis.grassroot.R;
 import com.techmorphosis.grassroot.adapters.GroupListAdapter;
 import com.techmorphosis.grassroot.services.GrassrootRestService;

@@ -147,13 +147,13 @@ public class ContactsAdapter extends SearchablePinnedHeaderListViewAdapter<Conta
 
 
     }
-}
 
-// /////////////////////////////////////////////////////////////////////////////////////
-// ViewHolder //
-// /////////////
- class ViewHolder
-{
-    TextView tv_person_name;
-    ImageView iv_Selected;
+    // /////////////////////////////////////////////////////////////////////////////////////
+    // ViewHolder //
+    // /////////////
+    class ViewHolder
+    {
+        TextView tv_person_name;
+        ImageView iv_Selected;
+    }
 }

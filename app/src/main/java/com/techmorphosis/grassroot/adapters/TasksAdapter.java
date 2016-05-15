@@ -2,7 +2,6 @@ package com.techmorphosis.grassroot.adapters;
 
 import android.content.Context;
 import android.support.v4.content.ContextCompat;
-import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -10,7 +9,7 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.techmorphosis.grassroot.Interface.TaskListListener;
+import com.techmorphosis.grassroot.interfaces.TaskListListener;
 import com.techmorphosis.grassroot.R;
 import com.techmorphosis.grassroot.services.model.TaskModel;
 import com.techmorphosis.grassroot.utils.Constant;

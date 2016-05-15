@@ -1,10 +1,10 @@
-package com.techmorphosis.grassroot.Network;
+package com.techmorphosis.grassroot.utils;
 
 import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 
-public class NetworkCheck {
+public class NetworkUtils {
 
 	
 	 public static boolean isNetworkAvailable(Context context) {

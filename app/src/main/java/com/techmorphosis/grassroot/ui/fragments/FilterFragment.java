@@ -11,7 +11,7 @@ import android.view.ViewGroup;
 import android.view.Window;
 import android.widget.TextView;
 
-import com.techmorphosis.grassroot.Interface.FilterInterface;
+import com.techmorphosis.grassroot.interfaces.FilterInterface;
 import com.techmorphosis.grassroot.R;
 
 import butterknife.BindView;

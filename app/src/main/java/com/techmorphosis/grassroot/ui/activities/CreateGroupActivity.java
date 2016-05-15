@@ -23,9 +23,9 @@ import android.widget.TextView;
 
 import com.github.clans.fab.FloatingActionButton;
 import com.github.clans.fab.FloatingActionMenu;
-import com.techmorphosis.grassroot.Interface.ClickListener;
+import com.techmorphosis.grassroot.interfaces.ClickListener;
 import com.techmorphosis.grassroot.R;
-import com.techmorphosis.grassroot.RecyclerView.RecyclerTouchListener;
+import com.techmorphosis.grassroot.ui.views.RecyclerTouchListener;
 import com.techmorphosis.grassroot.adapters.MemberListAdapter;
 import com.techmorphosis.grassroot.models.Contact;
 import com.techmorphosis.grassroot.services.GrassrootRestService;

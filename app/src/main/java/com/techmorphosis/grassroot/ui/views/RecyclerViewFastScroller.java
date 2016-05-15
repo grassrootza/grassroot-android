@@ -1,4 +1,4 @@
-package com.techmorphosis.grassroot.contact;
+package com.techmorphosis.grassroot.ui.views;
 
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
@@ -19,6 +19,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 public class RecyclerViewFastScroller extends LinearLayout {
+
     private static final int BUBBLE_ANIMATION_DURATION = 100;
     private static final int TRACK_SNAP_RANGE = 5;
 

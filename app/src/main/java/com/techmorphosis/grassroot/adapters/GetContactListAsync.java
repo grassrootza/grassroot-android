@@ -10,7 +10,7 @@ import android.provider.ContactsContract.Contacts;
 import android.telephony.PhoneNumberUtils;
 import android.util.Log;
 
-import com.techmorphosis.grassroot.Interface.ContactListRequester;
+import com.techmorphosis.grassroot.interfaces.ContactListRequester;
 import com.techmorphosis.grassroot.models.Contact;
 
 import java.util.ArrayList;

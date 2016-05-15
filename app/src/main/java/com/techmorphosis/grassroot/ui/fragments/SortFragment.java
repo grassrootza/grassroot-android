@@ -10,7 +10,7 @@ import android.view.ViewGroup;
 import android.view.Window;
 import android.widget.TextView;
 
-import com.techmorphosis.grassroot.Interface.SortInterface;
+import com.techmorphosis.grassroot.interfaces.SortInterface;
 import com.techmorphosis.grassroot.R;
 
 import butterknife.BindView;
