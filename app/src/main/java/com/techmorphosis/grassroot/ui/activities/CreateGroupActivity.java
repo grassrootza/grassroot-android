@@ -23,42 +23,55 @@ import android.widget.TextView;
 
 import com.github.clans.fab.FloatingActionButton;
 import com.github.clans.fab.FloatingActionMenu;
-import com.techmorphosis.grassroot.interfaces.ClickListener;
 import com.techmorphosis.grassroot.R;
-import com.techmorphosis.grassroot.ui.views.RecyclerTouchListener;
 import com.techmorphosis.grassroot.adapters.MemberListAdapter;
+import com.techmorphosis.grassroot.adapters.UserListAdapter;
+import com.techmorphosis.grassroot.interfaces.ClickListener;
 import com.techmorphosis.grassroot.models.Contact;
 import com.techmorphosis.grassroot.services.GrassrootRestService;
 import com.techmorphosis.grassroot.services.model.GenericResponse;
+import com.techmorphosis.grassroot.services.model.Member;
+import com.techmorphosis.grassroot.ui.fragments.MemberListFragment;
+import com.techmorphosis.grassroot.ui.views.RecyclerTouchListener;
 import com.techmorphosis.grassroot.utils.Constant;
+import com.techmorphosis.grassroot.utils.ContactUtil.ErrorUtils;
 import com.techmorphosis.grassroot.utils.PermissionUtils;
 import com.techmorphosis.grassroot.utils.SettingPreference;
 import com.techmorphosis.grassroot.utils.UtilClass;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
-import rx.Observer;
-import rx.android.schedulers.AndroidSchedulers;
-import rx.schedulers.Schedulers;
+import butterknife.OnTextChanged;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+
+import static butterknife.OnTextChanged.Callback.AFTER_TEXT_CHANGED;
 
 // subclass AppCompatActivity
 public class CreateGroupActivity extends PortraitActivity {
 
     private MemberListAdapter mAdapter;
+    private UserListAdapter memberAdapter;
+
     private String TAG = CreateGroupActivity.class.getSimpleName();
     private static final String regexForName = "[^a-zA-Z0-9 ]";
 
-    @BindView(R.id.rc_members_list)
-    RecyclerView mRecyclerView;
+    @BindView(R.id.cg_new_member_list_container)
+    RelativeLayout memberListContainer;
     @BindView(R.id.add_member_options)
     FloatingActionMenu addMemberOptions;
     @BindView(R.id.icon_add_member_manually)
     FloatingActionButton ic_edit;
     @BindView(R.id.icon_add_from_contacts)
     FloatingActionButton ic_fab_call;
+
+    @BindView(R.id.cg_collapsing_toolbar)
+    CollapsingToolbarLayout collapsingToolbarLayout;
 
     @Nullable
     @BindView(R.id.rl_one)
@@ -72,90 +85,41 @@ public class CreateGroupActivity extends PortraitActivity {
     @BindView(R.id.txt_toolbar)
     TextView txtToolbar;
     @BindView(R.id.et_groupname)
-    EditText et_groupname;
+    EditText et_groupname; // complaints in latest library asking for TextInputEditText but that throws no class errors..
     @BindView(R.id.rl_cg_root)
     RelativeLayout rlCgRoot;
     @BindView(R.id.iv_crossimage)
     ImageView ivCrossimage;
 
     //all phonebooklist
-    private ArrayList<Contact> phoneBookList;
-    private ArrayList<Contact> phoneBookFilteredList;
-    private ArrayList<Contact> manualInputList;
-    private ArrayList<Contact> mergeList;
+    private List<Member> membersForGroup;
+    private MemberListFragment memberListFragment;
 
     private Snackbar snackBar;
-    private GrassrootRestService grassrootRestService = new GrassrootRestService();
+    private GrassrootRestService grassrootRestService;
     private ProgressDialog progressDialog;
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_create__group);
         ButterKnife.bind(this);
+
         progressDialog = new ProgressDialog(this);
         progressDialog.setMessage("Please wait..");
-        findAllView();
+
         init();
-        mRecyclerView();
-        et_group_description.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-            }
-
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-            }
-
-            @Override
-            public void afterTextChanged(Editable s) {
-                tvCounter.setText("" + s.length() + "/" + "160");
-            }
-        });
+        setUpViews();
 
     }
 
     private void init() {
-        this.phoneBookList = new ArrayList();
-        this.mergeList = new ArrayList();
-        this.phoneBookFilteredList = new ArrayList();
-        this.manualInputList = new ArrayList<>();
+        grassrootRestService = new GrassrootRestService(this);
+        membersForGroup = new ArrayList<>();
     }
 
-    private void mRecyclerView() {
-        this.mRecyclerView.setLayoutManager(new LinearLayoutManager(this));
-        this.mAdapter = new MemberListAdapter(this.mergeList, getApplicationContext());
-        this.mRecyclerView.setAdapter(this.mAdapter);
-        this.mRecyclerView.addOnItemTouchListener(new RecyclerTouchListener(getApplicationContext(), this.mRecyclerView, new ClickListener() {
-            @Override
-            public void onClick(View view, int position) {
-                Log.e(TAG, "position is  " + position);
-                Contact click_model = (Contact) CreateGroupActivity.this.mergeList.get(position);
-                if (click_model == null) {
-                    Log.e(CreateGroupActivity.this.TAG, "click_model  is  " + null);
-                } else {
-                    Log.e(CreateGroupActivity.this.TAG, "click_model  is not null ");
-                }
-                if (click_model.isSelected) {
-                    click_model.isSelected = false;
-                    CreateGroupActivity.this.mAdapter.notifyDataSetChanged();
-                    return;
-                }
-                click_model.isSelected = true;
-                CreateGroupActivity.this.mAdapter.notifyDataSetChanged();
-            }
+    private void setUpViews() {
 
-            @Override
-            public void onLongClick(View view, int position) {
-
-            }
-        }));
-    }
-
-
-    private void findAllView() {
-        CollapsingToolbarLayout collapsingToolbar = (CollapsingToolbarLayout) findViewById(R.id.collapsing_toolbar);
         addMemberOptions.setOnMenuToggleListener(new FloatingActionMenu.OnMenuToggleListener() {
             @Override
             public void onMenuToggle(boolean opened) {
@@ -171,12 +135,51 @@ public class CreateGroupActivity extends PortraitActivity {
                 }
             }
         });
+    }
 
+    private void setUpMemberList() {
+        memberListFragment = new MemberListFragment();
+        memberListFragment.setMemberList(membersForGroup);
+        getSupportFragmentManager().beginTransaction()
+                .add(R.id.cg_new_member_list_container, memberListFragment)
+                .commit();
+
+        // todo: move this into the fragment, enabled/disabled by a boolean
+        /*this.mRecyclerView.addOnItemTouchListener(new RecyclerTouchListener(this, this.mRecyclerView, new ClickListener() {
+            @Override
+            public void onClick(View view, int position) {
+                // todo: integrate selected / not selected back into adapter
+                Log.e(TAG, "position is  " + position);
+                Contact clickedContact = CreateGroupActivity.this.mergeList.get(position);
+                if (clickedContact == null) {
+                    Log.e(CreateGroupActivity.this.TAG, "click_model  is  " + null);
+                } else {
+                    Log.e(CreateGroupActivity.this.TAG, "click_model  is not null ");
+                }
+                if (clickedContact.isSelected) {
+                    clickedContact.isSelected = false;
+                    memberAdapter.notifyDataSetChanged();
+                    return;
+                }
+                clickedContact.isSelected = true;
+                CreateGroupActivity.this.mAdapter.notifyDataSetChanged();
+            }
+
+            @Override
+            public void onLongClick(View view, int position) {
+
+            }
+        }));*/
     }
 
     @OnClick(R.id.iv_crossimage)
     public void ivCrossimage() {
         finish();
+    }
+
+    @OnTextChanged(value = R.id.et_group_description, callback = AFTER_TEXT_CHANGED)
+    public void changeLengthCounter(CharSequence s) {
+        tvCounter.setText("" + s.length() + "/" + "160");
     }
 
     @OnClick(R.id.icon_add_from_contacts)
@@ -190,7 +193,9 @@ public class CreateGroupActivity extends PortraitActivity {
         if (!PermissionUtils.contactReadPermissionGranted(this)) {
             PermissionUtils.requestReadContactsPermission(this);
         } else {
-            UtilClass.callPhoneBookActivity(this, phoneBookFilteredList, null);
+            // todo: reconsider this quite a bit
+            ArrayList<Contact> preSelectedList = new ArrayList<>(Contact.convertFromMembers(membersForGroup, true));
+            UtilClass.callPhoneBookActivity(this, preSelectedList, null);
         }
     }
 
@@ -198,7 +203,8 @@ public class CreateGroupActivity extends PortraitActivity {
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (requestCode == Constant.alertAskForContactPermission && grantResults.length > 0) {
-            PermissionUtils.checkPermGrantedAndLaunchPhoneBook(this, grantResults[0], phoneBookFilteredList);
+            ArrayList<Contact> preSelectedList = new ArrayList<>(Contact.convertFromMembers(membersForGroup, true));
+            PermissionUtils.checkPermGrantedAndLaunchPhoneBook(this, grantResults[0], preSelectedList);
         }
     }
 
@@ -240,74 +246,55 @@ public class CreateGroupActivity extends PortraitActivity {
         String groupDescription = et_group_description.getText().toString().trim();
 
         ArrayList<String> tempList = new ArrayList<>();
-        for (int i = 0; i < mergeList.size(); i++) {
-            Contact numbers = mergeList.get(i);
-            if (numbers.isSelected) {
-                tempList.add(numbers.selectedNumber);
-            }
+        for (Member member : membersForGroup) {
+            tempList.add(member.getPhoneNumber());
         }
 
         String[] phoneNumbers = tempList.toArray(new String[tempList.size()]);
         grassrootRestService.getApi()
-                .createGroup(mobileNumber, code, groupName, groupDescription, phoneNumbers)
-                .subscribeOn(Schedulers.newThread())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(new Observer<GenericResponse>() {
+                .createGroup(mobileNumber, code, groupName, groupDescription, phoneNumbers) // todo: pass member entities
+                .enqueue(new Callback<GenericResponse>() {
                     @Override
-                    public void onCompleted() {
+                    public void onResponse(Call<GenericResponse> call, Response<GenericResponse> response) {
                         hideProgress();
+                        if (response.isSuccessful()) {
+                            SettingPreference.setPrefHasSaveClicked(CreateGroupActivity.this, true);
+                            snackBar(CreateGroupActivity.this, getResources().getString(R.string.GROUP_CREATED), "", Snackbar.LENGTH_SHORT);
+                            SettingPreference.setisHasgroup(CreateGroupActivity.this, true);
+                            finish();
+                        } else {
+                            // todo: process and handle error, if any (shouldn't be)
+                        }
                     }
+
                     @Override
-                    public void onError(Throwable e) {
+                    public void onFailure(Call<GenericResponse> call, Throwable t) {
                         hideProgress();
-                        snackBar(CreateGroupActivity.this, "", "", Snackbar.LENGTH_SHORT);
-                    }
-                    @Override
-                    public void onNext(GenericResponse response) {
-                        SettingPreference.setPrefHasSaveClicked(CreateGroupActivity.this, true);
-                        snackBar(CreateGroupActivity.this, getResources().getString(R.string.GROUP_CREATED), "", Snackbar.LENGTH_SHORT);
-                        SettingPreference.setisHasgroup(CreateGroupActivity.this, true);
-                        finish();
+                        ErrorUtils.handleNetworkError(CreateGroupActivity.this, rlCgRoot, t);
                     }
                 });
 
-    Log.e(TAG, "groupName is " + groupName);
-    Log.e(TAG, "description is " + groupDescription);
+        Log.e(TAG, "groupName is " + groupName);
+        Log.e(TAG, "description is " + groupDescription);
+
     }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
-        mergeList.clear();
+        membersForGroup.clear(); // todo : probably don't want to do this, doing for now, until properly straighten out
 
         if (resultCode == Activity.RESULT_OK && requestCode == Constant.activityContactSelection) {
             Log.e(this.TAG, "resultCode==1 ");
 
             if (data != null) {
-                phoneBookList = new ArrayList<>();
-                phoneBookFilteredList = new ArrayList<>();
-                this.phoneBookList = data.getParcelableArrayListExtra(Constant.phoneBookList);
-
-                if (phoneBookList != null) {
-                    Log.e(this.TAG, "phoneBookList size is " + phoneBookList.size());
-                    for (Contact contact : phoneBookList) {
-                        // Contact sortedmodel = (Contact) this.phoneBookList.get(i);
-                        if (contact == null) {
-                            Log.e(this.TAG, "null");
-                        } else if (contact.isSelected) {
-                            this.phoneBookFilteredList.add(contact);
-                        }
-                    }
+                ArrayList<Contact> contactsSelected = data.getParcelableArrayListExtra(Constant.phoneBookList);
+                for (Contact contact : contactsSelected) {
+                    membersForGroup.add(new Member(contact.selectedNumber, contact.name, Constant.ROLE_ORDINARY_MEMBER));
                 }
-
-                mergeList.addAll(phoneBookFilteredList);
-                mergeList.addAll(manualInputList);
-
-                Log.e(this.TAG, "mergeList size is " + this.mergeList.size());
-                Log.e(this.TAG, "phoneBookFilteredList size is " + this.phoneBookFilteredList.size());
-
-                CreateGroupActivity.this.mAdapter.notifyDataSetChanged();
+                memberListContainer.setVisibility(View.VISIBLE);
+                setUpMemberList();
             }
 
         } else if (resultCode == Activity.RESULT_OK && requestCode == Constant.activityManualMemberEntry) {
@@ -319,15 +306,15 @@ public class CreateGroupActivity extends PortraitActivity {
             contact.isSelected = true;
             contact.name = name;
             contact.selectedNumber = selectedNumber;
-            this.manualInputList.add(contact);
-            Log.e(this.TAG, "manualInputList.size() " + this.manualInputList.size());
+            // this.manualInputList.add(contact);
+            // Log.e(this.TAG, "manualInputList.size() " + this.manualInputList.size());
 
-            mergeList.addAll(phoneBookFilteredList);
-            mergeList.addAll(manualInputList);
+            // mergeList.addAll(phoneBookFilteredList);
+            // mergeList.addAll(manualInputList);
 
-            Log.e(this.TAG, "mergeList.size() " + this.mergeList.size());
+            // Log.e(this.TAG, "mergeList.size() " + this.mergeList.size());
 
-            CreateGroupActivity.this.mAdapter.notifyDataSetChanged();
+            memberAdapter.notifyDataSetChanged();
         }
     }
 
@@ -338,6 +325,7 @@ public class CreateGroupActivity extends PortraitActivity {
     private void hideProgress(){
         progressDialog.show();
     }
+
     private void snackBar(Context applicationContext, String message, String Action_title, int lengthShort) {
         snackBar = Snackbar.make(rlCgRoot, message, lengthShort);
         if (!Action_title.isEmpty()) {

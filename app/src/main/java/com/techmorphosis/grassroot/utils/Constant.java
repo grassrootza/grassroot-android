@@ -11,8 +11,8 @@ public class Constant {
 
     // todo: implement good practice and use getters
 
-    public static final String stagingUrl = "http://staging.grassroot.org.za/api";
-    public static final String localUrl = "http://10.0.2.2:8080/api";
+    public static final String stagingUrl = "http://staging.grassroot.org.za/api/";
+    public static final String localUrl = "http://10.0.2.2:8080/api/";
 
     public static final String restUrl = BuildConfig.BUILD_TYPE.equals("release") ? stagingUrl : localUrl;
 

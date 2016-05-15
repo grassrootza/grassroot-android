@@ -32,6 +32,7 @@ import com.techmorphosis.grassroot.services.model.GenericResponse;
 import com.techmorphosis.grassroot.services.model.GroupSearchModel;
 import com.techmorphosis.grassroot.services.model.GroupSearchResponse;
 import com.techmorphosis.grassroot.ui.fragments.AlertDialogFragment;
+import com.techmorphosis.grassroot.utils.ContactUtil.ErrorUtils;
 import com.techmorphosis.grassroot.utils.SettingPreference;
 import com.techmorphosis.grassroot.interfaces.AlertDialogListener;
 
@@ -41,10 +42,9 @@ import java.util.List;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
-import retrofit.RetrofitError;
-import rx.Observer;
-import rx.android.schedulers.AndroidSchedulers;
-import rx.schedulers.Schedulers;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 import static com.techmorphosis.grassroot.utils.UtilClass.showAlertDialog;
 
@@ -52,8 +52,7 @@ public class GroupJoinActivity extends PortraitActivity implements OnClickListen
 
     private static final String TAG = GroupJoinActivity.class.getSimpleName();
 
-    //todo implement dependency injection
-    private GrassrootRestService grassrootRestService = new GrassrootRestService();
+    private GrassrootRestService grassrootRestService;
 
     @BindView(R.id.toolbar)
     Toolbar toolbar;
@@ -140,6 +139,7 @@ public class GroupJoinActivity extends PortraitActivity implements OnClickListen
 
 
     private void init() {
+        grassrootRestService = new GrassrootRestService(this);
         joinrequestList = new ArrayList<>();
     }
 
@@ -228,35 +228,29 @@ public class GroupJoinActivity extends PortraitActivity implements OnClickListen
         imServerError.setVisibility(View.INVISIBLE);
 
         grassrootRestService.getApi().search(searchTerm)
-                .subscribeOn(Schedulers.newThread())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(new Observer<GroupSearchResponse>() {
+                .enqueue(new Callback<GroupSearchResponse>() {
                     @Override
-                    public void onCompleted() {
+                    public void onResponse(Call<GroupSearchResponse> call, Response<GroupSearchResponse> response) {
                         progressDialog.dismiss();
-                    }
-                    @Override
-                    public void onError(Throwable e) {
-                        progressDialog.dismiss();
-                        jrRecyclerView.setVisibility(View.GONE);
-
-                        RetrofitError error = (RetrofitError)e;
-                        if(error.getKind().equals(RetrofitError.Kind.NETWORK)){
-                            showSnackBar(getString(R.string.No_network),getString(R.string.Retry),Snackbar.LENGTH_INDEFINITE);
+                        if (response.isSuccessful()) {
+                            jrRecyclerView.setVisibility(View.VISIBLE);
+                            joinrequestAdapter.clearApplications();
+                            joinrequestList = response.body().getGroups();
+                            joinrequestAdapter.addResults(joinrequestList);
                         } else {
+                            // todo: make this much more descriptive / helpful
                             errorLayout.setVisibility(View.VISIBLE);
                             imNOResults.setVisibility(View.VISIBLE);
                         }
                     }
+
                     @Override
-                    public void onNext(GroupSearchResponse response) {
+                    public void onFailure(Call<GroupSearchResponse> call, Throwable t) {
                         progressDialog.dismiss();
-                        jrRecyclerView.setVisibility(View.VISIBLE);
-                        joinrequestAdapter.clearApplications();
-                        joinrequestList = response.getGroups();
-                        joinrequestAdapter.addResults(joinrequestList);
+                        jrRecyclerView.setVisibility(View.GONE);
+                        ErrorUtils.handleNetworkError(GroupJoinActivity.this, rlRoot, t);
                     }
-            });
+                });
     }
 
     private void joinRequestWS() {
@@ -265,42 +259,35 @@ public class GroupJoinActivity extends PortraitActivity implements OnClickListen
         String phoneNumber = SettingPreference.getuser_mobilenumber(this);
         String code = SettingPreference.getuser_token(this);
         grassrootRestService.getApi().groupJoinRequest(phoneNumber,code,uid)
-                .subscribeOn(Schedulers.newThread())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(new Observer<GenericResponse>() {
+                .enqueue(new Callback<GenericResponse>() {
                     @Override
-                    public void onCompleted() {
+                    public void onResponse(Call<GenericResponse> call, Response<GenericResponse> response) {
                         progressDialog.dismiss();
-                    }
-                    @Override
-                    public void onError(Throwable e) {
-                        progressDialog.dismiss();
-                        RetrofitError error = (RetrofitError) e;
-                        if(error.getKind().equals(RetrofitError.Kind.NETWORK)){
-                            showSnackBar(getString(R.string.No_network),getString(R.string.Retry),Snackbar.LENGTH_INDEFINITE);
-                        }else{
+                        if (response.isSuccessful()) {
+                            alertDialog = showAlertDialog(getFragmentManager(), "Your request has been sent ", "", "OK", false, new AlertDialogListener() {
+                                @Override
+                                public void setRightButton() {
+                                    finish();
+                                    alertDialog.dismiss();
+                                }
+
+                                @Override
+                                public void setLeftButton() {
+
+                                }
+                            });
+                        } else {
+                            // todo: make this more robust
                             showSnackBar(getString(R.string.USER_ALREADY_PART),"",snackbar.LENGTH_LONG);
                         }
-
                     }
+
                     @Override
-                    public void onNext(GenericResponse response) {
+                    public void onFailure(Call<GenericResponse> call, Throwable t) {
                         progressDialog.dismiss();
-                        alertDialog = showAlertDialog(getFragmentManager(),"Your request has been sent " ,"" ,"OK" ,false,new AlertDialogListener() {
-                            @Override
-                            public void setRightButton() {
-                                finish();
-                                alertDialog.dismiss();
-
-                            }
-                            @Override
-                            public void setLeftButton() {
-
-                            }
-                        });
+                        ErrorUtils.handleNetworkError(GroupJoinActivity.this, rlRoot, t);
                     }
                 });
-
     }
 
     private void setUpToolbar() {

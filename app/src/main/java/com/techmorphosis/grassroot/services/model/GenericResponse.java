@@ -23,6 +23,8 @@ public class GenericResponse {
         this.status = status;
     }
 
+    public boolean wasSuccessful() { return "SUCCESS".equals(status); } // todo: check constant/code instead
+
     /**
      * @return The code
      */
@@ -72,7 +74,6 @@ public class GenericResponse {
     public void setHasGroups(Boolean hasGroups) {
         this.hasGroups = hasGroups;
     }
-
 
     public String getDisplayName() {
         return displayName;

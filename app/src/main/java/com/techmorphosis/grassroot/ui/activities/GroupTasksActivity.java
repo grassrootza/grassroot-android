@@ -22,12 +22,14 @@ import com.techmorphosis.grassroot.interfaces.TaskListListener;
 import com.techmorphosis.grassroot.R;
 import com.techmorphosis.grassroot.adapters.TasksAdapter;
 import com.techmorphosis.grassroot.services.GrassrootRestService;
+import com.techmorphosis.grassroot.services.NoConnectivityException;
 import com.techmorphosis.grassroot.services.model.GenericResponse;
 import com.techmorphosis.grassroot.services.model.TaskModel;
 import com.techmorphosis.grassroot.services.model.TaskResponse;
 import com.techmorphosis.grassroot.ui.fragments.FilterFragment;
 import com.techmorphosis.grassroot.ui.views.CustomItemAnimator;
 import com.techmorphosis.grassroot.utils.Constant;
+import com.techmorphosis.grassroot.utils.ContactUtil.ErrorUtils;
 import com.techmorphosis.grassroot.utils.SettingPreference;
 
 import java.util.ArrayList;
@@ -35,11 +37,9 @@ import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
-import retrofit.RetrofitError;
-import rx.Observable;
-import rx.Observer;
-import rx.android.schedulers.AndroidSchedulers;
-import rx.schedulers.Schedulers;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class GroupTasksActivity extends PortraitActivity implements TaskListListener {
 
@@ -84,7 +84,7 @@ public class GroupTasksActivity extends PortraitActivity implements TaskListList
     private List<TaskModel> toDoList;
     public List<TaskModel> activitiesList;
 
-    private GrassrootRestService grassrootRestService = new GrassrootRestService();
+    private GrassrootRestService grassrootRestService;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -135,6 +135,7 @@ public class GroupTasksActivity extends PortraitActivity implements TaskListList
     }
 
     private void init() {
+        grassrootRestService = new GrassrootRestService(this);
         phoneNumber = SettingPreference.getuser_mobilenumber(this);
         code = SettingPreference.getuser_token(this);
     }
@@ -171,32 +172,35 @@ public class GroupTasksActivity extends PortraitActivity implements TaskListList
 
         mProgressBar.setVisibility(View.VISIBLE);
         activitiesList = new ArrayList<>();
-        grassrootRestService.getApi().getGroupTasks(groupid, phoneNumber, code).subscribeOn(Schedulers.newThread())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(new Observer<TaskResponse>() {
+
+        grassrootRestService.getApi()
+                .getGroupTasks(groupid, phoneNumber, code)
+                .enqueue(new Callback<TaskResponse>() {
                     @Override
-                    public void onCompleted() {
+                    public void onResponse(Call<TaskResponse> call, Response<TaskResponse> response) {
                         mProgressBar.setVisibility(View.INVISIBLE);
+                        if (response.isSuccessful()) {
+                            TaskResponse taskResponse = response.body();
+                            if (Constant.NO_GROUP_TASKS.equals(taskResponse.getMessage())) {
+                                Log.e(TAG, "No group activities!");
+                                callNewTaskActivity();
+                            } else {
+                                activitiesList = taskResponse.getTasks();
+                                group_activitiesAdapter.clearTasks();
+                                recycleViewGroupActivities.setVisibility(View.VISIBLE);
+                                group_activitiesAdapter.addTasks(activitiesList);
+                            }
+                        } // todo: add snack bar with error possibilities
                     }
 
                     @Override
-                    public void onError(Throwable e) {
-                        Log.e(TAG, "Inside getActivities ... Here is the failure! " + e.getMessage());
+                    public void onFailure(Call<TaskResponse> call, Throwable t) {
+                        Log.e(TAG, "Inside getActivities ... Here is the failure! " + t.getMessage());
                         mProgressBar.setVisibility(View.INVISIBLE);
-                        imNoInternet.setVisibility(View.VISIBLE);
-                    }
-
-                    @Override
-                    public void onNext(TaskResponse response) {
-                        if (Constant.NO_GROUP_TASKS.equals(response.getMessage())) {
-                            Log.e(TAG, "No group activities!");
-                            callNewTaskActivity();
-                        } else {
-                            activitiesList = response.getTasks();
-                            group_activitiesAdapter.clearTasks();
-                            recycleViewGroupActivities.setVisibility(View.VISIBLE);
-                            group_activitiesAdapter.addTasks(activitiesList);
-                        }
+                        if (t instanceof NoConnectivityException)
+                            imNoInternet.setVisibility(View.VISIBLE);
+                        else
+                            ErrorUtils.handleNetworkError(GroupTasksActivity.this, rlActivityRoot, t);
                     }
                 });
     }
@@ -422,7 +426,7 @@ public class GroupTasksActivity extends PortraitActivity implements TaskListList
     @Override
     public void respondToTask(String taskUid, String taskType, String response) {
 
-        Observable<GenericResponse> restCall;
+        Call<GenericResponse> restCall;
         final String msgSuccess, msgAlreadyResponded;
         if (taskType.equals("VOTE")) {
             restCall = grassrootRestService.getApi().castVote(taskUid, phoneNumber, code, response);
@@ -440,32 +444,32 @@ public class GroupTasksActivity extends PortraitActivity implements TaskListList
             throw new UnsupportedOperationException("Responding to neither vote nor meeting! Error somewhere");
         }
 
-        restCall.observeOn(AndroidSchedulers.mainThread())
-                .subscribe(new Observer<GenericResponse>() {
-                    @Override
-                    public void onCompleted() {
-                        mProgressBar.setVisibility(View.INVISIBLE);
+        restCall.enqueue(new Callback<GenericResponse>() {
+            @Override
+            public void onResponse(Call<GenericResponse> call, Response<GenericResponse> response) {
+                mProgressBar.setVisibility(View.INVISIBLE);
+                if (response.isSuccessful()) {
+                    showSnackBar(msgSuccess);
+                    groupActivitiesWS(); // refresh list of tasks (todo: make efficient, just refresh one activity)
+                } else {
+                    if (response.code() == 409) { // todo: check this is right, and use constant, not hard code
+                        showSnackBar(msgAlreadyResponded);
+                    } else {
+                        showSnackBar(getString(R.string.Unknown_error));
                     }
+                }
+            }
 
-                    @Override
-                    public void onError(Throwable e) {
-                        mProgressBar.setVisibility(View.INVISIBLE);
-                        RetrofitError retrofitError = (RetrofitError) e;
-                        if (retrofitError.getKind().equals(RetrofitError.Kind.NETWORK)) {
-                            imNoInternet.setVisibility(View.VISIBLE);
-                        } else if (retrofitError.getResponse().getStatus() == 409) {
-                            showSnackBar(msgAlreadyResponded);
-                        } else {
-                            showSnackBar(getString(R.string.Unknown_error));
-                        }
-                    }
-
-                    @Override
-                    public void onNext(GenericResponse genericResponse) {
-                        groupActivitiesWS();
-                        showSnackBar(msgSuccess);
-                    }
-                });
+            @Override
+            public void onFailure(Call<GenericResponse> call, Throwable t) {
+                mProgressBar.setVisibility(View.INVISIBLE);
+                if (t instanceof NoConnectivityException) {
+                    imNoInternet.setVisibility(View.VISIBLE);
+                } else {
+                    ErrorUtils.handleNetworkError(GroupTasksActivity.this, rlActivityRoot, t);
+                }
+            }
+        });
     }
 
     private void showSnackBar(String message) {

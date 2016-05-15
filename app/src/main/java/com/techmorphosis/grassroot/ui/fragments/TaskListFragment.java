@@ -47,7 +47,7 @@ public class TaskListFragment extends Fragment {
     }
 
     private void init() {
-        grassrootRestService = new GrassrootRestService();
+        grassrootRestService = new GrassrootRestService(this.getContext());
     }
 
     @Override

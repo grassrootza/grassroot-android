@@ -18,6 +18,7 @@ import com.techmorphosis.grassroot.services.model.GenericResponse;
 import com.techmorphosis.grassroot.services.model.Member;
 import com.techmorphosis.grassroot.ui.fragments.MemberListFragment;
 import com.techmorphosis.grassroot.utils.Constant;
+import com.techmorphosis.grassroot.utils.ContactUtil.ErrorUtils;
 import com.techmorphosis.grassroot.utils.PermissionUtils;
 import com.techmorphosis.grassroot.utils.SettingPreference;
 import com.techmorphosis.grassroot.utils.UtilClass;
@@ -28,9 +29,9 @@ import java.util.List;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
-import rx.Observer;
-import rx.android.schedulers.AndroidSchedulers;
-import rx.schedulers.Schedulers;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 /**
  * Created by luke on 2016/05/05.
@@ -46,6 +47,9 @@ public class AddMembersActivity extends AppCompatActivity {
 
     private MemberListFragment existingMemberListFragment;
     private MemberListFragment newMemberListFragment;
+
+    @BindView(R.id.rl_am_root)
+    RelativeLayout amRlRoot;
 
     @BindView(R.id.am_add_member_options)
     FloatingActionMenu addMemberOptions;
@@ -159,29 +163,26 @@ public class AddMembersActivity extends AppCompatActivity {
     }
 
     private void postNewMembersToGroup() {
-        grassrootRestService = new GrassrootRestService();
+        grassrootRestService = new GrassrootRestService(this);
         String mobileNumber = SettingPreference.getuser_mobilenumber(getApplicationContext());
         String sessionCode = SettingPreference.getuser_token(getApplicationContext());
 
         grassrootRestService.getApi()
                 .addGroupMembers(groupUid, mobileNumber, sessionCode, membersToAdd)
-                .subscribeOn(Schedulers.newThread())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(new Observer<GenericResponse>() {
+                .enqueue(new Callback<GenericResponse>() {
                     @Override
-                    public void onCompleted() {
-                        Log.d(TAG, "DONE! All completed");
+                    public void onResponse(Call<GenericResponse> call, Response<GenericResponse> response) {
+                        if (response.isSuccessful()) {
+                            Log.d(TAG, "Finished adding members");
+                            // todo: refresh the task list intelligently
+                        } else {
+                            // todo: handle error gracefully
+                        }
                     }
 
                     @Override
-                    public void onError(Throwable e) {
-                        Log.d(TAG, "Finished ... but didn't really work");
-                    }
-
-                    @Override
-                    public void onNext(GenericResponse genericResponse) {
-                        // todo: tell the user! also refresh group fragment so number changes
-                        Log.d(TAG, "Succceeded!");
+                    public void onFailure(Call<GenericResponse> call, Throwable t) {
+                        ErrorUtils.handleNetworkError(AddMembersActivity.this, amRlRoot, t);
                     }
                 });
     }

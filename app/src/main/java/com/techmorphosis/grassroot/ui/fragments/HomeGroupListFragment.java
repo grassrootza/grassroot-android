@@ -26,6 +26,7 @@ import com.techmorphosis.grassroot.interfaces.SortInterface;
 import com.techmorphosis.grassroot.R;
 import com.techmorphosis.grassroot.adapters.GroupListAdapter;
 import com.techmorphosis.grassroot.services.GrassrootRestService;
+import com.techmorphosis.grassroot.services.NoConnectivityException;
 import com.techmorphosis.grassroot.services.model.Group;
 import com.techmorphosis.grassroot.services.model.GroupResponse;
 import com.techmorphosis.grassroot.ui.activities.CreateGroupActivity;
@@ -34,6 +35,7 @@ import com.techmorphosis.grassroot.ui.activities.GroupTasksActivity;
 import com.techmorphosis.grassroot.ui.activities.GroupJoinActivity;
 import com.techmorphosis.grassroot.ui.views.SwipeableRecyclerViewTouchListener;
 import com.techmorphosis.grassroot.utils.Constant;
+import com.techmorphosis.grassroot.utils.ContactUtil.ErrorUtils;
 import com.techmorphosis.grassroot.utils.SettingPreference;
 import com.techmorphosis.grassroot.utils.UtilClass;
 
@@ -42,15 +44,15 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
-import retrofit.RetrofitError;
-import rx.Observer;
-import rx.android.schedulers.AndroidSchedulers;
-import rx.schedulers.Schedulers;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class HomeGroupListFragment extends android.support.v4.app.Fragment {
 
@@ -108,7 +110,7 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment {
     private String TAG = HomeGroupListFragment.class.getSimpleName();
     public boolean date_click = false, role_click = false, defaults_click = false;
     private FragmentCallbacks mCallbacks;
-    private GrassrootRestService grassrootRestService = new GrassrootRestService();
+    private GrassrootRestService grassrootRestService;
 
 
     @Override
@@ -136,7 +138,7 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment {
      */
     private void userGroupWS() {
         Log.d(TAG, "Inside group homepage on create view ... userGroupWS");
-        //preExecute
+
         mProgressBar.setVisibility(View.VISIBLE);
         rcGroupList.setVisibility(View.INVISIBLE);
         errorLayout.setVisibility(View.GONE);
@@ -147,39 +149,36 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment {
         String mobileNumber = SettingPreference.getuser_mobilenumber(getActivity());
         String code = SettingPreference.getuser_token(getActivity());
 
-        grassrootRestService.getApi().getUserGroups(mobileNumber, code)
-                .subscribeOn(Schedulers.newThread())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(new Observer<GroupResponse>() {
-                    @Override
-                    public void onCompleted() {
-                        mProgressBar.setVisibility(View.INVISIBLE);
-                        rcGroupList.setVisibility(View.VISIBLE);
-                    }
+        Call<GroupResponse> call = grassrootRestService.getApi().getUserGroups(mobileNumber, code);
+        call.enqueue(new Callback<GroupResponse>() {
+            @Override
+            public void onResponse(Call<GroupResponse> call, Response<GroupResponse> response) {
+                if (response.isSuccessful()) {
+                    GroupResponse groups = response.body();
+                    groupList.addAll(groups.getGroups());
+                    groupListclone.addAll(groups.getGroups());
+                    rcGroupList.setVisibility(View.VISIBLE);
+                    groupListRowAdapter.addData(groupList);
+                    ivGhpSearch.setEnabled(true);
+                    ivGhpSort.setEnabled(true);
+                    mProgressBar.setVisibility(View.INVISIBLE);
+                    rcGroupList.setVisibility(View.VISIBLE);
+                } else {
+                    Snackbar.make(rlGhpRoot, getString(R.string.Unknown_error), Snackbar.LENGTH_INDEFINITE).show();
+                }
+            }
 
-                    @Override
-                    public void onError(Throwable e) {
-                        mProgressBar.setVisibility(View.INVISIBLE);
-                        if (((RetrofitError) e).getKind().equals(RetrofitError.Kind.NETWORK)) {
-                            errorLayout.setVisibility(View.VISIBLE);
-                            imNoInternet.setVisibility(View.VISIBLE);
-                        } else {
-                            errorLayout.setVisibility(View.VISIBLE);
-                            imNoInternet.setVisibility(View.VISIBLE);
-                            Snackbar.make(rlGhpRoot, getString(R.string.Unknown_error), Snackbar.LENGTH_INDEFINITE).show();
-                        }
-                    }
-
-                    @Override
-                    public void onNext(GroupResponse response) {
-                        groupList.addAll(response.getGroups());
-                        groupListclone.addAll(response.getGroups());
-                        rcGroupList.setVisibility(View.VISIBLE);
-                        groupListRowAdapter.addData(groupList);
-                        ivGhpSearch.setEnabled(true);
-                        ivGhpSort.setEnabled(true);
-                    }
-                });
+            @Override
+            public void onFailure(Call<GroupResponse> call, Throwable t) {
+                mProgressBar.setVisibility(View.INVISIBLE);
+                if (t instanceof NoConnectivityException) {
+                    errorLayout.setVisibility(View.VISIBLE);
+                    imNoInternet.setVisibility(View.VISIBLE);
+                } else {
+                    ErrorUtils.handleNetworkError(getContext(), rlGhpRoot, t);
+                }
+            }
+        });
     }
 
 
@@ -227,6 +226,7 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment {
 
     private void init() {
         Log.d(TAG, "Inside group homepage on create view ... init method");
+        grassrootRestService = new GrassrootRestService(this.getContext());
         utilClass = new UtilClass();
         groupList = new ArrayList<>();
         groupListclone = new ArrayList<>();

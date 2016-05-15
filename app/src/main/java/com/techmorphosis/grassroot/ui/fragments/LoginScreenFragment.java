@@ -20,22 +20,19 @@ import butterknife.OnClick;
 /**
  * Created by paballo on 2016/04/26.
  */
-public class LoginScreenView extends Fragment {
+public class LoginScreenFragment extends Fragment {
 
     @BindView(R.id.et_mobile_login)
     EditText et_mobile_login;
 
     @BindView(R.id.bt_login)
-    Button bt_register;
-
+    Button bt_login;
 
     private OnLoginScreenInteractionListener onLoginScreenInteractionListener;
-
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
     }
 
     @Override

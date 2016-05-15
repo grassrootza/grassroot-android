@@ -8,23 +8,22 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.TextView;
 
 import com.techmorphosis.grassroot.R;
 import com.techmorphosis.grassroot.adapters.UserListAdapter;
 import com.techmorphosis.grassroot.services.GrassrootRestService;
 import com.techmorphosis.grassroot.services.model.Member;
 import com.techmorphosis.grassroot.services.model.MemberList;
+import com.techmorphosis.grassroot.utils.ContactUtil.ErrorUtils;
 import com.techmorphosis.grassroot.utils.SettingPreference;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
-import rx.Observer;
-import rx.android.schedulers.AndroidSchedulers;
-import rx.schedulers.Schedulers;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 /**
  * Created by luke on 2016/05/08.
@@ -41,6 +40,8 @@ public class MemberListFragment extends Fragment {
 
     @BindView(R.id.mlist_frag_recycler_view)
     RecyclerView memberListRecyclerView;
+
+    private ViewGroup vgContainer;
 
     // NB: we are not doing checks for null on this because we will use the fragment in create group
     public void setGroupUid(String groupUid) {
@@ -59,7 +60,7 @@ public class MemberListFragment extends Fragment {
 
     private void init() {
         if (groupUid != null) {
-            this.grassrootRestService = new GrassrootRestService();
+            this.grassrootRestService = new GrassrootRestService(this.getContext());
         }
     }
 
@@ -69,6 +70,7 @@ public class MemberListFragment extends Fragment {
         View viewToReturn = inflater.inflate(R.layout.fragment_member_list, container, false);
         ButterKnife.bind(this, viewToReturn);
         setUpRecyclerView();
+        this.vgContainer = container;
         return viewToReturn;
     }
 
@@ -108,25 +110,20 @@ public class MemberListFragment extends Fragment {
 
         grassrootRestService.getApi()
                 .getGroupMembers(groupUid, userPhoneNumber, userSessionCode)
-                .subscribeOn(Schedulers.newThread())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(new Observer<MemberList>() {
+                .enqueue(new Callback<MemberList>() {
                     @Override
-                    public void onCompleted() {
-                        // todo: once progress bar in place, stop it here
-                        Log.d(TAG, "inside MemberListFragment ... userListAdaptor now has X members: " + userListAdapter.getItemCount());
+                    public void onResponse(Call<MemberList> call, Response<MemberList> response) {
+                        if (response.isSuccessful()) {
+                            List<Member> membersReturned = response.body().getMembers();
+                            userListAdapter.addMembers(membersReturned);
+                        } else {
+                            // todo: handle error, via a dialog box
+                        }
                     }
 
                     @Override
-                    public void onError(Throwable e) {
-                        // todo: use a dialog box here
-                        Log.e(TAG, "inside MemberListFragment ... error in getting group members!");
-                    }
-
-                    @Override
-                    public void onNext(MemberList memberList) {
-                        Log.d(TAG, "memberList : " + memberList.toString());
-                        userListAdapter.addMembers(memberList.getMembers());
+                    public void onFailure(Call<MemberList> call, Throwable t) {
+                        ErrorUtils.handleNetworkError(getContext(), vgContainer, t); // todo : will snackbar show correctly??
                     }
                 });
 

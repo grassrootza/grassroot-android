@@ -20,7 +20,6 @@ import android.widget.ImageView;
 import android.widget.RelativeLayout;
 
 import com.crashlytics.android.Crashlytics;
-import com.techmorphosis.grassroot.utils.NetworkUtils;
 import com.techmorphosis.grassroot.R;
 import com.techmorphosis.grassroot.services.GcmRegistrationService;
 import com.techmorphosis.grassroot.services.GrassrootRestService;
@@ -28,10 +27,12 @@ import com.techmorphosis.grassroot.services.model.GenericResponse;
 import com.techmorphosis.grassroot.services.model.Token;
 import com.techmorphosis.grassroot.services.model.TokenResponse;
 import com.techmorphosis.grassroot.ui.fragments.HomeScreenViewFragment;
-import com.techmorphosis.grassroot.ui.fragments.LoginScreenView;
+import com.techmorphosis.grassroot.ui.fragments.LoginScreenFragment;
 import com.techmorphosis.grassroot.ui.fragments.OtpScreenFragment;
 import com.techmorphosis.grassroot.ui.fragments.RegisterScreenFragment;
+import com.techmorphosis.grassroot.utils.ContactUtil.ErrorUtils;
 import com.techmorphosis.grassroot.utils.LocationUtils;
+import com.techmorphosis.grassroot.utils.NetworkUtils;
 import com.techmorphosis.grassroot.utils.SettingPreference;
 import com.techmorphosis.grassroot.utils.TopExceptionHandler;
 
@@ -42,10 +43,9 @@ import butterknife.ButterKnife;
 import butterknife.OnClick;
 import butterknife.Optional;
 import io.fabric.sdk.android.Fabric;
-import retrofit.RetrofitError;
-import rx.Observer;
-import rx.android.schedulers.AndroidSchedulers;
-import rx.schedulers.Schedulers;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 //import butterknife.BindView;
 
@@ -54,7 +54,7 @@ import rx.schedulers.Schedulers;
  */
 @SuppressLint("NewApi")
 public class StartActivity extends PortraitActivity implements HomeScreenViewFragment.OnHomeScreenInteractionListener,
-        RegisterScreenFragment.OnRegisterScreenInteractionListener, LoginScreenView.OnLoginScreenInteractionListener,
+        RegisterScreenFragment.OnRegisterScreenInteractionListener, LoginScreenFragment.OnLoginScreenInteractionListener,
         OtpScreenFragment.OnOtpScreenFragmentListener {
     //will fix once we start with mvp implementation
 
@@ -95,8 +95,9 @@ public class StartActivity extends PortraitActivity implements HomeScreenViewFra
     @Nullable
     @BindView(R.id.rl_start)
     RelativeLayout rlStart;
+
     private ProgressDialog progressDialog;
-    private GrassrootRestService grassrootRestService = new GrassrootRestService();
+    private GrassrootRestService grassrootRestService;
 
 
     @Override
@@ -142,11 +143,10 @@ public class StartActivity extends PortraitActivity implements HomeScreenViewFra
 
     private void init() {
         defaultHandler = new Handler();
+        grassrootRestService = new GrassrootRestService(this);
     }
 
     private void showHomeScreen() {
-
-        Log.d(TAG, "inside StartActivity ... inside method showHomeScreen");
         defaultHandler.postDelayed(
                 new Runnable() {
                     public void run() {
@@ -161,7 +161,6 @@ public class StartActivity extends PortraitActivity implements HomeScreenViewFra
     }
 
     private void setUpHomeScreen() {
-
         otpscreen = false;
         loginscreen = false;
         registerscreen = false;
@@ -188,15 +187,15 @@ public class StartActivity extends PortraitActivity implements HomeScreenViewFra
         registerscreen = false;
         loginscreen = true;
         ivBack.setVisibility(View.VISIBLE);
-        switchFragments(new LoginScreenView());
+        switchFragments(new LoginScreenFragment());
     }
 
     private void setUpOtpScreen() {
         OtpScreenFragment otpScreenFragment = OtpScreenFragment.newInstance(data);
         switchFragments(otpScreenFragment);
+        // this next block : huh??
         if (registerscreen) {
             otpscreen = true;
-
         } else if (loginscreen) {
             otpscreen = true;
         }
@@ -263,32 +262,30 @@ public class StartActivity extends PortraitActivity implements HomeScreenViewFra
         registerscreen = true;
         grassrootRestService.getApi()
                 .addUser(et_mobile_register,et_userName)
-                .subscribeOn(Schedulers.newThread())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(new Observer<GenericResponse>() {
+                .enqueue(new Callback<GenericResponse>() {
                     @Override
-                    public void onCompleted() {
+                    public void onResponse(Call<GenericResponse> call, Response<GenericResponse> response) {
                         progressDialog.dismiss();
-                    }
-                    @Override
-                    public void onError(Throwable e) {
-                        progressDialog.dismiss();
-                        showSnackBar(getApplicationContext(), "", getResources().getString(R.string.User_already_registered), "", 0, Snackbar.LENGTH_SHORT);
-                    }
-                    @Override
-                    public void onNext(GenericResponse response) {
-                        if(response.getStatus().contentEquals("SUCCESS")){
-                            data = (String) response.getData();
+                        if (response.isSuccessful()) {
+                            data = (String) response.body().getData();
                             mobileNumber = et_mobile_register;
-                        }
-                        if (otpscreen) {
-                            Log.d(TAG, "not calling setUpOtpScreen");
-                            OtpScreenFragment otpScreenFragment = (OtpScreenFragment) getVisibleFragment();
-                            otpScreenFragment.et_otp.setText(data);
+                            if (otpscreen) {
+                                Log.d(TAG, "not calling setUpOtpScreen");
+                                OtpScreenFragment otpScreenFragment = (OtpScreenFragment) getVisibleFragment();
+                                otpScreenFragment.et_otp.setText(data);
+                            } else {
+                                Log.e(TAG, "calling setUpOtpScreen");
+                                setUpOtpScreen();
+                            }
                         } else {
-                            Log.e(TAG, "calling setUpOtpScreen");
-                            setUpOtpScreen();
+                            showSnackBar(getApplicationContext(), "", getResources().getString(R.string.User_already_registered), "", 0, Snackbar.LENGTH_SHORT);
                         }
+                    }
+
+                    @Override
+                    public void onFailure(Call<GenericResponse> call, Throwable t) {
+                        progressDialog.dismiss();
+                        ErrorUtils.handleNetworkError(StartActivity.this, rlStart, t);
                     }
                 });
 
@@ -310,31 +307,30 @@ public class StartActivity extends PortraitActivity implements HomeScreenViewFra
 
         grassrootRestService.getApi()
                 .login(mobile_number)
-                .subscribeOn(Schedulers.newThread())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(new Observer<GenericResponse>() {
+                .enqueue(new Callback<GenericResponse>() {
                     @Override
-                    public void onCompleted() {
+                    public void onResponse(Call<GenericResponse> call, Response<GenericResponse> response) {
                         progressDialog.dismiss();
-                    }
-                    @Override
-                    public void onError(Throwable e) {
-                        progressDialog.dismiss();
-                        showSnackBar(getApplicationContext(), "", getResources().getString(R.string.User_not_registered), "", 0, Snackbar.LENGTH_SHORT);
-                    }
-                    @Override
-                    public void onNext(GenericResponse response) {
-                        if(response.getStatus().contentEquals("SUCCESS")){
-                            data = (String)response.getData();
-                        } // todo: handle cases of the error failing, otherwise this sets up a null pointer below
-                        if (otpscreen) {
-                            Log.e(TAG, "not calling setUpOtpScreen");
-                            OtpScreenFragment otpScreenFragment = (OtpScreenFragment) getVisibleFragment();
-                            otpScreenFragment.et_otp.setText(data);
+                        if(response.isSuccessful()) {
+                            data = (String) response.body().getData(); // this is asking for trouble, refactor
+                            if (otpscreen) {
+                                Log.e(TAG, "not calling setUpOtpScreen");
+                                OtpScreenFragment otpScreenFragment = (OtpScreenFragment) getVisibleFragment();
+                                otpScreenFragment.et_otp.setText(data);
+                            } else {
+                                Log.e(TAG, "calling setUpOtpScreen");
+                                setUpOtpScreen();
+                            }
                         } else {
-                            Log.e(TAG, "calling setUpOtpScreen");
-                            setUpOtpScreen();
+                            showSnackBar(getApplicationContext(), "", getResources().getString(R.string.User_not_registered), "", 0, Snackbar.LENGTH_SHORT);
                         }
+                    }
+
+                    @Override
+                    public void onFailure(Call<GenericResponse> call, Throwable t) {
+                        // in Retrofit2, this is only called if couldn't reach server, not if server sent back wrong request
+                        progressDialog.dismiss();
+                        ErrorUtils.handleNetworkError(StartActivity.this, rlStart, t);
                     }
                 });
     }
@@ -348,22 +344,12 @@ public class StartActivity extends PortraitActivity implements HomeScreenViewFra
         progressDialog.show();
         grassrootRestService.getApi()
                 .verify(mobileNumber,tokenCode)
-                .subscribeOn(Schedulers.newThread())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(new Observer<TokenResponse>() {
+                .enqueue(new Callback<TokenResponse>() {
                     @Override
-                    public void onCompleted() {
+                    public void onResponse(Call<TokenResponse> call, Response<TokenResponse> response) {
                         progressDialog.dismiss();
-                    }
-                    @Override
-                    public void onError(Throwable e) {
-                        progressDialog.dismiss();
-                        showSnackBar(getApplicationContext(), "", getResources().getString(R.string.INVALID_TOKEN), "", 0, Snackbar.LENGTH_SHORT);
-                    }
-                    @Override
-                    public void onNext(TokenResponse response) {
-                        if(response.getStatus().contentEquals("SUCCESS")){
-                            Token token = response.getToken();
+                        if (response.isSuccessful()) {
+                            Token token = response.body().getToken();
                             SettingPreference.setuser_token(StartActivity.this, token.getCode());
                             SettingPreference.setuser_mobilenumber(StartActivity.this, mobileNumber);
                             SettingPreference.setisLoggedIn(StartActivity.this, true);
@@ -377,8 +363,15 @@ public class StartActivity extends PortraitActivity implements HomeScreenViewFra
                             Intent homeScreenIntent = new Intent(StartActivity.this, HomeScreenActivity.class);
                             startActivity(homeScreenIntent);
                             finish();
+                        } else {
+                            showSnackBar(getApplicationContext(), "", getResources().getString(R.string.INVALID_TOKEN), "", 0, Snackbar.LENGTH_SHORT);
                         }
+                    }
 
+                    @Override
+                    public void onFailure(Call<TokenResponse> call, Throwable t) {
+                        progressDialog.dismiss();
+                        ErrorUtils.handleNetworkError(StartActivity.this, rlStart, t);
                     }
                 });
     }
@@ -392,42 +385,26 @@ public class StartActivity extends PortraitActivity implements HomeScreenViewFra
         progressDialog.show();
         grassrootRestService.getApi()
                 .authenticate(mobileNumber,code)
-                .subscribeOn(Schedulers.newThread())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(new Observer<TokenResponse>() {
+                .enqueue(new Callback<TokenResponse>() {
                     @Override
-                    public void onCompleted() {
+                    public void onResponse(Call<TokenResponse> call, Response<TokenResponse> response) {
                         progressDialog.dismiss();
-                    }
-                    @Override
-                    public void onError(Throwable e) {
-                        RetrofitError error = (RetrofitError)e;
-                        Log.e(TAG, String.valueOf(error.getResponse().getStatus()));
-                        progressDialog.dismiss();
-                        showSnackBar(getApplicationContext(), "", getResources().getString(R.string.INVALID_TOKEN), "", 0, Snackbar.LENGTH_SHORT);
-                    }
-
-                    @Override
-                    public void onNext(TokenResponse response) {
-                        if(response.getStatus().contentEquals("SUCCESS")){
-                            Token token = response.getToken();
+                        if (response.isSuccessful()) {
+                            Token token = response.body().getToken();
                             SettingPreference.setuser_token(StartActivity.this, token.getCode());
                             SettingPreference.setuser_mobilenumber(StartActivity.this, mobileNumber);
                             SettingPreference.setisLoggedIn(StartActivity.this, true);
                             SettingPreference.setuser_phonetoken(StartActivity.this, mobileNumber + "/" + token.getCode());
                             Log.i(TAG, "getPREF_Phone_Token is " + SettingPreference.getPREF_Phone_Token(StartActivity.this));
 
-                            Boolean hasGroups = response.getHasGroups();
-                            String displayname = response.getDisplayName();
+                            Boolean hasGroups = response.body().getHasGroups();
+                            String displayname = response.body().getDisplayName();
 
-                            Log.i(TAG, "inside StartActivity ... user has logged on ... hasGroups is " + hasGroups);
-                            Log.i(TAG, "inside StartActivity ... user has logged on ... displayname is " + displayname);
                             if(!SettingPreference.getIsGcmEnabled(StartActivity.this)){
-                                 Intent gcmRegistrationIntent = new Intent(StartActivity.this, GcmRegistrationService.class);
-                                 gcmRegistrationIntent.putExtra("phoneNumber", mobileNumber);
-                                 startService(gcmRegistrationIntent);
-                             }
-
+                                Intent gcmRegistrationIntent = new Intent(StartActivity.this, GcmRegistrationService.class);
+                                gcmRegistrationIntent.putExtra("phoneNumber", mobileNumber);
+                                startService(gcmRegistrationIntent);
+                            }
 
                             if (hasGroups) {
                                 SettingPreference.setisHasgroup(StartActivity.this, true);
@@ -435,13 +412,20 @@ public class StartActivity extends PortraitActivity implements HomeScreenViewFra
                                 Intent intent = new Intent(StartActivity.this, HomeScreenActivity.class);
                                 startActivity(intent);
                                 finish();
-
                             } else {
                                 Intent intent = new Intent(StartActivity.this, HomeScreenActivity.class);
                                 startActivity(intent);
                                 finish();
                             }
+                        } else {
+                            showSnackBar(getApplicationContext(), "", getResources().getString(R.string.INVALID_TOKEN), "", 0, Snackbar.LENGTH_SHORT);
                         }
+                    }
+
+                    @Override
+                    public void onFailure(Call<TokenResponse> call, Throwable t) {
+                        progressDialog.dismiss();
+                        ErrorUtils.handleNetworkError(StartActivity.this, rlStart, t);
                     }
                 });
 

@@ -20,9 +20,9 @@ import com.google.android.gms.location.LocationSettingsResult;
 import com.techmorphosis.grassroot.services.GrassrootRestService;
 import com.techmorphosis.grassroot.services.model.GenericResponse;
 
-import rx.Observer;
-import rx.android.schedulers.AndroidSchedulers;
-import rx.schedulers.Schedulers;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 /**
  * Created by luke on 2016/05/10.
@@ -42,7 +42,7 @@ public class LocationUtils implements GoogleApiClient.ConnectionCallbacks, Googl
 
     public LocationUtils(Activity activity) {
         callingActivity = activity;
-        grassrootRestService = new GrassrootRestService();
+        grassrootRestService = new GrassrootRestService(activity);
         if (googleApiClient == null) {
             googleApiClient = new GoogleApiClient.Builder(activity)
                     .addConnectionCallbacks(this)
@@ -129,27 +129,24 @@ public class LocationUtils implements GoogleApiClient.ConnectionCallbacks, Googl
         String userNumber = SettingPreference.getuser_mobilenumber(callingActivity);
         String userToken = SettingPreference.getuser_token(callingActivity);
 
-        if (grassrootRestService == null || userNumber == null || userToken == null)
+        if (userNumber == null || userToken == null)
             throw new UnsupportedOperationException("Error! Environment not set up to do this");
 
         grassrootRestService.getApi()
                 .logLocation(userNumber, userToken, latitude, longitude)
-                .subscribeOn(Schedulers.newThread())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(new Observer<GenericResponse>() {
+                .enqueue(new Callback<GenericResponse>() {
                     @Override
-                    public void onCompleted() {
-                        Log.e(TAG, "DONE");
+                    public void onResponse(Call<GenericResponse> call, Response<GenericResponse> response) {
+                        if (response.isSuccessful()) {
+                            Log.d(TAG, "Done! Location recorded");
+                        } else {
+                            Log.d(TAG, "Nope! Something went wrong, but not the network");
+                        }
                     }
 
                     @Override
-                    public void onError(Throwable e) {
-                        Log.e(TAG, "ERROR: " + e.getMessage());
-                    }
-
-                    @Override
-                    public void onNext(GenericResponse genericResponse) {
-                        Log.e(TAG, "DONE");
+                    public void onFailure(Call<GenericResponse> call, Throwable t) {
+                        Log.e(TAG, "Something went wrong with the connection");
                     }
                 });
     }
