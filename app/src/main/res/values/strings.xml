@@ -95,7 +95,7 @@
     <!--Logout-->
     <string name="Logout_text">Are you sure you want to logout?</string>
 
-    <!--Join_Request-->
+    <!--GroupJoinActivity-->
     <string name="search">search</string>
     <string name="search_box">Enter group name</string>
     <string name="validate_search_box">Please search for a group</string>

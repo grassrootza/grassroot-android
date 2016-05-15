@@ -12,9 +12,8 @@ import com.techmorphosis.grassroot.R;
 import com.techmorphosis.grassroot.adapters.TasksAdapter;
 import com.techmorphosis.grassroot.services.GrassrootRestService;
 import com.techmorphosis.grassroot.services.model.TaskModel;
-import com.techmorphosis.grassroot.ui.activities.CustomItemAnimator;
+import com.techmorphosis.grassroot.ui.views.CustomItemAnimator;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import butterknife.BindView;

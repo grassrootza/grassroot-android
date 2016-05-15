@@ -38,17 +38,17 @@
         </activity>
 
         <activity
-            android:name=".ui.activities.HomeScreen"
+            android:name=".ui.activities.HomeScreenActivity"
             android:configChanges="keyboardHidden|orientation"
             android:label="@string/app_name"
             android:screenOrientation="portrait" />
 
         <activity
             android:name=".ui.activities.GroupTasksActivity"
-            android:parentActivityName=".ui.activities.HomeScreen"/>
+            android:parentActivityName=".ui.activities.HomeScreenActivity"/>
 
         <activity
-            android:name=".ui.activities.NewActivities"></activity>
+            android:name=".ui.activities.NewTaskMenuActivity"></activity>
 
         <activity
             android:name=".ui.activities.CreateGroupActivity"
@@ -60,13 +60,13 @@
             android:screenOrientation="portrait" />
 
         <activity
-            android:name=".ui.activities.Join_Request"
+            android:name=".ui.activities.GroupJoinActivity"
             android:label="@string/title_activity_join__request" />
         <activity
             android:name=".ui.activities.PhoneBookContactsActivity"
             android:label="@string/title_activity_phone_book_contacts" />
         <activity
-            android:name=".ui.activities.DialogActivity"
+            android:name=".ui.activities.SelectPhoneNumberActivity"
             android:label="@string/title_activity_dilog"
             android:theme="@style/MyDialog" />
         <activity
@@ -74,7 +74,7 @@
             android:label="@string/title_activity_add_contact_manually"
             android:theme="@style/AppTheme" />
         <activity
-            android:name=".ui.activities.Blank"
+            android:name=".ui.activities.NotBuiltActivity"
             android:label="@string/title_activity_blank"
             android:theme="@style/AppTheme" />
 

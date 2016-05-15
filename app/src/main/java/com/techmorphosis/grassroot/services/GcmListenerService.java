@@ -5,16 +5,13 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 
 
 import com.techmorphosis.grassroot.R;
-import com.techmorphosis.grassroot.ui.activities.Blank;
-
-import java.util.Calendar;
+import com.techmorphosis.grassroot.ui.activities.NotBuiltActivity;
 
 /**
  * Created by paballo on 2016/05/09.
@@ -48,7 +45,7 @@ public class GcmListenerService extends com.google.android.gms.gcm.GcmListenerSe
 
 
         Log.d(TAG, "Received a push notification from server");
-        Intent resultIntent = new Intent(this, Blank.class);
+        Intent resultIntent = new Intent(this, NotBuiltActivity.class);
         resultIntent.putExtra("title",String.valueOf(msg.get( "entity_type")));
         PendingIntent resultPendingIntent = PendingIntent.getActivity(this, 0,
                 resultIntent, PendingIntent.FLAG_ONE_SHOT);

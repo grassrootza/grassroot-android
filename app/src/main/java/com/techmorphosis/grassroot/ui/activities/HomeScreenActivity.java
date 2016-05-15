@@ -20,24 +20,24 @@ import com.techmorphosis.grassroot.interfaces.AlertDialogListener;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 
-public class HomeScreen extends PortraitActivity implements NavigationDrawerFragment.NavigationDrawerCallbacks,
+public class HomeScreenActivity extends PortraitActivity implements NavigationDrawerFragment.NavigationDrawerCallbacks,
         WelcomeFragment.FragmentCallbacks, HomeGroupListFragment.FragmentCallbacks {
+
+    private static final String TAG = HomeScreenActivity.class.getCanonicalName();
 
     @BindView(R.id.drawer_layout)
     DrawerLayout drawer;
 
     android.support.v4.app.Fragment fragment = null;
     private String openFragment;
-    public String TAG = "HomeScreen";
+
     AlertDialogFragment alertDialogFragment;
-    UtilClass utilClass;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_homescreen);
         ButterKnife.bind(this);
-        utilClass = new UtilClass();
     }
 
 
@@ -53,17 +53,13 @@ public class HomeScreen extends PortraitActivity implements NavigationDrawerFrag
         switch (position) {
             case 0:
                 //Profile
-
-                if (SettingPreference.getisHasgroup(HomeScreen.this)) {
+                if (SettingPreference.getisHasgroup(this)) {
                     fragment = new HomeGroupListFragment();
                     openFragment = "HomeGroupListFragment";
                 } else {
                     fragment = new WelcomeFragment();
                     openFragment = "WelcomeFragment";
-
                 }
-
-
                 break;
 
             case 1:
@@ -77,11 +73,9 @@ public class HomeScreen extends PortraitActivity implements NavigationDrawerFrag
             case 3:
                 //Logout
 
-                alertDialogFragment = utilClass.showAlertDialog(getFragmentManager(), getString(R.string.Logout_text), "Yes", "No", true, new AlertDialogListener() {
+                alertDialogFragment = UtilClass.showAlertDialog(getFragmentManager(), getString(R.string.Logout_text), "Yes", "No", true, new AlertDialogListener() {
                     @Override
                     public void setRightButton() {//no
-
-
                         alertDialogFragment.dismiss();
                     }
 
@@ -89,12 +83,10 @@ public class HomeScreen extends PortraitActivity implements NavigationDrawerFrag
                     public void setLeftButton() {
                         //Yes
                         SettingPreference.clearAll(getApplicationContext());
-                        Intent open = new Intent(HomeScreen.this, StartActivity.class);
+                        Intent open = new Intent(HomeScreenActivity.this, StartActivity.class);
                         startActivity(open);
                         finish();
-
                         alertDialogFragment.dismiss();
-
                     }
                 });
 
@@ -132,12 +124,10 @@ public class HomeScreen extends PortraitActivity implements NavigationDrawerFrag
         }
 
         if (fragment != null) {
-
             android.support.v4.app.FragmentManager fragmentManager1 = getSupportFragmentManager();
             android.support.v4.app.FragmentTransaction ft1 = fragmentManager1.beginTransaction();
             ft1.replace(R.id.fragment_container, fragment);
             ft1.commit();
-
         } else {
             Log.e("Error", "Error in creating fragment");
         }
@@ -156,7 +146,7 @@ public class HomeScreen extends PortraitActivity implements NavigationDrawerFrag
 
             SettingPreference.setPrefHasSaveClicked(this, false);
 
-            if (SettingPreference.getisHasgroup(HomeScreen.this)) {
+            if (SettingPreference.getisHasgroup(HomeScreenActivity.this)) {
                 Log.e("onResume", "Error in creating fragment");
                 fragment = new HomeGroupListFragment();
                 openFragment = "HomeGroupListFragment";

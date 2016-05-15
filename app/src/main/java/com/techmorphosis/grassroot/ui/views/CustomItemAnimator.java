@@ -1,4 +1,4 @@
-package com.techmorphosis.grassroot.ui.activities;
+package com.techmorphosis.grassroot.ui.views;
 
 import android.animation.Animator;
 import android.animation.AnimatorSet;

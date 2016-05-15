@@ -13,9 +13,7 @@ import android.widget.ImageView;
 
 import com.techmorphosis.grassroot.R;
 import com.techmorphosis.grassroot.ui.activities.AddMembersActivity;
-import com.techmorphosis.grassroot.ui.activities.Blank;
-import com.techmorphosis.grassroot.ui.activities.CreateGroupActivity;
-import com.techmorphosis.grassroot.ui.activities.PhoneBookContactsActivity;
+import com.techmorphosis.grassroot.ui.activities.NotBuiltActivity;
 import com.techmorphosis.grassroot.utils.Constant;
 
 import butterknife.BindView;
@@ -102,7 +100,7 @@ public class GroupQuickMemberModalFragment extends android.support.v4.app.Dialog
     public  void gmViewMembersIconListener() {
         Log.d(TAG, "inside modal ... view member icon clicked!");
                 if (viewMembersPermitted) {
-                    Intent viewMembers = new Intent(getActivity(), Blank.class);
+                    Intent viewMembers = new Intent(getActivity(), NotBuiltActivity.class);
                     startActivity(viewMembers);
                     getDialog().dismiss();
                 } else {
@@ -116,7 +114,7 @@ public class GroupQuickMemberModalFragment extends android.support.v4.app.Dialog
         Log.d(TAG, "inside modal ... edit settings icon clicked!");
 
         if (editSettingsPermitted) {
-            Intent editGroupSettings = new Intent(getActivity(), Blank.class);
+            Intent editGroupSettings = new Intent(getActivity(), NotBuiltActivity.class);
             startActivity(editGroupSettings);
             getDialog().dismiss();
         } else {

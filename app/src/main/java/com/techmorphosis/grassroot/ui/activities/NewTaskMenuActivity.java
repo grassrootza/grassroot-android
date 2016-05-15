@@ -4,7 +4,6 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
-import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 
@@ -15,9 +14,9 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 
-public class NewActivities extends AppCompatActivity {
+public class NewTaskMenuActivity extends AppCompatActivity {
 
-    private static final String TAG = NewActivities.class.getCanonicalName();
+    private static final String TAG = NewTaskMenuActivity.class.getCanonicalName();
 
     private String groupUid;
     private String groupName;
@@ -53,21 +52,21 @@ public class NewActivities extends AppCompatActivity {
 
     @OnClick(R.id.bt_todo)
     public void onTodoButtonClick() {
-                Intent todo=new Intent(this,Blank.class);
+                Intent todo=new Intent(this,NotBuiltActivity.class);
                 todo.putExtra("title","ToDO");
                 startActivity(todo);
     }
 
     @OnClick(R.id.bt_meeting)
     public void onMeetingButtonClick() {
-                Intent todo=new Intent(this,Blank.class);
+                Intent todo=new Intent(this,NotBuiltActivity.class);
                 todo.putExtra("title","Meeting");
                 startActivity(todo);
     }
 
     @OnClick(R.id.bt_vote)
     public void onVoteButtonClick() {
-                Intent todo=new Intent(this,Blank.class);
+                Intent todo=new Intent(this,NotBuiltActivity.class);
                 todo.putExtra("title","Vote");
                 startActivity(todo);
     }

@@ -17,7 +17,7 @@ import android.widget.TextView;
 import com.techmorphosis.grassroot.R;
 import com.techmorphosis.grassroot.adapters.MyPagerAdapter;
 import com.techmorphosis.grassroot.ui.activities.CreateGroupActivity;
-import com.techmorphosis.grassroot.ui.activities.Join_Request;
+import com.techmorphosis.grassroot.ui.activities.GroupJoinActivity;
 import com.viewpagerindicator.PageIndicator;
 
 import butterknife.BindView;
@@ -94,7 +94,7 @@ public class WelcomeFragment extends android.support.v4.app.Fragment {
 
     @OnClick(R.id.bt_joingroup)
     public void joingroup() {
-        Intent joingroup = new Intent(getActivity(), Join_Request.class);
+        Intent joingroup = new Intent(getActivity(), GroupJoinActivity.class);
         startActivity(joingroup);
     }
 

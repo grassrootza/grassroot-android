@@ -131,7 +131,7 @@ public class StartActivity extends PortraitActivity implements HomeScreenViewFra
                 @Override
                 public void run() {
                     Intent intent;
-                    intent = new Intent(StartActivity.this, HomeScreen.class);
+                    intent = new Intent(StartActivity.this, HomeScreenActivity.class);
                     startActivity(intent);
                     finish();
                 }
@@ -374,7 +374,7 @@ public class StartActivity extends PortraitActivity implements HomeScreenViewFra
                             Intent gcmRegistrationIntent = new Intent(StartActivity.this, GcmRegistrationService.class);
                             gcmRegistrationIntent.putExtra("phoneNumber", mobileNumber);
                             startService(gcmRegistrationIntent);
-                            Intent homeScreenIntent = new Intent(StartActivity.this, HomeScreen.class);
+                            Intent homeScreenIntent = new Intent(StartActivity.this, HomeScreenActivity.class);
                             startActivity(homeScreenIntent);
                             finish();
                         }
@@ -432,12 +432,12 @@ public class StartActivity extends PortraitActivity implements HomeScreenViewFra
                             if (hasGroups) {
                                 SettingPreference.setisHasgroup(StartActivity.this, true);
                                 SettingPreference.setuser_name(StartActivity.this, displayname);
-                                Intent intent = new Intent(StartActivity.this, HomeScreen.class);
+                                Intent intent = new Intent(StartActivity.this, HomeScreenActivity.class);
                                 startActivity(intent);
                                 finish();
 
                             } else {
-                                Intent intent = new Intent(StartActivity.this, HomeScreen.class);
+                                Intent intent = new Intent(StartActivity.this, HomeScreenActivity.class);
                                 startActivity(intent);
                                 finish();
                             }

@@ -10,13 +10,14 @@ import android.widget.TextView;
 
 import com.techmorphosis.grassroot.R;
 
-public class Blank extends AppCompatActivity {
+public class NotBuiltActivity extends AppCompatActivity {
 
     private LinearLayout llToolbar;
     private ImageView ivBack;
     private TextView txtToolbarTitle;
     private TextView txtTitle;
-    private static final String TAG = "Blank";
+
+    private static final String TAG = "NotBuiltActivity";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

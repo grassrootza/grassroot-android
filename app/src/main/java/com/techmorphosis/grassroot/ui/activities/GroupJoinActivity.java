@@ -24,6 +24,7 @@ import android.widget.TextView;
 
 import com.techmorphosis.grassroot.interfaces.ClickListener;
 import com.techmorphosis.grassroot.R;
+import com.techmorphosis.grassroot.ui.views.CustomItemAnimator;
 import com.techmorphosis.grassroot.ui.views.RecyclerTouchListener;
 import com.techmorphosis.grassroot.adapters.JoinRequestAdapter;
 import com.techmorphosis.grassroot.services.GrassrootRestService;
@@ -32,7 +33,6 @@ import com.techmorphosis.grassroot.services.model.GroupSearchModel;
 import com.techmorphosis.grassroot.services.model.GroupSearchResponse;
 import com.techmorphosis.grassroot.ui.fragments.AlertDialogFragment;
 import com.techmorphosis.grassroot.utils.SettingPreference;
-import com.techmorphosis.grassroot.utils.UtilClass;
 import com.techmorphosis.grassroot.interfaces.AlertDialogListener;
 
 import java.util.ArrayList;
@@ -46,7 +46,14 @@ import rx.Observer;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.schedulers.Schedulers;
 
-public class Join_Request extends PortraitActivity implements OnClickListener{
+import static com.techmorphosis.grassroot.utils.UtilClass.showAlertDialog;
+
+public class GroupJoinActivity extends PortraitActivity implements OnClickListener{
+
+    private static final String TAG = GroupJoinActivity.class.getSimpleName();
+
+    //todo implement dependency injection
+    private GrassrootRestService grassrootRestService = new GrassrootRestService();
 
     @BindView(R.id.toolbar)
     Toolbar toolbar;
@@ -54,7 +61,6 @@ public class Join_Request extends PortraitActivity implements OnClickListener{
     TextView txtToolbar;
     @BindView(R.id.et_searchbox)
     EditText et_searchbox;
-    private UtilClass utilclass;
     @BindView(R.id.jr_RecyclerView)
     RecyclerView jrRecyclerView;
     @BindView(R.id.im_no_results)
@@ -65,18 +71,17 @@ public class Join_Request extends PortraitActivity implements OnClickListener{
     ImageView imNOInternet;
     @BindView(R.id.rl_root)
     RelativeLayout rlRoot;
-    private LinearLayoutManager mLayoutManager;
-    private JoinRequestAdapter joinrequestAdapter;
-    private List<GroupSearchModel> joinrequestList;
-    private boolean btn_close;
-    private String TAG=Join_Request.class.getSimpleName();
-    private Snackbar snackbar;
     @BindView(R.id.error_layout)
     View errorLayout;
-    private AlertDialogFragment alerdialog;
+
+    private JoinRequestAdapter joinrequestAdapter;
+    private List<GroupSearchModel> joinrequestList;
+
+    private boolean btn_close;
+    private Snackbar snackbar;
+    private AlertDialogFragment alertDialog;
     private String uid;
-    //todo implement dependency injection
-    private GrassrootRestService grassrootRestService = new GrassrootRestService();
+
     private ProgressDialog progressDialog;
     private String prgMessage = "Please Wait..";
 
@@ -93,66 +98,53 @@ public class Join_Request extends PortraitActivity implements OnClickListener{
         setUpRecyclerView();
     }
 
-    private void setUpRecyclerView()
-    {
+    private void setUpRecyclerView() {
         // use this setting to improve performance if you know that changes
         // in content do not change the layout size of the RecyclerView
         jrRecyclerView.setHasFixedSize(true);
 
         // use a linear layout manager
-        mLayoutManager = new LinearLayoutManager(this);
-        jrRecyclerView.setLayoutManager(mLayoutManager);
+        jrRecyclerView.setLayoutManager(new LinearLayoutManager(this));
         jrRecyclerView.setItemAnimator(new CustomItemAnimator());
 
         // specify an adapter
         joinrequestAdapter = new JoinRequestAdapter(getApplicationContext(),new ArrayList<GroupSearchModel>());
         jrRecyclerView.setAdapter(joinrequestAdapter);
 
-
         // setUpRecyclerView.setItemAnimator(new DefaultItemAnimator());
         jrRecyclerView.addOnItemTouchListener(new RecyclerTouchListener(getApplicationContext(), jrRecyclerView, new ClickListener() {
             @Override
             public void onClick(View view, int position) {
                 uid = joinrequestList.get(position).getId();
-
-                alerdialog = utilclass.showAlertDialog(getFragmentManager(), getString(R.string.alertbox), "NO", "YES", false, new AlertDialogListener() {
+                alertDialog = showAlertDialog(getFragmentManager(),
+                        getString(R.string.alertbox), "NO", "YES", false, new AlertDialogListener() {
                     @Override
                     public void setRightButton() {
                         joinRequestWS();
-                        alerdialog.dismiss();
-
+                        alertDialog.dismiss();
                     }
 
                     @Override
                     public void setLeftButton() {
-                        alerdialog.dismiss();
-
+                        alertDialog.dismiss();
                     }
                 });
             }
 
             @Override
             public void onLongClick(View view, int position) {
-
+                // todo: add a modal with group description
             }
-
         }));
-
-
     }
 
 
-    private void init()
-    {
-        utilclass= new UtilClass();
-        joinrequestList=new ArrayList<>();
+    private void init() {
+        joinrequestList = new ArrayList<>();
     }
 
-    private void setUpSearchBox()
-    {
-
-        et_searchbox.addTextChangedListener(new TextWatcher()
-        {
+    private void setUpSearchBox() {
+        et_searchbox.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
 
@@ -164,23 +156,17 @@ public class Join_Request extends PortraitActivity implements OnClickListener{
             }
 
             @Override
-            public void afterTextChanged(Editable s)
-            {
-                if (s.length()>0)
-                {
+            public void afterTextChanged(Editable s) {
+                if (s.length()>0) {
                     et_searchbox.setCompoundDrawablesWithIntrinsicBounds(0, 0, R.drawable.btn_close, 0);
                     btn_close=true;
-                }
-                else
-                {
+                } else {
                     et_searchbox.setCompoundDrawablesWithIntrinsicBounds(0, 0, R.drawable.btn_search_gray, 0);
                     btn_close=false;
                 }
 
             }
         });
-
-
 
         et_searchbox.setOnTouchListener(new View.OnTouchListener() {
             @Override
@@ -209,8 +195,7 @@ public class Join_Request extends PortraitActivity implements OnClickListener{
             @Override
             public boolean onEditorAction(TextView v, int actionId, KeyEvent event)
             {
-                if (actionId== EditorInfo.IME_ACTION_SEARCH)
-                {
+                if (actionId== EditorInfo.IME_ACTION_SEARCH) {
                     try {
                         InputMethodManager imm= (InputMethodManager) getApplicationContext().getSystemService(Context.INPUT_METHOD_SERVICE);
                         imm.hideSoftInputFromWindow(getCurrentFocus().getWindowToken(), 0);
@@ -218,74 +203,63 @@ public class Join_Request extends PortraitActivity implements OnClickListener{
                         e.printStackTrace();
                     }
 
-                    if (et_searchbox.getText().toString().trim().isEmpty())
-                    {
+                    if (et_searchbox.getText().toString().trim().isEmpty()) {
                         showSnackBar(getString(R.string.validate_search_box),"",Snackbar.LENGTH_SHORT);
-
-                    }
-                    else
-                    {
+                    } else {
                         Group_SearchWS();
                     }
-
-
-
                 }
-
                 return false;
             }
         });
 
     }
 
-    private void Group_SearchWS()
-    {
+    private void Group_SearchWS() {
 
-       String searchTerm = et_searchbox.getText().toString().trim();
+        String searchTerm = et_searchbox.getText().toString().trim();
         Log.e(TAG, "Group_SearchWS");
+
         joinrequestList.clear();
         jrRecyclerView.setVisibility(View.INVISIBLE);
         errorLayout.setVisibility(View.INVISIBLE);
         imNOInternet.setVisibility(View.INVISIBLE);
         imNOResults.setVisibility(View.INVISIBLE);
         imServerError.setVisibility(View.INVISIBLE);
-        grassrootRestService.getApi().search(searchTerm).subscribeOn(Schedulers.newThread())
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribe(new Observer<GroupSearchResponse>() {
-                @Override
-                public void onCompleted() {
-                    progressDialog.dismiss();
-                }
-                @Override
-                public void onError(Throwable e) {
-                    progressDialog.dismiss();
-                    jrRecyclerView.setVisibility(View.GONE);
 
-                    RetrofitError error = (RetrofitError)e;
-                    if(error.getKind().equals(RetrofitError.Kind.NETWORK)){
-                        showSnackBar(getString(R.string.No_network),getString(R.string.Retry),Snackbar.LENGTH_INDEFINITE);
-                    }else{
-                        errorLayout.setVisibility(View.VISIBLE);
-                        imNOResults.setVisibility(View.VISIBLE);
+        grassrootRestService.getApi().search(searchTerm)
+                .subscribeOn(Schedulers.newThread())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Observer<GroupSearchResponse>() {
+                    @Override
+                    public void onCompleted() {
+                        progressDialog.dismiss();
                     }
+                    @Override
+                    public void onError(Throwable e) {
+                        progressDialog.dismiss();
+                        jrRecyclerView.setVisibility(View.GONE);
 
-                }
-                @Override
-                public void onNext(GroupSearchResponse response) {
-                    progressDialog.dismiss();
-                    jrRecyclerView.setVisibility(View.VISIBLE);
-                    joinrequestAdapter.clearApplications();
-                    joinrequestList = response.getGroups();
-                    joinrequestAdapter.addResults(joinrequestList);
-                }
+                        RetrofitError error = (RetrofitError)e;
+                        if(error.getKind().equals(RetrofitError.Kind.NETWORK)){
+                            showSnackBar(getString(R.string.No_network),getString(R.string.Retry),Snackbar.LENGTH_INDEFINITE);
+                        } else {
+                            errorLayout.setVisibility(View.VISIBLE);
+                            imNOResults.setVisibility(View.VISIBLE);
+                        }
+                    }
+                    @Override
+                    public void onNext(GroupSearchResponse response) {
+                        progressDialog.dismiss();
+                        jrRecyclerView.setVisibility(View.VISIBLE);
+                        joinrequestAdapter.clearApplications();
+                        joinrequestList = response.getGroups();
+                        joinrequestAdapter.addResults(joinrequestList);
+                    }
             });
-
-
-
     }
 
-    private void joinRequestWS()
-    {
+    private void joinRequestWS() {
         Log.e(TAG, "joinRequestWS");
         progressDialog.show();
         String phoneNumber = SettingPreference.getuser_mobilenumber(this);
@@ -301,7 +275,7 @@ public class Join_Request extends PortraitActivity implements OnClickListener{
                     @Override
                     public void onError(Throwable e) {
                         progressDialog.dismiss();
-                        RetrofitError error = (RetrofitError)e;
+                        RetrofitError error = (RetrofitError) e;
                         if(error.getKind().equals(RetrofitError.Kind.NETWORK)){
                             showSnackBar(getString(R.string.No_network),getString(R.string.Retry),Snackbar.LENGTH_INDEFINITE);
                         }else{
@@ -312,11 +286,11 @@ public class Join_Request extends PortraitActivity implements OnClickListener{
                     @Override
                     public void onNext(GenericResponse response) {
                         progressDialog.dismiss();
-                        alerdialog = utilclass.showAlertDialog(getFragmentManager(),"Your request has been sent " ,"" ,"OK" ,false,new AlertDialogListener() {
+                        alertDialog = showAlertDialog(getFragmentManager(),"Your request has been sent " ,"" ,"OK" ,false,new AlertDialogListener() {
                             @Override
                             public void setRightButton() {
                                 finish();
-                                alerdialog.dismiss();
+                                alertDialog.dismiss();
 
                             }
                             @Override
@@ -341,13 +315,11 @@ public class Join_Request extends PortraitActivity implements OnClickListener{
     }
 
 
-    private void showSnackBar(String message, String buttontext,int length)
-    {
+    private void showSnackBar(String message, String buttontext,int length) {
         snackbar= Snackbar.make(rlRoot,message,length);
         snackbar.setActionTextColor(Color.RED);
 
-        if (!buttontext.isEmpty())
-        {
+        if (!buttontext.isEmpty()) {
             snackbar.setAction(buttontext, new OnClickListener() {
                 @Override
                 public void onClick(View v) {
@@ -356,7 +328,6 @@ public class Join_Request extends PortraitActivity implements OnClickListener{
             });
         }
         snackbar.show();
-
     }
 
     @OnClick({R.id.im_no_internet, R.id.im_no_results, R.id.im_server_error})
@@ -366,6 +337,4 @@ public class Join_Request extends PortraitActivity implements OnClickListener{
             Group_SearchWS();
 
     }
-
-
 }

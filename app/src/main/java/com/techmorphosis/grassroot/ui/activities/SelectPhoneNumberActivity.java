@@ -15,44 +15,41 @@ import com.techmorphosis.grassroot.R;
 import com.techmorphosis.grassroot.ui.views.RecyclerTouchListener;
 import com.techmorphosis.grassroot.adapters.MyRecyclerAdapter;
 import com.techmorphosis.grassroot.models.Contact;
-import com.techmorphosis.grassroot.ui.fragments.AlertDialogFragment;
-import com.techmorphosis.grassroot.utils.UtilClass;
 
 import java.util.ArrayList;
-import java.util.List;
 
 import butterknife.BindView;
 import butterknife.OnClick;
 
-public class DialogActivity extends Activity implements  View.OnClickListener {
+public class SelectPhoneNumberActivity extends Activity implements  View.OnClickListener {
 
+    private static final String TAG = SelectPhoneNumberActivity.class.getSimpleName();
 
     @BindView(R.id.rcv_dialog)
     public RecyclerView mRecyclerView;
-    private MyRecyclerAdapter adapter;
-    private ArrayList<String> numberlist;
-    private String TAG = DialogActivity.class.getSimpleName();
-    private List<String> list;
     @BindView(R.id.bt_cg_right)
     public TextView bt_cg_right;
     @BindView(R.id.bt_cg_left)
     public TextView bt_cg_left;
-    public ArrayList<Contact> multiplenumbers;
+
+    private MyRecyclerAdapter adapter;
+    private ArrayList<String> numberList;
+
+    public ArrayList<Contact> contatsWithMultipleNumbers;
     public String selectednumber;
-    private UtilClass utilClass;
-    private AlertDialogFragment alertDialogFragment;
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+
         super.onCreate(savedInstanceState);
         requestWindowFeature(1);
         setContentView(R.layout.activity_dilog);
         this.setFinishOnTouchOutside(false);
         init();
-        multiplenumbers = new ArrayList<>();
+        contatsWithMultipleNumbers = new ArrayList<>();
         Bundle bundle = getIntent().getExtras();
-        numberlist = bundle.getStringArrayList("numberList");
+        numberList = bundle.getStringArrayList("numberList");
         selectednumber = bundle.getString("selectedNumber");
         Log.e(TAG, "selectedNumber is " + selectednumber);
 
@@ -61,10 +58,10 @@ public class DialogActivity extends Activity implements  View.OnClickListener {
         } else {
             bt_cg_right.setEnabled(false);
         }
-        for (int i = 0; i < numberlist.size(); i++) {
+        for (int i = 0; i < numberList.size(); i++) {
             Contact contact = new Contact();
-            contact.selectedNumber = numberlist.get(i);
-            if (selectednumber.equals(numberlist.get(i))) {
+            contact.selectedNumber = numberList.get(i);
+            if (selectednumber.equals(numberList.get(i))) {
                 contact.isSelected = true;
 
 
@@ -73,7 +70,7 @@ public class DialogActivity extends Activity implements  View.OnClickListener {
 
             }
 
-            multiplenumbers.add(contact);
+            contatsWithMultipleNumbers.add(contact);
 
         }
 
@@ -84,22 +81,20 @@ public class DialogActivity extends Activity implements  View.OnClickListener {
     }
 
     private void init() {
-        utilClass = new UtilClass();
-
     }
 
 
     private void mRecyclerView() {
         mRecyclerView.setLayoutManager(new LinearLayoutManager(getApplicationContext()));
-        adapter = new MyRecyclerAdapter(getApplicationContext(), multiplenumbers);
+        adapter = new MyRecyclerAdapter(getApplicationContext(), contatsWithMultipleNumbers);
         mRecyclerView.setAdapter(adapter);
         mRecyclerView.addOnItemTouchListener(new RecyclerTouchListener(getApplicationContext(), mRecyclerView, new ClickListener() {
             @Override
             public void onClick(View view, int position) {
 
                 //proceed
-                for (int i = 0; i < multiplenumbers.size(); i++) {
-                    Contact model = multiplenumbers.get(i);
+                for (int i = 0; i < contatsWithMultipleNumbers.size(); i++) {
+                    Contact model = contatsWithMultipleNumbers.get(i);
 
                     if (i == position) {
                         //ipdate the selectednumber
@@ -119,13 +114,13 @@ public class DialogActivity extends Activity implements  View.OnClickListener {
                 adapter.notifyDataSetChanged();
 
                 /*
-                Contact validmodel = multiplenumbers.get(position);
+                Contact validmodel = contatsWithMultipleNumbers.get(position);
                 if (validnumber(validmodel.selectedNumber))
                 {
                    //valid number
                     //proceed
-                    for (int i = 0; i < multiplenumbers.size(); i++) {
-                        Contact model = multiplenumbers.get(i);
+                    for (int i = 0; i < contatsWithMultipleNumbers.size(); i++) {
+                        Contact model = contatsWithMultipleNumbers.get(i);
 
                         if (i == position) {
                             model.isSelected = true;

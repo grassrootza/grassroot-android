@@ -26,6 +26,7 @@ import com.techmorphosis.grassroot.services.model.GenericResponse;
 import com.techmorphosis.grassroot.services.model.TaskModel;
 import com.techmorphosis.grassroot.services.model.TaskResponse;
 import com.techmorphosis.grassroot.ui.fragments.FilterFragment;
+import com.techmorphosis.grassroot.ui.views.CustomItemAnimator;
 import com.techmorphosis.grassroot.utils.Constant;
 import com.techmorphosis.grassroot.utils.SettingPreference;
 
@@ -201,7 +202,7 @@ public class GroupTasksActivity extends PortraitActivity implements TaskListList
     }
 
     private void callNewTaskActivity() {
-        Intent open = new Intent(this, NewActivities.class);
+        Intent open = new Intent(this, NewTaskMenuActivity.class);
         open.putExtra(Constant.GROUPUID_FIELD, groupid);
         open.putExtra(Constant.GROUPNAME_FIELD, groupName);
         startActivity(open);

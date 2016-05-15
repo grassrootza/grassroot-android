@@ -12,7 +12,7 @@ import android.view.Window;
 import android.widget.ImageView;
 
 import com.techmorphosis.grassroot.R;
-import com.techmorphosis.grassroot.ui.activities.Blank;
+import com.techmorphosis.grassroot.ui.activities.NotBuiltActivity;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -77,7 +77,7 @@ public class GroupQuickTaskModalFragment extends android.support.v4.app.DialogFr
     @OnClick(R.id.ic_home_to_do_active)
     public void icHomeToDoActive() {
         if (todoPermitted) {
-            Intent ToDo = new Intent(getActivity(), Blank.class);
+            Intent ToDo = new Intent(getActivity(), NotBuiltActivity.class);
             ToDo.putExtra("title", "ToDo");
             startActivity(ToDo);
             getDialog().dismiss();
@@ -90,7 +90,7 @@ public class GroupQuickTaskModalFragment extends android.support.v4.app.DialogFr
     @OnClick(R.id.ic_home_vote_active)
     public void icHomeVoteActive() {
         if (votePermitted) {
-            Intent Vote = new Intent(getActivity(), Blank.class);
+            Intent Vote = new Intent(getActivity(), NotBuiltActivity.class);
             Vote.putExtra("title", "Vote");
             startActivity(Vote);
             getDialog().dismiss();
@@ -103,7 +103,7 @@ public class GroupQuickTaskModalFragment extends android.support.v4.app.DialogFr
     @OnClick(R.id.ic_home_call_meeting_active)
     public void icHomeCallMeetingActive() {
         if (meetingPermitted) {
-            Intent Meeting = new Intent(getActivity(), Blank.class);
+            Intent Meeting = new Intent(getActivity(), NotBuiltActivity.class);
             Meeting.putExtra("title", "Meeting");
             startActivity(Meeting);
             getDialog().dismiss();

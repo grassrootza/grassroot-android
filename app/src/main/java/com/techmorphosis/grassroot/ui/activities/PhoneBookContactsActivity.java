@@ -169,7 +169,7 @@ public class PhoneBookContactsActivity extends PortraitActivity implements Conta
         Contact contactClicked = listOfContacts.get(position);
 
         if (contactClicked.numbers.size() > 1) {//show dialog
-            Intent i = new Intent(PhoneBookContactsActivity.this, DialogActivity.class);
+            Intent i = new Intent(PhoneBookContactsActivity.this, SelectPhoneNumberActivity.class);
             i.putStringArrayListExtra("numberList", (ArrayList<String>) contactClicked.numbers);
             i.putExtra("selectedNumber", contactClicked.selectedNumber);
             startActivityForResult(i, Constant.activitySelectNumberFromContact);

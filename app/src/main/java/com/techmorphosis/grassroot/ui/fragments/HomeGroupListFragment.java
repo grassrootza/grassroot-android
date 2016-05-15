@@ -29,10 +29,10 @@ import com.techmorphosis.grassroot.services.GrassrootRestService;
 import com.techmorphosis.grassroot.services.model.Group;
 import com.techmorphosis.grassroot.services.model.GroupResponse;
 import com.techmorphosis.grassroot.ui.activities.CreateGroupActivity;
-import com.techmorphosis.grassroot.ui.activities.CustomItemAnimator;
+import com.techmorphosis.grassroot.ui.views.CustomItemAnimator;
 import com.techmorphosis.grassroot.ui.activities.GroupTasksActivity;
-import com.techmorphosis.grassroot.ui.activities.Join_Request;
-import com.techmorphosis.grassroot.ui.activities.SwipeableRecyclerViewTouchListener;
+import com.techmorphosis.grassroot.ui.activities.GroupJoinActivity;
+import com.techmorphosis.grassroot.ui.views.SwipeableRecyclerViewTouchListener;
 import com.techmorphosis.grassroot.utils.Constant;
 import com.techmorphosis.grassroot.utils.SettingPreference;
 import com.techmorphosis.grassroot.utils.UtilClass;
@@ -457,7 +457,7 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment {
             e.printStackTrace();
         }
 
-        Intent icFabJoinGroup = new Intent(getActivity(), Join_Request.class);
+        Intent icFabJoinGroup = new Intent(getActivity(), GroupJoinActivity.class);
         startActivity(icFabJoinGroup);
     }
 

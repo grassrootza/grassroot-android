@@ -53,12 +53,12 @@ public class UtilClass {
         Toast.makeText(context, s, Toast.LENGTH_SHORT).show();
     }
 
-    public void showsnackBar(View v,Context applicationContext, String message) {
+    public void showsnackBar(View v, Context applicationContext, String message) {
         snackBar= Snackbar.make(v, message, Snackbar.LENGTH_SHORT);
         snackBar.show();
     }
 
-    public AlertDialogFragment showAlertDialog(FragmentManager manager, String message, String left, String right,
+    public static AlertDialogFragment showAlertDialog(FragmentManager manager, String message, String left, String right,
                                                Boolean flag, AlertDialogListener alertDialogListener) {
         AlertDialogFragment ss2 = new AlertDialogFragment();
         Bundle b = new Bundle();
