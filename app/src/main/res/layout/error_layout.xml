@@ -9,7 +9,7 @@
         android:id="@+id/im_no_results"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:src="@drawable/im_no_groups"
+        android:src="@drawable/im_no_results"
         android:layout_centerInParent="true"
         android:visibility="gone"
         />

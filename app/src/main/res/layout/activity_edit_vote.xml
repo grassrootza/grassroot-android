@@ -1,0 +1,193 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/rl_ev_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:card_view="http://schemas.android.com/apk/res-auto"
+    android:background="@color/RecyclerView_background"
+    tools:context="com.techmorphosis.grassroot.ui.activities.EditVote"
+
+    >
+
+    <android.support.v7.widget.Toolbar
+        android:id="@+id/vv_toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="?actionBarSize"
+        android:background="@color/primaryColor"
+        android:elevation="5dp"
+        >
+
+        <TextView
+            android:id="@+id/txt_toolbar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/ev_tv_toolbar"
+            android:textColor="@color/white"
+            android:textSize="@dimen/txt_large"
+            />
+    </android.support.v7.widget.Toolbar>
+
+
+    <RelativeLayout
+        android:id="@+id/rl_vv_main_layout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@+id/vv_toolbar"
+
+        >
+        <ScrollView
+            android:id="@+id/scrollView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:scrollbars="vertical"
+            android:paddingTop="10dp"
+            android:clipToPadding="false"
+            android:layout_marginLeft="5dp"
+            android:layout_marginRight="5dp"
+            >
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+
+            >
+
+            <android.support.v7.widget.CardView
+                android:id="@+id/upper_card"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                card_view:cardCornerRadius="5dp"
+                card_view:cardElevation="3dp"
+                card_view:contentPadding="5dp"
+                card_view:cardBackgroundColor="#fff"
+                android:layout_margin="5dp"
+                android:padding="5dp"
+
+                >
+
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    >
+                    <android.support.design.widget.TextInputLayout
+
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:id="@+id/et2"
+
+                        >
+                        <EditText
+                            android:id="@+id/et_description"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:hint="@string/ev_description"
+                            android:padding="10dp"
+                            android:singleLine="true"
+                            android:imeOptions="actionDone"
+                            android:textSize="@dimen/txt_medium"
+                            android:textColor="@color/ev_et_description"
+                            android:lines="5"
+                            android:minLines="5"
+                            android:maxLines="10"
+                            android:inputType="textMultiLine|textNoSuggestions"
+                            android:gravity="top"
+                            android:maxLength="320"
+                            android:scrollbars="vertical"
+
+                            />
+
+                    </android.support.design.widget.TextInputLayout>
+
+
+                    <TextView
+                        android:id="@+id/tv_counter"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_alignParentRight="true"
+                        android:layout_below="@+id/et2"
+                        android:textColor="@color/ev_txt_counter"
+                        android:text="0/320"
+                        />
+                </RelativeLayout>
+
+            </android.support.v7.widget.CardView>
+
+
+            <android.support.v7.widget.CardView
+                android:id="@+id/datetimepicker"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                card_view:cardCornerRadius="3dp"
+                card_view:cardElevation="3dp"
+                card_view:contentPadding="10dp"
+                card_view:cardBackgroundColor="#fff"
+                android:layout_margin="5dp"
+                android:padding="5dp"
+                android:layout_below="@+id/upper_card"
+                android:clickable="true"
+                android:foreground="?selectableItemBackground"
+                >
+
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    >
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/ev_closing"
+                        android:layout_alignParentLeft="true"
+                        android:textColor="@color/black"
+                        android:textSize="@dimen/txt_medium"
+                        android:layout_centerHorizontal="true"
+                        android:layout_centerVertical="true"
+                        android:layout_marginRight="10dp"
+                        />
+
+                        <TextView
+                            android:id="@+id/txt_ev_deadline"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:drawableLeft="@drawable/btn_calender"
+                            tools:text="30-2-16 11:17"
+                            android:layout_centerHorizontal="true"
+                            android:drawablePadding="5dp"
+                            android:layout_centerVertical="true"
+                            android:textSize="@dimen/txt_medium"
+                            android:layout_marginLeft="10dp"
+                            android:layout_alignParentRight="true"
+                            android:textColor="@color/black"
+                            />
+                </RelativeLayout>
+
+
+            </android.support.v7.widget.CardView>
+
+        </RelativeLayout>
+
+
+        </ScrollView>
+
+        <Button
+            android:id="@+id/bt_editVote"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/register"
+            android:textAllCaps="true"
+            android:textColor="@color/white"
+            android:text="@string/ev_bt_save"
+            android:textSize="@dimen/txt_medium"
+            android:layout_alignParentBottom="true"
+            android:layout_marginBottom="20dp"
+            android:layout_marginLeft="16dp"
+            android:layout_marginRight="16dp"
+            />
+
+    </RelativeLayout>
+
+
+
+</RelativeLayout>

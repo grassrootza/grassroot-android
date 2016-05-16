@@ -6,6 +6,7 @@ import android.util.Log;
 
 import com.android.volley.AuthFailureError;
 import com.android.volley.DefaultRetryPolicy;
+import com.android.volley.NoConnectionError;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
@@ -15,6 +16,9 @@ import com.android.volley.toolbox.Volley;
 import com.techmorphosis.grassroot.utils.UtilClass;
 import com.techmorphosis.grassroot.utils.listener.ErrorListenerVolley;
 import com.techmorphosis.grassroot.utils.listener.ResponseListenerVolley;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -58,7 +62,22 @@ public class NetworkCall {
             @Override
             public void onResponse(String response) {
                 Log.e(TAG, " makeRequest() onResponse " + response);
-                responseListenerVolley.onSuccess(response);
+
+                try {
+                    JSONObject jsonObject = new JSONObject(response);
+                    Log.e(TAG,"fine");
+                    if (mContext!=null) {
+                        responseListenerVolley.onSuccess(response);
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                    Log.e(TAG, "not fine");
+                     VolleyError volleyError=new NoConnectionError();
+                    if (mContext!=null) {
+                        NetworkCall.this.errorListenerVolley.onError(volleyError);
+                    }
+                }
+
                 prgDialog.dismiss();
                 requestQueue.stop();
 
@@ -68,9 +87,12 @@ public class NetworkCall {
             @Override
             public void onErrorResponse(VolleyError volleyError) {
 
-                NetworkCall.this.errorListenerVolley.onError(volleyError);
-
-                 prgDialog.dismiss();
+                if (mContext!=null)
+                {
+                    NetworkCall.this.errorListenerVolley.onError(volleyError);
+                }
+                Log.e(TAG,"volleyError is " + volleyError);
+                prgDialog.dismiss();
                 requestQueue.stop();
 
             }

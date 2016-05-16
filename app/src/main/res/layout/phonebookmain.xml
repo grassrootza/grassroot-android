@@ -36,6 +36,7 @@
                     android:layout_height="match_parent"
                     android:src="@drawable/btn_back_wt"
                     android:paddingLeft="16dp"
+                    android:paddingRight="16dp"
                     android:background="@drawable/button_alpha_rlsimple"
                     android:layout_alignParentLeft="true"
                     />
@@ -115,8 +116,8 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:cacheColorHint="@android:color/transparent"
-        android:divider="@null"
-        android:dividerHeight="0px"
+        android:divider="#ddd"
+        android:dividerHeight="0.3dp"
         android:fadeScrollbars="false"
         android:fastScrollEnabled="true"
         android:listSelector="@drawable/listview_selector"
@@ -126,6 +127,34 @@
         android:paddingTop="10dp"
         android:background="@color/background"
         android:clipToPadding="false"
-
+        android:visibility="gone"
         />
+    <include
+        android:id="@+id/error_layout"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        layout="@layout/qube_error_layout"
+        android:layout_centerInParent="true"
+        android:visibility="gone"
+        />
+
+    <com.techmorphosis.grassroot.utils.ProgressBarCircularIndeterminate
+        android:id="@+id/prg_pb"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:background="@color/primaryColor"
+        android:layout_centerInParent="true"
+        android:visibility="gone"
+        ></com.techmorphosis.grassroot.utils.ProgressBarCircularIndeterminate>
+
+    <TextView
+        android:id="@+id/txt_prg_pb"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/prg_message"
+        android:layout_below="@+id/prg_pb"
+        android:layout_centerHorizontal="true"
+        android:visibility="gone"
+        />
+
 </RelativeLayout>

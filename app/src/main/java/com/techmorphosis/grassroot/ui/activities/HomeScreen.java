@@ -4,12 +4,13 @@ import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.support.design.widget.Snackbar;
 import android.support.v4.widget.DrawerLayout;
 import android.util.Log;
 import android.view.Gravity;
 
 import com.techmorphosis.grassroot.R;
-import com.techmorphosis.grassroot.ui.fragments.AlertDialogFragment;
+import com.techmorphosis.grassroot.ui.DialogFragment.AlertDialogFragment;
 import com.techmorphosis.grassroot.ui.fragments.Group_Homepage;
 import com.techmorphosis.grassroot.ui.fragments.NavigationDrawerFragment;
 import com.techmorphosis.grassroot.ui.fragments.RateUsFragment;
@@ -26,18 +27,47 @@ public class HomeScreen extends PortraitActivity implements NavigationDrawerFrag
     public  String TAG="HomeScreen";
     AlertDialogFragment alertDialogFragment;
     UtilClass utilClass;
+    private NavigationDrawerFragment drawerFrag;
+    private Snackbar homesnackbar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_homescreen);
+       // registeringReceiver();
+
         drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        drawerFrag = (NavigationDrawerFragment) getFragmentManager().findFragmentById(R.id.navigation_drawer);
+        drawerFrag.setUp(R.id.navigation_drawer, drawer);
         utilClass = new UtilClass();
+       // Snackbar.make(drawer, "hello", Snackbar.LENGTH_INDEFINITE).show();
+        HomeFragment();
         hasUserRatedApp();
     }
 
+/*    private void registeringReceiver() {
+        IntentFilter intentfilter = new IntentFilter();
+        intentfilter.addAction(getString(R.string.Logout));
+        registerReceiver(broadcastReceiver, intentfilter);
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        unregisterReceiver(broadcastReceiver);
+    }
+
+    BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            logout();
+        }
+    };*/
+
+
     private void hasUserRatedApp()
     {
+
 
         if (!SettingPreffrence.getisRateus(getApplicationContext()))
         {
@@ -87,7 +117,7 @@ public class HomeScreen extends PortraitActivity implements NavigationDrawerFrag
     @Override
     public void onNavigationDrawerItemSelected(int position) {
 
-        if (drawer != null) drawer.closeDrawer(Gravity.START);
+        if (drawer != null) drawer.closeDrawer(Gravity.LEFT);
         fragment=null;
 
             switch(position)
@@ -95,60 +125,29 @@ public class HomeScreen extends PortraitActivity implements NavigationDrawerFrag
                 case 0:
                   //Profile
 
-                    if (SettingPreffrence.getisHasgroup(HomeScreen.this))
-                    {
-                        fragment = new Group_Homepage();
-                        openFragment="Group_Homepage";
-                    }
-                    else
-                    {
-                        fragment = new WelcomeFragment();
-                        openFragment="WelcomeFragment";
-
-                    }
+                    Intent profile = new Intent(getApplicationContext(),ProfileSettings.class);
+                    startActivity(profile);
 
 
-                break;
+                    break;
+
 
                 case 1:
-                    //Setting
-                break;
+                    //FAQ
+                   /* fragment = new FAQActivity();
+                    openFragment="FAQActivity";*/
+                    Intent faq= new Intent(HomeScreen.this,FAQActivity.class);
+                    startActivity(faq);
+                    break;
 
                 case 2:
-                    //FAQ
-                break;
+                    //NotificationCenter
+                    Intent noifications = new Intent(HomeScreen.this,NotificationCenter.class);
+                    startActivity(noifications);
+
+                    break;
 
                 case 3:
-                    //Logout
-
-                    alertDialogFragment =utilClass.showAlerDialog(getFragmentManager(), getString(R.string.Logout_text), "Yes","No",true, new AlertDialogListener()
-                    {
-                        @Override
-                        public void setRightButton()
-                        {//no
-
-
-                            alertDialogFragment.dismiss();
-                        }
-
-                        @Override
-                        public void setLeftButton()
-                        {
-                            //Yes
-                            SettingPreffrence.clearAll(getApplicationContext());
-                            Intent open= new Intent(HomeScreen.this,StartActivity.class);
-                            startActivity(open);
-
-                            alertDialogFragment.dismiss();
-
-                        }
-                    });
-
-
-
-                break;
-
-                case 4:
                     //Share
 
                     //implicit Intent
@@ -160,7 +159,7 @@ public class HomeScreen extends PortraitActivity implements NavigationDrawerFrag
 
                     break;
 
-                case 5:
+                case 4:
                     //Rate App
 
                     //implicit Intent
@@ -175,6 +174,9 @@ public class HomeScreen extends PortraitActivity implements NavigationDrawerFrag
 
                     break;
 
+                case  5:
+                    logout();
+                  break;
 
 
             }
@@ -187,15 +189,67 @@ public class HomeScreen extends PortraitActivity implements NavigationDrawerFrag
             ft1.replace(R.id.fragment_container, fragment);
             ft1.commit();
 
-        } else
+        }
+        else
         {
             Log.e("Error", "Error in creating fragment");
         }
     }
 
+    private void logout()
+    {
+        alertDialogFragment =utilClass.showAlerDialog(getFragmentManager(), getString(R.string.Logout_message), "Yes","No",true, new AlertDialogListener()
+        {
+            @Override
+            public void setRightButton()
+            {//no
+
+
+                alertDialogFragment.dismiss();
+            }
+
+            @Override
+            public void setLeftButton()
+            {
+                //Yes
+                SettingPreffrence.clearAll(getApplicationContext());
+                Intent open= new Intent(HomeScreen.this,StartActivity.class);
+                startActivity(open);
+                finish();
+                alertDialogFragment.dismiss();
+
+            }
+        });
+    }
+
+    private void HomeFragment() {
+        if (SettingPreffrence.getisHasgroup(HomeScreen.this))
+        {
+            fragment = new Group_Homepage();
+            openFragment="Group_Homepage";
+        }
+        else
+        {
+            fragment = new WelcomeFragment();
+            openFragment="WelcomeFragment";
+
+        }
+        if (fragment != null)
+        {
+
+            android.support.v4.app.FragmentManager fragmentManager1 = getSupportFragmentManager();
+            android.support.v4.app.FragmentTransaction ft1 = fragmentManager1.beginTransaction();
+            ft1.replace(R.id.fragment_container, fragment);
+            ft1.commit();
+
+        }
+
+
+    }
+
     @Override
     public void menuClick() { // Getting data from fragment
-        if (drawer != null) drawer.openDrawer(Gravity.START);
+        if (drawer != null) drawer.openDrawer(Gravity.LEFT);
     }
 
     @Override
@@ -234,9 +288,80 @@ public class HomeScreen extends PortraitActivity implements NavigationDrawerFrag
             }
 
         }
+        else if (SettingPreffrence.getPREF_HAS_Update(HomeScreen.this))
+        {
+            Snackbar.make(drawer,getString(R.string.pp_update_msg),Snackbar.LENGTH_SHORT).show();
+            drawerFrag.updateNotificationDrawersname();
+            SettingPreffrence.setPREF_HAS_Update(HomeScreen.this,false);
+        }
 
 
 
 
     }
+
+    @Override
+    public void onBackPressed() {
+//        super.onBackPressed();
+
+        if (getFragmentManager().getBackStackEntryCount() > 1)
+        {
+
+        //popup fragment first
+            getFragmentManager().popBackStackImmediate();
+
+            if (getSupportFragmentManager().findFragmentById(R.id.fragment_container) instanceof Group_Homepage) {
+
+                drawerFrag.updateNotificationDrawers(0);
+            }
+            else if (getSupportFragmentManager().findFragmentById(R.id.fragment_container) instanceof WelcomeFragment) {
+
+                drawerFrag.updateNotificationDrawers(0);
+
+            }
+            /*else if (getSupportFragmentManager().findFragmentById(R.id.fragment_container) instanceof Group_Homepage) {
+
+            }*/
+        }
+        else
+        {
+            super.onBackPressed();
+        }
+    }
+
+/*
+    public void showSnackbar(String message,int length,String actionButtontxt) {
+
+
+        homesnackbar = Snackbar.make(drawer, message, length);
+        homesnackbar.setActionTextColor(Color.RED);
+        if (!TextUtils.isEmpty(actionButtontxt)) {
+
+            if (actionButtontxt.equalsIgnoreCase(getString(R.string.Logout))) {
+                homesnackbar.setAction(actionButtontxt, new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        logout();
+                    }
+                });
+
+            }
+            else
+            {
+                homesnackbar.setAction(actionButtontxt, new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        Group_Homepage fragment = (Group_Homepage) getSupportFragmentManager().findFragmentByTag("Group_Homepage");
+                        fragment.UserGroupWS();
+                    }
+                });
+            }
+
+        }
+
+        homesnackbar.show();
+    }
+*/
+
+
 }

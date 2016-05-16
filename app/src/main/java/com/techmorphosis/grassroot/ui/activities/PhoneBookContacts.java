@@ -1,19 +1,12 @@
 package com.techmorphosis.grassroot.ui.activities;
 
-import android.app.FragmentManager;
-import android.app.FragmentTransaction;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
-import android.content.pm.PackageManager;
-import android.database.Cursor;
-import android.net.Uri;
 import android.os.Bundle;
 import android.os.Parcelable;
-import android.provider.ContactsContract;
 import android.support.v7.widget.Toolbar;
 import android.text.Editable;
-import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.util.Log;
 import android.view.View;
@@ -21,9 +14,9 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.EditText;
 import android.widget.ImageView;
-import android.widget.ProgressBar;
+import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
-import android.widget.Toast;
+import android.widget.TextView;
 
 import com.techmorphosis.grassroot.ContactLib.PinnedHeaderListView;
 import com.techmorphosis.grassroot.Interface.GetContactList;
@@ -31,14 +24,11 @@ import com.techmorphosis.grassroot.R;
 import com.techmorphosis.grassroot.adapters.ContactsAdapter;
 import com.techmorphosis.grassroot.adapters.GetContactListAsync;
 import com.techmorphosis.grassroot.models.ContactsModel;
-import com.techmorphosis.grassroot.ui.fragments.MyDialogFragment;
-import com.techmorphosis.grassroot.ui.fragments.RateUsFragment;
 import com.techmorphosis.grassroot.utils.Constant;
-import com.techmorphosis.grassroot.utils.ContactUtil.ContactsQuery;
+import com.techmorphosis.grassroot.utils.ProgressBarCircularIndeterminate;
 import com.techmorphosis.grassroot.utils.UtilClass;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 
@@ -65,26 +55,26 @@ public class PhoneBookContacts extends PortraitActivity implements GetContactLis
   private UtilClass utilClass;
   private RelativeLayout rlPhonebookRoot;
   private ArrayList<Parcelable> filterdList;
+  private ProgressBarCircularIndeterminate prgPb;
+  private TextView txtPrgPb;
+
+  private View errorLayout;
+  private LinearLayout llNoResult;
+  private LinearLayout llServerError;
 
   @Override
   protected void onCreate(Bundle savedInstanceState)
     {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.phonebookmain);
-      setUpToolbar();
-    init();
+      findAllViews();
+      init();
       this.context = this;
-      mListView=(PinnedHeaderListView)findViewById(android.R.id.list);
-      rlPhonebookRoot = (RelativeLayout) findViewById(R.id.rl_phonebook_root);
 
-      progressBar = new ProgressDialog(PhoneBookContacts.this);
-      progressBar.setMessage("Searching...");
-      progressBar.setCancelable(false);
-      progressBar.show();
+      showLoader();
 
       Bundle b= getIntent().getExtras();
       filterdList =b.getParcelableArrayList(Constant.filterdList);
-
 
       new GetContactListAsync(this.context, this).execute(new Void[0]);
 
@@ -131,7 +121,21 @@ public class PhoneBookContacts extends PortraitActivity implements GetContactLis
 
     }
 
+
+
+  private void showLoader() {
+
+    ivSearch.setEnabled(false);
+    mListView.setVisibility(View.GONE);
+    errorLayout.setVisibility(View.GONE);
+    llNoResult.setVisibility(View.GONE);
+
+    prgPb.setVisibility(View.VISIBLE);
+    txtPrgPb.setVisibility(View.VISIBLE);
+  }
+
   private void init() {
+
      utilClass = new UtilClass();
     filterdList= new ArrayList<>();
     contacts_names=new ArrayList<>();
@@ -174,7 +178,7 @@ public class PhoneBookContacts extends PortraitActivity implements GetContactLis
     }
   }
 
-  private void setUpToolbar()
+  private void findAllViews()
     {
 
       ivSearch = (ImageView) findViewById(R.id.iv_search);
@@ -189,33 +193,55 @@ public class PhoneBookContacts extends PortraitActivity implements GetContactLis
       ivCross = (ImageView) findViewById(R.id.iv_cross);
       et_search = (EditText) findViewById(R.id.et_search);
 
-      ivSearch.setOnClickListener(ivSearch());
-      ivRlSearch.setOnClickListener(ivRlSearch());
-      ivCross.setOnClickListener(ivCross());
-      ivBack.setOnClickListener(ivBack());
+      mListView=(PinnedHeaderListView)findViewById(android.R.id.list);
+      rlPhonebookRoot = (RelativeLayout) findViewById(R.id.rl_phonebook_root);
 
-      et_search.addTextChangedListener(new TextWatcher() {
-        @Override
-        public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+      prgPb = (ProgressBarCircularIndeterminate) findViewById(R.id.prg_pb);
+      txtPrgPb = (TextView) findViewById(R.id.txt_prg_pb);
 
-        }
+      errorLayout = findViewById(R.id.error_layout);
 
-        @Override
-        public void onTextChanged(CharSequence s, int start, int before, int count) {
+      llNoResult = (LinearLayout) errorLayout.findViewById(R.id.ll_no_result);
+      llServerError = (LinearLayout) errorLayout.findViewById(R.id.ll_server_error);
 
-        }
 
-        @Override
-        public void afterTextChanged(Editable s) {
-          if (s.length() > 0) {
-            Filter(et_search.getText().toString());
-          } else {
-            Filter("");
-          }
-        }
-      });
+
+      setAllListner();
+
+
 
     }
+
+  private void setAllListner() {
+
+    ivSearch.setOnClickListener(ivSearch());
+    ivRlSearch.setOnClickListener(ivRlSearch());
+    ivCross.setOnClickListener(ivCross());
+    ivBack.setOnClickListener(ivBack());
+
+
+    et_search.addTextChangedListener(new TextWatcher() {
+      @Override
+      public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+      }
+
+      @Override
+      public void onTextChanged(CharSequence s, int start, int before, int count) {
+
+      }
+
+      @Override
+      public void afterTextChanged(Editable s) {
+        if (s.length() > 0) {
+          Filter(et_search.getText().toString());
+        } else {
+          Filter("");
+        }
+      }
+    });
+
+  }
 
   private void Filter(String s) {
 
@@ -349,12 +375,26 @@ public class PhoneBookContacts extends PortraitActivity implements GetContactLis
         }
 
         contacts_names.addAll(list);
+        ivSearch.setEnabled(true);
 
       }
-    else
+    else if (filterdList.size()==0 || filterdList==null)
       {
-        //dont do nothing
-      contacts_names.addAll(list);
+        Log.e(TAG, "filterdList.size()==0 || filterdList==null");
+
+
+        if (list.size() == 0) {
+
+          Log.e(TAG, "list.size() == 0 ");
+          errorLayout.setVisibility(View.VISIBLE);
+          llNoResult.setVisibility(View.VISIBLE);
+
+        } else {
+          //just add All data
+          Log.e(TAG, "else == 0 ");
+          contacts_names.addAll(list);
+          ivSearch.setEnabled(true);
+        }
 
       }
 
@@ -363,12 +403,16 @@ public class PhoneBookContacts extends PortraitActivity implements GetContactLis
     mListView.setAdapter(mAdapter);
     mListView.setOnScrollListener(mAdapter);
     mListView.setEnableHeaderTransparencyChanges(false);
-    progressBar.cancel();
+    hideLoader();
 
-    }
+  }
 
+  private void hideLoader() {
 
-
+    prgPb.setVisibility(View.GONE);
+    txtPrgPb.setVisibility(View.GONE);
+    mListView.setVisibility(View.VISIBLE);
+  }
 
 
 }

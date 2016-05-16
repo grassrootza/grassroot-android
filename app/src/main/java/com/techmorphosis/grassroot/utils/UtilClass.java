@@ -13,7 +13,7 @@ import android.support.design.widget.Snackbar;
 import android.view.View;
 import android.widget.Toast;
 
-import com.techmorphosis.grassroot.ui.fragments.AlertDialogFragment;
+import com.techmorphosis.grassroot.ui.DialogFragment.AlertDialogFragment;
 import com.techmorphosis.grassroot.utils.listener.AlertDialogListener;
 
 // Referenced classes of package com.techmorphosis.Utils:

@@ -3,40 +3,52 @@ package com.techmorphosis.grassroot.ui.fragments;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Color;
 import android.net.ParseException;
 import android.os.Bundle;
 import android.support.design.widget.Snackbar;
+import android.support.v4.widget.DrawerLayout;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.Editable;
+import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
+import android.widget.TextView;
 
+import com.android.volley.AuthFailureError;
 import com.android.volley.NoConnectionError;
+import com.android.volley.ServerError;
 import com.android.volley.TimeoutError;
 import com.android.volley.VolleyError;
 import com.github.clans.fab.FloatingActionButton;
 import com.github.clans.fab.FloatingActionMenu;
+import com.techmorphosis.grassroot.Animator.CustomItemAnimator;
 import com.techmorphosis.grassroot.Interface.SortInterface;
 import com.techmorphosis.grassroot.Network.AllLinsks;
 import com.techmorphosis.grassroot.Network.NetworkCall;
 import com.techmorphosis.grassroot.R;
+import com.techmorphosis.grassroot.RecyclerView.SwipeableRecyclerViewTouchListener;
 import com.techmorphosis.grassroot.adapters.Group_homepageAdapter;
 import com.techmorphosis.grassroot.models.Group_Homepage_Model;
+import com.techmorphosis.grassroot.ui.DialogFragment.AlertDialogFragment;
+import com.techmorphosis.grassroot.ui.DialogFragment.Group_ActivityMenuDialog;
 import com.techmorphosis.grassroot.ui.activities.Create_Group;
-import com.techmorphosis.grassroot.ui.activities.CustomItemAnimator;
 import com.techmorphosis.grassroot.ui.activities.Group_Activities;
 import com.techmorphosis.grassroot.ui.activities.Join_Request;
-import com.techmorphosis.grassroot.ui.activities.SwipeableRecyclerViewTouchListener;
 import com.techmorphosis.grassroot.utils.L;
+import com.techmorphosis.grassroot.utils.ProgressBarCircularIndeterminate;
 import com.techmorphosis.grassroot.utils.SettingPreffrence;
 import com.techmorphosis.grassroot.utils.UtilClass;
 import com.techmorphosis.grassroot.utils.listener.ErrorListenerVolley;
@@ -55,7 +67,7 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.Locale;
 
-public class Group_Homepage extends android.support.v4.app.Fragment implements View.OnClickListener{
+public class Group_Homepage extends android.support.v4.app.Fragment implements View.OnClickListener {
 
     UtilClass utilClass;
     private RelativeLayout rlGhpRoot;
@@ -69,11 +81,8 @@ public class Group_Homepage extends android.support.v4.app.Fragment implements V
     private ArrayList<Group_Homepage_Model> groupListclone;
 
     private String TAG = Group_Homepage.class.getSimpleName();
-    private View errorLayout;
 
-    private ImageView imNoResults;
-    private ImageView imServerError;
-    private ImageView imNoInternet;
+
     private LinearLayoutManager mLayoutManager;
 
     private FloatingActionMenu menu1;
@@ -88,10 +97,22 @@ public class Group_Homepage extends android.support.v4.app.Fragment implements V
     private ArrayList<Group_Homepage_Model> organizerList;
     private ArrayList<Group_Homepage_Model> memberList;
     private ProgressBar mProgressBar;
-    public boolean date_click =false, role_click =false, defaults_click =false;
+    public boolean date_click = false, role_click = false, defaults_click = false;
     private View view;
     private FragmentCallbacks mCallbacks;
+    public Snackbar snackbar;
+    private AlertDialogFragment alertDialogFragment;
+    private DrawerLayout drawer;
 
+    private View errorLayout;
+    private LinearLayout llNoResult;
+    private LinearLayout llNoInternet;
+    private LinearLayout llServerError;
+
+    private int error_flag;//0-success 1- no Internet 2- Invalid Token 3- Unknown error
+    private ProgressBarCircularIndeterminate prgGh;
+    private TextView txtPrgGh;
+    private LinearLayout llInvalidToken;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -100,180 +121,96 @@ public class Group_Homepage extends android.support.v4.app.Fragment implements V
     }
 
     @Override
-    public void onActivityCreated(Bundle savedInstanceState)
-    {
+    public void onActivityCreated(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        context= getActivity();
+        context = getActivity();
         findAllViews();
         init();
         Recylerview();
         UserGroupWS();
     }
 
-    private void UserGroupWS()
-    {
-        //preExecute
+    public void UserGroupWS() {
+
+        preExecute();
+
+        doInBacground();
+
+
+    }
+
+
+    private void preExecute() {
+
+
+        error_flag = 0;
+
+        //visible
+        prgGh.setVisibility(View.VISIBLE);
+        txtPrgGh.setVisibility(View.VISIBLE);
+
+        //gone
         rcGhp.setVisibility(View.INVISIBLE);
         errorLayout.setVisibility(View.GONE);
-        imNoInternet.setVisibility(View.GONE);
-        imServerError.setVisibility(View.GONE);
-        imNoResults.setVisibility(View.GONE);
+        llNoInternet.setVisibility(View.GONE);
+        llServerError.setVisibility(View.GONE);
+        llNoResult.setVisibility(View.GONE);
 
-        //doInBacground
-        NetworkCall networkCall =  new NetworkCall
+
+    }
+
+    private void doInBacground() {
+
+        NetworkCall networkCall = new NetworkCall
                 (
                         getActivity(),
                         new ResponseListenerVolley() {
                             @Override
-                            public void onSuccess(String s)
-                            {
-                                rcGhp.setVisibility(View.VISIBLE);
-
-                                String id = null,status,code,message;
-                                try {
-                                    JSONObject jsonObject_success = new JSONObject(s);
-                                     status = jsonObject_success.getString("status");
-                                     message = jsonObject_success.getString("message");
-                                    
-                                    if (status.equalsIgnoreCase("SUCCESS"))
-                                    {
-
-                                        code = jsonObject_success.getString("code");
-                                        JSONArray jsonArray_success = jsonObject_success.getJSONArray("data");
-                                        for (int i = 0; i < jsonArray_success.length(); i++)
-                                        {
-                                            jsonObject_success = (JSONObject) jsonArray_success.get(i);
-
-                                            Group_Homepage_Model model = new Group_Homepage_Model();
-
-                                            model.id = jsonObject_success.getString("id");
-                                            model.groupName = jsonObject_success.getString("groupName");
-                                            model.description = jsonObject_success.getString("description");
-                                            model.groupCreator = jsonObject_success.getString("groupCreator");
-                                            model.role = jsonObject_success.getString("role");
-                                            model.groupMemberCount = jsonObject_success.getString("groupMemberCount");
-                                            JSONObject dateTimeObject = jsonObject_success.getJSONObject("dateTime");
-                                            /*Time*/
-                                            model.hour= dateTimeObject.getString("hour");
-                                            model.minute = dateTimeObject.getString("minute");
-                                            model.second = dateTimeObject.getString("second");
-                                            model.nano = dateTimeObject.getString("nano");
-
-                                            /*Date*/
-                                            model.dayOfMonth= dateTimeObject.getString("dayOfMonth");
-                                            model.monthValue= dateTimeObject.getString("monthValue");
-                                            model.year = dateTimeObject.getString("year");
-
-                                            model.dateTimefull=Calendar2Date(model.dayOfMonth, model.monthValue, model.year, model.hour, model.minute, model.second, model.nano);
-                                            model.dateTimeshort=Calendar3Date(model.dayOfMonth, model.monthValue, model.year, model.hour, model.minute, model.second, model.nano);
-
-
-                                            JSONArray jsonArray_permission= jsonObject_success.getJSONArray("permissions");
-                                            //Log.e(TAG,"model.groupName   is  " + model.groupName);
-
-                                            ArrayList<String> permissionList= new ArrayList<>();
-                                            if (jsonArray_permission.length()>0)
-                                            {
-
-                                                for (int j = 0; j < jsonArray_permission.length(); j++)
-                                                {
-                                                    permissionList.add(jsonArray_permission.getString(j));
-                                                }
-
-                                                model.permissionsList=permissionList;
-                                               // Log.e(TAG,"model.permissionsList.size() is  " + model.permissionsList.size());
-
-                                            }
-                                            else
-                                            {
-                                                model.permissionsList=permissionList;
-                                               // Log.e(TAG,"model.permissionsList.size() is  " + model.permissionsList.size());
-                                            }
-
-
-                                            groupListclone.add(model);
-                                            groupList.add(model);
-
-                                        }
-
-                                        rcGhp.setVisibility(View.VISIBLE);
-
-
-                                        group_homepageAdapter.addApplications(groupList);
-
-                                        ivGhpSearch.setEnabled(true);
-                                        ivGhpSort.setEnabled(true);
-
-
-                                     /*   Log.e(TAG, "status is " + status);
-                                        Log.e(TAG, "message is " + message);
-                                        Log.e(TAG, "id is " + id);
-                                        Log.e(TAG,"list size is " + groupList.size());*/
-
-                                    }
-                                    else
-                                    {
-                                        Log.e(TAG,"error ");
-                                    }
-
-
-                                } catch (JSONException e) {
-                                    e.printStackTrace();
-                                    errorLayout.setVisibility(View.VISIBLE);
-                                    imNoInternet.setVisibility(View.VISIBLE);
-                                }
-
-
+                            public void onSuccess(String repsonse) {
+                                error_flag = 0;
+                                postExecute(repsonse);
                             }
                         },
                         new ErrorListenerVolley() {
                             @Override
-                            public void onError(VolleyError volleyError)
-                            {
-                                if ((volleyError instanceof NoConnectionError) || (volleyError instanceof TimeoutError))
-                                {
-                                    errorLayout.setVisibility(View.VISIBLE);
-                                    imNoInternet.setVisibility(View.VISIBLE);
+                            public void onError(VolleyError volleyError) {
+                                if ((volleyError instanceof NoConnectionError) || (volleyError instanceof TimeoutError)) {
 
-                                }
-                                else
-                                {
-                                    String response = null,status,message;
+                                    error_flag = 1;
+                                    postExecute("");
+
+                                } else if (volleyError instanceof ServerError) {
+                                    String response = null, status, message;
                                     try {
-                                        response = new String(volleyError.networkResponse.data,"utf-8");
-                                        L.e(TAG,"response is  " , response);
-                                        JSONObject jsonObject_error  = new JSONObject(response);
-                                        status = jsonObject_error.getString("status");
-                                        message = jsonObject_error.getString("message");
-                                        if (status.equalsIgnoreCase("FAILURE"))
-                                        {
-                                            if (jsonObject_error.getString("code").equals("404"))
-                                            {
+                                        response = new String(volleyError.networkResponse.data, "utf-8");
+                                        L.e(TAG, "response is  ", response);
+                                        JSONObject jsonObject_error = new JSONObject(response);
 
-                                                errorLayout.setVisibility(View.VISIBLE);
-                                                imNoResults.setVisibility(View.VISIBLE);
-                                            }
-                                            else
-                                            {
+                                        error_flag = 0;
+                                        postExecute(response);
 
-                                                Snackbar.make(rlGhpRoot,getString(R.string.Unknown_error),Snackbar.LENGTH_INDEFINITE).show();
-
-                                            }
-
-                                        }
-                                    }
-                                    catch (UnsupportedEncodingException e) {
+                                    } catch (UnsupportedEncodingException e) {// Data is not able to UnsupportedEncodingException
                                         e.printStackTrace();
-                                        errorLayout.setVisibility(View.VISIBLE);
-                                        imServerError.setVisibility(View.VISIBLE);
 
-                                    } catch (JSONException e) {
+                                        error_flag = 5;
+                                        postExecute("");
+
+                                    } catch (JSONException e) {// Data is not able to parse
                                         e.printStackTrace();
-                                        errorLayout.setVisibility(View.VISIBLE);
-                                        imServerError.setVisibility(View.VISIBLE);
 
+                                        error_flag= 5;
+                                        postExecute("");
                                     }
 
+
+                                } else if (volleyError instanceof AuthFailureError) {
+
+                                    error_flag = 2;
+                                    postExecute("");
+
+                                } else {// Unknown error
+                                    error_flag = 5;
+                                    postExecute("");
 
                                 }
 
@@ -283,10 +220,174 @@ public class Group_Homepage extends android.support.v4.app.Fragment implements V
                         ,
                         getString(R.string.prg_message)
                         ,
-                        true
+                        false
                 );
 
-            networkCall.makeStringRequest_GET();
+        networkCall.makeStringRequest_GET();
+        Log.e(TAG, "link is " + AllLinsks.usergroups + SettingPreffrence.getuser_mobilenumber(getActivity()) + "/" + SettingPreffrence.getuser_token(getActivity()));
+    }
+
+    public void postExecute(String repsonse) {
+
+
+
+        if (error_flag == 1) {//no Internet
+            prgGh.setVisibility(View.GONE);
+            txtPrgGh.setVisibility(View.GONE);
+
+            errorLayout.setVisibility(View.VISIBLE);
+            llNoInternet.setVisibility(View.VISIBLE);
+        }
+        else if (error_flag==2) {// Invalid Token
+            prgGh.setVisibility(View.GONE);
+            txtPrgGh.setVisibility(View.GONE);
+
+            errorLayout.setVisibility(View.VISIBLE);
+            llInvalidToken.setVisibility(View.VISIBLE);
+        }
+        else if (error_flag==3) {//Unknown error
+            prgGh.setVisibility(View.GONE);
+            txtPrgGh.setVisibility(View.GONE);
+
+            errorLayout.setVisibility(View.VISIBLE);
+            llServerError.setVisibility(View.VISIBLE);
+        }
+
+        else if (error_flag == 0) {
+//            rcGhp.setVisibility(View.VISIBLE);
+
+            String id = null, status, code, message;
+            try {
+                JSONObject jsonObject_success = new JSONObject(repsonse);
+                status = jsonObject_success.getString("status");
+                message = jsonObject_success.getString("message");
+
+                if (status.equalsIgnoreCase("SUCCESS")) {
+
+                    code = jsonObject_success.getString("code");
+                    JSONArray data_array = jsonObject_success.getJSONArray("data");
+                    if (data_array.length() > 0) {
+
+                        for (int i = 0; i < data_array.length(); i++) {
+                            jsonObject_success = (JSONObject) data_array.get(i);
+
+                            Group_Homepage_Model model = new Group_Homepage_Model();
+
+                            model.id = jsonObject_success.getString("id");
+                            model.groupName = jsonObject_success.getString("groupName");
+                            model.description = jsonObject_success.getString("description");
+                            model.groupCreator = jsonObject_success.getString("groupCreator");
+                            model.role = jsonObject_success.getString("role");
+                            model.groupMemberCount = jsonObject_success.getString("groupMemberCount");
+                            JSONObject dateTimeObject = jsonObject_success.getJSONObject("dateTime");
+                                            /*Time*/
+                            model.hour = dateTimeObject.getString("hour");
+                            model.minute = dateTimeObject.getString("minute");
+                            model.second = dateTimeObject.getString("second");
+                            model.nano = dateTimeObject.getString("nano");
+
+                                            /*Date*/
+                            model.dayOfMonth = dateTimeObject.getString("dayOfMonth");
+                            model.monthValue = dateTimeObject.getString("monthValue");
+                            model.year = dateTimeObject.getString("year");
+
+                            model.dateTimefull = Calendar2Date(model.dayOfMonth, model.monthValue, model.year, model.hour, model.minute, model.second, model.nano);
+                            model.dateTimeshort = Calendar3Date(model.dayOfMonth, model.monthValue, model.year, model.hour, model.minute, model.second, model.nano);
+
+
+                            JSONArray jsonArray_permission = jsonObject_success.getJSONArray("permissions");
+                            //Log.e(TAG,"model.groupName   is  " + model.groupName);
+
+                            ArrayList<String> permissionList = new ArrayList<>();
+                            if (jsonArray_permission.length() > 0) {
+
+                                for (int j = 0; j < jsonArray_permission.length(); j++) {
+                                    permissionList.add(jsonArray_permission.getString(j));
+                                }
+
+                                model.permissionsList = permissionList;
+                                // Log.e(TAG,"model.permissionsList.size() is  " + model.permissionsList.size());
+
+                            } else {
+                                model.permissionsList = permissionList;
+                                // Log.e(TAG,"model.permissionsList.size() is  " + model.permissionsList.size());
+                            }
+
+
+                            groupListclone.add(model);
+                            groupList.add(model);
+
+                        }
+
+                        group_homepageAdapter.addApplications(groupList);
+
+
+                        //step1-hide the loader
+                        prgGh.setVisibility(View.GONE);
+                        txtPrgGh.setVisibility(View.GONE);
+
+                        //step2- show the list
+                        rcGhp.setVisibility(View.VISIBLE);
+
+                        //step3- now enable the ui onclick
+                        ivGhpSearch.setEnabled(true);
+                        ivGhpSort.setEnabled(true);
+
+
+                    }
+                    else
+                    {
+
+                        //No result
+                        prgGh.setVisibility(View.GONE);
+                        txtPrgGh.setVisibility(View.GONE);
+
+                        errorLayout.setVisibility(View.VISIBLE);
+                        llNoResult.setVisibility(View.VISIBLE);
+                    }
+
+
+
+                } else if (status.equalsIgnoreCase("Failure")) {
+                    Log.e(TAG, "Failure ");
+
+                    prgGh.setVisibility(View.GONE);
+                    txtPrgGh.setVisibility(View.GONE);
+
+
+                    errorLayout.setVisibility(View.VISIBLE);
+                    llNoResult.setVisibility(View.VISIBLE);
+
+                } else {    // if status not matched
+                    errorLayout.setVisibility(View.VISIBLE);
+                    llServerError.setVisibility(View.VISIBLE);
+
+                }
+
+
+            } catch (JSONException e) {
+                e.printStackTrace();
+                Log.e(TAG, "JSONException is " + e.getMessage());
+
+                prgGh.setVisibility(View.GONE);
+                txtPrgGh.setVisibility(View.GONE);
+
+                errorLayout.setVisibility(View.VISIBLE);
+                llServerError.setVisibility(View.VISIBLE);
+
+            }
+
+        }
+        else {
+
+            Log.e(TAG, "case not match is "  );
+
+            prgGh.setVisibility(View.GONE);
+            txtPrgGh.setVisibility(View.GONE);
+
+            errorLayout.setVisibility(View.VISIBLE);
+            llServerError.setVisibility(View.VISIBLE);
+        }
 
 
     }
@@ -294,15 +395,7 @@ public class Group_Homepage extends android.support.v4.app.Fragment implements V
     private String Calendar2Date(String dayOfMonth, String monthValue, String year, String hour, String minute, String second, String nano) {
 
 
-   /*     Log.e(TAG,"dayOfMonth " + dayOfMonth);
-        Log.e(TAG,"monthValue " + monthValue);
-        Log.e(TAG,"year " + year);
 
-        Log.e(TAG,"hour " + hour);
-        Log.e(TAG,"minute " + minute);
-        Log.e(TAG,"second " + second);*/
-
-        //get the current date as Calendar object
         Calendar calendar = Calendar.getInstance();
 
         /*Date*/
@@ -320,12 +413,11 @@ public class Group_Homepage extends android.support.v4.app.Fragment implements V
         SimpleDateFormat formatter = new SimpleDateFormat("dd-MM-yy:HH:mm:SS");
         String dateString = formatter.format(date);
 
-       // Log.e(TAG,"dateString " + dateString);
-        return  dateString;
+        // Log.e(TAG,"dateString " + dateString);
+        return dateString;
     }
 
     private String Calendar3Date(String dayOfMonth, String monthValue, String year, String hour, String minute, String second, String nano) {
-
 
 
         //get the current date as Calendar object
@@ -346,60 +438,56 @@ public class Group_Homepage extends android.support.v4.app.Fragment implements V
         SimpleDateFormat formatter = new SimpleDateFormat("dd-MM-yyyy");
         String dateString = formatter.format(date);
 
-        return  dateString;
+        return dateString;
     }
 
 
-    private void Recylerview()
-    {
-     //   rcGhp.setHasFixedSize(true);
+    private void Recylerview() {
+        //   rcGhp.setHasFixedSize(true);
 
         // use a linear layout manager
         mLayoutManager = new LinearLayoutManager(getActivity());
         rcGhp.setLayoutManager(mLayoutManager);
         rcGhp.setItemAnimator(new CustomItemAnimator());
-        group_homepageAdapter = new Group_homepageAdapter(getActivity(),new ArrayList<Group_Homepage_Model>(),Group_Homepage.this);
+        group_homepageAdapter = new Group_homepageAdapter(getActivity(), new ArrayList<Group_Homepage_Model>(), Group_Homepage.this);
         rcGhp.setAdapter(group_homepageAdapter);
 
         SwipeableRecyclerViewTouchListener swipeDeleteTouchListener = new SwipeableRecyclerViewTouchListener(
-                        context,
-                        rcGhp,
-                        R.id.main_view,
-                        R.id.main_background_view,
-                        new SwipeableRecyclerViewTouchListener.SwipeListener() {
-                            @Override
-                            public boolean canSwipe(int position) {
-                              //  Toast.makeText(getActivity(), "canSwipe", Toast.LENGTH_LONG).show();
-                                try {
-                                    menu1.close(true);
-                                } catch (Exception e) {
-                                    e.printStackTrace();
-                                }
+                context,
+                rcGhp,
+                R.id.main_view,
+                R.id.main_background_view,
+                new SwipeableRecyclerViewTouchListener.SwipeListener() {
+                    @Override
+                    public boolean canSwipe(int position) {
+                        //  Toast.makeText(getActivity(), "canSwipe", Toast.LENGTH_LONG).show();
+                        try {
+                            menu1.close(true);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
 
-                                    Intent blank= new Intent(getActivity(),Group_Activities.class);
-                                    blank.putExtra("groupid",groupList.get(position).id);
-                                blank.putExtra("groupName",groupList.get(position).groupName);
-                                startActivity(blank);
-                                return false;
+                        Intent blank = new Intent(getActivity(), Group_Activities.class);
+                        blank.putExtra("groupid", groupList.get(position).id);
+                        blank.putExtra("groupName", groupList.get(position).groupName);
+                        startActivity(blank);
+                        return false;
 
-                            }
+                    }
 
-                            @Override
-                            public void onDismissedBySwipe(RecyclerView recyclerView, int[] reverseSortedPositions) {
-                                //Toast.makeText(getActivity(),"onDismissedBySwipe",Toast.LENGTH_LONG).show();
-                            }
-
-
+                    @Override
+                    public void onDismissedBySwipe(RecyclerView recyclerView, int[] reverseSortedPositions) {
+                        //Toast.makeText(getActivity(),"onDismissedBySwipe",Toast.LENGTH_LONG).show();
+                    }
 
 
-                        });
+                });
         rcGhp.addOnItemTouchListener(swipeDeleteTouchListener);
 
 
     }
 
-    private void init()
-    {
+    private void init() {
         utilClass = new UtilClass();
         groupList = new ArrayList<>();
         groupListclone = new ArrayList<>();
@@ -408,10 +496,9 @@ public class Group_Homepage extends android.support.v4.app.Fragment implements V
         ivGhpSearch.setEnabled(false);
     }
 
-    private void findAllViews()
-    {
+    private void findAllViews() {
         rlGhpRoot = (RelativeLayout) view.findViewById(R.id.rl_ghp_root);
-
+        drawer = (DrawerLayout) getActivity().findViewById(R.id.drawer_layout);
         ivGhpDrawer = (ImageView) view.findViewById(R.id.iv_ghp_drawer);
         ivGhpSearch = (ImageView) view.findViewById(R.id.iv_ghp_search);
         ivGhpSort = (ImageView) view.findViewById(R.id.iv_ghp_sort);
@@ -424,11 +511,12 @@ public class Group_Homepage extends android.support.v4.app.Fragment implements V
         et_search = (EditText) view.findViewById(R.id.et_search);
 
         rcGhp = (RecyclerView) view.findViewById(R.id.recycler_view);
-        errorLayout = view.findViewById(R.id.error_layout);
+        errorLayout = view.findViewById(R.id.icl_nm_error_layout);
 
-        imNoResults = (ImageView) errorLayout.findViewById(R.id.im_no_results);
-        imServerError = (ImageView) errorLayout.findViewById(R.id.im_server_error);
-        imNoInternet = (ImageView) errorLayout.findViewById(R.id.im_no_internet);
+        llNoResult = (LinearLayout) errorLayout.findViewById(R.id.ll_no_result);
+        llNoInternet = (LinearLayout) errorLayout.findViewById(R.id.ll_no_internet);
+        llServerError = (LinearLayout) errorLayout.findViewById(R.id.ll_server_error);
+        llInvalidToken = (LinearLayout) errorLayout.findViewById(R.id.ll_invalid_token);
 
         // Handle ProgressBar
         mProgressBar = (ProgressBar) view.findViewById(R.id.progressBar);
@@ -438,9 +526,10 @@ public class Group_Homepage extends android.support.v4.app.Fragment implements V
         icFabJoinGroup = (FloatingActionButton) view.findViewById(R.id.ic_fab_join_group);
         icFabStartGroup = (FloatingActionButton) view.findViewById(R.id.ic_fab_start_group);
 
-        imNoResults.setOnClickListener(this);
-        imServerError.setOnClickListener(this);
-        imNoInternet.setOnClickListener(this);
+        llNoResult.setOnClickListener(this);
+        llServerError.setOnClickListener(this);
+        llNoInternet.setOnClickListener(this);
+        llInvalidToken.setOnClickListener(this);
 
         icFabJoinGroup.setOnClickListener(icFabJoinGroup());
         icFabStartGroup.setOnClickListener(icFabStartGroup());
@@ -449,6 +538,10 @@ public class Group_Homepage extends android.support.v4.app.Fragment implements V
         ivGhpSearch.setOnClickListener(ivGhpSearch());
         ivCross.setOnClickListener(ivCross());
         ivGhpDrawer.setOnClickListener(ivGhpDrawer());
+
+        prgGh = (ProgressBarCircularIndeterminate) view.findViewById(R.id.prg_gh);
+        txtPrgGh = (TextView) view.findViewById(R.id.txt_prg_gh);
+
 
 
         menu1.setOnMenuToggleListener(new FloatingActionMenu.OnMenuToggleListener() {
@@ -494,14 +587,12 @@ public class Group_Homepage extends android.support.v4.app.Fragment implements V
         });
 
 
-
     }
 
-    private void Filter(String s)
-    {
-    //convert to Lowercase and then pass to adapter
+    private void Filter(String s) {
+        //convert to Lowercase and then pass to adapter
 
-        String searchwords= s.toLowerCase(Locale.getDefault());
+        String searchwords = s.toLowerCase(Locale.getDefault());
 
 
         group_homepageAdapter.filter(searchwords);
@@ -510,21 +601,21 @@ public class Group_Homepage extends android.support.v4.app.Fragment implements V
     }
 
     private View.OnClickListener ivGhpDrawer() {
-            return new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    //drawer
-                    mCallbacks.menuClick();
+        return new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                //drawer
+                mCallbacks.menuClick();
 
-                }
-            };
+            }
+        };
     }
 
     private View.OnClickListener ivGhpSearch() {
         return new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-            //search
+                //search
                 rlSimple.setVisibility(View.GONE);
                 rlSearch.setVisibility(View.VISIBLE);
 
@@ -533,16 +624,16 @@ public class Group_Homepage extends android.support.v4.app.Fragment implements V
     }
 
     private View.OnClickListener ivGhpSort() {
-        return  new View.OnClickListener() {
+        return new View.OnClickListener() {
             @Override
             public void onClick(View v) {
 
                 //sort
-                SortFragment sortFragment= new SortFragment();
+                SortFragment sortFragment = new SortFragment();
                 Bundle b = new Bundle();
-                b.putBoolean("Date",date_click);
-                b.putBoolean("Role",role_click);
-                b.putBoolean("Default",defaults_click);
+                b.putBoolean("Date", date_click);
+                b.putBoolean("Role", role_click);
+                b.putBoolean("Default", defaults_click);
                 sortFragment.setArguments(b);
                 sortFragment.show(getFragmentManager(), "SortFragment");
                 sortFragment.setListener(new SortInterface() {
@@ -667,8 +758,8 @@ public class Group_Homepage extends android.support.v4.app.Fragment implements V
                         group_homepageAdapter.clearApplications();
 
                         //doInBackground
-                        //    groupList.clear();
 
+                        //    groupList.clear();
 
                         //postExecute
                         //handle visibility
@@ -712,12 +803,11 @@ public class Group_Homepage extends android.support.v4.app.Fragment implements V
                     };
 
 
-
                 });
 
 
-                }
-            };
+            }
+        };
     }
 
 
@@ -725,20 +815,17 @@ public class Group_Homepage extends android.support.v4.app.Fragment implements V
         return new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (et_search.getText().toString().isEmpty())
-                {
+                if (et_search.getText().toString().isEmpty()) {
                     rlSearch.setVisibility(View.GONE);
                     rlSimple.setVisibility(View.VISIBLE);
 
                     try {
-                        InputMethodManager imm= (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
-                        imm.hideSoftInputFromWindow(getActivity().getCurrentFocus().getWindowToken(),0);
+                        InputMethodManager imm = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
+                        imm.hideSoftInputFromWindow(getActivity().getCurrentFocus().getWindowToken(), 0);
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
-                }
-                else
-                {
+                } else {
                     et_search.setText("");
                 }
 
@@ -748,7 +835,7 @@ public class Group_Homepage extends android.support.v4.app.Fragment implements V
 
 
     private View.OnClickListener icFabJoinGroup() {
-        return  new View.OnClickListener() {
+        return new View.OnClickListener() {
             @Override
             public void onClick(View v) {
 
@@ -758,14 +845,31 @@ public class Group_Homepage extends android.support.v4.app.Fragment implements V
                     e.printStackTrace();
                 }
 
-                Intent icFabJoinGroup=new Intent(getActivity(), Join_Request.class);
+                Intent icFabJoinGroup = new Intent(getActivity(), Join_Request.class);
                 startActivity(icFabJoinGroup);
             }
         };
     }
 
+    @Override
+    public void onResume() {
+        super.onResume();
+        Animation animation1 = AnimationUtils.loadAnimation(getActivity(), R.anim.fab2);
+        menu1.startAnimation(animation1);
+        menu1.setVisibility(View.VISIBLE);
+
+
+        if (SettingPreffrence.getPREF_Call_Vote(getActivity())) {
+
+            SettingPreffrence.setPREF_Call_Vote(getActivity(), false);
+
+            Snackbar.make(rlGhpRoot, getString(R.string.nm_cratevote_msg), Snackbar.LENGTH_SHORT).show();
+
+        }
+    }
+
     private View.OnClickListener icFabStartGroup() {
-        return  new View.OnClickListener() {
+        return new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 try {
@@ -773,36 +877,65 @@ public class Group_Homepage extends android.support.v4.app.Fragment implements V
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
-                Intent icFabStartGroup=new Intent(getActivity(), Create_Group.class);
+                Intent icFabStartGroup = new Intent(getActivity(), Create_Group.class);
                 startActivity(icFabStartGroup);
             }
         };
     }
 
     @Override
-    public void onClick(View v)
-    {
-        if (v==imNoResults || v==imServerError || v==imNoInternet )
-            UserGroupWS();
+    public void onClick(View v) {
+
+        /*if (v == llNoResult || v == llServerError || v == llNoInternet || v==llInvalidToken) {
+            llNoResult.setAlpha((float) 0.3);
+        }*/
+        switch (v.getId())
+        {
+            case  R.id.ll_no_result :
+              //  llNoResult.setAlpha((float) 0.2);
+                UserGroupWS();
+                break;
+            case  R.id.ll_server_error :
+               // llServerError.setAlpha((float) 0.2);
+                UserGroupWS();
+
+                break;
+            case  R.id.ll_no_internet :
+               // llNoInternet.setAlpha((float) 0.2);
+                UserGroupWS();
+
+                break;
+           /* case  R.id.ll_invalid_token :
+                //llInvalidToken.setAlpha((float) 0.2);
+                UserGroupWS();
+
+                break;*/
+        }
 
 
     }
 
-    public void addClickStringAction(Context context, View cardView, final int position)
-    {
+    public void addClickStringAction(Context context, View cardView, final int position) {
         cardView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
 
                 try {
+
                     menu1.close(true);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
 
-                Intent blank= new Intent(getActivity(),Group_Activities.class);
-                blank.putExtra("groupid",groupList.get(position).id);
-                blank.putExtra("groupName",groupList.get(position).groupName);
+                Log.e(TAG, "Click");
+                Log.e(TAG, "getGroupId is " + groupList.get(position).id);
+
+                SettingPreffrence.setGroupId(getActivity(), groupList.get(position).id);
+
+
+                Intent blank = new Intent(getActivity(), Group_Activities.class);
+                blank.putExtra("groupid", groupList.get(position).id);
+                blank.putExtra("groupName", groupList.get(position).groupName);
                 startActivity(blank);
             }
         });
@@ -810,13 +943,14 @@ public class Group_Homepage extends android.support.v4.app.Fragment implements V
     }
 
 
-
     public void addLongClickStringAction(final Context context, View button, final int position) {
         button.setOnLongClickListener(new View.OnLongClickListener() {
             @Override
             public boolean onLongClick(View v) {
                 Log.e(TAG, "onLongClick ");
+                Log.e(TAG, "getGroupId is " + groupList.get(position).id);
 
+                SettingPreffrence.setGroupId(getActivity(), groupList.get(position).id);
 
                 Boolean Meeting = false, ToDo = false, Vote = false;
                 Group_Homepage_Model dialog_model = groupList.get(position);
@@ -851,8 +985,9 @@ public class Group_Homepage extends android.support.v4.app.Fragment implements V
                 return true;
             }
         });
-    }
 
+
+    }
 
 
     @Override
@@ -877,5 +1012,39 @@ public class Group_Homepage extends android.support.v4.app.Fragment implements V
         Log.e("onDetach", "Detached");
     }
 
+
+    public void showSnackbar(String message, int length, String actionButtontxt) {
+
+
+        snackbar = Snackbar.make(drawer, message, length);
+        snackbar.setActionTextColor(Color.RED);
+        if (!TextUtils.isEmpty(actionButtontxt)) {
+
+            if (actionButtontxt.equalsIgnoreCase(getString(R.string.Logout))) {
+                snackbar.setAction(actionButtontxt, new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        logout();
+                    }
+                });
+
+            } else {
+                snackbar.setAction(actionButtontxt, new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        UserGroupWS();
+                    }
+                });
+            }
+
+        }
+
+        snackbar.show();
+    }
+
+
+    private void logout() {
+        getActivity().sendBroadcast(new Intent().setAction(getString(R.string.Logout)));
+    }
 
 }

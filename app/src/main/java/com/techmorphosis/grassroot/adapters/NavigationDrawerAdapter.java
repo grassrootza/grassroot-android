@@ -10,6 +10,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.techmorphosis.grassroot.R;
@@ -52,11 +53,13 @@ public class NavigationDrawerAdapter extends RecyclerView.Adapter<NavigationDraw
 
         if (myDrawerModel.isChecked())
         {
-            holder.title.setTextColor(mContext.getResources().getColor(R.color.buttoncolor));
+            holder.rlDrawerRow.setBackgroundResource(R.color.textbg);
+            holder.title.setTextColor(mContext.getResources().getColor(R.color.primaryColor));
             holder.titleicon.setBackgroundResource(myDrawerModel.getChangeicon());
         }
         else
         {
+            holder.rlDrawerRow.setBackgroundResource(R.color.white);
             holder.title.setTextColor(mContext.getResources().getColor(R.color.black));
         }
 
@@ -70,11 +73,13 @@ public class NavigationDrawerAdapter extends RecyclerView.Adapter<NavigationDraw
 
     public static  class MyViewHolder extends  RecyclerView.ViewHolder
     {
+        private final RelativeLayout rlDrawerRow;
         TextView title;
         ImageView titleicon;
 
         public MyViewHolder(View itemView) {
             super(itemView);
+            rlDrawerRow = (RelativeLayout) itemView.findViewById(R.id.rl_drawer_row);
             title = (TextView) itemView.findViewById(R.id.txt_title);
             titleicon  = (ImageView) itemView.findViewById(R.id.iv_titleicon);
 

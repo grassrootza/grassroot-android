@@ -3,20 +3,24 @@ package com.techmorphosis.grassroot.ui.activities;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
+import com.android.volley.AuthFailureError;
 import com.android.volley.NoConnectionError;
+import com.android.volley.ServerError;
 import com.android.volley.TimeoutError;
 import com.android.volley.VolleyError;
-import com.github.clans.fab.FloatingActionMenu;
+import com.techmorphosis.grassroot.Animator.CustomItemAnimator;
 import com.techmorphosis.grassroot.Interface.FilterInterface;
 import com.techmorphosis.grassroot.Network.AllLinsks;
 import com.techmorphosis.grassroot.Network.NetworkCall;
@@ -24,6 +28,8 @@ import com.techmorphosis.grassroot.R;
 import com.techmorphosis.grassroot.adapters.Group_ActivitiesAdapter;
 import com.techmorphosis.grassroot.models.Group_ActivitiesModel;
 import com.techmorphosis.grassroot.ui.fragments.FilterFragment;
+import com.techmorphosis.grassroot.utils.L;
+import com.techmorphosis.grassroot.utils.ProgressBarCircularIndeterminate;
 import com.techmorphosis.grassroot.utils.SettingPreffrence;
 import com.techmorphosis.grassroot.utils.UtilClass;
 import com.techmorphosis.grassroot.utils.listener.ErrorListenerVolley;
@@ -36,7 +42,8 @@ import org.json.JSONObject;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 
-public class Group_Activities extends PortraitActivity {
+public class Group_Activities extends PortraitActivity  implements View.OnClickListener{
+
 
     private RelativeLayout gaToolbar;
     private ImageView ivGaBack;
@@ -47,10 +54,14 @@ public class Group_Activities extends PortraitActivity {
     private UtilClass utilclass;
     private ImageView ivGaFilter;
     private String groupid;
+
     private View errorLayout;
-    private ImageView imNoResults;
-    private ImageView imServerError;
-    private ImageView imNoInternet;
+    private LinearLayout llNoResult;
+    private LinearLayout llNoInternet;
+    private LinearLayout llServerError;
+    private LinearLayout llInvalidToken;
+
+
     private LinearLayoutManager mLayoutManager;
     private Group_ActivitiesAdapter group_activitiesAdapter;
     private static final String TAG = "Group_Activities";
@@ -62,8 +73,12 @@ public class Group_Activities extends PortraitActivity {
     private ArrayList<Group_ActivitiesModel> toDoList;
     private ProgressBar mProgressBar;
     private boolean clear_click =false;
-    private FloatingActionMenu fabbutton;
+    private FloatingActionButton fabbutton;
     private String groupName;
+    private int error_flag;//0-success 1- no Internet 2- Invalid Token 3- Unknown error
+    private ProgressBarCircularIndeterminate prgGa;
+    private TextView txtPrgGa;
+    private View v;
 
 
     @Override
@@ -101,82 +116,49 @@ public class Group_Activities extends PortraitActivity {
     {
 
         //preExecute
-        activitiesList = new ArrayList<>();
+        preExecute();
 
-        
 
         //doInBackground
+        doInBackground();
+
+
+
+    }
+
+
+    private void preExecute() {
+
+        activitiesList = new ArrayList<>();
+
+        error_flag = 0;
+
+        //visible
+        prgGa.setVisibility(View.VISIBLE);
+        txtPrgGa.setVisibility(View.VISIBLE);
+
+        //gone
+        rcGa.setVisibility(View.INVISIBLE);
+        errorLayout.setVisibility(View.GONE);
+        llNoInternet.setVisibility(View.GONE);
+        llServerError.setVisibility(View.GONE);
+        llNoResult.setVisibility(View.GONE);
+
+    }
+
+    private void doInBackground() {
+
+
         NetworkCall networkCall = new NetworkCall
                 (
                         Group_Activities.this,
 
                         new ResponseListenerVolley() {
                             @Override
-                            public void onSuccess(String s)
-                            {
+                            public void onSuccess(String response) {
 
-                                //parse string to json
-
-                                try {
-                                    JSONObject jsonObject= new JSONObject(s);
-                                    if (jsonObject.getString("status").equalsIgnoreCase("SUCCESS"))
-                                    {
-                                        //proceed
-                                        JSONArray jsonArray = jsonObject.getJSONArray("data");
-
-                                        if (jsonArray.length()>0)
-                                        {
-
-                                            for (int i = 0; i < jsonArray.length(); i++)
-                                            {
-                                            JSONObject array_jsonobject= (JSONObject) jsonArray.get(i);
-                                            Group_ActivitiesModel model = new Group_ActivitiesModel();
-                                                model.id=array_jsonobject.getString("id");
-                                                model.title = array_jsonobject.getString("title");
-                                                model.description = array_jsonobject.getString("description");
-                                                model.name = array_jsonobject.getString("name");
-                                                model.type = array_jsonobject.getString("type");
-                                                model.deadline = array_jsonobject.getString("deadline");
-                                                model.hasResponded = array_jsonobject.getBoolean("hasResponded");
-                                                model.canAction = array_jsonobject.getBoolean("canAction");
-                                                model.reply = array_jsonobject.getString("reply");
-                                                if (model.type.equalsIgnoreCase("VOTE")){
-                                                    votemeeting(model);
-                                                }
-                                                else if (model.type.equalsIgnoreCase("MEETING")){
-                                                    votemeeting(model);
-                                                }
-                                                else if (model.type.equalsIgnoreCase("TODO")){
-                                                    ToDo(model);
-                                                }
-                                                activitiesList.add(model);
-
-                                            }
-
-                                        }
-                                      /*  Log.e(TAG,"activitiesList size is  " + activitiesList.size());
-                                        for (int i = 0; i < activitiesList.size(); i++) {
-                                            Log.e(TAG,"position is " + i);
-                                            Log.e(TAG,"title is " + activitiesList.get(i).title);
-                                        }*/
-
-                                        group_activitiesAdapter.clearApplications();
-
-                                        rcGa.setVisibility(View.VISIBLE);
-
-                                        group_activitiesAdapter.addApplications(activitiesList);
-                                        ivGaFilter.setEnabled(true);
-
-
-                                    }
-
-                                } catch (JSONException e) {
-                                    e.printStackTrace();
-
-                                    //failed to parse nly due to no internet
-                                    errorLayout.setVisibility(View.VISIBLE);
-                                    imNoInternet.setVisibility(View.VISIBLE);
-                                }
+                                error_flag = 0;
+                                postExecute(response);
 
 
                             }
@@ -186,63 +168,186 @@ public class Group_Activities extends PortraitActivity {
                             @Override
                             public void onError(VolleyError volleyError) {
 
-                                if ((volleyError instanceof NoConnectionError)|| (volleyError instanceof TimeoutError))
-                                {
-                                    //failed to parse nly due to no internet
-                                    errorLayout.setVisibility(View.VISIBLE);
-                                    imNoInternet.setVisibility(View.VISIBLE);
+                                if ((volleyError instanceof NoConnectionError)|| (volleyError instanceof TimeoutError)) {
+                                    error_flag = 1;
+                                    postExecute("");
                                 }
-                                else
+                                else if (volleyError instanceof ServerError)
                                 {
-                                    try
-                                    {
-                                        String responsebody = new String(volleyError.networkResponse.data,"utf-8");
-                                        Log.e(TAG, "responseBody " + responsebody);
-                                        JSONObject jsonObject = new JSONObject(responsebody);
-                                        String status = jsonObject.getString("status");
-                                        String message = jsonObject.getString("message");
-                                        if (status.equalsIgnoreCase("SUCCESS"))
-                                        {
-                                            Log.e(TAG, "status is" + status);
-                                            Log.e(TAG, "message is" + message);
-                                            if (jsonObject.getString("code").equalsIgnoreCase("404"))
-                                            {
-                                                showSnackBar(getString(R.string.ga_no_activities),"","","","",snackbar.LENGTH_SHORT);
-                                            }
-                                            else
-                                            {
-                                                showSnackBar(getString(R.string.Unknown_error),"","","","",snackbar.LENGTH_SHORT);
+                                    String response = null, status, message;
+                                    try {
+                                        response = new String(volleyError.networkResponse.data, "utf-8");
+                                        L.e(TAG, "response is  ", response);
+                                        JSONObject jsonObject_error = new JSONObject(response);
 
-                                            }
+                                        error_flag = 0;
+                                        postExecute(response);
 
-                                        }
-
-
-                                    } catch (UnsupportedEncodingException e) {
+                                    } catch (UnsupportedEncodingException e) {// Data is not able to UnsupportedEncodingException
                                         e.printStackTrace();
-                                        showSnackBar(getString(R.string.Unknown_error), "", "", "","", snackbar.LENGTH_SHORT);
 
-                                    } catch (JSONException e) {
+                                        error_flag = 5;
+                                        postExecute("");
+
+                                    } catch (JSONException e) {// Data is not able to parse
                                         e.printStackTrace();
-                                        showSnackBar(getString(R.string.Unknown_error), "", "", "","", snackbar.LENGTH_SHORT);
 
+                                        error_flag= 5;
+                                        postExecute("");
                                     }
 
+
+                                }
+                                else if (volleyError instanceof AuthFailureError) {
+                                    error_flag = 2;
+                                    postExecute("");
+                                }
+                                else {//Unknown error
+                                    error_flag = 5;
+                                    postExecute("");
                                 }
 
                             }
                         },
                         AllLinsks.groupactivities + groupid + "/" + SettingPreffrence.getPREF_Phone_Token(Group_Activities.this),
                         getString(R.string.prg_message),
-                        true
+                        false
 
                 );
 
         networkCall.makeStringRequest_GET();
+    }
 
-        //PostExecute
+    private void postExecute(String response) {
+
+        Log.e(TAG,"error_flag is " + error_flag);
+
+        if (error_flag == 1) {//no Internet
+            prgGa.setVisibility(View.GONE);
+            txtPrgGa.setVisibility(View.GONE);
+
+            errorLayout.setVisibility(View.VISIBLE);
+            llNoInternet.setVisibility(View.VISIBLE);
+        }
+        else if (error_flag==2) {// Invalid Token
+            prgGa.setVisibility(View.GONE);
+            txtPrgGa.setVisibility(View.GONE);
+
+            errorLayout.setVisibility(View.VISIBLE);
+            llInvalidToken.setVisibility(View.VISIBLE);
+        }
+        else if (error_flag==3) {//Unknown error
+            prgGa.setVisibility(View.GONE);
+            txtPrgGa.setVisibility(View.GONE);
+
+            errorLayout.setVisibility(View.VISIBLE);
+            llServerError.setVisibility(View.VISIBLE);
+        }
+        else if (error_flag==0) {
+
+            try {
+                JSONObject jsonObject= new JSONObject(response);
+                if (jsonObject.getString("status").equalsIgnoreCase("SUCCESS"))
+                {
+
+
+                    //proceed
+                    JSONArray jsonArray = jsonObject.getJSONArray("data");
+
+                    if (jsonArray.length() > 0) {
+
+                        for (int i = 0; i < jsonArray.length(); i++) {
+                            JSONObject array_jsonobject = (JSONObject) jsonArray.get(i);
+                            Group_ActivitiesModel model = new Group_ActivitiesModel();
+                            model.id = array_jsonobject.getString("id");
+                            model.title = array_jsonobject.getString("title");
+                            model.description = array_jsonobject.getString("description");
+                            model.name = array_jsonobject.getString("name");
+                            model.type = array_jsonobject.getString("type");
+                            model.deadline = array_jsonobject.getString("deadline");
+                            model.hasResponded = array_jsonobject.getBoolean("hasResponded");
+                            model.canAction = array_jsonobject.getBoolean("canAction");
+                            model.reply = array_jsonobject.getString("reply");
+                            if (model.type.equalsIgnoreCase("VOTE")) {
+                                votemeeting(model);
+                            } else if (model.type.equalsIgnoreCase("MEETING")) {
+                                votemeeting(model);
+                            } else if (model.type.equalsIgnoreCase("TODO")) {
+                                ToDo(model);
+                            }
+                            activitiesList.add(model);
+
+                        }
+
+
+                        group_activitiesAdapter.clearApplications();
+
+
+                        group_activitiesAdapter.addApplications(activitiesList);
+
+                        //step1-hide the loader
+                        prgGa.setVisibility(View.GONE);
+                        txtPrgGa.setVisibility(View.GONE);
+
+                        //step2- show the list
+                        rcGa.setVisibility(View.VISIBLE);
+
+                        //step3- now enable the ui onclick
+                        ivGaFilter.setEnabled(true);
+
+
+                    } else {
+
+                        //No result
+                        prgGa.setVisibility(View.GONE);
+                        txtPrgGa.setVisibility(View.GONE);
+
+                        errorLayout.setVisibility(View.VISIBLE);
+                        llNoResult.setVisibility(View.VISIBLE);
+
+                    }
+
+
+
+
+                }
+                else if (jsonObject.getString("status").equalsIgnoreCase("Failure"))
+                {
+                    Log.e(TAG, "Failure ");
+
+                    prgGa.setVisibility(View.GONE);
+                    txtPrgGa.setVisibility(View.GONE);
+
+
+                    errorLayout.setVisibility(View.VISIBLE);
+                    llNoResult.setVisibility(View.VISIBLE);
+                }
+
+            } catch (JSONException e) {
+                e.printStackTrace();
+
+                Log.e(TAG, "JSONException is " + e.getMessage());
+
+                prgGa.setVisibility(View.GONE);
+                txtPrgGa.setVisibility(View.GONE);
+
+                errorLayout.setVisibility(View.VISIBLE);
+                llServerError.setVisibility(View.VISIBLE);
+            }
+
+        }
+        else {
+            Log.e(TAG, "case not match is "  );
+
+            prgGa.setVisibility(View.GONE);
+            txtPrgGa.setVisibility(View.GONE);
+
+            errorLayout.setVisibility(View.VISIBLE);
+            llServerError.setVisibility(View.VISIBLE);
+        }
 
     }
+
 
     private void ToDo(Group_ActivitiesModel model)
     {
@@ -349,32 +454,46 @@ public class Group_Activities extends PortraitActivity {
         ivGaFilter = (ImageView) findViewById(R.id.iv_ga_filter);
         tvGaToolbarTxt = (TextView) findViewById(R.id.tv_ga_toolbar_txt);
         rcGa = (RecyclerView) findViewById(R.id.rc_ga);
+
+        errorLayout = (View) findViewById(R.id.error_layout);
+        prgGa = (ProgressBarCircularIndeterminate) findViewById(R.id.prg_ga);
+        txtPrgGa = (TextView) findViewById(R.id.txt_prg_ga);
+
+
         errorLayout = findViewById(R.id.error_layout);
-        imNoResults = (ImageView) errorLayout.findViewById(R.id.im_no_results);
-        imServerError = (ImageView) errorLayout.findViewById(R.id.im_server_error);
-        imNoInternet = (ImageView) errorLayout.findViewById(R.id.im_no_internet);
+
+        llNoResult = (LinearLayout) errorLayout.findViewById(R.id.ll_no_result);
+        llNoInternet = (LinearLayout) errorLayout.findViewById(R.id.ll_no_internet);
+        llServerError = (LinearLayout) errorLayout.findViewById(R.id.ll_server_error);
+        llInvalidToken = (LinearLayout) errorLayout.findViewById(R.id.ll_invalid_token);
+
+
         // Handle ProgressBar
         mProgressBar = (ProgressBar) findViewById(R.id.progressBar);
-        fabbutton = (FloatingActionMenu) findViewById(R.id.fabbutton);
+        fabbutton = (FloatingActionButton) findViewById(R.id.fabbutton);
 
         ivGaFilter.setEnabled(false);
         ivGaFilter.setOnClickListener(ivGaFilter());
         ivGaBack.setOnClickListener(ivGaBack());
         tvGaToolbarTxt.setText(groupName);
-        fabbutton.setOnMenuToggleListener(new FloatingActionMenu.OnMenuToggleListener() {
-            @Override
-            public void onMenuToggle(boolean opened) {
-                String text = "";
-                if (opened) {
-                    fabbutton.toggle(false);
-                    Intent open= new Intent(Group_Activities.this,NewActivities.class);
-                    startActivity(open);
-                    overridePendingTransition(R.anim.push_up_in, R.anim.push_up_out);
-                } else {
 
-                }
+        fabbutton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                SettingPreffrence.setGroupId(Group_Activities.this,groupid);
+                Log.e(TAG,"groupid is " + groupid);
+                Intent open= new Intent(Group_Activities.this,NewActivities.class);
+                startActivity(open);
+                overridePendingTransition(R.anim.push_up_in, R.anim.push_up_out);
             }
+
         });
+
+        //onClick
+        llNoResult.setOnClickListener(this);
+        llServerError.setOnClickListener(this);
+        llNoInternet.setOnClickListener(this);
+        llInvalidToken.setOnClickListener(this);
 
     }
 
@@ -629,38 +748,21 @@ public class Group_Activities extends PortraitActivity {
     private void CallVoteMeetingWS(final int position, String response) {
         //preExecute
             String Url = null;
-        if (activitiesList.get(position).type.equalsIgnoreCase("VOTE"))
-        {
+        String type = null;
 
-            response=response;
-          /*  if (activitiesList.get(position).reply.equalsIgnoreCase("Yes"))
-            {
-                response="NO_RESPONSE";
-            }
-            else
-            {
-                response="Yes";
+        if (activitiesList.get(position).type.equalsIgnoreCase("VOTE")) {
 
-            }*/
-            Url=AllLinsks.Vote + activitiesList.get(position).id + "/" + SettingPreffrence.getPREF_Phone_Token(Group_Activities.this) + "?response=" + response;
-            Log.e(TAG,"VoteUrl is " + Url );
+
+            type = "Vote";
+            Url = AllLinsks.Vote + activitiesList.get(position).id + "/" + SettingPreffrence.getPREF_Phone_Token(Group_Activities.this) + "?response=" + response;
+            Log.e(TAG, "VoteUrl is " + Url);
 
         }
         else if (activitiesList.get(position).type.equalsIgnoreCase("MEETING"))
         {
 
 
-            response=response;
-
-         /*   if (activitiesList.get(position).reply.equalsIgnoreCase("Yes"))
-            {
-                response="NO_RESPONSE";
-            }
-            else
-            {
-                response="Yes";
-
-            }*/
+            type="Meeting";
             Url=AllLinsks.Meeting + activitiesList.get(position).id + "/" + SettingPreffrence.getPREF_Phone_Token(Group_Activities.this) + "?response=" + response;
             Log.e(TAG,"MeetingUrl is " + Url );
 
@@ -669,6 +771,7 @@ public class Group_Activities extends PortraitActivity {
         //doInBacground
         final String finalResponse = response;
         final String finalResponse1 = response;
+        final String finalType = type;
         NetworkCall networkCall = new NetworkCall
                 (
                         Group_Activities.this,
@@ -679,48 +782,17 @@ public class Group_Activities extends PortraitActivity {
                                 //parse string to json
                                 try {
                                     JSONObject jsonObject = new JSONObject(s);
+
                                     if (jsonObject.getString("status").equalsIgnoreCase("SUCCESS")) {
+
 
                                         Group_Activities_WS();
 
-
-/*
-                                        Group_ActivitiesModel update_model = activitiesList.get(position);
-
-                                        update_model.hasResponded=true;//u responded succesfully
-                                        update_model.canAction=false;//u cant do action now
-                                        update_model.reply= finalResponse;//ur reply is save
-*/
-
-                                        /*
-                                        if (update_model.reply.equalsIgnoreCase("Yes"))
-                                        {
-
-                                            //if Yes then change No
-                                            update_model.hasResponded=true;
-                                            update_model.canAction=false;
-                                            update_model.reply="No";
-
-
-                                        }
-                                        else
-                                        {
-                                            //if No then change Yes
-                                            update_model.hasResponded=true;
-                                            update_model.canAction=false;
-                                            update_model.reply="Yes";
-
-
-                                        }
-                                        */
-
-                                     //   group_activitiesAdapter.notifyDataSetChanged();
-
-                                        if (activitiesList.get(position).type.equalsIgnoreCase("VOTE"))
+                                        if (finalType.equalsIgnoreCase("Vote"))
                                         {
                                             showSnackBar(getString(R.string.ga_Votesend), "", "", "", "",Snackbar.LENGTH_SHORT);
                                         }
-                                        else
+                                        else  if (finalType.equalsIgnoreCase("Meeting"))
                                         {
                                             showSnackBar(getString(R.string.ga_Meetingsend), "", "", "", "",Snackbar.LENGTH_SHORT);
 
@@ -743,34 +815,50 @@ public class Group_Activities extends PortraitActivity {
                         new ErrorListenerVolley() {
                             @Override
                             public void onError(VolleyError volleyError) {
-                                try {
-                                    String responsebody = new String(volleyError.networkResponse.data, "utf-8");
-                                    Log.e(TAG, "responseBody " + responsebody);
-                                    JSONObject jsonObject = new JSONObject(responsebody);
-                                    String status = jsonObject.getString("status");
-                                    String message = jsonObject.getString("message");
-                                    if (status.equalsIgnoreCase("SUCCESS")) {
-                                        Log.e(TAG, "status is" + status);
-                                        Log.e(TAG, "message is" + message);
-                                        if (jsonObject.getString("code").equalsIgnoreCase("409")) {
-                                            showSnackBar(getString(R.string.ga_VoteFailure), "", "", "","", snackbar.LENGTH_SHORT);
-                                        } else {
-                                            showSnackBar(getString(R.string.Unknown_error), "", "", "","", snackbar.LENGTH_SHORT);
+                                if (volleyError instanceof NoConnectionError || volleyError instanceof TimeoutError)
+                                {
+                                    showSnackBar(getString(R.string.Unknown_error), "", "", "", "", snackbar.LENGTH_SHORT);
+
+                                }
+                                else if (volleyError instanceof ServerError)
+                                {
+                                    try {
+                                        String responsebody = new String(volleyError.networkResponse.data, "utf-8");
+                                        Log.e(TAG, "responseBody " + responsebody);
+                                        JSONObject jsonObject = new JSONObject(responsebody);
+                                        String status = jsonObject.getString("status");
+                                        String message = jsonObject.getString("message");
+                                        if (status.equalsIgnoreCase("SUCCESS")) {
+                                            Log.e(TAG, "status is" + status);
+                                            Log.e(TAG, "message is" + message);
+                                            if (jsonObject.getString("code").equalsIgnoreCase("409")) {
+                                                showSnackBar(getString(R.string.ga_VoteFailure), "", "", "", "", snackbar.LENGTH_SHORT);
+                                            } else {
+                                                showSnackBar(getString(R.string.Unknown_error), "", "", "", "", snackbar.LENGTH_SHORT);
+
+                                            }
 
                                         }
 
+
+                                    } catch (UnsupportedEncodingException e) {
+                                        e.printStackTrace();
+                                        showSnackBar(getString(R.string.Unknown_error), "", "", "", "", snackbar.LENGTH_SHORT);
+
+                                    } catch (JSONException e) {
+                                        e.printStackTrace();
+                                        showSnackBar(getString(R.string.Unknown_error), "", "", "", "", snackbar.LENGTH_SHORT);
+
                                     }
 
-
-                                } catch (UnsupportedEncodingException e) {
-                                    e.printStackTrace();
-                                    showSnackBar(getString(R.string.Unknown_error), "", "", "","", snackbar.LENGTH_SHORT);
-
-                                } catch (JSONException e) {
-                                    e.printStackTrace();
-                                    showSnackBar(getString(R.string.Unknown_error), "", "", "","", snackbar.LENGTH_SHORT);
+                                }
+                                else if (volleyError instanceof AuthFailureError)
+                                {
+                                    showSnackBar(getString(R.string.INVALID_TOKEN), "", "", "", "", snackbar.LENGTH_SHORT);
 
                                 }
+
+
                             }
                         },
 
@@ -801,14 +889,77 @@ public class Group_Activities extends PortraitActivity {
 
 
     }
+    public void CardView(View mainView, final int position)
+    {
+        mainView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Group_ActivitiesModel model;
+                if (vote_click)
+                {
+                     model = voteList.get(position);
+
+                }
+                else if (meeting_click)
+                {
+                     model = meetingList.get(position);
+
+                }
+                else if (todo_click)
+                {
+                     model = toDoList.get(position);
+
+                }
+                else
+                {
+                     model = activitiesList.get(position);
+
+                }
+                Log.e(TAG,"positions is " + position);
+                Log.e(TAG,"title is " + model.title);
+                Log.e(TAG,"type is " + model.type);
+                if (model.type.equalsIgnoreCase("VOTE")) {
+                    Intent vote_view = new Intent(Group_Activities.this, ViewVote.class);
+                    vote_view.putExtra("voteid", model.id);
+                    startActivityForResult(vote_view,1);
+                }
+            }
+        });
+    }
+
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+
+        if (resultCode == 1 && requestCode == 1) {
+
+            Log.e(this.TAG, "resultCode==1 ");
+            if (data != null) {
+                if (data.getStringExtra("update").equals("1"))
+                {
+                    Log.e(TAG,"update");
+                    Group_Activities_WS();
+
+                }
+                else
+                {
+                    Log.e(TAG," nothing to update");
+                }
+            }
+        } else  {
+            Log.e(this.TAG, "resultCode==2");
+
+        }
+    }
+
 
     public void Completed(ImageView iv2, final int position, final String response)
     {
         iv2.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-               // Toast.makeText(getBaseContext(), "Completed position is " + position, Toast.LENGTH_LONG).show();
-                    CallToDoWS(position,response);
+                // Toast.makeText(getBaseContext(), "Completed position is " + position, Toast.LENGTH_LONG).show();
+                CallToDoWS(position, response);
             }
         });
 
@@ -876,34 +1027,56 @@ public class Group_Activities extends PortraitActivity {
                         new ErrorListenerVolley() {
                             @Override
                             public void onError(VolleyError volleyError) {
-                                try {
-                                    String responsebody = new String(volleyError.networkResponse.data, "utf-8");
-                                    Log.e(TAG, "responseBody " + responsebody);
-                                    JSONObject jsonObject = new JSONObject(responsebody);
-                                    String status = jsonObject.getString("status");
-                                    String message = jsonObject.getString("message");
-                                    if (status.equalsIgnoreCase("SUCCESS")) {
-                                        Log.e(TAG, "status is" + status);
-                                        Log.e(TAG, "message is" + message);
-                                        if (jsonObject.getString("code").equalsIgnoreCase("409")) {
-                                            showSnackBar(getString(R.string.ga_ToDoFailure), "", "", "","", snackbar.LENGTH_SHORT);
-                                        } else {
-                                            showSnackBar(getString(R.string.Unknown_error), "", "", "","", snackbar.LENGTH_SHORT);
+                                if (volleyError instanceof  NoConnectionError || volleyError instanceof  TimeoutError)
+                                {
+                                    showSnackBar(getString(R.string.No_network), getString(R.string.Retry), "ToDoWs",response, String.valueOf(position), Snackbar.LENGTH_INDEFINITE);
+
+                                }
+                                else if (volleyError instanceof ServerError)
+                                {
+
+                                    try {
+                                        String responsebody = new String(volleyError.networkResponse.data, "utf-8");
+                                        Log.e(TAG, "responseBody " + responsebody);
+                                        JSONObject jsonObject = new JSONObject(responsebody);
+                                        String status = jsonObject.getString("status");
+                                        String message = jsonObject.getString("message");
+                                        if (status.equalsIgnoreCase("SUCCESS")) {
+                                            Log.e(TAG, "status is" + status);
+                                            Log.e(TAG, "message is" + message);
+                                            if (jsonObject.getString("code").equalsIgnoreCase("409")) {
+                                                showSnackBar(getString(R.string.ga_ToDoFailure), "", "", "", "", snackbar.LENGTH_SHORT);
+                                            } else {
+                                                showSnackBar(getString(R.string.Unknown_error), "", "", "", "", snackbar.LENGTH_SHORT);
+
+                                            }
 
                                         }
 
+
+                                    } catch (UnsupportedEncodingException e) {
+                                        e.printStackTrace();
+                                        showSnackBar(getString(R.string.Unknown_error), "", "", "", "", snackbar.LENGTH_SHORT);
+
+                                    } catch (JSONException e) {
+                                        e.printStackTrace();
+                                        showSnackBar(getString(R.string.Unknown_error), "", "", "", "", snackbar.LENGTH_SHORT);
+
                                     }
 
-
-                                } catch (UnsupportedEncodingException e) {
-                                    e.printStackTrace();
-                                    showSnackBar(getString(R.string.Unknown_error), "", "", "", "",snackbar.LENGTH_SHORT);
-
-                                } catch (JSONException e) {
-                                    e.printStackTrace();
-                                    showSnackBar(getString(R.string.Unknown_error), "", "", "","", snackbar.LENGTH_SHORT);
+                                }
+                                else if (volleyError instanceof  AuthFailureError)
+                                {
+                                    showSnackBar(getString(R.string.INVALID_TOKEN), "", "", "", "", snackbar.LENGTH_SHORT);
 
                                 }
+                                else
+                                {
+                                    showSnackBar(getString(R.string.Unknown_error), "", "", "", "", snackbar.LENGTH_SHORT);
+
+                                }
+
+
                             }
                         },
 
@@ -943,5 +1116,50 @@ public class Group_Activities extends PortraitActivity {
         snackbar.show();
 
     }
-    
+
+
+    @Override
+    public void onClick(View v) {
+
+        /*if (v == llNoResult || v == llServerError || v == llNoInternet || v==llInvalidToken) {
+            llNoResult.setAlpha((float) 0.3);
+        }*/
+        switch (v.getId())
+        {
+            case  R.id.ll_no_result :
+                //  llNoResult.setAlpha((float) 0.2);
+                Group_Activities_WS();
+                break;
+            case  R.id.ll_server_error :
+                // llServerError.setAlpha((float) 0.2);
+                Group_Activities_WS();
+
+                break;
+            case  R.id.ll_no_internet :
+                // llNoInternet.setAlpha((float) 0.2);
+                Group_Activities_WS();
+
+                break;
+         /*   case  R.id.ll_invalid_token :
+                //llInvalidToken.setAlpha((float) 0.2);
+                Group_Activities_WS();
+
+                break;*/
+        }
+
+
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (SettingPreffrence.getPREF_Call_Vote(Group_Activities.this)) {
+
+            SettingPreffrence.setPREF_Call_Vote(Group_Activities.this,false);
+
+            showSnackBar(getString(R.string.nm_cratevote_msg), "", "", "", "", snackbar.LENGTH_SHORT);
+            Group_Activities_WS();
+        }
+    }
+
 }

@@ -4,7 +4,7 @@
     android:shape="rectangle">
 
     <!-- view background color -->
-    <solid android:color="@color/buttoncolor" />
+    <solid android:color="@color/primaryColor" />
 
 
     <!-- view border color and width -->

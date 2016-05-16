@@ -4,7 +4,7 @@
     <style name="AppTheme" parent="Theme.AppCompat.Light.NoActionBar">
         <!-- Customize your theme here. -->
         <item name="android:windowBackground">@color/windowBackground</item>
-        <item name="colorControlActivated">@color/buttoncolor</item>
+        <item name="colorControlActivated">@color/primaryColor</item>
         <item name="colorPrimaryDark">@color/primaryColorDark</item>
         <item name="colorPrimary">@color/primaryColor</item>
         <item name="vpiCirclePageIndicatorStyle">@style/CustomCirclePageIndicator</item>
@@ -71,5 +71,61 @@
     <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
 
     <style name="MyDialog" parent="@android:style/Theme.Dialog"></style>
+
+    <style name="AppTheme.DialogMetrics">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:paddingLeft">@dimen/dialog_padding_horizontal</item>
+        <item name="android:paddingRight">@dimen/dialog_padding_horizontal</item>
+        <item name="android:paddingTop">@dimen/dialog_padding_vertical</item>
+    </style>
+
+
+    <style name="Button" tools:ignore="NewApi">
+        <item name="android:textSize">@dimen/md_button_textsize</item>
+        <item name="android:singleLine">true</item>
+        <item name="android:layout_gravity">center_vertical</item>
+        <item name="android:gravity">center</item>
+        <item name="android:background">@null</item>
+        <item name="android:minWidth">@dimen/md_button_min_width</item>
+        <item name="android:paddingLeft">@dimen/md_button_textpadding_horizontal</item>
+        <item name="android:paddingRight">@dimen/md_button_textpadding_horizontal</item>
+    </style>
+
+    <style name="text_medium" tools:ignore="NewApi">
+        <item name="android:textSize">@dimen/txt_medium</item>
+        <item name="android:singleLine">true</item>
+    </style>
+
+    <style name="text_small" tools:ignore="NewApi">
+        <item name="android:textSize">@dimen/txt_small</item>
+        <item name="android:singleLine">true</item>
+    </style>
+
+    <style name="Button_green" tools:ignore="NewApi">
+        <item name="android:textSize">@dimen/txt_medium</item>
+        <item name="android:textColor">@drawable/green_txt</item>
+        <item name="android:singleLine">true</item>
+        <item name="android:background">@drawable/register</item>
+        <item name="android:layout_marginLeft">10dp</item>
+        <item name="android:layout_marginRight">10dp</item>
+        <item name="android:layout_marginBottom">20dp</item>
+
+
+    </style>
+
+    <style name="Button_white" tools:ignore="NewApi">
+        <item name="android:textSize">@dimen/txt_medium</item>
+        <item name="android:textColor">@drawable/white_txt</item>
+        <item name="android:singleLine">true</item>
+        <item name="android:background">@drawable/register</item>
+        <item name="android:layout_marginLeft">10dp</item>
+        <item name="android:layout_marginRight">10dp</item>
+        <item name="android:layout_marginBottom">20dp</item>
+
+
+    </style>
+
+
 
 </resources>
