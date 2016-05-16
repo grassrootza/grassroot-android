@@ -30,7 +30,7 @@ import com.techmorphosis.grassroot.ui.fragments.HomeScreenViewFragment;
 import com.techmorphosis.grassroot.ui.fragments.LoginScreenFragment;
 import com.techmorphosis.grassroot.ui.fragments.OtpScreenFragment;
 import com.techmorphosis.grassroot.ui.fragments.RegisterScreenFragment;
-import com.techmorphosis.grassroot.utils.ContactUtil.ErrorUtils;
+import com.techmorphosis.grassroot.utils.ErrorUtils;
 import com.techmorphosis.grassroot.utils.LocationUtils;
 import com.techmorphosis.grassroot.utils.NetworkUtils;
 import com.techmorphosis.grassroot.utils.SettingPreference;

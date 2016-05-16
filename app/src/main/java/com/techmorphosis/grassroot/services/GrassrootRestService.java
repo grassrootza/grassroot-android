@@ -62,7 +62,7 @@ public class GrassrootRestService {
 
         @GET("user/add/{phoneNumber}/{displayName}")
         Call<GenericResponse> addUser(@Path("phoneNumber") String phoneNumber,
-                                            @Path("displayName") String displayName);
+                                      @Path("displayName") String displayName);
 
         @GET("user/login/{phoneNumber}")
         Call<GenericResponse> login(@Path("phoneNumber") String phoneNumber);
@@ -70,12 +70,12 @@ public class GrassrootRestService {
        //authenticate existing user
         @GET("user/login/authenticate/{phoneNumber}/{code}")
         Call<TokenResponse> authenticate(@Path("phoneNumber") String phoneNumber,
-                                               @Path("code") String code);
+                                         @Path("code") String code);
 
         //verify new user login credential
         @GET("user/verify/{phoneNumber}/{code}")
         Call<TokenResponse> verify(@Path("phoneNumber") String phoneNumber,
-                                         @Path("code") String code);
+                                   @Path("code") String code);
 
         //store user location
         @GET("user/location/{phoneNumber}/{code}/{latitude}/{longitude}")
@@ -88,7 +88,13 @@ public class GrassrootRestService {
                                                 @Path("code") String code,
                                                 @Query("groupName") String groupName,
                                                 @Query("description") String description,
-                                                @Query("phoneNumbers") String[] phoneNumbers); // todo: send names & roles, too
+                                                @Query("phoneNumbers") String[] phoneNumbers);
+
+        @POST("group/create/new/{phoneNumber}/{code}/{groupName}/{description}")
+        Call<GenericResponse> createGroupNew(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
+                                             @Path("groupName") String groupName, @Path("description") String groupDescription,
+                                             @Body List<Member> membersToAdd);
+
          //user groups
         @GET("group/list/{phoneNumber}/{code}")
         Call<GroupResponse> getUserGroups(@Path("phoneNumber") String phoneNumber,

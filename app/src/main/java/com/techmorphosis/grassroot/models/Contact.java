@@ -22,7 +22,6 @@ public class Contact implements Parcelable {
     public String selectedNumber;
     public String contact_ID;
 
-
     @Override
     public int describeContents() {
         return 0;
@@ -65,7 +64,7 @@ public class Contact implements Parcelable {
     public static List<Member> convertToMembers(List<Contact> contacts, String roleName) {
         List<Member> members = new ArrayList<>();
         for (final Contact c : contacts)
-            members.add(new Member(c.selectedNumber, c.name, roleName));
+            members.add(new Member(c.selectedNumber, c.name, roleName, c.contact_ID));
         return members;
     }
 
@@ -78,6 +77,7 @@ public class Contact implements Parcelable {
             c.numbers = Collections.singletonList(m.getPhoneNumber());
             c.name = m.getDisplayName();
             c.isSelected = defaultSelected;
+            c.contact_ID = m.getContactId();
             contacts.add(c);
         }
         return contacts;
@@ -104,6 +104,7 @@ public class Contact implements Parcelable {
                 "name='" + name + '\'' +
                 ", selectedNumber=" + selectedNumber +
                 ", numbers=" + numbers +
+                ", contactId=" + contact_ID +
                 '}';
     }
 }

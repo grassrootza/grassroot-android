@@ -1,4 +1,4 @@
-package com.techmorphosis.grassroot.utils.ContactUtil;
+package com.techmorphosis.grassroot.utils;
 
 import android.content.Context;
 import android.support.design.widget.Snackbar;
@@ -35,8 +35,9 @@ public class ErrorUtils {
             socketError(errorViewHolder, (SocketTimeoutException) e);
         } else if (e instanceof IOException) {
             otherIOError(errorViewHolder, (IOException) e);
+        } else {
+            Log.e(TAG, "Error! Should not be another kind of error here! Output: " + e.toString());
         }
-        Log.e(TAG, "Error! Should not be another kind of error here! Output: " + e.toString());
     }
 
     public static void connectivityError(View holder, NoConnectivityException e) {

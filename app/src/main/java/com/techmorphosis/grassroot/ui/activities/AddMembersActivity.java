@@ -18,7 +18,7 @@ import com.techmorphosis.grassroot.services.model.GenericResponse;
 import com.techmorphosis.grassroot.services.model.Member;
 import com.techmorphosis.grassroot.ui.fragments.MemberListFragment;
 import com.techmorphosis.grassroot.utils.Constant;
-import com.techmorphosis.grassroot.utils.ContactUtil.ErrorUtils;
+import com.techmorphosis.grassroot.utils.ErrorUtils;
 import com.techmorphosis.grassroot.utils.PermissionUtils;
 import com.techmorphosis.grassroot.utils.SettingPreference;
 import com.techmorphosis.grassroot.utils.UtilClass;
@@ -36,15 +36,18 @@ import retrofit2.Response;
 /**
  * Created by luke on 2016/05/05.
  */
-public class AddMembersActivity extends AppCompatActivity {
+public class AddMembersActivity extends AppCompatActivity implements MemberListFragment.MemberListListener {
 
     private static final String TAG = AddMembersActivity.class.getSimpleName();
+    private static final String EXISTING_ID = "existingMembers";
+    private static final String NEW_ID = "newMembers";
 
     private String groupUid;
     private String groupName;
     private List<Member> membersToAdd;
-    private GrassrootRestService grassrootRestService;
+    private boolean newMemberListStarted;
 
+    private GrassrootRestService grassrootRestService;
     private MemberListFragment existingMemberListFragment;
     private MemberListFragment newMemberListFragment;
 
@@ -82,16 +85,15 @@ public class AddMembersActivity extends AppCompatActivity {
 
         Bundle extras = getIntent().getExtras();
         if (extras == null) {
-            Log.e(TAG, "ERROR! Null extras passed to add members activity, cannot execute, aborting");
+            Log.d(TAG, "ERROR! Null extras passed to add members activity, cannot execute, aborting");
             finish();
             return;
         } else {
-            Log.e(TAG, "inside addMembersActivity ... passed extras bundle = " + extras.toString());
+            Log.d(TAG, "inside addMembersActivity ... passed extras bundle = " + extras.toString());
             init(extras);
             groupNameView.setText(groupName); // todo: handle long group names
             setupFloatingActionButtons();
             setupExistingMemberRecyclerView();
-            Log.d(TAG, "inside addMembersActivity ... created it!");
         }
     }
 
@@ -114,6 +116,7 @@ public class AddMembersActivity extends AppCompatActivity {
     private void setupExistingMemberRecyclerView() {
         existingMemberListFragment = new MemberListFragment();
         existingMemberListFragment.setGroupUid(groupUid);
+        existingMemberListFragment.setID(EXISTING_ID);
         getSupportFragmentManager().beginTransaction()
                 .add(R.id.am_existing_member_list_container, existingMemberListFragment)
                 .commit();
@@ -122,14 +125,13 @@ public class AddMembersActivity extends AppCompatActivity {
     private void setupNewMemberRecyclerView() {
         newMemberListFragment = new MemberListFragment();
         newMemberListFragment.setGroupUid(null);
-        newMemberListFragment.setMemberList(membersToAdd);
+        newMemberListFragment.setID(NEW_ID);
         getSupportFragmentManager().beginTransaction()
                 .add(R.id.am_new_member_list_container, newMemberListFragment)
                 .commit();
-        // newMemberListFragment.setHeading(getResources().getString(R.string.member_list_new_members_header));
     }
 
-    @OnClick(R.id.iv_crossimage)
+    @OnClick(R.id.am_iv_crossimage)
     public void closeMenu() { finish(); }
 
     @OnClick(R.id.icon_add_from_contacts)
@@ -155,9 +157,9 @@ public class AddMembersActivity extends AppCompatActivity {
     public void commitResultsAndExit() {
         if (membersToAdd != null && membersToAdd.size() > 0) {
             postNewMembersToGroup();
-            Log.e(TAG, "Exiting with these members to add: " + membersToAdd.toString());
+            Log.d(TAG, "Exiting with these members to add: " + membersToAdd.toString());
         } else {
-            Log.e(TAG, "Exited with no members to add!");
+            Log.d(TAG, "Exited with no members to add!");
         }
         finish();
     }
@@ -206,11 +208,14 @@ public class AddMembersActivity extends AppCompatActivity {
                 addContactsToMembers(returnedContacts);
             } else if (requestCode == Constant.activityManualMemberEntry) {
                 Log.d(TAG, "got contact from manual entry!");
+                Member newMember = new Member(data.getStringExtra("selectedNumber"), data.getStringExtra("name"),
+                        Constant.ROLE_ORDINARY_MEMBER, null);
+                membersToAdd.add(newMember);
             }
         }
 
         // todo: handle duplication & change
-        if (membersToAdd.size() > 0) {
+        if (!newMemberListStarted && membersToAdd.size() > 0) {
             setupNewMemberRecyclerView();
             newMembersTitle.setVisibility(View.VISIBLE);
             newMemberContainer.setVisibility(View.VISIBLE);
@@ -221,8 +226,21 @@ public class AddMembersActivity extends AppCompatActivity {
     private void addContactsToMembers(List<Contact> contacts) {
         // todo: handle removal ...
         for (Contact contact : contacts) {
-            Member newMember = new Member(contact.selectedNumber, contact.name, Constant.ROLE_ORDINARY_MEMBER);
+            Member newMember = new Member(contact.selectedNumber, contact.name, Constant.ROLE_ORDINARY_MEMBER, contact.contact_ID);
             membersToAdd.add(newMember);
+        }
+    }
+
+    @Override
+    public void onMemberListInitiated(MemberListFragment fragment) {
+        if (NEW_ID.equals(fragment.getID())) {
+            newMemberListFragment.setMemberList(membersToAdd);
+            newMemberListStarted = true;
+        } else if (EXISTING_ID.equals(fragment.getID())) {
+
+        } else {
+            // todo: maybe use this for the other one too?
+            throw new UnsupportedOperationException("This should only be caring about the memberlists in the activity");
         }
     }
 }

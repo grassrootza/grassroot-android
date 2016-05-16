@@ -27,7 +27,7 @@ public class MemberListAdapter extends
 
 	public MemberListAdapter(ArrayList<Contact> contact, Context context) {
 		this.data = contact;
-		inflater=LayoutInflater.from(context);
+		inflater = LayoutInflater.from(context);
 	}
 
 	@Override

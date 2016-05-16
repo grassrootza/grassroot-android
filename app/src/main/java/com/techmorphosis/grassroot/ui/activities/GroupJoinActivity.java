@@ -32,7 +32,7 @@ import com.techmorphosis.grassroot.services.model.GenericResponse;
 import com.techmorphosis.grassroot.services.model.GroupSearchModel;
 import com.techmorphosis.grassroot.services.model.GroupSearchResponse;
 import com.techmorphosis.grassroot.ui.fragments.AlertDialogFragment;
-import com.techmorphosis.grassroot.utils.ContactUtil.ErrorUtils;
+import com.techmorphosis.grassroot.utils.ErrorUtils;
 import com.techmorphosis.grassroot.utils.SettingPreference;
 import com.techmorphosis.grassroot.interfaces.AlertDialogListener;
 
@@ -56,7 +56,7 @@ public class GroupJoinActivity extends PortraitActivity implements OnClickListen
 
     @BindView(R.id.toolbar)
     Toolbar toolbar;
-    @BindView(R.id.txt_toolbar)
+    @BindView(R.id.am_txt_toolbar)
     TextView txtToolbar;
     @BindView(R.id.et_searchbox)
     EditText et_searchbox;

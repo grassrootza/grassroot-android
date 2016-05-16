@@ -53,6 +53,11 @@ public class UserListAdapter extends RecyclerView.Adapter<UserListAdapter.ViewHo
 
     public List<Member> getMembers() { return members; }
 
+    public void resetMembers(List<Member> memberList) {
+        members = new ArrayList<>(memberList);
+        this.notifyDataSetChanged();
+    }
+
     /**
      * Method to create the view holder that will be filled with content
      * @param parent The view group containing this record

@@ -21,7 +21,7 @@ import butterknife.OnClick;
  */
 public class HomeScreenViewFragment extends Fragment {
 
-    @BindView(R.id.bt_register)
+    @BindView(R.id.amm_bt_add)
     Button bt_register;
 
     @BindView(R.id.bt_login)
@@ -57,7 +57,7 @@ public class HomeScreenViewFragment extends Fragment {
         }
     }
 
-    @OnClick(R.id.bt_register)
+    @OnClick(R.id.amm_bt_add)
     public void onRegisterButtonClick(View view){
         onHomeScreenInteractionListener.onRegisterButtonClick();
     }

@@ -109,11 +109,12 @@ public class PhoneBookContactsActivity extends PortraitActivity implements Conta
         }
 
         if (preSelectedList != null && preSelectedList.size() > 0) {
-
             for (int i = 0; i < preSelectedList.size(); i++) {
                 Contact preSelectedContact = (Contact) preSelectedList.get(i);
+                Log.v(TAG, "got a contact from the list, looks like: " + preSelectedContact);
                 for (int j = 0; j < returnedContactList.size(); j++) {
                     Contact listModel = returnedContactList.get(j);
+                    Log.v(TAG, "preSelecting a contact! The contact looks like: " + listModel.toString());
                     if (preSelectedContact.contact_ID.equals(listModel.contact_ID)) {
                         listModel.isSelected = true;
                         listModel.selectedNumber = preSelectedContact.selectedNumber;

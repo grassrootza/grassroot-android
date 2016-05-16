@@ -35,7 +35,7 @@ import com.techmorphosis.grassroot.ui.activities.GroupTasksActivity;
 import com.techmorphosis.grassroot.ui.activities.GroupJoinActivity;
 import com.techmorphosis.grassroot.ui.views.SwipeableRecyclerViewTouchListener;
 import com.techmorphosis.grassroot.utils.Constant;
-import com.techmorphosis.grassroot.utils.ContactUtil.ErrorUtils;
+import com.techmorphosis.grassroot.utils.ErrorUtils;
 import com.techmorphosis.grassroot.utils.SettingPreference;
 import com.techmorphosis.grassroot.utils.UtilClass;
 
@@ -44,7 +44,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
-import java.util.List;
 import java.util.Locale;
 
 import butterknife.BindView;

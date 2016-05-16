@@ -21,6 +21,8 @@ public class Member implements Parcelable {
     private String displayName;
     private String roleName;
 
+    private String contactId; // only set locally, if we retrieve member from contacts
+
     @Override
     public int describeContents() { return 0; }
 
@@ -42,10 +44,11 @@ public class Member implements Parcelable {
         groupUid = incoming.readString();
     }
 
-    public Member(String phoneNumber, String displayName, String roleName) {
+    public Member(String phoneNumber, String displayName, String roleName, String contactId) {
         this.phoneNumber = phoneNumber;
         this.displayName = displayName;
         this.roleName = (roleName != null) ? roleName : Constant.ROLE_ORDINARY_MEMBER;
+        this.contactId = contactId;
     }
 
     public static final Creator<Member> CREATOR = new Creator<Member>() {
@@ -82,6 +85,10 @@ public class Member implements Parcelable {
         return roleName;
     }
 
+    public String getContactId() { return contactId; }
+
+    public void setContactId(String contactId) { this.contactId = contactId; }
+
     // toString etc
 
 
@@ -91,6 +98,7 @@ public class Member implements Parcelable {
                 "userUid='" + userUid + '\'' +
                 ", phoneNumber='" + phoneNumber + '\'' +
                 ", displayName='" + displayName + '\'' +
+                ", contactId=" + contactId + '\'' +
                 '}';
     }
 }

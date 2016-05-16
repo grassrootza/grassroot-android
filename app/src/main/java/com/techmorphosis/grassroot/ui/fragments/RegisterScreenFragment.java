@@ -28,7 +28,7 @@ public class RegisterScreenFragment extends Fragment {
     @BindView(R.id.et_mobile_register)
     EditText et_mobile_register;
 
-    @BindView(R.id.bt_register)
+    @BindView(R.id.amm_bt_add)
     Button bt_register;
 
     private OnRegisterScreenInteractionListener onRegisterScreenInteractionListener;
@@ -72,7 +72,7 @@ public class RegisterScreenFragment extends Fragment {
         super.onDetach();
     }
 
-    @OnClick(R.id.bt_register)
+    @OnClick(R.id.amm_bt_add)
     public void onRegisteButtonClick(){
         onRegisterScreenInteractionListener.register(et_userName,et_mobile_register);
 

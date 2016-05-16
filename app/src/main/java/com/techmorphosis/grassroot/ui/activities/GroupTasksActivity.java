@@ -29,7 +29,7 @@ import com.techmorphosis.grassroot.services.model.TaskResponse;
 import com.techmorphosis.grassroot.ui.fragments.FilterFragment;
 import com.techmorphosis.grassroot.ui.views.CustomItemAnimator;
 import com.techmorphosis.grassroot.utils.Constant;
-import com.techmorphosis.grassroot.utils.ContactUtil.ErrorUtils;
+import com.techmorphosis.grassroot.utils.ErrorUtils;
 import com.techmorphosis.grassroot.utils.SettingPreference;
 
 import java.util.ArrayList;

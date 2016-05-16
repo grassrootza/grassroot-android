@@ -33,7 +33,7 @@
 
 
 <Button
-    android:id="@+id/bt_register"
+    android:id="@+id/amm_bt_add"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
     android:textAllCaps="false"
