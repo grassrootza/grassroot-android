@@ -390,7 +390,7 @@ public class StartActivity extends PortraitActivity {
 
         if (et_mobile_login.getText().toString().isEmpty()) {
             //utilClass.showToast(getApplicationContext(),"et_mobile_login");
-            showSnackBar(getApplicationContext(), "", getResources().getString(R.string.Either_field_empty), "", 0, Snackbar.LENGTH_SHORT);
+            showSnackBar(getApplicationContext(), "", getResources().getString(R.string.Cellphone_number_empty), "", 0, Snackbar.LENGTH_SHORT);
 
         } else {
             if (et_mobile_login.getText().toString().length() != 10 && et_mobile_login.getText().toString().length() < 10) {
@@ -737,6 +737,8 @@ public class StartActivity extends PortraitActivity {
 
                                 } catch (JSONException e) {
                                     e.printStackTrace();
+                                    showSnackBar(getApplicationContext(), "", getResources().getString(R.string.Unknown_error), "", 0, Snackbar.LENGTH_SHORT);
+
                                 }
                             }
 
@@ -875,6 +877,8 @@ public class StartActivity extends PortraitActivity {
 
                                 } catch (JSONException e) {
                                     e.printStackTrace();
+                                    showSnackBar(getApplicationContext(), "", getResources().getString(R.string.Unknown_error), "", 0, Snackbar.LENGTH_SHORT);
+
                                 }
                             }
 
@@ -1057,13 +1061,15 @@ public class StartActivity extends PortraitActivity {
                                     Log.e(TAG, "failure");
                                     Log.e(TAG, "code is " + code);
                                     Log.e(TAG, "message is " + message);
-                                    showSnackBar(getApplicationContext(), "", getResources().getString(R.string.INVALID_TOKEN), "", 0, Snackbar.LENGTH_SHORT);
+                                    showSnackBar(getApplicationContext(), "", getResources().getString(R.string.INVALID_TOKEN), "", 0, Snackbar.LENGTH_INDEFINITE);
                                 }
 
                             }  catch (UnsupportedEncodingException error){
 
                             } catch (JSONException e) {
                                 e.printStackTrace();
+                                showSnackBar(getApplicationContext(), "", getResources().getString(R.string.Unknown_error), "", 0, Snackbar.LENGTH_SHORT);
+
                             }
                         }
 

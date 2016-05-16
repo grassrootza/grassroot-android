@@ -100,7 +100,7 @@ public class SortFragment extends android.support.v4.app.DialogFragment
 
         tvDate.setOnClickListener(tvDateClick());
         tvrole.setOnClickListener(roleClick());
-        tvdefaults.setOnClickListener(defaultsClick());
+       // tvdefaults.setOnClickListener(defaultsClick());
 
     }
 

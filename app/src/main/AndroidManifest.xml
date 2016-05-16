@@ -24,14 +24,13 @@
             android:configChanges="keyboardHidden|orientation"
             android:label="@string/app_name"
             android:screenOrientation="portrait" />
-        <activity
-            android:name=".ui.activities.StartActivity"
-            >
+        <activity android:name=".ui.activities.StartActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+
         </activity>
 
         <meta-data
@@ -59,13 +58,28 @@
             android:name=".ui.activities.AddContactManually"
             android:label="@string/title_activity_add_contact_manually"
             android:theme="@style/AppTheme" />
-
         <activity
             android:name=".ui.activities.Blank"
             android:label="@string/title_activity_blank"
             android:theme="@style/AppTheme" />
         <activity android:name=".ui.activities.Group_Activities" />
-        <activity android:name=".ui.activities.NewActivities"></activity>
+        <activity android:name=".ui.activities.NewActivities" />
+        <activity android:name=".ui.activities.ViewVote" />
+        <activity android:name=".ui.activities.FAQFragment" />
+        <activity
+            android:name=".ui.activities.EditVote"
+            android:windowSoftInputMode="adjustPan" />
+        <activity android:name=".ui.activities.ProfileSettings">
+            >
+        </activity>
+        <activity
+            android:name=".ui.activities.CreateVote"
+            android:label="@string/title_activity_create_vote"
+            android:theme="@style/AppTheme"
+            android:windowSoftInputMode="adjustPan" />
+        <activity android:name=".ui.activities.VoteNotifyMembers" />
+        <activity android:name=".ui.activities.NotificationCenter">
+        </activity>
     </application>
 
 </manifest>

@@ -1,5 +1,6 @@
 package com.techmorphosis.grassroot.ui.activities;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -24,8 +25,13 @@ public class Blank extends AppCompatActivity {
         setContentView(R.layout.activity_blank);
 
         finAllViews();
-        if (getIntent() != null) {
+        if (getIntent() != null)
+        {
             txtTitle.setText(getIntent().getExtras().getString("title"));
+            if (txtTitle.getText().toString().equalsIgnoreCase("Vote")) {
+                Intent i = new Intent(Blank.this,CreateVote.class);
+                startActivity(i);
+            }
             txtToolbarTitle.setText(getIntent().getExtras().getString("title"));
         }
         else
@@ -52,5 +58,6 @@ public class Blank extends AppCompatActivity {
             }
         };
     }
+
 
 }

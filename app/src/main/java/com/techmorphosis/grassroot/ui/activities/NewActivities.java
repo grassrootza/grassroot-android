@@ -1,6 +1,9 @@
 package com.techmorphosis.grassroot.ui.activities;
 
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
@@ -14,6 +17,8 @@ public class NewActivities extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_new);
+        registeringReceiver();
+
 
         findAllViews();
     }
@@ -51,9 +56,9 @@ public class NewActivities extends AppCompatActivity {
         return new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent todo=new Intent(NewActivities.this,Blank.class);
-                todo.putExtra("title","Meeting");
-                startActivity(todo);
+                Intent meeting=new Intent(NewActivities.this,Blank.class);
+                meeting.putExtra("title","Meeting");
+                startActivity(meeting);
 
             }
         };
@@ -63,9 +68,9 @@ public class NewActivities extends AppCompatActivity {
         return new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent todo=new Intent(NewActivities.this,Blank.class);
-                todo.putExtra("title","Vote");
-                startActivity(todo);
+                Intent vote=new Intent(NewActivities.this,CreateVote.class);
+               // todo.putExtra("title","Vote");
+                startActivity(vote);
 
             }
         };
@@ -78,4 +83,23 @@ public class NewActivities extends AppCompatActivity {
 
     }
 
+    BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            NewActivities.this.finish();
+        }
+    };
+
+
+    public void registeringReceiver() {
+        IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction(getString(R.string.bs_BR_name));
+        registerReceiver(broadcastReceiver, intentFilter);
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        unregisterReceiver(broadcastReceiver);
+    }
 }

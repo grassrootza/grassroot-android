@@ -15,7 +15,7 @@ import com.techmorphosis.grassroot.R;
 import com.techmorphosis.grassroot.RecyclerView.RecyclerTouchListener;
 import com.techmorphosis.grassroot.adapters.MyRecyclerAdapter;
 import com.techmorphosis.grassroot.models.ContactsModel;
-import com.techmorphosis.grassroot.ui.fragments.AlertDialogFragment;
+import com.techmorphosis.grassroot.ui.DialogFragment.AlertDialogFragment;
 import com.techmorphosis.grassroot.utils.UtilClass;
 
 import java.util.ArrayList;

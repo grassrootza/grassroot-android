@@ -5,6 +5,7 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
@@ -48,7 +49,7 @@ public class Group_ActivitiesAdapter extends RecyclerView.Adapter<Group_Activiti
       holder.txtGroupownername.setText("Posted by " + model.name);
        holder.txtGroupdesc.setText(model.description);
         holder.datetime.setText(model.deadline);
-
+        activity.CardView(holder.mainView, position);
 
 
 
@@ -360,25 +361,9 @@ public class Group_ActivitiesAdapter extends RecyclerView.Adapter<Group_Activiti
             //Thumbs down
             holder.iv3.setImageResource(R.drawable.ic_no_vote_inactive);
 
-            if (model.Thumpsup.equalsIgnoreCase("enableclick"))
-            {
+            holder.iv2.setEnabled(false);
+            holder.iv3.setEnabled(false);
 
-                activity.thumps_Up(holder.iv2,position);
-            }
-            else
-            {
-                holder.iv2.setEnabled(false);
-            }
-
-            if (model.Thumpsdown.equalsIgnoreCase("enableclick"))
-            {
-                activity.thumps_Down(holder.iv3, position);
-
-            }
-            else
-            {
-                holder.iv3.setEnabled(false);
-            }
 
         }
 
@@ -455,6 +440,18 @@ public class Group_ActivitiesAdapter extends RecyclerView.Adapter<Group_Activiti
             }
 
         }
+        else if (model.reply.equalsIgnoreCase("NO_RESPONSE"))
+        {
+            //Thumbs up
+            holder.iv2.setImageResource(R.drawable.ic_vote_inactive);
+            //Thumbs down
+            holder.iv3.setImageResource(R.drawable.ic_no_vote_inactive);
+
+            activity.thumps_Up(holder.iv2, position);
+
+            activity.thumps_Down(holder.iv3, position);
+
+        }
 
     }
 
@@ -490,9 +487,9 @@ public class Group_ActivitiesAdapter extends RecyclerView.Adapter<Group_Activiti
         private TextView txtGroupdesc;
         private View divider;
         private RelativeLayout footer;
-        private ImageView iv1;
-        private ImageView iv2;
-        private ImageView iv3;
+        private ImageButton iv1;
+        private ImageButton iv2;
+        private ImageButton iv3;
         private TextView datetime;
 
         public GA_ViewHolder(View view)
@@ -507,9 +504,9 @@ public class Group_ActivitiesAdapter extends RecyclerView.Adapter<Group_Activiti
             txtGroupdesc = (TextView) view.findViewById(R.id.txt_groupdesc);
             divider = (View) view.findViewById(R.id.divider);
             footer = (RelativeLayout) view.findViewById(R.id.footer);
-            iv1 = (ImageView) view.findViewById(R.id.iv1);
-            iv2 = (ImageView) view.findViewById(R.id.iv2);
-            iv3 = (ImageView) view.findViewById(R.id.iv3);
+            iv1 = (ImageButton) view.findViewById(R.id.iv1);
+            iv2 = (ImageButton) view.findViewById(R.id.iv2);
+            iv3 = (ImageButton) view.findViewById(R.id.iv3);
             datetime = (TextView) view.findViewById(R.id.datetime);
         }
     }

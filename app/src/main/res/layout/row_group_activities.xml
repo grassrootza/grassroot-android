@@ -17,7 +17,8 @@
             card_view:cardElevation="3dp"
             card_view:contentPadding="10dp"
             card_view:cardBackgroundColor="#fff"
-
+            android:clickable="true"
+            android:foreground="?attr/selectableItemBackground"
             >
             <RelativeLayout
                 android:layout_width="match_parent"
@@ -105,36 +106,52 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_below="@+id/divider"
-                android:paddingBottom="@dimen/halfpadding"
-                android:paddingTop="@dimen/halfpadding"
+
                 >
 
-                <ImageView
+                <ImageButton
                     android:id="@+id/iv1"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:paddingRight="@dimen/padding"
+                    android:layout_marginRight="6dp"
+                    android:background="?android:selectableItemBackground"
+                    android:scaleType="fitCenter"
+                    android:paddingLeft="6dp"
+                    android:paddingRight="6dp"
+                    android:paddingBottom="@dimen/halfpadding"
+                    android:paddingTop="@dimen/halfpadding"
                     />
 
 
-                <ImageView
+                <ImageButton
                     android:id="@+id/iv2"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_toRightOf="@+id/iv1"
                     android:visibility="visible"
-                    android:paddingRight="@dimen/padding"
-
+                    android:layout_marginRight="6dp"
+                    android:background="?android:selectableItemBackground"
+                    android:scaleType="fitCenter"
+                    android:paddingLeft="6dp"
+                    android:paddingRight="6dp"
+                    android:paddingBottom="@dimen/halfpadding"
+                    android:paddingTop="@dimen/halfpadding"
                     />
 
 
-                <ImageView
+                <ImageButton
                     android:id="@+id/iv3"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_toRightOf="@+id/iv2"
                     android:visibility="visible"
-                    android:paddingRight="@dimen/padding"
+                    android:layout_marginRight="6dp"
+                    android:background="?android:selectableItemBackground"
+                    android:scaleType="fitCenter"
+                    android:paddingLeft="6dp"
+                    android:paddingRight="6dp"
+                    android:paddingBottom="@dimen/halfpadding"
+                    android:paddingTop="@dimen/halfpadding"
                     />
 
 
@@ -146,6 +163,8 @@
                     android:layout_alignParentRight="true"
                     android:layout_centerVertical="true"
                     android:textColor="@color/black"
+                    android:paddingTop="@dimen/halfpadding"
+                    android:paddingBottom="@dimen/halfpadding"
                     />
 
             </RelativeLayout>

@@ -166,17 +166,16 @@
         android:visibility="gone"
         />
 
-
-
     <include
-        android:id="@+id/error_layout"
-        android:layout_height="wrap_content"
+        android:id="@+id/icl_nm_error_layout"
+        layout="@layout/qube_error_layout"
         android:layout_width="wrap_content"
-        layout="@layout/error_layout"
+        android:layout_height="wrap_content"
         android:layout_centerInParent="true"
-        android:visibility="gone"
 
         />
+
+
 
     <com.github.clans.fab.FloatingActionMenu
         android:id="@+id/menu1"
@@ -195,7 +194,7 @@
         fab:menu_colorNormal="#FFB805"
         fab:menu_colorPressed="#F2AB00"
         fab:menu_colorRipple="#D99200"
-
+        android:visibility="gone"
         >
 
         <com.github.clans.fab.FloatingActionButton
@@ -223,4 +222,24 @@
     </com.github.clans.fab.FloatingActionMenu>
 
 
-    </RelativeLayout>
+
+    <com.techmorphosis.grassroot.utils.ProgressBarCircularIndeterminate
+        android:id="@+id/prg_gh"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:background="@color/primaryColor"
+        android:layout_centerInParent="true"
+        android:visibility="gone"
+        ></com.techmorphosis.grassroot.utils.ProgressBarCircularIndeterminate>
+        
+    <TextView
+        android:id="@+id/txt_prg_gh"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/prg_message"
+        android:layout_below="@+id/prg_gh"
+        android:layout_centerHorizontal="true"
+        android:visibility="gone"
+        />
+    
+</RelativeLayout>

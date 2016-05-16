@@ -3,11 +3,12 @@ package com.techmorphosis.grassroot.adapters;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 
-import com.techmorphosis.grassroot.ui.fragments.FiveFragment;
-import com.techmorphosis.grassroot.ui.fragments.FourFragment;
-import com.techmorphosis.grassroot.ui.fragments.OneFragment;
-import com.techmorphosis.grassroot.ui.fragments.ThreeFragment;
-import com.techmorphosis.grassroot.ui.fragments.TwoFragment;
+import com.techmorphosis.grassroot.ui.fragments.viewpager.FiveFragment;
+import com.techmorphosis.grassroot.ui.fragments.viewpager.FourFragment;
+import com.techmorphosis.grassroot.ui.fragments.viewpager.OneFragment;
+import com.techmorphosis.grassroot.ui.fragments.viewpager.ThreeFragment;
+import com.techmorphosis.grassroot.ui.fragments.viewpager.TwoFragment;
+
 
 /**
  * Created by admin on 22-Mar-16.

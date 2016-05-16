@@ -58,7 +58,9 @@
             android:layout_margin="10.0dip"
             android:padding="10.0dip"
             android:src="@drawable/btn_back_green"
-            android:visibility="invisible" />
+            android:visibility="invisible"
+            android:background="@drawable/profile_bg"
+            />
 
         <View
             android:layout_width="fill_parent"

@@ -13,6 +13,8 @@ import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.util.Log;
 import android.view.View;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -107,7 +109,7 @@ public class Create_Group extends PortraitActivity {
             @Override
             public void afterTextChanged(Editable s) {
               //  Log.e(TAG,"afterTextChanged length  is " + s.length());
-                tvCounter.setText("" + s.length() + "/" + "160");
+                tvCounter.setText("" + s.length() + "/" + "320");
 
             }
         });
@@ -180,6 +182,10 @@ public class Create_Group extends PortraitActivity {
         btnSelection = (Button) findViewById(R.id.bt_save);
         btnSelection.setOnClickListener(Save());
         ivCrossimage.setOnClickListener(ivCrossimage());
+
+        Animation animation1 = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.fab);
+        menu2.startAnimation(animation1);
+        menu2.setVisibility(View.VISIBLE);
 
         menu2.setOnMenuToggleListener(new FloatingActionMenu.OnMenuToggleListener() {
             @Override

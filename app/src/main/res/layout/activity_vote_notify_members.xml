@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/rl_root_layout"
+    xmlns:card_view="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/RecyclerView_background"
+    tools:context="com.techmorphosis.grassroot.ui.activities.VoteNotifyMembers">
+
+
+    <android.support.v7.widget.Toolbar
+        android:id="@+id/tlb_nm"
+        android:layout_width="match_parent"
+        android:layout_height="?actionBarSize"
+        android:background="@color/primaryColor">
+
+        <TextView
+            android:id="@+id/txt_nm_tlb"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/nm_txt_tlb"
+            android:textColor="@color/white"
+            android:textSize="@dimen/txt_large" />
+
+    </android.support.v7.widget.Toolbar>
+
+    <LinearLayout
+        android:id="@+id/ll_nm_main_layout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/tlb_nm"
+        android:orientation="vertical"
+
+        >
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="15dp"
+            android:layout_weight="1"
+            android:clipToPadding="false"
+            android:paddingTop="15dp"
+
+            >
+
+            <android.support.v7.widget.CardView
+                android:id="@+id/card_view"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="10dp"
+                android:layout_marginRight="10dp"
+                card_view:cardBackgroundColor="@color/white"
+                card_view:cardCornerRadius="5dp"
+                card_view:cardElevation="3dp"
+                card_view:contentPadding="10dp"
+
+                >
+
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    >
+
+                    <RelativeLayout
+                        android:id="@+id/rl_nm_notify_header"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:background="@color/vv_Body_agree_disagree">
+
+                        <TextView
+                            style="@style/text_medium"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:padding="10dp"
+                            android:text="@string/cv_notify_group_title"
+                            android:textColor="@color/vv_txtResponse" />
+
+                        <android.support.v7.widget.SwitchCompat
+                            android:id="@+id/sw_notifyall"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_alignParentRight="true"
+                            android:layout_centerVertical="true"
+                            android:checked="true"
+                            android:paddingRight="5dp"
+
+                            />
+
+                    </RelativeLayout>
+
+                    <android.support.v7.widget.RecyclerView xmlns:android="http://schemas.android.com/apk/res/android"
+                        xmlns:tools="http://schemas.android.com/tools"
+                        android:id="@+id/recyclerView"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_below="@+id/rl_nm_notify_header"
+                        android:clipToPadding="false"
+                        android:paddingTop="15dp"
+                        tools:listitem="@layout/row_dialog"
+                        android:background="@color/vv_Body_agree_disagree"
+                        />
+
+
+                    <ProgressBar
+                        android:id="@+id/progress_paging"
+                        android:layout_width="25dp"
+                        android:layout_height="25dp"
+                        android:layout_alignParentBottom="true"
+                        android:layout_centerHorizontal="true"
+                        android:visibility="gone"
+                        />
+
+
+
+                </RelativeLayout>
+
+
+
+
+            </android.support.v7.widget.CardView>
+
+
+        </RelativeLayout>
+
+        <Button
+            android:id="@+id/btn_nm_done"
+            style="@style/Button_green"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/nm_bt_done" />
+
+    </LinearLayout>
+
+    <include
+        android:id="@+id/icl_nm_error_layout"
+        layout="@layout/error_layout"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+
+        />
+
+    <com.techmorphosis.grassroot.utils.ProgressBarCircularIndeterminate
+        android:id="@+id/progressBarCircularIndeterminate"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:layout_centerInParent="true"
+        android:background="@color/primaryColor"
+        android:visibility="gone" />
+
+    <TextView
+        android:id="@+id/txt_prg"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/progressBarCircularIndeterminate"
+        android:layout_centerHorizontal="true"
+        android:text="Please Wait.."
+        android:visibility="gone"
+
+        />
+
+
+</RelativeLayout>

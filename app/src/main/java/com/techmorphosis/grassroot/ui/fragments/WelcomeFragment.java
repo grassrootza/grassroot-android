@@ -82,6 +82,7 @@ public class WelcomeFragment extends android.support.v4.app.Fragment {
     private void findView()
     {
         toolbar = (Toolbar) view.findViewById(R.id.toolbar);
+
         toolbarText = (TextView) toolbar.findViewById(R.id.txt_welcometitle);
         pager = (ViewPager) view.findViewById(R.id.pager);
         mIndicator = (CirclePageIndicator)view.findViewById(R.id.indicator);

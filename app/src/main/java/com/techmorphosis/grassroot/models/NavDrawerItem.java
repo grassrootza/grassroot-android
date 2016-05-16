@@ -20,6 +20,10 @@ public class NavDrawerItem {
 
     }
 
+    public NavDrawerItem() {
+
+    }
+
     public int getIcon() {
         return icon;
     }
