@@ -58,5 +58,28 @@
 
     <color name="grey_divider">#7e7e7e</color>
 
+    <!--View Vote-->
+    <color name="vv_title">#4d4d4d</color>
+    <color name="vv_postedby">#0d0d0d</color>
+    <color name="vv_divider">#4d4d4d</color>
+    <color name="vv_description">#4d4d4d</color>
+    <color name="vv_Body_agree_disagree">#eeeeee</color>
+    <color name="vv_Requestmessage">#4d4d4d</color>
+    <color name="vv_deadline">#9d9d9d</color>
+
+    <color name="vv_Body_Response">#f6f6f6</color>
+    <color name="vv_txtResponse">#4d4d4d</color>
+    <color name="vv_body_row">#F6F6F6</color>
+    <color name="vv_txt_row">#4d4d4d</color>
+    <color name="vv_yes">#4aca85</color>
+    <color name="vv_no">#e84343</color>
+
+    <!--Edit Vote-->
+    <color name="ev_txt_counter">#0d0d0d</color>
+    <color name="ev_et_description">#0d0d0d</color>
+
+    <!--notifications-->
+    <color name="nc_date">#b4b4b4</color>
+
 
 </resources>

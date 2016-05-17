@@ -58,7 +58,7 @@ public class NavigationDrawerFragment extends Fragment {
             mFromSavedInstanceState = true;
         } else 
         {
-            selectItem(mCurrentSelectedPosition);
+           // selectItem(mCurrentSelectedPosition);
         }
     }
 
@@ -122,12 +122,12 @@ public class NavigationDrawerFragment extends Fragment {
     public  ArrayList<NavDrawerItem> getData()
     {
         draweritems = new ArrayList<NavDrawerItem>();
-        draweritems.add(new NavDrawerItem(getString(R.string.Profile),R.drawable.ic_profile,R.drawable.ic_profile_green,true));
-        draweritems.add(new NavDrawerItem(getString(R.string.Settings),R.drawable.ic_settings,R.drawable.ic_settings_green,false));
+        draweritems.add(new NavDrawerItem(getString(R.string.Profile),R.drawable.ic_profile,R.drawable.ic_profile_green,false));
         draweritems.add(new NavDrawerItem(getString(R.string.FAQs),R.drawable.ic_faq,R.drawable.ic_faq_green,false));
-        draweritems.add(new NavDrawerItem(getString(R.string.Logout),R.drawable.ic_logout,R.drawable.ic_logout_green,false));
+        draweritems.add(new NavDrawerItem(getString(R.string.Notifications),R.drawable.ic_notification,R.drawable.ic_notification_green,false));
         draweritems.add(new NavDrawerItem(getString(R.string.Share),R.drawable.ic_share,R.drawable.ic_share_green,false));
         draweritems.add(new NavDrawerItem(getString(R.string.Rate_App),R.drawable.ic_rate_us,R.drawable.ic_rate_us_green,false));
+        draweritems.add(new NavDrawerItem(getString(R.string.Logout),R.drawable.ic_logout,R.drawable.ic_logout_green,false));
 
 
         return draweritems;
@@ -176,6 +176,34 @@ public class NavigationDrawerFragment extends Fragment {
             mCallbacks.onNavigationDrawerItemSelected(position);
 
         }
+    }
+
+
+    public  void updateNotificationDrawers(int position)
+    {
+
+        displayName.setText(SettingPreference.getuser_name(getActivity()));
+
+        for (int i = 0; i < draweritems.size(); i++) {
+            NavDrawerItem item= (NavDrawerItem) draweritems.get(i);
+            if (position==i)
+            {
+                item.setIsChecked(true);
+            }
+            else
+            {
+                item.setIsChecked(false);
+            }
+
+        }
+        drawerAdapter.notifyDataSetChanged();
+    }
+
+    public  void updateNotificationDrawersname()
+    {
+
+        displayName.setText(SettingPreference.getuser_name(getActivity()));
+
     }
 
 

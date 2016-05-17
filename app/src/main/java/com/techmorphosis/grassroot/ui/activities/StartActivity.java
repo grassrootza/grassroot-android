@@ -278,7 +278,7 @@ public class StartActivity extends PortraitActivity implements HomeScreenViewFra
                                 setUpOtpScreen();
                             }
                         } else {
-                            showSnackBar(getApplicationContext(), "", getResources().getString(R.string.User_already_registered), "", 0, Snackbar.LENGTH_SHORT);
+                            showSnackBar(getApplicationContext(), "", getResources().getString(R.string.USER_ALREADY_EXISTS), "", 0, Snackbar.LENGTH_SHORT);
                         }
                     }
 
@@ -538,7 +538,7 @@ public class StartActivity extends PortraitActivity implements HomeScreenViewFra
     private void loginFormValidation(EditText et_mobile_login) {
         if (et_mobile_login.getText().toString().isEmpty()) {
             et_mobile_login.requestFocus();
-            et_mobile_login.setError(getResources().getString(R.string.Cellphone_numbr_empty));
+            et_mobile_login.setError(getResources().getString(R.string.Cellphone_number_empty));
         } else {
             if (et_mobile_login.getText().toString().length() != 10 && et_mobile_login.getText().toString().length() < 10) {
                 et_mobile_login.requestFocus();
@@ -561,13 +561,13 @@ public class StartActivity extends PortraitActivity implements HomeScreenViewFra
         if (et_userName.getText().toString().trim().isEmpty() || et_mobile_register.getText().toString().isEmpty()) {
             if(et_userName.getText().toString().trim().isEmpty() && !et_mobile_register.getText().toString().isEmpty()) {
                 et_userName.requestFocus();
-                et_userName.setError(getResources().getString(R.string.Name_Empty));
+                et_userName.setError(getResources().getString(R.string.Either_field_empty));
             } else if(et_mobile_register.getText().toString().isEmpty()  &&  !et_userName.getText().toString().isEmpty()) {
                 et_mobile_register.requestFocus();
-                et_mobile_register.setError(getResources().getString(R.string.Cellphone_numbr_empty));
+                et_mobile_register.setError(getResources().getString(R.string.Cellphone_number_empty));
             } else {
-                et_userName.setError(getResources().getString(R.string.Name_Empty));
-                et_mobile_register.setError(getResources().getString(R.string.Cellphone_numbr_empty));
+                et_userName.setError(getResources().getString(R.string.Either_field_empty));
+                et_mobile_register.setError(getResources().getString(R.string.Cellphone_number_empty));
                 showSnackBar(getApplicationContext(), "", getResources().getString(R.string.Either_field_empty), "", 0, Snackbar.LENGTH_SHORT);
             }
         } else {

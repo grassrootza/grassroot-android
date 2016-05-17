@@ -1,12 +1,11 @@
 buildscript {
     repositories {
-        // mavenCentral()
         maven { url 'https://maven.fabric.io/public' }
     }
 
     dependencies {
         classpath 'io.fabric.tools:gradle:1.+'
-        // classpath 'me.tatarka:gradle-retrolambda:3.2.5'
+
     }
 }
 
@@ -36,7 +35,6 @@ android {
         versionCode 1
         versionName "1.0"
     }
-
     buildTypes {
         release {
             minifyEnabled true
@@ -51,8 +49,18 @@ android {
 }
 
 dependencies {
-
     compile fileTree(dir: 'libs', include: ['*.jar'])
+
+    testCompile 'junit:junit:4.12'
+    testCompile 'org.robolectric:robolectric:3.0'
+    testCompile "org.robolectric:shadows-support-v4:3.0"
+    testCompile "org.robolectric:shadows-play-services:3.0-rc2"
+    testCompile 'org.mockito:mockito-core:1.+'
+
+
+    compile 'com.android.support:appcompat-v7:23.1.1'
+    compile 'com.android.support:design:23.1.1'
+    compile 'com.android.support:recyclerview-v7:23.0.2'
 
     compile 'com.android.support:appcompat-v7:23.4.0'
     compile 'com.android.support:design:23.4.0'
@@ -68,6 +76,9 @@ dependencies {
     compile 'com.squareup.retrofit2:converter-gson:2.0.0'
     compile 'com.squareup.okhttp3:logging-interceptor:3.2.0'
 
+    compile 'com.wdullaer:materialdatetimepicker:2.3.0'
+
+
     compile "com.google.android.gms:play-services-gcm:8.4.0"
     compile "com.google.android.gms:play-services-location:8.4.0"
 
@@ -79,6 +90,7 @@ dependencies {
     compile('com.crashlytics.sdk.android:crashlytics:2.5.5@aar') {
         transitive = true;
     }
+    apply plugin: 'com.google.gms.google-services'
 
 
 }

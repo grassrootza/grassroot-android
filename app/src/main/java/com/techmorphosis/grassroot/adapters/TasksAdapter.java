@@ -2,6 +2,7 @@ package com.techmorphosis.grassroot.adapters;
 
 import android.content.Context;
 import android.support.v4.content.ContextCompat;
+import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -64,6 +65,7 @@ public class TasksAdapter extends RecyclerView.Adapter<TasksAdapter.GA_ViewHolde
         }
 
         holder.datetime.setText(deadlineFormat.format(taskModel.getDeadlineDate()));
+        listener.onCardClick(holder.cardView, position);//todo fix this
 
         switch (taskModel.getType()) {
             case Constant.MEETING:
@@ -91,6 +93,8 @@ public class TasksAdapter extends RecyclerView.Adapter<TasksAdapter.GA_ViewHolde
             }
         });
     }
+
+
 
     private void setUpCardStyle(GA_ViewHolder viewHolder, boolean isCardPrimary) {
         viewHolder.txtTiltle.setTextColor(isCardPrimary ? primaryColor : secondaryColor);
@@ -198,6 +202,8 @@ public class TasksAdapter extends RecyclerView.Adapter<TasksAdapter.GA_ViewHolde
 
         @BindView(R.id.iv_type)
         ImageView iv_type;
+        @BindView(R.id.task_card_view_root)
+        CardView cardView;
         @BindView(R.id.txt_title)
         TextView txtTiltle;
         @BindView(R.id.txt_groupownername)

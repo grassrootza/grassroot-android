@@ -44,6 +44,9 @@ public class TaskModel implements Parcelable {
     private boolean canMarkCompleted;
 
 
+    public TaskModel() {
+    }
+
     public String getId() {
         return id;
     }

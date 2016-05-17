@@ -30,31 +30,36 @@
     <string name="et_mobile_login"></string>
 
 
-    <!--Alerts-->
-    <string name="No_network">No network</string>
+    !--Alerts-->
+    <string name="No_network">Your Network Connection does not seem to be work properly.\n Click to try again</string>
     <string name="Retry">RETRY</string>
     <string name="Unknown_error">Oops, an error occurred. Try again later.</string>
     <string name="Either_field_empty">Please enter all fields to proceed.</string>
-    <string name="Name_Empty">Name cannot be empty.</string>
     <string name="Cellphone_number_invalid">Please enter a valid cellphone number</string>
-    <string name="Cellphone_numbr_empty">Please enter cellphone number to proceed.</string>
+    <string name="Cellphone_number_empty">Please enter cellphone number to proceed.</string>
     <string name="User_not_registered">User not registered. Please register to proceed.</string>
-    <string name="User_already_registered">Sorry, that phone number is already registered on Grassroot. Please login.</string>
     <string name="OTP_empty">Please enter OTP to proceed</string>
     <string name="OTP_invalid">Please enter the correct OTP to proceed.</string>
     <string name="USER_DOES_NOT_EXIST">User not registered.Please register to proceed.</string>
     <string name="USER_ALREADY_EXISTS">User Already Exist</string>
     <string name="Otp_success">Please Enter Verification code sent by SMS</string>
-    <string name="INVALID_TOKEN">invalid token</string>
+    <string name="INVALID_TOKEN">You seem to be signed in to another device. Please logout and login again</string>
+    <string name="Logout_message">Are you sure you want to Log out?</string>
+    <string name="USER_HAS_NO_GROUPS">User has no group</string>
+    <string name="No_notifications">No Notifications</string>
+    <string name="No_network_txt">Your Network Connection does not seem to be work properly.\n Click to try again</string>
+    <string name="No_reult_txt">No result found</string>
+    <string name="Unknown_error_txt">Oops <b>!</b> \n Something wents wrong \n\n Please try again after sometime</string>
 
     <!-- Draweritem name-->
-    <string name="Profile">Profile</string>
-    <string name="Settings">Settings</string>
+    <string name="Profile">Profile Settings</string>
     <string name="FAQs">FAQs</string>
     <string name="Support">Support</string>
     <string name="Logout">Logout</string>
     <string name="Share">Share</string>
     <string name="Rate_App">Rate App</string>
+    <string name="Notifications">Notifications</string>
+
 
     <string name="open">open</string>
     <string name="close">close</string>
@@ -173,9 +178,139 @@
     <string name="ga_newToDo">NEW TODO</string>
     <string name="ga_addMembers">ADD MEMBERS</string>
 
+    <!--Profile--><!--pp-->
+    <string name="pp_txt_toolbar">Profile Settings</string>
+    <string name="pp_bt_update">Update</string>
+    <string name="pp_txt_Updatename">Update name</string>
+    <string name="pp_txt_language">Change language</string>
+    <string name="pp_txt_notifications">Configure Notifications</string>
+    <string name="pp_txt_settings">Security settings</string>
+    <string name="pp_et_title">Username</string>
+    <string name="pp_name_dialog">Update Username</string>
+    <string name="pp_Cancel">CANCEL</string>
+    <string name="pp_OK">OK</string>
+    <string name="pp_err_no_edit">Nothing to modify</string>
+    <string name="pp_language_dialog_title">Choose Language</string>
+    <string name="pp_notifications_dialog_title">Configure notifications</string>
+    <string name="pp_update_msg">Profile Updated Successfully</string>
+
+    <!--Edit Vote--> <!--ev-->
+    <string name="ev_tv_toolbar">EDIT VOTE</string>
+    <string name="ev_bt_save">Save Changes</string>
+    <string name="ev_rl_vote_header">Do you agree or disagree</string>
+    <string name="ev_yes">Yes</string>
+    <string name="ev_no">No</string>
+    <string name="ev_description">Description</string>
+    <string name="ev_closing">Closing time</string>
+
+
+    <!--Create Vote--> <!--cv-->
+    <string name="cv_bt_call_vote">Call Vote</string>
+    <string name="cv_txt_tlb">Create Vote</string>
+    <string name="cv_et_title">Title</string>
+    <string name="cv_et_desc">Edit Description</string>
+    <string name="cv_config_alerts_title">Configure alerts</string>
+    <string name="cv_notify_group_title">Notify entire group</string>
+
+    <!--View Vote--> <!--vv-->
+    <string name="vv_tv_toolbar">VIEW VOTE</string>
+    <string name="vv_bt_editvote">Edit Vote</string>
+    <string name="vv_rl_vote_header">Do you agree or disagree?</string>
+    <string name="vv_yes">Yes</string>
+    <string name="vv_no">No</string>
+    <string name="vv_maybe">May Be</string>
+    <string name="vv_invalid">Invalid</string>
+    <string name="vv_numberOfUsers">Number of User</string>
+    <string name="vv_numberNoRSVP">Number of RSVP</string>
+    <string name="vv_voteup">Vote Details Updated Successfully</string>
+
+    <!--FAQ-->
+    <string name="fq_txt_toolbar">FAQs</string>
+    <string-array name="fq_Header">
+        <item>How do I get started?</item>
+        <item>Okay, I\'ve part of some groups. What next?</item>
+        <item>Why can\'t I call a meeting or vote on one of the groups I\'m part of?</item>
+        <item>How does Grassroot send out messages?</item>
+
+    </string-array>
+
+    <string-array name="fq_Answer">
+        <item>Grassroot is built to work with groups. A group is any collection of people you would like to collaborate with, organize and mobilize e.g. a stokvel, funeral society, street committee, church groups etc.
+             \n\nSomeone may have added you to one of their groups already in the past. If so, you will see the group listed on the opening screen. You can still create or join whatever other groups you would like.
+              \n\nIf you are not yet part of a group, you will have to join or create one. You can join a group by entering its private "join code" (the group organizer can give it to you), or, if is a public group, by searching for it.
+        </item>
+
+        <item>Grassroot has three core functions: calling meetings, taking votes, and recording to-dos (decisions). If you swipe [right] on a group name, you\'ll see all of its meetings, votes and to-dos. If you long press on it, you will be able to call a meeting or vote or record a to-do.
+            \n\nCalling a meeting, creating a vote, or recording a decision are all similar. You specify a short description (so it can fit in an SMS), add an optional longer description, a deadline em dash when the meeting will happen, the vote will close, or the to-do must be done em dash and that\'s it. More advanced settings are also available (see below).
+        </item>
+
+        <item> In every group there are three roles: group organizers, committee members, and ordinary members. Every group can create its own settings about what roles can do which functions. In most groups, all members can call a meeting or vote or record a to-do.
+            \n\nSome groups, though, choose to restrict this to only commitee members or organizers. In those groups, if you click on the group you will not have the function available to call a meeting or vote or record a to-do.
+        </item>
+
+        <item>Grassroot will send notifications to any group members who have smartphones. Group members who only have basic phones will receive the notification by SMS. In each case, every single group member will receive the message, no matter the kind of phone they have.
+            \n\n  <a href="www.grassroot.org.za/FAQ">For more details, see: www.grassroot.org.za/FAQ</a>
+        </item>
+
+    </string-array>
+
+    <!--language-->
+    <string-array name="language">
+        <item>English</item>
+        <item>isiZulu</item>
+        <item>Xitsonga</item>
+        <item>North Sotho</item>
+    </string-array>
+
+    <string-array name="languagekey">
+        <item>en</item>
+        <item>zu</item>
+        <item>ts</item>
+        <item>nso</item>
+    </string-array>
+
+
+    <!--Notifications-->
+    <string-array name="Notifications">
+        <item>Notify on all events</item>
+        <item>Notify on just new events</item>
+        <item>Notify on new  events and changes to groups</item>
+    </string-array>
+
+    <string-array name="Notificationskey">
+        <item>NOTIFY_ALL_EVENTS</item>
+        <item>NOTIFY_NEW_EVENTS</item>
+        <item>NOTIFY_NEW_EVENTS_AND_GROUP_CHANGES</item>
+    </string-array>
+    <string name="title_activity_create_vote">CreateVote</string>
+
+    <!--Notify members--><!--nm-->
+    <string name="nm_txt_tlb">Notify Members</string>
+    <string name="nm_bt_done">Done</string>
+    <string name="nm_cratevote_msg">Vote created successfully</string>
+    <string name="nm_title_error_msg">Please enter title</string>
+    <string name="nm_description_error_msg">Please enter Description</string>
+    <string name="nm_closingtime_msg">Please enter Closing Time</string>
+
+    <!--end-->
+
+    <!--alerts-->
+    <string name="one_day">Send reminder <b>1 day</b> ahead</string>
+    <string name="half_day">Send reminder <b>half a day</b> ahead</string>
+    <string name="one_hour">Send reminder <b>1 hour</b> ahead</string>
+    <string name="immediate">Send reminder <b>immediately</b></string>
+
+
+    <!--Notification Center--> <!--nc-->
+    <string name="nc_txt_tlb">Notification</string>
+    <string name="nc_txt_">v</string>
 
     <string name="USER_ALREADY_PART">User already part of group</string>
     <string name="sender_id">681116473953@gcm.googleapis.com</string>
     <string name="project_id">681116473953</string>
+
+
+    <!--Blank screen--><!--bs-->
+    <string name="bs_BR_name">Blank Screen</string>
 
 </resources>

@@ -15,11 +15,11 @@ import java.util.List;
 
 /**
  * Created by admin on 22-Mar-16.
- */public class MyPagerAdapter extends FragmentPagerAdapter {
+ */public class WelcomePagerAdapter extends FragmentPagerAdapter {
 
     private List<Fragment> fragments;
 
-    public MyPagerAdapter(FragmentManager fm) {
+    public WelcomePagerAdapter(FragmentManager fm) {
         super(fm);
         initList();
     }

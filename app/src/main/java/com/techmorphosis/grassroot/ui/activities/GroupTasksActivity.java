@@ -17,10 +17,10 @@ import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 
 import com.github.clans.fab.FloatingActionMenu;
-import com.techmorphosis.grassroot.interfaces.FilterInterface;
-import com.techmorphosis.grassroot.interfaces.TaskListListener;
 import com.techmorphosis.grassroot.R;
 import com.techmorphosis.grassroot.adapters.TasksAdapter;
+import com.techmorphosis.grassroot.interfaces.FilterInterface;
+import com.techmorphosis.grassroot.interfaces.TaskListListener;
 import com.techmorphosis.grassroot.services.GrassrootRestService;
 import com.techmorphosis.grassroot.services.NoConnectivityException;
 import com.techmorphosis.grassroot.services.model.GenericResponse;
@@ -166,6 +166,7 @@ public class GroupTasksActivity extends PortraitActivity implements TaskListList
         recycleViewGroupActivities.setItemAnimator(new CustomItemAnimator());
         group_activitiesAdapter = new TasksAdapter(new ArrayList<TaskModel>(), this, this);
         recycleViewGroupActivities.setAdapter(group_activitiesAdapter);
+
     }
 
     private void groupActivitiesWS() {
@@ -389,6 +390,8 @@ public class GroupTasksActivity extends PortraitActivity implements TaskListList
                 Log.e(TAG, "clear is " + clear_click);
             }
 
+
+
             @Override
             public void clear(boolean vote, boolean meeting, boolean todo, boolean clear) {
 
@@ -471,6 +474,47 @@ public class GroupTasksActivity extends PortraitActivity implements TaskListList
             }
         });
     }
+
+
+    public void onCardClick(View view, final int position)
+    {
+        view.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                TaskModel model;
+                if (vote_click)
+                {
+                    model = voteList.get(position);
+
+                }
+                else if (meeting_click)
+                {
+                    model = meetingList.get(position);
+
+                }
+                else if (todo_click)
+                {
+                    model = toDoList.get(position);
+
+                }
+                else
+                {
+                    model = activitiesList.get(position);
+
+
+                }
+                Log.e(TAG,"positions is " + position);
+                Log.e(TAG,"title is " + model.getTitle());
+                Log.e(TAG,"type is " + model.getType());
+                if (model.getType().equalsIgnoreCase("VOTE")) {
+                    Intent vote_view = new Intent(GroupTasksActivity.this, ViewVote.class);
+                    vote_view.putExtra("voteid", model.getId());
+                    startActivityForResult(vote_view,1);
+                }
+            }
+        });
+    }
+
 
     private void showSnackBar(String message) {
         showSnackBar(message, "", "", "", "", snackbar.LENGTH_SHORT);
