@@ -22,6 +22,7 @@ public class Member implements Parcelable {
     private String roleName;
 
     private String contactId; // only set locally, if we retrieve member from contacts
+    private boolean selected; // so can remove from a list (optional)
 
     @Override
     public int describeContents() { return 0; }
@@ -42,6 +43,7 @@ public class Member implements Parcelable {
         displayName = incoming.readString();
         roleName = incoming.readString();
         groupUid = incoming.readString();
+        selected = true;
     }
 
     public Member(String phoneNumber, String displayName, String roleName, String contactId) {
@@ -49,6 +51,7 @@ public class Member implements Parcelable {
         this.displayName = displayName;
         this.roleName = (roleName != null) ? roleName : Constant.ROLE_ORDINARY_MEMBER;
         this.contactId = contactId;
+        this.selected = true;
     }
 
     public static final Creator<Member> CREATOR = new Creator<Member>() {
@@ -88,6 +91,12 @@ public class Member implements Parcelable {
     public String getContactId() { return contactId; }
 
     public void setContactId(String contactId) { this.contactId = contactId; }
+
+    public boolean isSelected() { return selected; }
+
+    public void setSelected(boolean selected) { this.selected = selected; }
+
+    public void toggleSelected() { selected = !selected; }
 
     // toString etc
 

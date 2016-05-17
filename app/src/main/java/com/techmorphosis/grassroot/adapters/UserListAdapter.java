@@ -6,6 +6,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.techmorphosis.grassroot.R;
@@ -21,6 +22,7 @@ public class UserListAdapter extends RecyclerView.Adapter<UserListAdapter.ViewHo
 
     private static final String TAG = UserListAdapter.class.getCanonicalName();
     private List<Member> members;
+    private boolean showSelected;
     private LayoutInflater layoutInflater;
 
     /**
@@ -29,17 +31,22 @@ public class UserListAdapter extends RecyclerView.Adapter<UserListAdapter.ViewHo
     public static class ViewHolder extends RecyclerView.ViewHolder {
 
         public TextView tvMemberName;
+        public ImageView ivSelectedIcon;
 
         public ViewHolder(View itemLayoutView) {
             super(itemLayoutView);
-            // Log.e(TAG, "userListAdaptor! inside internal viewholder class!");
             tvMemberName = (TextView) itemLayoutView.findViewById(R.id.mlist_tv_member_name);
+            ivSelectedIcon = (ImageView) itemLayoutView.findViewById(R.id.mlist_iv_selected);
         }
     }
 
     public UserListAdapter(Context context) {
         this.members = new ArrayList<>();
         this.layoutInflater = LayoutInflater.from(context);
+    }
+
+    public void setShowSelected(boolean showSelected) {
+        this.showSelected = showSelected;
     }
 
     @Override
@@ -53,9 +60,23 @@ public class UserListAdapter extends RecyclerView.Adapter<UserListAdapter.ViewHo
 
     public List<Member> getMembers() { return members; }
 
+    public void removeMembers(final int[] positions) {
+        for (int i = 0; i < positions.length; i++) {
+            Log.e(TAG, "removing member! at position : " + positions[i]);
+            members.remove(positions[i]);
+            notifyItemRemoved(positions[i]);
+        }
+        notifyDataSetChanged();
+    }
+
     public void resetMembers(List<Member> memberList) {
         members = new ArrayList<>(memberList);
         this.notifyDataSetChanged();
+    }
+
+    public void toggleMemberSelected(int position) {
+        members.get(position).toggleSelected();
+        notifyDataSetChanged();
     }
 
     /**
@@ -66,9 +87,9 @@ public class UserListAdapter extends RecyclerView.Adapter<UserListAdapter.ViewHo
      */
     @Override
     public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        // Log.e(TAG, "userListAdaptor! creating view holder!");
         View listItem = layoutInflater.inflate(R.layout.member_list_item, parent, false); // todo : switch to getting inflater in here?
         ViewHolder vh = new ViewHolder(listItem);
+        vh.ivSelectedIcon.setVisibility(showSelected ? View.VISIBLE : View.GONE);
         return vh;
     }
 
@@ -82,6 +103,10 @@ public class UserListAdapter extends RecyclerView.Adapter<UserListAdapter.ViewHo
     public void onBindViewHolder(ViewHolder viewHolder, int position) {
         Member thisMember = members.get(position);
         viewHolder.tvMemberName.setText(thisMember.getDisplayName());
+        if (showSelected) {
+            viewHolder.ivSelectedIcon.setImageResource(thisMember.isSelected() ?
+                    R.drawable.btn_checked : R.drawable.btn_unchecked);
+        }
         // Log.e(TAG, "userListAdaptor! binding view holder!");
     }
 

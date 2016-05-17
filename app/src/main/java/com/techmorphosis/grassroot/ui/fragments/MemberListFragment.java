@@ -13,9 +13,12 @@ import android.view.ViewGroup;
 
 import com.techmorphosis.grassroot.R;
 import com.techmorphosis.grassroot.adapters.UserListAdapter;
+import com.techmorphosis.grassroot.interfaces.ClickListener;
 import com.techmorphosis.grassroot.services.GrassrootRestService;
 import com.techmorphosis.grassroot.services.model.Member;
 import com.techmorphosis.grassroot.services.model.MemberList;
+import com.techmorphosis.grassroot.ui.views.RecyclerTouchListener;
+import com.techmorphosis.grassroot.ui.views.SwipeableRecyclerViewTouchListener;
 import com.techmorphosis.grassroot.utils.ErrorUtils;
 import com.techmorphosis.grassroot.utils.SettingPreference;
 
@@ -39,9 +42,11 @@ public class MemberListFragment extends Fragment {
     // since android's framework is so abysmal, an equals comparison on fragment at different stages in its lifecycle fails
     // hence have to create this horrible hack just to be able to compare fragments ...
     private String ID;
-
-    MemberListListener mListener;
     private String groupUid;
+    private boolean canDismissItems;
+    private boolean showSelected;
+
+    private MemberListListener mListener;
     private GrassrootRestService grassrootRestService;
     private UserListAdapter userListAdapter;
 
@@ -53,6 +58,15 @@ public class MemberListFragment extends Fragment {
     // NB: we are not doing checks for null on this because we will use the fragment in create group
     public void setGroupUid(String groupUid) {
         this.groupUid = groupUid;
+    }
+
+    // Note: Since Android has terrible framework of no overriding constructors, only non-type-safe bundle nonsense, do this manually
+    public void setCanDismissItems(boolean canDismissItems) { this.canDismissItems = canDismissItems; }
+
+    public void setShowSelected(boolean showSelected) {
+        this.showSelected = showSelected;
+        if (userListAdapter != null)
+            userListAdapter.setShowSelected(showSelected);
     }
 
     public void setMemberList(List<Member> members) {
@@ -120,37 +134,46 @@ public class MemberListFragment extends Fragment {
         Log.e(TAG, "setting up the recycler view!");
         memberListRecyclerView.setLayoutManager(new LinearLayoutManager(this.getContext()));
         memberListRecyclerView.setAdapter(userListAdapter);
+        userListAdapter.setShowSelected(showSelected);
         if (groupUid != null)
             retrieveGroupMembers();
+        if (canDismissItems)
+            setUpDismissal();
         memberListRecyclerView.setVisibility(View.VISIBLE);
         Log.e(TAG, "ZOG : set up view, adaptor has : " + userListAdapter.getItemCount() + " items");
-
         // todo: set this up (also, have a dismiss swipe)
-        /*this.mRecyclerView.addOnItemTouchListener(new RecyclerTouchListener(this, this.mRecyclerView, new ClickListener() {
-            @Override
-            public void onClick(View view, int position) {
-                // todo: integrate selected / not selected back into adapter
-                Log.e(TAG, "position is  " + position);
-                Contact clickedContact = CreateGroupActivity.this.mergeList.get(position);
-                if (clickedContact == null) {
-                    Log.e(CreateGroupActivity.this.TAG, "click_model  is  " + null);
-                } else {
-                    Log.e(CreateGroupActivity.this.TAG, "click_model  is not null ");
-                }
-                if (clickedContact.isSelected) {
-                    clickedContact.isSelected = false;
-                    memberAdapter.notifyDataSetChanged();
-                    return;
-                }
-                clickedContact.isSelected = true;
-                CreateGroupActivity.this.mAdapter.notifyDataSetChanged();
-            }
+    }
 
-            @Override
-            public void onLongClick(View view, int position) {
+    private void setUpDismissal() {
+        SwipeableRecyclerViewTouchListener swipeDeleteListener = new SwipeableRecyclerViewTouchListener(
+                getContext(), memberListRecyclerView, R.id.mlist_tv_member_name, R.id.mlist_tv_member_name,
+                new SwipeableRecyclerViewTouchListener.SwipeListener() {
+                    @Override
+                    public boolean canSwipe(int position) {
+                        return true;
+                    }
 
-            }
-        }));*/
+                    @Override
+                    public void onDismissedBySwipe(RecyclerView recyclerView, int[] reverseSortedPositions) {
+                        userListAdapter.removeMembers(reverseSortedPositions);
+                    }
+                });
+        memberListRecyclerView.addOnItemTouchListener(swipeDeleteListener);
+
+        if (showSelected) {
+            memberListRecyclerView.addOnItemTouchListener(new RecyclerTouchListener(getContext(), memberListRecyclerView,
+                    new ClickListener() {
+                        @Override
+                        public void onClick(View view, int position) {
+                            userListAdapter.toggleMemberSelected(position);
+                        }
+
+                        @Override
+                        public void onLongClick(View view, int position) {
+                            userListAdapter.toggleMemberSelected(position);
+                        }
+            }));
+        }
     }
 
     @Override
@@ -189,3 +212,4 @@ public class MemberListFragment extends Fragment {
     }
 
 }
+

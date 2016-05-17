@@ -64,7 +64,9 @@ import java.util.List;
  * android.view.ViewPropertyAnimator}.</p>
  */
 public class SwipeableRecyclerViewTouchListener implements RecyclerView.OnItemTouchListener {
+
     private final String TAG= SwipeableRecyclerViewTouchListener.class.getSimpleName();
+
     // Cached ViewConfiguration and system-wide constant values
     private int mSlop;
     private int mMinFlingVelocity;

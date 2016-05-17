@@ -53,7 +53,6 @@ public class AddContactManually extends PortraitActivity {
             Intent i = new Intent();
             i.putExtra("name",et_userName.getText().toString());
             i.putExtra("selectedNumber",et_mobile_register.getText().toString());
-
             setResult(RESULT_OK,i);
             finish();
         };
@@ -82,8 +81,7 @@ public class AddContactManually extends PortraitActivity {
         }
     }
 
-    private void showSnackBar(Context applicationContext, String s, String string, String s1, int i, int lengthShort)
-    {
+    private void showSnackBar(Context applicationContext, String s, String string, String s1, int i, int lengthShort) {
         snackbar=Snackbar.make(activityRegister, string ,lengthShort);
         snackbar.show();
     }

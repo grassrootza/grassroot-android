@@ -31,8 +31,11 @@ public class GroupQuickMemberModalFragment extends android.support.v4.app.Dialog
     ImageView icViewMemberIcon;
     @BindView(R.id.ic_edit_group_active)
     ImageView icEditSettingsIcon;
+
     private String groupUid;
     private String groupName;
+    private int groupPosition;
+
     private boolean addMemberPermitted, viewMembersPermitted, editSettingsPermitted;
 
     // would rather use good practice and not have empty constructor, but Android is Android
@@ -65,35 +68,35 @@ public class GroupQuickMemberModalFragment extends android.support.v4.app.Dialog
 
         this.groupUid = b.getString(Constant.GROUPUID_FIELD);
         this.groupName = b.getString(Constant.GROUPNAME_FIELD);
+        this.groupPosition = b.getInt(Constant.INDEX_FIELD);
 
         addMemberPermitted = b.getBoolean("addMember");
         viewMembersPermitted = b.getBoolean("viewMembers");
         editSettingsPermitted = b.getBoolean("editSettings");
 
-        int addIcon = addMemberPermitted ? R.drawable.ic_home_call_meeting_active : R.drawable.ic_home_call_meeting_inactive;
-        int viewIcon = viewMembersPermitted ? R.drawable.ic_home_vote_active : R.drawable.ic_home_vote_inactive;
+        int addIcon = viewMembersPermitted ? R.drawable.ic_home_vote_active : R.drawable.ic_home_vote_inactive;
+        int viewIcon = addMemberPermitted ? R.drawable.ic_home_call_meeting_active : R.drawable.ic_home_call_meeting_inactive;
         int editIcon = editSettingsPermitted ? R.drawable.ic_home_to_do_active : R.drawable.ic_home_to_do_inactive;
 
-        icViewMemberIcon.setImageResource(addIcon);
-        icAddMemberIcon.setImageResource(viewIcon);
+        icAddMemberIcon.setImageResource(addIcon);
+        icViewMemberIcon.setImageResource(viewIcon);
         icEditSettingsIcon.setImageResource(editIcon);
     }
 
     @OnClick(R.id.ic_home_add_member_active)
     public void gmAddMemberIconListener() {
+        if (addMemberPermitted) {
+            Intent addMember = new Intent(getActivity(), AddMembersActivity.class);
+            addMember.putExtra(Constant.GROUPUID_FIELD, groupUid);
+            addMember.putExtra(Constant.GROUPNAME_FIELD, groupName);
+            addMember.putExtra(Constant.INDEX_FIELD, groupPosition);
 
-                if (addMemberPermitted) {
-                    Log.d(TAG, "inside modal ... add member icon clicked! for group with UID = " + groupUid + ", and name = "
-                            + groupName);
-                    Intent addMember = new Intent(getActivity(), AddMembersActivity.class);
-                    addMember.putExtra(Constant.GROUPUID_FIELD, groupUid);
-                    addMember.putExtra(Constant.GROUPNAME_FIELD, groupName);
-                    startActivity(addMember);
-                    getDialog().dismiss();
-                } else {
-                    getDialog().dismiss();
-                }
-
+            // note: inefficiency here in routing back via activity, but getParentFragment is throwing a null error...
+            getActivity().startActivityForResult(addMember, Constant.activityAddMembersToGroup);
+            getDialog().dismiss();
+        } else {
+            getDialog().dismiss();
+        }
     }
 
     @OnClick(R.id.ic_home_view_members_active)
@@ -122,4 +125,6 @@ public class GroupQuickMemberModalFragment extends android.support.v4.app.Dialog
 
 
         }
-    } }
+    }
+
+}

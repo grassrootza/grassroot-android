@@ -59,6 +59,8 @@ public class GroupListAdapter extends RecyclerView.Adapter<GroupListAdapter.GHP_
         holder.itemView.setLongClickable(true);
         Group group = groups.get(position);
 
+        Log.e(TAG, "groupListAdapter ... calling onBindViewHolder, at position : " + position + " and " + group.getGroupMemberCount() + " members");
+
         final String groupOrganizerDescription = "Organizer: " + group.getGroupCreator();
         final String groupDescription = group.getDescription();
         final int visibility = (groupDescription == null || groupDescription.trim().equals("")) ? View.GONE : View.VISIBLE;
@@ -73,7 +75,7 @@ public class GroupListAdapter extends RecyclerView.Adapter<GroupListAdapter.GHP_
 
         RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) holder.profileV2.getLayoutParams();
         params.height = height;
-        params.width=width;
+        params.width = width;
 
         holder.profileV2.setLayoutParams(params);
         holder.profileV1.setVisibility(View.VISIBLE);
@@ -111,32 +113,29 @@ public class GroupListAdapter extends RecyclerView.Adapter<GroupListAdapter.GHP_
         this.notifyItemRangeInserted(0, groupList.size() - 1);
     }
 
-    public void filter(String searchwords)
-    {
+    // todo: this is probably not the best way to do this (maybe rething whole list structure/handling etc)
+    public void updateGroup(int position, Group group) {
+        groups.set(position, group);
+        notifyItemChanged(position);
+        notifyDataSetChanged(); // for some reason, the line above calls onBindViewHolder, but doesn't rewrite the text view!!
+    }
+
+    public void filter(String searchwords) {
         //first clear the current data
         groups.clear();
         Log.e(TAG, "filter search_string is " + searchwords);
 
-        if (searchwords.equals(""))
-        {
+        if (searchwords.equals("")) {
             groups.addAll(oldGroupModel);
-        }
-        else
-        {
-            for (Group group:oldGroupModel)
-            {
-
-                if (group.getGroupName().trim().toLowerCase(Locale.getDefault()).contains(searchwords))
-                {
+        } else {
+            for (Group group:oldGroupModel) {
+                if (group.getGroupName().trim().toLowerCase(Locale.getDefault()).contains(searchwords)) {
                     Log.e(TAG,"model.groupName.trim() " + group.getGroupName().trim().toLowerCase(Locale.getDefault()));
                     Log.e(TAG,"searchwords is " + searchwords);
                     groups.add(group);
-                }
-                else
-                {
+                } else {
                     //Log.e(TAG,"not found");
                 }
-
             }
         }
         notifyDataSetChanged();

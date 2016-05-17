@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     style="@style/MemberListItemRow"
+    android:id="@+id/mlist_rl"
     android:orientation="horizontal"
     android:layout_width="match_parent"
     android:layout_height="wrap_content">
@@ -12,4 +13,13 @@
             android:id="@+id/mlist_tv_member_name"
             android:text="@string/member_list_default_name"/>
 
-</LinearLayout>
+    <ImageView
+        android:id="@+id/mlist_iv_selected"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentRight="true"
+        android:layout_centerVertical="true"
+        android:src="@drawable/btn_unchecked"
+        android:layout_marginRight="20dp" />
+
+</RelativeLayout>

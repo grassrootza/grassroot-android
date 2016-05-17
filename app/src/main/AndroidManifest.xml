@@ -41,7 +41,8 @@
             android:name=".ui.activities.HomeScreenActivity"
             android:configChanges="keyboardHidden|orientation"
             android:label="@string/app_name"
-            android:screenOrientation="portrait" />
+            android:screenOrientation="portrait"
+            android:launchMode="singleTop" />
 
         <activity
             android:name=".ui.activities.GroupTasksActivity"

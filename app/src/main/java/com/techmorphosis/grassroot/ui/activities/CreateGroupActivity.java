@@ -272,5 +272,7 @@ public class CreateGroupActivity extends PortraitActivity implements MemberListF
     @Override
     public void onMemberListInitiated(MemberListFragment fragment) {
         // todo: use this to handle fragment setting up & observation, instead of create at start...
+        memberListFragment.setShowSelected(true);
+        memberListFragment.setCanDismissItems(true);
     }
 }

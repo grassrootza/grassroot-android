@@ -12,8 +12,7 @@
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        style="@style/MemberListItemRow"
-        android:layout_below="@+id/tv_cg_title">
+        style="@style/MemberListItemRow">
 
         <TextView
             android:id="@+id/tv_person_name"

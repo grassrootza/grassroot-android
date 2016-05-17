@@ -1,5 +1,6 @@
 package com.techmorphosis.grassroot.ui.activities;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
@@ -44,6 +45,7 @@ public class AddMembersActivity extends AppCompatActivity implements MemberListF
 
     private String groupUid;
     private String groupName;
+    private int groupPosition; // in case called from a list, so can update selectively
     private List<Member> membersToAdd;
     private boolean newMemberListStarted;
 
@@ -87,7 +89,6 @@ public class AddMembersActivity extends AppCompatActivity implements MemberListF
         if (extras == null) {
             Log.d(TAG, "ERROR! Null extras passed to add members activity, cannot execute, aborting");
             finish();
-            return;
         } else {
             Log.d(TAG, "inside addMembersActivity ... passed extras bundle = " + extras.toString());
             init(extras);
@@ -100,6 +101,7 @@ public class AddMembersActivity extends AppCompatActivity implements MemberListF
     private void init(Bundle extras) {
         this.groupUid = extras.getString(Constant.GROUPUID_FIELD);
         this.groupName = extras.getString(Constant.GROUPNAME_FIELD);
+        this.groupPosition = extras.getInt(Constant.INDEX_FIELD);
         this.membersToAdd = new ArrayList<>();
     }
 
@@ -126,6 +128,9 @@ public class AddMembersActivity extends AppCompatActivity implements MemberListF
         newMemberListFragment = new MemberListFragment();
         newMemberListFragment.setGroupUid(null);
         newMemberListFragment.setID(NEW_ID);
+        newMemberListFragment.setCanDismissItems(true);
+        newMemberListFragment.setShowSelected(true);
+
         getSupportFragmentManager().beginTransaction()
                 .add(R.id.am_new_member_list_container, newMemberListFragment)
                 .commit();
@@ -156,12 +161,12 @@ public class AddMembersActivity extends AppCompatActivity implements MemberListF
     @OnClick(R.id.am_bt_save)
     public void commitResultsAndExit() {
         if (membersToAdd != null && membersToAdd.size() > 0) {
+            // note: have to exit on complete of rest call, else get issues updating group & overlap
             postNewMembersToGroup();
-            Log.d(TAG, "Exiting with these members to add: " + membersToAdd.toString());
         } else {
             Log.d(TAG, "Exited with no members to add!");
+            finish();
         }
-        finish();
     }
 
     private void postNewMembersToGroup() {
@@ -175,8 +180,13 @@ public class AddMembersActivity extends AppCompatActivity implements MemberListF
                     @Override
                     public void onResponse(Call<GenericResponse> call, Response<GenericResponse> response) {
                         if (response.isSuccessful()) {
-                            Log.d(TAG, "Finished adding members");
-                            // todo: refresh the task list intelligently
+                            // todo : maybe, maybe a progress bar
+                            Log.d(TAG, "Finished adding these members: " + membersToAdd.toString());
+                            Intent i = new Intent();
+                            i.putExtra(Constant.GROUPUID_FIELD, groupUid);
+                            i.putExtra(Constant.INDEX_FIELD, groupPosition);
+                            setResult(RESULT_OK, i);
+                            finish();
                         } else {
                             // todo: handle error gracefully
                         }

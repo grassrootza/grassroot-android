@@ -24,6 +24,7 @@ public class Constant {
 
     public static final String GROUPUID_FIELD = "groupUid";
     public static final String GROUPNAME_FIELD = "groupName";
+    public static final String INDEX_FIELD = "index";
 
     public static final String VOTE = "VOTE";
     public static final String MEETING = "MEETING";
@@ -37,6 +38,7 @@ public class Constant {
     public static final int activityContactSelection = 1;
     public static final int activityManualMemberEntry = 2;
     public static final int activitySelectNumberFromContact = 3;
+    public static final int activityAddMembersToGroup = 4;
 
     public static final int alertAskForContactPermission = 91;
 

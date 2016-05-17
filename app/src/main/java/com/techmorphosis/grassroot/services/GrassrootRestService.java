@@ -100,6 +100,10 @@ public class GrassrootRestService {
         Call<GroupResponse> getUserGroups(@Path("phoneNumber") String phoneNumber,
                                           @Path("code") String code);
 
+        @GET("group/get/{phoneNumber}/{code}/{groupUid}")
+        Call<GroupResponse> getSingleGroup(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
+                                           @Path("groupUid") String groupUid);
+
         //group join request
         @POST("group/join/request/{phoneNumber}/{code}")
         Call<GenericResponse> groupJoinRequest(@Path("phoneNumber") String phoneNumber,
