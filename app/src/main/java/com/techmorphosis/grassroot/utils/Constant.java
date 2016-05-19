@@ -16,7 +16,6 @@ public class Constant {
 
     public static final String restUrl = BuildConfig.BUILD_TYPE.equals("release") ? stagingUrl : localUrl;
 
-    public static final String phoneBookList = "phoneBookList";
     public static final String filteredList = "filteredList";
 
     public static final String selectedContacts = "selectedContacts";
@@ -25,12 +24,16 @@ public class Constant {
     public static final String GROUPUID_FIELD = "groupUid";
     public static final String GROUPNAME_FIELD = "groupName";
     public static final String INDEX_FIELD = "index";
+    public static final String PARENT_TAG_FIELD = "parentTag";
 
     public static final String VOTE = "VOTE";
     public static final String MEETING = "MEETING";
     public static final String TODO = "TODO";
 
-    public static final String ROLE_ORDINARY_MEMBER = "ROLE_ORDINARY_MEMBER";
+    public static final String ROLE_GROUP_ORGANIZER  = "ROLE_GROUP_ORGANIZER";
+    public static final String ROLE_COMMITTEE_MEMBER = "ROLE_COMMITTEE_MEMBER";
+    public static final String ROLE_ORDINARY_MEMBER  = "ROLE_ORDINARY_MEMBER";
+
     public static final String NO_GROUP_TASKS = "NO_GROUP_ACTIVITIES";
 
     public static final SimpleDateFormat isoDateTimeSDF = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
@@ -39,6 +42,7 @@ public class Constant {
     public static final int activityManualMemberEntry = 2;
     public static final int activitySelectNumberFromContact = 3;
     public static final int activityAddMembersToGroup = 4;
+    public static final int activityRemoveMembers = 5;
 
     public static final int alertAskForContactPermission = 91;
 

@@ -6,6 +6,7 @@
     <color name="primaryColorDark">#339661</color>
     <color name="textSecondaryColorDark">#8A000000</color>
     <color name="windowBackground">#fafafa</color>
+    <color name="iconActive">#FFFF8D</color>
 
 
     <color name="white">#fff</color>
@@ -15,7 +16,7 @@
     <color name="background">#eeeeee</color>
     <color name="dark_background">#ddd</color>
     <color name="red">#FF0000</color>
-     <color name="orange">#FFBF00</color>
+    <color name="orange">#FFBF00</color>
     <color name="list_background">#fafafa</color>
     <color name="list_background_pressed">#eeeeee</color>
     <color name="textbg">#efefef</color>
@@ -24,7 +25,7 @@
     <color name="RecyclerView_background">#ECEFF1</color>
 
 
-     <color name="yellow">#F0ED0F</color>
+    <color name="yellow">#F0ED0F</color>
     <color name="white_transparent">#20FFFFFF</color>
 
     <!--RateUs Scree-->

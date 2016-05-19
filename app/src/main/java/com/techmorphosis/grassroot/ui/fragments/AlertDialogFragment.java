@@ -33,8 +33,6 @@ public class AlertDialogFragment extends DialogFragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-
     }
 
     @Override
@@ -43,10 +41,7 @@ public class AlertDialogFragment extends DialogFragment {
         ButterKnife.bind(this, view);
         getDialog().getWindow().requestFeature(Window.FEATURE_NO_TITLE);
         return view;
-
     }
-
-
 
     @OnClick(R.id.bt_left)
     public void leftButtonListener() {
@@ -56,7 +51,6 @@ public class AlertDialogFragment extends DialogFragment {
     @OnClick(R.id.bt_right)
     public void rightButtonListener() {
         mAlertDialogListener.setRightButton();
-
     }
 
     @Override
@@ -72,13 +66,9 @@ public class AlertDialogFragment extends DialogFragment {
         } else {
             txtMessage.setText("error");
         }
-
-
     }
 
     public void setListener(AlertDialogListener alertdialoglistener) {
         mAlertDialogListener = alertdialoglistener;
     }
-
-
 }

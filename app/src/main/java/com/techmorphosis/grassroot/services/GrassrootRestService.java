@@ -2,16 +2,20 @@ package com.techmorphosis.grassroot.services;
 
 import android.content.Context;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.techmorphosis.grassroot.services.model.GenericResponse;
 import com.techmorphosis.grassroot.services.model.GroupResponse;
 import com.techmorphosis.grassroot.services.model.GroupSearchResponse;
 import com.techmorphosis.grassroot.services.model.Member;
+import com.techmorphosis.grassroot.services.model.MemberDeserializer;
 import com.techmorphosis.grassroot.services.model.MemberList;
 import com.techmorphosis.grassroot.services.model.TaskResponse;
 import com.techmorphosis.grassroot.services.model.TokenResponse;
 import com.techmorphosis.grassroot.utils.Constant;
 
 import java.util.List;
+import java.util.Set;
 
 import okhttp3.OkHttpClient;
 import okhttp3.logging.HttpLoggingInterceptor;
@@ -46,12 +50,23 @@ public class GrassrootRestService {
                 .addNetworkInterceptor(new HeaderInterceptor())
                 .build();
 
+
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl(GRASSROOT_SERVER_URL)
                 .addConverterFactory(GsonConverterFactory.create())
                 .client(client).build();
 
         mRestApi = retrofit.create(RestApi.class);
+    }
+
+    private static GsonConverterFactory buildGsonConverterFactory() {
+        GsonBuilder gsonBuilder = new GsonBuilder();
+
+        // add any custom deserializers here
+        gsonBuilder.registerTypeAdapter(Member.class, new MemberDeserializer());
+        Gson myGson = gsonBuilder.create();
+
+        return GsonConverterFactory.create(myGson);
     }
 
     public RestApi getApi() {
@@ -138,14 +153,18 @@ public class GrassrootRestService {
 
 
         // retrieve group members
-        @GET("group/members/list/{phoneNumber}/{code}/{groupUid}")
+        @GET("group/members/list/{phoneNumber}/{code}/{groupUid}/{selected}")
         Call<MemberList> getGroupMembers(@Path("groupUid") String groupUid, @Path("phoneNumber") String phoneNumber,
-                                         @Path("code") String code);
+                                         @Path("code") String code, @Path("selected") boolean selected);
 
         @Headers("Content-Type: application/json")
         @POST("group/members/add/{phoneNumber}/{code}/{uid}")
         Call<GenericResponse> addGroupMembers(@Path("uid") String groupUid, @Path("phoneNumber") String phoneNumber,
                                               @Path("code") String code, @Body List<Member> membersToAdd);
+
+        @POST("group/members/remove/{phoneNumber}/{code}/{groupUid}")
+        Call<GenericResponse> removeGroupMembers(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
+                                                 @Path("groupUid") String groupUid, @Query("memberUids") Set<String> memberUids);
 
         @POST("gcm/register/{phoneNumber}/{code}")
         Call<GenericResponse> pushRegistration(@Path("phoneNumber") String phoneNumber,

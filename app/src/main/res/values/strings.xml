@@ -9,6 +9,8 @@
     <string name="title_activity_add_members">Add group members</string>
     <string name="title_activity_phone_book_contacts">Contact list</string>
     <string name="title_activity_dilog">DialogActivity</string>
+    <string name="title_activity_group_members">View members</string>
+    <string name="title_activity_remove_members">Remove members</string>
 
     <string name="register"><u>Forgot password?</u></string>
 
@@ -21,14 +23,12 @@
     <string name="bt_submit_otp">SUBMIT</string>
     <string name="txtresend">Verification code not received?\n Resend</string>
 
-
     <!--container Register-->
     <string name="et_userName">Name</string>
     <string name="et_mobile_register">Cellphone number</string>
 
     <!--container Login-->
     <string name="et_mobile_login"></string>
-
 
     <!--Alerts-->
     <string name="No_network">No network</string>
@@ -82,7 +82,8 @@
     <string name="joingroup">REQUEST TO JOIN A GROUP</string>
     <string name="startgroup">START A GROUP</string>
 
-    <!-- -&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;-->
+    <string name="bt_save">Save</string>
+    <string name="bt_cancel">Cancel</string>
 
 
     <!--RateUs Screen-->
@@ -111,7 +112,6 @@
     <string name="cg_title">Create new group</string>
     <string name="cg_group_name">Group name</string>
     <string name="cg_group_description">Group description</string>
-    <string name="cg_Save">Save</string>
     <string name="cg_title_contact">Current group members</string>
     <string name="cg_member_list_header">Group members</string>
 
@@ -150,6 +150,10 @@
     <string name="gm_add_member">ADD MEMBER</string>
     <string name="gm_view_members">VIEW MEMBERS</string>
     <string name="gm_edit_settings">EDIT GROUP</string>
+    <string name="gm_remove_members">REMOVE MEMBERS</string>
+
+    <string name="gm_add_members_lc">Add members</string>
+    <string name="gm_new_task_lc">Call new event</string>
 
     <!--Group ativities-> <!-ga- -->
     <string name="ga_tv_toolbar">Name of group</string>

@@ -8,10 +8,13 @@
         android:icon="@drawable/btn_filter"
         app:showAsAction="ifRoom" />
 
-    <item android:id="@+id/mi_view_members"
-        android:title="View members"
-        app:showAsAction="never" />
+    <item
+        android:id="@+id/mi_icon_search"
+        android:title="Search"
+        android:icon="@drawable/btn_search"
+        app:showAsAction="ifRoom" />
 
+    <!-- todo : permissions -->
     <item android:id="@+id/mi_add_members"
         android:title="Add members"
         app:showAsAction="never" />

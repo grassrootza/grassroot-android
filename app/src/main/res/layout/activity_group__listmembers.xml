@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:fab="http://schemas.android.com/apk/res-auto"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:id="@+id/rl_lm_root"
+    style="@style/AppTheme">
+
+    <android.support.v7.widget.Toolbar
+        android:id="@+id/lm_toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="?actionBarSize"
+        android:background="@color/primaryColor"
+        android:gravity="center_vertical"
+        android:elevation="4dp"
+        android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar">
+
+    </android.support.v7.widget.Toolbar>
+
+    <android.support.design.widget.CoordinatorLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@id/lm_toolbar">
+
+        <android.support.design.widget.AppBarLayout
+            android:id="@+id/am_app_bar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <android.support.design.widget.CollapsingToolbarLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingBottom="16dp"
+                android:paddingLeft="10dp"
+                app:expandedTitleMarginEnd="30dp"
+                app:expandedTitleMarginStart="10dp"
+                app:layout_scrollFlags="scroll|exitUntilCollapsed"
+                app:layout_collapseMode="parallax">
+
+                <TextView
+                    style="@style/GiantHeader"
+                    android:id="@+id/lm_tv_groupname"
+                    android:text="@string/cg_group_name"
+                    android:elegantTextHeight="true" />
+
+            </android.support.design.widget.CollapsingToolbarLayout>
+
+        </android.support.design.widget.AppBarLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_below="@id/am_app_bar"
+            android:layout_marginTop="10dp"
+            android:id="@+id/ll_am_member_lists"
+            app:layout_behavior="@string/appbar_scrolling_view_behavior">
+
+            <TextView
+                style="@style/MemberListHeader"
+                android:id="@+id/tv_am_existing_members_title"
+                android:text="@string/member_list_default_header" />
+
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/lm_member_list_container">
+            </RelativeLayout>
+
+        </LinearLayout>
+
+    </android.support.design.widget.CoordinatorLayout>
+
+    <!-- must of this should be put in style, but don't work in style (Android, robust, etc), hence copy & pasted -->
+    <com.github.clans.fab.FloatingActionMenu
+        android:id="@+id/lm_ic_floating_menu"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+
+        fab:menu_openDirection="up"
+        fab:menu_labels_ellipsize="end"
+        fab:menu_labels_singleLine="true"
+        fab:menu_backgroundColor="@android:color/transparent"
+
+        fab:menu_shadowColor="#444"
+        fab:menu_colorNormal="#FFB805"
+        fab:menu_colorPressed="#F2AB00"
+        fab:menu_colorRipple="#D99200"
+
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentRight="true"
+        android:paddingRight="10dp"
+        android:paddingBottom="10dp"
+        android:paddingLeft="10dp">
+
+        <com.github.clans.fab.FloatingActionButton
+            style="@style/MenuButtonsStyle"
+            fab:fab_label="@string/gm_add_members_lc"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/lm_fab_add_members"
+            android:src="@drawable/ic_fab_add_contact"
+            android:visibility="gone" />
+
+        <com.github.clans.fab.FloatingActionButton
+            style="@style/MenuButtonsStyle"
+            fab:fab_label="@string/gm_new_task_lc"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/lm_fab_new_task"
+            android:src="@drawable/ic_fab_call"
+            android:visibility="gone" />
+
+    </com.github.clans.fab.FloatingActionMenu>
+
+</RelativeLayout>
+

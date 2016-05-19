@@ -49,9 +49,9 @@ public class SortFragment extends android.support.v4.app.DialogFragment
         super.onActivityCreated(savedInstanceState);
 
         Bundle b= getArguments();
-        date= b.getBoolean("Date");
-        role=b.getBoolean("Role");
-        defaults=b.getBoolean("Default");
+        date = b.getBoolean("Date");
+        role =b.getBoolean("Role");
+        defaults = b.getBoolean("Default");
         updateui(date, role, defaults);
 
     }

@@ -14,7 +14,7 @@ public class Member implements Parcelable {
 
     private static final String TAG = Member.class.getCanonicalName();
 
-    private String userUid;
+    private String memberUid;
     private String groupUid;
 
     private String phoneNumber;
@@ -22,14 +22,14 @@ public class Member implements Parcelable {
     private String roleName;
 
     private String contactId; // only set locally, if we retrieve member from contacts
-    private boolean selected; // so can remove from a list (optional)
+    private boolean selected;
 
     @Override
     public int describeContents() { return 0; }
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
-        dest.writeString(this.userUid);
+        dest.writeString(this.memberUid);
         dest.writeString(this.phoneNumber);
         dest.writeString(this.displayName);
         dest.writeString(this.roleName);
@@ -38,7 +38,7 @@ public class Member implements Parcelable {
 
     protected Member(Parcel incoming) {
         Log.d(TAG, "inside Member, constructing with incoming parcel : " + incoming.toString());
-        userUid = incoming.readString();
+        memberUid = incoming.readString();
         phoneNumber = incoming.readString();
         displayName = incoming.readString();
         roleName = incoming.readString();
@@ -68,9 +68,11 @@ public class Member implements Parcelable {
 
     // GETTERS
 
-    public String getUserUid() {
-        return userUid;
+    public String getMemberUid() {
+        return memberUid;
     }
+
+    public void setMemberUid(String memberUid) { this.memberUid = memberUid; }
 
     public String getPhoneNumber() {
         return phoneNumber;
@@ -104,10 +106,11 @@ public class Member implements Parcelable {
     @Override
     public String toString() {
         return "Member{" +
-                "userUid='" + userUid + '\'' +
+                "memberUid='" + memberUid + '\'' +
                 ", phoneNumber='" + phoneNumber + '\'' +
                 ", displayName='" + displayName + '\'' +
                 ", contactId=" + contactId + '\'' +
+                ", selected=" + selected + '\'' +
                 '}';
     }
 }

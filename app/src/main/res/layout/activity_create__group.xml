@@ -218,7 +218,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:textAllCaps="true"
-        android:text="@string/cg_Save"
+        android:text="@string/bt_save"
         android:textSize="@dimen/txt_large"
         android:layout_marginBottom="20dp"
         android:textColor="@drawable/green_txt"

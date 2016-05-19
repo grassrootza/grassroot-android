@@ -1,7 +1,5 @@
 package com.techmorphosis.grassroot.adapters;
 
-import android.content.Context;
-
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -18,6 +16,7 @@ import com.techmorphosis.grassroot.ui.fragments.HomeGroupListFragment;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.Locale;
 
@@ -28,21 +27,33 @@ import butterknife.ButterKnife;
  */
 public class GroupListAdapter extends RecyclerView.Adapter<GroupListAdapter.GHP_ViewHolder>{
 
+    private String TAG = GroupListAdapter.class.getSimpleName();
+
     private final HomeGroupListFragment activity;
-    Context context;
+
+    // todo: figure out if we can use new SortedList, problem is doesn't seem to enable comparator switching (ugh, Android)
 
     ArrayList<Group> groups;
     ArrayList<Group> oldGroupModel;
-    private String TAG= GroupListAdapter.class.getSimpleName();
 
-    private static final SimpleDateFormat inputSDF = new SimpleDateFormat("dd-MM-yy:HH:mm:SS");
     private static final SimpleDateFormat outputSDF = new SimpleDateFormat("EEE, d MMM, ''yy");
 
-    public GroupListAdapter(Context context, ArrayList<Group> groups, HomeGroupListFragment activity) {
-        this.context = context;
+    public GroupListAdapter(ArrayList<Group> groups, HomeGroupListFragment activity) {
         this.groups = groups;
         this.activity = activity;
-        Log.e(TAG,"Adapter data.size() is " + groups.size());
+    }
+
+    public void sortByDate() {
+        Log.e(TAG, "groupListAdapter: sorting by date!");
+        Collections.sort(groups, Collections.reverseOrder()); // since Date entity sorts earliest to latest
+        notifyDataSetChanged();
+    }
+
+    public void sortByRole() {
+        // todo: consider moving this back out to fragment (esp given notifyDataSet being bad..)
+        Log.e(TAG, "groupListAdapter: sorting by role!");
+        Collections.sort(groups, Collections.reverseOrder(Group.GroupRoleComparator)); // as above
+        notifyDataSetChanged();
     }
 
     @Override
@@ -58,8 +69,6 @@ public class GroupListAdapter extends RecyclerView.Adapter<GroupListAdapter.GHP_
 
         holder.itemView.setLongClickable(true);
         Group group = groups.get(position);
-
-        Log.e(TAG, "groupListAdapter ... calling onBindViewHolder, at position : " + position + " and " + group.getGroupMemberCount() + " members");
 
         final String groupOrganizerDescription = "Organizer: " + group.getGroupCreator();
         final String groupDescription = group.getDescription();
@@ -84,14 +93,9 @@ public class GroupListAdapter extends RecyclerView.Adapter<GroupListAdapter.GHP_
 
         String displayDateTime;
 
-        try {
-            // todo: move this into the Model constructor instead (oh for Java 8)
-            Date date = inputSDF.parse(group.getDateTimeFull());
-            displayDateTime = date.after(new Date()) ? "Next event: " + outputSDF.format(date)
-                    : "Last event: " + outputSDF.format(date);
-        } catch (Exception e) {
-            displayDateTime = group.getDateTimeShort();
-        }
+        Date date = group.getDate();
+        displayDateTime = date.after(new Date()) ? "Next event: " + outputSDF.format(date)
+                : "Last event: " + outputSDF.format(date);
 
         holder.datetime.setText(displayDateTime);
 
@@ -113,7 +117,7 @@ public class GroupListAdapter extends RecyclerView.Adapter<GroupListAdapter.GHP_
         this.notifyItemRangeInserted(0, groupList.size() - 1);
     }
 
-    // todo: this is probably not the best way to do this (maybe rething whole list structure/handling etc)
+    // todo: this might not be the best way to do this (maybe rethink whole list structure/handling etc)
     public void updateGroup(int position, Group group) {
         groups.set(position, group);
         notifyItemChanged(position);
@@ -140,10 +144,6 @@ public class GroupListAdapter extends RecyclerView.Adapter<GroupListAdapter.GHP_
         }
         notifyDataSetChanged();
 
-    }
-
-    public void clearAll() {
-        this.notifyDataSetChanged();
     }
 
     public void clearGroups() {

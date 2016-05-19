@@ -9,12 +9,13 @@ import com.techmorphosis.grassroot.utils.Constant;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.Comparator;
 import java.util.Date;
 
 /**
  * Created by paballo on 2016/05/05.
  */
-public class TaskModel implements Parcelable {
+public class TaskModel implements Parcelable, Comparable<TaskModel> {
 
     private static final String TAG = TaskModel.class.getCanonicalName();
 
@@ -144,7 +145,6 @@ public class TaskModel implements Parcelable {
         dest.writeString(this.reply);
         dest.writeString(this.completedYes);
         dest.writeString(this.completedNo);
-
     }
 
     protected TaskModel(Parcel in) {
@@ -189,4 +189,34 @@ public class TaskModel implements Parcelable {
             return new TaskModel[size];
         }
     };
+
+    @Override
+    public int compareTo(TaskModel task2) {
+        return getDeadlineDate().compareTo(task2.getDeadlineDate());
+    }
+
+    public static Comparator<TaskModel> canRespondComparator = new Comparator<TaskModel>() {
+        @Override
+        public int compare(TaskModel taskModel, TaskModel t1) {
+            return (!taskModel.hasResponded && t1.hasResponded) ? 1 :
+                    (taskModel.hasResponded && !t1.hasResponded) ? -1
+                            : -(taskModel.compareTo(t1)); // so it's reverse order on the date
+        }
+    };
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        TaskModel taskModel = (TaskModel) o;
+
+        return id != null ? id.equals(taskModel.id) : taskModel.id == null;
+
+    }
+
+    @Override
+    public int hashCode() {
+        return id != null ? id.hashCode() : 0;
+    }
 }

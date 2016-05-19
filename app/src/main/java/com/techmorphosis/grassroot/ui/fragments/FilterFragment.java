@@ -1,9 +1,11 @@
 package com.techmorphosis.grassroot.ui.fragments;
 
 import android.app.DialogFragment;
+import android.content.Context;
 import android.graphics.Typeface;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -11,8 +13,8 @@ import android.view.ViewGroup;
 import android.view.Window;
 import android.widget.TextView;
 
-import com.techmorphosis.grassroot.interfaces.FilterInterface;
 import com.techmorphosis.grassroot.R;
+import com.techmorphosis.grassroot.utils.Constant;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -23,6 +25,10 @@ import butterknife.OnClick;
  */
 public class FilterFragment extends DialogFragment {
 
+    private static final String TAG = FilterFragment.class.getSimpleName();
+
+    private TasksFilterListener filterListener;
+
     @BindView(R.id.tv_Vote)
     TextView tvVote;
     @BindView(R.id.tv_meeting)
@@ -31,11 +37,8 @@ public class FilterFragment extends DialogFragment {
     TextView tvtoDo;
     @BindView(R.id.tv_clear)
     TextView tvClear;
-    private static final String TAG = "FilterFragment";
-    public boolean vote = false, meeting = false, todo = false;
-    private FilterInterface filterinterface;
-    private boolean clear;
 
+    public boolean filterVote = false, filterMeeting = false, filterTodo = false;
 
     @Nullable
     @Override
@@ -51,179 +54,83 @@ public class FilterFragment extends DialogFragment {
         super.onActivityCreated(savedInstanceState);
         Bundle b = getArguments();
         if (b != null) {
-            vote = b.getBoolean("Vote");
-            meeting = b.getBoolean("Meeting");
-            todo = b.getBoolean("ToDo");
-            clear = b.getBoolean("Clear");
-
-            Log.e(TAG, "vote is " + vote);
-            Log.e(TAG, "meeting is " + meeting);
-            Log.e(TAG, "todo is " + todo);
-            Log.e(TAG, "clear is " + clear);
-
+            filterVote = b.getBoolean(Constant.VOTE);
+            filterMeeting = b.getBoolean(Constant.MEETING);
+            filterTodo = b.getBoolean(Constant.TODO);
         } else {
-
+            filterVote = false;
+            filterMeeting = false;
+            filterTodo = false;
         }
 
         initViews();
-        updateui(vote, meeting, todo);
-
-    }
-
-    private void updateui(boolean vote, boolean meeting, boolean todo) {
-
-        if (vote) {
-
-            tvVote.setTypeface(null, Typeface.BOLD);
-
-            tvVote.setTextColor(getResources().getColor(R.color.primaryColor));
-            tvMeeting.setTextColor(getResources().getColor(R.color.grey));
-            tvtoDo.setTextColor(getResources().getColor(R.color.grey));
-            tvClear.setTextColor(getResources().getColor(R.color.grey));
-
-
-        } else if (meeting) {
-            tvVote.setTextColor(getResources().getColor(R.color.grey));
-            tvMeeting.setTextColor(getResources().getColor(R.color.primaryColor));
-            tvtoDo.setTextColor(getResources().getColor(R.color.grey));
-            tvClear.setTextColor(getResources().getColor(R.color.grey));
-
-
-            tvMeeting.setTypeface(null, Typeface.BOLD);
-
-        } else if (todo) {
-            tvtoDo.setTypeface(null, Typeface.BOLD);
-
-            tvVote.setTextColor(getResources().getColor(R.color.grey));
-            tvMeeting.setTextColor(getResources().getColor(R.color.grey));
-            tvtoDo.setTextColor(getResources().getColor(R.color.primaryColor));
-            tvClear.setTextColor(getResources().getColor(R.color.grey));
-
-
-        } else if (clear) {
-            tvClear.setTypeface(null, Typeface.BOLD);
-            tvVote.setTextColor(getResources().getColor(R.color.grey));
-            tvMeeting.setTextColor(getResources().getColor(R.color.grey));
-            tvtoDo.setTextColor(getResources().getColor(R.color.grey));
-            tvClear.setTextColor(getResources().getColor(R.color.primaryColor));
-
-
-        }
+        updateUi();
     }
 
     private void initViews() {
         tvVote.setText("Vote");
         tvMeeting.setText("Meeting");
         tvtoDo.setText("ToDo");
+    }
 
+    private void updateUi() {
+        final Context context = getActivity();
+        final int primaryColor = ContextCompat.getColor(context, R.color.primaryColor);
+        final int greyColor = ContextCompat.getColor(context, R.color.grey);
+
+        tvVote.setTextColor(filterVote ? primaryColor : greyColor);
+        tvMeeting.setTextColor(filterMeeting ? primaryColor : greyColor);
+        tvtoDo.setTextColor(filterTodo ? primaryColor : greyColor);
+
+        tvVote.setTypeface(null, filterVote ? Typeface.BOLD : Typeface.NORMAL);
+        tvMeeting.setTypeface(null, filterMeeting ? Typeface.BOLD : Typeface.NORMAL);
+        tvtoDo.setTypeface(null, filterTodo ? Typeface.BOLD : Typeface.NORMAL);
+    }
+
+    private void callClickOrClear(String typeChanged, boolean changedFlagState) {
+        // Log.e(TAG, "call click or clear : mtg = " + filterMeeting + ", ")
+        if (filterMeeting || filterVote || filterTodo) {
+           filterListener.itemClicked(typeChanged, changedFlagState);
+        } else {
+            filterListener.clearFilters();
+        }
     }
 
     @OnClick(R.id.tv_clear)
     public void clearClick() {
-
-
-/*
-                        vote = false;
-                        meeting=false;
-                        todo=false;
-                        clear=true;
-
-                        tvClear.setTypeface(null, Typeface.BOLD);
-
-
-                        tvVote.setTextColor(getResources().getColor(R.color.grey));
-                        tvMeeting.setTextColor(getResources().getColor(R.color.grey));
-                        tvtoDo.setTextColor(getResources().getColor(R.color.grey));
-                        tvClear.setTextColor(getResources().getColor(R.color.primaryColor));
-*/
-
-
-        // ((HomeGroupListFragment) getActivity()).tvVoteClick(date,role,defaults);
-        filterinterface.clear(vote, meeting, todo, clear);
+        filterListener.clearFilters();
         getDialog().dismiss();
-
-
     }
 
     @OnClick(R.id.tv_Vote)
     public void tvVoteClick() {
-
-
-/*
-                vote = true;
-                meeting=false;
-                todo=false;                        clear=true;
-
-
-
-                tvVote.setTypeface(null, Typeface.BOLD);
-
-
-                tvVote.setTextColor(getResources().getColor(R.color.primaryColor));
-                tvMeeting.setTextColor(getResources().getColor(R.color.grey));
-                tvtoDo.setTextColor(getResources().getColor(R.color.grey));
-*/
-
-        // ((HomeGroupListFragment) getActivity()).tvVoteClick(date,role,defaults);
-        filterinterface.vote(vote, meeting, todo, clear);
-
+        filterVote = !filterVote;
+        callClickOrClear(Constant.VOTE, filterVote);
         getDialog().dismiss();
-
     }
 
 
     @OnClick(R.id.tv_meeting)
     public void meetingClick() {
-
-
-/*
-                vote = false;
-                meeting=true;
-                todo=false;
-                clear=true;
-
-
-                tvVote.setTextColor(getResources().getColor(R.color.grey));
-                tvMeeting.setTextColor(getResources().getColor(R.color.primaryColor));
-                tvtoDo.setTextColor(getResources().getColor(R.color.grey));
-
-                tvMeeting.setTypeface(null, Typeface.BOLD);*/
-
-        // ((HomeGroupListFragment) getActivity()).meetingClick(date, role, defaults);
-        filterinterface.meeting(vote, meeting, todo, clear);
+        filterMeeting = !filterMeeting;
+        callClickOrClear(Constant.MEETING, filterMeeting);
         getDialog().dismiss();
-
     }
 
     @OnClick(R.id.tv_todo)
     public void toDoClick() {
-
-
-/*
-                vote = false;
-                meeting=false;
-                todo=true;
-                clear=true;
-
-
-                tvtoDo.setTypeface(null, Typeface.BOLD);
-
-                tvVote.setTextColor(getResources().getColor(R.color.grey));
-                tvMeeting.setTextColor(getResources().getColor(R.color.grey));
-                tvtoDo.setTextColor(getResources().getColor(R.color.primaryColor));
-*/
-
-
-        // ((HomeGroupListFragment) getActivity()).defaultsClick(date, role, defaults);
-        filterinterface.todo(vote, meeting, todo, clear);
+        filterTodo = !filterTodo;
+        callClickOrClear(Constant.TODO, filterTodo);
         getDialog().dismiss();
-
-
     }
 
+    public interface TasksFilterListener {
+        void itemClicked(String typeChanged, boolean changedFlagState);
+        void clearFilters();
+    }
 
-    public void setListener(FilterInterface fragmentsCalllistner) {
-        filterinterface = fragmentsCalllistner;
+    public void setListener(TasksFilterListener tasksFilterListener) {
+        filterListener = tasksFilterListener;
     }
 
 }

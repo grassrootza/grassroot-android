@@ -50,7 +50,9 @@ public class UserListAdapter extends RecyclerView.Adapter<UserListAdapter.ViewHo
     }
 
     @Override
-    public int getItemCount() { return members.size(); }
+    public int getItemCount() {
+        return members.size();
+    }
 
     public void addMembers(List<Member> memberList) {
         Log.d(TAG, members.size() + " members so far, add these to adaptor: " + memberList.toString());
@@ -58,7 +60,13 @@ public class UserListAdapter extends RecyclerView.Adapter<UserListAdapter.ViewHo
         this.notifyItemRangeInserted(0, memberList.size() - 1);
     }
 
-    public List<Member> getMembers() { return members; }
+    public List<Member> getMembers() {
+        return members;
+    }
+
+    public String getMemberUid(int position) {
+        return members.get(position).getMemberUid();
+    }
 
     public void removeMembers(final int[] positions) {
         for (int i = 0; i < positions.length; i++) {

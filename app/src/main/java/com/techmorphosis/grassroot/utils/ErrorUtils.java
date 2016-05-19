@@ -61,8 +61,12 @@ public class ErrorUtils {
 
     public static void socketError(View holder, SocketTimeoutException e) {
         final String errorText = "Sorry! Our server may be down: " + e.getMessage();
-        Snackbar snackBar = Snackbar.make(holder, errorText, Snackbar.LENGTH_LONG);
-        snackBar.show();
+        try {
+            Snackbar snackBar = Snackbar.make(holder, errorText, Snackbar.LENGTH_LONG);
+            snackBar.show();
+        } catch (Exception e1) {
+            Log.e(TAG, "Socket error on startup");
+        }
     }
 
 }

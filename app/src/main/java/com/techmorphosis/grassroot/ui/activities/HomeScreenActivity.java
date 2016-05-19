@@ -55,8 +55,8 @@ public class HomeScreenActivity extends PortraitActivity implements NavigationDr
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (resultCode == Activity.RESULT_OK) {
-            if (requestCode == Constant.activityAddMembersToGroup && data != null) {
-                Log.e(TAG, "Got a result from add members to group!");
+            if (data != null && (requestCode == Constant.activityAddMembersToGroup || requestCode == Constant.activityRemoveMembers)) {
+                Log.e(TAG, "Got a result from add or remove members to group!");
                 int groupPosition = data.getIntExtra(Constant.INDEX_FIELD, -1);
                 String groupUid = data.getStringExtra(Constant.GROUPUID_FIELD);
                 HomeGroupListFragment hgl = (HomeGroupListFragment) mainFragment;

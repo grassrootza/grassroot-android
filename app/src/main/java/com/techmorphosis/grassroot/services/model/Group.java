@@ -3,16 +3,19 @@ package com.techmorphosis.grassroot.services.model;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import com.techmorphosis.grassroot.utils.Constant;
+
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 
 /**
  * Created by paballo on 2016/05/04.
  */
-public class Group implements Parcelable {
+public class Group implements Parcelable, Comparable<Group> {
 
     private static final String TAG = Group.class.getCanonicalName();
 
@@ -22,202 +25,104 @@ public class Group implements Parcelable {
     private String groupCreator;
     private String role;
     private Integer groupMemberCount;
+
+    private Date date;
     private DateTime dateTime;
     private String dateTimeFull;
-    private String dateTimeShort;
+
     private List<String> permissions = new ArrayList<>(); // todo: convert this to a set so can do fast hashing
 
-    /**
-     *
-     * @return
-     * The id
-     */
     public String getId() {
         return id;
     }
 
-    /**
-     *
-     * @param id
-     * The id
-     */
     public void setId(String id) {
         this.id = id;
     }
 
-    /**
-     *
-     * @return
-     * The groupName
-     */
     public String getGroupName() {
         return groupName;
     }
 
-    /**
-     *
-     * @param groupName
-     * The groupName
-     */
     public void setGroupName(String groupName) {
         this.groupName = groupName;
     }
 
-    /**
-     *
-     * @return
-     * The description
-     */
     public String getDescription() {
         return description;
     }
 
-    /**
-     *
-     * @param description
-     * The description
-     */
     public void setDescription(String description) {
         this.description = description;
     }
 
-    /**
-     *
-     * @return
-     * The groupCreator
-     */
     public String getGroupCreator() {
         return groupCreator;
     }
 
-    /**
-     *
-     * @param groupCreator
-     * The groupCreator
-     */
-    public void setGroupCreator(String groupCreator) {
-        this.groupCreator = groupCreator;
-    }
-
-    /**
-     *
-     * @return
-     * The role
-     */
     public String getRole() {
         return role;
     }
 
-    /**
-     *
-     * @param role
-     * The role
-     */
     public void setRole(String role) {
         this.role = role;
     }
 
-    /**
-     *
-     * @return
-     * The groupMemberCount
-     */
     public Integer getGroupMemberCount() {
         return groupMemberCount;
     }
 
-    /**
-     *
-     * @param groupMemberCount
-     * The groupMemberCount
-     */
-    public void setGroupMemberCount(Integer groupMemberCount) {
-        this.groupMemberCount = groupMemberCount;
-    }
-
-    /**
-     *
-     * @return
-     * The dateTime
-     */
     public DateTime getDateTime() {
         return dateTime;
     }
 
-    /**
-     *
-     * @param dateTime
-     * The dateTime
-     */
     public void setDateTime(DateTime dateTime) {
         this.dateTime = dateTime;
     }
 
-    /**
-     *
-     * @return
-     * The permissions
-     */
+    public Date getDate() {
+        if (date == null) {
+            constructDate();
+            return date;
+        } else {
+            return date;
+        }
+    }
+
     public List<String> getPermissions() {
         return permissions;
     }
 
-    /**
-     *
-     * @param permissions
-     * The permissions
-     */
     public void setPermissions(List<String> permissions) {
         this.permissions = permissions;
     }
 
-    public String getDateTimeFull() {
-
+    private void constructDate() {
         //get the current date as Calendar object
         Calendar calendar = Calendar.getInstance();
 
         // NB: because Java 7 datetime is unbelievably bad, and Android still uses it, make sure to set these in order
 
-        /*Date*/
         calendar.set(Calendar.YEAR, dateTime.getYear());
         calendar.set(Calendar.MONTH, dateTime.getMonthValue() - 1);
         calendar.set(Calendar.DAY_OF_MONTH, dateTime.getDayOfMonth());
 
-        /*Time*/
         calendar.set(Calendar.HOUR_OF_DAY, dateTime.getHour());
         calendar.set(Calendar.MINUTE, dateTime.getMinute());
         calendar.set(Calendar.SECOND, dateTime.getSecond());
-        Date date = calendar.getTime();
+        this.date = calendar.getTime();
+    }
+
+    public String getDateTimeFull() {
+
+        if (date == null) {
+            constructDate();
+        }
 
         SimpleDateFormat formatter = new SimpleDateFormat("dd-MM-yy:HH:mm:SS");
         dateTimeFull = formatter.format(date);
 
-        // Log.e(TAG,"dateString " + dateString);
         return dateTimeFull;
-    }
-
-    public String getDateTimeShort() {
-
-        //get the current date as Calendar object
-        Calendar calendar = Calendar.getInstance();
-
-        /*Date*/
-        calendar.set(Calendar.DAY_OF_MONTH, dateTime.getDayOfMonth());
-        calendar.set(Calendar.MONTH, dateTime.getMonthValue() - 1);
-        calendar.set(Calendar.YEAR, dateTime.getYear());
-
-        /*Time*/
-        calendar.set(Calendar.HOUR, dateTime.getHour());
-        calendar.set(Calendar.MINUTE, dateTime.getMinute());
-        calendar.set(Calendar.SECOND, dateTime.getSecond());
-        Date date = calendar.getTime();
-
-        SimpleDateFormat formatter = new SimpleDateFormat("dd-MM-yyyy");
-        dateTimeShort = formatter.format(date);
-
-        return dateTimeShort;
-
-
     }
 
     @Override
@@ -234,7 +139,6 @@ public class Group implements Parcelable {
         dest.writeString(this.role);
         dest.writeInt(this.groupMemberCount);
         dest.writeString(this.dateTimeFull);
-        dest.writeString(this.dateTimeShort);
         dest.writeStringList(this.permissions);
     }
 
@@ -245,7 +149,6 @@ public class Group implements Parcelable {
         groupCreator = in.readString();
         role = in.readString();
         dateTimeFull = in.readString();
-        dateTimeShort = in.readString();
         permissions = in.createStringArrayList();
     }
 
@@ -258,6 +161,34 @@ public class Group implements Parcelable {
         @Override
         public Group[] newArray(int size) {
             return new Group[size];
+        }
+    };
+
+    @Override
+    public int compareTo(Group g2) {
+        return this.getDate().compareTo(g2.getDate());
+    }
+
+    public static Comparator<Group> GroupRoleComparator = new Comparator<Group>() {
+        @Override
+        public int compare(Group group, Group t1) {
+            int compareRoles = compareRoleNames(group.getRole(), t1.getRole());
+            if (compareRoles != 0)
+                return compareRoles;
+            else
+                return group.compareTo(t1);
+        }
+
+        private int compareRoleNames(String roleFirst, String roleSecond) {
+            if (roleFirst.equals(roleSecond)) {
+                return 0;
+            } else if (roleFirst.equals(Constant.ROLE_ORDINARY_MEMBER)) {
+                return -1;
+            } else if (roleFirst.equals(Constant.ROLE_COMMITTEE_MEMBER) && roleSecond.equals(Constant.ROLE_GROUP_ORGANIZER)) {
+                return -1;
+            } else {
+                return 1;
+            }
         }
     };
 }

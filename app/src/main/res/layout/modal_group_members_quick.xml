@@ -52,7 +52,7 @@
             android:layout_marginBottom="10dp" />
 
         <ImageView
-            android:id="@+id/ic_edit_group_active"
+            android:id="@+id/ic_remove_members_active"
             android:src="@drawable/ic_home_to_do_active"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -61,12 +61,12 @@
             android:layout_alignStart="@+id/ic_home_view_members_active" />
 
         <TextView
-            android:id="@+id/ic_edit_group_text"
+            android:id="@+id/ic_remove_members_text"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textColor="@color/white"
-            android:text="@string/gm_edit_settings"
-            android:layout_below="@+id/ic_edit_group_active"
+            android:text="@string/gm_remove_members"
+            android:layout_below="@+id/ic_remove_members_active"
             android:layout_centerHorizontal="true"
             android:layout_marginTop="5dp"
             android:layout_marginBottom="10dp" />

@@ -194,6 +194,13 @@ public class TasksAdapter extends RecyclerView.Adapter<TasksAdapter.GA_ViewHolde
         }
     }
 
+    public void changeToTaskList(List<TaskModel> tasksToView) {
+        // todo: optimize this, a lot, is used in filtering what can be quite large lists
+        this.tasks.clear();
+        this.tasks.addAll(tasksToView); // not great, but otherwise run into lots of errors because of assignment etc
+        notifyDataSetChanged(); // very bad, just a stopgap
+    }
+
     public static class GA_ViewHolder extends RecyclerView.ViewHolder {
 
         @BindView(R.id.iv_type)

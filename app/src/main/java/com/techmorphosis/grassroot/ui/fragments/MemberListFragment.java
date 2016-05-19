@@ -45,8 +45,10 @@ public class MemberListFragment extends Fragment {
     private String groupUid;
     private boolean canDismissItems;
     private boolean showSelected;
+    private boolean selectedByDefault;
 
     private MemberListListener mListener;
+    private MemberListClickDismissListener clickDismissListener;
     private GrassrootRestService grassrootRestService;
     private UserListAdapter userListAdapter;
 
@@ -60,8 +62,14 @@ public class MemberListFragment extends Fragment {
         this.groupUid = groupUid;
     }
 
+    public void setSelectedByDefault(boolean selectedByDefault) {
+        this.selectedByDefault = selectedByDefault;
+    }
+
     // Note: Since Android has terrible framework of no overriding constructors, only non-type-safe bundle nonsense, do this manually
-    public void setCanDismissItems(boolean canDismissItems) { this.canDismissItems = canDismissItems; }
+    public void setCanDismissItems(boolean canDismissItems) {
+        this.canDismissItems = canDismissItems;
+    }
 
     public void setShowSelected(boolean showSelected) {
         this.showSelected = showSelected;
@@ -89,23 +97,30 @@ public class MemberListFragment extends Fragment {
         void onMemberListInitiated(MemberListFragment fragment);
     }
 
+    public interface MemberListClickDismissListener {
+        void onMemberDismissed(int position, String memberUid);
+        void onMemberClicked(int position, String memberUid);
+    }
+
     public void setID(String ID) { this.ID = ID; }
     public String getID() { return ID; }
 
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
+
         try {
             mListener = (MemberListListener) context;
         } catch (ClassCastException e) {
             // todo : do we really want to do this? not sure if listener should be compulsory, to reexamine
             throw new ClassCastException(context.toString() + " must implement onMemberListListener");
         }
+
+        clickDismissListener = (context instanceof MemberListClickDismissListener) ? (MemberListClickDismissListener) context : null;
     }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
-        Log.e(TAG, "listFragment! Inside onCreate");
         super.onCreate(savedInstanceState);
         init();
         mListener.onMemberListInitiated(this);
@@ -145,6 +160,10 @@ public class MemberListFragment extends Fragment {
     }
 
     private void setUpDismissal() {
+        if (clickDismissListener == null) {
+            throw new UnsupportedOperationException("Selection and dismisal require calling activity to implement listener");
+        }
+
         SwipeableRecyclerViewTouchListener swipeDeleteListener = new SwipeableRecyclerViewTouchListener(
                 getContext(), memberListRecyclerView, R.id.mlist_tv_member_name, R.id.mlist_tv_member_name,
                 new SwipeableRecyclerViewTouchListener.SwipeListener() {
@@ -156,6 +175,10 @@ public class MemberListFragment extends Fragment {
                     @Override
                     public void onDismissedBySwipe(RecyclerView recyclerView, int[] reverseSortedPositions) {
                         userListAdapter.removeMembers(reverseSortedPositions);
+                        for (int i = 0; i < reverseSortedPositions.length; i++) {
+                            clickDismissListener.onMemberDismissed(reverseSortedPositions[i],
+                                    userListAdapter.getMemberUid(reverseSortedPositions[i]));
+                        }
                     }
                 });
         memberListRecyclerView.addOnItemTouchListener(swipeDeleteListener);
@@ -166,20 +189,16 @@ public class MemberListFragment extends Fragment {
                         @Override
                         public void onClick(View view, int position) {
                             userListAdapter.toggleMemberSelected(position);
+                            clickDismissListener.onMemberClicked(position, userListAdapter.getMemberUid(position));
                         }
 
                         @Override
                         public void onLongClick(View view, int position) {
                             userListAdapter.toggleMemberSelected(position);
+                            clickDismissListener.onMemberClicked(position, userListAdapter.getMemberUid(position));
                         }
             }));
         }
-    }
-
-    @Override
-    public void onPause() {
-        // todo: persist this list of members temporarily, to cut down on redundant calls
-        super.onPause();
     }
 
     private void retrieveGroupMembers() {
@@ -192,7 +211,7 @@ public class MemberListFragment extends Fragment {
         Log.d(TAG, "inside MemberListFragment, retrieving group members for uid = " + groupUid);
 
         grassrootRestService.getApi()
-                .getGroupMembers(groupUid, userPhoneNumber, userSessionCode)
+                .getGroupMembers(groupUid, userPhoneNumber, userSessionCode, selectedByDefault)
                 .enqueue(new Callback<MemberList>() {
                     @Override
                     public void onResponse(Call<MemberList> call, Response<MemberList> response) {

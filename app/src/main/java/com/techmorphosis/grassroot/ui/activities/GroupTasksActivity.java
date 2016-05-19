@@ -3,6 +3,7 @@ package com.techmorphosis.grassroot.ui.activities;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.os.SystemClock;
 import android.support.design.widget.Snackbar;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -17,10 +18,9 @@ import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 
 import com.github.clans.fab.FloatingActionMenu;
-import com.techmorphosis.grassroot.interfaces.FilterInterface;
-import com.techmorphosis.grassroot.interfaces.TaskListListener;
 import com.techmorphosis.grassroot.R;
 import com.techmorphosis.grassroot.adapters.TasksAdapter;
+import com.techmorphosis.grassroot.interfaces.TaskListListener;
 import com.techmorphosis.grassroot.services.GrassrootRestService;
 import com.techmorphosis.grassroot.services.NoConnectivityException;
 import com.techmorphosis.grassroot.services.model.GenericResponse;
@@ -30,10 +30,13 @@ import com.techmorphosis.grassroot.ui.fragments.FilterFragment;
 import com.techmorphosis.grassroot.ui.views.CustomItemAnimator;
 import com.techmorphosis.grassroot.utils.Constant;
 import com.techmorphosis.grassroot.utils.ErrorUtils;
+import com.techmorphosis.grassroot.utils.MenuUtils;
 import com.techmorphosis.grassroot.utils.SettingPreference;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -41,12 +44,15 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
+import static java.util.Collections.*;
+
 public class GroupTasksActivity extends PortraitActivity implements TaskListListener {
 
     private static final String TAG = GroupTasksActivity.class.getCanonicalName();
 
-    private String groupid;
+    private String groupUid;
     private String groupName;
+
     private String phoneNumber;
     private String code;
 
@@ -64,6 +70,7 @@ public class GroupTasksActivity extends PortraitActivity implements TaskListList
     @BindView(R.id.progressBar)
     ProgressBar mProgressBar;
 
+    private Snackbar snackbar;
     @BindView(R.id.error_layout)
     View errorLayout;
     @BindView(R.id.im_no_results)
@@ -75,14 +82,16 @@ public class GroupTasksActivity extends PortraitActivity implements TaskListList
 
     private TasksAdapter group_activitiesAdapter;
 
-    private Snackbar snackbar;
-    public boolean vote_click = false, meeting_click = false, todo_click = false;
-    private boolean clear_click = false;
+    public List<TaskModel> fullTasksList; // stores all the tasks we get from server
+    public List<TaskModel> viewedTasksList; // on filtering, stores only those we have selected
 
-    private List<TaskModel> voteList;
-    private List<TaskModel> meetingList;
-    private List<TaskModel> toDoList;
-    public List<TaskModel> activitiesList;
+    private Map<String, List<TaskModel>> decomposedList; // decomposed list of votes, meetings, to-dos, for fast filter
+    private Map<String, Boolean> filterFlags;
+    private boolean listsAlreadyDecomposed = false, filtersActive;
+
+    private List<TaskModel> voteList; // stores the votes, only created if user hits filter
+    private List<TaskModel> meetingList; // stores the meetings, only created if user hits filter
+    private List<TaskModel> toDoList; // stores the todos, only created if user hits filter
 
     private GrassrootRestService grassrootRestService;
 
@@ -98,8 +107,8 @@ public class GroupTasksActivity extends PortraitActivity implements TaskListList
             throw new UnsupportedOperationException("Group activities action called without group Uid!");
         }
 
-        groupid = extras.getString("groupid");
-        groupName = extras.getString("groupName");
+        groupUid = extras.getString(Constant.GROUPUID_FIELD);
+        groupName = extras.getString(Constant.GROUPNAME_FIELD);
 
         init();
         setUpViews();
@@ -110,7 +119,6 @@ public class GroupTasksActivity extends PortraitActivity implements TaskListList
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // todo: check for permissions
-        Log.e(TAG, "inside onCreateOptionsMenu!");
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.menu_group_tasks, menu);
         return true;
@@ -118,16 +126,22 @@ public class GroupTasksActivity extends PortraitActivity implements TaskListList
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
+        // todo: check permissions
         switch (item.getItemId()) {
             case R.id.mi_icon_filter:
                 filterTasks();
                 return true;
+            case R.id.mi_view_members:
+                Intent viewMembers = MenuUtils.constructIntent(this, GroupMembersActivity.class, groupUid, groupName);
+                viewMembers.putExtra(Constant.PARENT_TAG_FIELD, GroupTasksActivity.class.getCanonicalName());
+                startActivity(viewMembers);
+                return true;
             case R.id.mi_add_members:
-                Intent addMember = new Intent(this, AddMembersActivity.class);
-                addMember.putExtra(Constant.GROUPUID_FIELD, groupid);
-                addMember.putExtra(Constant.GROUPNAME_FIELD, groupName);
-                startActivity(addMember);
-                Log.d(TAG, "user wants to add members!");
+                startActivity(MenuUtils.constructIntent(this, AddMembersActivity.class, groupUid, groupName));
+                return true;
+            case R.id.mi_remove_members:
+                Intent removeMembers = MenuUtils.constructIntent(this, RemoveMembersActivity.class, groupUid, groupName);
+                startActivity(removeMembers); // todo: pass a tag
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
@@ -138,6 +152,9 @@ public class GroupTasksActivity extends PortraitActivity implements TaskListList
         grassrootRestService = new GrassrootRestService(this);
         phoneNumber = SettingPreference.getuser_mobilenumber(this);
         code = SettingPreference.getuser_token(this);
+        filterFlags = new HashMap<>();
+        viewedTasksList = new ArrayList<>();
+        resetFilterFlags();
     }
 
     private void setUpViews() {
@@ -154,7 +171,7 @@ public class GroupTasksActivity extends PortraitActivity implements TaskListList
                 if (opened) {
                     // todo: check & pass permissions
                     fabbutton.toggle(false);
-                    callNewTaskActivity();
+                    startActivity(MenuUtils.constructIntent(GroupTasksActivity.this, NewTaskMenuActivity.class, groupUid, groupName));
                     overridePendingTransition(R.anim.push_up_in, R.anim.push_up_out);
                 }
             }
@@ -169,12 +186,11 @@ public class GroupTasksActivity extends PortraitActivity implements TaskListList
     }
 
     private void groupActivitiesWS() {
-
         mProgressBar.setVisibility(View.VISIBLE);
-        activitiesList = new ArrayList<>();
+        fullTasksList = new ArrayList<>();
 
         grassrootRestService.getApi()
-                .getGroupTasks(groupid, phoneNumber, code)
+                .getGroupTasks(groupUid, phoneNumber, code)
                 .enqueue(new Callback<TaskResponse>() {
                     @Override
                     public void onResponse(Call<TaskResponse> call, Response<TaskResponse> response) {
@@ -183,12 +199,12 @@ public class GroupTasksActivity extends PortraitActivity implements TaskListList
                             TaskResponse taskResponse = response.body();
                             if (Constant.NO_GROUP_TASKS.equals(taskResponse.getMessage())) {
                                 Log.e(TAG, "No group activities!");
-                                callNewTaskActivity();
+                                startActivity(MenuUtils.constructIntent(GroupTasksActivity.this, NewTaskMenuActivity.class, groupUid, groupName));
                             } else {
-                                activitiesList = taskResponse.getTasks();
+                                fullTasksList = taskResponse.getTasks();
                                 group_activitiesAdapter.clearTasks();
                                 recycleViewGroupActivities.setVisibility(View.VISIBLE);
-                                group_activitiesAdapter.addTasks(activitiesList);
+                                resetViewToAllTasks();
                             }
                         } // todo: add snack bar with error possibilities
                     }
@@ -205,222 +221,92 @@ public class GroupTasksActivity extends PortraitActivity implements TaskListList
                 });
     }
 
-    private void callNewTaskActivity() {
-        Intent open = new Intent(this, NewTaskMenuActivity.class);
-        open.putExtra(Constant.GROUPUID_FIELD, groupid);
-        open.putExtra(Constant.GROUPNAME_FIELD, groupName);
-        startActivity(open);
+    private void resetViewToAllTasks() {
+        Log.d(TAG, "resetting view to all tasks! full task list is: " + fullTasksList.size());
+        viewedTasksList.clear();
+        viewedTasksList.addAll(fullTasksList);
+        group_activitiesAdapter.changeToTaskList(viewedTasksList);
     }
 
     private void filterTasks() {
-        Log.e(TAG, "before ");
-        Log.e(TAG, "vote is " + vote_click);
-        Log.e(TAG, "meeting is " + meeting_click);
-        Log.e(TAG, "todo is " + todo_click);
-        Log.e(TAG, "clear is " + clear_click);
+        // really destroy / reconstruct on every click? maybe persist and clean up later
+        FilterFragment filterDialog = new FilterFragment();
+        filterDialog.setArguments(assembleFilterBundle());
+        filterDialog.show(getFragmentManager(), "FilterFragment");
 
-        //sort
-        FilterFragment sortFragment = new FilterFragment();
-        Bundle b = new Bundle();
-        b.putBoolean("Vote", vote_click);
-        b.putBoolean("Meeting", meeting_click);
-        b.putBoolean("ToDo", todo_click);
-        b.putBoolean("Clear", clear_click);
+        if (!listsAlreadyDecomposed) {
+            // first time accessing filter dialog
+            decomposeLists();
+            listsAlreadyDecomposed = true;
+            filtersActive = true;
+        }
 
-        sortFragment.setArguments(b);
-        sortFragment.show(getFragmentManager(), "FilterFragment");
-        sortFragment.setListener(new FilterInterface() {
-
+        filterDialog.setListener(new FilterFragment.TasksFilterListener() {
             @Override
-            public void vote(boolean vote, boolean meeting, boolean todo, boolean clear) {
-                Log.e(TAG, "vote is ");
-
-
-                voteList = new ArrayList<TaskModel>();
-
-                //validation
-                for (int i = 0; i < activitiesList.size(); i++) {
-                    if (activitiesList.get(i).getType().equalsIgnoreCase("Vote"))
-                        voteList.add(activitiesList.get(i));
-                }
-                if (voteList.size() > 0) {
-
-                    //Filter State
-                    vote_click = true;
-                    meeting_click = false;
-                    todo_click = false;
-                    clear_click = false;
-
-
-                    //show progress
-                    recycleViewGroupActivities.setVisibility(View.GONE);
-                    mProgressBar.setVisibility(View.VISIBLE);
-
-                    //pre-execute
-                    group_activitiesAdapter.clearTasks();
-
-
-                    Log.e(TAG, "activitiesList is " + activitiesList.size());
-                    Log.e(TAG, "voteList is " + voteList.size());
-
-                    //postExecute
-                    //handle visibility
-                    recycleViewGroupActivities.setVisibility(View.VISIBLE);
-                    mProgressBar.setVisibility(View.GONE);
-
-                    //set data for list
-                    group_activitiesAdapter.addTasks(voteList);
-                } else {
-                    vote_click = false;
-                    showSnackBar(getString(R.string.ga_noVote));
-                }
-
-                Log.e(TAG, "after ");
-                Log.e(TAG, "vote is " + vote_click);
-                Log.e(TAG, "meeting is " + meeting_click);
-                Log.e(TAG, "todo is " + todo_click);
-                Log.e(TAG, "clear is " + clear_click);
-
+            public void itemClicked(String typeChanged, boolean changedFlagState) {
+                addOrRemoveTaskType(typeChanged, changedFlagState);
             }
 
             @Override
-            public void meeting(boolean vote, boolean meeting, boolean todo, boolean clear) {
-
-                Log.e(TAG, "meeting is ");
-
-
-                meetingList = new ArrayList<TaskModel>();
-                for (int i = 0; i < activitiesList.size(); i++) {
-                    if (activitiesList.get(i).getType().equalsIgnoreCase("Meeting"))
-                        meetingList.add(activitiesList.get(i));
-                }
-                if (meetingList.size() > 0) {
-                    //Filter State
-                    meeting_click = true;
-                    vote_click = false;
-                    todo_click = false;
-                    clear_click = false;
-
-                    //show progress
-                    recycleViewGroupActivities.setVisibility(View.GONE);
-                    mProgressBar.setVisibility(View.VISIBLE);
-
-
-                    Log.e(TAG, "activitiesList is " + activitiesList.size());
-                    Log.e(TAG, "Meeting is " + meetingList.size());
-
-
-                    //pre-execute
-                    group_activitiesAdapter.clearTasks();
-
-
-                    //doInBackground
-                    //  groupList.clear_click();
-
-                    //postExecute
-                    //handle visibility
-                    recycleViewGroupActivities.setVisibility(View.VISIBLE);
-                    mProgressBar.setVisibility(View.GONE);
-
-                    //set data for list
-                    group_activitiesAdapter.addTasks(meetingList);
-
-                } else {
-                    meeting_click = false;
-
-                    showSnackBar(getString(R.string.ga_noMeeting), "", "", "", "", snackbar.LENGTH_SHORT);
-
-                }
-                Log.e(TAG, "after ");
-                Log.e(TAG, "vote is " + vote_click);
-                Log.e(TAG, "meeting is " + meeting_click);
-                Log.e(TAG, "todo is " + todo_click);
-                Log.e(TAG, "clear is " + clear_click);
+            public void clearFilters() {
+                resetViewToAllTasks();
+                resetFilterFlags();
             }
 
-            @Override
-            public void todo(boolean vote, boolean meeting, boolean todo, boolean clear) {
-                Log.e(TAG, "todo is ");
-
-
-                toDoList = new ArrayList<TaskModel>();
-
-                for (int i = 0; i < activitiesList.size(); i++) {
-                    if (activitiesList.get(i).getType().equalsIgnoreCase("todo"))
-                        toDoList.add(activitiesList.get(i));
-                }
-                if (toDoList.size() > 0) {
-                    //Filter State
-                    todo_click = true;
-                    vote_click = false;
-                    meeting_click = false;
-                    clear_click = false;
-
-                    //show progress
-                    recycleViewGroupActivities.setVisibility(View.GONE);
-                    mProgressBar.setVisibility(View.VISIBLE);
-
-
-                    //pre-execute
-                    group_activitiesAdapter.clearTasks();
-
-                    Log.e(TAG, "activitiesList is " + activitiesList.size());
-                    Log.e(TAG, "toDoList is " + toDoList.size());
-
-
-                    //postExecute
-                    //handle visibility
-                    recycleViewGroupActivities.setVisibility(View.VISIBLE);
-                    mProgressBar.setVisibility(View.GONE);
-
-                    //set data for list
-                    group_activitiesAdapter.addTasks(toDoList);
-
-                } else {
-                    todo_click = false;
-
-                    showSnackBar(getString(R.string.ga_noToDo), "", "", "", "", snackbar.LENGTH_SHORT);
-
-                }
-                Log.e(TAG, "after ");
-                Log.e(TAG, "vote is " + vote_click);
-                Log.e(TAG, "meeting is " + meeting_click);
-                Log.e(TAG, "todo is " + todo_click);
-                Log.e(TAG, "clear is " + clear_click);
-            }
-
-            @Override
-            public void clear(boolean vote, boolean meeting, boolean todo, boolean clear) {
-
-                //Filter State
-                vote_click = false;
-                meeting_click = false;
-                todo_click = false;
-                clear_click = false;
-
-                //show progress
-                recycleViewGroupActivities.setVisibility(View.GONE);
-                mProgressBar.setVisibility(View.VISIBLE);
-
-                voteList = new ArrayList<>();
-                meetingList = new ArrayList<>();
-                toDoList = new ArrayList<>();
-
-                //pre-execute
-                group_activitiesAdapter.clearTasks();
-                recycleViewGroupActivities.setVisibility(View.VISIBLE);
-                mProgressBar.setVisibility(View.GONE);
-
-                //set data for list
-                group_activitiesAdapter.addTasks(activitiesList);
-
-                Log.e(TAG, "after ");
-                Log.e(TAG, "vote is " + vote_click);
-                Log.e(TAG, "meeting is " + meeting_click);
-                Log.e(TAG, "todo is " + todo_click);
-                Log.e(TAG, "clear is " + clear_click);
-            }
         });
+    }
+
+    private void decomposeLists() {
+        Long startTime = SystemClock.currentThreadTimeMillis();
+
+        decomposedList = new HashMap<>();
+        viewedTasksList = new ArrayList<>();
+        voteList = new ArrayList<>();
+        meetingList = new ArrayList<>();
+        toDoList = new ArrayList<>();
+
+        for (TaskModel tm : fullTasksList) {
+            if (Constant.MEETING.equals(tm.getType())) meetingList.add(tm);
+            else if (Constant.VOTE.equals(tm.getType())) voteList.add(tm);
+            else if (Constant.TODO.equals(tm.getType())) toDoList.add(tm);
+        }
+
+        decomposedList.put(Constant.MEETING, meetingList);
+        decomposedList.put(Constant.VOTE, voteList);
+        decomposedList.put(Constant.TODO, toDoList);
+
+        Log.d(TAG, String.format("decomposed task list, sizes: %d total, %d votes, %d mtgs, %d todos, took %d msecs", fullTasksList.size(),
+                voteList.size(), meetingList.size(), toDoList.size(), SystemClock.currentThreadTimeMillis() - startTime));
+    }
+
+    private void addOrRemoveTaskType(String taskType, boolean turnFilterOn) {
+        filterFlags.put(taskType, turnFilterOn);
+        List<TaskModel> tasks = decomposedList.get(taskType);
+
+        if (turnFilterOn) {
+            if (tasks.isEmpty()) {
+                showSnackBar("No tasks of that type"); // todo : call different strings ("ga_noTodo")
+            } else {
+                if (!filtersActive) {
+                    viewedTasksList.clear();
+                    filtersActive = true;
+                }
+                viewedTasksList.addAll(tasks);
+                sort(viewedTasksList, reverseOrder());
+                group_activitiesAdapter.changeToTaskList(viewedTasksList);
+            }
+        } else {
+            viewedTasksList.removeAll(tasks);
+            sort(viewedTasksList, reverseOrder());
+            group_activitiesAdapter.changeToTaskList(viewedTasksList);
+        }
+    }
+
+    private void resetFilterFlags() {
+        filtersActive = false;
+        filterFlags.put(Constant.MEETING, false);
+        filterFlags.put(Constant.VOTE, false);
+        filterFlags.put(Constant.TODO, false);
     }
 
     @Override
@@ -473,7 +359,7 @@ public class GroupTasksActivity extends PortraitActivity implements TaskListList
     }
 
     private void showSnackBar(String message) {
-        showSnackBar(message, "", "", "", "", snackbar.LENGTH_SHORT);
+        showSnackBar(message, "", "", "", "", snackbar.LENGTH_LONG);
     }
 
     private void showSnackBar(String message, final String actionButtontext, final String type,
@@ -487,16 +373,24 @@ public class GroupTasksActivity extends PortraitActivity implements TaskListList
                 @Override
                 public void onClick(View v) {
                     if (type.equalsIgnoreCase("VoteMeeting")) {
-                        TaskModel task = activitiesList.get(Integer.parseInt(positions));
+                        TaskModel task = fullTasksList.get(Integer.parseInt(positions));
                         respondToTask(task.getId(), task.getType(), response);
                     } else {
-                        respondToTask(activitiesList.get(Integer.parseInt(positions)).getId(), "TODO", response);
+                        respondToTask(fullTasksList.get(Integer.parseInt(positions)).getId(), "TODO", response);
                     }
                 }
             });
         }
         snackbar.show();
 
+    }
+
+    private Bundle assembleFilterBundle() {
+        Bundle b = new Bundle();
+        b.putBoolean(Constant.VOTE, filterFlags.get(Constant.VOTE));
+        b.putBoolean(Constant.MEETING, filterFlags.get(Constant.MEETING));
+        b.putBoolean(Constant.TODO, filterFlags.get(Constant.TODO));
+        return b;
     }
 
 }

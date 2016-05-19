@@ -3,7 +3,10 @@ package com.techmorphosis.grassroot.ui.fragments;
 
 import android.content.Intent;
 import android.graphics.drawable.ColorDrawable;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
+import android.support.v4.content.ContextCompat;
+import android.support.v4.graphics.drawable.DrawableCompat;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -13,8 +16,11 @@ import android.widget.ImageView;
 
 import com.techmorphosis.grassroot.R;
 import com.techmorphosis.grassroot.ui.activities.AddMembersActivity;
-import com.techmorphosis.grassroot.ui.activities.NotBuiltActivity;
+import com.techmorphosis.grassroot.ui.activities.GroupMembersActivity;
+import com.techmorphosis.grassroot.ui.activities.HomeScreenActivity;
+import com.techmorphosis.grassroot.ui.activities.RemoveMembersActivity;
 import com.techmorphosis.grassroot.utils.Constant;
+import com.techmorphosis.grassroot.utils.MenuUtils;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -29,14 +35,14 @@ public class GroupQuickMemberModalFragment extends android.support.v4.app.Dialog
     ImageView icAddMemberIcon;
     @BindView(R.id.ic_home_view_members_active)
     ImageView icViewMemberIcon;
-    @BindView(R.id.ic_edit_group_active)
-    ImageView icEditSettingsIcon;
+    @BindView(R.id.ic_remove_members_active)
+    ImageView icRemoveMembersIcon;
 
     private String groupUid;
     private String groupName;
     private int groupPosition;
 
-    private boolean addMemberPermitted, viewMembersPermitted, editSettingsPermitted;
+    private boolean addMemberPermitted, viewMembersPermitted, editSettingsPermitted, removeMembersPermitted;
 
     // would rather use good practice and not have empty constructor, but Android is Android
     public GroupQuickMemberModalFragment() { }
@@ -56,7 +62,6 @@ public class GroupQuickMemberModalFragment extends android.support.v4.app.Dialog
         return view;
     }
 
-
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
@@ -66,31 +71,36 @@ public class GroupQuickMemberModalFragment extends android.support.v4.app.Dialog
 
         Log.d(TAG, "inside quickGroupMemberBundle, passed bundle = " + b.toString());
 
+        final int colorActive = ContextCompat.getColor(getContext(), R.color.iconActive);
+        final int colorInactive = ContextCompat.getColor(getContext(), R.color.text_grey);
+
         this.groupUid = b.getString(Constant.GROUPUID_FIELD);
         this.groupName = b.getString(Constant.GROUPNAME_FIELD);
         this.groupPosition = b.getInt(Constant.INDEX_FIELD);
 
         addMemberPermitted = b.getBoolean("addMember");
         viewMembersPermitted = b.getBoolean("viewMembers");
+        removeMembersPermitted = b.getBoolean("removeMembers");
         editSettingsPermitted = b.getBoolean("editSettings");
 
-        int addIcon = viewMembersPermitted ? R.drawable.ic_home_vote_active : R.drawable.ic_home_vote_inactive;
-        int viewIcon = addMemberPermitted ? R.drawable.ic_home_call_meeting_active : R.drawable.ic_home_call_meeting_inactive;
-        int editIcon = editSettingsPermitted ? R.drawable.ic_home_to_do_active : R.drawable.ic_home_to_do_inactive;
+        /*final Drawable dRemove = ContextCompat.getDrawable(getContext(), R.drawable.ic_remove_circle_black_lrg);
+        final Drawable wRemove = DrawableCompat.wrap(dRemove);
+        DrawableCompat.setTint(wRemove, removeMembersPermitted ? colorActive : colorInactive);*/
+
+        int addIcon = addMemberPermitted ? R.drawable.ic_add_circle_active_25dp : R.drawable.ic_add_circle_inactive_25dp; // ic fab active
+        int viewIcon = viewMembersPermitted ? R.drawable.ic_home_call_meeting_active : R.drawable.ic_home_call_meeting_inactive; // ic p/bk
+        int removeIcon = removeMembersPermitted ? R.drawable.ic_remove_circle_active_25dp : R.drawable.ic_remove_circle_inactive_25dp;
 
         icAddMemberIcon.setImageResource(addIcon);
         icViewMemberIcon.setImageResource(viewIcon);
-        icEditSettingsIcon.setImageResource(editIcon);
+        icRemoveMembersIcon.setImageResource(removeIcon);
     }
 
     @OnClick(R.id.ic_home_add_member_active)
     public void gmAddMemberIconListener() {
         if (addMemberPermitted) {
-            Intent addMember = new Intent(getActivity(), AddMembersActivity.class);
-            addMember.putExtra(Constant.GROUPUID_FIELD, groupUid);
-            addMember.putExtra(Constant.GROUPNAME_FIELD, groupName);
+            Intent addMember = MenuUtils.constructIntent(getActivity(), AddMembersActivity.class, groupUid, groupName);
             addMember.putExtra(Constant.INDEX_FIELD, groupPosition);
-
             // note: inefficiency here in routing back via activity, but getParentFragment is throwing a null error...
             getActivity().startActivityForResult(addMember, Constant.activityAddMembersToGroup);
             getDialog().dismiss();
@@ -101,24 +111,22 @@ public class GroupQuickMemberModalFragment extends android.support.v4.app.Dialog
 
     @OnClick(R.id.ic_home_view_members_active)
     public  void gmViewMembersIconListener() {
-        Log.d(TAG, "inside modal ... view member icon clicked!");
-                if (viewMembersPermitted) {
-                    Intent viewMembers = new Intent(getActivity(), NotBuiltActivity.class);
-                    startActivity(viewMembers);
-                    getDialog().dismiss();
-                } else {
-                    getDialog().dismiss();
-                }
-
+        if (viewMembersPermitted) {
+            Intent viewMembers = MenuUtils.constructIntent(getActivity(), GroupMembersActivity.class, groupUid, groupName);
+            viewMembers.putExtra(Constant.PARENT_TAG_FIELD, HomeScreenActivity.class.getCanonicalName());
+            startActivity(viewMembers);
+            getDialog().dismiss();
+        } else {
+            getDialog().dismiss();
+        }
     }
 
-    @OnClick(R.id.ic_edit_group_active)
-    public void gmEditSettingsIconListener() {
-        Log.d(TAG, "inside modal ... edit settings icon clicked!");
-
-        if (editSettingsPermitted) {
-            Intent editGroupSettings = new Intent(getActivity(), NotBuiltActivity.class);
-            startActivity(editGroupSettings);
+    @OnClick(R.id.ic_remove_members_active)
+    public void gmRemoveMembersIconListener() {
+        if (removeMembersPermitted) {
+            Intent removeMembers = MenuUtils.constructIntent(getActivity(), RemoveMembersActivity.class, groupUid, groupName);
+            removeMembers.putExtra(Constant.INDEX_FIELD, groupPosition);
+            getActivity().startActivityForResult(removeMembers, Constant.activityRemoveMembers);
             getDialog().dismiss();
         } else {
             getDialog().dismiss();

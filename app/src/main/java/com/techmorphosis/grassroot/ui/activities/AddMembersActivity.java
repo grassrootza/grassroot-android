@@ -37,7 +37,7 @@ import retrofit2.Response;
 /**
  * Created by luke on 2016/05/05.
  */
-public class AddMembersActivity extends AppCompatActivity implements MemberListFragment.MemberListListener {
+public class AddMembersActivity extends AppCompatActivity implements MemberListFragment.MemberListListener, MemberListFragment.MemberListClickDismissListener {
 
     private static final String TAG = AddMembersActivity.class.getSimpleName();
     private static final String EXISTING_ID = "existingMembers";
@@ -252,5 +252,15 @@ public class AddMembersActivity extends AppCompatActivity implements MemberListF
             // todo: maybe use this for the other one too?
             throw new UnsupportedOperationException("This should only be caring about the memberlists in the activity");
         }
+    }
+
+    @Override
+    public void onMemberDismissed(int position, String memberUid) {
+        // todo : deal with this
+    }
+
+    @Override
+    public void onMemberClicked(int position, String memberUid) {
+        // todo : deal with this
     }
 }

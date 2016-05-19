@@ -55,10 +55,21 @@
             android:name=".ui.activities.CreateGroupActivity"
             android:label="@string/title_activity_create__group"
             android:windowSoftInputMode="adjustPan" />
+
         <activity
             android:name=".ui.activities.AddMembersActivity"
             android:label="@string/title_activity_add_members"
             android:screenOrientation="portrait" />
+
+        <activity
+            android:name=".ui.activities.RemoveMembersActivity"
+            android:label="@string/title_activity_remove_members"
+            android:parentActivityName=".ui.activities.GroupTasksActivity"/> <!-- todo: reorder to home -->
+
+        <activity
+            android:name=".ui.activities.GroupMembersActivity"
+            android:label="@string/title_activity_group_members"
+            android:parentActivityName=".ui.activities.HomeScreenActivity" />
 
         <activity
             android:name=".ui.activities.GroupJoinActivity"
