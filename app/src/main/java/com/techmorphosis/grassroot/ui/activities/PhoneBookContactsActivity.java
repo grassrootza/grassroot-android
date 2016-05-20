@@ -23,8 +23,10 @@ import com.techmorphosis.grassroot.utils.PermissionUtils;
 import com.techmorphosis.grassroot.utils.UtilClass;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -38,11 +40,15 @@ public class PhoneBookContactsActivity extends PortraitActivity implements Conta
     public static final String TAG = PhoneBookContactsActivity.class.getSimpleName();
 
     private ContactsAdapter mAdapter;
-    ArrayList<Contact> listOfContacts;
-    private ArrayList<Parcelable> preSelectedList;
-    private ArrayList<Contact> contactsToRemove;
 
-    private int multi_number_positons=-1;
+    ArrayList<Contact> contactsDisplayed;
+    ArrayList<Contact> contactsSelected;
+    ArrayList<Contact> contactsRemoved;
+
+    private ArrayList<Contact> preSelectedList; // e.g., from prior launch & return of this
+    private ArrayList<Contact> contactsToFilterOut; // e.g., existing group members
+
+    private int multiNumberPosition =-1;
     private UtilClass utilClass;
 
     @BindView(android.R.id.list) // android.R?
@@ -77,14 +83,14 @@ public class PhoneBookContactsActivity extends PortraitActivity implements Conta
         setUpProgressBar();
         init();
 
-        Bundle b= getIntent().getExtras();
+        Bundle b = getIntent().getExtras();
         preSelectedList = b.getParcelableArrayList(Constant.filteredList);
-        contactsToRemove = b.getParcelableArrayList(Constant.doNotDisplayContacts);
+        contactsToFilterOut = b.getParcelableArrayList(Constant.doNotDisplayContacts);
 
         GetContactListAsync contactListGetter = new GetContactListAsync(this, this);
 
         if (PermissionUtils.contactReadPermissionGranted(this)) {
-            contactListGetter.execute(new Void[0]);
+            contactListGetter.execute();
         } else {
             Log.e(TAG, "Error! Phone book activity called without permission to read contacts");
             finish();
@@ -94,42 +100,59 @@ public class PhoneBookContactsActivity extends PortraitActivity implements Conta
     private void init() {
         utilClass = new UtilClass();
         preSelectedList = new ArrayList<>();
-        listOfContacts =new ArrayList<>();
+        contactsDisplayed = new ArrayList<>();
+        contactsSelected = new ArrayList<>();
+        contactsRemoved = new ArrayList<>();
     }
 
     public void putContactList(List<Contact> returnedContactList) {
 
-        Log.d(TAG, "listPhones size is " + returnedContactList.size());
+        final boolean filterContacts = contactsToFilterOut != null && !contactsToFilterOut.isEmpty();
+        final boolean preSelectContacts = preSelectedList != null && !preSelectedList.isEmpty();
 
-        if (contactsToRemove != null && contactsToRemove.size() > 0) {
-            // todo: keep an eye on behavior of contacts with multiple numbers
-            Log.d(TAG, "removing some contacts! these : " + contactsToRemove);
-            Log.d(TAG, "returned contact list looks like: " + returnedContactList.toString());
-            returnedContactList.removeAll(contactsToRemove);
-        }
+        if (filterContacts) {
+            // note: can't rely on hash/equals as filter list won't have contactId (local) and contacts won't have memberUid
+            // assembling this map is then quicker than doing a double iteration over the lists, hence ...
+            // todo: optimize this quite a bit, most obviously deciding which list is transformed to map and which is iterated here
 
-        if (preSelectedList != null && preSelectedList.size() > 0) {
-            for (int i = 0; i < preSelectedList.size(); i++) {
-                Contact preSelectedContact = (Contact) preSelectedList.get(i);
-                Log.v(TAG, "got a contact from the list, looks like: " + preSelectedContact);
-                for (int j = 0; j < returnedContactList.size(); j++) {
-                    Contact listModel = returnedContactList.get(j);
-                    Log.v(TAG, "preSelecting a contact! The contact looks like: " + listModel.toString());
-                    if (preSelectedContact.contact_ID.equals(listModel.contact_ID)) {
-                        listModel.isSelected = true;
-                        listModel.selectedNumber = preSelectedContact.selectedNumber;
-                    }
+            final Map<String, Contact> phoneNumberMap = assemblePhoneMap(returnedContactList);
+            for (Contact c : contactsToFilterOut) {
+                Contact contact = phoneNumberMap.get(UtilClass.formatNumberToE164(c.selectedNumber));
+                if (contact != null) {
+                    returnedContactList.remove(contact);
                 }
             }
         }
 
-        listOfContacts.addAll(returnedContactList);
-        mAdapter=new ContactsAdapter(listOfContacts,getApplicationContext());
+        // as above, could do with some iteration, maybe reuse the map
+        if (preSelectContacts) {
+            for (Contact c : preSelectedList) {
+                int index = returnedContactList.indexOf(c);
+                if (index != -1) {
+                    returnedContactList.get(index).isSelected = true;
+                }
+            }
+        }
+
+        contactsDisplayed.addAll(returnedContactList);
+        mAdapter = new ContactsAdapter(contactsDisplayed, getApplicationContext());
         mListView.setAdapter(mAdapter);
         mListView.setOnScrollListener(mAdapter);
         mListView.setEnableHeaderTransparencyChanges(false);
         progressBar.cancel();
+    }
 
+    private Map<String, Contact> assemblePhoneMap(List<Contact> contactList) {
+        Map<String, Contact> phoneMap = new HashMap<>();
+        for (Contact c : contactList) {
+            final List<String> nums = c.numbers;
+            if (!nums.isEmpty()) {
+                for (String number : nums) {
+                    phoneMap.put(UtilClass.formatNumberToE164(number), c);
+                }
+            }
+        }
+        return phoneMap;
     }
 
     /**
@@ -138,36 +161,22 @@ public class PhoneBookContactsActivity extends PortraitActivity implements Conta
     @OnClick(R.id.iv_back)
     public void ivBack() {
         Intent i = new Intent();
-        i.putParcelableArrayListExtra(Constant.selectedContacts, membersToReturn());
+        i.putParcelableArrayListExtra(Constant.contactsAdded, contactsSelected);
+        i.putParcelableArrayListExtra(Constant.contactsRemoved, contactsRemoved);
         setResult(RESULT_OK,i);
         finish();
     }
 
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-    }
-
-    private ArrayList<Contact> membersToReturn() {
-        ArrayList<Contact> selectedMembers = new ArrayList<>();
-        // oh for Java 8 ... todo: consider holding a sep list so don't have to do this iteration on close
-        for (Contact contact : listOfContacts) {
-            if (contact.isSelected) {
-                selectedMembers.add(contact);
-            }
-        }
-        return selectedMembers;
-    }
-
     /**
      * SECTION : handle clicking on member, including asking to pick one number if multiple
+     * note : probably want to switch this to using recycler view on item click ... likely more robust
      */
 
     @OnItemClick(android.R.id.list)
     public void selectMember(int position) {
 
-        multi_number_positons = position;
-        Contact contactClicked = listOfContacts.get(position);
+        multiNumberPosition = position;
+        Contact contactClicked = contactsDisplayed.get(position);
 
         if (contactClicked.numbers.size() > 1) {//show dialog
             Intent i = new Intent(PhoneBookContactsActivity.this, SelectPhoneNumberActivity.class);
@@ -176,20 +185,38 @@ public class PhoneBookContactsActivity extends PortraitActivity implements Conta
             startActivityForResult(i, Constant.activitySelectNumberFromContact);
         } else {
             if (contactClicked.isSelected) {
-                contactClicked.isSelected = false;
-                contactClicked.selectedNumber = "";
+                switchContactToUnselected(contactClicked);
             } else {
-                contactClicked.isSelected = true;
                 try {
-                    contactClicked.selectedNumber = contactClicked.numbers.get(0);
+                    switchContactToSelected(contactClicked);
                 } catch (Exception e) {
-                    e.printStackTrace();
                     utilClass.showsnackBar(rlPhonebookRoot,PhoneBookContactsActivity.this,getString(R.string.empty_contact));
                 }
             }
             mAdapter.notifyDataSetChanged();
-            Log.e(TAG, "selectedNumber is " + contactClicked.selectedNumber);
         }
+    }
+
+    private void switchContactToSelected(Contact contactClicked) {
+        contactClicked.selectedNumber = contactClicked.numbers.get(0);
+        if (contactsRemoved.contains(contactClicked)) {
+            contactsRemoved.remove(contactClicked);
+        }
+        if (!preSelectedList.contains(contactClicked)) {
+            contactsSelected.add(contactClicked);
+        }
+        contactClicked.isSelected = true;
+    }
+
+    private void switchContactToUnselected(Contact contactClicked) {
+        if (preSelectedList.contains(contactClicked)) {
+            contactsRemoved.add(contactClicked);
+        }
+        if (contactsSelected.contains(contactClicked)) {
+            contactsSelected.remove(contactClicked);
+        }
+        // todo: this means if reclick, can't switch number, so make sure to wire up on long click
+        contactClicked.isSelected = false;
     }
 
     @Override
@@ -197,17 +224,17 @@ public class PhoneBookContactsActivity extends PortraitActivity implements Conta
         super.onActivityResult(requestCode, resultCode, data);
         if (resultCode == 1) { // todo: replace these numbers with meaningful named constants
             String selectednumber = data.getStringExtra("selectednumber");
-            Contact contactAtPosition = listOfContacts.get(multi_number_positons);
+            Contact contactAtPosition = contactsDisplayed.get(multiNumberPosition);
             contactAtPosition.isSelected = true;
             contactAtPosition.selectedNumber = selectednumber;
             mAdapter.notifyDataSetChanged();
             Log.e(TAG, "onActivityResult selectedNumber is " + selectednumber);
         } else if (resultCode == 2) {
-            Contact contactAtPosition = listOfContacts.get(multi_number_positons);
+            Contact contactAtPosition = contactsDisplayed.get(multiNumberPosition);
             contactAtPosition.isSelected = false;
             contactAtPosition.selectedNumber="";
             mAdapter.notifyDataSetChanged();
-            multi_number_positons=1;
+            multiNumberPosition = -1;
         }
     }
 

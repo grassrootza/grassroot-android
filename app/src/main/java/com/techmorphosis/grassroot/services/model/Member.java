@@ -104,6 +104,25 @@ public class Member implements Parcelable {
 
 
     @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Member member = (Member) o;
+
+        if (memberUid != null ? !memberUid.equals(member.memberUid) : member.memberUid != null)
+            return false;
+        return contactId != null ? contactId.equals(member.contactId) : member.contactId == null;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = memberUid != null ? memberUid.hashCode() : 0;
+        result = 31 * result + (contactId != null ? contactId.hashCode() : 0);
+        return result;
+    }
+
+    @Override
     public String toString() {
         return "Member{" +
                 "memberUid='" + memberUid + '\'' +

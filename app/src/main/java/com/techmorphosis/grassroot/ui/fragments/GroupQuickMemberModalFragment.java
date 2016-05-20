@@ -71,9 +71,6 @@ public class GroupQuickMemberModalFragment extends android.support.v4.app.Dialog
 
         Log.d(TAG, "inside quickGroupMemberBundle, passed bundle = " + b.toString());
 
-        final int colorActive = ContextCompat.getColor(getContext(), R.color.iconActive);
-        final int colorInactive = ContextCompat.getColor(getContext(), R.color.text_grey);
-
         this.groupUid = b.getString(Constant.GROUPUID_FIELD);
         this.groupName = b.getString(Constant.GROUPNAME_FIELD);
         this.groupPosition = b.getInt(Constant.INDEX_FIELD);
@@ -83,13 +80,9 @@ public class GroupQuickMemberModalFragment extends android.support.v4.app.Dialog
         removeMembersPermitted = b.getBoolean("removeMembers");
         editSettingsPermitted = b.getBoolean("editSettings");
 
-        /*final Drawable dRemove = ContextCompat.getDrawable(getContext(), R.drawable.ic_remove_circle_black_lrg);
-        final Drawable wRemove = DrawableCompat.wrap(dRemove);
-        DrawableCompat.setTint(wRemove, removeMembersPermitted ? colorActive : colorInactive);*/
-
-        int addIcon = addMemberPermitted ? R.drawable.ic_add_circle_active_25dp : R.drawable.ic_add_circle_inactive_25dp; // ic fab active
-        int viewIcon = viewMembersPermitted ? R.drawable.ic_home_call_meeting_active : R.drawable.ic_home_call_meeting_inactive; // ic p/bk
-        int removeIcon = removeMembersPermitted ? R.drawable.ic_remove_circle_active_25dp : R.drawable.ic_remove_circle_inactive_25dp;
+        int addIcon = addMemberPermitted ? R.drawable.ic_add_circle_active_24dp : R.drawable.ic_add_circle_inactive_24dp;
+        int viewIcon = viewMembersPermitted ? R.drawable.ic_list_icon_active_24dp : R.drawable.ic_list_icon_inactive_24dp;
+        int removeIcon = removeMembersPermitted ? R.drawable.ic_remove_circle_active_24dp : R.drawable.ic_remove_circle_inactive_24dp;
 
         icAddMemberIcon.setImageResource(addIcon);
         icViewMemberIcon.setImageResource(viewIcon);

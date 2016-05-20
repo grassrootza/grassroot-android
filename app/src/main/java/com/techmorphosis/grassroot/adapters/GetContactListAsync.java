@@ -38,7 +38,7 @@ public class GetContactListAsync extends AsyncTask<Void, Void, List<Contact>> {
 
         this.contentResolver = context.getContentResolver();
         Cursor cur = contentResolver.query(Contacts.CONTENT_URI, null, null, null, "display_name ASC");
-        Log.e(TAG, "inside retrieveContacts, just got cursor with : " + cur.getCount() + " elements");
+        Log.d(TAG, "inside retrieveContacts, just got cursor with : " + cur.getCount() + " elements");
 
         if (cur.getCount() > 0) {
 

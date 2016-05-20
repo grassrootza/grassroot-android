@@ -41,6 +41,7 @@ public class GroupListAdapter extends RecyclerView.Adapter<GroupListAdapter.GHP_
     public GroupListAdapter(ArrayList<Group> groups, HomeGroupListFragment activity) {
         this.groups = groups;
         this.activity = activity;
+        this.oldGroupModel = new ArrayList<>(); // todo :figure out what this is for, if anything
     }
 
     public void sortByDate() {

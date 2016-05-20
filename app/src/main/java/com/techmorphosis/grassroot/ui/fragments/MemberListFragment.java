@@ -1,11 +1,11 @@
 package com.techmorphosis.grassroot.ui.fragments;
 
-import android.app.Activity;
 import android.content.Context;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.helper.ItemTouchHelper;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -18,12 +18,10 @@ import com.techmorphosis.grassroot.services.GrassrootRestService;
 import com.techmorphosis.grassroot.services.model.Member;
 import com.techmorphosis.grassroot.services.model.MemberList;
 import com.techmorphosis.grassroot.ui.views.RecyclerTouchListener;
-import com.techmorphosis.grassroot.ui.views.SwipeableRecyclerViewTouchListener;
 import com.techmorphosis.grassroot.utils.ErrorUtils;
 import com.techmorphosis.grassroot.utils.SettingPreference;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import butterknife.BindView;
@@ -77,20 +75,39 @@ public class MemberListFragment extends Fragment {
             userListAdapter.setShowSelected(showSelected);
     }
 
-    public void setMemberList(List<Member> members) {
-        if (userListAdapter != null) {
-            userListAdapter.resetMembers(members);
-        }
-    }
-
     public void addMembers(List<Member> members) {
         if (userListAdapter != null) {
             userListAdapter.addMembers(members);
         }
     }
 
+    public void removeMember(Member member) {
+        if (userListAdapter != null) {
+            userListAdapter.removeMember(member);
+        }
+    }
+
+    public void removeMembers(List<Member> members) {
+        if (userListAdapter != null) {
+            userListAdapter.removeMembers(members);
+        }
+    }
+
     public List<Member> getMemberList() {
         return this.userListAdapter.getMembers();
+    }
+
+    public List<Member> getSelectedMembers() {
+        // Java 8 Lambdas would be really nice here ...
+        if (!showSelected) {
+            return userListAdapter.getMembers();
+        } else {
+            List<Member> membersToReturn = new ArrayList<>();
+            for (Member m : userListAdapter.getMembers()) {
+                if (m.isSelected()) membersToReturn.add(m);
+            }
+            return membersToReturn;
+        }
     }
 
     public interface MemberListListener {
@@ -115,7 +132,6 @@ public class MemberListFragment extends Fragment {
             // todo : do we really want to do this? not sure if listener should be compulsory, to reexamine
             throw new ClassCastException(context.toString() + " must implement onMemberListListener");
         }
-
         clickDismissListener = (context instanceof MemberListClickDismissListener) ? (MemberListClickDismissListener) context : null;
     }
 
@@ -137,7 +153,6 @@ public class MemberListFragment extends Fragment {
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        Log.e(TAG, "setting up the fragment!");
         View viewToReturn = inflater.inflate(R.layout.fragment_member_list, container, false);
         ButterKnife.bind(this, viewToReturn);
         setUpRecyclerView();
@@ -146,17 +161,14 @@ public class MemberListFragment extends Fragment {
     }
 
     private void setUpRecyclerView() {
-        Log.e(TAG, "setting up the recycler view!");
         memberListRecyclerView.setLayoutManager(new LinearLayoutManager(this.getContext()));
         memberListRecyclerView.setAdapter(userListAdapter);
         userListAdapter.setShowSelected(showSelected);
         if (groupUid != null)
-            retrieveGroupMembers();
+            fetchGroupMembers();
         if (canDismissItems)
             setUpDismissal();
         memberListRecyclerView.setVisibility(View.VISIBLE);
-        Log.e(TAG, "ZOG : set up view, adaptor has : " + userListAdapter.getItemCount() + " items");
-        // todo: set this up (also, have a dismiss swipe)
     }
 
     private void setUpDismissal() {
@@ -164,24 +176,22 @@ public class MemberListFragment extends Fragment {
             throw new UnsupportedOperationException("Selection and dismisal require calling activity to implement listener");
         }
 
-        SwipeableRecyclerViewTouchListener swipeDeleteListener = new SwipeableRecyclerViewTouchListener(
-                getContext(), memberListRecyclerView, R.id.mlist_tv_member_name, R.id.mlist_tv_member_name,
-                new SwipeableRecyclerViewTouchListener.SwipeListener() {
-                    @Override
-                    public boolean canSwipe(int position) {
-                        return true;
-                    }
+        ItemTouchHelper.SimpleCallback simpleCallback = new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT) {
 
-                    @Override
-                    public void onDismissedBySwipe(RecyclerView recyclerView, int[] reverseSortedPositions) {
-                        userListAdapter.removeMembers(reverseSortedPositions);
-                        for (int i = 0; i < reverseSortedPositions.length; i++) {
-                            clickDismissListener.onMemberDismissed(reverseSortedPositions[i],
-                                    userListAdapter.getMemberUid(reverseSortedPositions[i]));
-                        }
-                    }
-                });
-        memberListRecyclerView.addOnItemTouchListener(swipeDeleteListener);
+            @Override
+            public boolean onMove(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder, RecyclerView.ViewHolder target) {
+                return false;
+            }
+
+            @Override
+            public void onSwiped(RecyclerView.ViewHolder viewHolder, int direction) {
+                int swipedPosition = viewHolder.getAdapterPosition();
+                userListAdapter.removeMembers(new int[] { swipedPosition });
+            }
+        };
+
+        ItemTouchHelper itemTouchHelper = new ItemTouchHelper(simpleCallback);
+        itemTouchHelper.attachToRecyclerView(memberListRecyclerView);
 
         if (showSelected) {
             memberListRecyclerView.addOnItemTouchListener(new RecyclerTouchListener(getContext(), memberListRecyclerView,
@@ -201,7 +211,7 @@ public class MemberListFragment extends Fragment {
         }
     }
 
-    private void retrieveGroupMembers() {
+    private void fetchGroupMembers() {
         if (groupUid == null)
             throw new UnsupportedOperationException("Cannot retrieve group members from null group uid");
 
