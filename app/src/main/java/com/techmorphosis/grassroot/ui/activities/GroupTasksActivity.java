@@ -183,6 +183,7 @@ public class GroupTasksActivity extends PortraitActivity implements TaskListList
         recycleViewGroupActivities.setItemAnimator(new CustomItemAnimator());
         group_activitiesAdapter = new TasksAdapter(new ArrayList<TaskModel>(), this, this);
         recycleViewGroupActivities.setAdapter(group_activitiesAdapter);
+
     }
 
     private void groupActivitiesWS() {
@@ -357,6 +358,25 @@ public class GroupTasksActivity extends PortraitActivity implements TaskListList
             }
         });
     }
+
+
+    public void onCardClick(View view, final int position) {
+        view.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                TaskModel model = viewedTasksList.get(position); // todo : check this
+                Log.e(TAG,"positions is " + position);
+                Log.e(TAG,"title is " + model.getTitle());
+                Log.e(TAG,"type is " + model.getType());
+                if (model.getType().equalsIgnoreCase("VOTE")) {
+                    Intent vote_view = new Intent(GroupTasksActivity.this, ViewVote.class);
+                    vote_view.putExtra("voteid", model.getId());
+                    startActivityForResult(vote_view,1);
+                }
+            }
+        });
+    }
+
 
     private void showSnackBar(String message) {
         showSnackBar(message, "", "", "", "", snackbar.LENGTH_LONG);

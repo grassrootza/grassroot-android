@@ -1,6 +1,9 @@
 package com.techmorphosis.grassroot.ui.activities;
 
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -36,7 +39,7 @@ public class NewTaskMenuActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_new);
         ButterKnife.bind(this);
-
+        registeringReceiver();
         Bundle b = getIntent().getExtras();
         if (b == null) { throw new UnsupportedOperationException("Error! Null arguments passed to modal"); }
 
@@ -67,9 +70,10 @@ public class NewTaskMenuActivity extends AppCompatActivity {
 
     @OnClick(R.id.bt_vote)
     public void onVoteButtonClick() {
-                Intent todo=new Intent(this,NotBuiltActivity.class);
-                todo.putExtra("title","Vote");
-                startActivity(todo);
+                Intent createVote=new Intent(this,CreateVote.class);
+                createVote.putExtra("title","Vote");
+                createVote.putExtra(Constant.GROUPUID_FIELD, groupUid);
+                startActivity(createVote);
     }
 
     @OnClick(R.id.bt_newmember)
@@ -80,6 +84,18 @@ public class NewTaskMenuActivity extends AppCompatActivity {
         addMembers.putExtra(Constant.GROUPNAME_FIELD, groupName);
         startActivity(addMembers);
     }
+    public void registeringReceiver() {
+        IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction(getString(R.string.bs_BR_name));
+        registerReceiver(broadcastReceiver, intentFilter);
+    }
+
+    BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            NewTaskMenuActivity.this.finish();
+        }
+    };
 
     public void onBackPressed() {
         super.onBackPressed();

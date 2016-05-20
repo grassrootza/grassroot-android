@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/rl_root_faq"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <android.support.v7.widget.Toolbar
+        android:id="@+id/fq_toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/primaryColor"
+        >
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/fq_txt_toolbar"
+            android:layout_gravity="center"
+            android:textSize="@dimen/txt_large"
+            android:textColor="@color/white"
+            />
+
+    </android.support.v7.widget.Toolbar>
+
+    <ExpandableListView
+        android:id="@+id/listview_faq"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:choiceMode="singleChoice"
+        android:descendantFocusability="beforeDescendants"
+        android:scrollbarStyle="insideOverlay"
+        android:scrollingCache="false"
+        android:transcriptMode="disabled"
+        android:fastScrollEnabled="false"
+        android:smoothScrollbar="true"
+        android:fastScrollAlwaysVisible="false"
+        android:animationCache="false"
+        android:persistentDrawingCache="none"
+        android:alwaysDrawnWithCache="false"
+        android:drawingCacheQuality="low"
+        android:overScrollMode="never"
+        android:scrollbars="none"
+        android:divider="@null"/>
+
+</LinearLayout>

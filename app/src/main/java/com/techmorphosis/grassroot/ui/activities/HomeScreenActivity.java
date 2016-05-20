@@ -9,6 +9,7 @@ import android.support.v4.app.Fragment;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.util.Log;
+import android.view.Gravity;
 
 import com.techmorphosis.grassroot.R;
 import com.techmorphosis.grassroot.ui.fragments.AlertDialogFragment;
@@ -32,6 +33,9 @@ public class HomeScreenActivity extends PortraitActivity implements NavigationDr
     DrawerLayout drawer;
 
     private Fragment mainFragment;
+    android.support.v4.app.Fragment fragment = null;
+    private NavigationDrawerFragment drawerFrag;
+    private String openFragment;
 
     AlertDialogFragment alertDialogFragment;
 
@@ -40,8 +44,11 @@ public class HomeScreenActivity extends PortraitActivity implements NavigationDr
         super.onCreate(savedInstanceState);
         Log.e(TAG, "onCreate for HomeScreenActivity ... ");
         setContentView(R.layout.activity_homescreen);
+        drawerFrag = (NavigationDrawerFragment) getFragmentManager().findFragmentById(R.id.navigation_drawer);
+        drawerFrag.setUp(R.id.navigation_drawer, drawer);
         ButterKnife.bind(this);
-        setUpHomeFragment();
+        HomeFragment();
+        //setUpHomeFragment();
     }
 
     private void setUpHomeFragment() {
@@ -63,6 +70,7 @@ public class HomeScreenActivity extends PortraitActivity implements NavigationDr
                 hgl.updateSingleGroup(groupPosition, groupUid);
             }
         }
+
     }
 
 
@@ -72,54 +80,43 @@ public class HomeScreenActivity extends PortraitActivity implements NavigationDr
         Fragment fragmentToSwitch = null;
 
         if (drawer != null) {
-            drawer.closeDrawer(GravityCompat.START);
+            drawer.closeDrawer(Gravity.LEFT);
         }
 
         switch (position) {
-            case 0: //Profile
-                fragmentToSwitch = SettingPreference.getisHasgroup(this) ? new HomeGroupListFragment() : new WelcomeFragment();
+
+            case 0:
+                //Profile
+                Intent profile = new Intent(getApplicationContext(),ProfileSettings.class);
+                startActivity(profile);
                 break;
+
+
             case 1:
-                //Setting
+                //faq
+                Intent faq= new Intent(HomeScreenActivity.this,FAQActivity.class);
+                startActivity(faq);
                 break;
             case 2:
-                //FAQ
+                //NotificationCenter
+                Intent noifications = new Intent(HomeScreenActivity.this,NotificationCenter.class);
+                startActivity(noifications);
                 break;
             case 3:
-                //Logout
-                alertDialogFragment = UtilClass.showAlertDialog(getFragmentManager(), getString(R.string.Logout_text), "Yes", "No", true, new AlertDialogListener() {
-                    @Override
-                    public void setRightButton() {//no
-                        alertDialogFragment.dismiss();
-                    }
 
-                    @Override
-                    public void setLeftButton() {
-                        //Yes
-                        SettingPreference.clearAll(getApplicationContext());
-                        Intent open = new Intent(HomeScreenActivity.this, StartActivity.class);
-                        startActivity(open);
-                        finish();
-                        alertDialogFragment.dismiss();
-                    }
-                });
-
-
-                break;
-
-            case 4:
                 //Share
 
                 //implicit Intent
-                Intent shareapp = new Intent("android.intent.action.SEND");
+                Intent shareapp= new Intent("android.intent.action.SEND");
                 shareapp.setType("text/plain");
                 shareapp.setAction("android.intent.action.SEND");
                 shareapp.putExtra("android.intent.extra.TEXT", getString(R.string.share_app_text));
-                startActivity(Intent.createChooser(shareapp, "Share via.."));
+                startActivity(Intent.createChooser(shareapp,"Share via.."));
 
                 break;
+                
 
-            case 5:
+            case 4:
                 //Rate App
 
                 //implicit Intent
@@ -127,12 +124,16 @@ public class HomeScreenActivity extends PortraitActivity implements NavigationDr
                     Intent rateapp = new Intent("android.intent.action.VIEW", Uri.parse("market://details?id=com.techmorphosis.grassroot"));
                     startActivity(rateapp);
                 } catch (ActivityNotFoundException activitynotfoundexception) {
-                    Intent rateapp2 = new Intent("android.intent.action.VIEW", Uri.parse("https://play.google.com/store/apps/details?id=com.techmorphosis.grassroot"));
+                    Intent rateapp2 = new Intent("android.intent.action.VIEW" ,Uri.parse("https://play.google.com/store/apps/details?id=com.techmorphosis.grassroot"));
                     startActivity(rateapp2);
                 }
 
 
                 break;
+
+            case 5:
+                logout();
+
 
 
         }
@@ -144,6 +145,59 @@ public class HomeScreenActivity extends PortraitActivity implements NavigationDr
         } else {
             Log.e("Error", "Error in creating fragment");
         }
+    }
+
+
+    private void logout()
+    {
+        alertDialogFragment =UtilClass.showAlertDialog(getFragmentManager(), getString(R.string.Logout_message), "Yes","No",true, new AlertDialogListener()
+        {
+            @Override
+            public void setRightButton()
+            {//no
+
+
+                alertDialogFragment.dismiss();
+            }
+
+            @Override
+            public void setLeftButton()
+            {
+                //Yes
+                SettingPreference.clearAll(getApplicationContext());
+                Intent open= new Intent(HomeScreenActivity.this,StartActivity.class);
+                startActivity(open);
+                finish();
+                alertDialogFragment.dismiss();
+
+            }
+        });
+    }
+
+
+    private void HomeFragment() {
+        if (SettingPreference.getisHasgroup(HomeScreenActivity.this))
+        {
+            fragment = new HomeGroupListFragment();
+            openFragment="Group_Homepage";
+        }
+        else
+        {
+            fragment = new WelcomeFragment();
+            openFragment="WelcomeFragment";
+
+        }
+        if (fragment != null)
+        {
+
+            android.support.v4.app.FragmentManager fragmentManager1 = getSupportFragmentManager();
+            android.support.v4.app.FragmentTransaction ft1 = fragmentManager1.beginTransaction();
+            ft1.replace(R.id.fragment_container, fragment);
+            ft1.commit();
+
+        }
+
+
     }
 
     @Override

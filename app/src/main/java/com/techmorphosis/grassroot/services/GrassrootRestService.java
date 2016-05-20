@@ -1,15 +1,19 @@
 package com.techmorphosis.grassroot.services;
 
 import android.content.Context;
+import android.support.annotation.Nullable;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.techmorphosis.grassroot.services.model.EventResponse;
 import com.techmorphosis.grassroot.services.model.GenericResponse;
 import com.techmorphosis.grassroot.services.model.GroupResponse;
 import com.techmorphosis.grassroot.services.model.GroupSearchResponse;
 import com.techmorphosis.grassroot.services.model.Member;
 import com.techmorphosis.grassroot.services.model.MemberDeserializer;
 import com.techmorphosis.grassroot.services.model.MemberList;
+import com.techmorphosis.grassroot.services.model.NotificationList;
+import com.techmorphosis.grassroot.services.model.ProfileResponse;
 import com.techmorphosis.grassroot.services.model.TaskResponse;
 import com.techmorphosis.grassroot.services.model.TokenResponse;
 import com.techmorphosis.grassroot.utils.Constant;
@@ -34,7 +38,7 @@ import retrofit2.http.Query;
  */
 public class GrassrootRestService {
 
-    private static final String GRASSROOT_SERVER_URL = Constant.restUrl;
+    private static final String GRASSROOT_SERVER_URL = Constant.stagingUrl;
     private RestApi mRestApi;
 
     // todo: consider switching to static (but then requires handling connection manager differently...)
@@ -138,7 +142,7 @@ public class GrassrootRestService {
                                              @Path("code") String code,
                                              @Query("response") String response);
 
-        //cast vote
+        //rsvp for a meeting
         @GET("meeting/rsvp/{id}/{phoneNumber}/{code}")
         Call<GenericResponse> rsvp(@Path("id") String voteId,
                                    @Path("phoneNumber") String phoneNumber,
@@ -170,6 +174,45 @@ public class GrassrootRestService {
         Call<GenericResponse> pushRegistration(@Path("phoneNumber") String phoneNumber,
                                                      @Path("code") String code,
                                                      @Query("registration_id") String regId);
+
+        //retrieve notifications
+        @GET("notification/list/{phoneNumber}/{code}")
+        Call<NotificationList> getUserNotifications(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
+                                                    @Nullable @Query("page") Integer page
+                ,@Nullable @Query("size") Integer size);
+
+
+       //view vote
+        @GET("vote/view/{id}/{phoneNumber}/{code}")
+        Call<EventResponse> viewVote(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
+                                     @Path("id") String id);
+
+        //edit vote
+        @POST("vote/update/{id}/{phoneNumber}/{code}")
+        Call<GenericResponse> editVote(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
+                                 @Path("id") String id,@Query("title") String title, @Query("description") String description,
+                                       @Query("closingTime") String closingTime);
+
+        //create vote
+        @POST("vote/create/{id}/{phoneNumber}/{code}")
+        Call<GenericResponse> createVote(@Path("phoneNumber") String phoneNumber, @Path("code") String code, @Path("id") String groupId,
+                                         @Query("title") String title, @Query("description") String description, @Query("closingTime") String closingTime,
+                                         @Query("reminderMins") int minutes, @Query("members") List<String> members, @Query("notifyGroup") boolean relayable);
+
+
+        //Profile settings
+        @GET("user/profile/settings/{phoneNumber}/{code}")
+        Call<ProfileResponse> getUserProfile(@Path("phoneNumber") String phoneNumber,
+                                             @Path("code") String code);
+        //Update profile settings
+        @POST("user/profile/settings/update/{phoneNumber}/{code}")
+        Call<GenericResponse> updateProfile(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
+                                            @Query("displayName") String displayName, @Query("language") String language,
+        @Query("alertPreference") String preference);
+
+
+
+
     }
 
 }

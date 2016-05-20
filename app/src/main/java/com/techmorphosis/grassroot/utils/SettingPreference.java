@@ -30,6 +30,11 @@ public class SettingPreference {
     private static final String PREF_Type = "Pref_type";
     private static final String PREF_HAS_SAVE_CLICKED = "Pref_save_clicked";
 
+    private static final String PREF_LANGUAGE = "language_preference";
+
+    private static final String PREF_ALERT = "alert_preference";
+
+
     private static final String PREF_Phone_Token = "Pref_phone_token";
 
     private static final String PREF_OTP = "Pref_otp";
@@ -131,6 +136,22 @@ public class SettingPreference {
     public static void setuser_phonetoken(Context context, String value) {
         getPref(context).edit().putString(PREF_Phone_Token, value).apply();
     }
+    public static void setPrefLanguage(Context context, String value){
+        getPref(context).edit().putString(PREF_LANGUAGE, value).apply();
+    }
+
+    public static String getPrefLanguage(Context context){
+        return getPref(context).getString(PREF_LANGUAGE,"");
+    }
+
+
+    public static void setPrefAlert(Context context, String value){
+        getPref(context).edit().putString(PREF_ALERT, value);
+    }
+
+    public static String getPrefAlert(Context context){
+        return getPref(context).getString(PREF_ALERT, "");
+    }
 
 
     public static String getPREF_Phone_Token(Context context) {
@@ -160,6 +181,7 @@ public class SettingPreference {
     public static boolean getPrefHasSaveClicked(Context context) {
         return getPref(context).getBoolean(PREF_Type,false);
     }
+
 
 
     public static void setIsGcmEnabled(Context context, boolean value) {
