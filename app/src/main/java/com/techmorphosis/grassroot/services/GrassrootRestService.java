@@ -38,7 +38,7 @@ import retrofit2.http.Query;
  */
 public class GrassrootRestService {
 
-    private static final String GRASSROOT_SERVER_URL = Constant.stagingUrl;
+    private static final String GRASSROOT_SERVER_URL = Constant.restUrl;
     private RestApi mRestApi;
 
     // todo: consider switching to static (but then requires handling connection manager differently...)
@@ -53,7 +53,6 @@ public class GrassrootRestService {
                 .addNetworkInterceptor(new ConnectivityInterceptor(context))
                 .addNetworkInterceptor(new HeaderInterceptor())
                 .build();
-
 
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl(GRASSROOT_SERVER_URL)

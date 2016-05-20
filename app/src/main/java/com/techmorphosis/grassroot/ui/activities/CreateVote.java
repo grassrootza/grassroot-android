@@ -47,33 +47,26 @@ import retrofit2.Response;
 
 public class CreateVote extends PortraitActivity implements TimePickerDialog.OnTimeSetListener, DatePickerDialog.OnDateSetListener {
 
-    private static final String TAG = "CreateVote";
+    private static final String TAG = CreateVote.class.getCanonicalName();
+
     private Toolbar tlbCv;
-    private TextView txtTlbCv;
-    private ScrollView cvScrollview;
-    private CardView cardView;
-    private RelativeLayout rlTxtIpl;
-    private TextInputLayout txtIpl;
     private TextView txtTitleCount;
     private TextView txtPostedname;
-    private RelativeLayout rlTxtIplDesc;
-    private TextInputLayout txtIplDesc;
     private TextView txtDescCount;
     private CardView cvDatepicker;
-    private TextView txtDeadlineTitle;
     private TextView txtDeadline;
+
     private RelativeLayout rlAlertsHeader;
     private RelativeLayout rlAlertsBody;
-    private RelativeLayout rlRowOneDay;
+
     private SwitchCompat swOneDay;
-    private RelativeLayout rlRowHalfDay;
     private SwitchCompat swHalfDay;
-    private RelativeLayout rlRowOneHour;
     private SwitchCompat swOneHour;
-    private RelativeLayout rlRowImmediate;
     private SwitchCompat swImmediate;
+
     private EditText et_title_cv;
     private EditText et_description_cv;
+
     private ImageView ivExpandCv;
 
     ValueAnimator mAnimator;
@@ -85,19 +78,21 @@ public class CreateVote extends PortraitActivity implements TimePickerDialog.OnT
     private boolean dateselected = false;
     Calendar now;
     private String todaydateString;
+    private String reminderMins;
 
     public String[] switchnamearr = {"swOneDay", "swHalfDay", "swOneHour", "swImmediate"};
     public SwitchCompat[] switchCompatarr = {swOneDay, swHalfDay, swOneHour, swImmediate};
     private CardView rlNotifyHeader;
+
     private SwitchCompat swNotifyall;
     private Button btcallvote;
     private boolean notifyGroup;
-    private String reminderMins;
-    private String members = "";
+
     private String closingTime;
     private Snackbar snackbar;
     private RelativeLayout rlRootCv;
     public boolean receiver = false;
+
     private GrassrootRestService grassrootRestService;
     private String phoneNumber;
     private String code;
@@ -108,20 +103,17 @@ public class CreateVote extends PortraitActivity implements TimePickerDialog.OnT
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_create_vote);
+
         if (getIntent().getExtras() != null) {//No Broadcast Reciever
-            // Toast.makeText(CreateVote.this, "not null", Toast.LENGTH_SHORT).show();
             groupId = getIntent().getStringExtra(Constant.GROUPUID_FIELD);
             receiver = false;
         } else {//Broadcast Reciever
-            //Toast.makeText(CreateVote.this, " null", Toast.LENGTH_SHORT).show();
             receiver = true;
         }
 
         grassrootRestService = new GrassrootRestService(this);
         findAllViews();
         setUpToolbar();
-
-
     }
 
     private void setUpToolbar() {
@@ -138,40 +130,29 @@ public class CreateVote extends PortraitActivity implements TimePickerDialog.OnT
 
         rlRootCv = (RelativeLayout) findViewById(R.id.rl_root_cv);
         tlbCv = (Toolbar) findViewById(R.id.tlb_cv);
-        txtTlbCv = (TextView) findViewById(R.id.txt_tlb_cv);
 
-        cvScrollview = (ScrollView) findViewById(R.id.cv_scrollview);
-        cardView = (CardView) findViewById(R.id.card_view);
-
-        rlTxtIpl = (RelativeLayout) findViewById(R.id.rl_txt_ipl);
         et_title_cv = (EditText) findViewById(R.id.et_title_cv);
         txtTitleCount = (TextView) findViewById(R.id.txt_title_count);
 
         txtPostedname = (TextView) findViewById(R.id.txt_postedname);
 
-        rlTxtIplDesc = (RelativeLayout) findViewById(R.id.rl_txt_ipl_desc);
         et_description_cv = (EditText) findViewById(R.id.et_description_cv);
         txtDescCount = (TextView) findViewById(R.id.txt_desc_count);
 
         cvDatepicker = (CardView) findViewById(R.id.cv_datepicker);
 
-        txtDeadlineTitle = (TextView) findViewById(R.id.txt_deadline_title);
         txtDeadline = (TextView) findViewById(R.id.txt_deadline);
 
         rlAlertsHeader = (RelativeLayout) findViewById(R.id.rl_alerts_header);
         rlAlertsBody = (RelativeLayout) findViewById(R.id.rl_alerts_body);
         ivExpandCv = (ImageView) findViewById(R.id.iv_expand_alert);
 
-        rlRowOneDay = (RelativeLayout) findViewById(R.id.rl_row_one_day);
         swOneDay = (SwitchCompat) findViewById(R.id.sw_one_day);
 
-        rlRowHalfDay = (RelativeLayout) findViewById(R.id.rl_row_half_day);
         swHalfDay = (SwitchCompat) findViewById(R.id.sw_half_day);
 
-        rlRowOneHour = (RelativeLayout) findViewById(R.id.rl_row_one_hour);
         swOneHour = (SwitchCompat) findViewById(R.id.sw_one_hour);
 
-        rlRowImmediate = (RelativeLayout) findViewById(R.id.rl_row_immediate);
         swImmediate = (SwitchCompat) findViewById(R.id.sw_immediate);
 
         rlNotifyHeader = (CardView) findViewById(R.id.rl_notify_header);
@@ -183,7 +164,6 @@ public class CreateVote extends PortraitActivity implements TimePickerDialog.OnT
         txtDescCount.setText("0/320");
         txtTitleCount.setText("0/35");
         txtPostedname.setText("Posted by " + SettingPreference.getuser_name(CreateVote.this));
-
 
         setAllListner();
     }
@@ -266,31 +246,15 @@ public class CreateVote extends PortraitActivity implements TimePickerDialog.OnT
     private void FormValidation() {
 
         if (TextUtils.isEmpty(et_title_cv.getText().toString())) {
-            //          Toast.makeText(CreateVote.this, "if et_title_cv", Toast.LENGTH_SHORT).show();
             showSnackBar(getString(R.string.nm_title_error_msg), snackbar.LENGTH_SHORT, "");
         } else {
-            // Toast.makeText(CreateVote.this, "else  et_title_cv", Toast.LENGTH_SHORT).show();
-
             if (TextUtils.isEmpty(et_description_cv.getText().toString())) {
-
-                //            Toast.makeText(CreateVote.this, "if et_description_cv", Toast.LENGTH_SHORT).show();
-
                 showSnackBar(getString(R.string.nm_description_error_msg), snackbar.LENGTH_SHORT, "");
-
-
             } else {
-                //          Toast.makeText(CreateVote.this, "else  et_description_cv", Toast.LENGTH_SHORT).show();
-
                 if (TextUtils.isEmpty(closingTime)) {
-//                    Toast.makeText(CreateVote.this, "if   closingTime", Toast.LENGTH_SHORT).show();
-
                     showSnackBar(getString(R.string.nm_closingtime_msg), snackbar.LENGTH_SHORT, "");
                 } else {
-                    // Toast.makeText(CreateVote.this, "else    closingTime", Toast.LENGTH_SHORT).show();
-
-
                     callVoteWS();
-
                 }
             }
 

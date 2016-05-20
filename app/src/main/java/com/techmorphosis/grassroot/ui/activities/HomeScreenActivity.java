@@ -47,8 +47,7 @@ public class HomeScreenActivity extends PortraitActivity implements NavigationDr
         drawerFrag = (NavigationDrawerFragment) getFragmentManager().findFragmentById(R.id.navigation_drawer);
         drawerFrag.setUp(R.id.navigation_drawer, drawer);
         ButterKnife.bind(this);
-        HomeFragment();
-        //setUpHomeFragment();
+        setUpHomeFragment();
     }
 
     private void setUpHomeFragment() {
@@ -172,32 +171,6 @@ public class HomeScreenActivity extends PortraitActivity implements NavigationDr
 
             }
         });
-    }
-
-
-    private void HomeFragment() {
-        if (SettingPreference.getisHasgroup(HomeScreenActivity.this))
-        {
-            fragment = new HomeGroupListFragment();
-            openFragment="Group_Homepage";
-        }
-        else
-        {
-            fragment = new WelcomeFragment();
-            openFragment="WelcomeFragment";
-
-        }
-        if (fragment != null)
-        {
-
-            android.support.v4.app.FragmentManager fragmentManager1 = getSupportFragmentManager();
-            android.support.v4.app.FragmentTransaction ft1 = fragmentManager1.beginTransaction();
-            ft1.replace(R.id.fragment_container, fragment);
-            ft1.commit();
-
-        }
-
-
     }
 
     @Override

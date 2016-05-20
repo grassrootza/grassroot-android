@@ -12,6 +12,7 @@ import android.widget.ImageView;
 
 import com.techmorphosis.grassroot.R;
 import com.techmorphosis.grassroot.utils.Constant;
+import com.techmorphosis.grassroot.utils.MenuUtils;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -70,10 +71,9 @@ public class NewTaskMenuActivity extends AppCompatActivity {
 
     @OnClick(R.id.bt_vote)
     public void onVoteButtonClick() {
-                Intent createVote=new Intent(this,CreateVote.class);
-                createVote.putExtra("title","Vote");
-                createVote.putExtra(Constant.GROUPUID_FIELD, groupUid);
-                startActivity(createVote);
+        Intent createVote = MenuUtils.constructIntent(this, CreateVote.class, groupUid, groupName);
+        createVote.putExtra("title","Vote");
+        startActivity(createVote);
     }
 
     @OnClick(R.id.bt_newmember)

@@ -12,7 +12,9 @@ import android.view.Window;
 import android.widget.ImageView;
 
 import com.techmorphosis.grassroot.R;
+import com.techmorphosis.grassroot.ui.activities.CreateVote;
 import com.techmorphosis.grassroot.ui.activities.NotBuiltActivity;
+import com.techmorphosis.grassroot.utils.MenuUtils;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -23,16 +25,25 @@ public class GroupQuickTaskModalFragment extends android.support.v4.app.DialogFr
 
     private static final String TAG = GroupQuickTaskModalFragment.class.getSimpleName();
 
+    private String groupUid;
+    private String groupName;
+
     @BindView(R.id.ic_home_vote_active)
     ImageView icHomeVoteActive;
     @BindView(R.id.ic_home_call_meeting_active)
     ImageView icHomeCallMeetingActive;
     @BindView(R.id.ic_home_to_do_active)
     ImageView icHomeToDoActive;
+
     public boolean votePermitted = false, meetingPermitted = false, todoPermitted = false;
 
     // would rather use good practice and not have empty constructor, but Android is Android
     public GroupQuickTaskModalFragment() {
+    }
+
+    public void setGroupParameters(String groupUid, String groupName) {
+        this.groupUid = groupUid;
+        this.groupName = groupName;
     }
 
     @Override
@@ -90,7 +101,7 @@ public class GroupQuickTaskModalFragment extends android.support.v4.app.DialogFr
     @OnClick(R.id.ic_home_vote_active)
     public void icHomeVoteActive() {
         if (votePermitted) {
-            Intent Vote = new Intent(getActivity(), NotBuiltActivity.class);
+            Intent Vote = MenuUtils.constructIntent(getContext(), CreateVote.class, groupUid, groupName);
             Vote.putExtra("title", "Vote");
             startActivity(Vote);
             getDialog().dismiss();

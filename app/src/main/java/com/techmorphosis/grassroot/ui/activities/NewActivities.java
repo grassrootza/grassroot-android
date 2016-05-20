@@ -71,7 +71,6 @@ public class NewActivities extends AppCompatActivity {
                 Intent vote=new Intent(NewActivities.this,CreateVote.class);
                // todo.putExtra("title","Vote");
                 startActivity(vote);
-
             }
         };
     }

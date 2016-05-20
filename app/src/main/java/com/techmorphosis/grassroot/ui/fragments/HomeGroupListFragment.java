@@ -377,6 +377,7 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment {
             public boolean onLongClick(View v) {
                 Group dialog_model = groupList.get(position);
                 GroupQuickTaskModalFragment dialog = new GroupQuickTaskModalFragment();
+                dialog.setGroupParameters(dialog_model.getId(), dialog_model.getGroupName());
 
                 Bundle args = new Bundle();
                 args.putBoolean("Meeting", dialog_model.getPermissions().contains("GROUP_PERMISSION_CREATE_GROUP_MEETING"));

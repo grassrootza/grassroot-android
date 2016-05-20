@@ -146,14 +146,11 @@ public class VoteNotifyMembers extends AppCompatActivity {
 
     }
 
-    private void doInBackground(String groupId)
-    {
-
-
+    private void doInBackground(String groupId) {
         String phoneNumber = SettingPreference.getuser_mobilenumber(this);
         String code = SettingPreference.getuser_token(this);
 
-        grassrootRestService.getApi().getGroupMembers(groupId,phoneNumber,code).
+        grassrootRestService.getApi().getGroupMembers(groupId,phoneNumber,code,true).
                 enqueue(new Callback<MemberList>() {
                     @Override
                     public void onResponse(Call<MemberList> call, Response<MemberList> response) {
@@ -163,9 +160,6 @@ public class VoteNotifyMembers extends AppCompatActivity {
                     }
                     @Override
                     public void onFailure(Call<MemberList> call, Throwable t) {
-
-
-
                         //  ErrorUtils.handleNetworkError(ViewVote.this, errorLayout, t);
                     }
                 });
