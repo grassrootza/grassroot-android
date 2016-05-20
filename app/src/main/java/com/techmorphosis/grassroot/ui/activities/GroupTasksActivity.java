@@ -199,7 +199,7 @@ public class GroupTasksActivity extends PortraitActivity implements TaskListList
                         if (response.isSuccessful()) {
                             TaskResponse taskResponse = response.body();
                             if (Constant.NO_GROUP_TASKS.equals(taskResponse.getMessage())) {
-                                Log.e(TAG, "No group activities!");
+                                // todo : make this go "up" to the home page, not empty group page
                                 startActivity(MenuUtils.constructIntent(GroupTasksActivity.this, NewTaskMenuActivity.class, groupUid, groupName));
                             } else {
                                 fullTasksList = taskResponse.getTasks();

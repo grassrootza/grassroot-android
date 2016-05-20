@@ -57,7 +57,7 @@ public class UserListAdapter extends RecyclerView.Adapter<UserListAdapter.ViewHo
     public void addMembers(List<Member> memberList) {
         Log.d(TAG, members.size() + " members so far, add these to adaptor: " + memberList.toString());
         members.addAll(memberList);
-        this.notifyItemRangeInserted(0, memberList.size() - 1);
+        this.notifyDataSetChanged(); // todo : as everywhere, optimize this, later
     }
 
     public List<Member> getMembers() {
@@ -70,11 +70,25 @@ public class UserListAdapter extends RecyclerView.Adapter<UserListAdapter.ViewHo
 
     public void removeMembers(final int[] positions) {
         for (int i = 0; i < positions.length; i++) {
-            Log.e(TAG, "removing member! at position : " + positions[i]);
             members.remove(positions[i]);
             notifyItemRemoved(positions[i]);
+            Log.e(TAG, "removed member! at position : " + positions[i] + ", remaining members : " + members.toString());
         }
-        notifyDataSetChanged();
+        // notifyDataSetChanged();
+    }
+
+    public void removeMembers(List<Member> membersToRemove) {
+        members.removeAll(membersToRemove);
+        this.notifyDataSetChanged();
+    }
+
+    public void removeMember(Member member) {
+        // this relies on hash code and equals implementation that relies on (nullable) contactId and memberUid ... keep eye out
+        int position = members.indexOf(member);
+        Log.e(TAG, "found the member! at this position: " + position);
+        members.remove(member);
+        if (position != -1)
+            this.notifyItemRemoved(position);
     }
 
     public void resetMembers(List<Member> memberList) {
@@ -112,6 +126,7 @@ public class UserListAdapter extends RecyclerView.Adapter<UserListAdapter.ViewHo
         Member thisMember = members.get(position);
         viewHolder.tvMemberName.setText(thisMember.getDisplayName());
         if (showSelected) {
+            Log.d(TAG, "binding member! member = " + thisMember.toString());
             viewHolder.ivSelectedIcon.setImageResource(thisMember.isSelected() ?
                     R.drawable.btn_checked : R.drawable.btn_unchecked);
         }

@@ -31,7 +31,9 @@ import com.techmorphosis.grassroot.utils.SettingPreference;
 import com.techmorphosis.grassroot.utils.UtilClass;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -43,8 +45,7 @@ import retrofit2.Response;
 
 import static butterknife.OnTextChanged.Callback.AFTER_TEXT_CHANGED;
 
-// subclass AppCompatActivity
-public class CreateGroupActivity extends PortraitActivity implements MemberListFragment.MemberListListener {
+public class CreateGroupActivity extends PortraitActivity implements MemberListFragment.MemberListListener, MemberListFragment.MemberListClickDismissListener {
 
     private String TAG = CreateGroupActivity.class.getSimpleName();
     private static final String regexForName = "[^a-zA-Z0-9 ]";
@@ -75,14 +76,11 @@ public class CreateGroupActivity extends PortraitActivity implements MemberListF
     @BindView(R.id.cg_txt_toolbar)
     TextView txtToolbar;
     @BindView(R.id.et_groupname)
-    EditText et_groupname; // complaints in latest library asking for TextInputEditText but that throws no class errors..
+    EditText et_groupname; // complaints in latest library asking for TextInputEditText but that throws no class errors, todo: fix
     @BindView(R.id.cg_iv_crossimage)
     ImageView ivCrossimage;
 
-    //all phonebooklist
-    private List<Member> membersFromContacts;
-    private List<Member> membersFromManual;
-
+    private Map<String, Member> mapMembersContacts;
     private MemberListFragment memberListFragment;
 
     private Snackbar snackBar;
@@ -105,9 +103,8 @@ public class CreateGroupActivity extends PortraitActivity implements MemberListF
 
     private void init() {
         grassrootRestService = new GrassrootRestService(this);
-        membersFromContacts = new ArrayList<>();
-        membersFromManual = new ArrayList<>();
         memberListFragment = new MemberListFragment();
+        mapMembersContacts = new HashMap<>();
     }
 
     private void setUpViews() {
@@ -150,7 +147,7 @@ public class CreateGroupActivity extends PortraitActivity implements MemberListF
         if (!PermissionUtils.contactReadPermissionGranted(this)) {
             PermissionUtils.requestReadContactsPermission(this);
         } else {
-            ArrayList<Contact> preSelectedList = new ArrayList<>(Contact.convertFromMembers(membersFromContacts, true));
+            ArrayList<Contact> preSelectedList = new ArrayList<>(Contact.convertFromMembers(memberListFragment.getSelectedMembers()));
             Log.e(TAG, "calling phone book, with these pre-selected: " + preSelectedList.toString());
             UtilClass.callPhoneBookActivity(this, preSelectedList, null);
         }
@@ -160,7 +157,7 @@ public class CreateGroupActivity extends PortraitActivity implements MemberListF
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (requestCode == Constant.alertAskForContactPermission && grantResults.length > 0) {
-            ArrayList<Contact> preSelectedList = new ArrayList<>(Contact.convertFromMembers(membersFromContacts, true));
+            ArrayList<Contact> preSelectedList = new ArrayList<>(Contact.convertFromMembers(memberListFragment.getSelectedMembers()));
             PermissionUtils.checkPermGrantedAndLaunchPhoneBook(this, grantResults[0], preSelectedList);
         }
     }
@@ -202,8 +199,7 @@ public class CreateGroupActivity extends PortraitActivity implements MemberListF
         String groupName = et_groupname.getText().toString().trim().replaceAll(regexForName, "");
         String groupDescription = et_group_description.getText().toString().trim();
 
-        List<Member> groupMembers = new ArrayList<>(membersFromContacts);
-        groupMembers.addAll(membersFromManual);
+        List<Member> groupMembers = memberListFragment.getSelectedMembers();
 
         grassrootRestService.getApi()
                 .createGroupNew(mobileNumber, code, groupName, groupDescription, groupMembers)
@@ -233,18 +229,34 @@ public class CreateGroupActivity extends PortraitActivity implements MemberListF
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
+        List<Member> membersToAdd = new ArrayList<>();
+        List<Member> membersToRemove = new ArrayList<>();
+
         if (resultCode == Activity.RESULT_OK && data != null) {
             if (requestCode == Constant.activityContactSelection) {
-                ArrayList<Contact> contactsSelected = data.getParcelableArrayListExtra(Constant.selectedContacts);
-                membersFromContacts = Contact.convertToMembers(contactsSelected, Constant.ROLE_ORDINARY_MEMBER);
+                final ArrayList<Contact> contactsAdded = data.getParcelableArrayListExtra(Constant.contactsAdded);
+                for (Contact c : contactsAdded) {
+                    Member m = new Member(c.selectedNumber, c.name, Constant.ROLE_ORDINARY_MEMBER, c.contact_ID);
+                    mapMembersContacts.put(c.contact_ID, m);
+                    membersToAdd.add(m);
+                }
+                final ArrayList<Contact> contactsRemoved = data.getParcelableArrayListExtra(Constant.contactsRemoved);
+                for (Contact c : contactsRemoved) {
+                    // todo : null pointer checks etc
+                    membersToRemove.add(mapMembersContacts.get(c.contact_ID));
+                }
             } else if (requestCode == Constant.activityManualMemberEntry) {
                 Member newMember = new Member(data.getStringExtra("selectedNumber"), data.getStringExtra("name"),
                         Constant.ROLE_ORDINARY_MEMBER, null);
-                membersFromManual.add(newMember);
+                membersToAdd.add(newMember);
             }
 
-            memberListFragment.setMemberList(membersFromContacts);
-            memberListFragment.addMembers(membersFromManual);
+            // todo : optimizing & cleaning these (e.g., going to call notify data changed twice ...)
+
+            if (!membersToAdd.isEmpty())
+                memberListFragment.addMembers(membersToAdd);
+            if (!membersToRemove.isEmpty())
+                memberListFragment.removeMembers(membersToRemove);
         }
     }
 
@@ -274,5 +286,15 @@ public class CreateGroupActivity extends PortraitActivity implements MemberListF
         // todo: use this to handle fragment setting up & observation, instead of create at start...
         memberListFragment.setShowSelected(true);
         memberListFragment.setCanDismissItems(true);
+    }
+
+    @Override
+    public void onMemberDismissed(int position, String memberUid) {
+        // todo : deal with this (maybe)
+    }
+
+    @Override
+    public void onMemberClicked(int position, String memberUid) {
+        // todo : deal with this
     }
 }

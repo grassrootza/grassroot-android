@@ -69,14 +69,14 @@ public class Contact implements Parcelable {
     }
 
     // todo: optimize the hell out of this
-    public static List<Contact> convertFromMembers(List<Member> members, boolean defaultSelected) {
+    public static List<Contact> convertFromMembers(List<Member> members) {
         List<Contact> contacts = new ArrayList<>();
         for (final Member m : members) {
             Contact c = new Contact();
             c.selectedNumber = m.getPhoneNumber();
             c.numbers = Collections.singletonList(m.getPhoneNumber());
             c.name = m.getDisplayName();
-            c.isSelected = defaultSelected;
+            c.isSelected = m.isSelected();
             c.contact_ID = m.getContactId();
             contacts.add(c);
         }
@@ -90,12 +90,12 @@ public class Contact implements Parcelable {
 
         Contact contact = (Contact) o;
 
-        return UtilClass.formatNumberToE164(selectedNumber).equals(UtilClass.formatNumberToE164(contact.selectedNumber));
+        return contact_ID != null ? contact_ID.equals(contact.contact_ID) : contact.contact_ID == null;
     }
 
     @Override
     public int hashCode() {
-        return selectedNumber.hashCode();
+        return contact_ID != null ? contact_ID.hashCode() : 0;
     }
 
     @Override

@@ -18,7 +18,8 @@ public class Constant {
 
     public static final String filteredList = "filteredList";
 
-    public static final String selectedContacts = "selectedContacts";
+    public static final String contactsAdded = "contactsAdded";
+    public static final String contactsRemoved = "contactsRemoved";
     public static final String doNotDisplayContacts = "doNotDisplayContacts";
 
     public static final String GROUPUID_FIELD = "groupUid";
@@ -43,6 +44,7 @@ public class Constant {
     public static final int activitySelectNumberFromContact = 3;
     public static final int activityAddMembersToGroup = 4;
     public static final int activityRemoveMembers = 5;
+
 
     public static final int alertAskForContactPermission = 91;
 
