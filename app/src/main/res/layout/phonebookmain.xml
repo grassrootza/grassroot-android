@@ -1,3 +1,4 @@
+
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
                 xmlns:tools="http://schemas.android.com/tools"
                 android:layout_width="match_parent"
@@ -144,17 +145,17 @@
         android:layout_height="32dp"
         android:background="@color/primaryColor"
         android:layout_centerInParent="true"
-        android:visibility="gone"
+        android:visibility="visible"
         ></com.techmorphosis.grassroot.utils.ProgressBarCircularIndeterminate>
 
     <TextView
         android:id="@+id/txt_prg_pb"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/prg_message"
+        android:text="@string/cg_contacs_loading"
         android:layout_below="@+id/prg_pb"
         android:layout_centerHorizontal="true"
-        android:visibility="gone"
+        android:visibility="visible"
         />
 
 </RelativeLayout>

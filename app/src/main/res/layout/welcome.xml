@@ -37,7 +37,9 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:layout_weight="0.75">
+            android:layout_weight="0.75"
+            android:layout_below="@+id/toolbar"
+            >
 
             <RelativeLayout
                 android:layout_width="match_parent"
@@ -48,7 +50,7 @@
                     android:id="@+id/pager"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:layout_below="@id/toolbar" />
+                     />
 
                 <com.viewpagerindicator.CirclePageIndicator
                     android:id="@+id/indicator"
@@ -57,15 +59,12 @@
                     android:layout_height="30dp"
                     android:layout_alignParentLeft="true"
                     android:layout_alignParentStart="true"
-                    android:layout_below="@+id/toolbar"
                     android:layout_marginTop="165dp"
                     android:padding="15dp"
                     app:fillColor="#fff"
                     app:pageColor="@android:color/transparent"
                     app:radius="05dp"
                     app:strokeColor="@color/primaryColorDark" />
-
-
 
 
             </RelativeLayout>

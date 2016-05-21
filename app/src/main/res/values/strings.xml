@@ -1,7 +1,22 @@
 <resources>
     <string name="app_name">Grassroot</string>
 
-    <string name="hello_world">Hello world!</string>
+    <!--GCM-->
+    <string name="sender_id">681116473953</string>
+    <string name="Server_API_Key">AIzaSyBFEX10lX_KITAXL0hifg_M1ctRd4ACG2A</string>
+    <string name="Android_API_Key">AIzaSyCQIcVV-FKNkHTJaXJdSqfeVUFvqAHYfSs</string>
+    <string name="Testing_Key">AIzaSyAb7cyP_Hl069fA1dD4AITDDX3_3XCshs8</string>
+    <string name="Production_Key">AIzaSyAbcDXh1pfh3PsJU-Hprm9aEKhVcUBz3Rg</string>
+
+    <string name="gcm_send_message">Token retrieved and sent to server! You can now use gcmsender to
+        send downstream messages to this app.</string>
+    <string name="registering_message">Generating InstanceID token...</string>
+    <string name="token_error_message">An error occurred while either fetching the InstanceID token,
+        sending the fetched token to the server or subscribing to the PubSub topic. Please try
+        running the sample again.</string>
+
+
+
     <string name="action_settings">Settings</string>
     <string name="title_activity_homescreen">Homescreen</string>
     <string name="title_activity_join__request">Join_Request</string>
@@ -71,6 +86,11 @@
     <string name="four_title">Vote</string>
     <string name="five_title">Act</string>
 
+    <string name="txt_welcome">Welcome to <b>Grassroot</b></string>
+    <string name="txt_getstart">To get started</string>
+
+
+
     <!--content-->
     <string name="o_content">Meet, vote, act</string>
     <string name="t_content">Create, join, and connect groups, as many and as large as you’d like</string>
@@ -81,6 +101,11 @@
     <!--button-->
     <string name="joingroup">REQUEST TO JOIN A GROUP</string>
     <string name="startgroup">START A GROUP</string>
+
+    <string name="new_joingroup">Join Group</string>
+    <string name="new_startgroup">Create Group</string>
+
+
 
     <!-- -&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;-->
 
@@ -110,6 +135,7 @@
     <string name="cg_group_description">Group description</string>
     <string name="cg_Save">Save</string>
     <string name="cg_title_contact">Current group members</string>
+    <string name="cg_contacs_loading">Scanning all your contacts....</string>
 
     <string name="action_search">Search...</string>
     <string name="cg_dialog_title">Select any one number</string>
@@ -269,6 +295,9 @@
     <string name="cv_et_desc">Edit Description</string>
     <string name="cv_config_alerts_title">Configure alerts</string>
     <string name="cv_notify_group_title">Notify entire group</string>
+    <string name="cv_notify_member_prefix">You have selected</string>
+    <string name="cv_notify_member_suffix_one">member</string>
+    <string name="cv_notify_member_suffix_two">members</string>
 
     <!--alerts-->
     <string name="one_day">Send reminder <b>1 day</b> ahead</string>
@@ -283,6 +312,7 @@
     <string name="nm_title_error_msg">Please enter title</string>
     <string name="nm_description_error_msg">Please enter Description</string>
     <string name="nm_closingtime_msg">Please enter Closing Time</string>
+    <string name="nm_vote_members_msg">Please select atleast one members</string>
 
     <!--end-->
 

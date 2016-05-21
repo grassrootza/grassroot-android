@@ -320,6 +320,8 @@ public class Join_Request extends PortraitActivity implements OnClickListener{
                             if ((volleyError instanceof NoConnectionError)|| (volleyError instanceof TimeoutError)) {
                                 error_flag1 = 1;
                                 postExecute1("");
+
+
                             }
                             else if (volleyError instanceof ServerError)
                             {
@@ -536,6 +538,7 @@ public class Join_Request extends PortraitActivity implements OnClickListener{
                     public void onError(VolleyError volleyError) {
 
                         if ((volleyError instanceof NoConnectionError)|| (volleyError instanceof TimeoutError)) {
+                            Log.e(TAG,"volleyError is  " + volleyError.getMessage());
                             error_flag2 = 1;
                             postExecute2("");
                         }

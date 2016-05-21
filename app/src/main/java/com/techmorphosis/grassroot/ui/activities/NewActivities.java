@@ -5,13 +5,12 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
-import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.ImageView;
 
 import com.techmorphosis.grassroot.R;
 
-public class NewActivities extends AppCompatActivity {
+public class NewActivities extends PortraitActivity {
     private ImageView ivBack;
     @Override
     protected void onCreate(Bundle savedInstanceState) {

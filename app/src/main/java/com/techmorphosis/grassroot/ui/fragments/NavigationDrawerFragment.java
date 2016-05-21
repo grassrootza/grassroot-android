@@ -179,22 +179,15 @@ public class NavigationDrawerFragment extends Fragment {
     }
 
 
-    public  void updateNotificationDrawers(int position)
+    public  void clearNotificationDrawersSelection()
     {
 
-        displayName.setText(SettingPreffrence.getuser_name(getActivity()));
+        //displayName.setText(SettingPreffrence.getuser_name(getActivity()));
 
-        for (int i = 0; i < draweritems.size(); i++) {
+        for (int i = 0; i < draweritems.size(); i++)
+        {
             NavDrawerItem item= (NavDrawerItem) draweritems.get(i);
-            if (position==i)
-            {
-                item.setIsChecked(true);
-            }
-            else
-            {
-                item.setIsChecked(false);
-            }
-
+            item.setIsChecked(false);
         }
         drawerAdapter.notifyDataSetChanged();
     }

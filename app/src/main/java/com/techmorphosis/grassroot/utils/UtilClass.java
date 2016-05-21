@@ -14,7 +14,13 @@ import android.view.View;
 import android.widget.Toast;
 
 import com.techmorphosis.grassroot.ui.DialogFragment.AlertDialogFragment;
+import com.techmorphosis.grassroot.ui.DialogFragment.NotificationDialog;
 import com.techmorphosis.grassroot.utils.listener.AlertDialogListener;
+
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Locale;
+import java.util.TimeZone;
 
 // Referenced classes of package com.techmorphosis.Utils:
 //            AlertDialogListener, DeliveryScheduleListner
@@ -64,6 +70,21 @@ public class UtilClass
 
     }
 
+    public NotificationDialog showAlertDialog1(android.support.v4.app.FragmentManager fragmentmanager, String s, String s1, String s2, String s3, boolean flag, AlertDialogListener alertdialoglistener)
+    {
+        NotificationDialog ss1 = NotificationDialog.newInstance(s, s1, s2, s3, flag);
+        ss1.setListener(alertdialoglistener);
+        ss1.setCancelable(false);
+        ss1.show(fragmentmanager, null);
+        return ss1;
+    }
+
+    public  String timeZone()
+    {
+        Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("GMT"), Locale.getDefault());
+        String   timeZone = new SimpleDateFormat("Z").format(calendar.getTime());
+        return timeZone.substring(0, 3) + ":"+ timeZone.substring(3, 5);
+    }
 
 
 

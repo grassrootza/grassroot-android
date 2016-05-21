@@ -595,7 +595,13 @@ public class Group_Homepage extends android.support.v4.app.Fragment implements V
         String searchwords = s.toLowerCase(Locale.getDefault());
 
 
-        group_homepageAdapter.filter(searchwords);
+        try {
+            if (group_homepageAdapter.getItemCount()>0) {
+                group_homepageAdapter.filter(searchwords);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
 
     }

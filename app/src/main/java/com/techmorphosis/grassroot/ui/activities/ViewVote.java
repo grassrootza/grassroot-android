@@ -377,6 +377,13 @@ public class ViewVote extends PortraitActivity implements View.OnClickListener{
     {
         Log.e(TAG, "setView");
 
+    /*    try {
+          Log.e(TAG, "convertW3CTODeviceTimeZone(deadlineISO) is " + convertW3CTODeviceTimeZone(deadlineISO));
+            ;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+*/
         txtVvTitle.setText(title);
         txtVvGroupname.setText("Posted by " + name);
         try {

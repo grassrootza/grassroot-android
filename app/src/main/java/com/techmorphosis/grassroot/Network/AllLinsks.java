@@ -26,6 +26,8 @@ public class AllLinsks
     public static final String ProfileSetting = DOMAIN2 + PREFIX1 + "profile/settings/";
     public static final String UpdateProfileSetting = DOMAIN2 + PREFIX1 + "profile/settings/update/";
     public static final String CreateVote = DOMAIN2 + "vote/create/";
-    public static final String Votemembers =  DOMAIN2 + PREFIX2 + "members/";
+    public static final String Votemembers =  DOMAIN2 + PREFIX2 + "members/list/";
     public static final String notificationList = DOMAIN2 + "notification/list/";
+    public static final String gcm_register = DOMAIN2 + "gcm/register/";
+   public static final String gcm_deregister = DOMAIN2 + "gcm/deregister/";
 }
