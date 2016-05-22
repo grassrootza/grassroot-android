@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.os.SystemClock;
 import android.support.design.widget.Snackbar;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -36,14 +37,9 @@ import com.techmorphosis.grassroot.utils.Constant;
 import com.techmorphosis.grassroot.utils.ErrorUtils;
 import com.techmorphosis.grassroot.utils.MenuUtils;
 import com.techmorphosis.grassroot.utils.SettingPreference;
-import com.techmorphosis.grassroot.utils.UtilClass;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.Date;
+import java.util.List;
 import java.util.Locale;
 
 import butterknife.BindView;
@@ -67,8 +63,11 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment {
     @BindView(R.id.iv_ghp_sort)
     ImageView ivGhpSort;
 
+    @BindView(R.id.gl_swipe_refresh)
+    SwipeRefreshLayout glSwipeRefresh;
     @BindView(R.id.recycler_view)
     RecyclerView rcGroupList;
+
     @BindView(R.id.error_layout)
     View errorLayout;
     @BindView(R.id.im_no_results)
@@ -93,11 +92,15 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment {
     RelativeLayout rlSearch;
     @BindView(R.id.rl_simple)
     RelativeLayout rlSimple;
+
     @BindView(R.id.progressBar)
     ProgressBar mProgressBar;
 
     private GroupListAdapter groupListRowAdapter;
-    private ArrayList<Group> groupList;
+    private List<Group> userGroups;
+
+    private String mobileNumber;
+    private String userCode;
 
     public boolean date_click = false, role_click = false, defaults_click = false;
 
@@ -132,14 +135,18 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment {
         super.onCreate(savedInstanceState);
         init();
         setUpRecyclerView();
-        updateAllUserGroups();
+        setUpSwipeRefresh();
+        fetchGroupList();
     }
 
     private void init() {
         grassrootRestService = new GrassrootRestService(this.getContext());
-        groupList = new ArrayList<>();
+        userGroups = new ArrayList<>();
         ivGhpSort.setEnabled(false);
         ivGhpSearch.setEnabled(false);
+
+        mobileNumber = SettingPreference.getuser_mobilenumber(getActivity());
+        userCode = SettingPreference.getuser_token(getActivity());
 
         menu1.setOnMenuToggleListener(new FloatingActionMenu.OnMenuToggleListener() {
             @Override
@@ -154,22 +161,19 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment {
      * Method executed to retrieve and populate list of groups. Note: this does not handle the absence
      * of a connection very well, at all. Will probably need to rethink.
      */
-    private void updateAllUserGroups() {
+    private void fetchGroupList() {
 
-        progressShow();
+        mProgressBar.setVisibility(View.VISIBLE);
 
-        String mobileNumber = SettingPreference.getuser_mobilenumber(getActivity());
-        String code = SettingPreference.getuser_token(getActivity());
-
-        Call<GroupResponse> call = grassrootRestService.getApi().getUserGroups(mobileNumber, code);
+        Call<GroupResponse> call = grassrootRestService.getApi().getUserGroups(mobileNumber, userCode);
         call.enqueue(new Callback<GroupResponse>() {
             @Override
             public void onResponse(Call<GroupResponse> call, Response<GroupResponse> response) {
                 if (response.isSuccessful()) {
                     GroupResponse groups = response.body();
-                    groupList.addAll(groups.getGroups());
+                    userGroups.addAll(groups.getGroups());
                     rcGroupList.setVisibility(View.VISIBLE);
-                    groupListRowAdapter.addData(groupList);
+                    groupListRowAdapter.addData(userGroups);
                     ivGhpSearch.setEnabled(true);
                     ivGhpSort.setEnabled(true);
                     mProgressBar.setVisibility(View.INVISIBLE);
@@ -192,11 +196,35 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment {
         });
     }
 
+    /*
+    Separating this method from the above, because we will probably want it to call some kind of diff
+    in time, rather than doing a full refresh, and don't need to worry about progress bar, etc
+     */
+    public void refreshGroupList() {
+        grassrootRestService.getApi().getUserGroups(mobileNumber, userCode).enqueue(new Callback<GroupResponse>() {
+            @Override
+            public void onResponse(Call<GroupResponse> call, Response<GroupResponse> response) {
+                if (response.isSuccessful()) {
+                    Log.i(TAG, "Refreshing Group List ... call successful");
+                    groupListRowAdapter.setGroupList(response.body().getGroups());
+                } else {
+                    Log.e(TAG, "Refreshing group list ... error! Here is the code: " + response.errorBody());
+                }
+                glSwipeRefresh.setRefreshing(false);
+            }
+
+            @Override
+            public void onFailure(Call<GroupResponse> call, Throwable t) {
+                ErrorUtils.handleNetworkError(getContext(), rlGhpRoot, t);
+            }
+        });
+    }
+
     public void updateSingleGroup(final int position, final String groupUid) {
         if (position == -1)
             throw new UnsupportedOperationException("ERROR! This should not be called without a valid position");
 
-        Group groupUpdated = groupList.get(position);
+        Group groupUpdated = userGroups.get(position);
         if (groupUpdated.getId().equals(groupUid)) {
             String mobileNumber = SettingPreference.getuser_mobilenumber(getContext());
             String code = SettingPreference.getuser_token(getContext());
@@ -208,7 +236,7 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment {
                             // todo : consider shuffling this group to the top of the list
                             Group group = response.body().getGroups().get(0);
                             Log.e(TAG, "Group updated, has " + group.getGroupMemberCount() + " members");
-                            groupList.set(position, group);
+                            userGroups.set(position, group);
                             groupListRowAdapter.updateGroup(position, group);
                         }
 
@@ -222,13 +250,11 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment {
         }
     }
 
-    private void progressShow() {
-        mProgressBar.setVisibility(View.VISIBLE);
-        rcGroupList.setVisibility(View.INVISIBLE);
-        errorLayout.setVisibility(View.GONE);
-        imNoInternet.setVisibility(View.GONE);
-        imServerError.setVisibility(View.GONE);
-        imNoResults.setVisibility(View.GONE);
+    // called after creating a group
+    public void insertGroup(final int position) {
+        // todo : actually add it, for now, just do a refresh
+        Log.e(TAG, "refreshing groups!");
+        refreshGroupList();
     }
 
     private void setUpRecyclerView() {
@@ -253,8 +279,8 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment {
                             e.printStackTrace();
                         }
                         Intent blank = new Intent(getActivity(), GroupTasksActivity.class);
-                        blank.putExtra("groupid", groupList.get(position).getId());
-                        blank.putExtra("groupName", groupList.get(position).getGroupName());
+                        blank.putExtra("groupid", userGroups.get(position).getId());
+                        blank.putExtra("groupName", userGroups.get(position).getGroupName());
                         startActivity(blank);
                         return false;
                     }
@@ -267,11 +293,44 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment {
         rcGroupList.addOnItemTouchListener(swipeDeleteTouchListener);
     }
 
+    private void setUpSwipeRefresh() {
+        glSwipeRefresh.setColorSchemeColors(getResources().getColor(R.color.primaryColor));
+        glSwipeRefresh.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                refreshGroupList();
+            }
+        });
+    }
+
     @OnTextChanged(value = R.id.et_search, callback = OnTextChanged.Callback.AFTER_TEXT_CHANGED)
     public void searchStringChanged(CharSequence s) {
         String str = s.length() > 0 ? et_search.getText().toString() : "";
         String searchwords = str.toLowerCase(Locale.getDefault());
-        groupListRowAdapter.filter(searchwords);
+        filter(searchwords);
+    }
+
+    private void filter(String searchwords) {
+        //first clear the current data
+        Log.e(TAG, "filter search_string is " + searchwords);
+
+        if (searchwords.equals("")) {
+            groupListRowAdapter.setGroupList(userGroups);
+        } else {
+            final List<Group> filteredGroups = new ArrayList<>();
+
+            for (Group group : userGroups) {
+                if (group.getGroupName().trim().toLowerCase(Locale.getDefault()).contains(searchwords)) {
+                    Log.e(TAG,"model.groupName.trim() " + group.getGroupName().trim().toLowerCase(Locale.getDefault()));
+                    Log.e(TAG,"searchwords is " + searchwords);
+                    filteredGroups.add(group);
+                } else {
+                    //Log.e(TAG,"not found");
+                }
+            }
+
+            groupListRowAdapter.setGroupList(filteredGroups);
+        }
     }
 
     @OnClick(R.id.iv_ghp_drawer)
@@ -351,12 +410,21 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment {
     public void icFabStartGroup() {
         menu1.close(true);
         Intent icFabStartGroup=new Intent(getActivity(), CreateGroupActivity.class);
-        startActivity(icFabStartGroup);
+        startActivityForResult(icFabStartGroup, Constant.activityCreateGroup);
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (resultCode == Activity.RESULT_OK && requestCode == Constant.activityCreateGroup) {
+            Log.e(TAG, "got the result in the fragment, code : " + requestCode);
+            insertGroup(0);
+        }
     }
 
     @OnClick({R.id.im_no_results, R.id.im_no_internet,R.id.im_server_error})
     public void onClick() {
-        updateAllUserGroups();
+        fetchGroupList();
     }
 
     public void addGroupRowShortClickListener(View element, final int position) {
@@ -365,7 +433,7 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment {
             public void onClick(View v) {
                 menu1.close(true);
                 Intent openGroupTasks = MenuUtils.constructIntent(getActivity(), GroupTasksActivity.class,
-                        groupList.get(position).getId(), groupList.get(position).getGroupName());
+                        userGroups.get(position).getId(), userGroups.get(position).getGroupName());
                 startActivity(openGroupTasks);
             }
         });
@@ -375,7 +443,7 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment {
         element.setOnLongClickListener(new View.OnLongClickListener() {
             @Override
             public boolean onLongClick(View v) {
-                Group dialog_model = groupList.get(position);
+                Group dialog_model = userGroups.get(position);
                 GroupQuickTaskModalFragment dialog = new GroupQuickTaskModalFragment();
                 dialog.setGroupParameters(dialog_model.getId(), dialog_model.getGroupName());
 
@@ -394,7 +462,7 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment {
         element.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Group grpMembership = groupList.get(position);
+                Group grpMembership = userGroups.get(position);
                 GroupQuickMemberModalFragment dialog = new GroupQuickMemberModalFragment();
 
                 Bundle args = new Bundle();

@@ -15,10 +15,9 @@ import com.techmorphosis.grassroot.services.model.Group;
 import com.techmorphosis.grassroot.ui.fragments.HomeGroupListFragment;
 
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
-import java.util.Locale;
+import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -31,29 +30,23 @@ public class GroupListAdapter extends RecyclerView.Adapter<GroupListAdapter.GHP_
 
     private final HomeGroupListFragment activity;
 
-    // todo: figure out if we can use new SortedList, problem is doesn't seem to enable comparator switching (ugh, Android)
-
-    ArrayList<Group> groups;
-    ArrayList<Group> oldGroupModel;
+    List<Group> displayedGroups;
 
     private static final SimpleDateFormat outputSDF = new SimpleDateFormat("EEE, d MMM, ''yy");
 
-    public GroupListAdapter(ArrayList<Group> groups, HomeGroupListFragment activity) {
-        this.groups = groups;
+    public GroupListAdapter(List<Group> groups, HomeGroupListFragment activity) {
+        this.displayedGroups = groups;
         this.activity = activity;
-        this.oldGroupModel = new ArrayList<>(); // todo :figure out what this is for, if anything
     }
 
+    // todo: consider moving these back out to fragment (esp given notifyDataSet being bad..)
     public void sortByDate() {
-        Log.e(TAG, "groupListAdapter: sorting by date!");
-        Collections.sort(groups, Collections.reverseOrder()); // since Date entity sorts earliest to latest
+        Collections.sort(displayedGroups, Collections.reverseOrder()); // since Date entity sorts earliest to latest
         notifyDataSetChanged();
     }
 
     public void sortByRole() {
-        // todo: consider moving this back out to fragment (esp given notifyDataSet being bad..)
-        Log.e(TAG, "groupListAdapter: sorting by role!");
-        Collections.sort(groups, Collections.reverseOrder(Group.GroupRoleComparator)); // as above
+        Collections.sort(displayedGroups, Collections.reverseOrder(Group.GroupRoleComparator)); // as above
         notifyDataSetChanged();
     }
 
@@ -69,7 +62,7 @@ public class GroupListAdapter extends RecyclerView.Adapter<GroupListAdapter.GHP_
     public void onBindViewHolder(GHP_ViewHolder holder, int position) {
 
         holder.itemView.setLongClickable(true);
-        Group group = groups.get(position);
+        Group group = displayedGroups.get(position);
 
         final String groupOrganizerDescription = "Organizer: " + group.getGroupCreator();
         final String groupDescription = group.getDescription();
@@ -92,13 +85,9 @@ public class GroupListAdapter extends RecyclerView.Adapter<GroupListAdapter.GHP_
         holder.profileV2.setVisibility(View.VISIBLE);
         holder.profileV2.setText("+" + String.valueOf(group.getGroupMemberCount()));
 
-        String displayDateTime;
-
         Date date = group.getDate();
-        displayDateTime = date.after(new Date()) ? "Next event: " + outputSDF.format(date)
-                : "Last event: " + outputSDF.format(date);
-
-        holder.datetime.setText(displayDateTime);
+        String datePrefix = date.after(new Date()) ? "Next event: "  : "Last event: ";
+        holder.datetime.setText(datePrefix + outputSDF.format(date));
 
         activity.addGroupRowLongClickListener(holder.cardView, position);
         activity.addGroupRowShortClickListener(holder.cardView, position);
@@ -108,54 +97,31 @@ public class GroupListAdapter extends RecyclerView.Adapter<GroupListAdapter.GHP_
 
     @Override
     public int getItemCount() {
-        return groups.size();
+        return displayedGroups.size();
     }
 
-    public void addData(ArrayList<Group> groupList){
-        oldGroupModel = new ArrayList<>();
-        groups.addAll(groupList);
-        oldGroupModel.addAll(groupList);
+    public void addData(List<Group> groupList){
+        Log.e(TAG, "adding data to group list! number of groups: " + groupList.size());
+        displayedGroups.addAll(groupList);
         this.notifyItemRangeInserted(0, groupList.size() - 1);
     }
 
     // todo: this might not be the best way to do this (maybe rethink whole list structure/handling etc)
     public void updateGroup(int position, Group group) {
-        groups.set(position, group);
+        displayedGroups.set(position, group);
         notifyItemChanged(position);
         notifyDataSetChanged(); // for some reason, the line above calls onBindViewHolder, but doesn't rewrite the text view!!
     }
 
-    public void filter(String searchwords) {
-        //first clear the current data
-        groups.clear();
-        Log.e(TAG, "filter search_string is " + searchwords);
-
-        if (searchwords.equals("")) {
-            groups.addAll(oldGroupModel);
-        } else {
-            for (Group group:oldGroupModel) {
-                if (group.getGroupName().trim().toLowerCase(Locale.getDefault()).contains(searchwords)) {
-                    Log.e(TAG,"model.groupName.trim() " + group.getGroupName().trim().toLowerCase(Locale.getDefault()));
-                    Log.e(TAG,"searchwords is " + searchwords);
-                    groups.add(group);
-                } else {
-                    //Log.e(TAG,"not found");
-                }
-            }
-        }
-        notifyDataSetChanged();
-
+    public void addGroup(int position, Group group) {
+        displayedGroups.add(position, group);
+        notifyItemInserted(position);
     }
 
-    public void clearGroups() {
-        int size = this.groups.size();
-        if (size > 0) {
-            for (int i = 0; i < size; i++) {
-                groups.remove(0);
-            }
-
-            this.notifyItemRangeRemoved(0, size);
-        }
+    public void setGroupList(List<Group> groupList) {
+        displayedGroups.clear();
+        displayedGroups.addAll(groupList);
+        notifyDataSetChanged(); // calling item range inserted causes a strange crash (related to main/background threads, I think)
     }
 
     public class GHP_ViewHolder extends RecyclerView.ViewHolder {

@@ -22,6 +22,7 @@ import com.techmorphosis.grassroot.R;
 import com.techmorphosis.grassroot.models.Contact;
 import com.techmorphosis.grassroot.services.GrassrootRestService;
 import com.techmorphosis.grassroot.services.model.GenericResponse;
+import com.techmorphosis.grassroot.services.model.Group;
 import com.techmorphosis.grassroot.services.model.Member;
 import com.techmorphosis.grassroot.ui.fragments.MemberListFragment;
 import com.techmorphosis.grassroot.utils.Constant;
@@ -206,11 +207,12 @@ public class CreateGroupActivity extends PortraitActivity implements MemberListF
                 .enqueue(new Callback<GenericResponse>() {
                     @Override
                     public void onResponse(Call<GenericResponse> call, Response<GenericResponse> response) {
-                        hideProgress(); // note : this is leaking...
                         if (response.isSuccessful()) {
-                            SettingPreference.setPrefHasSaveClicked(CreateGroupActivity.this, true);
-                            snackBar(CreateGroupActivity.this, getResources().getString(R.string.GROUP_CREATED), "", Snackbar.LENGTH_SHORT);
-                            SettingPreference.setisHasgroup(CreateGroupActivity.this, true);
+                            progressDialog.hide(); // this is leaking ...
+                            SettingPreference.setisHasgroup(getApplicationContext(), true);
+                            Intent result = new Intent();
+                            // todo : add the created group to the intent
+                            setResult(RESULT_OK);
                             finish();
                         } else {
                             // todo: process and handle error, if any (shouldn't be)
@@ -265,7 +267,6 @@ public class CreateGroupActivity extends PortraitActivity implements MemberListF
     }
 
     private void hideProgress(){
-        progressDialog.hide();
     }
 
     private void snackBar(Context applicationContext, String message, String Action_title, int lengthShort) {

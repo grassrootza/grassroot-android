@@ -39,11 +39,15 @@ public class Constant {
 
     public static final SimpleDateFormat isoDateTimeSDF = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
 
+    /**
+     * RESULT CODS FOR ACTIVITIES
+     */
     public static final int activityContactSelection = 1;
     public static final int activityManualMemberEntry = 2;
     public static final int activitySelectNumberFromContact = 3;
     public static final int activityAddMembersToGroup = 4;
     public static final int activityRemoveMembers = 5;
+    public static final int activityCreateGroup = 6;
 
 
     public static final int alertAskForContactPermission = 91;
