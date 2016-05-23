@@ -1,0 +1,35 @@
+{
+  "project_info": {
+    "project_number": "681116473953",
+    "project_id": "grassroot-1265"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:681116473953:android:2ce6bba7eeb6f212",
+        "android_client_info": {
+          "package_name": "com.techmorphosis.grassroot"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCQIcVV-FKNkHTJaXJdSqfeVUFvqAHYfSs"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 1
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

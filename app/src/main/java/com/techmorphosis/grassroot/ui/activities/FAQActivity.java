@@ -18,7 +18,7 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- * Created by karthik on 16-09-2015.
+ * Created by Ravi on 16-09-2015.
  */
 public class FAQActivity extends PortraitActivity implements View.OnClickListener {
 
@@ -108,7 +108,7 @@ public class FAQActivity extends PortraitActivity implements View.OnClickListene
 
 
 
-        faqAdapter = new FAQAdapter(getApplicationContext(), listDataHeader, listDataChild);
+        faqAdapter = new FAQAdapter(this, listDataHeader, listDataChild);
         faqListview.setAdapter(faqAdapter);
 
 

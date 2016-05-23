@@ -104,7 +104,10 @@ public class ProfileSettings extends PortraitActivity implements EditItemDialog.
                                 Log.e(TAG, "ErrorListenerVolley inside " + volleyError);
 
                                 if (volleyError instanceof NoConnectionError || volleyError instanceof TimeoutError) {
+
+
                                     showSnackbar(getString(R.string.No_network), snackbar.LENGTH_INDEFINITE, getString(R.string.Retry), "Profile");
+
                                 } else if (volleyError instanceof ServerError) {
                                     try {
                                         String response = new String(volleyError.networkResponse.data, "utf-8");
@@ -159,7 +162,10 @@ public class ProfileSettings extends PortraitActivity implements EditItemDialog.
                             @Override
                             public void onError(VolleyError volleyError) {
                                 if (volleyError instanceof NoConnectionError || volleyError instanceof TimeoutError) {
-                                    showSnackbar(getString(R.string.No_network), snackbar.LENGTH_INDEFINITE, getString(R.string.Retry), "Profile");
+                                    //showSnackbar(getString(R.string.No_network), snackbar.LENGTH_INDEFINITE, getString(R.string.Retry), "Profile");
+
+                                    showSnackbar(getString(R.string.No_network), snackbar.LENGTH_INDEFINITE, getString(R.string.Retry), "Update");
+
                                 } else if (volleyError instanceof ServerError) {
                                     try {
                                         String response = new String(volleyError.networkResponse.data, "utf-8");

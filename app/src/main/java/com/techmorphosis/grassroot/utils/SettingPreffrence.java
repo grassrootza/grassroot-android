@@ -21,6 +21,7 @@ public class SettingPreffrence {
     private static final String IS_LOGIN = "IsLoggedIn";
     private static final String IS_RATEUS = "IsRateus";
     private static final String IS_RATEUSCOUNTER = "IsRateuscounter";
+    private static final String IS_NOTIFICATIONCOUNTER = "IsNotifcationcounter";
     private static final String IS_HASGROUP = "IsHasgroup";
 
 
@@ -38,7 +39,8 @@ public class SettingPreffrence {
     private static final String PREF_Call_Vote = "Pref_Call_Vote_clicked";
 
 
-
+    private static final String PREF_GCM_token = "Pref_Gcm_token";
+    private static final String PREF_GCM_SENT_TOKEN_TO_SERVER = "pref_Gcm_token_to_server";
 
 
     private static final String PREF_Phone_Token = "Pref_phone_token";
@@ -51,9 +53,11 @@ public class SettingPreffrence {
         return context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
     }
 
+
     /**
      * Create login session
      */
+
 
     public static boolean clearAll(Context context)
     {
@@ -202,5 +206,44 @@ public class SettingPreffrence {
         return getPref(context).getBoolean(PREF_Call_Vote,false);
     }
 
+
+
+                        /*GCM*/
+    public static void setPREF_Gcmtoken(Context context, String value) {
+        getPref(context).edit().putString(PREF_GCM_token, value).apply();
+    }
+
+
+    public static String getPREF_Gcmtoken(Context context) {
+        return getPref(context).getString(PREF_GCM_token, "");
+    }
+
+    public static void setPrefGcmSentTokenToServer(Context context, Boolean value) {
+        getPref(context).edit().putBoolean(PREF_GCM_SENT_TOKEN_TO_SERVER, value).apply();
+    }
+
+
+    public static Boolean getPrefGcmSentTokenToServer(Context context) {
+        return getPref(context).getBoolean(PREF_GCM_SENT_TOKEN_TO_SERVER, false);
+    }
+
+    public static void setIsNotificationcounter(Context context, Integer value) {
+
+        getPref(context).edit().putInt(IS_NOTIFICATIONCOUNTER, value).apply();
+    }
+
+    public static int getIsNotificationcounter(Context context) {
+        return getPref(context).getInt(IS_NOTIFICATIONCOUNTER, 0);
+    }
+
+
+    public static void setPREF_OTP(Context context, String value) {
+
+        getPref(context).edit().putString(PREF_OTP, value).apply();
+    }
+
+    public static String getPREF_OTP(Context context) {
+        return getPref(context).getString(PREF_OTP, "");
+    }
 
 }

@@ -22,7 +22,9 @@ import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
+import com.android.volley.AuthFailureError;
 import com.android.volley.NoConnectionError;
+import com.android.volley.ServerError;
 import com.android.volley.TimeoutError;
 import com.android.volley.VolleyError;
 import com.github.clans.fab.FloatingActionButton;
@@ -274,8 +276,8 @@ public class Create_Group extends PortraitActivity {
 
     private void validate_allFields()
     {
-
-        if ( !(TextUtils.isEmpty(et_groupname.getText().toString().trim().replaceAll("[^a-zA-Z0-9]", "")) ))
+          // Log.e(TAG,"$v2 " + et_groupname.getText().toString().trim().replaceAll("[^\\sa-zA-Z0-9]", ""));
+        if ( !(TextUtils.isEmpty(et_groupname.getText().toString().trim().replaceAll("[^\\sa-zA-Z0-9]", "")) ))
         {
             Group_CreationWS();
         }
@@ -328,28 +330,32 @@ public class Create_Group extends PortraitActivity {
                             snackBar(Create_Group.this,getResources().getString(R.string.No_network),"Retry",Snackbar.LENGTH_LONG);
 
                         }
-                        else
-                        {
+                        else if (volleyError instanceof ServerError) {
                             try {
-                                String responseBody= new String(volleyError.networkResponse.data,"utf-8");
-                                Log.e(TAG,"responseBody is " + responseBody);
-                                JSONObject jsonObject_error= new JSONObject(responseBody);
+                                String responseBody = new String(volleyError.networkResponse.data, "utf-8");
+                                Log.e(TAG, "responseBody is " + responseBody);
+                                JSONObject jsonObject_error = new JSONObject(responseBody);
                                 String status = jsonObject_error.getString("status");
                                 String message = jsonObject_error.getString("message");
-                                if (status.equalsIgnoreCase("FAILURE"))
-                                {
-                                    snackBar(Create_Group.this,message,"",Snackbar.LENGTH_SHORT);
+                                if (status.equalsIgnoreCase("FAILURE")) {
+                                    snackBar(Create_Group.this, message, "", Snackbar.LENGTH_SHORT);
                                 }
 
                             } catch (UnsupportedEncodingException e) {
                                 e.printStackTrace();
                             } catch (JSONException e) {
                                 e.printStackTrace();
-                                    utilClass.showsnackBar(rlCgRoot,Create_Group.this,getString(R.string.Unknown_error));
+                                utilClass.showsnackBar(rlCgRoot, Create_Group.this, getString(R.string.Unknown_error));
 
                             }
 
 
+                        }
+                        else if (volleyError instanceof AuthFailureError) {
+                            utilClass.showsnackBar(rlCgRoot, Create_Group.this, getString(R.string.INVALID_TOKEN));
+
+                        } else {
+                            utilClass.showsnackBar(rlCgRoot, Create_Group.this, getString(R.string.Unknown_error));
                         }
                     }
 
@@ -370,21 +376,22 @@ public class Create_Group extends PortraitActivity {
 
         );
         HashMap<String,String> hashMap= new HashMap<>();
-        hashMap.put("groupName" ,et_groupname.getText().toString().trim().replaceAll("[^a-zA-Z0-9]", ""));
-        hashMap.put("description" ,et_group_description.getText().toString().trim().replaceAll("[^a-zA-Z0-9]", ""));
+        hashMap.put("groupName", et_groupname.getText().toString().replaceAll("[^\\sa-zA-Z0-9]", ""));
+        hashMap.put("description" ,et_group_description.getText().toString().replaceAll("[^\\sa-zA-Z0-9]", ""));
         for (int i = 0; i <  mergeList.size(); i++)
         {
             ContactsModel numbers= mergeList.get(i);
             if (numbers.isSelected)
             {
-                hashMap.put("phoneNumbers["+i+"]",numbers.selectedNumber);
+                hashMap.put("phoneNumbers["+i+"]",numbers.selectedNumber.replaceAll("[^+0-9]", ""));
+                Log.e(TAG,"number is " + numbers.selectedNumber.replaceAll("[^+0-9]", ""));
             }
 
         }
         networkCall.makeStringRequest_POST(hashMap);
 
-        Log.e(TAG, "groupName is " + et_groupname.getText().toString().trim().replaceAll("[^a-zA-Z0-9]", ""));
-        Log.e(TAG,"description is " + et_group_description.getText().toString().trim().replaceAll("[^a-zA-Z0-9]", ""));
+        Log.e(TAG, "groupName is " + et_groupname.getText().toString().replaceAll("[^\\sa-zA-Z0-9]", ""));
+        Log.e(TAG,"description is " + et_group_description.getText().toString().replaceAll("[^\\sa-zA-Z0-9]", ""));
 
     }
 

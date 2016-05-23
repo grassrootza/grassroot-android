@@ -64,7 +64,7 @@
                 android:inputType="phone"
                 android:textColor="#000"
                 android:drawableRight="@drawable/ic_call"
-                android:maxLength="10"
+                android:maxLength="13"
                 android:imeOptions="actionDone"
 
                 />

@@ -83,16 +83,15 @@
                             android:layout_height="wrap_content"
                             android:gravity="top"
                             android:hint="@string/cv_et_title"
-                            android:imeOptions="actionNext"
                             android:inputType="textMultiLine"
-                            android:lines="3"
                             android:maxLength="35"
                             android:maxLines="5"
-                            android:minLines="3"
+                            android:lines="2"
+                            android:minLines="2"
                             android:scrollbars="vertical"
                             android:textColor="@color/vv_title"
                             android:textSize="@dimen/txt_medium"
-
+                            android:imeOptions="actionNext"
                             />
                     </android.support.design.widget.TextInputLayout>
 
@@ -257,10 +256,12 @@
                     <RelativeLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginBottom="15dp"
-                        android:layout_marginTop="15dp"
+                        android:paddingBottom="15dp"
+                        android:paddingTop="15dp"
                         android:paddingLeft="10dp"
-                        android:paddingRight="10dp">
+                        android:paddingRight="10dp"
+
+                        >
 
                         <RelativeLayout
                             android:id="@+id/rl_row_one_day"
@@ -345,7 +346,8 @@
                             android:id="@+id/rl_row_immediate"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_below="@+id/rl_row_one_hour">
+                            android:layout_below="@+id/rl_row_one_hour"
+                            >
 
                             <TextView
                                 style="@style/text_medium"
@@ -421,14 +423,41 @@
                     android:background="@color/vv_Body_Response"
                     android:visibility="gone"
                     >
-                    <TextView
+                    <LinearLayout
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        tools:text="You have selected 5 members"
+                        android:orientation="horizontal"
                         android:layout_centerHorizontal="true"
-                        android:textColor="@color/black"
-                        android:padding="10dp"
-                        />
+                        android:background="@drawable/underline"
+
+                        >
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/cv_notify_member_prefix"
+                            android:textColor="@color/black"
+                            android:padding="10dp"
+                            />
+
+                        <TextView
+                            android:id="@+id/member_count"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            tools:text="5"
+                            android:textColor="@color/black"
+                            android:textStyle="bold"
+                            />
+
+                        <TextView
+                            android:id="@+id/suffix"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            tools:text="members"
+                            android:textColor="@color/black"
+                            android:padding="10dp"
+                            />
+
+                    </LinearLayout>
 
                 </RelativeLayout>
 

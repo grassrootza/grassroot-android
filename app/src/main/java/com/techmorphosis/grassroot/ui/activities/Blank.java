@@ -2,7 +2,6 @@ package com.techmorphosis.grassroot.ui.activities;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
@@ -11,7 +10,7 @@ import android.widget.TextView;
 
 import com.techmorphosis.grassroot.R;
 
-public class Blank extends AppCompatActivity {
+public class Blank extends PortraitActivity {
 
     private LinearLayout llToolbar;
     private ImageView ivBack;
