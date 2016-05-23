@@ -13,10 +13,11 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_centerInParent="true"
-        android:visibility="visible"
+        android:visibility="gone"
         android:padding="16dp"
         android:background="?android:selectableItemBackground"
         android:elevation="5dp"
+
         >
         <ImageView
             android:layout_width="wrap_content"

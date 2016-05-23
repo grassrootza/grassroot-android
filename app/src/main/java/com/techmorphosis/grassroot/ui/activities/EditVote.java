@@ -1,7 +1,6 @@
 package com.techmorphosis.grassroot.ui.activities;
 
 import android.app.ProgressDialog;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
@@ -18,26 +17,32 @@ import android.widget.RelativeLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
+import com.android.volley.AuthFailureError;
+import com.android.volley.NoConnectionError;
+import com.android.volley.ServerError;
+import com.android.volley.TimeoutError;
+import com.android.volley.VolleyError;
+import com.techmorphosis.grassroot.Network.AllLinsks;
+import com.techmorphosis.grassroot.Network.NetworkCall;
 import com.techmorphosis.grassroot.R;
-import com.techmorphosis.grassroot.services.GrassrootRestService;
-import com.techmorphosis.grassroot.services.model.GenericResponse;
-import com.techmorphosis.grassroot.utils.SettingPreference;
-import com.wdullaer.materialdatetimepicker.date.DatePickerDialog;
-import com.wdullaer.materialdatetimepicker.time.RadialPickerLayout;
-import com.wdullaer.materialdatetimepicker.time.TimePickerDialog;
+import com.techmorphosis.grassroot.slideDateTimePicker.SlideDateTimeListener;
+import com.techmorphosis.grassroot.slideDateTimePicker.SlideDateTimePicker;
+import com.techmorphosis.grassroot.utils.SettingPreffrence;
+import com.techmorphosis.grassroot.utils.UtilClass;
+import com.techmorphosis.grassroot.utils.listener.ErrorListenerVolley;
+import com.techmorphosis.grassroot.utils.listener.ResponseListenerVolley;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.UnsupportedEncodingException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.TimeZone;
+import java.util.HashMap;
 
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
-
-public class EditVote extends PortraitActivity  implements  TimePickerDialog.OnTimeSetListener,
-        DatePickerDialog.OnDateSetListener {
+public class EditVote extends PortraitActivity{
 
     private Toolbar vvToolbar;
     private TextView txtToolbar;
@@ -49,9 +54,9 @@ public class EditVote extends PortraitActivity  implements  TimePickerDialog.OnT
     private String description;
     private EditText et_description;
     private String deadline;
+    private String closingTime;
     private TextView txtEvDeadline;
     private String voteid;
-
 
     ProgressDialog progressDialog;
     private int error_flag;
@@ -61,37 +66,61 @@ public class EditVote extends PortraitActivity  implements  TimePickerDialog.OnT
     private Snackbar snackbar;
     private CardView datetimepicker;
 
-    private int year, month, day, hour, minute,second;
+    private int year, month, day, hour, minute, second;
     private String title;
 
     String selectedDate;
     private SimpleDateFormat simpleDateFormat;
-    private boolean dateselected=false;
-    private GrassrootRestService grassrootRestService;
+    private boolean dateselected = false;
     Calendar now;
+    private UtilClass utilClass;
+    private SimpleDateFormat mFormatter1 = new SimpleDateFormat("MMMM dd yyyy HH:MM");
+    private SimpleDateFormat mFormatter = new SimpleDateFormat("MMMM dd yyyy hh:mm aa");
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_edit_vote);
-        grassrootRestService =  new GrassrootRestService(this);
+
+        utilClass = new UtilClass();
+
         findAllViews();
         setUpToolbar();
-        if (getIntent()!=null)
-        {
+        if (getIntent() != null) {
             title = getIntent().getExtras().getString("title");
             description = getIntent().getExtras().getString("description");
             deadline = getIntent().getExtras().getString("deadline");
             voteid = getIntent().getExtras().getString("voteid");
         }
         et_description.setText(description);
+        closingTime = deadline;
         try {
             txtEvDeadline.setText(deadline);
+            Log.e(TAG, "DateConversion " + DateConversion(deadline));
+            closingTime = DateConversion(deadline);
         } catch (Exception e) {
             e.printStackTrace();
-            Log.e(TAG,"e is " + e.getMessage()) ;
+            Log.e(TAG, "e is " + e.getMessage());
         }
         Log.e(TAG, "voteid is  " + voteid);
+
+    }
+
+    private String DateConversion(String inputdate) {
+
+        SimpleDateFormat original = new SimpleDateFormat("dd-MM-yyyy HH:mm");
+        String target_string = null;
+        try {
+            Date date_original = original.parse(inputdate);
+            SimpleDateFormat target_date = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm");
+            target_string = target_date.format(date_original);
+
+        } catch (ParseException e) {
+            e.printStackTrace();
+
+        }
+
+        return target_string;
 
     }
 
@@ -135,58 +164,130 @@ public class EditVote extends PortraitActivity  implements  TimePickerDialog.OnT
     }
 
     private View.OnClickListener datetimepicker() {
-            return new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
+        return new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
 
 
-                    simpleDateFormat = new SimpleDateFormat("dd-MM-yyyy HH:mm");
-                    Date date1 = null;
-                    try {
-                        if (dateselected)
-                        {
-                            date1 = (Date) simpleDateFormat.parse(selectedDate);
+           /*     simpleDateFormat = new SimpleDateFormat("dd-MM-yyyy HH:mm");
+                Date date1 = null;
+                try {
+                    if (dateselected) {
+                        date1 = (Date) simpleDateFormat.parse(selectedDate);
 
+                    } else {
+
+                        try {
+                            date1 = (Date) simpleDateFormat.parse(deadline);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                            Log.e(TAG, " e is " + e.getMessage());
                         }
-                        else
-                        {
-
-                            try {
-                                date1 = (Date) simpleDateFormat.parse(deadline);
-                            } catch (Exception e) {
-                                e.printStackTrace();
-                                Log.e(TAG," e is " + e.getMessage());
-                            }
-                        }
-                    } catch (ParseException e) {
-                        e.printStackTrace();
                     }
+                } catch (ParseException e) {
+                    e.printStackTrace();
+                }
 
-                    now = Calendar.getInstance();
-                    now.setTime(date1);
+                now = Calendar.getInstance();
+                now.setTime(date1);
 
-                    Calendar today = Calendar.getInstance();
+                Calendar today = Calendar.getInstance();
 
-                    DatePickerDialog dpd = DatePickerDialog.newInstance(
-                            EditVote.this,
-                            now.get(Calendar.YEAR),
-                            now.get(Calendar.MONTH),
-                            now.get(Calendar.DAY_OF_MONTH)
-                    );
-                    dpd.vibrate(true);
-                            dpd.dismissOnPause(false);
-                            dpd.setAccentColor(getResources().getColor(R.color.primaryColor));
-                            dpd.setMinDate(today);
-                            dpd.show(getFragmentManager(), "Datepickerdialog");
-
-                        }
+                DatePickerDialog dpd = DatePickerDialog.newInstance(
+                        EditVote.this,
+                        now.get(Calendar.YEAR),
+                        now.get(Calendar.MONTH),
+                        now.get(Calendar.DAY_OF_MONTH)
+                );
+                dpd.vibrate(true);
+                dpd.dismissOnPause(false);
+                dpd.setAccentColor(getResources().getColor(R.color.primaryColor));
+                dpd.setMinDate(today);
+                dpd.show(getFragmentManager(), "Datepickerdialog");*/
 
 
-            };
+                showDateTimepPicker();
+
+            }
+
+
+        };
     }
 
-    public String convertW3CTODeviceTimeZone(String strDate) throws Exception
-    {
+    private SlideDateTimeListener listener = new SlideDateTimeListener() {
+
+        @Override
+        public void onDateTimeSet(Date date)
+        {
+            dateselected = true;
+
+            Log.e("TAG", "date is " + date);
+
+           /* Toast.makeText(EditVote.this, mFormatter.format(date), Toast.LENGTH_SHORT).show();
+            Toast.makeText(EditVote.this, mFormatter1.format(date), Toast.LENGTH_SHORT).show();*/
+
+            simpleDateFormat = new SimpleDateFormat("dd-MM-yyyy HH:mm");
+
+            txtEvDeadline.setText(simpleDateFormat.format(date));
+
+            selectedDate = simpleDateFormat.format(date);
+
+            SimpleDateFormat target_date = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm");
+
+            closingTime = target_date.format(date);
+
+            Log.e(TAG,"simpleDateFormat.format(date) is " + simpleDateFormat.format(date));
+
+
+        }
+
+        // Optional cancel listener
+        @Override
+        public void onDateTimeCancel()
+        {
+/*
+            Toast.makeText(EditVote.this,
+                    "Canceled", Toast.LENGTH_SHORT).show();
+*/
+        }
+    };
+
+
+    private void showDateTimepPicker() {
+
+        simpleDateFormat = new SimpleDateFormat("dd-MM-yyyy HH:mm");
+        Date date1 = null;
+        try {
+            if (dateselected) {
+                date1 = (Date) simpleDateFormat.parse(selectedDate);
+
+            } else {
+
+                try {
+                    date1 = (Date) simpleDateFormat.parse(deadline);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    Log.e(TAG, " e is " + e.getMessage());
+                }
+            }
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+
+        new SlideDateTimePicker.Builder(getSupportFragmentManager())
+                .setListener(listener)
+                .setInitialDate(date1)
+                        .setMinDate(new Date())
+                        //.setMaxDate(maxDate)
+                        //.setIs24HourTime(true)
+                        //.setTheme(SlideDateTimePicker.HOLO_DARK)
+                        .setIndicatorColor(Color.parseColor("#207A33"))
+                .build()
+                .show();
+    }
+
+/*
+    public String convertW3CTODeviceTimeZone(String strDate) throws Exception {
         SimpleDateFormat simpleDateFormatW3C = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
         Date dateServer = simpleDateFormatW3C.parse(strDate);
 
@@ -198,29 +299,27 @@ public class EditVote extends PortraitActivity  implements  TimePickerDialog.OnT
         // long timeMilliness=new Date(formattedDate).getTime();
         return formattedDate;
     }
+*/
 
     private View.OnClickListener button_save() {
-            return new View.OnClickListener() {
-                @Override
-                public void onClick(View v)
-                {
+        return new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
 
-                    EditVoteWS();
+                EditVoteWS();
 
-                }
+            }
 
-            };
+        };
     }
 
-    private void EditVoteWS()
-    {
+    private void EditVoteWS() {
 
         preExecute();
         doInbackground();
     }
 
-    private void preExecute()
-    {
+    private void preExecute() {
         error_flag = 0;
 
         progressDialog = new ProgressDialog(EditVote.this);
@@ -232,42 +331,15 @@ public class EditVote extends PortraitActivity  implements  TimePickerDialog.OnT
     }
 
 
-    private void doInbackground()
-    {
+    private void doInbackground() {
 
-       String phoneNumber = SettingPreference.getuser_mobilenumber(this);
-        String code = SettingPreference.getuser_token(this);
-
-       grassrootRestService.getApi().editVote(phoneNumber,code,voteid,title,description,deadline).
-               enqueue(new Callback<GenericResponse>() {
-                   @Override
-                   public void onResponse(Call<GenericResponse> call, Response<GenericResponse> response) {
-                       if (response.isSuccessful()) {
-                         postExecute();
-                       }
-                   }
-                   @Override
-                   public void onFailure(Call<GenericResponse> call, Throwable t) {
-                       Log.d(TAG, t.getMessage());
-
-                    //   rlVvMainLayout.setVisibility(View.GONE);
-                       if ((progressDialog != null) && progressDialog.isShowing()) {
-                           progressDialog.dismiss();
-                       }
-
-                       //  ErrorUtils.handleNetworkError(ViewVote.this, errorLayout, t);
-                   }
-               });
-
-
-    /*    NetworkCall networkCall = new NetworkCall
+        NetworkCall networkCall = new NetworkCall
                 (
                         EditVote.this,
                         new ResponseListenerVolley() {
                             @Override
-                            public void onSuccess(String s)
-                            {
-                                error_flag = 0 ;
+                            public void onSuccess(String s) {
+                                error_flag = 0;
                                 postExecute(s);
                             }
                         },
@@ -279,41 +351,39 @@ public class EditVote extends PortraitActivity  implements  TimePickerDialog.OnT
                                     progressDialog.dismiss();
                                 }
 
-                                if (volleyError instanceof NoConnectionError || volleyError instanceof TimeoutError)
-                                {
+                                if (volleyError instanceof NoConnectionError || volleyError instanceof TimeoutError) {
                                     error_flag = 1;
                                     postExecute("");
-                                }
-                                else if (volleyError instanceof ServerError) {
+                                } else if (volleyError instanceof ServerError) {
 
                                     String responsebody = null;
                                     try {
-                                        responsebody = new String(volleyError.networkResponse.data,"utf-8");
+                                        responsebody = new String(volleyError.networkResponse.data, "utf-8");
                                         Log.e(TAG, "responsebody is " + responsebody);
 
 
                                         try {
                                             JSONObject jsonObject = new JSONObject(responsebody);
-                                            error_flag=0;
+                                            error_flag = 0;
                                             postExecute(responsebody);
                                         } catch (JSONException e) {
                                             e.printStackTrace();
-                                            error_flag=5;
+                                            error_flag = 5;
                                             postExecute("");
                                         }
                                         ;
 
-                                    } catch (UnsupportedEncodingException e)
-                                    {
+                                    } catch (UnsupportedEncodingException e) {
                                         e.printStackTrace();
-                                        error_flag=5;
+                                        error_flag = 5;
                                         postExecute("");
                                     }
 
-                                     }
-                               else
-                                {//unKnown error
-                                    error_flag=5;
+                                } else if (volleyError instanceof AuthFailureError) {//unKnown error
+                                    error_flag = 4;
+                                    postExecute("");
+                                } else {
+                                    error_flag = 5;
                                     postExecute("");
                                 }
 
@@ -324,33 +394,48 @@ public class EditVote extends PortraitActivity  implements  TimePickerDialog.OnT
                         "",
                         false
                 );
-        HashMap<String,String> hashMap= new HashMap<>();
+        HashMap<String, String> hashMap = new HashMap<>();
         hashMap.put("description", et_description.getText().toString());
-        hashMap.put("closingTime", deadline);
+        hashMap.put("closingTime", closingTime + utilClass.timeZone());
         hashMap.put("title", title);
         networkCall.makeStringRequest_POST(hashMap);
 
         Log.e(TAG, "description is " + et_description.getText().toString());
-        Log.e(TAG, "closingTime is " + deadline);
-        Log.e(TAG,"title is "+ title);*/
+        Log.e(TAG, "closingTime is " + closingTime + utilClass.timeZone());
+        Log.e(TAG, "title is " + title);
     }
 
 
-    private void postExecute()
-    {
+    private void postExecute(String response) {
         Log.e(TAG, "  **** error **** " + error_flag);
 
         if ((progressDialog != null) && progressDialog.isShowing()) {
             progressDialog.dismiss();
         }
-            Intent close= new Intent();
-            close.putExtra("description",et_description.getText().toString());
-            close.putExtra("deadline",txtEvDeadline.getText().toString());
+
+        if (error_flag == 1) {//no Internet
+            //snackbar
+            showSnackBar(getString(R.string.No_network), Snackbar.LENGTH_INDEFINITE, getString(R.string.Retry));
+
+        } else if (error_flag == 4) {//Authentication error
+            //snackbar
+            showSnackBar(getString(R.string.INVALID_TOKEN), Snackbar.LENGTH_SHORT, "");
+
+        } else if (error_flag == 5) {//catch error
+            //snackbar
+            showSnackBar(getString(R.string.Unknown_error), Snackbar.LENGTH_SHORT, "");
+
+        } else if (error_flag == 0) {
+
+
+            Intent close = new Intent();
+            close.putExtra("description", et_description.getText().toString());
+            close.putExtra("deadline", txtEvDeadline.getText().toString());
             setResult(1, close);
             finish();
+        }
 
     }
-
 
 
     private void setUpToolbar() {
@@ -363,24 +448,21 @@ public class EditVote extends PortraitActivity  implements  TimePickerDialog.OnT
         });
     }
 
-    public void onBackPressed()
-    {
+    public void onBackPressed() {
 
         finish();
     }
 
-    public  void showSnackBar(String message, int length, String actionButtontext)
-    {
+    public void showSnackBar(String message, int length, String actionButtontext) {
 
-        snackbar=Snackbar.make(rlEvRoot, message, length);
+        snackbar = Snackbar.make(rlEvRoot, message, length);
         snackbar.setActionTextColor(Color.RED);
 
-        if (!actionButtontext.isEmpty())
-        {
+        if (!actionButtontext.isEmpty()) {
             snackbar.setAction(actionButtontext, new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                   EditVoteWS();
+                    EditVoteWS();
                 }
             });
 
@@ -389,58 +471,65 @@ public class EditVote extends PortraitActivity  implements  TimePickerDialog.OnT
     }
 
 
-
     @Override
     public void onResume() {
         super.onResume();
-        TimePickerDialog tpd = (TimePickerDialog) getFragmentManager().findFragmentByTag("Timepickerdialog");
+     /*   TimePickerDialog tpd = (TimePickerDialog) getFragmentManager().findFragmentByTag("Timepickerdialog");
         DatePickerDialog dpd = (DatePickerDialog) getFragmentManager().findFragmentByTag("Datepickerdialog");
 
-        if(tpd != null) tpd.setOnTimeSetListener(this);
-        if(dpd != null) dpd.setOnDateSetListener(this);
+        if (tpd != null) tpd.setOnTimeSetListener(this);
+        if (dpd != null) dpd.setOnDateSetListener(this);*/
+
     }
 
 
+/*
     @Override
     public void onTimeSet(RadialPickerLayout view, int hourOfDay, int minutes, int seconds) {
-        /*String hourString = hourOfDay < 10 ? "0"+hourOfDay : ""+hourOfDay;
+        */
+/*String hourString = hourOfDay < 10 ? "0"+hourOfDay : ""+hourOfDay;
         String minuteString = minute < 10 ? "0"+minute : ""+minute;
-        String secondString = second < 10 ? "0"+second : ""+second;*/
-        hour= hourOfDay;
+        String secondString = second < 10 ? "0"+second : ""+second;*//*
+
+        hour = hourOfDay;
         minute = minutes;
         second = seconds;
-        dateselected =true;
+        dateselected = true;
 
-        selectedDate=selectedDate+" "+hourOfDay+":"+minutes+":"+seconds;
+        selectedDate = selectedDate + " " + hourOfDay + ":" + minutes + ":" + seconds;
 
 
-        txtEvDeadline.setText( (day < 10 ? "0"+day : day)+"-"+
-                (month < 10 ? "0"+(month) : month)+"-"+
-                year +"  "+
-                (hour < 10 ? "0"+hour : hour)+":"+
-                (minute < 10 ? "0"+minute : minute));
+        txtEvDeadline.setText((day < 10 ? "0" + day : day) + "-" +
+                (month < 10 ? "0" + (month) : month) + "-" +
+                year + "  " +
+                (hour < 10 ? "0" + hour : hour) + ":" +
+                (minute < 10 ? "0" + minute : minute));
 
-       deadline=year+"-"+
-               (month < 10 ? "0"+(month) : month)+"-"+
-                (day < 10 ? "0"+day : day)+"T"+
-                (hour < 10 ? "0"+hour : hour)+":"+
-                (minute < 10 ? "0"+minute : minute);
+        closingTime = year + "-" +
+                (month < 10 ? "0" + (month) : month) + "-" +
+                (day < 10 ? "0" + day : day) + "T" +
+                (hour < 10 ? "0" + hour : hour) + ":" +
+                (minute < 10 ? "0" + minute : minute);
 
 
     }
+*/
 
 
+/*
     @Override
     public void onDateSet(DatePickerDialog view, int years, int monthOfYear, int dayOfMonth) {
-       // String date = "You picked the following date: "+dayOfMonth+"/"+(++monthOfYear)+"/"+year;
+        // String date = "You picked the following date: "+dayOfMonth+"/"+(++monthOfYear)+"/"+year;
         year = years;
         month = ++monthOfYear;
         day = dayOfMonth;
 
-        selectedDate= day+"-"+month+"-"+year;
-        dateselected =true;
+        selectedDate = day + "-" + month + "-" + year;
+        dateselected = true;
 
-        /*Calendar now = Calendar.getInstance();*/
+        */
+/*Calendar now = Calendar.getInstance();*//*
+
         TimePickerDialog tpd = TimePickerDialog.newInstance(
                 EditVote.this,
                 now.get(Calendar.HOUR_OF_DAY),
@@ -461,5 +550,6 @@ public class EditVote extends PortraitActivity  implements  TimePickerDialog.OnT
         });
         tpd.show(getFragmentManager(), "Timepickerdialog");
     }
+*/
 
 }

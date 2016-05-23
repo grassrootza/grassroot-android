@@ -36,7 +36,7 @@
             android:inputType="textPersonName|textCapWords"
             android:textColor="#000"
             android:drawableRight="@drawable/ic_user"
-            android:maxLength="20"
+            android:maxLength="15"
 
             />
 
@@ -62,7 +62,7 @@
             android:inputType="phone"
             android:textColor="#000"
             android:drawableRight="@drawable/ic_call"
-            android:maxLength="10"
+            android:maxLength="13"
             android:imeOptions="actionDone"
 
             />
@@ -74,7 +74,7 @@
 
 
 <Button
-        android:id="@+id/amm_bt_add"
+        android:id="@+id/bt_register"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:textAllCaps="false"
