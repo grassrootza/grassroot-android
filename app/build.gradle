@@ -35,6 +35,7 @@ android {
         versionCode 1
         versionName "1.0"
     }
+
     buildTypes {
         release {
             minifyEnabled false
@@ -45,6 +46,18 @@ android {
     packagingOptions {
         exclude 'META-INF/services/javax.annotation.processing.Processor'
 
+    }
+
+    sourceSets {
+        main {
+            res.srcDirs = [
+                    'src/main/res',
+                    'src/main/res/layout/activities',
+                    'src/main/res/layout/fragments',
+                    'src/main/res/layout/dialogs',
+                    'src/main/res/layout/listviews'
+            ]
+        }
     }
 }
 

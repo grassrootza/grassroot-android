@@ -4,8 +4,6 @@ package com.techmorphosis.grassroot.ui.fragments;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.v4.app.FragmentActivity;
-import android.support.v4.view.ViewPager;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -17,7 +15,6 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.techmorphosis.grassroot.R;
-import com.techmorphosis.grassroot.adapters.WelcomePagerAdapter;
 import com.techmorphosis.grassroot.ui.activities.CreateGroupActivity;
 import com.techmorphosis.grassroot.ui.activities.GroupJoinActivity;
 
@@ -52,7 +49,7 @@ public class NewWelcomeFragment extends android.support.v4.app.Fragment {
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        view = inflater.inflate(R.layout.newwelcome, container, false);
+        view = inflater.inflate(R.layout.activity_welcome_nogroup, container, false);
         findView();
         setUpToolbar();
         return view;

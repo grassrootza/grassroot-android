@@ -1,6 +1,7 @@
 package com.techmorphosis.grassroot.utils;
 
 import android.content.Context;
+import android.graphics.Color;
 import android.support.design.widget.Snackbar;
 import android.util.Log;
 import android.view.View;
@@ -67,6 +68,16 @@ public class ErrorUtils {
         } catch (Exception e1) {
             Log.e(TAG, "Socket error on startup");
         }
+    }
+
+    public static void showSnackBar(View holder, final String message, int length, final String actionText,
+                                    View.OnClickListener actionToTake) {
+        Snackbar snackbar = Snackbar.make(holder, message, length);
+        if (actionText != null && actionToTake != null) {
+            snackbar.setActionTextColor(Color.RED);
+            snackbar.setAction(actionText, actionToTake);
+        }
+        snackbar.show();
     }
 
 }

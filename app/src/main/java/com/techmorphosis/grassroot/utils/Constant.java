@@ -49,6 +49,7 @@ public class Constant {
     public static final int activityAddMembersToGroup = 4;
     public static final int activityRemoveMembers = 5;
     public static final int activityCreateGroup = 6;
+    public static final int activitySelectGroupMembers = 7;
 
 
     public static final int alertAskForContactPermission = 91;

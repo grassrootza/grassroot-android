@@ -4,7 +4,6 @@ import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.os.Parcelable;
 import android.util.Log;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
@@ -78,7 +77,7 @@ public class PhoneBookContactsActivity extends PortraitActivity implements Conta
     protected void onCreate(Bundle savedInstanceState) {
 
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.phonebookmain);
+        setContentView(R.layout.activity_phone_book);
         ButterKnife.bind(this);
         setUpProgressBar();
         init();

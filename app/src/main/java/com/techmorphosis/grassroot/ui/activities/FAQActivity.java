@@ -50,7 +50,7 @@ public class FAQActivity extends PortraitActivity implements View.OnClickListene
     public void onCreate(Bundle savedInstanceState) {
 
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.faq);
+        setContentView(R.layout.activity_faq);
         findAllViews();
         setUpToolbar();
         init();

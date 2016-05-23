@@ -5,25 +5,20 @@ import android.animation.ValueAnimator;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.os.SystemClock;
 import android.support.design.widget.Snackbar;
-import android.support.design.widget.TextInputLayout;
-import android.support.v7.widget.CardView;
 import android.support.v7.widget.SwitchCompat;
 import android.support.v7.widget.Toolbar;
 import android.text.Editable;
 import android.text.TextUtils;
-import android.text.TextWatcher;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
-import android.widget.Button;
-import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
-import android.widget.ScrollView;
 import android.widget.TextView;
 
 import com.techmorphosis.grassroot.R;
@@ -33,86 +28,83 @@ import com.techmorphosis.grassroot.services.model.GenericResponse;
 import com.techmorphosis.grassroot.slideDateTimePicker.SlideDateTimeListener;
 import com.techmorphosis.grassroot.slideDateTimePicker.SlideDateTimePicker;
 import com.techmorphosis.grassroot.utils.Constant;
+import com.techmorphosis.grassroot.utils.ErrorUtils;
 import com.techmorphosis.grassroot.utils.SettingPreference;
-import com.techmorphosis.grassroot.utils.UtilClass;
 
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
 import java.util.TimeZone;
 
+import butterknife.BindView;
+import butterknife.ButterKnife;
+import butterknife.OnCheckedChanged;
+import butterknife.OnClick;
+import butterknife.OnEditorAction;
+import butterknife.OnTextChanged;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
 public class CreateVote extends PortraitActivity {
 
-    private static final String TAG = "CreateVote";
-    private Toolbar tlbCv;
-    private TextView txtTlbCv;
-    private ScrollView cvScrollview;
-    private CardView cardView;
-    private RelativeLayout rlTxtIpl;
-    private TextInputLayout txtIpl;
-    private TextView txtTitleCount;
-    private TextView txtPostedname;
-    private RelativeLayout rlTxtIplDesc;
-    private TextInputLayout txtIplDesc;
-    private TextView txtDescCount;
-    private CardView cvDatepicker;
-    private TextView txtDeadlineTitle;
-    private TextView txtDeadline;
-    private RelativeLayout rlAlertsHeader;
-    private RelativeLayout rlAlertsBody;
-    private RelativeLayout rlRowOneDay;
-    private SwitchCompat swOneDay;
-    private RelativeLayout rlRowHalfDay;
-    private SwitchCompat swHalfDay;
-    private RelativeLayout rlRowOneHour;
-    private SwitchCompat swOneHour;
-    private RelativeLayout rlRowImmediate;
-    private SwitchCompat swImmediate;
-    private EditText et_title_cv;
-    private EditText et_description_cv;
-    private ImageView ivExpandCv;
+    private static final String TAG = CreateVote.class.getCanonicalName();
 
-    ValueAnimator mAnimator;
-    private int year, month, day, hour, minute,second;
-    private String title;
+    @BindView(R.id.rl_root_cv)
+    RelativeLayout rlRootCv;
+    @BindView(R.id.tlb_cv)
+    Toolbar tlbCv;
 
-    String selectedDate;
-    private SimpleDateFormat simpleDateFormat;
-    private boolean dateselected=false;
-    Calendar now;
-    private String todaydateString;
+    @BindView(R.id.et_title_cv)
+    EditText et_title_cv;
+    @BindView(R.id.txt_title_count)
+    TextView txtTitleCount;
+    @BindView(R.id.txt_postedname)
+    TextView txtPostedname;
+    @BindView(R.id.et_description_cv)
+    EditText et_description_cv;
+    @BindView(R.id.txt_desc_count)
+    TextView txtDescCount;
+    @BindView(R.id.txt_deadline)
+    TextView txtDeadline;
 
-    public String[] switchnamearr={"swOneDay","swHalfDay","swOneHour","swImmediate"};
-    public SwitchCompat[] switchCompatarr={swOneDay,swHalfDay,swOneHour,swImmediate};
-    private CardView rlNotifyHeader;
-    private SwitchCompat swNotifyall;
-    private Button btcallvote;
-    private String notifyGroup;
-    private String reminderMins;
-    private String members="";
-    private ArrayList<String> membersuidList;
+    @BindView(R.id.rl_alerts_body)
+    RelativeLayout rlAlertsBody;
+    @BindView(R.id.iv_expand_alert)
+    ImageView ivExpandCv;
 
-    private String closingTime;
-    private Snackbar snackbar;
-    private RelativeLayout rlRootCv;
-    public  boolean receiver = false;
+    @BindView(R.id.sw_one_day)
+    SwitchCompat swOneDay;
+    @BindView(R.id.sw_half_day)
+    SwitchCompat swHalfDay;
+    @BindView(R.id.sw_one_hour)
+    SwitchCompat swOneHour;
+    @BindView(R.id.sw_immediate)
+    SwitchCompat swImmediate;
 
-    private ArrayList<VoteMemberModel> voteMemberArrayList;
-    private RelativeLayout rlNotifyBody;
-    private TextView memberCount;
-    private int membercounter=0;
-    private StringBuilder stringBuilder;
-    private TextView suffix;
+    @BindView(R.id.sw_notifyall)
+    SwitchCompat swNotifyall;
+    @BindView(R.id.rl_notify_body)
+    RelativeLayout rlNotifyBody;
+    @BindView(R.id.member_count)
+    TextView memberCount;
 
-    private SimpleDateFormat mFormatter1 = new SimpleDateFormat("MMMM dd yyyy HH:MM");
-    private SimpleDateFormat mFormatter = new SimpleDateFormat("MMMM dd yyyy hh:mm aa");
+    @BindView(R.id.suffix)
+    TextView suffix;
+
+    private ValueAnimator mAnimator;
+
+    private Date selectedDate;
+    private boolean dateSelected = false;
+    private static SimpleDateFormat displayFormat = new SimpleDateFormat("dd-MM-yyyy HH:mm");
+    private SlideDateTimeListener listener;
+
+    private List<VoteMemberModel> voteMemberArrayList;
+    private boolean notifyWholeGroup;
+    private int notificationReminderSetting; // todo: enum! I mean, string as int, which this was ...
 
     private GrassrootRestService grassrootRestService;
     private String groupId;
@@ -121,23 +113,20 @@ public class CreateVote extends PortraitActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_create_vote);
-        if (getIntent().getExtras()!= null) {
-            groupId = getIntent().getStringExtra(Constant.GROUPUID_FIELD);
-            receiver=false;
-        } else {
-            groupId = "";
-            receiver = true;
-        }
+        ButterKnife.bind(this);
 
-        grassrootRestService = new GrassrootRestService(this);
-
-        findAllViews();
-        setUpToolbar();
         init();
-
+        setUpViews();
+        setUpToolbar();
     }
 
     private void init() {
+        if (getIntent().getExtras()!= null) {
+            groupId = getIntent().getStringExtra(Constant.GROUPUID_FIELD);
+        } else {
+            throw new UnsupportedOperationException("Cannot create vote without group ID");
+        }
+        grassrootRestService = new GrassrootRestService(this);
         voteMemberArrayList = new ArrayList<>();
     }
 
@@ -151,74 +140,16 @@ public class CreateVote extends PortraitActivity {
         });
     }
 
-    private void findAllViews() {
+    private void setUpViews() {
 
-        rlRootCv = (RelativeLayout) findViewById(R.id.rl_root_cv);
-        tlbCv = (Toolbar) findViewById(R.id.tlb_cv);
-        txtTlbCv = (TextView) findViewById(R.id.txt_tlb_cv);
-
-        cvScrollview = (ScrollView) findViewById(R.id.cv_scrollview);
-        cardView = (CardView) findViewById(R.id.card_view);
-
-        rlTxtIpl = (RelativeLayout) findViewById(R.id.rl_txt_ipl);
-        et_title_cv = (EditText) findViewById(R.id.et_title_cv);
-        txtTitleCount = (TextView) findViewById(R.id.txt_title_count);
-
-        txtPostedname = (TextView) findViewById(R.id.txt_postedname);
-
-        rlTxtIplDesc = (RelativeLayout) findViewById(R.id.rl_txt_ipl_desc);
-        et_description_cv = (EditText) findViewById(R.id.et_description_cv);
-        txtDescCount = (TextView) findViewById(R.id.txt_desc_count);
-
-        cvDatepicker = (CardView) findViewById(R.id.cv_datepicker);
-
-        txtDeadlineTitle = (TextView) findViewById(R.id.txt_deadline_title);
-        txtDeadline = (TextView) findViewById(R.id.txt_deadline);
-
-        rlAlertsHeader = (RelativeLayout) findViewById(R.id.rl_alerts_header);
-        rlAlertsBody = (RelativeLayout) findViewById(R.id.rl_alerts_body);
-        ivExpandCv = (ImageView) findViewById(R.id.iv_expand_alert);
-
-        rlRowOneDay = (RelativeLayout) findViewById(R.id.rl_row_one_day);
-        swOneDay = (SwitchCompat) findViewById(R.id.sw_one_day);
-
-        rlRowHalfDay = (RelativeLayout) findViewById(R.id.rl_row_half_day);
-        swHalfDay = (SwitchCompat) findViewById(R.id.sw_half_day);
-
-        rlRowOneHour = (RelativeLayout) findViewById(R.id.rl_row_one_hour);
-        swOneHour = (SwitchCompat) findViewById(R.id.sw_one_hour);
-
-        rlRowImmediate = (RelativeLayout) findViewById(R.id.rl_row_immediate);
-        swImmediate = (SwitchCompat) findViewById(R.id.sw_immediate);
-
-        rlNotifyHeader =(CardView) findViewById(R.id.rl_notify_header);
-        swNotifyall = (SwitchCompat) findViewById(R.id.sw_notifyall);
-
-        btcallvote = (Button)findViewById(R.id.bt_call_vote);
-
-        rlNotifyBody = (RelativeLayout) findViewById(R.id.rl_notify_body);
-        memberCount = (TextView) findViewById(R.id.member_count);
-
-
-        suffix = (TextView) findViewById(R.id.suffix);
-
-        txtDescCount.setText("0/320");
+        txtDescCount.setText("0/160"); // todo : convert to constant
         txtTitleCount.setText("0/35");
         txtPostedname.setText("Posted by " + SettingPreference.getuser_name(CreateVote.this));
 
+        swImmediate.setChecked(true);
+        swNotifyall.setChecked(true);
+        notifyWholeGroup = true;
 
-        setAllListner();
-    }
-
-    private void setAllListner() {
-
-
-        rlAlertsHeader.setOnClickListener(expandableHeader());
-        cvDatepicker.setOnClickListener(datetimepicker());
-        btcallvote.setOnClickListener(button_callVote());
-        rlNotifyBody.setOnClickListener(callVoteNotifyClass());
-
-        //Add onPreDrawListener
         rlAlertsBody.getViewTreeObserver().addOnPreDrawListener(
                 new ViewTreeObserver.OnPreDrawListener() {
 
@@ -236,125 +167,116 @@ public class CreateVote extends PortraitActivity {
                     }
                 });
 
-
-        et_title_cv.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+        listener = new SlideDateTimeListener() {
             @Override
-            public boolean onEditorAction(TextView v, int actionId, KeyEvent keyEvent) {
-                Log.e(TAG, "keyEvent.getKeyCode()  " + keyEvent.getKeyCode());
-                if ((keyEvent != null && (keyEvent.getKeyCode() == KeyEvent.KEYCODE_ENTER))) {
-
-                    Log.e(TAG, "enter is pressed");
-                    et_description_cv.requestFocus();
-                  //  Toast.makeText(CreateVote.this, "enter is pressed", Toast.LENGTH_SHORT).show();
-                    return true;
-
-                } else {
-                    //Toast.makeText(CreateVote.this, "els e", Toast.LENGTH_SHORT).show();
-                    Log.e(TAG, "else other key");
-                }
-                return false;
-            }
-        });
-
-
-        et_title_cv.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-
-            }
-
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-
-            }
-
-            @Override
-            public void afterTextChanged(Editable s) {
-                txtTitleCount.setText(s.length() + "/35");
-            }
-        });
-
-
-        et_description_cv.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-
-            }
-
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-
-            }
-
-            @Override
-            public void afterTextChanged(Editable s) {
-                txtDescCount.setText(s.length() + "/320");
-            }
-        });
-        
-        switchListner();
-
-
-
-
-    }
-
-    private View.OnClickListener callVoteNotifyClass() {
-        return new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-
-                Intent notifyactivity = new Intent(CreateVote.this, VoteNotifyMembers.class);
-                notifyactivity.putParcelableArrayListExtra(Constant.VotedmemberList, voteMemberArrayList);
-                startActivityForResult(notifyactivity, 1);
-
+            public void onDateTimeSet(Date date) {
+                Log.e("TAG", "date is " + date);
+                dateSelected = true;
+                selectedDate = date;
+                txtDeadline.setText(displayFormat.format(date));
             }
         };
     }
 
-    private View.OnClickListener button_callVote() {
-        return new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                FormValidation();
-
-            }
-        };
+    @OnEditorAction(R.id.et_title_cv)
+    public boolean onKeyPressedInTitleEdit(KeyEvent keyEvent) {
+        if ((keyEvent != null && (keyEvent.getKeyCode() == KeyEvent.KEYCODE_ENTER))) {
+            et_description_cv.requestFocus();
+            return true;
+        } else {
+            return false;
+        }
     }
 
-    private void FormValidation() {
+    @OnTextChanged(value = R.id.et_title_cv, callback = OnTextChanged.Callback.AFTER_TEXT_CHANGED)
+    public void updateTitleTextCounter(Editable s) {
+        txtTitleCount.setText(s.length() + "/35");
+
+    }
+
+    @OnTextChanged(value = R.id.et_description_cv, callback = OnTextChanged.Callback.AFTER_TEXT_CHANGED)
+    public void updateDescriptionTextCounter(Editable s) {
+        txtDescCount.setText(s.length() + "/160"); // todo: make the denominator a constant ...
+    }
+
+    @OnClick(R.id.rl_notify_body)
+    public void onNotifyClicked() {
+        Intent notifyactivity = new Intent(CreateVote.this, VoteNotifyMembers.class);
+        notifyactivity.putParcelableArrayListExtra(Constant.VotedmemberList, (ArrayList) voteMemberArrayList);
+        startActivityForResult(notifyactivity, 1);
+    }
+
+    @OnCheckedChanged(R.id.sw_one_day)
+    public void oneDaySelected(boolean isChecked) {
+        if (isChecked) {
+            notificationReminderSetting = 3;
+            toggleSwitches(swOneDay);
+        }
+    }
+
+    @OnCheckedChanged(R.id.sw_half_day)
+    public void halfDaySelected(boolean isChecked) {
+        if (isChecked) {
+            notificationReminderSetting = 2;
+            toggleSwitches(swHalfDay);
+        }
+    }
+
+    @OnCheckedChanged(R.id.sw_one_hour)
+    public void oneHourSelected(boolean isChecked) {
+        if (isChecked) {
+            notificationReminderSetting = 1;
+            toggleSwitches(swOneHour);
+        }
+    }
+
+    @OnCheckedChanged(R.id.sw_immediate)
+    public void immediateSelected(boolean isChecked) {
+        if (isChecked) {
+            notificationReminderSetting = 0;
+            toggleSwitches(swImmediate);
+        }
+    }
+
+    private void toggleSwitches(SwitchCompat selectedSwitch) {
+        swOneDay.setChecked(selectedSwitch.equals(swOneDay));
+        swHalfDay.setChecked(selectedSwitch.equals(swHalfDay));
+        swOneHour.setChecked(selectedSwitch.equals(swOneHour));
+        swImmediate.setChecked(selectedSwitch.equals(swImmediate));
+    }
+
+    @OnClick(R.id.bt_call_vote)
+    public void validateFormAndSubmit() {
 
         if (TextUtils.isEmpty(et_title_cv.getText().toString().trim().replaceAll("[^\\sa-zA-Z0-9 ]", ""))) {
-            showSnackBar(getString(R.string.nm_title_error_msg),snackbar.LENGTH_SHORT,"");
+            showSnackBar(getString(R.string.nm_title_error_msg),Snackbar.LENGTH_SHORT,"");
         } else {
-           if (TextUtils.isEmpty(et_description_cv.getText().toString().trim().replaceAll("[^\\sa-zA-Z0-9 ]", ""))) {
-               showSnackBar(getString(R.string.nm_description_error_msg),snackbar.LENGTH_SHORT,"");
+           if (selectedDate == null) {
+               showSnackBar(getString(R.string.nm_closingtime_msg),Snackbar.LENGTH_SHORT,"");
            } else {
-               if (TextUtils.isEmpty(closingTime)) {
-                   showSnackBar(getString(R.string.nm_closingtime_msg),snackbar.LENGTH_SHORT,"");
-               } else {
-                   callVoteWS();
-               }
-            }
-
+               callVoteWS();
+           }
         }
     }
 
     private void  callVoteWS() {
 
-        String phoneNumber = SettingPreference.getuser_mobilenumber(this);
-        String code = SettingPreference.getuser_token(this);
-        String title = et_title_cv.getText().toString();
-        String description = et_description_cv.getText().toString();
+        // todo : convert member list into list of UIDs
+        final String phoneNumber = SettingPreference.getuser_mobilenumber(this);
+        final String code = SettingPreference.getuser_token(this);
+        final String title = et_title_cv.getText().toString();
+        final String description = et_description_cv.getText().toString(); // todo: make sure can handle empty descs
+        final String closingTime = Constant.isoDateTimeSDF.format(selectedDate);
 
-        grassrootRestService.getApi().createVote(phoneNumber, code, groupId, title, description, closingTime, minute, null, true)
+        grassrootRestService.getApi()
+                .createVote(phoneNumber, code, groupId, title, description, closingTime, notificationReminderSetting, null, false)
                 .enqueue(new Callback<GenericResponse>() {
                     @Override
                     public void onResponse(Call<GenericResponse> call, Response<GenericResponse> response) {
                         Log.d(TAG, response.body().getMessage());
                         finish();
-                        exitActivity();
-                }
+                        exitActivity(); // todo : show a snackbar or something
+                    }
 
                     @Override
                     public void onFailure(Call<GenericResponse> call, Throwable t) {
@@ -366,316 +288,82 @@ public class CreateVote extends PortraitActivity {
 
     private void exitActivity() {
         sendBroadcast(new Intent().setAction(getString(R.string.bs_BR_name)));
-
     }
 
-    private void switchListner() {
-
-
-        swOneDay.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                Log.d(TAG, "swOneDay onCheckedChanged: " + isChecked);
-
-                if (isChecked) {
-                    reminderMins = "3";
-
-                    offAll("swOneDay");
-
-                }
-
-
-            }
-        });
-
-        swHalfDay.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                Log.d(TAG, "swHalfDay onCheckedChanged: " + isChecked);
-
-                if (isChecked) {
-                    reminderMins = "2";
-
-                    offAll("swHalfDay");
-
-                }
-
-
-            }
-        });
-
-
-        swOneHour.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                Log.d(TAG, "swOneHour onCheckedChanged: " + isChecked);
-
-                if (isChecked) {
-                    reminderMins = "1";
-
-                    offAll("swOneHour");
-
-                }
-
-
-            }
-        });
-
-
-        swImmediate.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                Log.d(TAG, "swImmediate onCheckedChanged: " + isChecked);
-
-                if (isChecked) {
-                    reminderMins = "0";
-                    offAll("swImmediate");
-
-                }
-
-
-            }
-        });
-        swImmediate.setChecked(true);
-        swNotifyall.setChecked(true);
-        notifyGroup = "true";
-        swNotifyall.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-
-                if (isChecked) {
-
-                    notifyGroup = "true";
-                    rlNotifyBody.setVisibility(View.GONE);
-
-                } else {
-                    notifyGroup = "false";
-                    voteMemberArrayList.clear();
-                    Intent notifyactivity = new Intent(CreateVote.this, VoteNotifyMembers.class);
-                    notifyactivity.putParcelableArrayListExtra(Constant.VotedmemberList, voteMemberArrayList);
-                    startActivityForResult(notifyactivity, 1);
-                }
-
-
-            }
-        });
-
+    @OnCheckedChanged(R.id.sw_notifyall)
+    public void toggleNotifyAllMembers(boolean isChecked) {
+        if (isChecked) {
+            notifyWholeGroup = true;
+            rlNotifyBody.setVisibility(View.GONE);
+        } else {
+            notifyWholeGroup = false;
+            voteMemberArrayList.clear(); // wtf, vs two lines later
+            Intent notifyactivity = new Intent(CreateVote.this, VoteNotifyMembers.class);
+            notifyactivity.putParcelableArrayListExtra(Constant.VotedmemberList, (ArrayList) voteMemberArrayList);
+            startActivityForResult(notifyactivity, Constant.activitySelectGroupMembers);
+        }
     }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
+        if (resultCode == RESULT_OK && requestCode == Constant.activitySelectGroupMembers) {
 
-        if (resultCode == 1 && requestCode == 1) {
+            voteMemberArrayList = data.getParcelableArrayListExtra(Constant.VotedmemberList);
+            int selectedMemberCount = calculateMemberNumber();
 
-            this.voteMemberArrayList = data.getParcelableArrayListExtra(Constant.VotedmemberList);
-            if (giveMembercount() > 0) {
+            if (selectedMemberCount > 0) {
                 rlNotifyBody.setVisibility(View.VISIBLE);
-                if (membercounter > 1) {
-
-                    memberCount.setText(String.valueOf(membercounter));
-                    suffix.setText(getString(R.string.cv_notify_member_suffix_two));
-                } else {
-                    memberCount.setText(String.valueOf(membercounter));
-                    suffix.setText(getString(R.string.cv_notify_member_suffix_one));
-                }
-
-                if (membercounter == voteMemberArrayList.size()) {
-                    swNotifyall.setChecked(true);
-                } else {
-                    swNotifyall.setChecked(false);
-                }
-
-            } else {
-
+                memberCount.setText(String.valueOf(selectedMemberCount));
+                suffix.setText(selectedMemberCount > 1 ? getString(R.string.cv_notify_member_suffix_two) :
+                        getString(R.string.cv_notify_member_suffix_one));
+                swNotifyall.setChecked(selectedMemberCount == voteMemberArrayList.size());
             }
-
         }
     }
 
-    public int giveMembercount() {
-
-         membercounter = 0;
-         stringBuilder = new StringBuilder();
-        for (int i = 0; i < voteMemberArrayList.size(); i++) {
-            VoteMemberModel membercount = voteMemberArrayList.get(i);
-            if (membercount.isSelected) {
-                membercounter++;
-                stringBuilder.append(membercount.memberUid);
-                stringBuilder.append(",");
+    public int calculateMemberNumber() {
+        int count = 0;
+        for (VoteMemberModel m : voteMemberArrayList) {
+            if (m.isSelected) {
+                count++;
             }
         }
+        return count;
+    }
 
-        if (stringBuilder.toString().equalsIgnoreCase("")) {
-            members = "";
+    @OnClick(R.id.cv_datepicker)
+    public void simpleDatePicker() {
+
+        Date dateToPass;
+        if (dateSelected) {
+            dateToPass = selectedDate;
         } else {
-            members = stringBuilder.toString().substring(0, stringBuilder.toString().length() - 1);
-        }
-
-        return membercounter;
-    }
-
-
-    private void offAll(String switchname) {
-
-
-        if (switchname.equalsIgnoreCase("swOneDay")) {
-            swHalfDay.setChecked(false);
-            swOneHour.setChecked(false);
-            swImmediate.setChecked(false);
-        }
-        else if (switchname.equalsIgnoreCase("swHalfDay")) {
-
-            swOneDay.setChecked(false);
-            swOneHour.setChecked(false);
-            swImmediate.setChecked(false);
-        }
-        else if (switchname.equalsIgnoreCase("swOneHour")) {
-            swOneDay.setChecked(false);
-            swHalfDay.setChecked(false);
-            swImmediate.setChecked(false);
-        }
-        else if (switchname.equalsIgnoreCase("swImmediate")) {
-
-            swOneDay.setChecked(false);
-            swHalfDay.setChecked(false);
-            swOneHour.setChecked(false);
-        }
-
-    }
-
-
-    private View.OnClickListener datetimepicker() {
-        return new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-
-                // MDdatepicker();
-                SimpleDatePicker();
-            }
-
-
-        };
-    }
-
-
-    private void SimpleDatePicker() {
-
-        simpleDateFormat = new SimpleDateFormat("dd-MM-yyyy HH:mm");
-        Date date1 = null;
-        try {
-            if (dateselected) {
-                date1 = (Date) simpleDateFormat.parse(selectedDate);
-
-            } else {
-
-                //today date but addition 10min
-                final long ONE_MINUTE_IN_MILLIS=60000;//millisecs
-                Calendar date = Calendar.getInstance();
-                long t= date.getTimeInMillis();
-                final Date afterAddingTenMins=new Date(t + (10 * ONE_MINUTE_IN_MILLIS));
-
-                todaydateString = simpleDateFormat.format(afterAddingTenMins);
-
-                try {
-                    date1 = (Date) simpleDateFormat.parse(todaydateString);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    Log.e(TAG, " e is " + e.getMessage());
-                }
-            }
-        } catch (ParseException e) {
-            e.printStackTrace();
+            final long TEN_MINUTES=10 * 60 * 1000; //millisecs
+            long t = SystemClock.currentThreadTimeMillis();
+            dateToPass = new Date(t + (TEN_MINUTES));
         }
 
         new SlideDateTimePicker.Builder(getSupportFragmentManager())
                 .setListener(listener)
-                .setInitialDate(date1)
-                        .setMinDate(new Date())
-                        //.setMaxDate(maxDate)
-                        //.setIs24HourTime(true)
-                        //.setTheme(SlideDateTimePicker.HOLO_DARK)
+                .setInitialDate(dateToPass)
+                .setMinDate(new Date())
                 .setIndicatorColor(Color.parseColor("#207A33"))
                 .build()
                 .show();
     }
 
-    private SlideDateTimeListener listener = new SlideDateTimeListener() {
-
-        @Override
-        public void onDateTimeSet(Date date)
-        {
-            Log.e("TAG", "date is " + date);
-
-            dateselected = true;
-
-            simpleDateFormat = new SimpleDateFormat("dd-MM-yyyy HH:mm");
-
-            txtDeadline.setText(simpleDateFormat.format(date));
-
-            selectedDate = simpleDateFormat.format(date);
-
-            SimpleDateFormat target_date = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm");
-
-            closingTime = target_date.format(date);
-
-            Log.e(TAG,"simpleDateFormat.format(date) is " + simpleDateFormat.format(date));
-
-
+    @OnClick(R.id.rl_alerts_header)
+    public void expandableHeader() {
+        if (rlAlertsBody.getVisibility()==View.GONE){
+            ivExpandCv.setImageResource(R.drawable.ic_arrow_up);
+            rlAlertsBody.setVisibility(View.VISIBLE);
+            mAnimator.start();
+        } else {
+            ivExpandCv.setImageResource(R.drawable.ic_arrow_down);
+            collapse();
         }
-
-        // Optional cancel listener
-        @Override
-        public void onDateTimeCancel()
-        {
-/*
-            Toast.makeText(CreateVote.this,
-                    "Canceled", Toast.LENGTH_SHORT).show();
-*/
-        }
-    };
-
-
-    public String convertW3CTODeviceTimeZone(String strDate) throws Exception
-    {
-        SimpleDateFormat simpleDateFormatW3C = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
-        Date dateServer = simpleDateFormatW3C.parse(strDate);
-
-        TimeZone deviceTimeZone = TimeZone.getDefault();
-        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
-        simpleDateFormat.setTimeZone(deviceTimeZone);
-
-        String formattedDate = simpleDateFormat.format(dateServer);
-        // long timeMilliness=new Date(formattedDate).getTime();
-        return formattedDate;
-    }
-
-
-
-
-
-    private View.OnClickListener expandableHeader() {
-        return new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (rlAlertsBody.getVisibility()==View.GONE){
-                    ivExpandCv.setImageResource(R.drawable.ic_arrow_up);
-                    expand();
-                }else{
-                    ivExpandCv.setImageResource(R.drawable.ic_arrow_down);
-                    collapse();
-                }
-            }
-        };
-    }
-
-    private void expand() {
-        //set Visible
-        rlAlertsBody.setVisibility(View.VISIBLE);
-
-
-        mAnimator.start();
     }
 
     private void collapse() {
@@ -683,6 +371,7 @@ public class CreateVote extends PortraitActivity {
 
         ValueAnimator mAnimator = slideAnimator(finalHeight, 0);
 
+        // must be a more efficient way to do this
         mAnimator.addListener(new Animator.AnimatorListener() {
             @Override
             public void onAnimationEnd(Animator animator) {
@@ -702,6 +391,7 @@ public class CreateVote extends PortraitActivity {
             public void onAnimationRepeat(Animator animator) {
             }
         });
+
         mAnimator.start();
     }
 
@@ -709,14 +399,11 @@ public class CreateVote extends PortraitActivity {
     private ValueAnimator slideAnimator(int start, int end) {
 
         ValueAnimator animator = ValueAnimator.ofInt(start, end);
-
-
         animator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
             @Override
             public void onAnimationUpdate(ValueAnimator valueAnimator) {
                 //Update Height
                 int value = (Integer) valueAnimator.getAnimatedValue();
-
                 ViewGroup.LayoutParams layoutParams = rlAlertsBody.getLayoutParams();
                 layoutParams.height = value;
                 rlAlertsBody.setLayoutParams(layoutParams);
@@ -725,30 +412,16 @@ public class CreateVote extends PortraitActivity {
         return animator;
     }
 
-    private void showSnackBar(String message,int length, final String actionButtontext)
-    {
-        snackbar = Snackbar.make(rlRootCv, message, length);
-        snackbar.setActionTextColor(Color.RED);
-
-        if (!actionButtontext.isEmpty() )
-        {
-            snackbar.setAction(actionButtontext, new View.OnClickListener() {
+    private void showSnackBar(String message, int length, final String actionButtontext) {
+        if (actionButtontext == null || actionButtontext.isEmpty()) {
+            ErrorUtils.showSnackBar(rlRootCv, message, length, null, null);
+        } else {
+            ErrorUtils.showSnackBar(rlRootCv, message, length, actionButtontext, new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
                     callVoteWS();
-
                 }
             });
         }
-        snackbar.show();
-
     }
-
-    public  String timeZone()
-    {
-        Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("GMT"), Locale.getDefault());
-        String   timeZone = new SimpleDateFormat("Z").format(calendar.getTime());
-        return timeZone.substring(0, 3) + ":"+ timeZone.substring(3, 5);
-    }
-
 }
