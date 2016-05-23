@@ -17,24 +17,16 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.techmorphosis.grassroot.R;
-import com.techmorphosis.grassroot.adapters.MyPagerAdapter;
-import com.techmorphosis.grassroot.ui.activities.Create_Group;
-import com.techmorphosis.grassroot.ui.activities.Join_Request;
-
-import java.util.TimeZone;
-
+import com.techmorphosis.grassroot.adapters.WelcomePagerAdapter;
+import com.techmorphosis.grassroot.ui.activities.CreateGroupActivity;
+import com.techmorphosis.grassroot.ui.activities.GroupJoinActivity;
 
 public class NewWelcomeFragment extends android.support.v4.app.Fragment {
 
-
-
-
-    private ViewPager pager;
-    private MyPagerAdapter adapter;
-    private FragmentActivity ctx;
     private View view;
     private Toolbar toolbar;
     private TextView toolbarText;
+
    // PageIndicator mIndicator;
     private NewFragmentCallbacks mCallbacks;
     private Button bt_joingroup;
@@ -56,19 +48,17 @@ public class NewWelcomeFragment extends android.support.v4.app.Fragment {
     @Override
     public void onActivityCreated(Bundle savedInstanceState)    {
         super.onActivityCreated(savedInstanceState);
-
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-         view = inflater.inflate(R.layout.newwelcome, container, false);
+        view = inflater.inflate(R.layout.newwelcome, container, false);
         findView();
         setUpToolbar();
         return view;
     }
 
-    private void setUpToolbar()
-    {
+    private void setUpToolbar() {
         toolbarText.setText("Welcome");
         toolbar.setNavigationIcon(getResources().getDrawable(R.drawable.btn_navigation));
         toolbar.setNavigationOnClickListener(new View.OnClickListener() {
@@ -78,8 +68,6 @@ public class NewWelcomeFragment extends android.support.v4.app.Fragment {
             }
         });
         startAnimation();
-
-
     }
 
     private void startAnimation() {
@@ -105,8 +93,7 @@ public class NewWelcomeFragment extends android.support.v4.app.Fragment {
             return  new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-
-                    Intent startgroup= new Intent(getActivity(), Create_Group.class);
+                    Intent startgroup= new Intent(getActivity(), CreateGroupActivity.class);
                     startActivity(startgroup);
                 }
             };
@@ -116,14 +103,14 @@ public class NewWelcomeFragment extends android.support.v4.app.Fragment {
         return  new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent joingroup= new Intent(getActivity(), Join_Request.class);
+                Intent joingroup= new Intent(getActivity(), GroupJoinActivity.class);
                 startActivity(joingroup);
             }
         };
     }
 
 
-    public static interface NewFragmentCallbacks {
+    public interface NewFragmentCallbacks {
         void menuClick();
     }
 

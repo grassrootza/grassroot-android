@@ -22,21 +22,12 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
 
-import com.android.volley.VolleyError;
 import com.google.android.gms.gcm.GoogleCloudMessaging;
 import com.google.android.gms.iid.InstanceID;
-import com.techmorphosis.grassroot.Network.AllLinsks;
-import com.techmorphosis.grassroot.Network.NetworkCall;
 import com.techmorphosis.grassroot.R;
-import com.techmorphosis.grassroot.utils.SettingPreffrence;
-import com.techmorphosis.grassroot.utils.listener.ErrorListenerVolley;
-import com.techmorphosis.grassroot.utils.listener.ResponseListenerVolley;
-
-import org.json.JSONException;
-import org.json.JSONObject;
+import com.techmorphosis.grassroot.utils.SettingPreference;
 
 import java.io.IOException;
-import java.util.HashMap;
 
 public class GcmRegistrationService extends IntentService {
 
@@ -64,7 +55,7 @@ public class GcmRegistrationService extends IntentService {
 
     } catch (Exception e) {
             Log.e(TAG, "Failed to complete token refresh", e);
-             SettingPreffrence.setPrefGcmSentTokenToServer(getApplicationContext(),false);
+             SettingPreference.setPrefGcmSentTokenToServer(getApplicationContext(),false);
 
         }
 
@@ -73,7 +64,7 @@ public class GcmRegistrationService extends IntentService {
 
     private void sendRegistrationtokenToServer2(final String token) {
 
-        NetworkCall networkCall = new NetworkCall
+        /*NetworkCall networkCall = new NetworkCall
                 (
                         getApplicationContext(),
                         new ResponseListenerVolley() {
@@ -118,7 +109,7 @@ public class GcmRegistrationService extends IntentService {
 
         HashMap<String,String> hashMap = new HashMap();
         hashMap.put("registration_id", token);
-        networkCall.makeStringRequest_POST(hashMap);
+        networkCall.makeStringRequest_POST(hashMap);*/
     }
 
 
@@ -154,12 +145,9 @@ public class GcmRegistrationService extends IntentService {
 
                 if (result != null) {
                     Log.e(TAG,"send Failed : " + result);
-                }
-                else//fine
-                {
+                } else {
                     Log.e(TAG,"result is  fine: " + result);
-                    SettingPreffrence.setPREF_Gcmtoken(getApplicationContext(), token);
-
+                    SettingPreference.setPREF_Gcmtoken(getApplicationContext(), token);
                 }
             }
         }.execute(null, null, null);

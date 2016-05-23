@@ -17,25 +17,12 @@ import android.widget.RelativeLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
-import com.android.volley.AuthFailureError;
-import com.android.volley.NoConnectionError;
-import com.android.volley.ServerError;
-import com.android.volley.TimeoutError;
-import com.android.volley.VolleyError;
-import com.techmorphosis.grassroot.Network.AllLinsks;
-import com.techmorphosis.grassroot.Network.NetworkCall;
 import com.techmorphosis.grassroot.R;
+import com.techmorphosis.grassroot.services.GrassrootRestService;
 import com.techmorphosis.grassroot.slideDateTimePicker.SlideDateTimeListener;
 import com.techmorphosis.grassroot.slideDateTimePicker.SlideDateTimePicker;
-import com.techmorphosis.grassroot.utils.SettingPreffrence;
 import com.techmorphosis.grassroot.utils.UtilClass;
-import com.techmorphosis.grassroot.utils.listener.ErrorListenerVolley;
-import com.techmorphosis.grassroot.utils.listener.ResponseListenerVolley;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.io.UnsupportedEncodingException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -167,47 +154,7 @@ public class EditVote extends PortraitActivity{
         return new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
-
-           /*     simpleDateFormat = new SimpleDateFormat("dd-MM-yyyy HH:mm");
-                Date date1 = null;
-                try {
-                    if (dateselected) {
-                        date1 = (Date) simpleDateFormat.parse(selectedDate);
-
-                    } else {
-
-                        try {
-                            date1 = (Date) simpleDateFormat.parse(deadline);
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                            Log.e(TAG, " e is " + e.getMessage());
-                        }
-                    }
-                } catch (ParseException e) {
-                    e.printStackTrace();
-                }
-
-                now = Calendar.getInstance();
-                now.setTime(date1);
-
-                Calendar today = Calendar.getInstance();
-
-                DatePickerDialog dpd = DatePickerDialog.newInstance(
-                        EditVote.this,
-                        now.get(Calendar.YEAR),
-                        now.get(Calendar.MONTH),
-                        now.get(Calendar.DAY_OF_MONTH)
-                );
-                dpd.vibrate(true);
-                dpd.dismissOnPause(false);
-                dpd.setAccentColor(getResources().getColor(R.color.primaryColor));
-                dpd.setMinDate(today);
-                dpd.show(getFragmentManager(), "Datepickerdialog");*/
-
-
                 showDateTimepPicker();
-
             }
 
 
@@ -222,9 +169,6 @@ public class EditVote extends PortraitActivity{
             dateselected = true;
 
             Log.e("TAG", "date is " + date);
-
-           /* Toast.makeText(EditVote.this, mFormatter.format(date), Toast.LENGTH_SHORT).show();
-            Toast.makeText(EditVote.this, mFormatter1.format(date), Toast.LENGTH_SHORT).show();*/
 
             simpleDateFormat = new SimpleDateFormat("dd-MM-yyyy HH:mm");
 
@@ -243,13 +187,7 @@ public class EditVote extends PortraitActivity{
 
         // Optional cancel listener
         @Override
-        public void onDateTimeCancel()
-        {
-/*
-            Toast.makeText(EditVote.this,
-                    "Canceled", Toast.LENGTH_SHORT).show();
-*/
-        }
+        public void onDateTimeCancel() { }
     };
 
 
@@ -286,21 +224,6 @@ public class EditVote extends PortraitActivity{
                 .show();
     }
 
-/*
-    public String convertW3CTODeviceTimeZone(String strDate) throws Exception {
-        SimpleDateFormat simpleDateFormatW3C = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
-        Date dateServer = simpleDateFormatW3C.parse(strDate);
-
-        TimeZone deviceTimeZone = TimeZone.getDefault();
-        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
-        simpleDateFormat.setTimeZone(deviceTimeZone);
-
-        String formattedDate = simpleDateFormat.format(dateServer);
-        // long timeMilliness=new Date(formattedDate).getTime();
-        return formattedDate;
-    }
-*/
-
     private View.OnClickListener button_save() {
         return new View.OnClickListener() {
             @Override
@@ -333,72 +256,18 @@ public class EditVote extends PortraitActivity{
 
     private void doInbackground() {
 
-        NetworkCall networkCall = new NetworkCall
-                (
-                        EditVote.this,
-                        new ResponseListenerVolley() {
-                            @Override
-                            public void onSuccess(String s) {
-                                error_flag = 0;
-                                postExecute(s);
-                            }
-                        },
-                        new ErrorListenerVolley() {
-                            @Override
-                            public void onError(VolleyError volleyError) {
+        GrassrootRestService grassrootRestService = new GrassrootRestService(this);
+        // grassrootRestService.getApi().editVote()
 
-                                if ((progressDialog != null) && progressDialog.isShowing()) {
-                                    progressDialog.dismiss();
-                                }
-
-                                if (volleyError instanceof NoConnectionError || volleyError instanceof TimeoutError) {
-                                    error_flag = 1;
-                                    postExecute("");
-                                } else if (volleyError instanceof ServerError) {
-
-                                    String responsebody = null;
-                                    try {
-                                        responsebody = new String(volleyError.networkResponse.data, "utf-8");
-                                        Log.e(TAG, "responsebody is " + responsebody);
+        //                    public void onSuccess(String s) {
+                                //error_flag = 0;
+        //                        postExecute(s);
 
 
-                                        try {
-                                            JSONObject jsonObject = new JSONObject(responsebody);
-                                            error_flag = 0;
-                                            postExecute(responsebody);
-                                        } catch (JSONException e) {
-                                            e.printStackTrace();
-                                            error_flag = 5;
-                                            postExecute("");
-                                        }
-                                        ;
-
-                                    } catch (UnsupportedEncodingException e) {
-                                        e.printStackTrace();
-                                        error_flag = 5;
-                                        postExecute("");
-                                    }
-
-                                } else if (volleyError instanceof AuthFailureError) {//unKnown error
-                                    error_flag = 4;
-                                    postExecute("");
-                                } else {
-                                    error_flag = 5;
-                                    postExecute("");
-                                }
-
-
-                            }
-                        },
-                        AllLinsks.EditVote + voteid + "/" + SettingPreffrence.getPREF_Phone_Token(EditVote.this),
-                        "",
-                        false
-                );
         HashMap<String, String> hashMap = new HashMap<>();
         hashMap.put("description", et_description.getText().toString());
         hashMap.put("closingTime", closingTime + utilClass.timeZone());
         hashMap.put("title", title);
-        networkCall.makeStringRequest_POST(hashMap);
 
         Log.e(TAG, "description is " + et_description.getText().toString());
         Log.e(TAG, "closingTime is " + closingTime + utilClass.timeZone());

@@ -15,6 +15,10 @@
     <uses-permission android:name="android.permission.READ_CONTACTS" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
 
+    <!-- todo : narrow down which of these are truly needed -->
+    <uses-permission android:name="android.permission.READ_SMS" />
+    <uses-permission android:name="android.permission.RECEIVE_SMS" />
+
     <permission android:name="com.techmorphosis.grassroot.permission.C2D_MESSAGE"
         android:protectionLevel="signature" />
     <uses-permission android:name="com.techmorphosis.grassroot.permission.C2D_MESSAGE" />
@@ -49,7 +53,7 @@
             android:parentActivityName=".ui.activities.HomeScreenActivity"/>
 
         <activity
-            android:name=".ui.activities.NewTaskMenuActivity"></activity>
+            android:name=".ui.activities.NewTaskMenuActivity" />
 
         <activity
             android:name=".ui.activities.CreateGroupActivity"
@@ -89,8 +93,10 @@
             android:name=".ui.activities.NotBuiltActivity"
             android:label="@string/title_activity_blank"
             android:theme="@style/AppTheme" />
+
         <activity android:name=".ui.activities.ViewVote" />
         <activity android:name=".ui.activities.FAQActivity" />
+
         <activity
             android:name=".ui.activities.EditVote"
             android:windowSoftInputMode="adjustPan" />
@@ -113,6 +119,7 @@
                 <category android:name="com.techmorphosis.grassroot" />
             </intent-filter>
         </receiver>
+
         <service
             android:name="com.techmorphosis.grassroot.services.GcmListenerService"
             android:exported="false" >
@@ -120,6 +127,7 @@
                 <action android:name="com.google.android.c2dm.intent.RECEIVE" />
             </intent-filter>
         </service>
+
         <service
             android:name="com.techmorphosis.grassroot.services.InstanceIDListenerService"
             android:exported="false">
@@ -127,7 +135,8 @@
                 <action android:name="com.google.android.gms.iid.InstanceID" />
             </intent-filter>
         </service>
-        <service android:name=".services.GcmRegistrationService"></service>
+
+        <service android:name=".services.GcmRegistrationService" />
 
     </application>
 

@@ -18,29 +18,19 @@ import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
-import com.android.volley.AuthFailureError;
-import com.android.volley.NoConnectionError;
-import com.android.volley.ServerError;
-import com.android.volley.TimeoutError;
-import com.android.volley.VolleyError;
-import com.techmorphosis.grassroot.Interface.ClickListener;
-import com.techmorphosis.grassroot.Network.AllLinsks;
-import com.techmorphosis.grassroot.Network.NetworkCall;
 import com.techmorphosis.grassroot.R;
-import com.techmorphosis.grassroot.RecyclerView.RecyclerTouchListener;
 import com.techmorphosis.grassroot.adapters.VoteNotifyMembersAdapter;
+import com.techmorphosis.grassroot.interfaces.ClickListener;
 import com.techmorphosis.grassroot.models.VoteMemberModel;
+import com.techmorphosis.grassroot.services.GrassrootRestService;
+import com.techmorphosis.grassroot.ui.views.RecyclerTouchListener;
 import com.techmorphosis.grassroot.utils.Constant;
 import com.techmorphosis.grassroot.utils.ProgressBarCircularIndeterminate;
-import com.techmorphosis.grassroot.utils.SettingPreffrence;
-import com.techmorphosis.grassroot.utils.listener.ErrorListenerVolley;
-import com.techmorphosis.grassroot.utils.listener.ResponseListenerVolley;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 
 public class VoteNotifyMembers extends PortraitActivity implements  View.OnClickListener{
@@ -82,7 +72,7 @@ public class VoteNotifyMembers extends PortraitActivity implements  View.OnClick
         setUpToolbar();
         memberlist = new ArrayList<>();
         Bundle b= getIntent().getExtras();
-        memberlist =b.getParcelableArrayList(Constant.VotedmemberList);
+        memberlist = b.getParcelableArrayList(Constant.VotedmemberList);
         init();
         if (memberlist.size() == 0) {
             MembersWS();
@@ -185,76 +175,17 @@ public class VoteNotifyMembers extends PortraitActivity implements  View.OnClick
 
     }
 
-    private void doInBackground()
-    {
+    private void doInBackground() {
 
-        NetworkCall networkcall = new NetworkCall
-                (
-                        VoteNotifyMembers.this,
-                        new ResponseListenerVolley() {
-                            @Override
-                            public void onSuccess(String s)
-                            {
+        GrassrootRestService grassrootRestService = new GrassrootRestService(this);
 
-                                error_flag =0;
-                                postExecute(s);
-                            }
-                        },
-                        new ErrorListenerVolley() {
-                            @Override
-                            public void onError(VolleyError volleyError) {
+        // todo: make a call to this and do post execute
+        // grassrootRestService.getApi().getGroupMembers()
 
-                                if (volleyError instanceof NoConnectionError || volleyError instanceof TimeoutError)
-                                {
-                                    error_flag =1;
-                                    postExecute("");
-
-                                }
-                                else if (volleyError instanceof ServerError)
-                                {
-                                    try {
-                                        String responsebody = new String(volleyError.networkResponse.data,"utf-8");
-                                        Log.e(TAG, "responsebody is " + responsebody);
-                                        try {
-                                            JSONObject jsonObject = new JSONObject(responsebody);
-                                            error_flag =0;
-                                            postExecute(responsebody);
-
-                                        } catch (JSONException e) {
-                                            e.printStackTrace();
-                                            error_flag =5;
-                                            postExecute("");
-
-                                        }
-
-                                    } catch (UnsupportedEncodingException e) {
-                                        e.printStackTrace();
-
-                                        error_flag =5;
-                                        postExecute("");
+        // error_flag =0;
+        // postExecute(s);
 
 
-                                    }
-
-                                }
-                                else if (volleyError instanceof AuthFailureError)
-                                {
-                                    error_flag = 4 ;
-                                    postExecute("");
-                                }
-                                else { //Unknown volley error
-                                    error_flag = 5;
-                                    postExecute("");
-                                }
-                            }
-                        },
-                        AllLinsks.Votemembers +SettingPreffrence.getPREF_Phone_Token(VoteNotifyMembers.this)+"/"+SettingPreffrence.getGroupId(VoteNotifyMembers.this)+"/"+"false",
-                        "",
-                        false
-
-
-                );
-        networkcall.makeStringRequest_GET();
     }
 
     private void postExecute(String response)

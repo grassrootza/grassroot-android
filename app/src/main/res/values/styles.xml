@@ -168,6 +168,7 @@
     <style name="Button_green" tools:ignore="NewApi">
         <item name="android:textSize">@dimen/txt_medium</item>
         <item name="android:textColor">@drawable/green_txt</item>
+        <item name="android:textAllCaps">true</item>
         <item name="android:singleLine">true</item>
         <item name="android:background">@drawable/register</item>
         <item name="android:layout_marginLeft">10dp</item>
@@ -181,7 +182,8 @@
         <item name="android:textSize">@dimen/txt_medium</item>
         <item name="android:textColor">@drawable/white_txt</item>
         <item name="android:singleLine">true</item>
-        <item name="android:background">@drawable/register</item>
+        <item name="android:textAllCaps">true</item>
+        <item name="android:background">@drawable/login</item>
         <item name="android:layout_marginLeft">10dp</item>
         <item name="android:layout_marginRight">10dp</item>
         <item name="android:layout_marginBottom">20dp</item>

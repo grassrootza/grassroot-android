@@ -11,8 +11,8 @@ import android.view.View;
 import android.widget.TextView;
 
 import com.techmorphosis.grassroot.R;
+import com.techmorphosis.grassroot.interfaces.AlertDialogListener;
 import com.techmorphosis.grassroot.utils.UtilClass;
-import com.techmorphosis.grassroot.utils.listener.AlertDialogListener;
 
 
 public class NotificationDialog extends android.support.v4.app.DialogFragment

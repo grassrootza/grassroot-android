@@ -17,6 +17,7 @@ public class Constant {
     public static final String restUrl = BuildConfig.BUILD_TYPE.equals("release") ? stagingUrl : localUrl;
 
     public static final String filteredList = "filteredList";
+    public static final  String VotedmemberList="VotedmemberList"; // todo: as with others, probably not needed
 
     public static final String contactsAdded = "contactsAdded";
     public static final String contactsRemoved = "contactsRemoved";

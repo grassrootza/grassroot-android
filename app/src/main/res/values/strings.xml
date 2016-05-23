@@ -68,6 +68,11 @@
 
     <!--welcome content-->
 
+    <string name="txt_welcome">Welcome to <b>Grassroot</b></string>
+    <string name="txt_getstart">To get started</string>
+    <string name="new_joingroup">Join Group</string>
+    <string name="new_startgroup">Create Group</string>
+
     <!--title-->
     <string name="o_title">Welcome to Grassroot</string>
     <string name="t_title">Groups</string>
@@ -89,12 +94,9 @@
     <string name="bt_save">Save</string>
     <string name="bt_cancel">Cancel</string>
 
-
     <!--RateUs Screen-->
     <string name="RateUs">RateUs</string>
     <string name="rate_us_text">If you enjoy using Grassroot, would you mind taking a moment to rate it? Thank You for your support.</string>
-
-
     <string name="share_app_text">Meet, Vote and Act with the Grassroot App. Download it now from the Android Play Store -https://play.google.com/store/apps/details?id=com.techmorphosis.grassroot</string>
 
     <!--Logout-->
@@ -125,6 +127,7 @@
 
     <!-- Phone book and other strings -->
     <string name="action_search">Search...</string>
+    <string name="cg_contacs_loading">Scanning all your contacts....</string>
     <string name="cg_dialog_title">Select any one number</string>
     <string name="cg_valid_number">The number selected is not a valid South African phone number. Please select a different number</string>
     <string name="title_activity_alert_dialog">AlertDialogActivity</string>
@@ -206,6 +209,10 @@
     <string name="ev_description">Description</string>
     <string name="ev_closing">Closing time</string>
 
+    <string name="cv_notify_member_prefix">You have selected</string>
+    <string name="cv_notify_member_suffix_one">member</string>
+    <string name="cv_notify_member_suffix_two">members</string>
+    <string name="nm_vote_members_msg">Please select at least one member</string>
 
     <!--Create Vote--> <!--cv-->
     <string name="cv_bt_call_vote">Call Vote</string>
@@ -312,6 +319,16 @@
     <string name="sender_id">681116473953@gcm.googleapis.com</string>
     <string name="project_id">681116473953</string>
 
+    <!-- GCM strings ; todo: put these in config or somewhere not disclosed when source is opened -->
+    <string name="Server_API_Key">AIzaSyBFEX10lX_KITAXL0hifg_M1ctRd4ACG2A</string>
+    <string name="Android_API_Key">AIzaSyCQIcVV-FKNkHTJaXJdSqfeVUFvqAHYfSs</string>
+    <string name="Testing_Key">AIzaSyAb7cyP_Hl069fA1dD4AITDDX3_3XCshs8</string>
+    <string name="Production_Key">AIzaSyAbcDXh1pfh3PsJU-Hprm9aEKhVcUBz3Rg</string>
+
+    <string name="gcm_send_message">Token retrieved and sent to server! You can now use gcmsender to send downstream messages to this app.</string>
+    <string name="registering_message">Generating InstanceID token...</string>
+    <string name="token_error_message">An error occurred while either fetching the InstanceID token, sending the fetched token to the server
+        or subscribing to the PubSub topic. Please try running the sample again.</string>
 
     <!--Blank screen--><!--bs-->
     <string name="bs_BR_name">Blank Screen</string>

@@ -12,7 +12,7 @@ import android.telephony.SmsMessage;
 import android.util.Log;
 
 import com.techmorphosis.grassroot.Service.QuickstartPreferences;
-import com.techmorphosis.grassroot.utils.SettingPreffrence;
+import com.techmorphosis.grassroot.utils.SettingPreference;
 
 import java.util.List;
 
@@ -42,7 +42,7 @@ public class SMSReciever extends BroadcastReceiver {
 
                 String otp=getOTP(message);
 
-                SettingPreffrence.setPREF_OTP(context,otp);
+                SettingPreference.setPREF_OTP(context,otp);
 
                 Intent registrationComplete = new Intent(QuickstartPreferences.REGISTRATION_COMPLETE);
                 LocalBroadcastManager.getInstance(context).sendBroadcast(registrationComplete);

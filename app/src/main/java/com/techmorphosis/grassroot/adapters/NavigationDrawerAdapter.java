@@ -18,7 +18,7 @@ import android.widget.TextView;
 
 import com.techmorphosis.grassroot.R;
 import com.techmorphosis.grassroot.models.NavDrawerItem;
-import com.techmorphosis.grassroot.utils.SettingPreffrence;
+import com.techmorphosis.grassroot.utils.SettingPreference;
 
 import java.util.ArrayList;
 
@@ -71,7 +71,7 @@ public class NavigationDrawerAdapter extends RecyclerView.Adapter<NavigationDraw
 
         if (position == 2) {
             holder.txtTitleCounter.setVisibility(View.VISIBLE);
-            int notificationcount = SettingPreffrence.getIsNotificationcounter(mContext);
+            int notificationcount = SettingPreference.getIsNotificationcounter(mContext);
             Log.e(TAG, "notificationcount is " + notificationcount);
             holder.txtTitleCounter.setText("" + notificationcount);
 

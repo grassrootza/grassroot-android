@@ -26,34 +26,27 @@ import android.widget.RelativeLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
-import com.android.volley.AuthFailureError;
-import com.android.volley.NoConnectionError;
-import com.android.volley.ServerError;
-import com.android.volley.TimeoutError;
-import com.android.volley.VolleyError;
-import com.techmorphosis.grassroot.Network.AllLinsks;
-import com.techmorphosis.grassroot.Network.NetworkCall;
 import com.techmorphosis.grassroot.R;
 import com.techmorphosis.grassroot.models.VoteMemberModel;
+import com.techmorphosis.grassroot.services.GrassrootRestService;
+import com.techmorphosis.grassroot.services.model.GenericResponse;
 import com.techmorphosis.grassroot.slideDateTimePicker.SlideDateTimeListener;
 import com.techmorphosis.grassroot.slideDateTimePicker.SlideDateTimePicker;
 import com.techmorphosis.grassroot.utils.Constant;
-import com.techmorphosis.grassroot.utils.SettingPreffrence;
+import com.techmorphosis.grassroot.utils.SettingPreference;
 import com.techmorphosis.grassroot.utils.UtilClass;
-import com.techmorphosis.grassroot.utils.listener.ErrorListenerVolley;
-import com.techmorphosis.grassroot.utils.listener.ResponseListenerVolley;
-
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.Locale;
 import java.util.TimeZone;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class CreateVote extends PortraitActivity {
 
@@ -110,7 +103,6 @@ public class CreateVote extends PortraitActivity {
     private Snackbar snackbar;
     private RelativeLayout rlRootCv;
     public  boolean receiver = false;
-    private UtilClass utilClass;
 
     private ArrayList<VoteMemberModel> voteMemberArrayList;
     private RelativeLayout rlNotifyBody;
@@ -122,22 +114,23 @@ public class CreateVote extends PortraitActivity {
     private SimpleDateFormat mFormatter1 = new SimpleDateFormat("MMMM dd yyyy HH:MM");
     private SimpleDateFormat mFormatter = new SimpleDateFormat("MMMM dd yyyy hh:mm aa");
 
+    private GrassrootRestService grassrootRestService;
+    private String groupId;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_create_vote);
-        if (getIntent().getExtras()!= null)
-        {//No Broadcast Reciever
-           // Toast.makeText(CreateVote.this, "not null", Toast.LENGTH_SHORT).show();
-                receiver=false;
-        }
-        else
-        {//Broadcast Reciever
-            //Toast.makeText(CreateVote.this, " null", Toast.LENGTH_SHORT).show();
+        if (getIntent().getExtras()!= null) {
+            groupId = getIntent().getStringExtra(Constant.GROUPUID_FIELD);
+            receiver=false;
+        } else {
+            groupId = "";
             receiver = true;
         }
 
-        utilClass = new UtilClass();
+        grassrootRestService = new GrassrootRestService(this);
+
         findAllViews();
         setUpToolbar();
         init();
@@ -211,7 +204,7 @@ public class CreateVote extends PortraitActivity {
 
         txtDescCount.setText("0/320");
         txtTitleCount.setText("0/35");
-        txtPostedname.setText("Posted by " + SettingPreffrence.getuser_name(CreateVote.this));
+        txtPostedname.setText("Posted by " + SettingPreference.getuser_name(CreateVote.this));
 
 
         setAllListner();
@@ -331,123 +324,44 @@ public class CreateVote extends PortraitActivity {
 
     private void FormValidation() {
 
-        if (TextUtils.isEmpty(et_title_cv.getText().toString().trim().replaceAll("[^\\sa-zA-Z0-9]", "")))
-        {
-  //          Toast.makeText(CreateVote.this, "if et_title_cv", Toast.LENGTH_SHORT).show();
+        if (TextUtils.isEmpty(et_title_cv.getText().toString().trim().replaceAll("[^\\sa-zA-Z0-9 ]", ""))) {
             showSnackBar(getString(R.string.nm_title_error_msg),snackbar.LENGTH_SHORT,"");
-        }
-        else
-        {
-           // Toast.makeText(CreateVote.this, "else  et_title_cv", Toast.LENGTH_SHORT).show();
-
-            if (TextUtils.isEmpty(et_description_cv.getText().toString().trim().replaceAll("[^\\sa-zA-Z0-9]", "")))
-            {
-
-    //            Toast.makeText(CreateVote.this, "if et_description_cv", Toast.LENGTH_SHORT).show();
-
-                showSnackBar(getString(R.string.nm_description_error_msg),snackbar.LENGTH_SHORT,"");
-
-
-            }
-            else
-            {
-      //          Toast.makeText(CreateVote.this, "else  et_description_cv", Toast.LENGTH_SHORT).show();
-
-                if (TextUtils.isEmpty(closingTime))
-                {
-//                    Toast.makeText(CreateVote.this, "if   closingTime", Toast.LENGTH_SHORT).show();
-
-                    showSnackBar(getString(R.string.nm_closingtime_msg),snackbar.LENGTH_SHORT,"");
-                }
-                else
-                {
-                   // Toast.makeText(CreateVote.this, "else    closingTime", Toast.LENGTH_SHORT).show();
-
-
-                    callVoteWS();
-
-                }
+        } else {
+           if (TextUtils.isEmpty(et_description_cv.getText().toString().trim().replaceAll("[^\\sa-zA-Z0-9 ]", ""))) {
+               showSnackBar(getString(R.string.nm_description_error_msg),snackbar.LENGTH_SHORT,"");
+           } else {
+               if (TextUtils.isEmpty(closingTime)) {
+                   showSnackBar(getString(R.string.nm_closingtime_msg),snackbar.LENGTH_SHORT,"");
+               } else {
+                   callVoteWS();
+               }
             }
 
         }
     }
 
-    private void  callVoteWS()
-    {
+    private void  callVoteWS() {
 
-        NetworkCall networkCall = new NetworkCall
-                (
-                        CreateVote.this,
-                        new ResponseListenerVolley() {
-                            @Override
-                            public void onSuccess(String s) {
-                                try {
-                                    JSONObject jsonObject = new JSONObject(s);
-                                    if (jsonObject.getString("status").equalsIgnoreCase("SUCCESS"))
-                                    {
-                                        SettingPreffrence.setPREF_Call_Vote(CreateVote.this, true);
-                                        finish();
-                                        if (receiver) {
-                                            exitActivity();
-                                        }
+        String phoneNumber = SettingPreference.getuser_mobilenumber(this);
+        String code = SettingPreference.getuser_token(this);
+        String title = et_title_cv.getText().toString();
+        String description = et_description_cv.getText().toString();
 
-                                        SettingPreffrence.setGroupId(CreateVote.this,"");
-                                    }
+        grassrootRestService.getApi().createVote(phoneNumber, code, groupId, title, description, closingTime, minute, null, true)
+                .enqueue(new Callback<GenericResponse>() {
+                    @Override
+                    public void onResponse(Call<GenericResponse> call, Response<GenericResponse> response) {
+                        Log.d(TAG, response.body().getMessage());
+                        finish();
+                        exitActivity();
+                }
 
-                                } catch (JSONException e) {
-                                    e.printStackTrace();
-                                    showSnackBar(getString(R.string.Unknown_error),snackbar.LENGTH_SHORT,"");
-                                }
+                    @Override
+                    public void onFailure(Call<GenericResponse> call, Throwable t) {
+                        Log.d(TAG, t.getMessage());
+                    }
+                });
 
-                            }
-                        },
-                        new ErrorListenerVolley() {
-                            @Override
-                            public void onError(VolleyError volleyError) {
-
-                                if (volleyError instanceof NoConnectionError || volleyError instanceof TimeoutError) {
-                                    showSnackBar(getString(R.string.No_network),snackbar.LENGTH_LONG,getString(R.string.Retry));
-                                }
-                                else if (volleyError instanceof ServerError)
-                                {
-                                    showSnackBar(getString(R.string.Unknown_error),snackbar.LENGTH_SHORT,"");
-                                }
-                                else if (volleyError instanceof AuthFailureError)
-                                {
-                                    showSnackBar(getString(R.string.INVALID_TOKEN),snackbar.LENGTH_LONG,"");
-                                }
-                                else
-                                {
-                                    showSnackBar(getString(R.string.Unknown_error),snackbar.LENGTH_SHORT,"");
-
-                                }
-                            }
-                        },
-                        AllLinsks.CreateVote + SettingPreffrence.getGroupId(CreateVote.this) + "/" + SettingPreffrence.getPREF_Phone_Token(CreateVote.this),
-                        getString(R.string.prg_message),
-                        true
-                );
-
-        HashMap<String, String> hashMap = new HashMap<>();
-        hashMap.put("title", et_title_cv.getText().toString().trim().replaceAll("[^\\sa-zA-Z0-9]", ""));
-        hashMap.put("description", et_description_cv.getText().toString().trim().replaceAll("[^\\sa-zA-Z0-9]", ""));
-        hashMap.put("closingTime", closingTime+utilClass.timeZone());
-        hashMap.put("notifyGroup", notifyGroup);
-        hashMap.put("reminderMins", reminderMins);
-        hashMap.put("members", members);
-
-
-        networkCall.makeStringRequest_POST(hashMap);
-
-        Log.e(TAG, "getGroupId is " + SettingPreffrence.getGroupId(CreateVote.this));
-        Log.e(TAG, "closingTime is " + closingTime + utilClass.timeZone());
-       /* Log.e(TAG, "title is  " + et_title_cv.getText().toString().trim().replaceAll("[^\\sa-zA-Z0-9]", ""));
-        Log.e(TAG,"et_description_cv is  " + et_description_cv.getText().toString().trim().replaceAll("[^\\sa-zA-Z0-9]", ""));
-        Log.e(TAG,"closingTime is  " + closingTime);*/
-   /*     Log.e(TAG,"notifyGroup is  " + notifyGroup);
-        Log.e(TAG,"reminderMins is  " + reminderMins);
-        Log.e(TAG,"members is  " + members);*/
-        Log.e(TAG,"members is  " + members);
     }
 
     private void exitActivity() {

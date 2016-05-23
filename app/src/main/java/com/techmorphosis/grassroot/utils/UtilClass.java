@@ -18,11 +18,16 @@ import android.view.View;
 import android.widget.Toast;
 
 import com.techmorphosis.grassroot.models.Contact;
+import com.techmorphosis.grassroot.ui.DialogFragment.NotificationDialog;
 import com.techmorphosis.grassroot.ui.activities.PhoneBookContactsActivity;
 import com.techmorphosis.grassroot.ui.fragments.AlertDialogFragment;
 import com.techmorphosis.grassroot.interfaces.AlertDialogListener;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Locale;
+import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -70,6 +75,21 @@ public class UtilClass {
         ss2.setListener(alertDialogListener);
         ss2.show(manager,null);
         return ss2;
+    }
+
+    public NotificationDialog showAlertDialog1(android.support.v4.app.FragmentManager fragmentmanager, String s, String s1, String s2, String s3,
+                                               boolean flag, AlertDialogListener alertdialoglistener) {
+        NotificationDialog ss1 = NotificationDialog.newInstance(s, s1, s2, s3, flag);
+        ss1.setListener(alertdialoglistener);
+        ss1.setCancelable(false);
+        ss1.show(fragmentmanager, null);
+        return ss1;
+    }
+
+    public  String timeZone() {
+        Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("GMT"), Locale.getDefault());
+        String   timeZone = new SimpleDateFormat("Z").format(calendar.getTime());
+        return timeZone.substring(0, 3) + ":"+ timeZone.substring(3, 5);
     }
 
     public static void callPhoneBookActivity(Activity callingActivity, ArrayList<Contact> preSelectedList,
