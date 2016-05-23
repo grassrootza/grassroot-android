@@ -177,7 +177,7 @@
             android:layout_height="wrap_content"
             android:background="@drawable/register"
             android:textAllCaps="true"
-            android:textColor="@color/white"
+            android:textColor="@drawable/green_txt"
             android:text="@string/ev_bt_save"
             android:textSize="@dimen/txt_medium"
             android:layout_alignParentBottom="true"

@@ -87,11 +87,32 @@ public class NetworkCall {
             @Override
             public void onErrorResponse(VolleyError volleyError) {
 
-                if (mContext!=null)
-                {
-                    NetworkCall.this.errorListenerVolley.onError(volleyError);
+                Log.e(TAG,"b4 volleyError is " + volleyError);
+                Log.e(TAG,"b4 volleyError message  is " + volleyError.toString());
+                Log.e(TAG,"b4 volleyError getClass  is " + volleyError.getClass().getSimpleName());
+
+
+                if (mContext!=null) {
+
+                    if (volleyError instanceof NoConnectionError) {
+                        if (volleyError.getMessage().contains("No authentication challenges found")) {//AuthFailureError
+                            // This is the error.  You probably will want to handle any IOException, not just those with the same message.
+                            volleyError = new AuthFailureError();
+                            NetworkCall.this.errorListenerVolley.onError(volleyError);
+
+                        } else {//NoConnectionError
+                            NetworkCall.this.errorListenerVolley.onError(volleyError);
+                        }
+                    } else
+                    {
+                        NetworkCall.this.errorListenerVolley.onError(volleyError);
+                    }
+
                 }
                 Log.e(TAG,"volleyError is " + volleyError);
+                Log.e(TAG,"volleyError message  is " + volleyError.toString());
+                Log.e(TAG,"volleyError getClass  is " + volleyError.getClass().getSimpleName());
+
                 prgDialog.dismiss();
                 requestQueue.stop();
 
@@ -112,8 +133,25 @@ public class NetworkCall {
         {
             @Override
             public void onResponse(String response) {
-                Log.e(TAG, "makeRequest() onResponse " + response);
-                responseListenerVolley.onSuccess(response);
+
+                Log.e(TAG, " makeRequest() onResponse " + response);
+
+                try {
+                    JSONObject jsonObject = new JSONObject(response);
+                    Log.e(TAG,"fine");
+                    if (mContext!=null) {
+                        responseListenerVolley.onSuccess(response);
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                    Log.e(TAG, "not fine");
+                    VolleyError volleyError=new NoConnectionError();
+                    if (mContext!=null) {
+                        NetworkCall.this.errorListenerVolley.onError(volleyError);
+                    }
+                }
+
+
                 prgDialog.dismiss();
                 requestQueue.stop();
 
@@ -124,6 +162,34 @@ public class NetworkCall {
             public void onErrorResponse(VolleyError volleyError) {
 
                 NetworkCall.this.errorListenerVolley.onError(volleyError);
+
+                Log.e(TAG,"b4 volleyError is " + volleyError);
+                Log.e(TAG,"b4 volleyError message  is " + volleyError.toString());
+                Log.e(TAG, "b4 volleyError getClass  is " + volleyError.getClass().getSimpleName());
+
+                if (mContext!=null) {
+
+                    if (volleyError instanceof NoConnectionError) {
+                        if (volleyError.getMessage().contains("No authentication challenges found")) {//AuthFailureError
+                            // This is the error.  You probably will want to handle any IOException, not just those with the same message.
+                            volleyError = new AuthFailureError();
+                            NetworkCall.this.errorListenerVolley.onError(volleyError);
+
+                        } else {//NoConnectionError
+                            NetworkCall.this.errorListenerVolley.onError(volleyError);
+                        }
+                    }
+                    else {
+
+                        NetworkCall.this.errorListenerVolley.onError(volleyError);
+
+                    }
+
+                }
+                Log.e(TAG,"volleyError is " + volleyError);
+                Log.e(TAG,"volleyError message  is " + volleyError.toString());
+                Log.e(TAG,"volleyError getClass  is " + volleyError.getClass().getSimpleName());
+
 
                 prgDialog.dismiss();
                 requestQueue.stop();

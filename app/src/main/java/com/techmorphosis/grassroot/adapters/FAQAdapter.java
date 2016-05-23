@@ -35,7 +35,8 @@ public class FAQAdapter extends BaseExpandableListAdapter {
         this._listDataHeader = listDataHeader;
         this._listDataChild = listChildData;
 
-        inflater = (LayoutInflater) this._context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+       // inflater = (LayoutInflater) this._context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        inflater = LayoutInflater.from(this._context);
 
 /*
         typeFaceBold = Typeface.createFromAsset(_context.getAssets(), "font/OpenSans_CondBold.ttf");

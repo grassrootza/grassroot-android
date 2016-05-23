@@ -40,8 +40,7 @@
             android:layout_height="wrap_content"
             android:layout_marginBottom="15dp"
             android:layout_weight="1"
-            android:clipToPadding="false"
-            android:paddingTop="15dp"
+            android:paddingTop="10dp"
 
             >
 
@@ -54,20 +53,23 @@
                 card_view:cardBackgroundColor="@color/white"
                 card_view:cardCornerRadius="5dp"
                 card_view:cardElevation="3dp"
-                card_view:contentPadding="10dp"
+                card_view:contentPadding="8dp"
 
                 >
 
                 <RelativeLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+
                     >
 
                     <RelativeLayout
                         android:id="@+id/rl_nm_notify_header"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:background="@color/vv_Body_agree_disagree">
+                        android:background="@color/vv_Body_agree_disagree"
+
+                        >
 
                         <TextView
                             style="@style/text_medium"
@@ -75,17 +77,21 @@
                             android:layout_height="wrap_content"
                             android:padding="10dp"
                             android:text="@string/cv_notify_group_title"
-                            android:textColor="@color/vv_txtResponse" />
+                            android:textColor="@color/vv_txtResponse"
+                            android:layout_alignParentLeft="true"
+                            android:layout_centerVertical="true"
+                            android:textSize="@dimen/txt_large"
+
+                            />
 
                         <android.support.v7.widget.SwitchCompat
                             android:id="@+id/sw_notifyall"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_alignParentRight="true"
-                            android:layout_centerVertical="true"
                             android:checked="true"
                             android:paddingRight="5dp"
-
+                            android:layout_centerVertical="true"
                             />
 
                     </RelativeLayout>
@@ -100,16 +106,6 @@
                         android:paddingTop="15dp"
                         tools:listitem="@layout/row_dialog"
                         android:background="@color/vv_Body_agree_disagree"
-                        />
-
-
-                    <ProgressBar
-                        android:id="@+id/progress_paging"
-                        android:layout_width="25dp"
-                        android:layout_height="25dp"
-                        android:layout_alignParentBottom="true"
-                        android:layout_centerHorizontal="true"
-                        android:visibility="gone"
                         />
 
 
@@ -135,7 +131,7 @@
 
     <include
         android:id="@+id/icl_nm_error_layout"
-        layout="@layout/error_layout"
+        layout="@layout/qube_error_layout"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_centerInParent="true"

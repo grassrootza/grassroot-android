@@ -1,12 +1,15 @@
 package com.techmorphosis.grassroot.ui.activities;
 
 import android.app.ProgressDialog;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.design.widget.Snackbar;
+import android.support.v4.content.LocalBroadcastManager;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.View;
@@ -32,6 +35,7 @@ import com.techmorphosis.grassroot.Network.AllLinsks;
 import com.techmorphosis.grassroot.Network.NetworkCall;
 import com.techmorphosis.grassroot.Network.NetworkCheck;
 import com.techmorphosis.grassroot.R;
+import com.techmorphosis.grassroot.Service.QuickstartPreferences;
 import com.techmorphosis.grassroot.utils.AnimUtils;
 import com.techmorphosis.grassroot.utils.SettingPreffrence;
 import com.techmorphosis.grassroot.utils.UIUtils;
@@ -51,6 +55,10 @@ import io.fabric.sdk.android.Fabric;
  * Created by admin on 22-Dec-15.
  */
 public class StartActivity extends PortraitActivity {
+
+    private boolean isReceiverRegistered;
+    private BroadcastReceiver mRegistrationBroadcastReceiver;
+
     public boolean exit;
     public static int SCREEN_TIMEOUT = 2000;
     private Handler defaultHandler;
@@ -147,6 +155,18 @@ public class StartActivity extends PortraitActivity {
             }, 2000L);
 
         }
+
+
+        mRegistrationBroadcastReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+
+                et_otp.setText(SettingPreffrence.getPREF_OTP(StartActivity.this));
+                SettingPreffrence.setPREF_OTP(context, "");
+
+            }
+        };
+
 
     }
 
@@ -294,6 +314,7 @@ public class StartActivity extends PortraitActivity {
     private void setUpOtpScreen()
     {
 
+         registerOTPReceiver();
 
         exit = false;//
 
@@ -335,6 +356,16 @@ public class StartActivity extends PortraitActivity {
     }
 
 
+
+    private void registerOTPReceiver() {
+        if(!isReceiverRegistered) {
+            LocalBroadcastManager.getInstance(this).registerReceiver(mRegistrationBroadcastReceiver,
+                    new IntentFilter(QuickstartPreferences.REGISTRATION_COMPLETE));
+            isReceiverRegistered = true;
+        }
+    }
+
+
     private View.OnClickListener buttonRegisterClickListener(final EditText et_userName, final EditText et_mobile_register) {
         return new View.OnClickListener() {
             @Override
@@ -342,7 +373,7 @@ public class StartActivity extends PortraitActivity {
 
 
                 //setUpOtpScreen();
-                registerFormValidation();
+                registerFormValidation(et_mobile_register.getText().toString().trim().replaceAll("[^+0-9]", ""));
             }
         };
     }
@@ -353,7 +384,7 @@ public class StartActivity extends PortraitActivity {
             public void onClick(View v) {
 
                 //setUpOtpScreen();
-                LoginFormValidation(et_mobile_login);
+                LoginFormValidation(et_mobile_login.getText().toString().trim().replaceAll("[^+0-9]", ""));
             }
         };
     }
@@ -386,73 +417,111 @@ public class StartActivity extends PortraitActivity {
 
     }
 
-    private void LoginFormValidation(EditText et_mobile_login) {
+    private void LoginFormValidation(String et_mobile_login) {
 
-        if (et_mobile_login.getText().toString().isEmpty()) {
+        if (et_mobile_login.isEmpty()) {
             //utilClass.showToast(getApplicationContext(),"et_mobile_login");
             showSnackBar(getApplicationContext(), "", getResources().getString(R.string.Cellphone_number_empty), "", 0, Snackbar.LENGTH_SHORT);
 
         } else {
-            if (et_mobile_login.getText().toString().length() != 10 && et_mobile_login.getText().toString().length() < 10) {
-                //utilClass.showToast(getApplicationContext(),"not valid");
-                showSnackBar(getApplicationContext(), "", getResources().getString(R.string.Cellphone_number_invalid), "", 0, Snackbar.LENGTH_SHORT);
-
+            if (NumberValidation(et_mobile_login)) {
+                Log.e(TAG,"true");
+                LoginWS();
             } else {
-
-                if (Integer.parseInt(String.valueOf(et_mobile_login.getText().toString().charAt(0))) != 0) {
-                    //utilClass.showToast(getApplicationContext(),"incorrect " + et_mobile_login.getText().toString().charAt(0));
-                    showSnackBar(getApplicationContext(), "", getResources().getString(R.string.Cellphone_number_invalid), "", 0, Snackbar.LENGTH_SHORT);
-
-                } else if (Integer.parseInt(String.valueOf(et_mobile_login.getText().toString().charAt(1))) == 0 || Integer.parseInt(String.valueOf(et_mobile_login.getText().toString().charAt(1))) == 9) {
-                    showSnackBar(getApplicationContext(), "", getResources().getString(R.string.Cellphone_number_invalid), "", 0, Snackbar.LENGTH_SHORT);
-
-                } else {
-
-                    //utilClass.showToast(getApplicationContext(),"Register WS");
-                    // showSnackBar(getApplicationContext(), "", "Login success", "", 0, Snackbar.LENGTH_SHORT);
-                    // setUpOtpScreen();
-                    //   RegisterWS(et_userName,et_mobile_login);
-                    LoginWS();
-                }
+                Log.e(TAG,"false");
             }
-
         }
     }
 
-    private void registerFormValidation() {
+    private boolean validsubstring(String source,String target, int start, int end) {
 
 
-        if (et_userName.getText().toString().trim().isEmpty() || et_mobile_register.getText().toString().isEmpty()) {
+        if (source.substring(start, end).equals(target)) {
+
+            return true;
+        }
+
+        return false;
+    }
+
+    private boolean validcharAt(int index,String value) {
+
+
+        int compareint=Integer.parseInt(String.valueOf(value.charAt(index)));
+
+        if (compareint == 6 || compareint == 7 || compareint == 8) {//6 || 7 || 8
+            return true;
+        }
+        return false;
+    }
+
+    private void registerFormValidation(String et_mobile_register) {
+
+
+        if (et_userName.getText().toString().trim().isEmpty() || et_mobile_register.isEmpty()) {
             // utilClass.showToast(getApplicationContext(),"both");
             showSnackBar(getApplicationContext(), "", getResources().getString(R.string.Either_field_empty), "", 0, Snackbar.LENGTH_SHORT);
 
         } else {
-            if (et_mobile_register.getText().toString().length() != 10 && et_mobile_register.getText().toString().length() < 10) {
-                //utilClass.showToast(getApplicationContext(),"not valid");
-                showSnackBar(getApplicationContext(), "", getResources().getString(R.string.Cellphone_number_invalid), "", 0, Snackbar.LENGTH_SHORT);
-
+            if (NumberValidation(et_mobile_register)) {
+                Log.e(TAG,"true");
+                RegisterWS();
             } else {
-
-                if (Integer.parseInt(String.valueOf(et_mobile_register.getText().toString().charAt(0))) != 0) {
-                    //utilClass.showToast(getApplicationContext(),"incorrect " + et_mobile_register.getText().toString().charAt(0));
-                    showSnackBar(getApplicationContext(), "", getResources().getString(R.string.Cellphone_number_invalid), "", 0, Snackbar.LENGTH_SHORT);
-
-                } else if (Integer.parseInt(String.valueOf(et_mobile_register.getText().toString().charAt(1))) == 0 || Integer.parseInt(String.valueOf(et_mobile_register.getText().toString().charAt(1))) == 9) {
-                    showSnackBar(getApplicationContext(), "", getResources().getString(R.string.Cellphone_number_invalid), "", 0, Snackbar.LENGTH_SHORT);
-
-                } else {
-
-                    //utilClass.showToast(getApplicationContext(),"Register WS");
-                    //showSnackBar(getApplicationContext(), "", "Register success", "", 0, Snackbar.LENGTH_SHORT);
-                    //setUpOtpScreen();
-
-                    /*Replace all spaces from name */
-                    /*RegisterWS(et_userName.getText().toString().replaceAll(" ", "%20"), et_mobile_register.getText().toString());*/
-                    RegisterWS();
-
-                }
+                Log.e(TAG,"false");
             }
         }
+    }
+
+    private boolean NumberValidation(String number) {
+
+        if (number.length() == 10) {
+
+            int start=0;
+            int end=1;
+            String target = "0";
+
+            if (validsubstring(number, target, start, end) && validcharAt(1, number)) {//2nd digit
+                return  true;
+            }
+            else {
+                showSnackBar(getApplicationContext(), "", getResources().getString(R.string.Cellphone_number_invalid), "", 0, Snackbar.LENGTH_SHORT);
+            }
+
+
+        }
+        else if (number.length() == 12) {
+
+            int start=0;
+            int end=3;
+            String target = "+27";
+
+
+            if (validsubstring(number,target,start,end) && validcharAt(3, number) ) {//fourth digit should be 6, 7 or 8
+                return  true;
+            }
+            else {
+                showSnackBar(getApplicationContext(), "", getResources().getString(R.string.Cellphone_number_invalid), "", 0, Snackbar.LENGTH_SHORT);
+            }
+
+        }
+        else if (number.length() == 13) {
+
+            int start=0;
+            int end=4;
+            String target = "0027";
+
+            if (validsubstring(number,target,start,end) && validcharAt(4, number) ) {//fifth digit should be 6, 7, or 8
+                return  true;
+            }
+            else {
+                showSnackBar(getApplicationContext(), "", getResources().getString(R.string.Cellphone_number_invalid), "", 0, Snackbar.LENGTH_SHORT);
+            }
+
+        }
+        else {
+            showSnackBar(getApplicationContext(), "", getResources().getString(R.string.Cellphone_number_invalid), "", 0, Snackbar.LENGTH_SHORT);
+        }
+        return false;
     }
 
 
@@ -1133,7 +1202,7 @@ public class StartActivity extends PortraitActivity {
             });
 
         }
-        Log.e(TAG, "show");
+       // Log.e(TAG, "show");
         //utilClass.showToast(getApplicationContext(),"showSnackBar");
 
         snackBar.show();

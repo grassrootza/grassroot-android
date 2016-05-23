@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Parcelable;
+import android.support.design.widget.Snackbar;
 import android.support.v7.widget.Toolbar;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -61,6 +62,7 @@ public class PhoneBookContacts extends PortraitActivity implements GetContactLis
   private View errorLayout;
   private LinearLayout llNoResult;
   private LinearLayout llServerError;
+  private Snackbar snackBar;
 
   @Override
   protected void onCreate(Bundle savedInstanceState)
@@ -101,17 +103,28 @@ public class PhoneBookContacts extends PortraitActivity implements GetContactLis
               mAdapter.notifyDataSetChanged();
             } else {
               //not selected
-              contact_position.isSelected = true;
-              try {
-                contact_position.selectedNumber = contact_position.numbers.get(0);
-              } catch (Exception e) {
-                e.printStackTrace();
-                utilClass.showsnackBar(rlPhonebookRoot,PhoneBookContacts.this,getString(R.string.empty_contact));
+              if (NumberValidation(contact_position.numbers.get(0).trim().replaceAll("[^+0-9]", ""))) {
+                Log.e(TAG,"true");
+
+                try {
+                  contact_position.selectedNumber = contact_position.numbers.get(0);
+                } catch (Exception e) {
+                  e.printStackTrace();
+                  utilClass.showsnackBar(rlPhonebookRoot,PhoneBookContacts.this,getString(R.string.empty_contact));
+
+                }
+                contact_position.isSelected = true;
+
+                mAdapter.notifyDataSetChanged();
+
+              } else {
+                Log.e(TAG,"false");
 
               }
-              mAdapter.notifyDataSetChanged();
+
+
             }
-            Log.e(TAG, "selectedNumber is " + contact_position.selectedNumber);
+           // Log.e(TAG, "selectedNumber is " + contact_position.selectedNumber);
 
           }
 
@@ -151,11 +164,18 @@ public class PhoneBookContacts extends PortraitActivity implements GetContactLis
 
       String selectednumber = data.getStringExtra("selectednumber");
 
-      ContactsModel contact_position = contacts_names.get(multi_number_positons);
-      //not selected
-      contact_position.isSelected = true;
-      contact_position.selectedNumber=selectednumber;
-      mAdapter.notifyDataSetChanged();
+      if (NumberValidation(selectednumber)) {
+        Log.e(TAG,"true");
+        ContactsModel contact_position = contacts_names.get(multi_number_positons);
+        //not selected
+        contact_position.isSelected = true;
+        contact_position.selectedNumber=selectednumber;
+        mAdapter.notifyDataSetChanged();
+      } else {
+        Log.e(TAG,"false");
+      }
+
+
      // Log.e(TAG, "onActivityResult selectedNumber is " + selectednumber);
 
   // Log.e(TAG, "onActivityResult model selectedNumber is " + contact_position.selectedNumber);
@@ -414,6 +434,90 @@ public class PhoneBookContacts extends PortraitActivity implements GetContactLis
     mListView.setVisibility(View.VISIBLE);
   }
 
+  private boolean NumberValidation(String number) {
+
+    Log.e(TAG,"number is " + number);
+    if (number.length() == 10) {
+
+      int start=0;
+      int end=1;
+      String target = "0";
+
+      if (validsubstring(number, target, start, end) && validcharAt(1, number)) {//2nd digit
+        return  true;
+      }
+      else {
+        showSnackBar(getApplicationContext(), "", getResources().getString(R.string.Cellphone_number_invalid), "", 0, Snackbar.LENGTH_SHORT);
+
+      }
+
+
+    }
+    else if (number.length() == 12) {
+
+      int start=0;
+      int end=3;
+      String target = "+27";
+
+
+      if (validsubstring(number,target,start,end) && validcharAt(3, number) ) {//fourth digit should be 6, 7 or 8
+        return  true;
+      }
+      else {
+        showSnackBar(getApplicationContext(), "", getResources().getString(R.string.Cellphone_number_invalid), "", 0, Snackbar.LENGTH_SHORT);
+      }
+
+    }
+    else if (number.length() == 13) {
+
+      int start=0;
+      int end=4;
+      String target = "0027";
+
+      if (validsubstring(number,target,start,end) && validcharAt(4, number) ) {//fifth digit should be 6, 7, or 8
+        return  true;
+      }
+      else {
+        showSnackBar(getApplicationContext(), "", getResources().getString(R.string.Cellphone_number_invalid), "", 0, Snackbar.LENGTH_SHORT);
+      }
+
+    }
+    else {
+      showSnackBar(getApplicationContext(), "", getResources().getString(R.string.Cellphone_number_invalid), "", 0, Snackbar.LENGTH_SHORT);
+    }
+    return false;
+  }
+
+  private boolean validsubstring(String source,String target, int start, int end) {
+
+
+    if (source.substring(start, end).equals(target)) {
+
+      return true;
+    }
+
+    return false;
+  }
+
+  private boolean validcharAt(int index,String value) {
+
+
+    int compareint=Integer.parseInt(String.valueOf(value.charAt(index)));
+
+    if (compareint == 6 || compareint == 7 || compareint == 8) {//6 || 7 || 8
+      return true;
+    }
+    return false;
+  }
+
+  public void showSnackBar(Context context, final String type, String message, String textLabel, int color, int length) {
+
+    snackBar = Snackbar.make(rlPhonebookRoot, message, length);
+    View view = snackBar.getView();
+
+
+    snackBar.show();
+  }
 
 }
 
