@@ -33,6 +33,8 @@
             android:name="io.fabric.ApiKey"
             android:value="a7c7f0c500c90b9563ff8801718ab0b391792bc3" />
 
+        <!-- Core activities -->
+
         <activity
             android:name=".ui.activities.StartActivity">
             <intent-filter>
@@ -55,6 +57,7 @@
         <activity
             android:name=".ui.activities.NewTaskMenuActivity" />
 
+        <!-- Group management activities -->
         <activity
             android:name=".ui.activities.CreateGroupActivity"
             android:label="@string/title_activity_create__group"
@@ -78,6 +81,8 @@
         <activity
             android:name=".ui.activities.GroupJoinActivity"
             android:label="@string/title_activity_join__request" />
+
+        <!-- Contact book and related activities -->
         <activity
             android:name=".ui.activities.PhoneBookContactsActivity"
             android:label="@string/title_activity_phone_book_contacts" />
@@ -94,21 +99,35 @@
             android:label="@string/title_activity_blank"
             android:theme="@style/AppTheme" />
 
+        <!-- Meeting related activities -->
+
+        <activity
+            android:name=".ui.activities.CreateMeetingActivity"
+            android:label="@string/cmtg_title"
+            android:theme="@style/AppTheme" />
+
+        <!-- Vote related activities -->
+
         <activity android:name=".ui.activities.ViewVote" />
-        <activity android:name=".ui.activities.FAQActivity" />
 
         <activity
             android:name=".ui.activities.EditVote"
             android:windowSoftInputMode="adjustPan" />
         <activity android:name=".ui.activities.ProfileSettings"/>
+
         <activity
-            android:name=".ui.activities.CreateVote"
+            android:name=".ui.activities.CreateVoteActivity"
             android:label="@string/title_activity_create_vote"
             android:theme="@style/AppTheme"
             android:windowSoftInputMode="adjustPan" />
+
         <activity android:name=".ui.activities.VoteNotifyMembers" />
+
+
+        <!-- Navigation drawer / system activities -->
         <activity android:name=".ui.activities.NotificationCenter"/>
 
+        <activity android:name=".ui.activities.FAQActivity" />
 
         <receiver
             android:name="com.google.android.gms.gcm.GcmReceiver"

@@ -194,15 +194,30 @@ public class GrassrootRestService {
 
         //create vote
         @POST("vote/create/{id}/{phoneNumber}/{code}")
-        Call<GenericResponse> createVote(@Path("phoneNumber") String phoneNumber, @Path("code") String code, @Path("id") String groupId,
-                                         @Query("title") String title, @Query("description") String description, @Query("closingTime") String closingTime,
-                                         @Query("reminderMins") int minutes, @Query("members") List<String> members, @Query("notifyGroup") boolean relayable);
+        Call<GenericResponse> createVote(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
+                                         @Path("id") String groupId, @Query("title") String title,
+                                         @Query("description") String description,
+                                         @Query("closingTime") String closingTime,
+                                         @Query("reminderMins") int minutes,
+                                         @Query("members") List<String> members, @Query("notifyGroup") boolean relayable);
+
+        // create meeting
+        @POST("meeting/create/{phoneNumber}/{code}/{parentUid}")
+        Call<GenericResponse> createMeeting(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
+                                            @Path("parentUid") String parentUid, @Query("title") String title,
+                                            @Query("description") String description,
+                                            @Query("eventStartDateTime") String dateTimeISO,
+                                            @Query("eventReminderType") String reminderType,
+                                            @Query("reminderMinutes") int reminderMinutes,
+                                            @Query("location") String location,
+                                            @Query("members") Set<String> memberUids);
 
 
         //Profile settings
         @GET("user/profile/settings/{phoneNumber}/{code}")
         Call<ProfileResponse> getUserProfile(@Path("phoneNumber") String phoneNumber,
                                              @Path("code") String code);
+
         //Update profile settings
         @POST("user/profile/settings/update/{phoneNumber}/{code}")
         Call<GenericResponse> updateProfile(@Path("phoneNumber") String phoneNumber, @Path("code") String code,

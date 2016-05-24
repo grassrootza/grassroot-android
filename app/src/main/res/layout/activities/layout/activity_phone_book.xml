@@ -122,7 +122,7 @@
         android:layout_below="@+id/rl_container"
         tools:listitem="@layout/listview_item"
         android:paddingTop="10dp"
-        android:background="@color/background"
+        android:background="@color/light_background"
         android:clipToPadding="false"
 
         />

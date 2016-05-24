@@ -2,31 +2,33 @@
 <resources>
 
     <!--styles-->
-    <color name="primaryColor">#207a33</color>
+    <color name="primaryColor">#207A33</color>
     <color name="primaryColorDark">#339661</color>
     <color name="textSecondaryColorDark">#8A000000</color>
     <color name="windowBackground">#fafafa</color>
     <color name="iconActive">#FFFF8D</color>
 
-
     <color name="white">#fff</color>
     <color name="black">#000</color>
-    <color name="transparent">#00000000</color>
-    <color name="buttoncolor">#207A33</color>
-    <color name="background">#eeeeee</color>
-    <color name="dark_background">#ddd</color>
     <color name="red">#FF0000</color>
     <color name="orange">#FFBF00</color>
+    <color name="transparent">#00000000</color>
+
+    <color name="buttoncolor">#207A33</color>
+    <color name="light_background">#EEEEEE</color>
+    <color name="dark_background">#ddd</color>
     <color name="list_background">#fafafa</color>
     <color name="list_background_pressed">#eeeeee</color>
-    <color name="textbg">#efefef</color>
-    <color name="text_grey">#b4b4b4</color>
-    <color name="view">#b4b4b4</color>
-    <color name="RecyclerView_background">#ECEFF1</color>
 
+    <color name="text_beige">#EFEFEF</color>
+    <color name="text_grey">#B4B4B4</color>
+    <color name="view">#B4B4B4</color>
+    <color name="off_white_background">#ECEFF1</color>
 
     <color name="yellow">#F0ED0F</color>
     <color name="white_transparent">#20FFFFFF</color>
+
+    <color name="dark_grey_text">#424242</color>
 
     <!--RateUs Scree-->
     <color name="grey_dialog_bg">#fff5f5f5</color>

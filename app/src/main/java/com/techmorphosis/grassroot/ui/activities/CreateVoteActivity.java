@@ -33,11 +33,8 @@ import com.techmorphosis.grassroot.utils.SettingPreference;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
-import java.util.Locale;
-import java.util.TimeZone;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -49,9 +46,9 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class CreateVote extends PortraitActivity {
+public class CreateVoteActivity extends PortraitActivity {
 
-    private static final String TAG = CreateVote.class.getCanonicalName();
+    private static final String TAG = CreateVoteActivity.class.getCanonicalName();
 
     @BindView(R.id.rl_root_cv)
     RelativeLayout rlRootCv;
@@ -144,7 +141,7 @@ public class CreateVote extends PortraitActivity {
 
         txtDescCount.setText("0/160"); // todo : convert to constant
         txtTitleCount.setText("0/35");
-        txtPostedname.setText("Posted by " + SettingPreference.getuser_name(CreateVote.this));
+        txtPostedname.setText("Posted by " + SettingPreference.getuser_name(CreateVoteActivity.this));
 
         swImmediate.setChecked(true);
         swNotifyall.setChecked(true);
@@ -191,7 +188,6 @@ public class CreateVote extends PortraitActivity {
     @OnTextChanged(value = R.id.et_title_cv, callback = OnTextChanged.Callback.AFTER_TEXT_CHANGED)
     public void updateTitleTextCounter(Editable s) {
         txtTitleCount.setText(s.length() + "/35");
-
     }
 
     @OnTextChanged(value = R.id.et_description_cv, callback = OnTextChanged.Callback.AFTER_TEXT_CHANGED)
@@ -201,7 +197,7 @@ public class CreateVote extends PortraitActivity {
 
     @OnClick(R.id.rl_notify_body)
     public void onNotifyClicked() {
-        Intent notifyactivity = new Intent(CreateVote.this, VoteNotifyMembers.class);
+        Intent notifyactivity = new Intent(CreateVoteActivity.this, VoteNotifyMembers.class);
         notifyactivity.putParcelableArrayListExtra(Constant.VotedmemberList, (ArrayList) voteMemberArrayList);
         startActivityForResult(notifyactivity, 1);
     }
@@ -247,7 +243,6 @@ public class CreateVote extends PortraitActivity {
 
     @OnClick(R.id.bt_call_vote)
     public void validateFormAndSubmit() {
-
         if (TextUtils.isEmpty(et_title_cv.getText().toString().trim().replaceAll("[^\\sa-zA-Z0-9 ]", ""))) {
             showSnackBar(getString(R.string.nm_title_error_msg),Snackbar.LENGTH_SHORT,"");
         } else {
@@ -298,7 +293,7 @@ public class CreateVote extends PortraitActivity {
         } else {
             notifyWholeGroup = false;
             voteMemberArrayList.clear(); // wtf, vs two lines later
-            Intent notifyactivity = new Intent(CreateVote.this, VoteNotifyMembers.class);
+            Intent notifyactivity = new Intent(CreateVoteActivity.this, VoteNotifyMembers.class);
             notifyactivity.putParcelableArrayListExtra(Constant.VotedmemberList, (ArrayList) voteMemberArrayList);
             startActivityForResult(notifyactivity, Constant.activitySelectGroupMembers);
         }

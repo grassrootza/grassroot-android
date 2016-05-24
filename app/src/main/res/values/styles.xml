@@ -48,7 +48,7 @@
     </style>
 
     <style name="PinnedHeader">
-        <item name="android:background">@color/background</item>
+        <item name="android:background">@color/light_background</item>
         <item name="android:gravity">center_vertical|left</item>
         <item name="android:paddingLeft">10dp</item>
         <item name="android:paddingRight">10dp</item>
@@ -174,8 +174,6 @@
         <item name="android:layout_marginLeft">10dp</item>
         <item name="android:layout_marginRight">10dp</item>
         <item name="android:layout_marginBottom">20dp</item>
-
-
     </style>
 
     <style name="Button_white" tools:ignore="NewApi">
@@ -187,10 +185,7 @@
         <item name="android:layout_marginLeft">10dp</item>
         <item name="android:layout_marginRight">10dp</item>
         <item name="android:layout_marginBottom">20dp</item>
-
-
     </style>
-
 
     <style name="Button" tools:ignore="NewApi">
         <item name="android:textSize">@dimen/md_button_textsize</item>
@@ -218,6 +213,34 @@
 
     <!-- SECTION ENDS -->
 
+    <!-- CALL MEETING / VOTES / ETC STYLES -->
+
+    <style name="FormCardView" parent="CardView">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginTop">10dp</item>
+        <item name="android:clickable">true</item>
+        <item name="android:foreground">?selectableItemBackground</item>
+        <item name="cardBackgroundColor">@color/white</item>
+    </style>
+
+    <style name="TextCharCounter">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_alignParentRight">true</item>
+        <item name="android:padding">5dp</item>
+        <item name="android:textColor">@color/ev_txt_counter</item>
+    </style>
+
+    <style name="FormSwitch">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_alignParentRight">true</item>
+        <item name="android:layout_centerVertical">true</item>
+        <item name="android:paddingRight">5dp</item>
+    </style>
+
+    <!-- ANIMATIONS -->
     <style name="animation_fast_flyinout">
         <item name="android:windowEnterAnimation">@anim/flyin_fast</item>
         <item name="android:windowExitAnimation">@anim/flyout_fast</item>

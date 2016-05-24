@@ -68,7 +68,7 @@ public class NewActivities extends AppCompatActivity {
         return new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent vote=new Intent(NewActivities.this,CreateVote.class);
+                Intent vote=new Intent(NewActivities.this,CreateVoteActivity.class);
                // todo.putExtra("title","Vote");
                 startActivity(vote);
             }

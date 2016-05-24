@@ -71,7 +71,7 @@ public class NewTaskMenuActivity extends AppCompatActivity {
 
     @OnClick(R.id.bt_vote)
     public void onVoteButtonClick() {
-        Intent createVote = MenuUtils.constructIntent(this, CreateVote.class, groupUid, groupName);
+        Intent createVote = MenuUtils.constructIntent(this, CreateVoteActivity.class, groupUid, groupName);
         createVote.putExtra("title","Vote");
         startActivity(createVote);
     }

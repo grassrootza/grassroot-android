@@ -12,7 +12,8 @@ import android.view.Window;
 import android.widget.ImageView;
 
 import com.techmorphosis.grassroot.R;
-import com.techmorphosis.grassroot.ui.activities.CreateVote;
+import com.techmorphosis.grassroot.ui.activities.CreateMeetingActivity;
+import com.techmorphosis.grassroot.ui.activities.CreateVoteActivity;
 import com.techmorphosis.grassroot.ui.activities.NotBuiltActivity;
 import com.techmorphosis.grassroot.utils.MenuUtils;
 
@@ -101,7 +102,7 @@ public class GroupQuickTaskModalFragment extends android.support.v4.app.DialogFr
     @OnClick(R.id.ic_home_vote_active)
     public void icHomeVoteActive() {
         if (votePermitted) {
-            Intent Vote = MenuUtils.constructIntent(getContext(), CreateVote.class, groupUid, groupName);
+            Intent Vote = MenuUtils.constructIntent(getContext(), CreateVoteActivity.class, groupUid, groupName);
             Vote.putExtra("title", "Vote");
             startActivity(Vote);
             getDialog().dismiss();
@@ -114,8 +115,7 @@ public class GroupQuickTaskModalFragment extends android.support.v4.app.DialogFr
     @OnClick(R.id.ic_home_call_meeting_active)
     public void icHomeCallMeetingActive() {
         if (meetingPermitted) {
-            Intent Meeting = new Intent(getActivity(), NotBuiltActivity.class);
-            Meeting.putExtra("title", "Meeting");
+            Intent Meeting = MenuUtils.constructIntent(getContext(), CreateMeetingActivity.class, groupUid, groupName);
             startActivity(Meeting);
             getDialog().dismiss();
         } else {

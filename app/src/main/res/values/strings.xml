@@ -234,6 +234,17 @@
     <string name="vv_numberNoRSVP">Number of RSVP</string>
     <string name="vv_voteup">Vote Details Updated Successfully</string>
 
+    <!-- Create meeting -->
+    <string name="cmtg_title">Call a meeting</string>
+    <string name="cmtg_btn_call">Call</string>
+    <string name="cmtg_title_hint">Meeting subject</string>
+    <string name="cmtg_called_by">Called by</string>
+    <string name="cmtg_desc_hint">Longer description or notes on the meeting</string>
+    <string name="cmtg_date_time_desc">Meeting date and time</string>
+    <string name="cmtg_config_reminders_heading">Configure reminder</string>
+    <string name="cmtg_invite_all">Invite whole group</string>
+    <string name="cmtg_location_hint">Meeting location</string>
+
     <!--FAQ-->
     <string name="fq_txt_toolbar">FAQs</string>
     <string-array name="fq_Header">

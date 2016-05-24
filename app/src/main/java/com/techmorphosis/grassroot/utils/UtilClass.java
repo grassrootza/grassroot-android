@@ -18,6 +18,7 @@ import android.view.View;
 import android.widget.Toast;
 
 import com.techmorphosis.grassroot.models.Contact;
+import com.techmorphosis.grassroot.services.model.Member;
 import com.techmorphosis.grassroot.ui.DialogFragment.NotificationDialog;
 import com.techmorphosis.grassroot.ui.activities.PhoneBookContactsActivity;
 import com.techmorphosis.grassroot.ui.fragments.AlertDialogFragment;
@@ -26,7 +27,9 @@ import com.techmorphosis.grassroot.interfaces.AlertDialogListener;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.HashSet;
 import java.util.Locale;
+import java.util.Set;
 import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -121,6 +124,13 @@ public class UtilClass {
         // todo: throw an error, etc
         Log.d(TAG, "error! tried to reformat, couldn't, here is phone number = " + normalizedNumber);
         return normalizedNumber;
+    }
+
+    public static Set<String> convertMembersToUids(Set<Member> members) {
+        Set<String> uids = new HashSet<>();
+        for (Member m : members)
+            uids.add(m.getMemberUid());
+        return uids;
     }
 
 }

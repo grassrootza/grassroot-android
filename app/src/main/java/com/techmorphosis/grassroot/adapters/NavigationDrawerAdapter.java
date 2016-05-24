@@ -59,7 +59,7 @@ public class NavigationDrawerAdapter extends RecyclerView.Adapter<NavigationDraw
 
         if (myDrawerModel.isChecked())
         {
-            holder.rlDrawerRow.setBackgroundResource(R.color.textbg);
+            holder.rlDrawerRow.setBackgroundResource(R.color.text_beige);
             holder.title.setTextColor(mContext.getResources().getColor(R.color.primaryColor));
             holder.titleicon.setBackgroundResource(myDrawerModel.getChangeicon());
         }
