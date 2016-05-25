@@ -9,8 +9,8 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.techmorphosis.grassroot.R;
-import com.techmorphosis.grassroot.models.VoteMemberModel;
-import com.techmorphosis.grassroot.ui.activities.VoteNotifyMembers;
+import com.techmorphosis.grassroot.services.model.Member;
+import com.techmorphosis.grassroot.ui.activities.VoteNotifyMembersActivity;
 
 import java.util.ArrayList;
 
@@ -19,11 +19,11 @@ import java.util.ArrayList;
  */
 public class VoteNotifyMembersAdapter extends RecyclerView.Adapter<VoteNotifyMembersAdapter.NotifyMemberVH> {
 
-    private final VoteNotifyMembers context;
-    public   ArrayList<VoteMemberModel> data;
+    private final VoteNotifyMembersActivity context;
+    public   ArrayList<Member> data;
     private static final String TAG = "MembersAdapter";
     
-    public VoteNotifyMembersAdapter(VoteNotifyMembers activity, ArrayList<VoteMemberModel> List) {
+    public VoteNotifyMembersAdapter(VoteNotifyMembersActivity activity, ArrayList<Member> List) {
         this.context = activity;
         this.data = List;
     }
@@ -41,11 +41,11 @@ public class VoteNotifyMembersAdapter extends RecyclerView.Adapter<VoteNotifyMem
     {
 
 //        holder.llRowDialog.setBackgroundColor(context.getResources().getColor(R.color.vv_Body_agree_disagree));
-        VoteMemberModel model= data.get(position);
+        Member model= data.get(position);
 
-        holder.tvDialogPersonName.setText(model.displayName);
+        holder.tvDialogPersonName.setText(model.getDisplayName());
 
-        if (model.isSelected)
+        if (model.isSelected())
         {
             holder.ivDialogSelected.setImageResource(R.drawable.btn_checked);
          /*   Log.e(TAG, "name " + model.displayName);

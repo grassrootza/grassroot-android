@@ -80,7 +80,7 @@ public class UtilClass {
         return ss2;
     }
 
-    public NotificationDialog showAlertDialog1(android.support.v4.app.FragmentManager fragmentmanager, String s, String s1, String s2, String s3,
+    public static  NotificationDialog showAlertDialog1(android.support.v4.app.FragmentManager fragmentmanager, String s, String s1, String s2, String s3,
                                                boolean flag, AlertDialogListener alertdialoglistener) {
         NotificationDialog ss1 = NotificationDialog.newInstance(s, s1, s2, s3, flag);
         ss1.setListener(alertdialoglistener);
@@ -89,7 +89,7 @@ public class UtilClass {
         return ss1;
     }
 
-    public  String timeZone() {
+    public  static String timeZone() {
         Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("GMT"), Locale.getDefault());
         String   timeZone = new SimpleDateFormat("Z").format(calendar.getTime());
         return timeZone.substring(0, 3) + ":"+ timeZone.substring(3, 5);

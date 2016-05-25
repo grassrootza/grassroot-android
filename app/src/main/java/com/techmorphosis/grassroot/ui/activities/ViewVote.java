@@ -2,7 +2,6 @@ package com.techmorphosis.grassroot.ui.activities;
 
 import android.animation.Animator;
 import android.animation.ValueAnimator;
-import android.app.ProgressDialog;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
@@ -29,112 +28,114 @@ import com.techmorphosis.grassroot.utils.ErrorUtils;
 import com.techmorphosis.grassroot.utils.ProgressBarCircularIndeterminate;
 import com.techmorphosis.grassroot.utils.SettingPreference;
 
-import com.techmorphosis.grassroot.utils.UtilClass;
 
-
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.io.UnsupportedEncodingException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.TimeZone;
 
+import butterknife.BindView;
+import butterknife.ButterKnife;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class ViewVote extends PortraitActivity implements View.OnClickListener{
+public class ViewVote extends PortraitActivity {
 
-            /*View*/
-    private Toolbar vvToolbar;
-    private TextView txtToolbar;
-    private TextView txtVvTitle;
-    private RelativeLayout rlNested;
-    private TextView txtVvGroupname;
-    private TextView txtVvDeadline;
-    private TextView txtVvDescription;
-    private RelativeLayout rlVoteStatus;
-    private LinearLayout llImageHolder;
-    private TextView txtHeader;
-    private UtilClass utilClass;
-    private ScrollView scrollView;
-
-    private LinearLayout rlVvMainLayout;
-    private ProgressBarCircularIndeterminate progressBarCircularIndeterminate;
-    private TextView txtPrg;
-    private Button bt_editVote;
-
+    private static final String TAG = "ViewVote";
+    @BindView(R.id.vv_toolbar)
+    Toolbar vvToolbar;
+    @BindView(R.id.txt_toolbar)
+    TextView txtToolbar;
+    @BindView(R.id.txt_vv_title)
+    TextView txtVvTitle;
+    @BindView(R.id.rl_nested)
+    RelativeLayout rlNested;
+    @BindView(R.id.txt_vv_groupname)
+    TextView txtVvGroupname;
+    @BindView(R.id.txt_vv_deadline)
+    TextView txtVvDeadline;
+    @BindView(R.id.txt_vv_description)
+    TextView txtVvDescription;
+    @BindView(R.id.rl_vote_status)
+    RelativeLayout rlVoteStatus;
+    @BindView(R.id.ll_image_holder)
+    LinearLayout llImageHolder;
+    @BindView(R.id.txt_header)
+    TextView txtHeader;
+    @BindView(R.id.scrollView)
+    ScrollView scrollView;
+    @BindView(R.id.rl_vv_main_layout)
+    LinearLayout rlVvMainLayout;
+    @BindView(R.id.progressBarCircularIndeterminate)
+    ProgressBarCircularIndeterminate progressBarCircularIndeterminate;
+    @BindView(R.id.txt_prg)
+    TextView txtPrg;
+    @BindView(R.id.bt_editVote)
+    Button bt_editVote;
+    @BindView(R.id.expandable)
     LinearLayout mLinearLayout;
+    @BindView(R.id.header)
     RelativeLayout mRelativeLayoutHeader;
     ValueAnimator mAnimator;
-    private LinearLayout llYes;
-    private TextView countYes;
-    private LinearLayout llNo;
-    private TextView countNo;
-    private ImageView ivExpand;
-
-
-            /*Variables*/
-    public  String voteid;
-    private String id;
-    private String title;
-    private String description;
-    private String name;
-    private String type;
-    private String deadline;
-    private Boolean hasResponded;
-    private boolean canAction;
-    private String reply;
-    private boolean canEdit;
-    private String no;
-    private String yes;
-    private String abstained;
-    private String no_reply;
-    private String possible;
-    private String cancelled;
-
-        /*others*/
-    private static final String TAG = "ViewVote";
-    private TextView txtYes;
-    private TextView txtNo;
-    private RelativeLayout vvRoot;
+    @BindView(R.id.ll_yes)
+    LinearLayout llYes;
+    @BindView(R.id.count_yes)
+    TextView countYes;
+    @BindView(R.id.ll_no)
+    LinearLayout llNo;
+    @BindView(R.id.count_no)
+    TextView countNo;
+    @BindView(R.id.iv_expand)
+    ImageView ivExpand;
+    @BindView(R.id.txt_yes)
+    TextView txtYes;
+    @BindView(R.id.txt_no)
+    TextView txtNo;
+    @BindView(R.id.vv_root)
+    RelativeLayout vvRoot;
     private Snackbar snackbar;
-    private ImageView Thumpsdown;
-    private ImageView Thumpsup;
-
-    private View errorLayout;
-    private LinearLayout llNoResult;
-    private LinearLayout llNoInternet;
-    private LinearLayout llServerError;
-    private LinearLayout llInvalidToken;
-
-
-    private int error_flag1; // 0- success ,1 - No Internet , 4-Invalid token , 5- Unknown error
-    private int error_flag2;
-
-    ProgressDialog progressDialog;
-    private String  update="0";
-    private String deadlineISO;
-
-    private LinearLayout llMaybe;
-    private TextView txtMaybe;
-    private TextView countMaybe;
-    //private LinearLayout llInvalid;
-    private TextView txtInvalid;
-    private TextView countInvalid;
-    private LinearLayout llNumberOfUsers;
-    private TextView txtNumberOfUsers;
-    private TextView countNumberOfUsers;
-    private LinearLayout llNumberNoRSVP;
-    private TextView txtNumberNoRSVP;
-    private TextView countNumberNoRSVP;
+    @BindView(R.id.Thumpsdown)
+    ImageView thumbsDown;
+    @BindView(R.id.Thumpsup)
+    ImageView thumbsUp;
+    @BindView(R.id.error_layout)
+    View errorLayout;
+    @BindView(R.id.ll_maybe)
+    LinearLayout llMaybe;
+    @BindView(R.id.txt_maybe)
+    TextView txtMaybe;
+    @BindView(R.id.count_maybe)
+    TextView countMaybe;
+    @BindView(R.id.txt_invalid)
+    TextView txtInvalid;
+    @BindView(R.id.count_invalid)
+    TextView countInvalid;
+    @BindView(R.id.ll_numberOfUsers)
+    LinearLayout llNumberOfUsers;
+    @BindView(R.id.txt_numberOfUsers)
+    TextView txtNumberOfUsers;
+    @BindView(R.id.count_numberOfUsers)
+    TextView countNumberOfUsers;
+    @BindView(R.id.ll_numberNoRSVP)
+    LinearLayout llNumberNoRSVP;
+    @BindView(R.id.txt_numberNoRSVP)
+    TextView txtNumberNoRSVP;
+    @BindView(R.id.count_numberNoRSVP)
+    TextView countNumberNoRSVP;
     private String maybe;
     private String invalid;
     private String numberOfUsers;
     private String numberOfRsvp;
     private int height;
     private int width;
+    public String voteid;
+    private String title;
+    private String description;
+
+    private String deadline;
+    ;
+    private boolean canEdit;
+    private boolean canAction;
     private GrassrootRestService grassrootRestService;
     private String phoneNumber;
     private String code;
@@ -145,11 +146,10 @@ public class ViewVote extends PortraitActivity implements View.OnClickListener{
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_view_vote);
-
+        ButterKnife.bind(this);
         findAllViews();
-        if (getIntent()!=null)
-        {
-            voteid = getIntent().getExtras().getString("voteid");
+        if (getIntent() != null) {
+            voteid = getIntent().getExtras().getString("id");
         }
 
         setUpToolbar();
@@ -168,232 +168,57 @@ public class ViewVote extends PortraitActivity implements View.OnClickListener{
         });
     }
 
-    public void onBackPressed()
-    {
+    public void onBackPressed() {
         Intent i = new Intent();
-        i.putExtra("update",update);
+        i.putExtra("update", 0);
         setResult(1, i);
         finish();
     }
 
     private void init() {
-         grassrootRestService = new GrassrootRestService(this);
-         utilClass = new UtilClass();
-         phoneNumber =SettingPreference.getuser_mobilenumber(this);
-         code = SettingPreference.getuser_token(this);
+        grassrootRestService = new GrassrootRestService(this);
+        phoneNumber = SettingPreference.getuser_mobilenumber(this);
+        code = SettingPreference.getuser_token(this);
 
-         CallViewVoteWS();
+        viewVote();
     }
 
-    private void CallViewVoteWS()
-    {
-
-    preExecute1();
-    doInBackground1();
+    private void viewVote() {
+        preExecute1();
+        doInBackground1();
     }
 
 
-    private void preExecute1()
-    {
-
-        error_flag1 = 0;
-
-        //hide the MainLayout
+    private void preExecute1() {
         rlVvMainLayout.setVisibility(View.GONE);
-
-
-         //hide the error Layout
-        errorLayout.setVisibility(View.GONE);
-        llNoResult.setVisibility(View.GONE);
-        llNoInternet.setVisibility(View.GONE);
-        llServerError.setVisibility(View.GONE);
-        llInvalidToken.setVisibility(View.GONE);
-
-        //show thr progress bar
         progressBarCircularIndeterminate.setVisibility(View.VISIBLE);
         txtPrg.setVisibility(View.VISIBLE);
 
-
     }
 
-    private void doInBackground1()
-    {
-
-        grassrootRestService.getApi().viewVote(phoneNumber,code,voteid).enqueue(new Callback<EventResponse>() {
+    private void doInBackground1() {
+        grassrootRestService.getApi().viewVote(phoneNumber, code, voteid).enqueue(new Callback<EventResponse>() {
             @Override
             public void onResponse(Call<EventResponse> call, Response<EventResponse> response) {
                 if (response.isSuccessful()) {
-                    Log.d(TAG,response.body().toString());
+                    Log.d(TAG, response.body().toString());
                     eventModel = response.body().getEventModel(); //todo: fix the rappy code, but for now just incorporate
                     setView(eventModel);
                 }
 
             }
+
             @Override
             public void onFailure(Call<EventResponse> call, Throwable t) {
                 progressBarCircularIndeterminate.setVisibility(View.GONE);
-                txtPrg.setVisibility(View.GONE);
-
-
-                rlVvMainLayout.setVisibility(View.GONE);
-                errorLayout.setVisibility(View.VISIBLE);
-                llServerError.setVisibility(View.VISIBLE);
-              //  ErrorUtils.handleNetworkError(ViewVote.this, errorLayout, t);
+                ErrorUtils.handleNetworkError(ViewVote.this, errorLayout, t);
             }
         });
 
 
-    /*    NetworkCall networkcall = new NetworkCall
-                (
-                        ViewVote.this,
-                        new ResponseListenerVolley() {
-                            @Override
-                            public void onSuccess(String s)
-                            {
-
-                                error_flag1 =0;
-                                postExecute1(s);
-                            }
-                        },
-                        new ErrorListenerVolley() {
-                            @Override
-                            public void onError(VolleyError volleyError) {
-
-                                if (volleyError instanceof NoConnectionError || volleyError instanceof TimeoutError)
-                                {
-                                  error_flag1 =1;
-                                    postExecute1("");
-
-                                }
-                                else if (volleyError instanceof ServerError)
-                                {
-                                    try {
-                                        String responsebody = new String(volleyError.networkResponse.data,"utf-8");
-                                        Log.e(TAG, "responsebody is " + responsebody);
-                                        try {
-                                            JSONObject jsonObject = new JSONObject(responsebody);
-                                            error_flag1 =0;
-                                            postExecute1(responsebody);
-
-                                        } catch (JSONException e) {
-                                            e.printStackTrace();
-                                            error_flag1 =5;
-                                            postExecute1("");
-
-                                        }
-
-                                    } catch (UnsupportedEncodingException e) {
-                                        e.printStackTrace();
-
-                                        error_flag1 =5;
-                                        postExecute1("");
-
-
-                                    }
-
-                                }
-                                else if (volleyError instanceof AuthFailureError)
-                                {
-                                    error_flag1 =4;
-                                    postExecute1("");
-
-
-                                }
-                                else
-                                {
-                                    error_flag1 = 5;
-                                    postExecute1("");
-
-                                }
-                            }
-                        },
-                        AllLinsks.VoteView + voteid + "/" + SettingPreference.getPREF_Phone_Token(ViewVote.this),
-                        "",
-                        false
-
-
-                );
-        networkcall.makeStringRequest_GET();*/
     }
 
-
-    private void postExecute1(String response)
-    {
-        Log.e(TAG, "error_flag1 is  " + error_flag1);
-
-
-      /*  if (error_flag1 == 1) {//no Internet
-            progressBarCircularIndeterminate.setVisibility(View.GONE);
-            txtPrg.setVisibility(View.GONE);
-
-            errorLayout.setVisibility(View.VISIBLE);
-            llNoInternet.setVisibility(View.VISIBLE);
-
-        }
-        else if (error_flag1 == 4)//Logout
-        {
-            progressBarCircularIndeterminate.setVisibility(View.GONE);
-            txtPrg.setVisibility(View.GONE);
-
-            errorLayout.setVisibility(View.VISIBLE);
-            llInvalidToken.setVisibility(View.VISIBLE);
-           // showSnackBar(getString(R.string.INVALID_TOKEN),"","","",snackbar.LENGTH_INDEFINITE);
-
-        }
-        else if (error_flag1 == 5) {//catch error
-            progressBarCircularIndeterminate.setVisibility(View.GONE);
-            txtPrg.setVisibility(View.GONE);
-
-            errorLayout.setVisibility(View.VISIBLE);
-            llServerError.setVisibility(View.VISIBLE);
-
-        } else if (error_flag1 == 0) {
-
-
-            try {
-                JSONObject jsonObject = new JSONObject(response);
-
-                if (jsonObject.getString("status").equalsIgnoreCase("SUCCESS")) {
-                    Log.e(TAG, "if");
-                    JSONObject dataObject = jsonObject.getJSONObject("data");
-                    id = dataObject.getString("id");
-                    title = dataObject.getString("title");
-                    description = dataObject.getString("description");
-                    name = dataObject.getString("name");
-                    type = dataObject.getString("type");
-                    deadline = dataObject.getString("deadline");
-                    deadlineISO = dataObject.getString("deadlineISO");
-                    hasResponded = dataObject.getBoolean("hasResponded");
-                    canAction = dataObject.getBoolean("canAction");
-                    reply = dataObject.getString("reply");
-                    canEdit = dataObject.getBoolean("canEdit");
-                    cancelled = dataObject.getString("cancelled");
-
-
-
-                    setView(model);
-
-                } else
-                    Log.e(TAG, "else");
-
-
-            } catch (JSONException e) {
-                e.printStackTrace();
-
-                progressBarCircularIndeterminate.setVisibility(View.GONE);
-                txtPrg.setVisibility(View.GONE);
-
-
-                rlVvMainLayout.setVisibility(View.GONE);
-                errorLayout.setVisibility(View.VISIBLE);
-                llServerError.setVisibility(View.VISIBLE);
-            }
-        }
-            */
-    }
-
-    private void setView(EventModel model)
-    {
+    private void setView(EventModel model) {
         Log.e(TAG, "setView");
 
         txtVvTitle.setText(model.getTitle());
@@ -402,7 +227,7 @@ public class ViewVote extends PortraitActivity implements View.OnClickListener{
             txtVvDeadline.setText(model.getDeadline());
         } catch (Exception e) {
             e.printStackTrace();
-            Log.e(TAG,"e is " + e.getMessage());
+            Log.e(TAG, "e is " + e.getMessage());
         }
         txtVvDescription.setText(model.getDescription());
         txtYes.setText(getString(R.string.vv_yes));
@@ -440,14 +265,11 @@ public class ViewVote extends PortraitActivity implements View.OnClickListener{
         rlVvMainLayout.setVisibility(View.VISIBLE);
 
 
-
     }
 
-    public String convertW3CTODeviceTimeZone(String strDate) throws Exception
-    {
+    public String convertW3CTODeviceTimeZone(String strDate) throws Exception {
         SimpleDateFormat simpleDateFormatW3C = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
         Date dateServer = simpleDateFormatW3C.parse(strDate);
-
         TimeZone deviceTimeZone = TimeZone.getDefault();
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
         simpleDateFormat.setTimeZone(deviceTimeZone);
@@ -458,143 +280,100 @@ public class ViewVote extends PortraitActivity implements View.OnClickListener{
     }
 
 
-
-    private void votemeeting(EventModel model)
-    {
+    private void votemeeting(EventModel model) {
         canAction(model);
-
     }
 
-    private void canAction(EventModel model)
-    {
-        if (model.getCanAction())
-        {
-
-            if (model.getHasResponded())
-            {  //model.hasResponded is true
-
-                //model.canAction is true
+    private void canAction(EventModel model) {
+        if (model.getCanAction()) {
+            if (model.getHasResponded()) {
                 canActionIsTrue(model);
-            }
-            else
-            {
-                //model.hasResponded is false
-
-
-                //model.canAction2 is true
+            } else {
                 canActionIsTrue2(model);
-
             }
-
-
-
-        }
-        else if (!model.getCanAction())
-        {
-
-            //model.canAction is false
+        } else if (!model.getCanAction()) {
             canActionIsFalse(model);
-
-
         }
 
     }
 
-    private void canActionIsTrue2(EventModel model)
-    {
-
-        Thumpsup.setEnabled(true);
-        Thumpsdown.setEnabled(true);
+    private void canActionIsTrue2(EventModel model) {
+        thumbsUp.setEnabled(true);
+        thumbsDown.setEnabled(true);
 
         //Thumbs down
-        Thumpsup.setImageResource(R.drawable.ic_no_vote_inactive);
+        thumbsUp.setImageResource(R.drawable.ic_no_vote_inactive);
         //Thumbs up
-        Thumpsdown.setImageResource(R.drawable.ic_vote_inactive);
+        thumbsDown.setImageResource(R.drawable.ic_vote_inactive);
 
     }
 
 
-    private void canActionIsTrue(EventModel model)
-    {
-        if (model.getReply().equalsIgnoreCase("Yes"))
-        {
+    private void canActionIsTrue(EventModel model) {
+        if (model.getReply().equalsIgnoreCase("Yes")) {
 
             //Thumbs up
-            Thumpsup.setImageResource(R.drawable.ic_vote_active);
+            thumbsUp.setImageResource(R.drawable.ic_vote_active);
 
             //Thumbs down
-            Thumpsdown.setImageResource(R.drawable.ic_no_vote_inactive);
+            thumbsDown.setImageResource(R.drawable.ic_no_vote_inactive);
 
-            Thumpsup.setEnabled(false);
-            Thumpsdown.setEnabled(true);
+            thumbsUp.setEnabled(false);
+            thumbsDown.setEnabled(true);
 
 
-        }
-        else  if (model.getReply().equalsIgnoreCase("No"))
-        {
+        } else if (model.getReply().equalsIgnoreCase("No")) {
 
             //Thumbs up
-            Thumpsup.setImageResource(R.drawable.ic_vote_inactive);
+            thumbsUp.setImageResource(R.drawable.ic_vote_inactive);
             //Thumbs down
-            Thumpsdown.setImageResource(R.drawable.ic_no_vote_active);
+            thumbsDown.setImageResource(R.drawable.ic_no_vote_active);
 
 
-            Thumpsup.setEnabled(true);
-            Thumpsdown.setEnabled(false);
+            thumbsUp.setEnabled(true);
+            thumbsDown.setEnabled(false);
 
 
-
-
-        }
-        else if (model.getReply().equalsIgnoreCase("NO_RESPONSE"))
-        {
+        } else if (model.getReply().equalsIgnoreCase("NO_RESPONSE")) {
             //Thumbs up
-            Thumpsup.setImageResource(R.drawable.ic_vote_inactive);
+            thumbsUp.setImageResource(R.drawable.ic_vote_inactive);
             //Thumbs down
-            Thumpsdown.setImageResource(R.drawable.ic_no_vote_inactive);
+            thumbsDown.setImageResource(R.drawable.ic_no_vote_inactive);
 
-            Thumpsup.setEnabled(true);
-            Thumpsdown.setEnabled(true);
+            thumbsUp.setEnabled(true);
+            thumbsDown.setEnabled(true);
         }
 
 
     }
 
-    private void canActionIsFalse(EventModel model)
-    {
+    private void canActionIsFalse(EventModel model) {
 
-        Thumpsup.setEnabled(false);
-        Thumpsdown.setEnabled(false);
+        thumbsUp.setEnabled(false);
+        thumbsDown.setEnabled(false);
 
-        if (model.getReply().equalsIgnoreCase("Yes"))
-        {
+        if (model.getReply().equalsIgnoreCase("Yes")) {
 
             //Thumbs up
-            Thumpsup.setImageResource(R.drawable.ic_vote_active);
+            thumbsUp.setImageResource(R.drawable.ic_vote_active);
 
             //Thumbs down
-            Thumpsdown.setImageResource(R.drawable.ic_no_vote_inactive);
+            thumbsDown.setImageResource(R.drawable.ic_no_vote_inactive);
 
 
-        }
-        else  if (model.getReply().equalsIgnoreCase("No"))
-        {
+        } else if (model.getReply().equalsIgnoreCase("No")) {
 
             //Thumbs up
-            Thumpsup.setImageResource(R.drawable.ic_vote_inactive);
+            thumbsUp.setImageResource(R.drawable.ic_vote_inactive);
             //Thumbs down
-            Thumpsdown.setImageResource(R.drawable.ic_no_vote_active);
+            thumbsDown.setImageResource(R.drawable.ic_no_vote_active);
 
 
-
-
-        }
-        else if (model.getReply().equalsIgnoreCase("NO_RESPONSE"))
-        {
+        } else if (model.getReply().equalsIgnoreCase("NO_RESPONSE")) {
             //Thumbs up
-            Thumpsup.setImageResource(R.drawable.ic_vote_inactive);
+            thumbsUp.setImageResource(R.drawable.ic_vote_inactive);
             //Thumbs down
-            Thumpsdown.setImageResource(R.drawable.ic_no_vote_inactive);
+            thumbsDown.setImageResource(R.drawable.ic_no_vote_inactive);
 
         }
 
@@ -602,239 +381,37 @@ public class ViewVote extends PortraitActivity implements View.OnClickListener{
     }
 
 
-    private void CallVoteWS(String response) {
+    private void castVote(String response) {
 
-        //preExecute2
-        preExecute2(response);
-
-        grassrootRestService.getApi().castVote(phoneNumber,code,voteid, response).
+        grassrootRestService.getApi().castVote(voteid, phoneNumber, code, response).
                 enqueue(new Callback<GenericResponse>() {
-            @Override
-            public void onResponse(Call<GenericResponse> call, Response<GenericResponse> response) {
-                if (response.isSuccessful()) {
-                   postExecute2(null);
-                }
+                    @Override
+                    public void onResponse(Call<GenericResponse> call, Response<GenericResponse> response) {
+                        if (response.isSuccessful()) {
+                            showSnackBar(getString(R.string.ga_Votesend), "", "", "", Snackbar.LENGTH_SHORT);
+                            viewVote();
+
+                        }
 
 
-            }
-            @Override
-            public void onFailure(Call<GenericResponse> call, Throwable t) {
-                progressBarCircularIndeterminate.setVisibility(View.GONE);
-                txtPrg.setVisibility(View.GONE);
+                    }
 
-
-                rlVvMainLayout.setVisibility(View.GONE);
-                errorLayout.setVisibility(View.VISIBLE);
-                llServerError.setVisibility(View.VISIBLE);
-                //  ErrorUtils.handleNetworkError(ViewVote.this, errorLayout, t);
-            }
-        });
-
-
-
-/*
-        //doInBacground
-        final String finalResponse = response;
-        final String finalResponse1 = response;
-        NetworkCall networkCall = new NetworkCall
-                (
-                        ViewVote.this,
-
-                        new ResponseListenerVolley() {
-                            @Override
-                            public void onSuccess(String s) {
-                                //parse string to json
-                                error_flag2=0;
-                                postExecute2(s);
-
-                            }
-                        },
-
-                        new ErrorListenerVolley() {
-                            @Override
-                            public void onError(VolleyError volleyError) {
-
-                                if (volleyError instanceof NoConnectionError || volleyError instanceof TimeoutError)
-                                {
-                                    error_flag2 = 1;
-                                    postExecute2("");
-                                }
-                                else  if (volleyError instanceof ServerError)
-                                {
-                                    try {
-
-                                        String responsebody = new String(volleyError.networkResponse.data, "utf-8");
-                                        Log.e(TAG, "responseBody " + responsebody);
-                                        JSONObject jsonObject = new JSONObject(responsebody);
-                                        String status = jsonObject.getString("status");
-                                        String message = jsonObject.getString("message");
-                                        if (status.equalsIgnoreCase("SUCCESS")) {
-                                            Log.e(TAG, "status is" + status);
-                                            Log.e(TAG, "message is" + message);
-                                            if (jsonObject.getString("code").equalsIgnoreCase("409")) {
-                                                showSnackBar(getString(R.string.ga_VoteFailure), "", "", "", snackbar.LENGTH_SHORT);
-                                            } else {
-                                                showSnackBar(getString(R.string.Unknown_error), "", "", "", snackbar.LENGTH_SHORT);
-
-                                            }
-
-                                        }
-
-
-                                    } catch (UnsupportedEncodingException e) {
-                                        e.printStackTrace();
-                                        showSnackBar(getString(R.string.Unknown_error), "", "", "", snackbar.LENGTH_SHORT);
-
-                                    } catch (JSONException e) {
-                                        e.printStackTrace();
-                                        showSnackBar(getString(R.string.Unknown_error), "", "", "", snackbar.LENGTH_SHORT);
-
-                                    }
-
-
-                                }
-                                else if (volleyError instanceof  AuthFailureError)
-                                {
-                                    showSnackBar(getString(R.string.INVALID_TOKEN),"","","",snackbar.LENGTH_INDEFINITE);
-                                }
-                                else
-                                {
-                                    showSnackBar(getString(R.string.Unknown_error),"","","",snackbar.LENGTH_SHORT);
-                                }
-
-
-                            }
-                        },
-
-                        AllLinsks.Vote + voteid + "/" + SettingPreference.getPREF_Phone_Token(ViewVote.this) + "?response=" + response,
-                        getString(R.string.prg_message),
-                        true
-
-                );
-
-        networkCall.makeStringRequest_GET();
-
-
-        //postExecute2
-        /*update model and notify adapter*/
-
+                    @Override
+                    public void onFailure(Call<GenericResponse> call, Throwable t) {
+                        progressBarCircularIndeterminate.setVisibility(View.GONE);
+                        txtPrg.setVisibility(View.GONE);
+                        ErrorUtils.handleNetworkError(ViewVote.this, errorLayout, t);
+                    }
+                });
     }
 
-    private void postExecute2(String respnse2)
-    {
-        JSONObject jsonObject = null;
-        try {
-            jsonObject = new JSONObject(respnse2);
-            if (jsonObject.getString("status").equalsIgnoreCase("SUCCESS")) {
-                showSnackBar(getString(R.string.ga_Votesend), "", "", "", Snackbar.LENGTH_SHORT);
-                update="1";
-                CallViewVoteWS();
-            }
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-
-    }
-
-    private void preExecute2(String response)
-    {
-        error_flag2 = 0;
-
-
-    }
 
     private void findAllViews() {
-        vvRoot = (RelativeLayout) findViewById(R.id.vv_root);
-        vvToolbar = (Toolbar) findViewById(R.id.vv_toolbar);
-        scrollView = (ScrollView) findViewById(R.id.scrollView);
-        rlVvMainLayout = (LinearLayout) findViewById(R.id.rl_vv_main_layout);
-        txtToolbar = (TextView) findViewById(R.id.txt_toolbar);
-        txtVvTitle = (TextView) findViewById(R.id.txt_vv_title);
-        rlNested = (RelativeLayout) findViewById(R.id.rl_nested);
-        txtVvGroupname = (TextView) findViewById(R.id.txt_vv_groupname);
-        txtVvDeadline = (TextView) findViewById(R.id.txt_vv_deadline);
-        txtVvDescription = (TextView) findViewById(R.id.txt_vv_description);
-        rlVoteStatus = (RelativeLayout) findViewById(R.id.rl_vote_status);
-        llImageHolder = (LinearLayout) findViewById(R.id.ll_image_holder);
-        txtHeader = (TextView) findViewById(R.id.txt_header);
 
-        errorLayout = findViewById(R.id.error_layout);
-
-        llNoResult = (LinearLayout) errorLayout.findViewById(R.id.ll_no_result);
-        llNoInternet = (LinearLayout) errorLayout.findViewById(R.id.ll_no_internet);
-        llServerError = (LinearLayout) errorLayout.findViewById(R.id.ll_server_error);
-        llInvalidToken = (LinearLayout) errorLayout.findViewById(R.id.ll_invalid_token);
-
-        progressBarCircularIndeterminate = (ProgressBarCircularIndeterminate) findViewById(R.id.progressBarCircularIndeterminate);
-        txtPrg = (TextView) findViewById(R.id.txt_prg);
-
-        mRelativeLayoutHeader = (RelativeLayout) findViewById(R.id.header);
-        mLinearLayout = (LinearLayout) findViewById(R.id.expandable);
-
-        llYes = (LinearLayout) findViewById(R.id.ll_yes);
-        txtYes = (TextView) findViewById(R.id.txt_yes);
-        countYes = (TextView) findViewById(R.id.count_yes);
-
-        llNo = (LinearLayout) findViewById(R.id.ll_no);
-        txtNo = (TextView) findViewById(R.id.txt_no);;
-        countNo = (TextView) findViewById(R.id.count_no);
-
-        llMaybe = (LinearLayout) findViewById(R.id.ll_maybe);
-        txtMaybe = (TextView) findViewById(R.id.txt_maybe);
-        countMaybe = (TextView) findViewById(R.id.count_maybe);
-
-        txtInvalid = (TextView) findViewById(R.id.txt_invalid);
-        countInvalid = (TextView) findViewById(R.id.count_invalid);
-
-        llNumberOfUsers = (LinearLayout) findViewById(R.id.ll_numberOfUsers);
-        txtNumberOfUsers = (TextView) findViewById(R.id.txt_numberOfUsers);
-        countNumberOfUsers = (TextView) findViewById(R.id.count_numberOfUsers);
-
-        llNumberNoRSVP = (LinearLayout) findViewById(R.id.ll_numberNoRSVP);
-        txtNumberNoRSVP = (TextView) findViewById(R.id.txt_numberNoRSVP);
-        countNumberNoRSVP = (TextView) findViewById(R.id.count_numberNoRSVP);
-
-
-        ivExpand = (ImageView) findViewById(R.id.iv_expand);
-        Thumpsup = (ImageView) findViewById(R.id.Thumpsup);
-        Thumpsdown = (ImageView) findViewById(R.id.Thumpsdown);
-
-        //OnClick
-
-        bt_editVote= (Button) findViewById(R.id.bt_editVote);
-    /*    ViewTreeObserver vto = bt_editVote.getViewTreeObserver();
-        vto.addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
-            @Override
-            public void onGlobalLayout() {
-                bt_editVote.getViewTreeObserver().removeGlobalOnLayoutListener(this);
-                width = bt_editVote.getMeasuredWidth();
-                height = bt_editVote.getMeasuredHeight();
-
-            }
-        });
-*/
-   /*     bt_editVote.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
-            @Override
-            public void onGlobalLayout() {
-                height= bt_editVote.getHeight();
-                Toast.makeText(ViewVote.this, "height " + bt_editVote.getHeight(), Toast.LENGTH_SHORT).show();
-
-            }
-        });
-        Toast.makeText(ViewVote.this, "bt_editVote.getHeight() " + height, Toast.LENGTH_SHORT).show();
-
-        RelativeLayout.LayoutParams layoutParams = (RelativeLayout.LayoutParams) scrollView
-                .getLayoutParams();
-
-        layoutParams.bottomMargin = bt_editVote.getHeight()+20;
-        scrollView.setLayoutParams(layoutParams);*/
         bt_editVote.setEnabled(false);
-
         mRelativeLayoutHeader.setOnClickListener(expandableHeader());
-        Thumpsup.setOnClickListener(Thumpsup());
-        Thumpsdown.setOnClickListener(Thumpsdown());
-        llServerError.setOnClickListener(this);
-        llNoInternet.setOnClickListener(this);
+        thumbsUp.setOnClickListener(Thumpsup());
+        thumbsDown.setOnClickListener(Thumpsdown());
 
         //Add onPreDrawListener
         mLinearLayout.getViewTreeObserver().addOnPreDrawListener(
@@ -857,66 +434,57 @@ public class ViewVote extends PortraitActivity implements View.OnClickListener{
     }
 
     private View.OnClickListener Thumpsdown() {
-            return new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    CallVoteWS("No");
-                }
-            };
+        return new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                castVote("No");
+            }
+        };
     }
 
     private View.OnClickListener Thumpsup() {
-            return new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    CallVoteWS("Yes");
-                }
-            };
+        return new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                castVote("Yes");
+            }
+        };
     }
 
     private View.OnClickListener expandableHeader() {
-                return new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        if (mLinearLayout.getVisibility()==View.GONE){
-                            ivExpand.setImageResource(R.drawable.ic_arrow_up);
-                            expand();
-                        }else{
-                            ivExpand.setImageResource(R.drawable.ic_arrow_down);
-                            collapse();
-                        }
-                    }
-                };
+        return new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (mLinearLayout.getVisibility() == View.GONE) {
+                    ivExpand.setImageResource(R.drawable.ic_arrow_up);
+                    expand();
+                } else {
+                    ivExpand.setImageResource(R.drawable.ic_arrow_down);
+                    collapse();
+                }
+            }
+        };
     }
 
-    private View.OnClickListener editVote_button()
-    {
-            return new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
+    private View.OnClickListener editVote_button() {
+        return new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
 
-                    if (canEdit){
-                        Intent i= new Intent(ViewVote.this,EditVote.class);
-                        i.putExtra("description",description);
-                        i.putExtra("deadline",deadline);
-                        i.putExtra("voteid",voteid);
-                        i.putExtra("title",title);
-                        startActivityForResult(i,1);
-
-                    }
+                if (canEdit) {
+                    Intent i = new Intent(ViewVote.this, EditVoteActivity.class);
+                    i.putExtra("description", description);
+                    i.putExtra("deadline", deadline);
+                    i.putExtra("voteid", voteid);
+                    i.putExtra("title", title);
+                    startActivityForResult(i, 1);
 
                 }
-            };
+
+            }
+        };
     }
 
-
-    @Override
-    public void onClick(View v)
-    {
-        if (v==llNoResult || v==llServerError || v==llNoInternet )
-            CallViewVoteWS();
-
-    }
 
     private void expand() {
         //set Visible
@@ -980,39 +548,32 @@ public class ViewVote extends PortraitActivity implements View.OnClickListener{
         if (resultCode == 1 && requestCode == 1) {
 
             Log.e(this.TAG, "resultCode==1 ");
-            if (data != null)
-            {
+            if (data != null) {
                 showSnackBar(getString(R.string.vv_voteup), "", "", "", Snackbar.LENGTH_SHORT);
                 txtVvDeadline.setText(data.getStringExtra("deadline"));
-                deadline= data.getStringExtra("deadline");
+                deadline = data.getStringExtra("deadline");
                 txtVvDescription.setText(data.getStringExtra("description"));
                 description = data.getStringExtra("description");
-                update="1";
             }
-        } else  {
+        } else {
             Log.e(this.TAG, "resultCode==2");
 
         }
     }
 
 
-
-    private void showSnackBar(String message, final String actionButtontext,  final String type,final  String response,int length)
-    {
+    private void showSnackBar(String message, final String actionButtontext, final String type, final String response, int length) {
         snackbar = Snackbar.make(vvRoot, message, length);
         snackbar.setActionTextColor(Color.RED);
 
-        if (!actionButtontext.isEmpty() )
-        {
+        if (!actionButtontext.isEmpty()) {
             snackbar.setAction(actionButtontext, new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-
-
                     if (type.equalsIgnoreCase("VoteMeeting")) {
-                        CallVoteWS(response);
+                        castVote(response);
                     } else {
-                        CallViewVoteWS();
+                        viewVote();
 
                     }
                 }

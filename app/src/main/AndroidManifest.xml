@@ -111,7 +111,7 @@
         <activity android:name=".ui.activities.ViewVote" />
 
         <activity
-            android:name=".ui.activities.EditVote"
+            android:name=".ui.activities.EditVoteActivity"
             android:windowSoftInputMode="adjustPan" />
         <activity android:name=".ui.activities.ProfileSettings"/>
 
@@ -121,7 +121,7 @@
             android:theme="@style/AppTheme"
             android:windowSoftInputMode="adjustPan" />
 
-        <activity android:name=".ui.activities.VoteNotifyMembers" />
+        <activity android:name=".ui.activities.VoteNotifyMembersActivity" />
 
 
         <!-- Navigation drawer / system activities -->

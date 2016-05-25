@@ -111,7 +111,6 @@ public class CreateVoteActivity extends PortraitActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_create_vote);
         ButterKnife.bind(this);
-
         init();
         setUpViews();
         setUpToolbar();
@@ -197,7 +196,7 @@ public class CreateVoteActivity extends PortraitActivity {
 
     @OnClick(R.id.rl_notify_body)
     public void onNotifyClicked() {
-        Intent notifyactivity = new Intent(CreateVoteActivity.this, VoteNotifyMembers.class);
+        Intent notifyactivity = new Intent(CreateVoteActivity.this, VoteNotifyMembersActivity.class);
         notifyactivity.putParcelableArrayListExtra(Constant.VotedmemberList, (ArrayList) voteMemberArrayList);
         startActivityForResult(notifyactivity, 1);
     }
@@ -293,8 +292,9 @@ public class CreateVoteActivity extends PortraitActivity {
         } else {
             notifyWholeGroup = false;
             voteMemberArrayList.clear(); // wtf, vs two lines later
-            Intent notifyactivity = new Intent(CreateVoteActivity.this, VoteNotifyMembers.class);
+            Intent notifyactivity = new Intent(CreateVoteActivity.this, VoteNotifyMembersActivity.class);
             notifyactivity.putParcelableArrayListExtra(Constant.VotedmemberList, (ArrayList) voteMemberArrayList);
+            notifyactivity.putExtra(Constant.GROUPUID_FIELD, groupId);
             startActivityForResult(notifyactivity, Constant.activitySelectGroupMembers);
         }
     }
