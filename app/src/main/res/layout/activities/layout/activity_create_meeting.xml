@@ -9,21 +9,13 @@
     android:layout_height="match_parent"
     android:background="@color/off_white_background">
 
-
     <android.support.v7.widget.Toolbar
         android:id="@+id/cmtg_tlb"
         android:layout_width="match_parent"
         android:layout_height="?actionBarSize"
         android:background="@color/primaryColor"
-        android:elevation="4dp">
-
-        <TextView
-            android:id="@+id/txt_tlb_cv"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/cmtg_title"
-            android:textColor="@color/white"
-            android:textSize="@dimen/txt_large" />
+        android:elevation="4dp"
+        android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar">
 
     </android.support.v7.widget.Toolbar>
 
@@ -177,146 +169,97 @@
                     </RelativeLayout>
                 </android.support.v7.widget.CardView>
 
-                <!-- todo : turn this into a fragment and include it -->
+                <!-- todo : turn this into a fragment and include it, plus flatten it -->
                 <!--alert header-->
-                <RelativeLayout
-                    android:id="@+id/rl_alerts_header"
+                <android.support.v7.widget.CardView
+                    android:id="@+id/cmtg_cv_reminder"
+                    android:layout_below="@id/cmtg_cv_datepicker"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_below="@+id/cmtg_cv_datepicker"
-                    android:layout_marginTop="10dp"
-                    android:background="@color/light_background">
+                    card_view:cardBackgroundColor="@color/light_background"
+                    style="@style/FormCardView">
 
-                    <TextView
-                        style="@style/text_medium"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:padding="10dp"
-                        android:text="@string/cmtg_config_reminders_heading"
-                        android:textColor="@color/vv_txtResponse" />
-
-                    <ImageView
-                        android:id="@+id/cmtg_iv_expand_alert"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_alignParentRight="true"
-                        android:layout_centerVertical="true"
-                        android:padding="10dp"
-                        android:src="@drawable/ic_arrow_down" />
-                </RelativeLayout>
-
-                <!-- alert body -->
-                <RelativeLayout
-                    android:id="@+id/cmtg_reminder_body"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_below="@+id/rl_alerts_header"
-                    android:background="@color/light_background"
-
-                    android:paddingBottom="15dp"
-                    android:paddingTop="15dp"
-                    android:paddingLeft="10dp"
-                    android:paddingRight="10dp"
-
-                    android:visibility="gone">
-
-                    <RelativeLayout
-                        android:id="@+id/rl_row_one_day"
+                    <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginBottom="10dp">
+                        android:orientation="vertical">
 
-                        <TextView
-                            style="@style/text_medium"
-                            android:layout_width="wrap_content"
+                        <RelativeLayout
+                            android:id="@+id/cmtg_reminder_header"
+                            android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_alignParentLeft="true"
-                            android:text="@string/one_day"
-                            android:textColor="@color/vv_txtResponse" />
+                            android:padding="10dp">
 
-                        <android.support.v7.widget.SwitchCompat
-                            android:id="@+id/sw_one_day"
-                            android:layout_width="wrap_content"
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                style="@style/text_medium"
+                                android:textColor="@color/dark_grey_text"
+                                android:text="@string/cmtg_config_reminders_heading"/>
+
+                            <ImageView
+                                android:id="@+id/cmtg_iv_expand_alert"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_alignParentRight="true"
+                                android:layout_centerVertical="true"
+                                android:src="@drawable/ic_arrow_down"/>
+
+                        </RelativeLayout>
+
+                        <RelativeLayout
+                            android:id="@+id/cmtg_reminder_body"
+                            android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_alignParentRight="true" />
+                            android:paddingBottom="15dp"
+                            android:paddingTop="15dp"
+                            android:paddingLeft="10dp"
+                            android:paddingRight="10dp"
+                            android:visibility="gone">
 
-                    </RelativeLayout>
+                            <!-- todo : fix layout alignment in here w/out extra nesting (also API 16 weirdness)-->
+                            <TextView
+                                android:id="@+id/tv_one_day"
+                                style="@style/ReminderRowText"
+                                android:text="@string/one_day" />
 
-                    <RelativeLayout
-                        android:id="@+id/rl_row_half_day"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_below="@+id/rl_row_one_day"
-                        android:layout_marginBottom="10dp">
+                            <android.support.v7.widget.SwitchCompat
+                                android:id="@+id/cmtg_sw_one_day"
+                                android:layout_width="match_parent"
+                                style="@style/ReminderSwitch"/>
 
-                        <TextView
-                            style="@style/text_medium"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_alignParentLeft="true"
-                            android:text="@string/half_day"
-                            android:textColor="@color/vv_txtResponse" />
+                            <TextView
+                                android:id="@+id/tv_half_day"
+                                android:layout_below="@id/cmtg_sw_one_day"
+                                style="@style/ReminderRowText"
+                                android:text="@string/half_day" />
 
-                        <android.support.v7.widget.SwitchCompat
-                            android:id="@+id/sw_half_day"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_alignParentRight="true" />
+                            <android.support.v7.widget.SwitchCompat
+                                android:id="@+id/cmtg_sw_half_day"
+                                android:layout_below="@id/cmtg_sw_one_day"
+                                style="@style/ReminderSwitch"/>
 
-                    </RelativeLayout>
+                            <TextView
+                                android:id="@+id/tv_one_hour"
+                                android:layout_below="@id/tv_half_day"
+                                style="@style/ReminderRowText"
+                                android:text="@string/one_hour" />
 
-                    <RelativeLayout
-                        android:id="@+id/rl_row_one_hour"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_below="@+id/rl_row_half_day"
-                        android:layout_marginBottom="10dp">
+                            <android.support.v7.widget.SwitchCompat
+                                android:id="@+id/cmtg_sw_one_hour"
+                                android:layout_below="@id/cmtg_sw_half_day"
+                                style="@style/ReminderSwitch"/>
 
-                        <TextView
-                            style="@style/text_medium"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_alignParentLeft="true"
-                            android:text="@string/one_hour"
-                            android:textColor="@color/vv_txtResponse" />
+                        </RelativeLayout>
 
-                        <android.support.v7.widget.SwitchCompat
-                            android:id="@+id/sw_one_hour"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_alignParentRight="true" />
+                    </LinearLayout>
 
-                    </RelativeLayout>
-
-                    <RelativeLayout
-                        android:id="@+id/rl_row_immediate"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_below="@+id/rl_row_one_hour">
-
-                        <TextView
-                            style="@style/text_medium"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_alignParentLeft="true"
-                            android:text="@string/immediate"
-                            android:textColor="@color/vv_txtResponse" />
-
-                        <android.support.v7.widget.SwitchCompat
-                            android:id="@+id/sw_immediate"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_alignParentRight="true" />
-
-                    </RelativeLayout>
-
-                </RelativeLayout>
+                </android.support.v7.widget.CardView>
 
                 <android.support.v7.widget.CardView
                     style="@style/FormCardView"
                     android:id="@+id/cmtg_notify_switch"
-                    android:layout_below="@+id/cmtg_reminder_body"
-
+                    android:layout_below="@id/cmtg_cv_reminder"
                     card_view:cardBackgroundColor="@color/light_background"
                     card_view:cardCornerRadius="3dp"
                     card_view:cardElevation="3dp">
@@ -341,11 +284,12 @@
                     </RelativeLayout>
                 </android.support.v7.widget.CardView>
 
+                <!-- todo: this is highly inefficient, flatten & combine soon -->
                 <RelativeLayout
-                    android:id="@+id/rl_notify_body"
+                    android:id="@+id/cmtg_rl_notify_count"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_below="@+id/rl_notify_header"
+                    android:layout_below="@id/cmtg_notify_switch"
                     android:background="@color/light_background"
                     android:visibility="gone">
 
@@ -364,7 +308,7 @@
                             android:padding="10dp" />
 
                         <TextView
-                            android:id="@+id/member_count"
+                            android:id="@+id/cmtg_tv_member_count"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             tools:text="5"
@@ -372,7 +316,7 @@
                             android:textStyle="bold" />
 
                         <TextView
-                            android:id="@+id/suffix"
+                            android:id="@+id/cmtg_tv_suffix"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             tools:text="members"

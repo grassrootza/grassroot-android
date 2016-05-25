@@ -251,7 +251,7 @@
                     android:layout_height="wrap_content"
                     android:layout_below="@+id/rl_alerts_header"
                     android:background="@color/vv_Body_agree_disagree"
-                    android:visibility="gone">
+                    android:visibility="visible">
 
                     <RelativeLayout
                         android:layout_width="match_parent"

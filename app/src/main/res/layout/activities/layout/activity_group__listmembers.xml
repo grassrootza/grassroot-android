@@ -22,14 +22,16 @@
     <android.support.design.widget.CoordinatorLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_below="@id/lm_toolbar">
+        android:layout_below="@id/lm_toolbar"
+        android:layout_above="@+id/lm_btn_done">
 
         <android.support.design.widget.AppBarLayout
-            android:id="@+id/am_app_bar"
+            android:id="@+id/lm_app_bar"
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
 
             <android.support.design.widget.CollapsingToolbarLayout
+                android:id="@+id/lm_ctl_toolbar"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:paddingBottom="16dp"
@@ -60,8 +62,32 @@
 
             <TextView
                 style="@style/MemberListHeader"
-                android:id="@+id/tv_am_existing_members_title"
+                android:id="@+id/lm_tv_existing_members_title"
                 android:text="@string/member_list_default_header" />
+
+            <LinearLayout
+                android:id="@+id/lm_ll_check_clear_all"
+                android:layout_width="fill_parent"
+                android:orientation="horizontal"
+                android:gravity="center"
+                android:layout_height="wrap_content"
+                android:visibility="gone">
+
+                <Button
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/lm_check_all"
+                    android:layout_marginRight="7dip"
+                    android:id="@+id/btnCheckAll" >
+                </Button>
+
+                <Button
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/clear_all"
+                    android:id="@+id/btnClearAll" >
+                </Button>
+            </LinearLayout>
 
             <RelativeLayout
                 android:layout_width="match_parent"
@@ -114,6 +140,16 @@
             android:visibility="gone" />
 
     </com.github.clans.fab.FloatingActionMenu>
+
+    <Button
+        android:id="@+id/lm_btn_done"
+        style="@style/Button_green"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:text="@string/nm_bt_done"
+        android:layout_marginTop="10dp"
+        android:visibility="gone" />
 
 </RelativeLayout>
 

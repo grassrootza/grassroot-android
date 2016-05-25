@@ -21,7 +21,6 @@ import com.techmorphosis.grassroot.utils.ErrorUtils;
 import com.techmorphosis.grassroot.utils.SettingPreference;
 import com.techmorphosis.grassroot.utils.UtilClass;
 
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -36,7 +35,7 @@ import retrofit2.Response;
  * Created by luke on 2016/05/18.
  */
 public class RemoveMembersActivity extends PortraitActivity implements MemberListFragment.MemberListListener,
-        MemberListFragment.MemberListClickDismissListener {
+        MemberListFragment.MemberClickListener {
 
     private static final String TAG = RemoveMembersActivity.class.getCanonicalName();
 

@@ -39,7 +39,7 @@ import retrofit2.Response;
 /**
  * Created by luke on 2016/05/05.
  */
-public class AddMembersActivity extends AppCompatActivity implements MemberListFragment.MemberListListener, MemberListFragment.MemberListClickDismissListener {
+public class AddMembersActivity extends AppCompatActivity implements MemberListFragment.MemberListListener, MemberListFragment.MemberClickListener {
 
     private static final String TAG = AddMembersActivity.class.getSimpleName();
     private static final String EXISTING_ID = "existingMembers";

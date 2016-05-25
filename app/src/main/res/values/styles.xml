@@ -222,6 +222,8 @@
         <item name="android:clickable">true</item>
         <item name="android:foreground">?selectableItemBackground</item>
         <item name="cardBackgroundColor">@color/white</item>
+        <item name="cardCornerRadius">3dp</item>
+        <item name="cardElevation">3dp</item>
     </style>
 
     <style name="TextCharCounter">
@@ -238,6 +240,21 @@
         <item name="android:layout_alignParentRight">true</item>
         <item name="android:layout_centerVertical">true</item>
         <item name="android:paddingRight">5dp</item>
+    </style>
+
+    <style name="ReminderRowText">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textSize">@dimen/txt_medium</item>
+        <item name="android:singleLine">true</item>
+        <item name="android:textColor">@color/dark_grey_text</item>
+        <item name="android:layout_marginBottom">15dp</item> <!-- todo: fix this hack for alignment -->
+    </style>
+
+    <style name="ReminderSwitch">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_alignParentRight">true</item>
     </style>
 
     <!-- ANIMATIONS -->

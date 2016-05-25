@@ -125,6 +125,10 @@
     <string name="am_title">Add members to group</string>
     <string name="am_title_contact">Current group members</string>
 
+    <!-- Member selection -->
+    <string name="lm_check_all">Select all</string>
+    <string name="clear_all">Clear all</string>
+
     <!-- Phone book and other strings -->
     <string name="action_search">Search...</string>
     <string name="cg_contacs_loading">Scanning all your contacts....</string>

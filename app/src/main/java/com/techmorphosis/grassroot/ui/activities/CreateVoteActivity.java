@@ -311,8 +311,7 @@ public class CreateVoteActivity extends PortraitActivity {
             if (selectedMemberCount > 0) {
                 rlNotifyBody.setVisibility(View.VISIBLE);
                 memberCount.setText(String.valueOf(selectedMemberCount));
-                suffix.setText(selectedMemberCount > 1 ? getString(R.string.cv_notify_member_suffix_two) :
-                        getString(R.string.cv_notify_member_suffix_one));
+                suffix.setText(selectedMemberCount > 1 ? getString(R.string.cv_notify_member_suffix_two) : getString(R.string.cv_notify_member_suffix_one));
                 swNotifyall.setChecked(selectedMemberCount == voteMemberArrayList.size());
             }
         }

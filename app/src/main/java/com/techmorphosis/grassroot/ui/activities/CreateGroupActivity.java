@@ -22,7 +22,6 @@ import com.techmorphosis.grassroot.R;
 import com.techmorphosis.grassroot.models.Contact;
 import com.techmorphosis.grassroot.services.GrassrootRestService;
 import com.techmorphosis.grassroot.services.model.GenericResponse;
-import com.techmorphosis.grassroot.services.model.Group;
 import com.techmorphosis.grassroot.services.model.Member;
 import com.techmorphosis.grassroot.ui.fragments.MemberListFragment;
 import com.techmorphosis.grassroot.utils.Constant;
@@ -46,7 +45,7 @@ import retrofit2.Response;
 
 import static butterknife.OnTextChanged.Callback.AFTER_TEXT_CHANGED;
 
-public class CreateGroupActivity extends PortraitActivity implements MemberListFragment.MemberListListener, MemberListFragment.MemberListClickDismissListener {
+public class CreateGroupActivity extends PortraitActivity implements MemberListFragment.MemberListListener, MemberListFragment.MemberClickListener {
 
     private String TAG = CreateGroupActivity.class.getSimpleName();
     private static final String regexForName = "[^a-zA-Z0-9 ]";

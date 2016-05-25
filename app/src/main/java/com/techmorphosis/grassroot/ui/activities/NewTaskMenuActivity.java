@@ -64,9 +64,8 @@ public class NewTaskMenuActivity extends AppCompatActivity {
 
     @OnClick(R.id.bt_meeting)
     public void onMeetingButtonClick() {
-                Intent todo=new Intent(this,NotBuiltActivity.class);
-                todo.putExtra("title","Meeting");
-                startActivity(todo);
+        Intent createMeeting = MenuUtils.constructIntent(this, CreateMeetingActivity.class, groupUid, groupName);
+        startActivity(createMeeting);
     }
 
     @OnClick(R.id.bt_vote)

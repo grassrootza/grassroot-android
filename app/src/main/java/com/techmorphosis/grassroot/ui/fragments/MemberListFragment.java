@@ -46,7 +46,7 @@ public class MemberListFragment extends Fragment {
     private boolean selectedByDefault;
 
     private MemberListListener mListener;
-    private MemberListClickDismissListener clickDismissListener;
+    private MemberClickListener clickListener;
     private GrassrootRestService grassrootRestService;
     private UserListAdapter userListAdapter;
 
@@ -54,6 +54,15 @@ public class MemberListFragment extends Fragment {
     RecyclerView memberListRecyclerView;
 
     private ViewGroup vgContainer;
+
+    public interface MemberListListener {
+        void onMemberListInitiated(MemberListFragment fragment);
+    }
+
+    public interface MemberClickListener {
+        void onMemberDismissed(int position, String memberUid);
+        void onMemberClicked(int position, String memberUid);
+    }
 
     // NB: we are not doing checks for null on this because we will use the fragment in create group
     public void setGroupUid(String groupUid) {
@@ -110,17 +119,7 @@ public class MemberListFragment extends Fragment {
         }
     }
 
-    public interface MemberListListener {
-        void onMemberListInitiated(MemberListFragment fragment);
-    }
-
-    public interface MemberListClickDismissListener {
-        void onMemberDismissed(int position, String memberUid);
-        void onMemberClicked(int position, String memberUid);
-    }
-
     public void setID(String ID) { this.ID = ID; }
-    public String getID() { return ID; }
 
     @Override
     public void onAttach(Context context) {
@@ -132,7 +131,7 @@ public class MemberListFragment extends Fragment {
             // todo : do we really want to do this? not sure if listener should be compulsory, to reexamine
             throw new ClassCastException(context.toString() + " must implement onMemberListListener");
         }
-        clickDismissListener = (context instanceof MemberListClickDismissListener) ? (MemberListClickDismissListener) context : null;
+        clickListener = (context instanceof MemberClickListener) ? (MemberClickListener) context : null;
     }
 
     @Override
@@ -168,14 +167,12 @@ public class MemberListFragment extends Fragment {
             fetchGroupMembers();
         if (canDismissItems)
             setUpDismissal();
+        if (showSelected)
+            setUpSelectionListener();
         memberListRecyclerView.setVisibility(View.VISIBLE);
     }
 
     private void setUpDismissal() {
-        if (clickDismissListener == null) {
-            throw new UnsupportedOperationException("Selection and dismisal require calling activity to implement listener");
-        }
-
         ItemTouchHelper.SimpleCallback simpleCallback = new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT) {
 
             @Override
@@ -186,29 +183,35 @@ public class MemberListFragment extends Fragment {
             @Override
             public void onSwiped(RecyclerView.ViewHolder viewHolder, int direction) {
                 int swipedPosition = viewHolder.getAdapterPosition();
-                userListAdapter.removeMembers(new int[] { swipedPosition });
+                // todo: revisit whether we really need this
+                clickListener.onMemberDismissed(swipedPosition, userListAdapter.getMemberUid(swipedPosition));
+                userListAdapter.removeMembers(new int[]{swipedPosition});
             }
         };
 
         ItemTouchHelper itemTouchHelper = new ItemTouchHelper(simpleCallback);
         itemTouchHelper.attachToRecyclerView(memberListRecyclerView);
+    }
 
-        if (showSelected) {
-            memberListRecyclerView.addOnItemTouchListener(new RecyclerTouchListener(getContext(), memberListRecyclerView,
-                    new ClickListener() {
-                        @Override
-                        public void onClick(View view, int position) {
-                            userListAdapter.toggleMemberSelected(position);
-                            clickDismissListener.onMemberClicked(position, userListAdapter.getMemberUid(position));
-                        }
-
-                        @Override
-                        public void onLongClick(View view, int position) {
-                            userListAdapter.toggleMemberSelected(position);
-                            clickDismissListener.onMemberClicked(position, userListAdapter.getMemberUid(position));
-                        }
-            }));
+    private void setUpSelectionListener() {
+        if (clickListener == null) {
+            throw new UnsupportedOperationException("Selection and dismisal require calling activity to implement listener");
         }
+
+        memberListRecyclerView.addOnItemTouchListener(new RecyclerTouchListener(getContext(), memberListRecyclerView,
+                new ClickListener() {
+                    @Override
+                    public void onClick(View view, int position) {
+                        userListAdapter.toggleMemberSelected(position);
+                        clickListener.onMemberClicked(position, userListAdapter.getMemberUid(position));
+                    }
+
+                    @Override
+                    public void onLongClick(View view, int position) {
+                        userListAdapter.toggleMemberSelected(position);
+                        clickListener.onMemberClicked(position, userListAdapter.getMemberUid(position));
+                    }
+        }));
     }
 
     private void fetchGroupMembers() {

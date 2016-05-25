@@ -207,7 +207,6 @@ public class GrassrootRestService {
                                             @Path("parentUid") String parentUid, @Query("title") String title,
                                             @Query("description") String description,
                                             @Query("eventStartDateTime") String dateTimeISO,
-                                            @Query("eventReminderType") String reminderType,
                                             @Query("reminderMinutes") int reminderMinutes,
                                             @Query("location") String location,
                                             @Query("members") Set<String> memberUids);

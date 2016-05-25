@@ -27,6 +27,10 @@ public class Constant {
     public static final String GROUPNAME_FIELD = "groupName";
     public static final String INDEX_FIELD = "index";
     public static final String PARENT_TAG_FIELD = "parentTag";
+    public static final String SELECTED_MEMBERS_FIELD = "selectedMembers";
+    public static final String SELECT_FIELD = "select_enabled";
+    public static final String SHOW_HEADER_FLAG = "show_header";
+    public static final String SHOW_ACTION_BUTTON_FLAG = "show_action_button";
 
     public static final String VOTE = "VOTE";
     public static final String MEETING = "MEETING";
