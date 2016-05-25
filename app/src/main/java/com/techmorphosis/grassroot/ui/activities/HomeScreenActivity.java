@@ -12,6 +12,7 @@ import android.util.Log;
 import android.view.Gravity;
 
 import com.techmorphosis.grassroot.R;
+import com.techmorphosis.grassroot.ui.DialogFragment.NotificationDialog;
 import com.techmorphosis.grassroot.ui.fragments.AlertDialogFragment;
 import com.techmorphosis.grassroot.ui.fragments.HomeGroupListFragment;
 import com.techmorphosis.grassroot.ui.fragments.NavigationDrawerFragment;
@@ -33,11 +34,9 @@ public class HomeScreenActivity extends PortraitActivity implements NavigationDr
     DrawerLayout drawer;
 
     private Fragment mainFragment;
-    android.support.v4.app.Fragment fragment = null;
     private NavigationDrawerFragment drawerFrag;
-    private String openFragment;
-
-    AlertDialogFragment alertDialogFragment;
+    private AlertDialogFragment alertDialogFragment;
+    private NotificationDialog notificationDialog;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -86,19 +85,19 @@ public class HomeScreenActivity extends PortraitActivity implements NavigationDr
 
             case 0:
                 //Profile
-                Intent profile = new Intent(getApplicationContext(),ProfileSettings.class);
+                Intent profile = new Intent(getApplicationContext(), ProfileSettings.class);
                 startActivity(profile);
                 break;
 
 
             case 1:
                 //faq
-                Intent faq= new Intent(HomeScreenActivity.this,FAQActivity.class);
+                Intent faq = new Intent(HomeScreenActivity.this, FAQActivity.class);
                 startActivity(faq);
                 break;
             case 2:
                 //NotificationCenter
-                Intent noifications = new Intent(HomeScreenActivity.this,NotificationCenter.class);
+                Intent noifications = new Intent(HomeScreenActivity.this, NotificationCenter.class);
                 startActivity(noifications);
                 break;
             case 3:
@@ -106,14 +105,14 @@ public class HomeScreenActivity extends PortraitActivity implements NavigationDr
                 //Share
 
                 //implicit Intent
-                Intent shareapp= new Intent("android.intent.action.SEND");
+                Intent shareapp = new Intent("android.intent.action.SEND");
                 shareapp.setType("text/plain");
                 shareapp.setAction("android.intent.action.SEND");
                 shareapp.putExtra("android.intent.extra.TEXT", getString(R.string.share_app_text));
-                startActivity(Intent.createChooser(shareapp,"Share via.."));
+                startActivity(Intent.createChooser(shareapp, "Share via.."));
 
                 break;
-                
+
 
             case 4:
                 //Rate App
@@ -123,7 +122,7 @@ public class HomeScreenActivity extends PortraitActivity implements NavigationDr
                     Intent rateapp = new Intent("android.intent.action.VIEW", Uri.parse("market://details?id=com.techmorphosis.grassroot"));
                     startActivity(rateapp);
                 } catch (ActivityNotFoundException activitynotfoundexception) {
-                    Intent rateapp2 = new Intent("android.intent.action.VIEW" ,Uri.parse("https://play.google.com/store/apps/details?id=com.techmorphosis.grassroot"));
+                    Intent rateapp2 = new Intent("android.intent.action.VIEW", Uri.parse("https://play.google.com/store/apps/details?id=com.techmorphosis.grassroot"));
                     startActivity(rateapp2);
                 }
 
@@ -132,7 +131,6 @@ public class HomeScreenActivity extends PortraitActivity implements NavigationDr
 
             case 5:
                 logout();
-
 
 
         }
@@ -146,11 +144,52 @@ public class HomeScreenActivity extends PortraitActivity implements NavigationDr
         }
     }
 
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
 
-    private void logout()
-    {
-        alertDialogFragment =UtilClass.showAlertDialog(getFragmentManager(), getString(R.string.Logout_message), "Yes","No",true, new AlertDialogListener()
-        {
+        Log.e(TAG, "onNewIntent ");
+
+        if (this.drawer.isDrawerOpen(GravityCompat.START)) {
+            this.drawer.closeDrawer(GravityCompat.START);
+        }
+
+        String body = intent.getStringExtra("body");
+        String entity_type = intent.getStringExtra("entity_type");
+        String title = intent.getStringExtra("title");
+        final String id = intent.getStringExtra("id");
+
+        Log.e(TAG, "body: " + body);
+        Log.e(TAG, "title: " + title);
+        Log.e(TAG, "entity_type : " + entity_type);
+        Log.e(TAG, "id  : " + id);
+
+     /*   if (!intent.hasExtra("update")) {
+            notificationDialog = UtilClass.showAlertDialog1(getSupportFragmentManager(), title, body, "Dismiss", "View", false, new AlertDialogListener() {
+                @Override
+                public void setRightButton() {
+
+                    // Log.e(TAG, "setRightButton ");
+                    notificationDialog.dismiss();
+                    Intent view_vote = new Intent(HomeScreenActivity.this, ViewVote.class);
+                    view_vote.putExtra("voteid", id);
+                    startActivity(view_vote);
+
+                }
+
+                @Override
+                public void setLeftButton() {
+                    //Log.e(TAG,"setLeftButton ");
+                    notificationDialog.dismiss();
+                    //  notificationCounter();
+
+                }
+            });
+        }*/
+    }
+
+    private void logout() {
+        alertDialogFragment = UtilClass.showAlertDialog(getFragmentManager(), getString(R.string.Logout_message), "Yes", "No", true, new AlertDialogListener() {
             @Override
             public void setRightButton() {//no
                 alertDialogFragment.dismiss();
@@ -160,7 +199,7 @@ public class HomeScreenActivity extends PortraitActivity implements NavigationDr
             public void setLeftButton() {
                 //Yes
                 SettingPreference.clearAll(getApplicationContext());
-                Intent open= new Intent(HomeScreenActivity.this,StartActivity.class);
+                Intent open = new Intent(HomeScreenActivity.this, StartActivity.class);
                 startActivity(open);
                 finish();
                 alertDialogFragment.dismiss();

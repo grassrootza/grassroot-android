@@ -17,47 +17,33 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import butterknife.BindView;
+
 /**
  * Created by karthik on 16-09-2015.
  */
-public class FAQActivity extends PortraitActivity implements View.OnClickListener {
+public class FAQActivity extends PortraitActivity{
+
+    @BindView(R.id.listview_faq)
+    ExpandableListView faqListview;
+    @BindView(R.id.rl_root_faq)
+    LinearLayout rlRootFaq;
+    @BindView(R.id.fq_toolbar)
+    Toolbar fqToolbar;
+    private List<String> listDataHeader;
+    private List<String> listDataChild;
+    private FAQAdapter faqAdapter;
 
     private int lastExpandedPosition = -1;
 
-    ExpandableListView faqListview;
-
-    List<String> listDataHeader;
-    List<String> listDataChild;
-    //List<String> listDatChild0, listDatChild1, listDatChild2, listDatChild3, listDatChild4, listDatChild5, listDatChild6, listDatChild7, listDatChild8, listDatChild9, listDatChild10, listDatChild11;
-    List<String> listrow;
-
-
-    private FAQAdapter faqAdapter;
-    private FAQModel faqModel;
-    private List<FAQModel> faqListData;
-
-
-    private TextView txtNavOption;
-
-    private ImageButton imgNinjaDelights, imgBack, imgClose;
-
-    View rootView;
-    private Toolbar fqToolbar;
-    private LinearLayout rlRootFaq;
-
-    @Nullable
     @Override
     public void onCreate(Bundle savedInstanceState) {
-
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_faq);
-        findAllViews();
         setUpToolbar();
-        init();
-       // Snackbar.make(rlRootFaq, "FAQ", Snackbar.LENGTH_INDEFINITE).show();
+        init();;
 
     }
-
 
     private void setUpToolbar() {
         fqToolbar.setNavigationIcon(R.drawable.btn_back_wt);
@@ -69,48 +55,15 @@ public class FAQActivity extends PortraitActivity implements View.OnClickListene
         });
     }
 
-
-    public void onBackPressed()
-    {
-
+    public void onBackPressed() {
         finish();
     }
 
-    private void findAllViews()
-    {
-        rlRootFaq = (LinearLayout) findViewById(R.id.rl_root_faq);
-        faqListview = (ExpandableListView) findViewById(R.id.listview_faq);
-        fqToolbar = (Toolbar) findViewById(R.id.fq_toolbar);
-    }
-
     public void init() {
-
-
-
-
-
-        faqListview.setGroupIndicator(null);
-        listDataHeader = new ArrayList<String>();
-
-
-
-
-        listrow = new ArrayList<String>();
-
-
-        faqListData = new ArrayList<>();
-
-
-
         generateData();
-
-
-
-
-
+        faqListview.setGroupIndicator(null);
         faqAdapter = new FAQAdapter(getApplicationContext(), listDataHeader, listDataChild);
         faqListview.setAdapter(faqAdapter);
-
 
     }
 
@@ -118,13 +71,9 @@ public class FAQActivity extends PortraitActivity implements View.OnClickListene
         String[] fq_qstn = getResources().getStringArray(R.array.fq_Header);
         listDataHeader = Arrays.asList(fq_qstn);
 
-
         // Answers
         String[] fq_ans = getResources().getStringArray(R.array.fq_Answer);
         listDataChild = Arrays.asList(fq_ans);
-
-
-
 
         faqListview.setOnGroupExpandListener(new ExpandableListView.OnGroupExpandListener() {
             @Override
@@ -139,15 +88,4 @@ public class FAQActivity extends PortraitActivity implements View.OnClickListene
 
     }
 
-    @Override
-    public void onClick(View view) {
-        switch (view.getId()) {
-
-
-         /*   case R.id.img_back:
-                getActivity().onBackPressed();
-                break;*/
-
-        }
-    }
 }

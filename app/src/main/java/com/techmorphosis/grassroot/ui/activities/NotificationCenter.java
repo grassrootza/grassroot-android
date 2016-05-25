@@ -28,13 +28,11 @@ import com.techmorphosis.grassroot.utils.ErrorUtils;
 import com.techmorphosis.grassroot.utils.ProgressBarCircularIndeterminate;
 import com.techmorphosis.grassroot.utils.SettingPreference;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import java.util.ArrayList;
 import java.util.List;
 
+import butterknife.BindView;
+import butterknife.ButterKnife;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -42,45 +40,54 @@ import retrofit2.Response;
 public class NotificationCenter extends PortraitActivity implements View.OnClickListener {
 
     private static final String TAG = "NotificationCenter";
-    private Toolbar tlbNc;
-    private RecyclerView rcNc;
-    private TextView txtTlbNc;
+    @BindView(R.id.tlb_nc)
+    Toolbar tlbNc;
+    @BindView(R.id.rc_nc)
+    RecyclerView rcNc;
+    @BindView(R.id.txt_tlb_nc)
+    TextView txtTlbNc;
+    @BindView(R.id.rl_root_nc)
+    RelativeLayout rlRootNc;
+    @BindView(R.id.prg_nc)
+    ProgressBarCircularIndeterminate prgNc;
+    @BindView(R.id.txt_prg_nc)
+    TextView txtPrgNc;
+    @BindView(R.id.prg_nc_paging)
+    ProgressBar prgNcPaging;
+    @BindView(R.id.error_layout)
+    View errorLayout;
+    @BindView(R.id.ll_no_result)
+    LinearLayout llNoResult;
+    @BindView(R.id.ll_no_internet)
+    LinearLayout llNoInternet;
+    @BindView(R.id.ll_server_error)
+    LinearLayout llServerError;
+    @BindView(R.id.ll_invalid_token)
+    LinearLayout llInvalidToken;
     private LinearLayoutManager mLayoutManager;
-    private int error_flag; // 0- success ,1 - No Internet , 4-Invalid token , 5- Unknown error
-    private RelativeLayout rlRootNc;
     private Snackbar snackbar;
-    private Integer pageNumber=0;
-    private Integer totalPages=1;
-    public ArrayList<NotificationModel> notifyList;
-    private ProgressBarCircularIndeterminate prgNc;
-    private TextView txtPrgNc;
-    private ProgressBar prgNcPaging;
-    int firstVisibleItem, visibleItemCount, totalItemCount;
-    private boolean loading = true;
-    private int ItemLeftCount;
-    private boolean isLoading=false; //false---now u call WS //true---WS is busy ..so plz wait untill data load
-    private int nextPage;
-    public  int pagecount=0;
-
-    private View errorLayout;
-    private LinearLayout llNoResult;
-    private LinearLayout llNoInternet;
-    private LinearLayout llServerError;
-    private LinearLayout llInvalidToken;
+    private Integer pageNumber = 0;
+    private Integer totalPages = 1;
     private GrassrootRestService grassrootRestService;
     private NotificationAdapter notificationAdapter;
     private List<Notification> notifications = new ArrayList<>();
+    public ArrayList<NotificationModel> notifyList;
+    private int error_flag; // 0- success ,1 - No Internet , 4-Invalid token , 5- Unknown error
+    int firstVisibleItem, visibleItemCount, totalItemCount;
+    private boolean loading = true;
+    private int ItemLeftCount;
+    private boolean isLoading = false; //false---now u call WS //true---WS is busy ..so plz wait untill data load
+    private int nextPage;
+    public int pagecount = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_notification_center);
-
-        findAllViews();
+        ButterKnife.bind(this);
         setUpToolbar();
         mRecylerview();
         init();
-        
 
     }
 
@@ -88,34 +95,9 @@ public class NotificationCenter extends PortraitActivity implements View.OnClick
         grassrootRestService = new GrassrootRestService(this);
         notificationAdapter = new NotificationAdapter(this);
         rcNc.setAdapter(notificationAdapter);
-        NotificationWS();
+        getNotifications(0,0);
     }
 
-
-    private void findAllViews()
-    {
-        tlbNc = (Toolbar) findViewById(R.id.tlb_nc);
-        txtTlbNc = (TextView) findViewById(R.id.txt_tlb_nc);
-        rcNc = (RecyclerView) findViewById(R.id.rc_nc);
-        rlRootNc = (RelativeLayout) findViewById(R.id.rl_root_nc);
-        prgNc = (ProgressBarCircularIndeterminate) findViewById(R.id.prg_nc);
-        txtPrgNc = (TextView) findViewById(R.id.txt_prg_nc);
-        prgNcPaging = (ProgressBar) findViewById(R.id.prg_nc_paging);
-
-        errorLayout = findViewById(R.id.error_layout);
-
-        llNoResult = (LinearLayout) errorLayout.findViewById(R.id.ll_no_result);
-        llNoInternet = (LinearLayout) errorLayout.findViewById(R.id.ll_no_internet);
-        llServerError = (LinearLayout) errorLayout.findViewById(R.id.ll_server_error);
-        llInvalidToken = (LinearLayout) errorLayout.findViewById(R.id.ll_invalid_token);
-
-        //onClick
-        llNoResult.setOnClickListener(this);
-        llServerError.setOnClickListener(this);
-        llNoInternet.setOnClickListener(this);
-
-
-    }
 
     private void setUpToolbar() {
 
@@ -138,13 +120,13 @@ public class NotificationCenter extends PortraitActivity implements View.OnClick
         rcNc.addOnItemTouchListener(new RecyclerTouchListener(NotificationCenter.this, rcNc, new ClickListener() {
             @Override
             public void onClick(View view, int position) {
-                NotificationModel clickmodel = notifyList.get(position);
-
+                Notification notification = notifications.get(position);
+                Log.d(TAG, notification.getMessage());
                 Intent openactivity = null;
-                switch (clickmodel.getEntityType().toLowerCase()) {
+                switch (notification.getEntityType().toLowerCase()) {
                     case "vote":
                         openactivity = new Intent(NotificationCenter.this, ViewVote.class);
-                        openactivity.putExtra("voteid", clickmodel.getEntityUid());
+                        openactivity.putExtra("id", notification.getEntityUid());
                         break;
                     case "meeting":
                         openactivity = new Intent(NotificationCenter.this, NotBuiltActivity.class);
@@ -185,7 +167,7 @@ public class NotificationCenter extends PortraitActivity implements View.OnClick
 
                 if (pageNumber < totalPages && ItemLeftCount <= 10 && !isLoading) {
                     prgNcPaging.setVisibility(View.VISIBLE);
-                    doInBackground(pageNumber,totalPages);
+                    getNotifications(pageNumber, totalPages);
                     isLoading = true;
 
                 }
@@ -196,49 +178,15 @@ public class NotificationCenter extends PortraitActivity implements View.OnClick
     }
 
 
-    private void NotificationWS() {
-
-        preExecute();
-
-        doInBackground(0,0);
-
-
-    }
-
-
-    private void preExecute()
-    {
-        error_flag = 0;
-
-        if (pageNumber == 0) {
-            //hide the List
-            rcNc.setVisibility(View.GONE);
-        }
 
 
 
-        if (pageNumber == 0) {
-            //show thr progress bar
-            prgNc.setVisibility(View.VISIBLE);
-            txtPrgNc.setVisibility(View.VISIBLE);
-
-            //gone
-            rcNc.setVisibility(View.INVISIBLE);
-            errorLayout.setVisibility(View.GONE);
-            llNoInternet.setVisibility(View.GONE);
-            llServerError.setVisibility(View.GONE);
-            llNoResult.setVisibility(View.GONE);
-        }
-
-
-    }
-
-    private void doInBackground(int page, int size)
-    {
+    private void getNotifications(int page, int size) {
 
         String phoneNumber = SettingPreference.getuser_mobilenumber(this);
         String code = SettingPreference.getuser_token(this);
-        grassrootRestService.getApi().getUserNotifications(phoneNumber,code, null, null).enqueue(new Callback<NotificationList>() {
+        prgNc.setVisibility(View.VISIBLE);
+        grassrootRestService.getApi().getUserNotifications(phoneNumber, code, null, null).enqueue(new Callback<NotificationList>() {
             @Override
             public void onResponse(Call<NotificationList> call, Response<NotificationList> response) {
                 if (response.isSuccessful()) {
@@ -249,15 +197,15 @@ public class NotificationCenter extends PortraitActivity implements View.OnClick
                     txtPrgNc.setVisibility(View.GONE);
 
                     rcNc.setVisibility(View.VISIBLE);
-                    if(pageNumber >1){
+                    if (pageNumber > 1) {
                         notificationAdapter.updateData(notifications);
 
-                    }else{
+                    } else {
                         notificationAdapter.addData(notifications);
                     }
-                     
+
                 }
-                notificationAdapter.notifyDataSetChanged();
+
             }
 
             @Override
@@ -267,194 +215,20 @@ public class NotificationCenter extends PortraitActivity implements View.OnClick
         });
 
 
-        ;
     }
 
-    private void postExecute(String response) {
 
 
-        Log.e(TAG, "error flag is " + error_flag);
-        Log.e(TAG,"pE isLoading " + isLoading);
-
-        if (error_flag == 1) {//No Internet
-
-            //hide the progress bar
-            prgNc.setVisibility(View.GONE);
-            txtPrgNc.setVisibility(View.GONE);
-
-            //hide the paging prg
-            prgNcPaging.setVisibility(View.GONE);
-
-            isLoading = false;
-            Log.e(TAG,"noInternet isLoading " + isLoading);
-
-            if (pagecount == 0) {
-
-                errorLayout.setVisibility(View.VISIBLE);
-                llNoInternet.setVisibility(View.VISIBLE);
-               // showSnackbar(getString(R.string.No_network), snackbar.LENGTH_INDEFINITE, getString(R.string.Retry));
-            }
-        }
-        else if (error_flag == 4) {//Invalid Token
-
-            //hide the progress bar
-            prgNc.setVisibility(View.GONE);
-            txtPrgNc.setVisibility(View.GONE);
-
-            //hide the paging prg
-            prgNcPaging.setVisibility(View.GONE);
-
-            if (pagecount==0) {
-
-                errorLayout.setVisibility(View.VISIBLE);
-                llInvalidToken.setVisibility(View.VISIBLE);
-
-               // showSnackbar(getString(R.string.INVALID_TOKEN), snackbar.LENGTH_INDEFINITE, "");
-            }
-
-        }
-        else if (error_flag == 5) {//Unkown error
-
-            //hide the progress bar
-            prgNc.setVisibility(View.GONE);
-            txtPrgNc.setVisibility(View.GONE);
-
-            //hide the paging prg
-            prgNcPaging.setVisibility(View.GONE);
-
-            isLoading = false;
-            if (pagecount==0) {
-                errorLayout.setVisibility(View.VISIBLE);
-                llServerError.setVisibility(View.VISIBLE);
-
-               // showSnackbar(getString(R.string.Unknown_error), snackbar.LENGTH_SHORT, "");
-            }
-        }
-        else if (error_flag==0) {//Success
-
-
-
-
-            JSONObject jsonObject = null;
-            try {
-                jsonObject = new JSONObject(response);
-
-                JSONObject dataObject = jsonObject.getJSONObject("data");
-
-                pageNumber = dataObject.getInt("pageNumber");
-                totalPages = dataObject.getInt("totalPages");
-                //nextPage = dataObject.getInt("nextPage");
-
-
-                JSONArray notificationsarray = dataObject.getJSONArray("notifications");
-
-                if (notificationsarray.length() > 0) {
-
-
-                    for (int i = 0; i < notificationsarray.length(); i++) {
-                        JSONObject singlearry_object = notificationsarray.getJSONObject(i);
-                        NotificationModel notificationModel = new NotificationModel();
-                        notificationModel.setUid(singlearry_object.getString("uid"));
-                        notificationModel.setEntityUid(singlearry_object.getString("entityUid"));
-                        notificationModel.setMessage(singlearry_object.getString("message"));
-                        notificationModel.setCreatedDatetime(singlearry_object.getString("createdDatetime"));
-                        notificationModel.setNotificationType(singlearry_object.getString("notificationType"));
-                        notificationModel.setEntityType(singlearry_object.getString("entityType"));
-                        notifyList.add(notificationModel);
-
-
-                    }
-
-
-                } else {
-                    //no data to set
-
-
-                    if (pagecount==0) {
-                        //hide the progress bar
-                        prgNc.setVisibility(View.GONE);
-                        txtPrgNc.setVisibility(View.GONE);
-
-                        errorLayout.setVisibility(View.VISIBLE);
-                        llNoResult.setVisibility(View.VISIBLE);
-
-
-                        //showSnackbar(getString(R.string.No_notifications),snackbar.LENGTH_INDEFINITE,"");
-                    }
-                    else
-                    {
-                        //hide the paging prg
-                        prgNcPaging.setVisibility(View.GONE);
-                    }
-                }
-
-            } catch (JSONException e) {
-                e.printStackTrace();
-                Log.e(TAG, "JSONException is " + e.getMessage());
-             //   showSnackbar(getString(R.string.Unknown_error), snackbar.LENGTH_SHORT, "");
-
-                prgNc.setVisibility(View.GONE);
-                txtPrgNc.setVisibility(View.GONE);
-
-                errorLayout.setVisibility(View.VISIBLE);
-                llServerError.setVisibility(View.VISIBLE);
-            }
-
-
-        }
-
-    }
-
-    private void setAdapter(ArrayList<Notification> notifyList)
-    {
-
-     //   Log.e(TAG, "setAdapter is " + notifyList.size());
-        Log.e(TAG,"*** pageNumber is " + pageNumber);
-
-        if (pageNumber == 1) {//initially set Adapter
-
-            notificationAdapter = new NotificationAdapter(notifyList);
-            rcNc.setAdapter(notificationAdapter);
-
-            //hide the progress bar
-            prgNc.setVisibility(View.GONE);
-            txtPrgNc.setVisibility(View.GONE);
-
-            rcNc.setVisibility(View.VISIBLE);
-
-
-        }
-        else//just update the Adapter
-        {
-            notificationAdapter.notifyDataSetChanged();
-            Log.e(TAG, "** notify adapter size " + notifyList.size());
-            Log.e(TAG,"** notify adapter");
-
-            //hide the paging prg
-            prgNcPaging.setVisibility(View.GONE);
-        }
-
-        isLoading = false;
-        Log.e(TAG,"*** Adapter isLoading " + isLoading);
-
-        pagecount++;
-
-
-
-    }
-
-    public  void showSnackbar(String message,int length,String actionbuttontxt)
-    {
+    public void showSnackbar(String message, int length, String actionbuttontxt) {
         snackbar = Snackbar.make(rlRootNc, message, length);
         snackbar.setActionTextColor(Color.RED);
 
-        if (!TextUtils.isEmpty(actionbuttontxt))
-        {
+        if (!TextUtils.isEmpty(actionbuttontxt)) {
             snackbar.setAction(actionbuttontxt, new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
 
-                    NotificationWS();
+                    getNotifications(0,0);
                 }
             });
 
@@ -464,11 +238,10 @@ public class NotificationCenter extends PortraitActivity implements View.OnClick
     }
 
     @Override
-    public void onClick(View v)
-    {
+    public void onClick(View v) {
 
-        if (v==llNoInternet || v==llNoResult || v==llNoResult )
-            NotificationWS();
+        if (v == llNoInternet || v == llNoResult || v == llNoResult)
+            getNotifications(0,0);
 
     }
 }

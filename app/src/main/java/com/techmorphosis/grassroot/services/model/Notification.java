@@ -5,7 +5,7 @@ package com.techmorphosis.grassroot.services.model;
  */
 public class Notification {
     private String uid;
-    private String entity_uid;
+    private String entityUid;
     private String title;
     private String message;
     private String createdDateTime; //todo change to iso datetime server side
@@ -19,10 +19,9 @@ public class Notification {
         return uid;
     }
 
-    public String getEntity_uid() {
-        return entity_uid;
+    public String getEntityUid() {
+        return entityUid;
     }
-
     public String getTitle() {
         return title;
     }

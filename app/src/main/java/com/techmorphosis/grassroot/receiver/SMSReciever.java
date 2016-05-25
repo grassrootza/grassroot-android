@@ -11,7 +11,6 @@ import android.support.v4.content.LocalBroadcastManager;
 import android.telephony.SmsMessage;
 import android.util.Log;
 
-import com.techmorphosis.grassroot.Service.QuickstartPreferences;
 import com.techmorphosis.grassroot.utils.SettingPreference;
 
 import java.util.List;
@@ -44,8 +43,8 @@ public class SMSReciever extends BroadcastReceiver {
 
                 SettingPreference.setPREF_OTP(context,otp);
 
-                Intent registrationComplete = new Intent(QuickstartPreferences.REGISTRATION_COMPLETE);
-                LocalBroadcastManager.getInstance(context).sendBroadcast(registrationComplete);
+              //  Intent registrationComplete = new Intent(QuickstartPreferences.REGISTRATION_COMPLETE);
+              //  LocalBroadcastManager.getInstance(context).sendBroadcast(registrationComplete);
 
 
                 /*if (isAppIsInBackground(context)){

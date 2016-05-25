@@ -11,7 +11,7 @@ import java.util.List;
 public class NotificationWrapper {
 
     //todo I messed up in the backend, this class should not exist
-    @SerializedName("data")
+
     private List<Notification> notifications = new ArrayList<>();
 
     private Integer pageNumber;

@@ -75,11 +75,13 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
 
     public void addData(List<Notification> notificationList){
         this.notifyList.addAll(notificationList);
+        notifyDataSetChanged();
 
     }
 
     public void updateData(List<Notification> notifications){
         notifyList.addAll(notifications);
+        notifyDataSetChanged();
 
 
     }
