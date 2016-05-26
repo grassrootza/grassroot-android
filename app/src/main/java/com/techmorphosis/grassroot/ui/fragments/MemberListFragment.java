@@ -119,6 +119,20 @@ public class MemberListFragment extends Fragment {
         }
     }
 
+    public void selectAllMembers() {
+        for (Member m : userListAdapter.getMembers()) {
+            m.setSelected(true);
+        }
+        userListAdapter.notifyDataSetChanged(); // todo : as elsewhere, use more efficient method
+    }
+
+    public void unselectAllMembers() {
+        for (Member m : userListAdapter.getMembers()) {
+            m.setSelected(false);
+        }
+        userListAdapter.notifyDataSetChanged();
+    }
+
     public void setID(String ID) { this.ID = ID; }
 
     @Override

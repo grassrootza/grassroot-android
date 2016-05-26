@@ -145,6 +145,17 @@ public class GroupMembersActivity extends PortraitActivity implements MemberList
 
     }
 
+    @OnClick(R.id.lm_btn_check_all)
+    public void selectAllMembers() {
+        memberListFragment.selectAllMembers();
+    }
+
+    @OnClick(R.id.lm_btn_clear_all)
+    public void clearAllMembers() {
+        memberListFragment.unselectAllMembers();
+    }
+
+
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // todo: check permissions & decide which to include

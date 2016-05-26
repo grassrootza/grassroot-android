@@ -18,6 +18,7 @@ import com.techmorphosis.grassroot.ui.fragments.HomeGroupListFragment;
 import com.techmorphosis.grassroot.ui.fragments.NavigationDrawerFragment;
 import com.techmorphosis.grassroot.ui.fragments.WelcomeFragment;
 import com.techmorphosis.grassroot.utils.Constant;
+import com.techmorphosis.grassroot.utils.ErrorUtils;
 import com.techmorphosis.grassroot.utils.SettingPreference;
 import com.techmorphosis.grassroot.utils.UtilClass;
 import com.techmorphosis.grassroot.interfaces.AlertDialogListener;
@@ -59,13 +60,17 @@ public class HomeScreenActivity extends PortraitActivity implements NavigationDr
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (resultCode == Activity.RESULT_OK) {
-            if (data != null && (requestCode == Constant.activityAddMembersToGroup || requestCode == Constant.activityRemoveMembers)) {
+        if (resultCode == Activity.RESULT_OK && data != null) {
+            if (requestCode == Constant.activityAddMembersToGroup || requestCode == Constant.activityRemoveMembers) {
                 Log.e(TAG, "Got a result from add or remove members to group!");
                 int groupPosition = data.getIntExtra(Constant.INDEX_FIELD, -1);
                 String groupUid = data.getStringExtra(Constant.GROUPUID_FIELD);
                 HomeGroupListFragment hgl = (HomeGroupListFragment) mainFragment;
                 hgl.updateSingleGroup(groupPosition, groupUid);
+            } else if (requestCode == Constant.activityCallMeeting) {
+                Log.e(TAG, "Called a meeting! Display the thing");
+                HomeGroupListFragment hgl = (HomeGroupListFragment) mainFragment;
+                hgl.showSuccessMessage(data);
             }
         }
 

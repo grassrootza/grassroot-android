@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.Snackbar;
 import android.support.design.widget.TextInputEditText;
+import android.support.v7.widget.CardView;
 import android.support.v7.widget.SwitchCompat;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
@@ -73,8 +74,6 @@ public class CreateMeetingActivity extends PortraitActivity {
     TextInputEditText etTitleInput;
     @BindView(R.id.cmtg_et_location)
     TextInputEditText etLocationInput;
-    @BindView(R.id.cmtg_et_description)
-    TextInputEditText etDescriptionInput;
 
     @BindView(R.id.cmtg_subject_count)
     TextView subjectCharCounter;
@@ -82,6 +81,7 @@ public class CreateMeetingActivity extends PortraitActivity {
     TextView descriptionCharCounter;
     @BindView(R.id.cmtg_location_count)
     TextView locationCharCounter;
+
     @BindView(R.id.cmtg_txt_deadline)
     TextView displayedDateTime;
 
@@ -99,6 +99,18 @@ public class CreateMeetingActivity extends PortraitActivity {
     SwitchCompat swOneHourAhead;
 
     private ValueAnimator reminderSlideOutAnimator;
+    private ValueAnimator reminderSlideInAnimator;
+    private ValueAnimator descriptionSlideOutAnimator;
+    private ValueAnimator descriptionSlideInAnimator;
+
+    @BindView(R.id.cmtg_cv_description)
+    CardView cvDescriptionCard;
+    @BindView(R.id.cmtg_desc_expand)
+    ImageView ivDescExpandIcon;
+    @BindView(R.id.cmtg_ll_desc_body)
+    RelativeLayout llDescriptionInput;
+    @BindView(R.id.cmtg_et_description)
+    TextInputEditText etDescriptionInput;
 
     @BindView(R.id.sw_notifyall)
     SwitchCompat swNotifyAll;
@@ -109,7 +121,6 @@ public class CreateMeetingActivity extends PortraitActivity {
     @BindView(R.id.cmtg_tv_suffix)
     TextView notifyCountSuffix;
 
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -118,6 +129,7 @@ public class CreateMeetingActivity extends PortraitActivity {
 
         init();
         setUpViews();;
+        setUpAnimators();
     }
 
     private void init() {
@@ -142,22 +154,6 @@ public class CreateMeetingActivity extends PortraitActivity {
             }
         });
 
-        rlReminderBody.getViewTreeObserver().addOnPreDrawListener(new ViewTreeObserver.OnPreDrawListener() {
-            @Override
-            public boolean onPreDraw() {
-                rlReminderBody.getViewTreeObserver().removeOnPreDrawListener(this);
-                rlReminderBody.setVisibility(View.GONE);
-
-                // todo : double check these for inefficiencies
-                final int widthSpec = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED);
-                final int heightSpec = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED);
-                rlReminderBody.measure(widthSpec, heightSpec);
-
-                reminderSlideOutAnimator = createSlideAnimator(0, rlReminderBody.getMeasuredHeight());
-                return true;
-            }
-        });
-
         dateTimeListener = new SlideDateTimeListener() {
             @Override
             public void onDateTimeSet(Date date) {
@@ -167,19 +163,6 @@ public class CreateMeetingActivity extends PortraitActivity {
         };
     }
 
-    // todo : figure out why this is quite abrupt on collapsing
-    private ValueAnimator createSlideAnimator(int startHeight, int endHeight) {
-        ValueAnimator animator = ValueAnimator.ofInt(startHeight, endHeight);
-        animator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
-            @Override
-            public void onAnimationUpdate(ValueAnimator valueAnimator) {
-                ViewGroup.LayoutParams layoutParams = rlReminderBody.getLayoutParams();
-                layoutParams.height = (Integer) valueAnimator.getAnimatedValue();;
-                rlReminderBody.setLayoutParams(layoutParams);
-            }
-        });
-        return animator;
-    }
 
     private void expandReminders() {
         ivReminderExpandIcon.setImageResource(R.drawable.ic_arrow_up);
@@ -189,28 +172,7 @@ public class CreateMeetingActivity extends PortraitActivity {
 
     private void collapseReminders() {
         ivReminderExpandIcon.setImageResource(R.drawable.ic_arrow_down);
-        ValueAnimator slideInAnimator = createSlideAnimator(rlReminderBody.getHeight(), 0);
-        // todo: figure out why this is occuring pretty fast
-        slideInAnimator.addListener(new Animator.AnimatorListener() {
-            @Override
-            public void onAnimationStart(Animator animator) {
-                Log.e(TAG, "animation done, setting visibility!");
-                rlReminderBody.setVisibility(View.GONE);
-            }
-
-            @Override
-            public void onAnimationEnd(Animator animator) {
-            }
-
-            @Override
-            public void onAnimationCancel(Animator animator) {
-            }
-
-            @Override
-            public void onAnimationRepeat(Animator animator) {
-            }
-        });
-        slideInAnimator.start();
+        reminderSlideInAnimator.start();
     }
 
     @OnTextChanged(R.id.cmtg_et_title)
@@ -265,10 +227,8 @@ public class CreateMeetingActivity extends PortraitActivity {
     @OnClick(R.id.cmtg_reminder_header)
     public void expandableHeader() {
         if (rlReminderBody.getVisibility() == View.VISIBLE) {
-            Log.e(TAG, "retracting reminder settings!");
             collapseReminders();
         } else {
-            Log.e(TAG, "expanding reminder settings!");
             expandReminders();
         }
     }
@@ -308,7 +268,24 @@ public class CreateMeetingActivity extends PortraitActivity {
         } else if (swOneHourAhead.isChecked()) {
             return 60;
         } else {
-            return 0;
+            return -1;
+        }
+    }
+
+    /*
+    ADD NOTES / DESCRIPTION
+     */
+
+    @OnClick(R.id.cmtg_cv_description)
+    public void expandDescription() {
+
+        if (llDescriptionInput.getVisibility() == View.GONE) {
+            llDescriptionInput.setVisibility(View.VISIBLE);
+            ivDescExpandIcon.setImageResource(R.drawable.ic_arrow_up);
+            descriptionSlideOutAnimator.start();
+        } else {
+            ivDescExpandIcon.setImageResource(R.drawable.ic_arrow_down);
+            descriptionSlideInAnimator.start();
         }
     }
 
@@ -321,7 +298,6 @@ public class CreateMeetingActivity extends PortraitActivity {
         if (checked) {
             notifyCountHolder.setVisibility(View.GONE);
         } else {
-            Log.e(TAG, "need to pick a member!");
             ArrayList<Member> preSelectedMembers = (assignedMembers == null) ? new ArrayList<Member>() :
                     new ArrayList<>(assignedMembers);
             Intent pickMember = MenuUtils.constructIntent(this, GroupMembersActivity.class, groupUid, "");
@@ -385,7 +361,7 @@ public class CreateMeetingActivity extends PortraitActivity {
         final String dateTimeISO = Constant.isoDateTimeSDF.format(meetingStartDateTime);
         final int minutes = obtainReminderMinutes();
 
-        Set<String> memberUids;
+        final Set<String> memberUids;
 
         if (notifyWholeGroup || assignedMembers == null || assignedMembers.isEmpty()) {
             memberUids = Collections.emptySet();
@@ -398,7 +374,11 @@ public class CreateMeetingActivity extends PortraitActivity {
             @Override
             public void onResponse(Call<GenericResponse> call, Response<GenericResponse> response) {
                 if (response.isSuccessful()) {
-                    // show some sort of message
+                    String resultMessage = notifyWholeGroup ? "Done! Meeting called of whole group" :
+                            String.format("Done! Meeting called of %d people", memberUids.size());
+                    Intent i = new Intent();
+                    i.putExtra(Constant.SUCCESS_MESSAGE, resultMessage);
+                    setResult(RESULT_OK, i);
                     finish();
                 } else {
                     ErrorUtils.showSnackBar(rlRoot, "Error! Could not call meeting", Snackbar.LENGTH_LONG, "", null);
@@ -408,6 +388,77 @@ public class CreateMeetingActivity extends PortraitActivity {
             @Override
             public void onFailure(Call<GenericResponse> call, Throwable t) {
                 ErrorUtils.handleNetworkError(CreateMeetingActivity.this, rlRoot, t);
+            }
+        });
+    }
+
+    // note: this may hog memory? possibly switch to creating inline rather than storing
+    private void setUpAnimators() {
+        reminderSlideOutAnimator = UtilClass.createSlidingAnimator(rlReminderBody, true);
+        reminderSlideInAnimator = UtilClass.createSlidingAnimator(rlReminderBody, false);
+        descriptionSlideOutAnimator = UtilClass.createSlidingAnimator(llDescriptionInput, true);
+        descriptionSlideInAnimator = UtilClass.createSlidingAnimator(llDescriptionInput, false);
+
+        reminderSlideInAnimator.addListener(new Animator.AnimatorListener() {
+            @Override
+            public void onAnimationStart(Animator animator) {
+            }
+
+            @Override
+            public void onAnimationEnd(Animator animator) {
+                rlReminderBody.setVisibility(View.GONE);
+            }
+
+            @Override
+            public void onAnimationCancel(Animator animator) {
+            }
+
+            @Override
+            public void onAnimationRepeat(Animator animator) {
+            }
+        });
+
+        descriptionSlideOutAnimator.addListener(new Animator.AnimatorListener() {
+            @Override
+            public void onAnimationStart(Animator animator) {
+                etDescriptionInput.setVisibility(View.GONE);
+            }
+
+            @Override
+            public void onAnimationEnd(Animator animator) {
+                etDescriptionInput.setVisibility(View.VISIBLE);
+            }
+
+            @Override
+            public void onAnimationCancel(Animator animator) {
+
+            }
+
+            @Override
+            public void onAnimationRepeat(Animator animator) {
+
+            }
+        });
+
+        descriptionSlideInAnimator.addListener(new Animator.AnimatorListener() {
+            @Override
+            public void onAnimationStart(Animator animator) {
+                etDescriptionInput.setVisibility(View.INVISIBLE);
+            }
+
+            @Override
+            public void onAnimationEnd(Animator animator) {
+                llDescriptionInput.setVisibility(View.GONE);
+            }
+
+            @Override
+            public void onAnimationCancel(Animator animator) {
+
+            }
+
+            @Override
+            public void onAnimationRepeat(Animator animator) {
+
             }
         });
     }

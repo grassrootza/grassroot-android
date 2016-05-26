@@ -257,6 +257,15 @@
         <item name="android:layout_alignParentRight">true</item>
     </style>
 
+    <style name="ButtonFlat">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:minWidth">88dp</item>
+        <item name="android:minHeight">36dp</item>
+        <item name="android:textSize">@dimen/txt_medium</item>
+        <item name="android:background">@drawable/button_flat_white</item>
+    </style>
+
     <!-- ANIMATIONS -->
     <style name="animation_fast_flyinout">
         <item name="android:windowEnterAnimation">@anim/flyin_fast</item>

@@ -4,6 +4,7 @@
 
 package com.techmorphosis.grassroot.utils;
 
+import android.animation.ValueAnimator;
 import android.app.Activity;
 import android.app.FragmentManager;
 import android.app.FragmentTransaction;
@@ -15,6 +16,7 @@ import android.support.design.widget.Snackbar;
 import android.telephony.PhoneNumberUtils;
 import android.util.Log;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Toast;
 
 import com.techmorphosis.grassroot.models.Contact;
@@ -57,10 +59,6 @@ public class UtilClass {
         MODEL = Build.MODEL;
     }
 
-    public void showToast(Context context, String s) {
-        Toast.makeText(context, s, Toast.LENGTH_SHORT).show();
-    }
-
     public void showsnackBar(View v, Context applicationContext, String message) {
         snackBar= Snackbar.make(v, message, Snackbar.LENGTH_SHORT);
         snackBar.show();
@@ -80,16 +78,28 @@ public class UtilClass {
         return ss2;
     }
 
-    public static  NotificationDialog showAlertDialog1(android.support.v4.app.FragmentManager fragmentmanager, String s, String s1, String s2, String s3,
-                                               boolean flag, AlertDialogListener alertdialoglistener) {
-        NotificationDialog ss1 = NotificationDialog.newInstance(s, s1, s2, s3, flag);
-        ss1.setListener(alertdialoglistener);
-        ss1.setCancelable(false);
-        ss1.show(fragmentmanager, null);
-        return ss1;
+    public static ValueAnimator createSlidingAnimator(final ViewGroup viewGroup, boolean expand) {
+        final int widthSpec = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED);
+        final int heightSpec = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED);
+
+        viewGroup.measure(widthSpec, heightSpec);
+        int height = viewGroup.getMeasuredHeight();
+
+        ValueAnimator animator = expand ? ValueAnimator.ofInt(0, height) : ValueAnimator.ofInt(height, 0);
+
+        animator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+            @Override
+            public void onAnimationUpdate(ValueAnimator valueAnimator) {
+                ViewGroup.LayoutParams params = viewGroup.getLayoutParams();
+                params.height = (Integer) valueAnimator.getAnimatedValue();
+                viewGroup.setLayoutParams(params);
+            }
+        });
+
+        return animator;
     }
 
-    public  static String timeZone() {
+    public static String timeZone() {
         Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("GMT"), Locale.getDefault());
         String   timeZone = new SimpleDateFormat("Z").format(calendar.getTime());
         return timeZone.substring(0, 3) + ":"+ timeZone.substring(3, 5);

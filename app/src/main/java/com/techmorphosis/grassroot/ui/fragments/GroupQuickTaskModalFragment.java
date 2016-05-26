@@ -15,6 +15,7 @@ import com.techmorphosis.grassroot.R;
 import com.techmorphosis.grassroot.ui.activities.CreateMeetingActivity;
 import com.techmorphosis.grassroot.ui.activities.CreateVoteActivity;
 import com.techmorphosis.grassroot.ui.activities.NotBuiltActivity;
+import com.techmorphosis.grassroot.utils.Constant;
 import com.techmorphosis.grassroot.utils.MenuUtils;
 
 import butterknife.BindView;
@@ -115,8 +116,9 @@ public class GroupQuickTaskModalFragment extends android.support.v4.app.DialogFr
     @OnClick(R.id.ic_home_call_meeting_active)
     public void icHomeCallMeetingActive() {
         if (meetingPermitted) {
+            Log.e(TAG, "about to start meeting for result!");
             Intent Meeting = MenuUtils.constructIntent(getContext(), CreateMeetingActivity.class, groupUid, groupName);
-            startActivity(Meeting);
+            getActivity().startActivityForResult(Meeting, Constant.activityCallMeeting);
             getDialog().dismiss();
         } else {
             getDialog().dismiss();

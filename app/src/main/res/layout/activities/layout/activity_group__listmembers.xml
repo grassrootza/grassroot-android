@@ -74,19 +74,23 @@
                 android:visibility="gone">
 
                 <Button
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
+                    style="@style/ButtonFlat"
+                    android:id="@+id/lm_btn_check_all"
                     android:text="@string/lm_check_all"
-                    android:layout_marginRight="7dip"
-                    android:id="@+id/btnCheckAll" >
-                </Button>
+                    android:textColor="@color/primaryColor"
+                    android:layout_marginBottom="10dp"
+                    android:layout_marginLeft="20dp"
+                    android:layout_marginRight="20dp" />
 
                 <Button
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
+                    style="@style/ButtonFlat"
+                    android:id="@+id/lm_btn_clear_all"
                     android:text="@string/clear_all"
-                    android:id="@+id/btnClearAll" >
-                </Button>
+                    android:textColor="@color/primaryColor"
+                    android:layout_marginBottom="10dp"
+                    android:layout_marginLeft="20dp"
+                    android:layout_marginRight="20dp" />
+
             </LinearLayout>
 
             <RelativeLayout

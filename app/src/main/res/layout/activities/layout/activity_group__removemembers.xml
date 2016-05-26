@@ -98,19 +98,10 @@
 
         <Button
             android:id="@+id/rm_bt_save"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignParentRight="true"
-
-            android:minWidth="88dp"
-            android:minHeight="36dp"
-
+            style="@style/ButtonFlat"
             android:text="@string/bt_save"
-            android:textSize="@dimen/txt_medium"
             android:textColor="@color/primaryColor"
-
-            android:background="@drawable/button_flat_white"
-
+            android:layout_alignParentRight="true"
             android:layout_marginBottom="20dp"
             android:layout_marginLeft="20dp"
             android:layout_marginRight="20dp"

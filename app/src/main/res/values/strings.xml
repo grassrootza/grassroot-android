@@ -1,6 +1,7 @@
 <resources>
     <string name="app_name">Grassroot</string>
 
+    <!-- Activity titles -->
     <string name="action_settings">Settings</string>
     <string name="title_activity_homescreen">Home screen</string>
     <string name="title_activity_mainactivity">Main activity</string>
@@ -14,22 +15,16 @@
 
     <string name="register"><u>Forgot password?</u></string>
 
-    <!--container Welcome-->
+    <!-- Welcome, register, OTP screens -->
     <string name="bt_log">LOGIN</string>
     <string name="bt_register">REGISTER</string>
-
-    <!--container Otp-->
-    <string name="et_otp">Otp</string>
     <string name="bt_submit_otp">SUBMIT</string>
+    <string name="et_otp">Otp</string>
     <string name="txtresend">Verification code not received?\n Resend</string>
-
-    <!--container Register-->
     <string name="et_userName">Name</string>
     <string name="et_mobile_register">Cellphone number</string>
 
-    <!--container Login-->
-    <string name="et_mobile_login"></string>
-
+    <!-- Error messages -->
     <string name="No_network">Your Network Connection does not seem to be work properly.\n Click to try again</string>
     <string name="Retry">RETRY</string>
     <string name="Unknown_error">Oops, an error occurred. Try again later.</string>
@@ -43,14 +38,13 @@
     <string name="USER_ALREADY_EXISTS">User Already Exist</string>
     <string name="Otp_success">Please Enter Verification code sent by SMS</string>
     <string name="INVALID_TOKEN">You seem to be signed in to another device. Please logout and login again</string>
-    <string name="Logout_message">Are you sure you want to Log out?</string>
     <string name="USER_HAS_NO_GROUPS">User has no group</string>
     <string name="No_notifications">No Notifications</string>
     <string name="No_network_txt">Your Network Connection does not seem to be work properly.\n Click to try again</string>
     <string name="No_reult_txt">No result found</string>
     <string name="Unknown_error_txt">Oops <b>!</b> \n Something wents wrong \n\n Please try again after sometime</string>
 
-    <!-- Draweritem name-->
+    <!-- Navigation drawer items -->
     <string name="Profile">Profile Settings</string>
     <string name="FAQs">FAQs</string>
     <string name="Support">Support</string>
@@ -58,51 +52,48 @@
     <string name="Share">Share</string>
     <string name="Rate_App">Rate App</string>
     <string name="Notifications">Notifications</string>
-
-
     <string name="open">open</string>
     <string name="close">close</string>
-    <!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_blank_fragment">Hello blank fragment</string>
-
+    <string name="Logout_message">Are you sure you want to logout?</string>
+    <string name="RateUs">RateUs</string>
+    <string name="rate_us_text">If you enjoy using Grassroot, would you mind taking a moment to rate it? Thank You for your support.</string>
+    <string name="share_app_text">Meet, Vote and Act with the Grassroot App. Download it now from the Android Play Store -https://play.google.com/store/apps/details?id=com.techmorphosis.grassroot</string>
 
     <!--welcome content-->
-
     <string name="txt_welcome">Welcome to <b>Grassroot</b></string>
     <string name="txt_getstart">To get started</string>
     <string name="new_joingroup">Join Group</string>
     <string name="new_startgroup">Create Group</string>
-
-    <!--title-->
     <string name="o_title">Welcome to Grassroot</string>
     <string name="t_title">Groups</string>
     <string name="th_title">Meet</string>
     <string name="four_title">Vote</string>
     <string name="five_title">Act</string>
-
-    <!--content-->
     <string name="o_content">Meet, vote, act</string>
     <string name="t_content">Create, join, and connect groups, as many and as large as you’d like</string>
     <string name="th_content">Call meetings, with notices sent to any kind of phone, responses, and reminders</string>
     <string name="four_content">Take simple polls, lasting five minutes or five weeks, of five or five thousand members</string>
     <string name="five_content">Record shared to-dos, automatically reminding the group until they are done</string>
 
-    <!--button-->
+    <!--HomeScreen Activity & Screens-->
     <string name="joingroup">REQUEST TO JOIN A GROUP</string>
     <string name="startgroup">START A GROUP</string>
-
     <string name="bt_save">Save</string>
     <string name="bt_cancel">Cancel</string>
+    <string name="ghp_toolbar_title">Your groups</string>
+    <string name="ghp_search_group_name">Group name</string>
+    <string name="tv_dialog_bottom_title">Quick Add</string>
+    <string name="title_activity_blank">Blank</string>
+    <string name="sort_title">Sort groups by:</string>
+    <string name="date">Date of last action</string>
+    <string name="role">Your role</string>
+    <string name="Default">Clear</string>
+    <string name="gm_add_member">ADD MEMBER</string>
+    <string name="gm_view_members">VIEW MEMBERS</string>
+    <string name="gm_edit_settings">EDIT GROUP</string>
+    <string name="gm_remove_members">REMOVE MEMBERS</string>
 
-    <!--RateUs Screen-->
-    <string name="RateUs">RateUs</string>
-    <string name="rate_us_text">If you enjoy using Grassroot, would you mind taking a moment to rate it? Thank You for your support.</string>
-    <string name="share_app_text">Meet, Vote and Act with the Grassroot App. Download it now from the Android Play Store -https://play.google.com/store/apps/details?id=com.techmorphosis.grassroot</string>
-
-    <!--Logout-->
-    <string name="Logout_text">Are you sure you want to logout?</string>
-
-    <!--GroupJoinActivity-->
+    <!--Group search and join -->
     <string name="search">search</string>
     <string name="search_box">Enter group name</string>
     <string name="validate_search_box">Please search for a group</string>
@@ -112,6 +103,8 @@
     <string name="member_list_default_header">Current members</string>
     <string name="member_list_new_members_header">New members</string>
     <string name="member_list_default_name">Kwanda D</string>
+    <string name="lm_check_all">Select all</string>
+    <string name="clear_all">Clear all</string>
 
     <!--    Create Group--><!--cg-->
     <string name="Add">Add</string>
@@ -124,10 +117,8 @@
     <!-- Add new members -->
     <string name="am_title">Add members to group</string>
     <string name="am_title_contact">Current group members</string>
-
-    <!-- Member selection -->
-    <string name="lm_check_all">Select all</string>
-    <string name="clear_all">Clear all</string>
+    <string name="gm_add_members_lc">Add members</string>
+    <string name="gm_new_task_lc">Call new event</string>
 
     <!-- Phone book and other strings -->
     <string name="action_search">Search...</string>
@@ -143,46 +134,17 @@
     <string name="empty_contact">Selected name does not have contact number</string>
     <string name="title_activity_group__homepage">Group_Homepage</string>
 
-    <!--Group_Home_page--><!--ghp-->
-    <string name="ghp_toolbar_title">Your groups</string>
-    <string name="ghp_search_group_name">Group name</string>
-
-    <!--GroupActivty_dialog-->
-    <string name="tv_dialog_bottom_title">Quick Add</string>
-    <string name="title_activity_blank">Blank</string>
-
-    <!--Sort dialog -->
-    <string name="sort_title">Sort groups by:</string>
-    <string name="date">Date of last action</string>
-    <string name="role">Your role</string>
-    <string name="Default">Clear</string>
-
-    <!-- Group additions -->
-    <string name="gm_add_member">ADD MEMBER</string>
-    <string name="gm_view_members">VIEW MEMBERS</string>
-    <string name="gm_edit_settings">EDIT GROUP</string>
-    <string name="gm_remove_members">REMOVE MEMBERS</string>
-
-    <string name="gm_add_members_lc">Add members</string>
-    <string name="gm_new_task_lc">Call new event</string>
-
-    <!--Group ativities-> <!-ga- -->
+    <!--GroupTasksActivity -->
     <string name="ga_tv_toolbar">Name of group</string>
-
     <string name="ga_Votesend">Vote sent successfully</string>
     <string name="ga_Meetingsend">RSVP sent</string>
-
     <string name="ga_VoteFailure">User has already  Voted</string>
-
     <string name="ga_no_activities">No Group Activities</string>
-
     <string name="ga_ToDocompleted">ToDo Completed</string>
     <string name="ga_ToDoFailure">ToDo already Completed</string>
-
     <string name="ga_noVote">No Vote Activities</string>
     <string name="ga_noMeeting">No meeting Activities</string>
     <string name="ga_noToDo">No ToDo Activities</string>
-
     <string name="ga_newVote">NEW VOTE</string>
     <string name="ga_newMeeting">NEW MEETING</string>
     <string name="ga_newToDo">NEW TODO</string>
@@ -204,7 +166,7 @@
     <string name="pp_notifications_dialog_title">Configure notifications</string>
     <string name="pp_update_msg">Profile Updated Successfully</string>
 
-    <!--Edit Vote--> <!--ev-->
+    <!--Edit Vote-->
     <string name="ev_tv_toolbar">EDIT VOTE</string>
     <string name="ev_bt_save">Save Changes</string>
     <string name="ev_rl_vote_header">Do you agree or disagree</string>
@@ -248,6 +210,7 @@
     <string name="cmtg_config_reminders_heading">Configure reminder</string>
     <string name="cmtg_invite_all">Invite whole group</string>
     <string name="cmtg_location_hint">Meeting location</string>
+    <string name="cmtg_desc_header">Add notes</string>
 
     <!--FAQ-->
     <string name="fq_txt_toolbar">FAQs</string>

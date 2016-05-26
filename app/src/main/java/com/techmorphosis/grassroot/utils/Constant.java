@@ -31,6 +31,7 @@ public class Constant {
     public static final String SELECT_FIELD = "select_enabled";
     public static final String SHOW_HEADER_FLAG = "show_header";
     public static final String SHOW_ACTION_BUTTON_FLAG = "show_action_button";
+    public static final String SUCCESS_MESSAGE = "success_message";
 
     public static final String VOTE = "VOTE";
     public static final String MEETING = "MEETING";
@@ -46,6 +47,7 @@ public class Constant {
 
     /**
      * RESULT CODS FOR ACTIVITIES
+     * todo : make an enum with to/from int
      */
     public static final int activityContactSelection = 1;
     public static final int activityManualMemberEntry = 2;
@@ -54,7 +56,7 @@ public class Constant {
     public static final int activityRemoveMembers = 5;
     public static final int activityCreateGroup = 6;
     public static final int activitySelectGroupMembers = 7;
-
+    public static final int activityCallMeeting = 8;
 
     public static final int alertAskForContactPermission = 91;
 

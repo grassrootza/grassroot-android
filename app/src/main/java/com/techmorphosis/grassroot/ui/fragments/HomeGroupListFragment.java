@@ -157,6 +157,13 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment {
         });
     }
 
+    public void showSuccessMessage(Intent data) {
+        // todo : update the group's card
+        Log.e(TAG, "and ... it's done");
+        String message = data.getStringExtra(Constant.SUCCESS_MESSAGE);
+        ErrorUtils.showSnackBar(rlGhpRoot, message, Snackbar.LENGTH_LONG, "", null);
+    }
+
     /**
      * Method executed to retrieve and populate list of groups. Note: this does not handle the absence
      * of a connection very well, at all. Will probably need to rethink.
