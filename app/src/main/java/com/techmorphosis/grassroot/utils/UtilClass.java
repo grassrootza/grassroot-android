@@ -78,6 +78,16 @@ public class UtilClass {
         return ss2;
     }
 
+    public static NotificationDialog showAlertDialog(android.support.v4.app.FragmentManager fragmentmanager, String s, String s1, String s2, String s3, boolean flag, AlertDialogListener alertdialoglistener)
+    {
+        NotificationDialog ss1 = NotificationDialog.newInstance(s, s1, s2, s3, flag);
+        ss1.setListener(alertdialoglistener);
+        ss1.setCancelable(false);
+        ss1.show(fragmentmanager, null);
+        return ss1;
+    }
+
+
     public static ValueAnimator createSlidingAnimator(final ViewGroup viewGroup, boolean expand) {
         final int widthSpec = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED);
         final int heightSpec = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED);

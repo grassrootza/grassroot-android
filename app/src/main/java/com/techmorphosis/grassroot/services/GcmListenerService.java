@@ -14,7 +14,6 @@ import android.os.Bundle;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 
-
 import com.techmorphosis.grassroot.R;
 import com.techmorphosis.grassroot.ui.activities.HomeScreenActivity;
 import com.techmorphosis.grassroot.ui.activities.NotBuiltActivity;
@@ -32,46 +31,10 @@ public class GcmListenerService extends com.google.android.gms.gcm.GcmListenerSe
     private static final String STACK_KEY = "stack_key";
 
 
+
     @Override
     public void onMessageReceived(String from, Bundle data) {
-
-        Intent resultIntent = null;
-        switch (data.getString("entity_type").toLowerCase()){
-            case "vote":
-                resultIntent = new Intent(this, ViewVote.class);
-                break;
-            case "todo":
-                resultIntent = new Intent(this,NotBuiltActivity.class );
-                break;
-            case "meeting":
-                resultIntent = new Intent(this, NotBuiltActivity.class);
-                break;
-            default:
-                resultIntent = new Intent(this, HomeScreenActivity.class);
-        }
-
-        if (SettingPreference.getisLoggedIn(this)) {
-            if (isAppIsInBackground(this)) {
-                notificationCounter();
                 sendNotification(data);
-
-            } else {
-
-                String title = data.getString("title");
-                String body = data.getString("body");
-                String id = data.getString("id");
-                String entity_type = data.getString("entity_type");
-                resultIntent.putExtra("entity_type", entity_type);
-                resultIntent.putExtra("title", title);
-                resultIntent.putExtra("body", body);
-                resultIntent.putExtra("id", id);
-                resultIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP  | Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                this.startActivity(resultIntent);
-
-            }
-
-        }
-
 
     }
 
@@ -79,7 +42,6 @@ public class GcmListenerService extends com.google.android.gms.gcm.GcmListenerSe
     public void onMessageSent(String msgId) {
         super.onMessageSent(msgId);
         Log.d(TAG, "message with id " + msgId + " sent.");
-
     }
 
     @Override
@@ -90,36 +52,16 @@ public class GcmListenerService extends com.google.android.gms.gcm.GcmListenerSe
 
     private void sendNotification(Bundle msg) {
 
-
         Log.d(TAG, "Received a push notification from server");
-        Intent resultIntent = null;
-        switch (msg.getString("entity_type").toLowerCase()){
-            case "vote":
-                resultIntent = new Intent(this, ViewVote.class);
-                resultIntent.putExtra("id", msg.getString("id"));
-                break;
-            case "todo":
-                resultIntent = new Intent(this,NotBuiltActivity.class );
-                break;
-            case "meeting":
-                resultIntent = new Intent(this, NotBuiltActivity.class);
-                break;
-            default:
-                resultIntent = new Intent(this, HomeScreenActivity.class);
-        }
-
-        PendingIntent resultPendingIntent = PendingIntent.getActivity(this, 0,
-                resultIntent, PendingIntent.FLAG_ONE_SHOT);
-
+        Intent resultIntent = generateResultIntent(msg);
+        PendingIntent resultPendingIntent = PendingIntent.getActivity(getBaseContext(), 0,
+                resultIntent,PendingIntent.FLAG_CANCEL_CURRENT);
 
         NotificationManager mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-        if (Build.VERSION.SDK_INT >= 21) {
-            Log.e(TAG, "lollipop");
+      if (Build.VERSION.SDK_INT >= 21) {
 
             NotificationCompat.InboxStyle inboxStyle = new NotificationCompat.InboxStyle();
-
-            NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(this);
-
+            NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(getApplicationContext());
             Notification notification = mBuilder.setSmallIcon((Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP)
                     ? R.drawable.ic_notification_icon : R.drawable.app_icon).setTicker(msg.getString("title")).setWhen(0)
                     .setAutoCancel(true)
@@ -127,33 +69,26 @@ public class GcmListenerService extends com.google.android.gms.gcm.GcmListenerSe
                     .setStyle(inboxStyle)
                     .setContentIntent(resultPendingIntent)
                     .setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION))
-                    .setLargeIcon(BitmapFactory.decodeResource(this.getResources(), R.drawable.app_icon))
+                    .setLargeIcon(BitmapFactory.decodeResource(getBaseContext().getResources(), R.drawable.app_icon))
                     .setContentText(msg.getString("body"))
+                    .setGroup(STACK_KEY)
                     .build();
-
 
             mNotificationManager.notify(msg.getString("id"), 0, notification);
 
         } else {
-
-            NotificationCompat.Builder mNotifyBuilder = new NotificationCompat.Builder(this)
+            NotificationCompat.Builder mNotifyBuilder = new NotificationCompat.Builder(getBaseContext())
                     .setContentTitle(msg.getString("title"))
                     .setContentText(msg.getString("body"))
+                    .setAutoCancel(true)
                     .setSmallIcon(R.drawable.app_icon)
                     .setContentIntent(resultPendingIntent)
                     .setGroup(STACK_KEY);
-            Log.d(TAG, msg.getString("title"));
-
-            Log.d(TAG, msg.getString("id"));
-            Log.d(TAG, msg.toString());
-
 
             int defaults = 0;
             defaults = defaults | Notification.DEFAULT_LIGHTS;
             defaults = defaults | Notification.DEFAULT_SOUND;
-
             mNotifyBuilder.setDefaults(defaults);
-            mNotifyBuilder.setAutoCancel(true);
             mNotificationManager.notify(msg.getString("id"), 0, mNotifyBuilder.build());
 
         }
@@ -163,7 +98,7 @@ public class GcmListenerService extends com.google.android.gms.gcm.GcmListenerSe
 
     public boolean isAppIsInBackground(Context context) {
         boolean isInBackground = true;
-        ActivityManager am = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
+        ActivityManager am = (ActivityManager) this.getSystemService(Context.ACTIVITY_SERVICE);
         if (Build.VERSION.SDK_INT > Build.VERSION_CODES.KITKAT_WATCH) {
             List<ActivityManager.RunningAppProcessInfo> runningProcesses = am.getRunningAppProcesses();
             for (ActivityManager.RunningAppProcessInfo processInfo : runningProcesses) {
@@ -187,7 +122,7 @@ public class GcmListenerService extends com.google.android.gms.gcm.GcmListenerSe
     }
 
 
-    private void notificationCounter() {
+    public void incrementNotificationCounter() {
 
         int notificationcount = SettingPreference.getIsNotificationcounter(getApplicationContext());
         Log.e(TAG, "b4 notificationcount is " + notificationcount);
@@ -198,4 +133,23 @@ public class GcmListenerService extends com.google.android.gms.gcm.GcmListenerSe
     }
 
 
+    private Intent generateResultIntent(Bundle msg) {
+        Intent resultIntent = new Intent(getBaseContext(), HomeScreenActivity.class);
+        if (msg.getString("entity_type").equalsIgnoreCase("vote")) {
+            resultIntent = new Intent(getBaseContext(), ViewVote.class);
+            resultIntent.putExtra("id", msg.getString("id"));
+        } else {
+            resultIntent = new Intent(getBaseContext(), NotBuiltActivity.class);
+
+        }
+        resultIntent.putExtra("entity_type", msg.getString("entity_type"));
+        Log.d(TAG, msg.getString("entity_type"));
+        resultIntent.putExtra("title", msg.getString("title"));
+        resultIntent.putExtra("body", msg.getString("body"));
+        resultIntent.putExtra("id", msg.getString("id"));
+
+        return resultIntent;
+
+
+    }
 }

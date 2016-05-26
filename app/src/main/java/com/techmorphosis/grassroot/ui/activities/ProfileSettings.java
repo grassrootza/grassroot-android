@@ -1,5 +1,6 @@
 package com.techmorphosis.grassroot.ui.activities;
 
+import android.app.ProgressDialog;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.support.design.widget.Snackbar;
@@ -18,7 +19,6 @@ import com.techmorphosis.grassroot.R;
 import com.techmorphosis.grassroot.adapters.ProfileAdapter;
 import com.techmorphosis.grassroot.interfaces.ClickListener;
 import com.techmorphosis.grassroot.services.GrassrootRestService;
-import com.techmorphosis.grassroot.services.model.EventModel;
 import com.techmorphosis.grassroot.services.model.GenericResponse;
 import com.techmorphosis.grassroot.services.model.ProfileResponse;
 import com.techmorphosis.grassroot.ui.DialogFragment.Profile.EditItemDialog;
@@ -27,59 +27,59 @@ import com.techmorphosis.grassroot.ui.views.RecyclerTouchListener;
 import com.techmorphosis.grassroot.utils.SettingPreference;
 
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
-import java.util.HashMap;
 
+import butterknife.BindView;
+import butterknife.ButterKnife;
+import butterknife.OnClick;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
 public class ProfileSettings extends PortraitActivity implements EditItemDialog.OnEditItemListener, EditNameDialogFragment.OnEditlanguageListener, EditNameDialogFragment.OnEditNotificationsListener {
 
-    private RelativeLayout rlRoot;
-    private LinearLayout ppToolbar;
-    private ImageView icEdit;
-    private ImageView ivPpProfile;
-    private TextView txtPpUsername;
-    private TextView txtPpNumber;
-    private RecyclerView mRecyclerView;
     private static final String TAG = "ProfileSettings";
+
+    @BindView(R.id.rl_root)
+    RelativeLayout rlRoot;
+    @BindView(R.id.pp_toolbar)
+    LinearLayout ppToolbar;
+    @BindView(R.id.iv_pp_profile)
+    ImageView ivPpProfile;
+    @BindView(R.id.txt_pp_username)
+    TextView txtPpUsername;
+    @BindView(R.id.txt_pp_number)
+    TextView txtPpNumber;
+    @BindView(R.id.rc_pp)
+    RecyclerView mRecyclerView;
+    @BindView(R.id.bt_pp_update)
+    Button btnupdate;
+    @BindView(R.id.iv_pp_back)
+    ImageView ivPpBack;
+
     private ProfileAdapter pAdapter;
-    private ArrayList<String> titlelist;
-    private ImageView ivPpBack;
-    public Snackbar snackbar;
+    private Snackbar snackbar;
     private String username;
     private String language;
     private String alertPreference;
-    private String selected_language;
-    private String selected_notifications;
-    private Button btnupdate;
     private GrassrootRestService grassrootRestService;
-    private String phoneNumber;
-    private String code;
+
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_profile_settings);
+        ButterKnife.bind(this);
         grassrootRestService = new GrassrootRestService(this);
-        findAllViews();
-     //   Log.e(TAG, "SettingPreffrence.getuser_name(getActivity()) is " + SettingPreffrence.getuser_name(ProfileSettings.this));
-        init();
-        ProfileSettingWS();
+        getProfileSettings();
 
     }
 
-    private void ProfileSettingWS() {
-
+    private void getProfileSettings() {
 
         final String phoneNumber = SettingPreference.getuser_mobilenumber(this);
-        String code = SettingPreference.getuser_token(this);
+        final String code = SettingPreference.getuser_token(this);
         grassrootRestService.getApi().getUserProfile(phoneNumber,code).enqueue(new Callback<ProfileResponse>() {
             @Override
             public void onResponse(Call<ProfileResponse> call, Response<ProfileResponse> response) {
@@ -98,174 +98,51 @@ public class ProfileSettings extends PortraitActivity implements EditItemDialog.
             }
         });
 
-        String prgMessage = "Please Wait";
-        //doInBackground
-   /*     NetworkCall networkCall = new NetworkCall
-                (
-                        ProfileSettings.this,
-                        new ResponseListenerVolley() {
-                            @Override
-                            public void onSuccess(String s) {
 
-                                try {
-                                    JSONObject jsonObject = new JSONObject(s);
-                                    if (jsonObject.getString("status").equalsIgnoreCase("SUCCESS")) {
-                                        JSONObject dataObject = jsonObject.getJSONObject("data");
-                                        username = dataObject.getString("displayName");
-                                        language = dataObject.getString("language");
-                                        alertPreference = dataObject.getString("alertPreference");
-                                        setAllViews();
-
-                                    }
-
-                                } catch (JSONException e) {
-                                    e.printStackTrace();
-                                    showSnackbar(getString(R.string.Unknown_error), snackbar.LENGTH_SHORT, "", "");
-                                }
-
-                            }
-                        },
-                        new ErrorListenerVolley() {
-                            @Override
-                            public void onError(VolleyError volleyError) {
-                                Log.e(TAG, "ErrorListenerVolley inside " + volleyError);
-
-                                if (volleyError instanceof NoConnectionError || volleyError instanceof TimeoutError) {
-                                    showSnackbar(getString(R.string.No_network), snackbar.LENGTH_INDEFINITE, getString(R.string.Retry), "Profile");
-                                } else if (volleyError instanceof ServerError) {
-                                    try {
-                                        String response = new String(volleyError.networkResponse.data, "utf-8");
-                                        Log.e(TAG, "response is " + response);
-                                    } catch (UnsupportedEncodingException e) {
-                                        e.printStackTrace();
-                                    }
-                                    showSnackbar(getString(R.string.Unknown_error), snackbar.LENGTH_SHORT, "", "");
-                                } else if (volleyError instanceof AuthFailureError) {
-                                    showSnackbar(getString(R.string.INVALID_TOKEN), snackbar.LENGTH_INDEFINITE, "", "");
-                                } else {
-                                    showSnackbar(getString(R.string.Unknown_error), snackbar.LENGTH_SHORT, "", "");
-
-                                }
-                            }
-                        },
-                        AllLinsks.ProfileSetting + SettingPreffrence.getPREF_Phone_Token(ProfileSettings.this),
-                        prgMessage,
-                        true
-                );
-        networkCall.makeStringRequest_GET();*/
     }
 
-    private void UpdateProfileSettingWS() {
+    private void updateProfileSetting() {
 
+        final ProgressDialog progressDialog = new ProgressDialog(this);
         String prgMessage = "Please Wait";
-
+        progressDialog.setMessage(prgMessage);
+        final String phoneNumber = SettingPreference.getuser_mobilenumber(this);
+        final String code = SettingPreference.getuser_token(this);
+        progressDialog.show();
         grassrootRestService.getApi().updateProfile(phoneNumber,code, username, language,alertPreference).enqueue(new Callback<GenericResponse>() {
             @Override
             public void onResponse(Call<GenericResponse> call, Response<GenericResponse> response) {
+                progressDialog.dismiss();
                 if (response.isSuccessful()) {
                     SettingPreference.setuser_name(ProfileSettings.this, username);
                     SettingPreference.setPrefLanguage(ProfileSettings.this, language);
                     SettingPreference.setPrefAlert(ProfileSettings.this, alertPreference);
                 }
-
             }
             @Override
             public void onFailure(Call<GenericResponse> call, Throwable t) {
-
-                //  ErrorUtils.handleNetworkError(ViewVote.this, errorLayout, t);
+                 progressDialog.dismiss();
+               //  ErrorUtils.
             }
         });
 
 
-   /*     //doInBackground
-        NetworkCall networkCall = new NetworkCall
-                (
-                        ProfileSettings.this,
-                        new ResponseListenerVolley() {
-                            @Override
-                            public void onSuccess(String s) {
 
-                                try {
-                                    JSONObject jsonObject = new JSONObject(s);
-                                    if (jsonObject.getString("status").equalsIgnoreCase("SUCCESS")) {
-                                        SettingPreffrence.setuser_name(ProfileSettings.this, username);
-                                        SettingPreffrence.setPREF_Language(ProfileSettings.this, language);
-                                        SettingPreffrence.setPREF_alertPreference(ProfileSettings.this, alertPreference);
-                                        SettingPreffrence.setPREF_HAS_Update(ProfileSettings.this, true);
-                                        finish();
-                                    }
-                                } catch (JSONException e) {
-                                    e.printStackTrace();
-                                    showSnackbar(getString(R.string.Unknown_error), snackbar.LENGTH_SHORT, "", "");
-                                }
-
-                            }
-                        },
-                        new ErrorListenerVolley() {
-                            @Override
-                            public void onError(VolleyError volleyError) {
-                                if (volleyError instanceof NoConnectionError || volleyError instanceof TimeoutError) {
-                                    showSnackbar(getString(R.string.No_network), snackbar.LENGTH_INDEFINITE, getString(R.string.Retry), "Profile");
-                                } else if (volleyError instanceof ServerError) {
-                                    try {
-                                        String response = new String(volleyError.networkResponse.data, "utf-8");
-                                        Log.e(TAG, "response is " + response);
-                                    } catch (UnsupportedEncodingException e) {
-                                        e.printStackTrace();
-                                    }
-                                    showSnackbar(getString(R.string.Unknown_error), snackbar.LENGTH_SHORT, "", "");
-                                } else if (volleyError instanceof AuthFailureError) {
-                                    showSnackbar(getString(R.string.INVALID_TOKEN), snackbar.LENGTH_INDEFINITE, "", "");
-                                } else {
-                                    showSnackbar(getString(R.string.Unknown_error), snackbar.LENGTH_SHORT, "", "");
-                                }
-
-                            }
-                        },
-                        AllLinsks.UpdateProfileSetting + SettingPreffrence.getPREF_Phone_Token(ProfileSettings.this),
-                        prgMessage,
-                        true
-                );
-        HashMap<String, String> hashMap = new HashMap<>();
-        hashMap.put("displayName", username);
-        hashMap.put("language", language);
-        hashMap.put("alertPreference", alertPreference);
-        networkCall.makeStringRequest_POST(hashMap);*/
     }
 
 
     private void setAllViews() {
         txtPpUsername.setText(username);
         txtPpNumber.setText(SettingPreference.getuser_mobilenumber(ProfileSettings.this));
-
         mRecyclerView();
         btnupdate.setVisibility(View.VISIBLE);
     }
 
-    private void init() {
 
-    }
+    @OnClick(R.id.iv_pp_back)
+    public void onBack() {
+        onBackPressed();
 
-    private void findAllViews() {
-        rlRoot = (RelativeLayout) findViewById(R.id.rl_root);
-        ppToolbar = (LinearLayout) findViewById(R.id.pp_toolbar);
-        ivPpBack = (ImageView) findViewById(R.id.iv_pp_back);
-        ivPpProfile = (ImageView) findViewById(R.id.iv_pp_profile);
-        txtPpUsername = (TextView) findViewById(R.id.txt_pp_username);
-        txtPpNumber = (TextView) findViewById(R.id.txt_pp_number);
-        mRecyclerView = (RecyclerView) findViewById(R.id.rc_pp);
-        btnupdate = (Button) findViewById(R.id.bt_pp_update);
-        btnupdate.setOnClickListener(button_update());
-        ivPpBack.setOnClickListener(onBack());
-    }
-
-    private View.OnClickListener onBack() {
-        return new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                onBackPressed();
-            }
-        };
     }
 
     @Override
@@ -275,14 +152,10 @@ public class ProfileSettings extends PortraitActivity implements EditItemDialog.
 
     }
 
-    private View.OnClickListener button_update() {
-        return new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-             Log.d(TAG, "Updating profile");
-                UpdateProfileSettingWS();
-            }
-        };
+    @OnClick(R.id.bt_pp_update)
+    public void onUpdateButton() {
+        updateProfileSetting();
+
     }
 
     private void mRecyclerView() {
@@ -339,9 +212,9 @@ public class ProfileSettings extends PortraitActivity implements EditItemDialog.
                 public void onClick(View v) {
 
                     if (type.equalsIgnoreCase("Profile")) {
-                        ProfileSettingWS();
+                        getProfileSettings();
                     } else if (type.equalsIgnoreCase("Update")) {
-                        UpdateProfileSettingWS();
+                        updateProfileSetting();
 
                     }
                 }
@@ -361,7 +234,6 @@ public class ProfileSettings extends PortraitActivity implements EditItemDialog.
 
     @Override
     public void onNotifications(String selected_notifications) {
-
         alertPreference = selected_notifications;
         //Toast.makeText(ProfileSettings.this, "notifications is " + selected_notifications, Toast.LENGTH_SHORT).show();
 

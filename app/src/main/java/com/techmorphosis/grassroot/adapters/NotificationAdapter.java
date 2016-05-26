@@ -18,6 +18,9 @@ import com.techmorphosis.grassroot.services.model.NotificationList;
 import java.util.ArrayList;
 import java.util.List;
 
+import butterknife.BindView;
+import butterknife.ButterKnife;
+
 /**
  * Created by ravi on 12/5/16.
  */
@@ -60,28 +63,28 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
 
     public class VH extends RecyclerView.ViewHolder {
 
-
-        private CardView mainView;
-        private TextView txtNcMessage;
-        private TextView txtDate;
+        @BindView(R.id.main_view)
+        CardView mainView;
+        @BindView(R.id.txt_nc_message)
+        TextView txtNcMessage;
+        @BindView(R.id.txt_date)
+        TextView txtDate;
 
         public VH(View view) {
             super(view);
-            mainView = (CardView) view.findViewById(R.id.main_view);
-            txtNcMessage = (TextView) view.findViewById(R.id.txt_nc_message);
-            txtDate = (TextView) view.findViewById(R.id.txt_date);
+            ButterKnife.bind(this, view);
         }
     }
 
     public void addData(List<Notification> notificationList){
         this.notifyList.addAll(notificationList);
-        notifyDataSetChanged();
+        this.notifyDataSetChanged();
 
     }
 
     public void updateData(List<Notification> notifications){
-        notifyList.addAll(notifications);
-        notifyDataSetChanged();
+        this.notifyList.addAll(notifications);
+
 
 
     }

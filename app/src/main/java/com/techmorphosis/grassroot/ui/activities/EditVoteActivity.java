@@ -57,6 +57,7 @@ public class EditVoteActivity extends PortraitActivity {
     CardView datetimepicker;
     @BindView(R.id.rl_ev_root)
     RelativeLayout rlEvRoot;
+
     private Snackbar snackbar;
     private ProgressDialog progressDialog;
     private String description;

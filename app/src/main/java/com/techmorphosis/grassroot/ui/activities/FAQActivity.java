@@ -18,6 +18,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import butterknife.BindView;
+import butterknife.ButterKnife;
 
 /**
  * Created by karthik on 16-09-2015.
@@ -40,6 +41,7 @@ public class FAQActivity extends PortraitActivity{
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_faq);
+        ButterKnife.bind(this);
         setUpToolbar();
         init();;
 
@@ -74,7 +76,6 @@ public class FAQActivity extends PortraitActivity{
         // Answers
         String[] fq_ans = getResources().getStringArray(R.array.fq_Answer);
         listDataChild = Arrays.asList(fq_ans);
-
         faqListview.setOnGroupExpandListener(new ExpandableListView.OnGroupExpandListener() {
             @Override
             public void onGroupExpand(int groupPosition) {

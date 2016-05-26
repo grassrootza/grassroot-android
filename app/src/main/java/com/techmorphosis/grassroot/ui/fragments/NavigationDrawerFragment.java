@@ -199,6 +199,11 @@ public class NavigationDrawerFragment extends Fragment {
         drawerAdapter.notifyDataSetChanged();
     }
 
+    public void cleanNotificationDrawer(){
+
+
+    }
+
     public  void updateNotificationDrawersname()
     {
 

@@ -122,20 +122,12 @@ public class ViewVote extends PortraitActivity {
     TextView txtNumberNoRSVP;
     @BindView(R.id.count_numberNoRSVP)
     TextView countNumberNoRSVP;
-    private String maybe;
-    private String invalid;
-    private String numberOfUsers;
-    private String numberOfRsvp;
-    private int height;
-    private int width;
-    public String voteid;
+
+    private String voteid;
     private String title;
     private String description;
-
     private String deadline;
-    ;
     private boolean canEdit;
-    private boolean canAction;
     private GrassrootRestService grassrootRestService;
     private String phoneNumber;
     private String code;
@@ -179,7 +171,6 @@ public class ViewVote extends PortraitActivity {
         grassrootRestService = new GrassrootRestService(this);
         phoneNumber = SettingPreference.getuser_mobilenumber(this);
         code = SettingPreference.getuser_token(this);
-
         viewVote();
     }
 
@@ -202,8 +193,9 @@ public class ViewVote extends PortraitActivity {
             public void onResponse(Call<EventResponse> call, Response<EventResponse> response) {
                 if (response.isSuccessful()) {
                     Log.d(TAG, response.body().toString());
-                    eventModel = response.body().getEventModel(); //todo: fix the rappy code, but for now just incorporate
+                    eventModel = response.body().getEventModel();
                     setView(eventModel);
+
                 }
 
             }
@@ -232,25 +224,17 @@ public class ViewVote extends PortraitActivity {
         txtVvDescription.setText(model.getDescription());
         txtYes.setText(getString(R.string.vv_yes));
         countYes.setText(String.valueOf(model.getResponseTotalsModel().getYes()));
-
         txtNo.setText(getString(R.string.vv_no));
         countNo.setText(String.valueOf(model.getResponseTotalsModel().getNo()));
-
         txtMaybe.setText(getString(R.string.vv_maybe));
         countMaybe.setText(String.valueOf(model.getResponseTotalsModel().getMaybe()));
-
         txtInvalid.setText(getString(R.string.vv_invalid));
         countInvalid.setText(String.valueOf(model.getResponseTotalsModel().getInvalid()));
-
         txtNumberOfUsers.setText(getString(R.string.vv_numberOfUsers));
         countNumberOfUsers.setText(String.valueOf(model.getResponseTotalsModel().getNumberOfUsers()));
-
         txtNumberNoRSVP.setText(getString(R.string.vv_numberNoRSVP));
         countNumberNoRSVP.setText(String.valueOf(model.getResponseTotalsModel().getNumberOfRsvp()));
-
-        //todo again, this is just so we can get the app working after merge, will fix after
         title = model.getTitle();
-        canAction = model.getCanAction();
         canEdit = model.isCanEdit();
         deadline = model.getDeadline();
         description = model.getDescription();
@@ -265,18 +249,6 @@ public class ViewVote extends PortraitActivity {
         rlVvMainLayout.setVisibility(View.VISIBLE);
 
 
-    }
-
-    public String convertW3CTODeviceTimeZone(String strDate) throws Exception {
-        SimpleDateFormat simpleDateFormatW3C = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
-        Date dateServer = simpleDateFormatW3C.parse(strDate);
-        TimeZone deviceTimeZone = TimeZone.getDefault();
-        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
-        simpleDateFormat.setTimeZone(deviceTimeZone);
-
-        String formattedDate = simpleDateFormat.format(dateServer);
-        // long timeMilliness=new Date(formattedDate).getTime();
-        return formattedDate;
     }
 
 

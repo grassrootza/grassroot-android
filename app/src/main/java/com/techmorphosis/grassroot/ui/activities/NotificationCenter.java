@@ -19,7 +19,6 @@ import android.widget.TextView;
 import com.techmorphosis.grassroot.R;
 import com.techmorphosis.grassroot.adapters.NotificationAdapter;
 import com.techmorphosis.grassroot.interfaces.ClickListener;
-import com.techmorphosis.grassroot.models.NotificationModel;
 import com.techmorphosis.grassroot.services.GrassrootRestService;
 import com.techmorphosis.grassroot.services.model.Notification;
 import com.techmorphosis.grassroot.services.model.NotificationList;
@@ -33,11 +32,12 @@ import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import butterknife.OnClick;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class NotificationCenter extends PortraitActivity implements View.OnClickListener {
+public class NotificationCenter extends PortraitActivity {
 
     private static final String TAG = "NotificationCenter";
     @BindView(R.id.tlb_nc)
@@ -68,17 +68,14 @@ public class NotificationCenter extends PortraitActivity implements View.OnClick
     private Snackbar snackbar;
     private Integer pageNumber = 0;
     private Integer totalPages = 1;
+    private Integer pageSize = 30;
     private GrassrootRestService grassrootRestService;
     private NotificationAdapter notificationAdapter;
     private List<Notification> notifications = new ArrayList<>();
-    public ArrayList<NotificationModel> notifyList;
-    private int error_flag; // 0- success ,1 - No Internet , 4-Invalid token , 5- Unknown error
-    int firstVisibleItem, visibleItemCount, totalItemCount;
-    private boolean loading = true;
+    private int firstVisibleItem, totalItemCount;
     private int ItemLeftCount;
-    private boolean isLoading = false; //false---now u call WS //true---WS is busy ..so plz wait untill data load
-    private int nextPage;
-    public int pagecount = 0;
+    private boolean isLoading;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -86,7 +83,7 @@ public class NotificationCenter extends PortraitActivity implements View.OnClick
         setContentView(R.layout.activity_notification_center);
         ButterKnife.bind(this);
         setUpToolbar();
-        mRecylerview();
+        setRecylerview();
         init();
 
     }
@@ -95,12 +92,11 @@ public class NotificationCenter extends PortraitActivity implements View.OnClick
         grassrootRestService = new GrassrootRestService(this);
         notificationAdapter = new NotificationAdapter(this);
         rcNc.setAdapter(notificationAdapter);
-        getNotifications(0,0);
+        getNotifications(null, null);
     }
 
 
     private void setUpToolbar() {
-
         tlbNc.setNavigationIcon(R.drawable.btn_back_wt);
         tlbNc.setNavigationOnClickListener(new View.OnClickListener() {
             @Override
@@ -110,7 +106,7 @@ public class NotificationCenter extends PortraitActivity implements View.OnClick
         });
     }
 
-    private void mRecylerview() {
+    private void setRecylerview() {
 
         rcNc.setHasFixedSize(false);
         mLayoutManager = new LinearLayoutManager(getApplicationContext());
@@ -153,7 +149,6 @@ public class NotificationCenter extends PortraitActivity implements View.OnClick
             public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
                 super.onScrolled(recyclerView, dx, dy);
 
-                visibleItemCount = rcNc.getChildCount();
                 totalItemCount = mLayoutManager.getItemCount();
                 firstVisibleItem = mLayoutManager.findFirstVisibleItemPosition();
                 ItemLeftCount = (totalItemCount - firstVisibleItem);
@@ -167,8 +162,9 @@ public class NotificationCenter extends PortraitActivity implements View.OnClick
 
                 if (pageNumber < totalPages && ItemLeftCount <= 10 && !isLoading) {
                     prgNcPaging.setVisibility(View.VISIBLE);
-                    getNotifications(pageNumber, totalPages);
+                    pageNumber = pageNumber++;
                     isLoading = true;
+                    getNotifications(pageNumber, pageSize);
 
                 }
 
@@ -177,16 +173,12 @@ public class NotificationCenter extends PortraitActivity implements View.OnClick
         });
     }
 
-
-
-
-
-    private void getNotifications(int page, int size) {
+    private void getNotifications(Integer page, Integer size) {
 
         String phoneNumber = SettingPreference.getuser_mobilenumber(this);
         String code = SettingPreference.getuser_token(this);
         prgNc.setVisibility(View.VISIBLE);
-        grassrootRestService.getApi().getUserNotifications(phoneNumber, code, null, null).enqueue(new Callback<NotificationList>() {
+        grassrootRestService.getApi().getUserNotifications(phoneNumber, code, page, size).enqueue(new Callback<NotificationList>() {
             @Override
             public void onResponse(Call<NotificationList> call, Response<NotificationList> response) {
                 if (response.isSuccessful()) {
@@ -195,13 +187,17 @@ public class NotificationCenter extends PortraitActivity implements View.OnClick
                     totalPages = response.body().getNotificationWrapper().getTotalPages();
                     prgNc.setVisibility(View.GONE);
                     txtPrgNc.setVisibility(View.GONE);
+                    prgNcPaging.setVisibility(View.GONE);
 
                     rcNc.setVisibility(View.VISIBLE);
                     if (pageNumber > 1) {
                         notificationAdapter.updateData(notifications);
+                        notificationAdapter.notifyDataSetChanged();;
+                        isLoading = false;
 
                     } else {
                         notificationAdapter.addData(notifications);
+
                     }
 
                 }
@@ -210,6 +206,7 @@ public class NotificationCenter extends PortraitActivity implements View.OnClick
 
             @Override
             public void onFailure(Call<NotificationList> call, Throwable t) {
+                prgNcPaging.setVisibility(View.INVISIBLE);
                 ErrorUtils.handleNetworkError(NotificationCenter.this, errorLayout, t);
             }
         });
@@ -217,18 +214,14 @@ public class NotificationCenter extends PortraitActivity implements View.OnClick
 
     }
 
-
-
     public void showSnackbar(String message, int length, String actionbuttontxt) {
         snackbar = Snackbar.make(rlRootNc, message, length);
         snackbar.setActionTextColor(Color.RED);
-
         if (!TextUtils.isEmpty(actionbuttontxt)) {
             snackbar.setAction(actionbuttontxt, new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-
-                    getNotifications(0,0);
+                    getNotifications(0, 0);
                 }
             });
 
@@ -237,11 +230,10 @@ public class NotificationCenter extends PortraitActivity implements View.OnClick
         snackbar.show();
     }
 
-    @Override
+    @OnClick(R.id.error_layout)
     public void onClick(View v) {
-
         if (v == llNoInternet || v == llNoResult || v == llNoResult)
-            getNotifications(0,0);
+            getNotifications(null, null);
 
     }
 }

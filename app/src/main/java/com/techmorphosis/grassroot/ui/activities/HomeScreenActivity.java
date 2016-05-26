@@ -81,20 +81,16 @@ public class HomeScreenActivity extends PortraitActivity implements NavigationDr
     public void onNavigationDrawerItemSelected(int position) {
 
         Fragment fragmentToSwitch = null;
-
         if (drawer != null) {
             drawer.closeDrawer(Gravity.LEFT);
         }
 
         switch (position) {
-
             case 0:
                 //Profile
                 Intent profile = new Intent(getApplicationContext(), ProfileSettings.class);
                 startActivity(profile);
                 break;
-
-
             case 1:
                 //faq
                 Intent faq = new Intent(HomeScreenActivity.this, FAQActivity.class);
@@ -106,7 +102,6 @@ public class HomeScreenActivity extends PortraitActivity implements NavigationDr
                 startActivity(noifications);
                 break;
             case 3:
-
                 //Share
 
                 //implicit Intent
@@ -115,13 +110,9 @@ public class HomeScreenActivity extends PortraitActivity implements NavigationDr
                 shareapp.setAction("android.intent.action.SEND");
                 shareapp.putExtra("android.intent.extra.TEXT", getString(R.string.share_app_text));
                 startActivity(Intent.createChooser(shareapp, "Share via.."));
-
                 break;
-
-
             case 4:
                 //Rate App
-
                 //implicit Intent
                 try {
                     Intent rateapp = new Intent("android.intent.action.VIEW", Uri.parse("market://details?id=com.techmorphosis.grassroot"));
@@ -131,12 +122,10 @@ public class HomeScreenActivity extends PortraitActivity implements NavigationDr
                     startActivity(rateapp2);
                 }
 
-
                 break;
 
             case 5:
                 logout();
-
 
         }
 
@@ -149,49 +138,6 @@ public class HomeScreenActivity extends PortraitActivity implements NavigationDr
         }
     }
 
-    @Override
-    protected void onNewIntent(Intent intent) {
-        super.onNewIntent(intent);
-
-        Log.e(TAG, "onNewIntent ");
-
-        if (this.drawer.isDrawerOpen(GravityCompat.START)) {
-            this.drawer.closeDrawer(GravityCompat.START);
-        }
-
-        String body = intent.getStringExtra("body");
-        String entity_type = intent.getStringExtra("entity_type");
-        String title = intent.getStringExtra("title");
-        final String id = intent.getStringExtra("id");
-
-        Log.e(TAG, "body: " + body);
-        Log.e(TAG, "title: " + title);
-        Log.e(TAG, "entity_type : " + entity_type);
-        Log.e(TAG, "id  : " + id);
-
-     /*   if (!intent.hasExtra("update")) {
-            notificationDialog = UtilClass.showAlertDialog1(getSupportFragmentManager(), title, body, "Dismiss", "View", false, new AlertDialogListener() {
-                @Override
-                public void setRightButton() {
-
-                    // Log.e(TAG, "setRightButton ");
-                    notificationDialog.dismiss();
-                    Intent view_vote = new Intent(HomeScreenActivity.this, ViewVote.class);
-                    view_vote.putExtra("voteid", id);
-                    startActivity(view_vote);
-
-                }
-
-                @Override
-                public void setLeftButton() {
-                    //Log.e(TAG,"setLeftButton ");
-                    notificationDialog.dismiss();
-                    //  notificationCounter();
-
-                }
-            });
-        }*/
-    }
 
     private void logout() {
         alertDialogFragment = UtilClass.showAlertDialog(getFragmentManager(), getString(R.string.Logout_message), "Yes", "No", true, new AlertDialogListener() {
@@ -214,8 +160,11 @@ public class HomeScreenActivity extends PortraitActivity implements NavigationDr
 
     @Override
     public void menuClick() { // Getting data from fragment
+
         if (drawer != null) drawer.openDrawer(GravityCompat.START);
+
     }
+
 
     @Override
     protected void onResume() {

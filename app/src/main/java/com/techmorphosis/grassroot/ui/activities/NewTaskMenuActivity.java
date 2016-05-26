@@ -40,7 +40,6 @@ public class NewTaskMenuActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_new);
         ButterKnife.bind(this);
-        registeringReceiver();
         Bundle b = getIntent().getExtras();
         if (b == null) { throw new UnsupportedOperationException("Error! Null arguments passed to modal"); }
 
@@ -48,6 +47,13 @@ public class NewTaskMenuActivity extends AppCompatActivity {
 
         this.groupUid = b.getString(Constant.GROUPUID_FIELD);
         this.groupName = b.getString(Constant.GROUPNAME_FIELD);
+    }
+
+    @Override
+    public void onResume(){
+        super.onResume();
+        registeringReceiver();
+
     }
 
     @OnClick(R.id.iv_back)
@@ -95,6 +101,28 @@ public class NewTaskMenuActivity extends AppCompatActivity {
             NewTaskMenuActivity.this.finish();
         }
     };
+
+    @Override
+    protected void onRestart(){
+        super.onRestart();
+        registeringReceiver();
+
+    }
+
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+       // unregisterReceiver(broadcastReceiver);
+
+    }
+
+
+
+
+
+    @Override
+
 
     public void onBackPressed() {
         super.onBackPressed();
