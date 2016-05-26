@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:id="@+id/rl_root_cv"
     xmlns:card_view="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/rl_root_cv"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/off_white_background"
@@ -83,15 +83,13 @@
                             android:layout_height="wrap_content"
                             android:gravity="top"
                             android:hint="@string/cv_et_title"
-                            android:inputType="textMultiLine"
+                            android:imeOptions="actionNext"
+                            android:inputType="text"
                             android:maxLength="35"
-                            android:maxLines="5"
-                            android:lines="2"
-                            android:minLines="2"
-                            android:scrollbars="vertical"
+                            android:singleLine="true"
                             android:textColor="@color/vv_title"
                             android:textSize="@dimen/txt_medium"
-                            android:imeOptions="actionNext"
+
                             />
                     </android.support.design.widget.TextInputLayout>
 
@@ -151,9 +149,9 @@
                             android:imeOptions="actionDone"
                             android:inputType="textMultiLine"
                             android:lines="5"
-                            android:minLines="5"
                             android:maxLength="320"
                             android:maxLines="10"
+                            android:minLines="5"
                             android:textColor="@color/vv_description"
                             android:textSize="@dimen/txt_medium" />
 
@@ -257,9 +255,9 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:paddingBottom="15dp"
-                        android:paddingTop="15dp"
                         android:paddingLeft="10dp"
                         android:paddingRight="10dp"
+                        android:paddingTop="15dp"
 
                         >
 
@@ -346,8 +344,7 @@
                             android:id="@+id/rl_row_immediate"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_below="@+id/rl_row_one_hour"
-                            >
+                            android:layout_below="@+id/rl_row_one_hour">
 
                             <TextView
                                 style="@style/text_medium"
@@ -421,41 +418,39 @@
                     android:layout_height="wrap_content"
                     android:layout_below="@+id/rl_notify_header"
                     android:background="@color/vv_Body_Response"
-                    android:visibility="gone"
-                    >
+                    android:visibility="gone">
+
                     <LinearLayout
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:orientation="horizontal"
                         android:layout_centerHorizontal="true"
                         android:background="@drawable/underline"
+                        android:orientation="horizontal"
 
                         >
+
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="@string/cv_notify_member_prefix"
-                            android:textColor="@color/black"
                             android:padding="10dp"
-                            />
+                            android:text="@string/cv_notify_member_prefix"
+                            android:textColor="@color/black" />
 
                         <TextView
                             android:id="@+id/member_count"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            tools:text="5"
                             android:textColor="@color/black"
                             android:textStyle="bold"
-                            />
+                            tools:text="5" />
 
                         <TextView
                             android:id="@+id/suffix"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            tools:text="members"
-                            android:textColor="@color/black"
                             android:padding="10dp"
-                            />
+                            android:textColor="@color/black"
+                            tools:text="members" />
 
                     </LinearLayout>
 
@@ -474,9 +469,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
-        android:text="@string/cv_bt_call_vote"
         android:layout_marginTop="10dp"
-        />
+        android:text="@string/cv_bt_call_vote" />
 
 
 </RelativeLayout>
