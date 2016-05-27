@@ -15,7 +15,7 @@ import com.techmorphosis.grassroot.ContactLib.PinnedHeaderListView;
 import com.techmorphosis.grassroot.interfaces.ContactListRequester;
 import com.techmorphosis.grassroot.R;
 import com.techmorphosis.grassroot.adapters.ContactsAdapter;
-import com.techmorphosis.grassroot.adapters.GetContactListAsync;
+import com.techmorphosis.grassroot.services.GetContactListAsync;
 import com.techmorphosis.grassroot.models.Contact;
 import com.techmorphosis.grassroot.utils.Constant;
 import com.techmorphosis.grassroot.utils.PermissionUtils;

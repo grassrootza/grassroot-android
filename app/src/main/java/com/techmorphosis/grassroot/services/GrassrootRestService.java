@@ -38,7 +38,7 @@ import retrofit2.http.Query;
  */
 public class GrassrootRestService {
 
-    private static final String GRASSROOT_SERVER_URL = Constant.stagingUrl;
+    private static final String GRASSROOT_SERVER_URL = Constant.restUrl;
     private RestApi mRestApi;
 
     // todo: consider switching to static (but then requires handling connection manager differently...)
@@ -199,7 +199,7 @@ public class GrassrootRestService {
                                          @Query("description") String description,
                                          @Query("closingTime") String closingTime,
                                          @Query("reminderMins") int minutes,
-                                         @Query("members") List<String> members, @Query("notifyGroup") boolean relayable);
+                                         @Query("members") Set<String> members, @Query("notifyGroup") boolean relayable);
 
         // create meeting
         @POST("meeting/create/{phoneNumber}/{code}/{parentUid}")

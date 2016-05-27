@@ -24,16 +24,6 @@ import com.techmorphosis.grassroot.enums.GravityEnum;
  */
 public class DialogUtils {
 
-//    @SuppressWarnings("ConstantConditions")
-//    public static float resolveFloat(Context context, int attr) {
-//        TypedArray a = context.obtainStyledAttributes(null, new int[]{attr});
-//        try {
-//            return a.getFloat(0, 0);
-//        } finally {
-//            a.recycle();
-//        }
-//    }
-
     /**
      * Hide Soft Keyboard from Dialogs with new Thread
      * @param context

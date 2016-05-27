@@ -32,7 +32,6 @@ import com.techmorphosis.grassroot.ui.activities.CreateGroupActivity;
 import com.techmorphosis.grassroot.ui.activities.GroupJoinActivity;
 import com.techmorphosis.grassroot.ui.activities.GroupTasksActivity;
 import com.techmorphosis.grassroot.ui.views.CustomItemAnimator;
-import com.techmorphosis.grassroot.ui.views.SwipeableRecyclerViewTouchListener;
 import com.techmorphosis.grassroot.utils.Constant;
 import com.techmorphosis.grassroot.utils.ErrorUtils;
 import com.techmorphosis.grassroot.utils.MenuUtils;
@@ -269,35 +268,6 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment {
         rcGroupList.setItemAnimator(new CustomItemAnimator());
         groupListRowAdapter = new GroupListAdapter(new ArrayList<Group>(), HomeGroupListFragment.this);
         rcGroupList.setAdapter(groupListRowAdapter);
-
-        SwipeableRecyclerViewTouchListener swipeDeleteTouchListener = new SwipeableRecyclerViewTouchListener(
-                getContext(),
-                rcGroupList,
-                R.id.task_card_view_root,
-                R.id.main_background_view,
-
-                new SwipeableRecyclerViewTouchListener.SwipeListener() {
-                    @Override
-                    public boolean canSwipe(int position) {
-                        // todo: think this should go in onDismissed, more likely ...
-                        try {
-                            menu1.close(true);
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
-                        Intent blank = new Intent(getActivity(), GroupTasksActivity.class);
-                        blank.putExtra("groupid", userGroups.get(position).getId());
-                        blank.putExtra("groupName", userGroups.get(position).getGroupName());
-                        startActivity(blank);
-                        return false;
-                    }
-
-                    @Override
-                    public void onDismissedBySwipe(RecyclerView recyclerView, int[] reverseSortedPositions) {
-                        //Toast.makeText(getActivity(),"onDismissedBySwipe",Toast.LENGTH_LONG).show();
-                    }
-                });
-        rcGroupList.addOnItemTouchListener(swipeDeleteTouchListener);
     }
 
     private void setUpSwipeRefresh() {

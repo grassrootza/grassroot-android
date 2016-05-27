@@ -29,6 +29,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 import java.util.TimeZone;
@@ -149,6 +150,16 @@ public class UtilClass {
         Set<String> uids = new HashSet<>();
         for (Member m : members)
             uids.add(m.getMemberUid());
+        return uids;
+    }
+
+    public static Set<String> convertMemberListToUids(List<Member> members) {
+        Set<String> uids = new HashSet<>();
+        if (members != null) {
+            for (Member m : members) {
+                uids.add(m.getMemberUid());
+            }
+        }
         return uids;
     }
 

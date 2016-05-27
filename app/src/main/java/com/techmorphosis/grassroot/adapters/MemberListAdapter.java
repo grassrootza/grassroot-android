@@ -18,9 +18,9 @@ import java.util.List;
 /**
  * Created by luke on 2016/05/06.
  */
-public class UserListAdapter extends RecyclerView.Adapter<UserListAdapter.ViewHolder> {
+public class MemberListAdapter extends RecyclerView.Adapter<MemberListAdapter.ViewHolder> {
 
-    private static final String TAG = UserListAdapter.class.getCanonicalName();
+    private static final String TAG = MemberListAdapter.class.getCanonicalName();
     private List<Member> members;
     private boolean showSelected;
     private LayoutInflater layoutInflater;
@@ -40,7 +40,7 @@ public class UserListAdapter extends RecyclerView.Adapter<UserListAdapter.ViewHo
         }
     }
 
-    public UserListAdapter(Context context) {
+    public MemberListAdapter(Context context) {
         this.members = new ArrayList<>();
         this.layoutInflater = LayoutInflater.from(context);
     }

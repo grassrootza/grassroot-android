@@ -1,4 +1,4 @@
-package com.techmorphosis.grassroot.adapters;
+package com.techmorphosis.grassroot.services;
 
 import android.content.ContentResolver;
 import android.content.Context;

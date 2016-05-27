@@ -1,19 +1,14 @@
 package com.techmorphosis.grassroot.ui.activities;
 
 import android.os.Bundle;
-import android.support.annotation.Nullable;
 import android.support.v7.widget.Toolbar;
 import android.view.View;
 import android.widget.ExpandableListView;
-import android.widget.ImageButton;
 import android.widget.LinearLayout;
-import android.widget.TextView;
 
 import com.techmorphosis.grassroot.R;
 import com.techmorphosis.grassroot.adapters.FAQAdapter;
-import com.techmorphosis.grassroot.models.FAQModel;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 

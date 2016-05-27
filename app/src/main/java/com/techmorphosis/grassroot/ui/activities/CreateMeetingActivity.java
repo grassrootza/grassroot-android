@@ -297,12 +297,7 @@ public class CreateMeetingActivity extends PortraitActivity {
         } else {
             ArrayList<Member> preSelectedMembers = (assignedMembers == null) ? new ArrayList<Member>() :
                     new ArrayList<>(assignedMembers);
-            Intent pickMember = MenuUtils.constructIntent(this, GroupMembersActivity.class, groupUid, "");
-            pickMember.putExtra(Constant.PARENT_TAG_FIELD, TAG);
-            pickMember.putExtra(Constant.SELECT_FIELD, true);
-            pickMember.putExtra(Constant.SHOW_ACTION_BUTTON_FLAG, false);
-            pickMember.putExtra(Constant.SHOW_HEADER_FLAG, false);
-            pickMember.putParcelableArrayListExtra(Constant.SELECTED_MEMBERS_FIELD, preSelectedMembers);
+            Intent pickMember = MenuUtils.memberSelectionIntent(this, groupUid, TAG, preSelectedMembers);
             startActivityForResult(pickMember, Constant.activitySelectGroupMembers);
         }
     }

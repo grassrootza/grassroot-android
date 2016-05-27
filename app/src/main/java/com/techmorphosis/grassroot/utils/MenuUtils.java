@@ -4,6 +4,11 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 
+import com.techmorphosis.grassroot.services.model.Member;
+import com.techmorphosis.grassroot.ui.activities.GroupMembersActivity;
+
+import java.util.ArrayList;
+
 /**
  * Created by luke on 2016/05/18.
  */
@@ -14,6 +19,17 @@ public final class MenuUtils {
         i.putExtra(Constant.GROUPUID_FIELD, groupUid);
         i.putExtra(Constant.GROUPNAME_FIELD, groupName);
         return i;
+    }
+
+    public static Intent memberSelectionIntent(Context callingContext, String groupUid, String TAG,
+                                               ArrayList<Member> preSelectedMembers) {
+        Intent pickMember = constructIntent(callingContext, GroupMembersActivity.class, groupUid, "");
+        pickMember.putExtra(Constant.PARENT_TAG_FIELD, TAG);
+        pickMember.putExtra(Constant.SELECT_FIELD, true);
+        pickMember.putExtra(Constant.SHOW_ACTION_BUTTON_FLAG, false);
+        pickMember.putExtra(Constant.SHOW_HEADER_FLAG, false);
+        pickMember.putParcelableArrayListExtra(Constant.SELECTED_MEMBERS_FIELD, preSelectedMembers);
+        return pickMember;
     }
 
 }

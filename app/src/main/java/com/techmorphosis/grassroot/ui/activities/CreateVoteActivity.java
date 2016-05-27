@@ -22,19 +22,22 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.techmorphosis.grassroot.R;
-import com.techmorphosis.grassroot.models.VoteMemberModel;
 import com.techmorphosis.grassroot.services.GrassrootRestService;
 import com.techmorphosis.grassroot.services.model.GenericResponse;
+import com.techmorphosis.grassroot.services.model.Member;
 import com.techmorphosis.grassroot.slideDateTimePicker.SlideDateTimeListener;
 import com.techmorphosis.grassroot.slideDateTimePicker.SlideDateTimePicker;
 import com.techmorphosis.grassroot.utils.Constant;
 import com.techmorphosis.grassroot.utils.ErrorUtils;
+import com.techmorphosis.grassroot.utils.MenuUtils;
 import com.techmorphosis.grassroot.utils.PreferenceUtils;
+import com.techmorphosis.grassroot.utils.UtilClass;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
-import java.util.List;
+import java.util.Set;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -96,12 +99,13 @@ public class CreateVoteActivity extends PortraitActivity {
 
     private Date selectedDate;
     private boolean dateSelected = false;
-    private static SimpleDateFormat displayFormat = new SimpleDateFormat("dd-MM-yyyy HH:mm");
+    private static final SimpleDateFormat displayFormat = new SimpleDateFormat("dd-MM-yyyy HH:mm");
     private SlideDateTimeListener listener;
 
-    private List<VoteMemberModel> voteMemberArrayList;
+    private ArrayList<Member> voteMemberArrayList;
+
     private boolean notifyWholeGroup;
-    private int notificationReminderSetting; // todo: enum! I mean, string as int, which this was ...
+    private int notificationReminderSetting; // todo: remove this / restructure
 
     private GrassrootRestService grassrootRestService;
     private String groupId;
@@ -194,13 +198,6 @@ public class CreateVoteActivity extends PortraitActivity {
         txtDescCount.setText(s.length() + "/160"); // todo: make the denominator a constant ...
     }
 
-    @OnClick(R.id.rl_notify_body)
-    public void onNotifyClicked() {
-        Intent notifyactivity = new Intent(CreateVoteActivity.this, VoteNotifyMembersActivity.class);
-        notifyactivity.putParcelableArrayListExtra(Constant.VotedmemberList, (ArrayList) voteMemberArrayList);
-        startActivityForResult(notifyactivity, 1);
-    }
-
     @OnCheckedChanged(R.id.sw_one_day)
     public void oneDaySelected(boolean isChecked) {
         if (isChecked) {
@@ -262,8 +259,18 @@ public class CreateVoteActivity extends PortraitActivity {
         final String description = et_description_cv.getText().toString(); // todo: make sure can handle empty descs
         final String closingTime = Constant.isoDateTimeSDF.format(selectedDate);
 
+        final Set<String> memberUids;
+
+        if (notifyWholeGroup || voteMemberArrayList == null || voteMemberArrayList.isEmpty()) {
+            memberUids = Collections.emptySet();
+        } else {
+            memberUids = UtilClass.convertMemberListToUids(voteMemberArrayList);
+        }
+        Log.e(TAG, "calling vote! with these UIDs: " + memberUids.toString());
+
         grassrootRestService.getApi()
-                .createVote(phoneNumber, code, groupId, title, description, closingTime, notificationReminderSetting, null, false)
+                .createVote(phoneNumber, code, groupId, title, description, closingTime,
+                        notificationReminderSetting, memberUids, false)
                 .enqueue(new Callback<GenericResponse>() {
                     @Override
                     public void onResponse(Call<GenericResponse> call, Response<GenericResponse> response) {
@@ -284,18 +291,20 @@ public class CreateVoteActivity extends PortraitActivity {
         sendBroadcast(new Intent().setAction(getString(R.string.bs_BR_name)));
     }
 
+    @OnClick(R.id.rl_notify_body)
+    public void onNotifyClicked() {
+        Intent notifyactivity = MenuUtils.memberSelectionIntent(this, groupId, TAG, voteMemberArrayList);
+        startActivityForResult(notifyactivity, Constant.activitySelectGroupMembers);
+    }
+
     @OnCheckedChanged(R.id.sw_notifyall)
     public void toggleNotifyAllMembers(boolean isChecked) {
         if (isChecked) {
             notifyWholeGroup = true;
             rlNotifyBody.setVisibility(View.GONE);
         } else {
-            notifyWholeGroup = false;
-            voteMemberArrayList.clear(); // wtf, vs two lines later
-            Intent notifyactivity = new Intent(CreateVoteActivity.this, VoteNotifyMembersActivity.class);
-            notifyactivity.putParcelableArrayListExtra(Constant.VotedmemberList, (ArrayList) voteMemberArrayList);
-            notifyactivity.putExtra(Constant.GROUPUID_FIELD, groupId);
-            startActivityForResult(notifyactivity, Constant.activitySelectGroupMembers);
+            Intent pickMember = MenuUtils.memberSelectionIntent(this, groupId, TAG, voteMemberArrayList);
+            startActivityForResult(pickMember, Constant.activitySelectGroupMembers);
         }
     }
 
@@ -305,26 +314,24 @@ public class CreateVoteActivity extends PortraitActivity {
 
         if (resultCode == RESULT_OK && requestCode == Constant.activitySelectGroupMembers) {
 
-            voteMemberArrayList = data.getParcelableArrayListExtra(Constant.VotedmemberList);
+            voteMemberArrayList = data.getParcelableArrayListExtra(Constant.SELECTED_MEMBERS_FIELD);
             int selectedMemberCount = calculateMemberNumber();
 
             if (selectedMemberCount > 0) {
                 rlNotifyBody.setVisibility(View.VISIBLE);
                 memberCount.setText(String.valueOf(selectedMemberCount));
                 suffix.setText(selectedMemberCount > 1 ? getString(R.string.cv_notify_member_suffix_two) : getString(R.string.cv_notify_member_suffix_one));
-                swNotifyall.setChecked(selectedMemberCount == voteMemberArrayList.size());
+                swNotifyall.setChecked(false);
+                notifyWholeGroup = false;
+            } else {
+                notifyWholeGroup = true;
+                swNotifyall.setChecked(true);
             }
         }
     }
 
     public int calculateMemberNumber() {
-        int count = 0;
-        for (VoteMemberModel m : voteMemberArrayList) {
-            if (m.isSelected) {
-                count++;
-            }
-        }
-        return count;
+        return voteMemberArrayList == null ? -1 : voteMemberArrayList.size();
     }
 
     @OnClick(R.id.cv_datepicker)
@@ -369,7 +376,6 @@ public class CreateVoteActivity extends PortraitActivity {
         mAnimator.addListener(new Animator.AnimatorListener() {
             @Override
             public void onAnimationEnd(Animator animator) {
-                //Height=0, but it set visibility to GONE
                 rlAlertsBody.setVisibility(View.GONE);
             }
 
@@ -391,7 +397,6 @@ public class CreateVoteActivity extends PortraitActivity {
 
 
     private ValueAnimator slideAnimator(int start, int end) {
-
         ValueAnimator animator = ValueAnimator.ofInt(start, end);
         animator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
             @Override

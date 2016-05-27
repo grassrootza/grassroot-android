@@ -12,7 +12,7 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.techmorphosis.grassroot.R;
-import com.techmorphosis.grassroot.adapters.UserListAdapter;
+import com.techmorphosis.grassroot.adapters.MemberListAdapter;
 import com.techmorphosis.grassroot.interfaces.ClickListener;
 import com.techmorphosis.grassroot.services.GrassrootRestService;
 import com.techmorphosis.grassroot.services.model.Member;
@@ -48,7 +48,7 @@ public class MemberListFragment extends Fragment {
     private MemberListListener mListener;
     private MemberClickListener clickListener;
     private GrassrootRestService grassrootRestService;
-    private UserListAdapter userListAdapter;
+    private MemberListAdapter userListAdapter;
 
     @BindView(R.id.mlist_frag_recycler_view)
     RecyclerView memberListRecyclerView;
@@ -157,7 +157,7 @@ public class MemberListFragment extends Fragment {
 
     private void init() {
         if (userListAdapter == null) {
-            userListAdapter = new UserListAdapter(this.getContext());
+            userListAdapter = new MemberListAdapter(this.getContext());
         }
         if (groupUid != null) {
             this.grassrootRestService = new GrassrootRestService(this.getContext());
