@@ -260,10 +260,16 @@
     <style name="ButtonFlat">
         <item name="android:layout_width">wrap_content</item>
         <item name="android:layout_height">wrap_content</item>
-        <item name="android:minWidth">88dp</item>
-        <item name="android:minHeight">36dp</item>
-        <item name="android:textSize">@dimen/txt_medium</item>
+
+        <item name="android:textSize">@dimen/md_button_textsize</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textAllCaps">true</item>
         <item name="android:background">@drawable/button_flat_white</item>
+
+        <item name="android:minHeight">36dp</item>
+        <item name="android:minWidth">@dimen/md_button_min_width</item>
+        <item name="android:paddingLeft">@dimen/md_button_textpadding_horizontal</item>
+        <item name="android:paddingRight">@dimen/md_button_textpadding_horizontal</item>
     </style>
 
     <!-- ANIMATIONS -->

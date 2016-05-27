@@ -12,8 +12,6 @@ import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
-import android.view.ViewGroup;
-import android.view.ViewTreeObserver;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
@@ -461,6 +459,14 @@ public class CreateMeetingActivity extends PortraitActivity {
 
             }
         });
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        if (assignedMembers == null || assignedMembers.isEmpty()) {
+            swNotifyAll.setChecked(true);
+        }
     }
 
 }

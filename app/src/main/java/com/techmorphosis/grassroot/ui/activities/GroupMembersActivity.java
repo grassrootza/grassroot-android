@@ -155,7 +155,6 @@ public class GroupMembersActivity extends PortraitActivity implements MemberList
         memberListFragment.unselectAllMembers();
     }
 
-
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // todo: check permissions & decide which to include
@@ -203,13 +202,18 @@ public class GroupMembersActivity extends PortraitActivity implements MemberList
 
     @OnClick(R.id.lm_btn_done)
     public void returnSelectedMembers() {
+        assembleReturnIntent();
+        finish();
+    }
+
+    private Intent assembleReturnIntent() {
         Intent i = new Intent();
         membersSelected = new ArrayList<>(memberListFragment.getSelectedMembers());
         i.putParcelableArrayListExtra(Constant.SELECTED_MEMBERS_FIELD, membersSelected);
         setResult(RESULT_OK,i);
-        Log.e(TAG, "Returning members!");
-        finish();
+        return i;
     }
+
 
     private Intent getParentActivityIntentImpl() {
         Intent i = null;

@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-    android:orientation="vertical">
-
-    <TextView android:id="@+id/tv_cg_title" android:layout_width="match_parent" android:layout_height="wrap_content" android:padding="16dp" android:text="@string/cg_title_contact" android:textColor="@color/cg_title" android:textSize="@dimen/txt_small" android:visibility="visible"/>
-</LinearLayout>

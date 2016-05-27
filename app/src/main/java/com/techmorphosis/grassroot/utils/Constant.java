@@ -46,7 +46,7 @@ public class Constant {
     public static final SimpleDateFormat isoDateTimeSDF = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
 
     /**
-     * RESULT CODS FOR ACTIVITIES
+     * RESULT CODES FOR ACTIVITIES
      * todo : make an enum with to/from int
      */
     public static final int activityContactSelection = 1;

@@ -63,9 +63,6 @@ public class CreateGroupActivity extends PortraitActivity implements MemberListF
     @BindView(R.id.icon_add_from_contacts)
     FloatingActionButton addMemberFromContacts;
 
-    @Nullable
-    @BindView(R.id.rl_one)
-    RelativeLayout rlOne;
     @BindView(R.id.tv_counter)
     TextView tvCounter;
     @BindView(R.id.cg_bt_save)

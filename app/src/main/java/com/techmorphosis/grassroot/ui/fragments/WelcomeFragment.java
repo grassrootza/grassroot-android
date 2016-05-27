@@ -15,7 +15,6 @@ import android.widget.Button;
 import android.widget.TextView;
 
 import com.techmorphosis.grassroot.R;
-import com.techmorphosis.grassroot.adapters.WelcomePagerAdapter;
 import com.techmorphosis.grassroot.ui.activities.CreateGroupActivity;
 import com.techmorphosis.grassroot.ui.activities.GroupJoinActivity;
 import com.viewpagerindicator.PageIndicator;
@@ -29,7 +28,6 @@ public class WelcomeFragment extends android.support.v4.app.Fragment {
 
     @BindView(R.id.pager)
     ViewPager pager;
-    WelcomePagerAdapter adapter;
     @BindView(R.id.toolbar)
     Toolbar toolbar;
     @BindView(R.id.txt_welcometitle)
@@ -58,10 +56,6 @@ public class WelcomeFragment extends android.support.v4.app.Fragment {
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
-
-        adapter = new WelcomePagerAdapter(getChildFragmentManager());
-        pager.setAdapter(adapter);
-        mIndicator.setViewPager(pager);
     }
 
     @Override
