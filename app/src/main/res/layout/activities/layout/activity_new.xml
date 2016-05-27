@@ -4,8 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".ui.activities.NewTaskMenuActivity"
-    android:background="@color/primaryColor"
-    >
+    android:background="@color/primaryColor">
 
     <ImageView
         android:id="@+id/iv_back"

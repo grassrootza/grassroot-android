@@ -5,6 +5,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.view.ViewPager;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
@@ -26,20 +27,16 @@ import butterknife.OnClick;
 
 public class WelcomeFragment extends android.support.v4.app.Fragment {
 
-    @BindView(R.id.pager)
-    ViewPager pager;
     @BindView(R.id.toolbar)
     Toolbar toolbar;
-    @BindView(R.id.txt_welcometitle)
-    TextView toolbarText;
-    @BindView(R.id.indicator)
-    PageIndicator mIndicator;
+    //@BindView(R.id.txt_welcometitle)
+    //TextView toolbarText;
     @BindView(R.id.bt_joingroup)
     Button bt_joingroup;
     @BindView(R.id.bt_startgroup)
     Button bt_startgroup;
-    private FragmentCallbacks mCallbacks;
 
+    private FragmentCallbacks mCallbacks;
 
     @Override
     public void onAttach(Context context) {
@@ -54,11 +51,6 @@ public class WelcomeFragment extends android.support.v4.app.Fragment {
     }
 
     @Override
-    public void onActivityCreated(Bundle savedInstanceState) {
-        super.onActivityCreated(savedInstanceState);
-    }
-
-    @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.welcome, container, false);
         ButterKnife.bind(this, view);
@@ -67,8 +59,8 @@ public class WelcomeFragment extends android.support.v4.app.Fragment {
     }
 
     private void setUpToolbar() {
-        toolbarText.setText("Welcome");
-        toolbar.setNavigationIcon(getResources().getDrawable(R.drawable.btn_navigation));
+        // toolbarText.setText(getResources().getString(R.string.txt_welcome_short));
+        toolbar.setNavigationIcon(ContextCompat.getDrawable(getActivity(), R.drawable.btn_navigation));
         toolbar.setNavigationOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -77,23 +69,17 @@ public class WelcomeFragment extends android.support.v4.app.Fragment {
         });
     }
 
-
     @OnClick(R.id.bt_startgroup)
     public void startgroup() {
-
-        Intent startgroup = new Intent(getActivity(), CreateGroupActivity.class);
-        startActivity(startgroup);
-
+        startActivity(new Intent(getActivity(), CreateGroupActivity.class));
     }
 
     @OnClick(R.id.bt_joingroup)
     public void joingroup() {
-        Intent joingroup = new Intent(getActivity(), GroupJoinActivity.class);
-        startActivity(joingroup);
+        startActivity(new Intent(getActivity(), GroupJoinActivity.class));
     }
 
-
-    public static interface FragmentCallbacks {
+    public interface FragmentCallbacks {
         void menuClick();
     }
 
@@ -103,6 +89,4 @@ public class WelcomeFragment extends android.support.v4.app.Fragment {
         mCallbacks = null;
         Log.e("onDetach", "Detached");
     }
-
-
 }

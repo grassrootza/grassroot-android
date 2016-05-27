@@ -30,6 +30,7 @@ import com.techmorphosis.grassroot.ui.fragments.HomeScreenViewFragment;
 import com.techmorphosis.grassroot.ui.fragments.LoginScreenFragment;
 import com.techmorphosis.grassroot.ui.fragments.OtpScreenFragment;
 import com.techmorphosis.grassroot.ui.fragments.RegisterScreenFragment;
+import com.techmorphosis.grassroot.utils.Constant;
 import com.techmorphosis.grassroot.utils.ErrorUtils;
 import com.techmorphosis.grassroot.utils.LocationUtils;
 import com.techmorphosis.grassroot.utils.NetworkUtils;
@@ -58,7 +59,6 @@ public class StartActivity extends PortraitActivity implements HomeScreenViewFra
         OtpScreenFragment.OnOtpScreenFragmentListener {
     //will fix once we start with mvp implementation
 
-    public static int SCREEN_TIMEOUT = 2000;
     private Handler defaultHandler;
     private String TAG = StartActivity.class.getSimpleName();
 
@@ -103,29 +103,30 @@ public class StartActivity extends PortraitActivity implements HomeScreenViewFra
     @Override
     protected void onCreate(Bundle bundle) {
         super.onCreate(bundle);
-        Log.d(TAG, "inside StartActivity ... calling onCreate()");
-        Fabric.with(this, new Crashlytics());
         Thread.setDefaultUncaughtExceptionHandler(new TopExceptionHandler(this));
 
         if (!PreferenceUtils.getisLoggedIn(this)) {
             setContentView(R.layout.start);
-            progressDialog = new ProgressDialog(this);
-            progressDialog.setMessage("Please Wait..");
             ButterKnife.bind(this);
-            if (NetworkUtils.isNetworkAvailable(StartActivity.this)) {
-                // todo: put meaning inside here or delete it, unless required for some other reason
-            } else {
+
+            progressDialog = new ProgressDialog(this);
+            progressDialog.setMessage(getResources().getString(R.string.txt_pls_wait));
+
+            if (!NetworkUtils.isNetworkAvailable(StartActivity.this)) {
                 PreferenceUtils.setisLoggedIn(this, false);
             }
-            init();
+
+            defaultHandler = new Handler();
+            grassrootRestService = new GrassrootRestService(this);
             displayMetrics = getApplicationContext().getResources().getDisplayMetrics();
             height = displayMetrics.heightPixels;
             showHomeScreen();
         } else {
             setContentView(R.layout.splashscreen);
             ButterKnife.bind(this);
-            iv_splashlogo.setVisibility(View.VISIBLE);
-            // todo : move these to somewhere appropriate, and/or put in a separate thread
+            if (iv_splashlogo != null) {
+                iv_splashlogo.setVisibility(View.VISIBLE);
+            }
             this.locationUtils = new LocationUtils(this);
             locationUtils.connect();
             new Handler().postDelayed(new Runnable() {
@@ -136,28 +137,22 @@ public class StartActivity extends PortraitActivity implements HomeScreenViewFra
                     startActivity(intent);
                     finish();
                 }
-            }, 300L);
+            }, Constant.shortDelay);
         }
-    }
-
-
-    private void init() {
-        defaultHandler = new Handler();
-        grassrootRestService = new GrassrootRestService(this);
     }
 
     private void showHomeScreen() {
         defaultHandler.postDelayed(
                 new Runnable() {
                     public void run() {
-                        rl_homelogo.animate().translationY((float) (-height / 6)).setDuration(500);
+                        rl_homelogo.animate().translationY((float) (-height / 6)).setDuration(Constant.mediumDelay);
                         defaultHandler.postDelayed(
                                 new Runnable() {
                                     public void run() {setUpHomeScreen();
                                     }
-                                }, 1000L);
+                                }, Constant.mediumDelay);
                     }
-                }, 500L);
+                }, Constant.mediumDelay);
     }
 
     private void setUpHomeScreen() {
@@ -173,19 +168,20 @@ public class StartActivity extends PortraitActivity implements HomeScreenViewFra
 
     private void setUpRegisterScreen() {
         data = "";
-        otpscreen = false;
         registerscreen = true;
+
+        otpscreen = false;
         loginscreen = false;
         ivBack.setVisibility(View.VISIBLE);
         switchFragments(RegisterScreenFragment.newInstance());
-
     }
 
     private void setUpLoginScreen() {
         data = "";
+        loginscreen = true;
+
         otpscreen = false;
         registerscreen = false;
-        loginscreen = true;
         ivBack.setVisibility(View.VISIBLE);
         switchFragments(new LoginScreenFragment());
     }
@@ -322,7 +318,13 @@ public class StartActivity extends PortraitActivity implements HomeScreenViewFra
                                 setUpOtpScreen();
                             }
                         } else {
-                            showSnackBar(getApplicationContext(), "", getResources().getString(R.string.User_not_registered), "", 0, Snackbar.LENGTH_SHORT);
+                            ErrorUtils.showSnackBar(rlStart, getResources().getString(R.string.User_not_registered),
+                                    Snackbar.LENGTH_INDEFINITE, "Register", new View.OnClickListener() {
+                                        @Override
+                                        public void onClick(View view) {
+                                            setUpRegisterScreen();
+                                        }
+                                    });
                         }
                     }
 

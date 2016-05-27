@@ -9,7 +9,9 @@ import java.text.SimpleDateFormat;
  */
 public class Constant {
 
-    // todo: implement good practice and use getters
+    public static long shortDelay = 300L;
+    public static long mediumDelay = 500L;
+    public static long longDelay = 1000L;
 
     public static final String stagingUrl = "http://staging.grassroot.org.za/api/";
     public static final String localUrl = "http://10.0.2.2:8080/api/";
@@ -17,8 +19,6 @@ public class Constant {
     public static final String restUrl = BuildConfig.BUILD_TYPE.equals("release") ? stagingUrl : localUrl;
 
     public static final String filteredList = "filteredList";
-    public static final  String VotedmemberList="VotedmemberList"; // todo: as with others, probably not needed
-
     public static final String contactsAdded = "contactsAdded";
     public static final String contactsRemoved = "contactsRemoved";
     public static final String doNotDisplayContacts = "doNotDisplayContacts";

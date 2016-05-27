@@ -16,6 +16,7 @@
     <string name="register"><u>Forgot password?</u></string>
 
     <!-- Welcome, register, OTP screens -->
+    <string name="txt_pls_wait">Please wait...</string>
     <string name="bt_log">LOGIN</string>
     <string name="bt_register">REGISTER</string>
     <string name="bt_submit_otp">SUBMIT</string>
@@ -31,7 +32,7 @@
     <string name="Either_field_empty">Please enter all fields to proceed.</string>
     <string name="Cellphone_number_invalid">Please enter a valid cellphone number</string>
     <string name="Cellphone_number_empty">Please enter cellphone number to proceed.</string>
-    <string name="User_not_registered">User not registered. Please register to proceed.</string>
+    <string name="User_not_registered">Sorry, that number isn\'t registered yet.</string>
     <string name="OTP_empty">Please enter OTP to proceed</string>
     <string name="OTP_invalid">Please enter the correct OTP to proceed.</string>
     <string name="USER_DOES_NOT_EXIST">User not registered.Please register to proceed.</string>
@@ -61,6 +62,9 @@
 
     <!--welcome content-->
     <string name="txt_welcome">Welcome to <b>Grassroot</b></string>
+    <string name="txt_welcome_short">Get started</string>
+    <string name="txt_welcome_para">To get started, create your own group, or ask to join one. You can then call meetings, take votes, record decisions, and more...</string>
+
     <string name="txt_getstart">To get started</string>
     <string name="new_joingroup">Join Group</string>
     <string name="new_startgroup">Create Group</string>

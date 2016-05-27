@@ -102,8 +102,6 @@ public class HomeScreenActivity extends PortraitActivity implements NavigationDr
                 break;
             case 3:
                 //Share
-
-                //implicit Intent
                 Intent shareapp = new Intent("android.intent.action.SEND");
                 shareapp.setType("text/plain");
                 shareapp.setAction("android.intent.action.SEND");
@@ -112,7 +110,6 @@ public class HomeScreenActivity extends PortraitActivity implements NavigationDr
                 break;
             case 4:
                 //Rate App
-                //implicit Intent
                 try {
                     Intent rateapp = new Intent("android.intent.action.VIEW", Uri.parse("market://details?id=com.techmorphosis.grassroot"));
                     startActivity(rateapp);
@@ -120,12 +117,9 @@ public class HomeScreenActivity extends PortraitActivity implements NavigationDr
                     Intent rateapp2 = new Intent("android.intent.action.VIEW", Uri.parse("https://play.google.com/store/apps/details?id=com.techmorphosis.grassroot"));
                     startActivity(rateapp2);
                 }
-
                 break;
-
             case 5:
                 logout();
-
         }
 
         if (fragmentToSwitch != null) {
@@ -159,9 +153,7 @@ public class HomeScreenActivity extends PortraitActivity implements NavigationDr
 
     @Override
     public void menuClick() { // Getting data from fragment
-
         if (drawer != null) drawer.openDrawer(GravityCompat.START);
-
     }
 
 
