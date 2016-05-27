@@ -22,9 +22,6 @@ public class NewTaskMenuActivity extends AppCompatActivity {
 
     private static final String TAG = NewTaskMenuActivity.class.getCanonicalName();
 
-    private String groupUid;
-    private String groupName;
-
     @BindView(R.id.iv_back)
     ImageView ivBack;
     @BindView(R.id.bt_vote)
@@ -34,6 +31,9 @@ public class NewTaskMenuActivity extends AppCompatActivity {
     @BindView(R.id.bt_todo)
     Button bt_todo;
 
+    private String groupUid;
+    private String groupName;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
@@ -41,7 +41,9 @@ public class NewTaskMenuActivity extends AppCompatActivity {
         setContentView(R.layout.activity_new);
         ButterKnife.bind(this);
         Bundle b = getIntent().getExtras();
-        if (b == null) { throw new UnsupportedOperationException("Error! Null arguments passed to modal"); }
+        if (b == null) {
+            throw new UnsupportedOperationException("Error! Null arguments passed to modal");
+        }
 
         Log.d(TAG, "inside newActivities, passed bundle = " + b.toString());
 
@@ -50,22 +52,22 @@ public class NewTaskMenuActivity extends AppCompatActivity {
     }
 
     @Override
-    public void onResume(){
+    public void onResume() {
         super.onResume();
-        registeringReceiver();
+
 
     }
 
     @OnClick(R.id.iv_back)
     public void onBackClick() {
-      onBackPressed();
+        onBackPressed();
     }
 
     @OnClick(R.id.bt_todo)
     public void onTodoButtonClick() {
-                Intent todo=new Intent(this,NotBuiltActivity.class);
-                todo.putExtra("title","ToDO");
-                startActivity(todo);
+        Intent todo = new Intent(this, NotBuiltActivity.class);
+        todo.putExtra("title", "ToDO");
+        startActivity(todo);
     }
 
     @OnClick(R.id.bt_meeting)
@@ -77,7 +79,7 @@ public class NewTaskMenuActivity extends AppCompatActivity {
     @OnClick(R.id.bt_vote)
     public void onVoteButtonClick() {
         Intent createVote = MenuUtils.constructIntent(this, CreateVoteActivity.class, groupUid, groupName);
-        createVote.putExtra("title","Vote");
+        createVote.putExtra("title", "Vote");
         startActivity(createVote);
     }
 
@@ -89,41 +91,20 @@ public class NewTaskMenuActivity extends AppCompatActivity {
         addMembers.putExtra(Constant.GROUPNAME_FIELD, groupName);
         startActivity(addMembers);
     }
-    public void registeringReceiver() {
-        IntentFilter intentFilter = new IntentFilter();
-        intentFilter.addAction(getString(R.string.bs_BR_name));
-        registerReceiver(broadcastReceiver, intentFilter);
-    }
 
-    BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            NewTaskMenuActivity.this.finish();
-        }
-    };
 
     @Override
-    protected void onRestart(){
+    protected void onRestart() {
         super.onRestart();
-        registeringReceiver();
-
     }
 
 
     @Override
     protected void onPause() {
         super.onPause();
-       // unregisterReceiver(broadcastReceiver);
-
     }
 
-
-
-
-
     @Override
-
-
     public void onBackPressed() {
         super.onBackPressed();
         overridePendingTransition(R.anim.push_down_in, R.anim.push_down_out);

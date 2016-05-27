@@ -19,11 +19,8 @@ public class NotificationDialog extends android.support.v4.app.DialogFragment
 {
 
     AlertDialogListener mAlertDialogListener;
-    private View rootView;
-    UtilClass utilClass;
 
-    public NotificationDialog()
-    {
+    public NotificationDialog() {
     }
 
     public static NotificationDialog newInstance(String s, String s1, String s2, String s3, boolean flag)
@@ -41,7 +38,7 @@ public class NotificationDialog extends android.support.v4.app.DialogFragment
 
     public Dialog onCreateDialog(Bundle bundle)
     {
-        utilClass = new UtilClass();
+
       String  bundle1 = getArguments().getString("title");
         String s = getArguments().getString("message");
         Object obj = getArguments().getString("left_text");

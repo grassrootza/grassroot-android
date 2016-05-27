@@ -314,5 +314,7 @@
 
     <!--Blank screen--><!--bs-->
     <string name="bs_BR_name">Blank Screen</string>
+    <string name="wait_message">Please wait...</string>
+    <string name="profile_updated">Profile Updated</string>
 
 </resources>

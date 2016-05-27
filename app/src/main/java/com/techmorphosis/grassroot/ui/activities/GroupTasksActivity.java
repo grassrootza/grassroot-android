@@ -369,7 +369,7 @@ public class GroupTasksActivity extends PortraitActivity implements TaskListList
                 Log.e(TAG,"title is " + model.getTitle());
                 Log.e(TAG,"type is " + model.getType());
                 if (model.getType().equalsIgnoreCase("VOTE")) {
-                    Intent vote_view = new Intent(GroupTasksActivity.this, ViewVote.class);
+                    Intent vote_view = new Intent(GroupTasksActivity.this, ViewVoteActivity.class);
                     vote_view.putExtra("id", model.getId());
                     startActivity(vote_view);
                 }

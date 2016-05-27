@@ -79,7 +79,7 @@ public class EditVoteActivity extends PortraitActivity {
             title = getIntent().getExtras().getString("title");
             description = getIntent().getExtras().getString("description");
             deadline = getIntent().getExtras().getString("deadline");
-            voteId = getIntent().getExtras().getString("voteId");
+            voteId = getIntent().getExtras().getString("voteid");
         }
         et_description.setText(description);
         closingTime = deadline;
@@ -215,7 +215,6 @@ public class EditVoteActivity extends PortraitActivity {
                     setResult(1, close);
                     finish();
                 }
-
             }
 
             @Override
@@ -223,7 +222,6 @@ public class EditVoteActivity extends PortraitActivity {
                 if (t instanceof NoConnectivityException) {
                     showSnackBar(getString(R.string.No_network), Snackbar.LENGTH_INDEFINITE, getString(R.string.Retry));
                 }
-
             }
         });
 

@@ -123,8 +123,8 @@ public class CreateVoteActivity extends PortraitActivity {
     private void init() {
         if (getIntent().getExtras()!= null) {
             groupId = getIntent().getStringExtra(Constant.GROUPUID_FIELD);
-        } else {
-            throw new UnsupportedOperationException("Cannot create vote without group ID");
+     //   } else {
+          //  throw new UnsupportedOperationException("Cannot create vote without group ID");
         }
         grassrootRestService = new GrassrootRestService(this);
         voteMemberArrayList = new ArrayList<>();
@@ -276,7 +276,7 @@ public class CreateVoteActivity extends PortraitActivity {
                     public void onResponse(Call<GenericResponse> call, Response<GenericResponse> response) {
                         Log.d(TAG, response.body().getMessage());
                         finish();
-                        exitActivity(); // todo : show a snackbar or something
+                         // todo : show a snackbar or something
                     }
 
                     @Override
@@ -287,9 +287,6 @@ public class CreateVoteActivity extends PortraitActivity {
 
     }
 
-    private void exitActivity() {
-        sendBroadcast(new Intent().setAction(getString(R.string.bs_BR_name)));
-    }
 
     @OnClick(R.id.rl_notify_body)
     public void onNotifyClicked() {

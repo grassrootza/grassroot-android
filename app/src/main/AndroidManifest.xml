@@ -18,6 +18,8 @@
     <!-- todo : narrow down which of these are truly needed -->
     <uses-permission android:name="android.permission.READ_SMS" />
     <uses-permission android:name="android.permission.RECEIVE_SMS" />
+    <uses-permission android:name="com.google.android.c2dm.permission.RECEIVE" />
+
 
 
     <permission android:name="com.techmorphosis.grassroot.permission.C2D_MESSAGE"
@@ -37,7 +39,8 @@
         <!-- Core activities -->
 
         <activity
-            android:name=".ui.activities.StartActivity">
+            android:name=".ui.activities.StartActivity"
+            android:launchMode="singleTop">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -56,7 +59,8 @@
             android:parentActivityName=".ui.activities.HomeScreenActivity"/>
 
         <activity
-            android:name=".ui.activities.NewTaskMenuActivity" />
+            android:name=".ui.activities.NewTaskMenuActivity"
+            android:noHistory="true"/>
 
         <!-- Group management activities -->
         <activity
@@ -109,10 +113,13 @@
 
         <!-- Vote related activities -->
 
-        <activity android:name=".ui.activities.ViewVote"
+        <activity android:name=".ui.activities.ViewVoteActivity"
             android:exported="true"
-            android:parentActivityName=".ui.activities.HomeScreenActivity"
-            android:launchMode="singleInstance"/>
+            android:launchMode="singleInstance">
+        <intent-filter>
+            <category android:name="android.intent.category.LAUNCHER" />
+        </intent-filter>
+            </activity>
 
         <activity
             android:name=".ui.activities.EditVoteActivity"

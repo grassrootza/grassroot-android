@@ -31,13 +31,14 @@ import com.techmorphosis.grassroot.utils.PreferenceUtils;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import butterknife.OnClick;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class ViewVote extends PortraitActivity {
+public class ViewVoteActivity extends PortraitActivity {
 
-    private static final String TAG = "ViewVote";
+    private static final String TAG = "ViewVoteActivity";
     @BindView(R.id.vv_toolbar)
     Toolbar vvToolbar;
     @BindView(R.id.txt_toolbar)
@@ -90,9 +91,9 @@ public class ViewVote extends PortraitActivity {
     @BindView(R.id.vv_root)
     RelativeLayout vvRoot;
     private Snackbar snackbar;
-    @BindView(R.id.Thumpsdown)
+    @BindView(R.id.thumbs_down)
     ImageView thumbsDown;
-    @BindView(R.id.Thumpsup)
+    @BindView(R.id.thumbs_up)
     ImageView thumbsUp;
     @BindView(R.id.error_layout)
     View errorLayout;
@@ -118,7 +119,6 @@ public class ViewVote extends PortraitActivity {
     TextView txtNumberNoRSVP;
     @BindView(R.id.count_numberNoRSVP)
     TextView countNumberNoRSVP;
-
     private String voteid;
     private String title;
     private String description;
@@ -139,7 +139,6 @@ public class ViewVote extends PortraitActivity {
         if (getIntent() != null) {
             voteid = getIntent().getExtras().getString("id");
         }
-
         setUpToolbar();
         init();
 
@@ -171,19 +170,19 @@ public class ViewVote extends PortraitActivity {
     }
 
     private void viewVote() {
-        preExecute1();
-        doInBackground1();
+        showProgress();
+        getVote();
     }
 
 
-    private void preExecute1() {
+    private void showProgress() {
         rlVvMainLayout.setVisibility(View.GONE);
         progressBarCircularIndeterminate.setVisibility(View.VISIBLE);
         txtPrg.setVisibility(View.VISIBLE);
 
     }
 
-    private void doInBackground1() {
+    private void getVote() {
         grassrootRestService.getApi().viewVote(phoneNumber, code, voteid).enqueue(new Callback<EventResponse>() {
             @Override
             public void onResponse(Call<EventResponse> call, Response<EventResponse> response) {
@@ -191,7 +190,6 @@ public class ViewVote extends PortraitActivity {
                     Log.d(TAG, response.body().toString());
                     eventModel = response.body().getEventModel();
                     setView(eventModel);
-
                 }
 
             }
@@ -199,7 +197,7 @@ public class ViewVote extends PortraitActivity {
             @Override
             public void onFailure(Call<EventResponse> call, Throwable t) {
                 progressBarCircularIndeterminate.setVisibility(View.GONE);
-                ErrorUtils.handleNetworkError(ViewVote.this, errorLayout, t);
+                ErrorUtils.handleNetworkError(ViewVoteActivity.this, errorLayout, t);
             }
         });
 
@@ -237,16 +235,12 @@ public class ViewVote extends PortraitActivity {
         votemeeting(model);
         if (model.isCanEdit()) {
             bt_editVote.setEnabled(true);
-            bt_editVote.setOnClickListener(editVote_button());
         }
         progressBarCircularIndeterminate.setVisibility(View.GONE);
         txtPrg.setVisibility(View.GONE);
-
         rlVvMainLayout.setVisibility(View.VISIBLE);
 
-
     }
-
 
     private void votemeeting(EventModel model) {
         canAction(model);
@@ -296,18 +290,14 @@ public class ViewVote extends PortraitActivity {
             thumbsUp.setImageResource(R.drawable.ic_vote_inactive);
             //Thumbs down
             thumbsDown.setImageResource(R.drawable.ic_no_vote_active);
-
-
             thumbsUp.setEnabled(true);
             thumbsDown.setEnabled(false);
-
 
         } else if (model.getReply().equalsIgnoreCase("NO_RESPONSE")) {
             //Thumbs up
             thumbsUp.setImageResource(R.drawable.ic_vote_inactive);
             //Thumbs down
             thumbsDown.setImageResource(R.drawable.ic_no_vote_inactive);
-
             thumbsUp.setEnabled(true);
             thumbsDown.setEnabled(true);
         }
@@ -316,18 +306,13 @@ public class ViewVote extends PortraitActivity {
     }
 
     private void canActionIsFalse(EventModel model) {
-
         thumbsUp.setEnabled(false);
         thumbsDown.setEnabled(false);
-
         if (model.getReply().equalsIgnoreCase("Yes")) {
-
             //Thumbs up
             thumbsUp.setImageResource(R.drawable.ic_vote_active);
-
             //Thumbs down
             thumbsDown.setImageResource(R.drawable.ic_no_vote_inactive);
-
 
         } else if (model.getReply().equalsIgnoreCase("No")) {
 
@@ -358,9 +343,7 @@ public class ViewVote extends PortraitActivity {
                         if (response.isSuccessful()) {
                             showSnackBar(getString(R.string.ga_Votesend), "", "", "", Snackbar.LENGTH_SHORT);
                             viewVote();
-
                         }
-
 
                     }
 
@@ -368,7 +351,7 @@ public class ViewVote extends PortraitActivity {
                     public void onFailure(Call<GenericResponse> call, Throwable t) {
                         progressBarCircularIndeterminate.setVisibility(View.GONE);
                         txtPrg.setVisibility(View.GONE);
-                        ErrorUtils.handleNetworkError(ViewVote.this, errorLayout, t);
+                        ErrorUtils.handleNetworkError(ViewVoteActivity.this, errorLayout, t);
                     }
                 });
     }
@@ -377,10 +360,6 @@ public class ViewVote extends PortraitActivity {
     private void findAllViews() {
 
         bt_editVote.setEnabled(false);
-        mRelativeLayoutHeader.setOnClickListener(expandableHeader());
-        thumbsUp.setOnClickListener(Thumpsup());
-        thumbsDown.setOnClickListener(Thumpsdown());
-
         //Add onPreDrawListener
         mLinearLayout.getViewTreeObserver().addOnPreDrawListener(
                 new ViewTreeObserver.OnPreDrawListener() {
@@ -389,76 +368,57 @@ public class ViewVote extends PortraitActivity {
                     public boolean onPreDraw() {
                         mLinearLayout.getViewTreeObserver().removeOnPreDrawListener(this);
                         mLinearLayout.setVisibility(View.GONE);
-
                         final int widthSpec = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED);
                         final int heightSpec = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED);
                         mLinearLayout.measure(widthSpec, heightSpec);
-
                         mAnimator = slideAnimator(0, mLinearLayout.getMeasuredHeight());
                         return true;
                     }
                 });
+    }
+
+
+    @OnClick(R.id.thumbs_down)
+    public void voteNo() {
+        castVote("No");
+    }
+
+    @OnClick(R.id.thumbs_up)
+    public void voteYes() {
+        castVote("Yes");
+    }
+
+
+    @OnClick(R.id.expandable)
+    public void onExpandableHeaderClickClick(View v) {
+        if (mLinearLayout.getVisibility() == View.GONE) {
+            ivExpand.setImageResource(R.drawable.ic_arrow_up);
+            expand();
+        } else {
+            ivExpand.setImageResource(R.drawable.ic_arrow_down);
+            collapse();
+        }
+
 
     }
 
-    private View.OnClickListener Thumpsdown() {
-        return new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                castVote("No");
-            }
-        };
-    }
+    @OnClick(R.id.bt_editVote)
+    public void editVote() {
+        if (canEdit) {
+            Intent i = new Intent(ViewVoteActivity.this, EditVoteActivity.class);
+            i.putExtra("description", description);
+            i.putExtra("deadline", deadline);
+            i.putExtra("voteid", voteid);
+            i.putExtra("title", title);
+            startActivityForResult(i, 1);
 
-    private View.OnClickListener Thumpsup() {
-        return new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                castVote("Yes");
-            }
-        };
-    }
-
-    private View.OnClickListener expandableHeader() {
-        return new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (mLinearLayout.getVisibility() == View.GONE) {
-                    ivExpand.setImageResource(R.drawable.ic_arrow_up);
-                    expand();
-                } else {
-                    ivExpand.setImageResource(R.drawable.ic_arrow_down);
-                    collapse();
-                }
-            }
-        };
-    }
-
-    private View.OnClickListener editVote_button() {
-        return new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-
-                if (canEdit) {
-                    Intent i = new Intent(ViewVote.this, EditVoteActivity.class);
-                    i.putExtra("description", description);
-                    i.putExtra("deadline", deadline);
-                    i.putExtra("voteid", voteid);
-                    i.putExtra("title", title);
-                    startActivityForResult(i, 1);
-
-                }
-
-            }
-        };
+        }
     }
 
 
     private void expand() {
         //set Visible
         mLinearLayout.setVisibility(View.VISIBLE);
-
-
         mAnimator.start();
     }
 
@@ -466,7 +426,6 @@ public class ViewVote extends PortraitActivity {
         int finalHeight = mLinearLayout.getHeight();
 
         ValueAnimator mAnimator = slideAnimator(finalHeight, 0);
-
         mAnimator.addListener(new Animator.AnimatorListener() {
             @Override
             public void onAnimationEnd(Animator animator) {
@@ -493,14 +452,11 @@ public class ViewVote extends PortraitActivity {
     private ValueAnimator slideAnimator(int start, int end) {
 
         ValueAnimator animator = ValueAnimator.ofInt(start, end);
-
-
         animator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
             @Override
             public void onAnimationUpdate(ValueAnimator valueAnimator) {
                 //Update Height
                 int value = (Integer) valueAnimator.getAnimatedValue();
-
                 ViewGroup.LayoutParams layoutParams = mLinearLayout.getLayoutParams();
                 layoutParams.height = value;
                 mLinearLayout.setLayoutParams(layoutParams);
@@ -533,7 +489,6 @@ public class ViewVote extends PortraitActivity {
     private void showSnackBar(String message, final String actionButtontext, final String type, final String response, int length) {
         snackbar = Snackbar.make(vvRoot, message, length);
         snackbar.setActionTextColor(Color.RED);
-
         if (!actionButtontext.isEmpty()) {
             snackbar.setAction(actionButtontext, new View.OnClickListener() {
                 @Override

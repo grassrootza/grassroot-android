@@ -65,17 +65,14 @@ public class NotificationCenter extends PortraitActivity {
     @BindView(R.id.ll_invalid_token)
     LinearLayout llInvalidToken;
     private LinearLayoutManager mLayoutManager;
-    private Snackbar snackbar;
     private Integer pageNumber = 0;
-    private Integer totalPages = 1;
-    private Integer pageSize = 30;
+    private Integer totalPages = 0;
+    private Integer pageSize = null;
     private GrassrootRestService grassrootRestService;
     private NotificationAdapter notificationAdapter;
     private List<Notification> notifications = new ArrayList<>();
-    private int firstVisibleItem, totalItemCount;
-    private int ItemLeftCount;
+    private int firstVisibleItem, totalItemCount, lastVisibileItem;
     private boolean isLoading;
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -114,60 +111,60 @@ public class NotificationCenter extends PortraitActivity {
         rcNc.setItemAnimator(new DefaultItemAnimator());
 
         rcNc.addOnItemTouchListener(new RecyclerTouchListener(NotificationCenter.this, rcNc, new ClickListener() {
-            @Override
-            public void onClick(View view, int position) {
-                Notification notification = notifications.get(position);
-                Log.d(TAG, notification.getMessage());
-                Intent openactivity = null;
-                switch (notification.getEntityType().toLowerCase()) {
-                    case "vote":
-                        openactivity = new Intent(NotificationCenter.this, ViewVote.class);
-                        openactivity.putExtra("id", notification.getEntityUid());
-                        break;
-                    case "meeting":
-                        openactivity = new Intent(NotificationCenter.this, NotBuiltActivity.class);
-                        openactivity.putExtra("title", "Meeting");
-                        break;
-                    case "todo":
-                        openactivity = new Intent(NotificationCenter.this, NotBuiltActivity.class);
-                        openactivity.putExtra("title", "ToDo");
-                        break;
-                }
-                startActivity(openactivity);
+                    @Override
+                    public void onClick(View view, int position) {
+                        Notification notification = notificationAdapter.getNotifications().get(position);
+                        Log.d(TAG, "clicked on item" + position);
+                        Log.d(TAG, notification.getMessage());
+                        Intent openactivity = null;
+                        switch (notification.getEntityType().toLowerCase()) {
+                            case "vote":
+                                openactivity = new Intent(NotificationCenter.this, ViewVoteActivity.class);
+                                openactivity.putExtra("id", notification.getEntityUid());
+                                break;
+                            case "meeting":
+                                openactivity = new Intent(NotificationCenter.this, NotBuiltActivity.class);
+                                openactivity.putExtra("title", "Meeting");
+                                break;
+                            case "todo":
+                                openactivity = new Intent(NotificationCenter.this, NotBuiltActivity.class);
+                                openactivity.putExtra("title", "ToDo");
+                                break;
+                        }
+                        startActivity(openactivity);
+                    }
 
-            }
+                    @Override
+                    public void onLongClick(View view, int position) {
 
-            @Override
-            public void onLongClick(View view, int position) {
+                    }
+                })
 
-            }
-        }));
+        );
 
         rcNc.addOnScrollListener(new RecyclerView.OnScrollListener() {
 
             @Override
             public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
                 super.onScrolled(recyclerView, dx, dy);
-
                 totalItemCount = mLayoutManager.getItemCount();
                 firstVisibleItem = mLayoutManager.findFirstVisibleItemPosition();
-                ItemLeftCount = (totalItemCount - firstVisibleItem);
+                lastVisibileItem = mLayoutManager.findLastVisibleItemPosition();
 
                 Log.e(TAG, "firstVisibleItem is " + firstVisibleItem);
                 Log.e(TAG, "Remaining is " + (totalItemCount - firstVisibleItem));
                 Log.e(TAG, "isLoading is " + isLoading);
                 Log.e(TAG, "totalPages" + totalPages);
                 Log.e(TAG, "pageNumber" + pageNumber);
+                Log.e(TAG, "totalItemCount"+totalItemCount);
 
-
-                if (pageNumber < totalPages && ItemLeftCount <= 10 && !isLoading) {
+                if (pageNumber <= totalPages &&  totalItemCount <= (lastVisibileItem + 10) && !isLoading) {
                     prgNcPaging.setVisibility(View.VISIBLE);
-                    pageNumber = pageNumber++;
+                    pageNumber = ++pageNumber;
                     isLoading = true;
                     getNotifications(pageNumber, pageSize);
 
                 }
-
 
             }
         });
@@ -182,53 +179,52 @@ public class NotificationCenter extends PortraitActivity {
             @Override
             public void onResponse(Call<NotificationList> call, Response<NotificationList> response) {
                 if (response.isSuccessful()) {
+
+                    hideProgess();
                     notifications = response.body().getNotificationWrapper().getNotifications();
                     pageNumber = response.body().getNotificationWrapper().getPageNumber();
                     totalPages = response.body().getNotificationWrapper().getTotalPages();
-                    prgNc.setVisibility(View.GONE);
                     txtPrgNc.setVisibility(View.GONE);
-                    prgNcPaging.setVisibility(View.GONE);
 
                     rcNc.setVisibility(View.VISIBLE);
                     if (pageNumber > 1) {
                         notificationAdapter.updateData(notifications);
-                        notificationAdapter.notifyDataSetChanged();;
-                        isLoading = false;
 
                     } else {
                         notificationAdapter.addData(notifications);
 
                     }
-
+                    notificationAdapter.notifyDataSetChanged();
+                    isLoading = false;
                 }
 
             }
-
             @Override
             public void onFailure(Call<NotificationList> call, Throwable t) {
-                prgNcPaging.setVisibility(View.INVISIBLE);
+                hideProgess();
                 ErrorUtils.handleNetworkError(NotificationCenter.this, errorLayout, t);
             }
         });
 
-
     }
 
-    public void showSnackbar(String message, int length, String actionbuttontxt) {
-        snackbar = Snackbar.make(rlRootNc, message, length);
-        snackbar.setActionTextColor(Color.RED);
-        if (!TextUtils.isEmpty(actionbuttontxt)) {
-            snackbar.setAction(actionbuttontxt, new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    getNotifications(0, 0);
-                }
-            });
-
+    private void showProgress(Integer page){
+        if(page!=null && page <1){
+            prgNc.setVisibility(View.VISIBLE);
+            prgNcPaging.setVisibility(View.INVISIBLE);
+        }
+        else{
+            prgNcPaging.setVisibility(View.VISIBLE);
+            prgNc.setVisibility(View.INVISIBLE);
         }
 
-        snackbar.show();
     }
+
+    private void hideProgess(){
+        prgNc.setVisibility(View.GONE);
+        prgNcPaging.setVisibility(View.GONE);
+    }
+
 
     @OnClick(R.id.error_layout)
     public void onClick(View v) {

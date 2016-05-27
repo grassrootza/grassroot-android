@@ -6,7 +6,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/off_white_background"
-    tools:context="com.techmorphosis.grassroot.ui.activities.ViewVote">
+    tools:context=".ui.activities.ViewVoteActivity">
 
     <android.support.v7.widget.Toolbar
         android:id="@+id/vv_toolbar"
@@ -155,7 +155,7 @@
                                 android:orientation="horizontal">
 
                                 <ImageButton
-                                    android:id="@+id/Thumpsdown"
+                                    android:id="@+id/thumbs_down"
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
                                     android:layout_gravity="center_vertical"
@@ -166,7 +166,7 @@
                                     android:scaleType="fitCenter" />
 
                                 <ImageButton
-                                    android:id="@+id/Thumpsup"
+                                    android:id="@+id/thumbs_up"
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
 
