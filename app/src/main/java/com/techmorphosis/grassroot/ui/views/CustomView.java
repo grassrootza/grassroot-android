@@ -1,4 +1,4 @@
-package com.techmorphosis.grassroot.utils;
+package com.techmorphosis.grassroot.ui.views;
 
 import android.content.Context;
 import android.graphics.Canvas;

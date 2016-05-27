@@ -33,8 +33,6 @@ public class ContactsAdapter extends SearchablePinnedHeaderListViewAdapter<Conta
     private final int[] PHOTO_TEXT_BACKGROUND_COLORS;
     private String TAG= ContactsAdapter.class.getSimpleName();
     ArrayList<Contact> oldContacts;
-    //private final AsyncTaskThreadPool mAsyncTaskThreadPool=new AsyncTaskThreadPool(1,2,10);
-
 
     @Override
     public CharSequence getSectionTitle(int sectionIndex) {

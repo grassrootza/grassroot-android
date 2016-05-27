@@ -1,4 +1,4 @@
-package com.techmorphosis.grassroot.utils;
+package com.techmorphosis.grassroot.ui.views;
 
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -9,6 +9,8 @@ import android.graphics.PorterDuff;
 import android.graphics.PorterDuffXfermode;
 import android.graphics.RectF;
 import android.util.AttributeSet;
+
+import static com.techmorphosis.grassroot.utils.DialogUtils.dpToPx;
 
 public class ProgressBarCircularIndeterminate extends CustomView {
 	
@@ -27,8 +29,8 @@ public class ProgressBarCircularIndeterminate extends CustomView {
 	// Set atributtes of XML to View
 		protected void setAttributes(AttributeSet attrs){
 			
-			setMinimumHeight(Utils.dpToPx(32, getResources()));
-			setMinimumWidth(Utils.dpToPx(32, getResources()));
+			setMinimumHeight(dpToPx(32, getResources()));
+			setMinimumWidth(dpToPx(32, getResources()));
 			
 			//Set background Color
 			// Color by resource
@@ -44,7 +46,7 @@ public class ProgressBarCircularIndeterminate extends CustomView {
 					setBackgroundColor(Color.parseColor("#1E88E5"));
 			}
 			
-			setMinimumHeight(Utils.dpToPx(3, getResources()));
+			setMinimumHeight(dpToPx(3, getResources()));
 			
 						
 		}
@@ -104,11 +106,11 @@ public class ProgressBarCircularIndeterminate extends CustomView {
 		    if(cont >= 50){
 		    	radius2 = (radius2 >= getWidth()/2)? (float)getWidth()/2 : radius2+1;
 		    }else{
-		    	radius2 = (radius2 >= getWidth()/2-Utils.dpToPx(4, getResources()))? (float)getWidth()/2-Utils.dpToPx(4, getResources()) : radius2+1;
+		    	radius2 = (radius2 >= getWidth()/2- dpToPx(4, getResources()))? (float)getWidth()/2- dpToPx(4, getResources()) : radius2+1;
 		    }
 		    temp.drawCircle(getWidth()/2, getHeight()/2, radius2, transparentPaint);
 		    canvas.drawBitmap(bitmap, 0, 0, new Paint());
-		    if(radius2 >= getWidth()/2-Utils.dpToPx(4, getResources()))
+		    if(radius2 >= getWidth()/2- dpToPx(4, getResources()))
 		    	cont++;
 		    if(radius2 >= getWidth()/2)
 		    	firstAnimationOver = true;
@@ -149,7 +151,7 @@ public class ProgressBarCircularIndeterminate extends CustomView {
 	    transparentPaint.setAntiAlias(true);
 	    transparentPaint.setColor(getResources().getColor(android.R.color.transparent));
 	    transparentPaint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.CLEAR));
-	    temp.drawCircle(getWidth()/2, getHeight()/2, (getWidth()/2)-Utils.dpToPx(4, getResources()), transparentPaint);
+	    temp.drawCircle(getWidth()/2, getHeight()/2, (getWidth()/2)- dpToPx(4, getResources()), transparentPaint);
 
 	    canvas.drawBitmap(bitmap, 0, 0, new Paint());
 	}

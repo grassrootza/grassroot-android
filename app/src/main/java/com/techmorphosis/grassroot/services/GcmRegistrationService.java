@@ -9,7 +9,7 @@ import com.google.android.gms.gcm.GoogleCloudMessaging;
 import com.google.android.gms.iid.InstanceID;
 import com.techmorphosis.grassroot.R;
 import com.techmorphosis.grassroot.services.model.GenericResponse;
-import com.techmorphosis.grassroot.utils.SettingPreference;
+import com.techmorphosis.grassroot.utils.PreferenceUtils;
 
 import java.io.IOException;
 import java.util.Calendar;
@@ -40,7 +40,7 @@ public class GcmRegistrationService extends IntentService {
             String token = InstanceID.getInstance(this).getToken(getString(R.string.project_id),
                     GoogleCloudMessaging.INSTANCE_ID_SCOPE, null);
             String phoneNumber = intent.getStringExtra("phoneNumber");
-            String code = SettingPreference.getuser_token(this);
+            String code = PreferenceUtils.getuser_token(this);
             Log.d(TAG, "Registering user for push messages");
             final String messageId = generateMessageId(phoneNumber);
             final Bundle data = new Bundle();
@@ -53,7 +53,7 @@ public class GcmRegistrationService extends IntentService {
                         @Override
                         public void onResponse(Call<GenericResponse> call, Response<GenericResponse> response) {
                             if (response.isSuccessful()) {
-                                SettingPreference.setIsGcmEnabled(GcmRegistrationService.this, true);
+                                PreferenceUtils.setIsGcmEnabled(GcmRegistrationService.this, true);
                             } else {
                                 //Falling back to gcm upstream even though its more unreliable
                                 try {

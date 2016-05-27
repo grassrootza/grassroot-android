@@ -1,4 +1,4 @@
-package com.techmorphosis.grassroot.utils;
+package com.techmorphosis.grassroot.ui.views;
 
 import android.content.Context;
 import android.content.res.ColorStateList;
@@ -18,6 +18,7 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 
 import com.techmorphosis.grassroot.R;
+import com.techmorphosis.grassroot.utils.DialogUtils;
 
 import java.lang.reflect.Field;
 

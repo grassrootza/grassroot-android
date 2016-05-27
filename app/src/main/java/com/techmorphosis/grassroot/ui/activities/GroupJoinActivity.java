@@ -33,7 +33,7 @@ import com.techmorphosis.grassroot.services.model.GroupSearchModel;
 import com.techmorphosis.grassroot.services.model.GroupSearchResponse;
 import com.techmorphosis.grassroot.ui.fragments.AlertDialogFragment;
 import com.techmorphosis.grassroot.utils.ErrorUtils;
-import com.techmorphosis.grassroot.utils.SettingPreference;
+import com.techmorphosis.grassroot.utils.PreferenceUtils;
 import com.techmorphosis.grassroot.interfaces.AlertDialogListener;
 
 import java.util.ArrayList;
@@ -256,8 +256,8 @@ public class GroupJoinActivity extends PortraitActivity implements OnClickListen
     private void joinRequestWS() {
         Log.e(TAG, "joinRequestWS");
         progressDialog.show();
-        String phoneNumber = SettingPreference.getuser_mobilenumber(this);
-        String code = SettingPreference.getuser_token(this);
+        String phoneNumber = PreferenceUtils.getuser_mobilenumber(this);
+        String code = PreferenceUtils.getuser_token(this);
         grassrootRestService.getApi().groupJoinRequest(phoneNumber,code,uid)
                 .enqueue(new Callback<GenericResponse>() {
                     @Override

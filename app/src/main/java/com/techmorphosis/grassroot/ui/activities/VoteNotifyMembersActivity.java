@@ -28,8 +28,8 @@ import com.techmorphosis.grassroot.services.model.Member;
 import com.techmorphosis.grassroot.services.model.MemberList;
 import com.techmorphosis.grassroot.ui.views.RecyclerTouchListener;
 import com.techmorphosis.grassroot.utils.Constant;
-import com.techmorphosis.grassroot.utils.ProgressBarCircularIndeterminate;
-import com.techmorphosis.grassroot.utils.SettingPreference;
+import com.techmorphosis.grassroot.ui.views.ProgressBarCircularIndeterminate;
+import com.techmorphosis.grassroot.utils.PreferenceUtils;
 
 import java.util.ArrayList;
 
@@ -165,8 +165,8 @@ public class VoteNotifyMembersActivity extends PortraitActivity {
     private void getGroupMembers() {
 
         GrassrootRestService grassrootRestService = new GrassrootRestService(this);
-        String phoneNumber = SettingPreference.getuser_mobilenumber(this);
-        String code = SettingPreference.getuser_token(this);
+        String phoneNumber = PreferenceUtils.getuser_mobilenumber(this);
+        String code = PreferenceUtils.getuser_token(this);
         showProgress();
         grassrootRestService.getApi().getGroupMembers(groupId, phoneNumber, code, true).enqueue(
                 new Callback<MemberList>() {

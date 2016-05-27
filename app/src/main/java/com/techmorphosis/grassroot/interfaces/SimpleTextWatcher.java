@@ -1,4 +1,4 @@
-package com.techmorphosis.grassroot.utils;
+package com.techmorphosis.grassroot.interfaces;
 
 import android.text.Editable;
 import android.text.TextWatcher;

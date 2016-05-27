@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.techmorphosis.grassroot.utils.ContactUtil;
+package com.techmorphosis.grassroot.ContactLib;
 
 import android.graphics.Bitmap;
 import android.os.Build;

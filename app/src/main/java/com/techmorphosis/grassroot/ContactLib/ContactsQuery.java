@@ -1,4 +1,4 @@
-package com.techmorphosis.grassroot.utils.ContactUtil;
+package com.techmorphosis.grassroot.ContactLib;
 
 import android.annotation.SuppressLint;
 import android.net.Uri;

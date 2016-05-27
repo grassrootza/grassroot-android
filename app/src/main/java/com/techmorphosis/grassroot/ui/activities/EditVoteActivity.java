@@ -20,7 +20,7 @@ import com.techmorphosis.grassroot.services.NoConnectivityException;
 import com.techmorphosis.grassroot.services.model.GenericResponse;
 import com.techmorphosis.grassroot.slideDateTimePicker.SlideDateTimeListener;
 import com.techmorphosis.grassroot.slideDateTimePicker.SlideDateTimePicker;
-import com.techmorphosis.grassroot.utils.SettingPreference;
+import com.techmorphosis.grassroot.utils.PreferenceUtils;
 import com.techmorphosis.grassroot.utils.UtilClass;
 
 import java.text.ParseException;
@@ -198,8 +198,8 @@ public class EditVoteActivity extends PortraitActivity {
 
     private void editVoteWS() {
 
-        String phoneNumber = SettingPreference.getuser_mobilenumber(this);
-        String code = SettingPreference.getuser_token(this);
+        String phoneNumber = PreferenceUtils.getuser_mobilenumber(this);
+        String code = PreferenceUtils.getuser_token(this);
         description = et_description.getText().toString();
         showProgress();
         GrassrootRestService grassrootRestService = new GrassrootRestService(this);

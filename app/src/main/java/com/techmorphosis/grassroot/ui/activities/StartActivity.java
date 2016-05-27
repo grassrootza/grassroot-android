@@ -33,7 +33,7 @@ import com.techmorphosis.grassroot.ui.fragments.RegisterScreenFragment;
 import com.techmorphosis.grassroot.utils.ErrorUtils;
 import com.techmorphosis.grassroot.utils.LocationUtils;
 import com.techmorphosis.grassroot.utils.NetworkUtils;
-import com.techmorphosis.grassroot.utils.SettingPreference;
+import com.techmorphosis.grassroot.utils.PreferenceUtils;
 import com.techmorphosis.grassroot.utils.TopExceptionHandler;
 
 import java.util.List;
@@ -107,7 +107,7 @@ public class StartActivity extends PortraitActivity implements HomeScreenViewFra
         Fabric.with(this, new Crashlytics());
         Thread.setDefaultUncaughtExceptionHandler(new TopExceptionHandler(this));
 
-        if (!SettingPreference.getisLoggedIn(this)) {
+        if (!PreferenceUtils.getisLoggedIn(this)) {
             setContentView(R.layout.start);
             progressDialog = new ProgressDialog(this);
             progressDialog.setMessage("Please Wait..");
@@ -115,7 +115,7 @@ public class StartActivity extends PortraitActivity implements HomeScreenViewFra
             if (NetworkUtils.isNetworkAvailable(StartActivity.this)) {
                 // todo: put meaning inside here or delete it, unless required for some other reason
             } else {
-                SettingPreference.setisLoggedIn(this, false);
+                PreferenceUtils.setisLoggedIn(this, false);
             }
             init();
             displayMetrics = getApplicationContext().getResources().getDisplayMetrics();
@@ -350,13 +350,13 @@ public class StartActivity extends PortraitActivity implements HomeScreenViewFra
                         progressDialog.dismiss();
                         if (response.isSuccessful()) {
                             Token token = response.body().getToken();
-                            SettingPreference.setuser_token(StartActivity.this, token.getCode());
-                            SettingPreference.setuser_mobilenumber(StartActivity.this, mobileNumber);
-                            SettingPreference.setisLoggedIn(StartActivity.this, true);
-                            SettingPreference.setuser_phonetoken(StartActivity.this, mobileNumber + "/" + token.getCode());
-                            SettingPreference.setuser_name(StartActivity.this, userName);
+                            PreferenceUtils.setuser_token(StartActivity.this, token.getCode());
+                            PreferenceUtils.setuser_mobilenumber(StartActivity.this, mobileNumber);
+                            PreferenceUtils.setisLoggedIn(StartActivity.this, true);
+                            PreferenceUtils.setuser_phonetoken(StartActivity.this, mobileNumber + "/" + token.getCode());
+                            PreferenceUtils.setuser_name(StartActivity.this, userName);
 
-                            Log.d(TAG, "getPREF_Phone_Token is " + SettingPreference.getPREF_Phone_Token(StartActivity.this));
+                            Log.d(TAG, "getPREF_Phone_Token is " + PreferenceUtils.getPREF_Phone_Token(StartActivity.this));
                             Intent gcmRegistrationIntent = new Intent(StartActivity.this, GcmRegistrationService.class);
                             gcmRegistrationIntent.putExtra("phoneNumber", mobileNumber);
                             startService(gcmRegistrationIntent);
@@ -391,24 +391,24 @@ public class StartActivity extends PortraitActivity implements HomeScreenViewFra
                         progressDialog.dismiss();
                         if (response.isSuccessful()) {
                             Token token = response.body().getToken();
-                            SettingPreference.setuser_token(StartActivity.this, token.getCode());
-                            SettingPreference.setuser_mobilenumber(StartActivity.this, mobileNumber);
-                            SettingPreference.setisLoggedIn(StartActivity.this, true);
-                            SettingPreference.setuser_phonetoken(StartActivity.this, mobileNumber + "/" + token.getCode());
-                            Log.i(TAG, "getPREF_Phone_Token is " + SettingPreference.getPREF_Phone_Token(StartActivity.this));
+                            PreferenceUtils.setuser_token(StartActivity.this, token.getCode());
+                            PreferenceUtils.setuser_mobilenumber(StartActivity.this, mobileNumber);
+                            PreferenceUtils.setisLoggedIn(StartActivity.this, true);
+                            PreferenceUtils.setuser_phonetoken(StartActivity.this, mobileNumber + "/" + token.getCode());
+                            Log.i(TAG, "getPREF_Phone_Token is " + PreferenceUtils.getPREF_Phone_Token(StartActivity.this));
 
                             Boolean hasGroups = response.body().getHasGroups();
                             String displayname = response.body().getDisplayName();
 
-                            if(!SettingPreference.getIsGcmEnabled(StartActivity.this)){
+                            if(!PreferenceUtils.getIsGcmEnabled(StartActivity.this)){
                                 Intent gcmRegistrationIntent = new Intent(StartActivity.this, GcmRegistrationService.class);
                                 gcmRegistrationIntent.putExtra("phoneNumber", mobileNumber);
                                 startService(gcmRegistrationIntent);
                             }
 
                             if (hasGroups) {
-                                SettingPreference.setisHasgroup(StartActivity.this, true);
-                                SettingPreference.setuser_name(StartActivity.this, displayname);
+                                PreferenceUtils.setisHasgroup(StartActivity.this, true);
+                                PreferenceUtils.setuser_name(StartActivity.this, displayname);
                                 Intent intent = new Intent(StartActivity.this, HomeScreenActivity.class);
                                 startActivity(intent);
                                 finish();

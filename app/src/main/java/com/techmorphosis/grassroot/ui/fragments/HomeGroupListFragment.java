@@ -36,7 +36,7 @@ import com.techmorphosis.grassroot.ui.views.SwipeableRecyclerViewTouchListener;
 import com.techmorphosis.grassroot.utils.Constant;
 import com.techmorphosis.grassroot.utils.ErrorUtils;
 import com.techmorphosis.grassroot.utils.MenuUtils;
-import com.techmorphosis.grassroot.utils.SettingPreference;
+import com.techmorphosis.grassroot.utils.PreferenceUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -145,8 +145,8 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment {
         ivGhpSort.setEnabled(false);
         ivGhpSearch.setEnabled(false);
 
-        mobileNumber = SettingPreference.getuser_mobilenumber(getActivity());
-        userCode = SettingPreference.getuser_token(getActivity());
+        mobileNumber = PreferenceUtils.getuser_mobilenumber(getActivity());
+        userCode = PreferenceUtils.getuser_token(getActivity());
 
         menu1.setOnMenuToggleListener(new FloatingActionMenu.OnMenuToggleListener() {
             @Override
@@ -233,8 +233,8 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment {
 
         Group groupUpdated = userGroups.get(position);
         if (groupUpdated.getId().equals(groupUid)) {
-            String mobileNumber = SettingPreference.getuser_mobilenumber(getContext());
-            String code = SettingPreference.getuser_token(getContext());
+            String mobileNumber = PreferenceUtils.getuser_mobilenumber(getContext());
+            String code = PreferenceUtils.getuser_token(getContext());
             grassrootRestService.getApi().getSingleGroup(mobileNumber, code, groupUid)
                     .enqueue(new Callback<GroupResponse>() {
                         @Override

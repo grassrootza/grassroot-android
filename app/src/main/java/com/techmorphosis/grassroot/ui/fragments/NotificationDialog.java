@@ -2,7 +2,7 @@
 // Jad home page: http://www.geocities.com/kpdus/jad.html
 // Decompiler options: braces fieldsfirst space lnc 
 
-package com.techmorphosis.grassroot.ui.DialogFragment;
+package com.techmorphosis.grassroot.ui.fragments;
 
 
 import android.app.Dialog;

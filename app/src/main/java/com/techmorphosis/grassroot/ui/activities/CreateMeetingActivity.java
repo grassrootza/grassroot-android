@@ -9,7 +9,6 @@ import android.support.design.widget.TextInputEditText;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.SwitchCompat;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.widget.ImageView;
@@ -25,7 +24,7 @@ import com.techmorphosis.grassroot.slideDateTimePicker.SlideDateTimePicker;
 import com.techmorphosis.grassroot.utils.Constant;
 import com.techmorphosis.grassroot.utils.ErrorUtils;
 import com.techmorphosis.grassroot.utils.MenuUtils;
-import com.techmorphosis.grassroot.utils.SettingPreference;
+import com.techmorphosis.grassroot.utils.PreferenceUtils;
 import com.techmorphosis.grassroot.utils.UtilClass;
 
 import java.text.SimpleDateFormat;
@@ -351,8 +350,8 @@ public class CreateMeetingActivity extends PortraitActivity {
 
     private void createMeetingAndExit() {
 
-        final String phoneNumber = SettingPreference.getuser_mobilenumber(this);
-        final String code = SettingPreference.getuser_token(this);
+        final String phoneNumber = PreferenceUtils.getuser_mobilenumber(this);
+        final String code = PreferenceUtils.getuser_token(this);
         final String title = etTitleInput.getText().toString();
         final String location = etLocationInput.getText().toString();
         final String description = etDescriptionInput.getText().toString();

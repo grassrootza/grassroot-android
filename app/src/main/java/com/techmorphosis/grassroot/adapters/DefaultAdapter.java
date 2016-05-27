@@ -11,7 +11,7 @@ import android.widget.TextView;
 import com.techmorphosis.grassroot.R;
 import com.techmorphosis.grassroot.models.NavDrawerItem;
 import com.techmorphosis.grassroot.utils.DialogUtils;
-import com.techmorphosis.grassroot.utils.MDTintHelper;
+import com.techmorphosis.grassroot.ui.views.MDTintHelper;
 
 import java.util.ArrayList;
 

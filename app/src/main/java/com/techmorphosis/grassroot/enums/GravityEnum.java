@@ -1,4 +1,4 @@
-package com.techmorphosis.grassroot.utils;
+package com.techmorphosis.grassroot.enums;
 
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;

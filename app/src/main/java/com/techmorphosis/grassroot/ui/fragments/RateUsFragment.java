@@ -12,7 +12,7 @@ import android.view.Window;
 import android.widget.TextView;
 
 import com.techmorphosis.grassroot.R;
-import com.techmorphosis.grassroot.utils.SettingPreference;
+import com.techmorphosis.grassroot.utils.PreferenceUtils;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -67,7 +67,7 @@ public class RateUsFragment extends DialogFragment
         return new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                SettingPreference.setisRateus(getActivity(),true);
+                PreferenceUtils.setisRateus(getActivity(),true);
             getDialog().dismiss();
             }
         };
@@ -86,7 +86,7 @@ public class RateUsFragment extends DialogFragment
         return new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                SettingPreference.setisRateus(getActivity(),true);
+                PreferenceUtils.setisRateus(getActivity(),true);
                 startActivity(new Intent("android.intent.action.VIEW", Uri.parse("market://details?id=com.techmorphosis.grassroot")));
                 getDialog().dismiss();
             }

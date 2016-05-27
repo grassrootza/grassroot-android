@@ -39,7 +39,7 @@
     </android.support.v7.widget.RecyclerView>
 
 
-    <com.techmorphosis.grassroot.utils.ProgressBarCircularIndeterminate
+    <com.techmorphosis.grassroot.ui.views.ProgressBarCircularIndeterminate
         android:id="@+id/prg_nc"
         android:layout_width="32dp"
         android:layout_height="32dp"
@@ -47,7 +47,7 @@
         android:background="@color/primaryColor"
         android:visibility="gone">
 
-    </com.techmorphosis.grassroot.utils.ProgressBarCircularIndeterminate>
+    </com.techmorphosis.grassroot.ui.views.ProgressBarCircularIndeterminate>
 
     <TextView
         android:id="@+id/txt_prg_nc"

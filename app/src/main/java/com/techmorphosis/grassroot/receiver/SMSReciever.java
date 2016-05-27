@@ -7,11 +7,10 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
-import android.support.v4.content.LocalBroadcastManager;
 import android.telephony.SmsMessage;
 import android.util.Log;
 
-import com.techmorphosis.grassroot.utils.SettingPreference;
+import com.techmorphosis.grassroot.utils.PreferenceUtils;
 
 import java.util.List;
 
@@ -41,7 +40,7 @@ public class SMSReciever extends BroadcastReceiver {
 
                 String otp=getOTP(message);
 
-                SettingPreference.setPREF_OTP(context,otp);
+                PreferenceUtils.setPREF_OTP(context,otp);
 
               //  Intent registrationComplete = new Intent(QuickstartPreferences.REGISTRATION_COMPLETE);
               //  LocalBroadcastManager.getInstance(context).sendBroadcast(registrationComplete);

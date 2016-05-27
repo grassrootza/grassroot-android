@@ -1,4 +1,4 @@
-<com.techmorphosis.grassroot.utils.MDRootLayout
+<com.techmorphosis.grassroot.ui.views.MDRootLayout
     android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
@@ -36,4 +36,4 @@
 
         />
 
-</com.techmorphosis.grassroot.utils.MDRootLayout>
+</com.techmorphosis.grassroot.ui.views.MDRootLayout>

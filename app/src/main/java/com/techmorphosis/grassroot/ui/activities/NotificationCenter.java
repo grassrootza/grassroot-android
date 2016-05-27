@@ -24,8 +24,8 @@ import com.techmorphosis.grassroot.services.model.Notification;
 import com.techmorphosis.grassroot.services.model.NotificationList;
 import com.techmorphosis.grassroot.ui.views.RecyclerTouchListener;
 import com.techmorphosis.grassroot.utils.ErrorUtils;
-import com.techmorphosis.grassroot.utils.ProgressBarCircularIndeterminate;
-import com.techmorphosis.grassroot.utils.SettingPreference;
+import com.techmorphosis.grassroot.ui.views.ProgressBarCircularIndeterminate;
+import com.techmorphosis.grassroot.utils.PreferenceUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -175,8 +175,8 @@ public class NotificationCenter extends PortraitActivity {
 
     private void getNotifications(Integer page, Integer size) {
 
-        String phoneNumber = SettingPreference.getuser_mobilenumber(this);
-        String code = SettingPreference.getuser_token(this);
+        String phoneNumber = PreferenceUtils.getuser_mobilenumber(this);
+        String code = PreferenceUtils.getuser_token(this);
         prgNc.setVisibility(View.VISIBLE);
         grassrootRestService.getApi().getUserNotifications(phoneNumber, code, page, size).enqueue(new Callback<NotificationList>() {
             @Override

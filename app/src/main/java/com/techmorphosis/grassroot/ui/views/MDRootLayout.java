@@ -1,4 +1,4 @@
-package com.techmorphosis.grassroot.utils;
+package com.techmorphosis.grassroot.ui.views;
 
 import android.annotation.TargetApi;
 import android.content.Context;
@@ -18,6 +18,8 @@ import android.widget.AdapterView;
 import android.widget.ScrollView;
 
 import com.techmorphosis.grassroot.R;
+import com.techmorphosis.grassroot.enums.GravityEnum;
+import com.techmorphosis.grassroot.utils.DialogUtils;
 
 /**
  * @author Kevin Barry (teslacoil) 4/02/2015

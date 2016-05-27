@@ -12,14 +12,13 @@ import android.util.Log;
 import android.view.Gravity;
 
 import com.techmorphosis.grassroot.R;
-import com.techmorphosis.grassroot.ui.DialogFragment.NotificationDialog;
+import com.techmorphosis.grassroot.ui.fragments.NotificationDialog;
 import com.techmorphosis.grassroot.ui.fragments.AlertDialogFragment;
 import com.techmorphosis.grassroot.ui.fragments.HomeGroupListFragment;
 import com.techmorphosis.grassroot.ui.fragments.NavigationDrawerFragment;
 import com.techmorphosis.grassroot.ui.fragments.WelcomeFragment;
 import com.techmorphosis.grassroot.utils.Constant;
-import com.techmorphosis.grassroot.utils.ErrorUtils;
-import com.techmorphosis.grassroot.utils.SettingPreference;
+import com.techmorphosis.grassroot.utils.PreferenceUtils;
 import com.techmorphosis.grassroot.utils.UtilClass;
 import com.techmorphosis.grassroot.interfaces.AlertDialogListener;
 
@@ -51,7 +50,7 @@ public class HomeScreenActivity extends PortraitActivity implements NavigationDr
     }
 
     private void setUpHomeFragment() {
-        mainFragment = SettingPreference.getisHasgroup(this) ? new HomeGroupListFragment() : new WelcomeFragment();
+        mainFragment = PreferenceUtils.getisHasgroup(this) ? new HomeGroupListFragment() : new WelcomeFragment();
         getSupportFragmentManager().beginTransaction()
                 .replace(R.id.fragment_container, mainFragment)
                 .commit();
@@ -149,7 +148,7 @@ public class HomeScreenActivity extends PortraitActivity implements NavigationDr
             @Override
             public void setLeftButton() {
                 //Yes
-                SettingPreference.clearAll(getApplicationContext());
+                PreferenceUtils.clearAll(getApplicationContext());
                 Intent open = new Intent(HomeScreenActivity.this, StartActivity.class);
                 startActivity(open);
                 finish();
@@ -170,8 +169,8 @@ public class HomeScreenActivity extends PortraitActivity implements NavigationDr
     protected void onResume() {
         super.onResume();
 
-        if (SettingPreference.getPrefHasSaveClicked(this)) {
-            SettingPreference.setPrefHasSaveClicked(this, false);
+        if (PreferenceUtils.getPrefHasSaveClicked(this)) {
+            PreferenceUtils.setPrefHasSaveClicked(this, false);
         }
 
 

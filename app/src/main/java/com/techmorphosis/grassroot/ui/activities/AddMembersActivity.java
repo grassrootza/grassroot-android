@@ -21,7 +21,7 @@ import com.techmorphosis.grassroot.ui.fragments.MemberListFragment;
 import com.techmorphosis.grassroot.utils.Constant;
 import com.techmorphosis.grassroot.utils.ErrorUtils;
 import com.techmorphosis.grassroot.utils.PermissionUtils;
-import com.techmorphosis.grassroot.utils.SettingPreference;
+import com.techmorphosis.grassroot.utils.PreferenceUtils;
 import com.techmorphosis.grassroot.utils.UtilClass;
 
 import java.util.ArrayList;
@@ -180,8 +180,8 @@ public class AddMembersActivity extends AppCompatActivity implements MemberListF
 
     private void postNewMembersToGroup(final List<Member> membersToAdd) {
         grassrootRestService = new GrassrootRestService(this);
-        String mobileNumber = SettingPreference.getuser_mobilenumber(getApplicationContext());
-        String sessionCode = SettingPreference.getuser_token(getApplicationContext());
+        String mobileNumber = PreferenceUtils.getuser_mobilenumber(getApplicationContext());
+        String sessionCode = PreferenceUtils.getuser_token(getApplicationContext());
 
         grassrootRestService.getApi()
                 .addGroupMembers(groupUid, mobileNumber, sessionCode, membersToAdd)

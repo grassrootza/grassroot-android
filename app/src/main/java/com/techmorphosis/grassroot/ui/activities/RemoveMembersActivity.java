@@ -18,7 +18,7 @@ import com.techmorphosis.grassroot.ui.fragments.AlertDialogFragment;
 import com.techmorphosis.grassroot.ui.fragments.MemberListFragment;
 import com.techmorphosis.grassroot.utils.Constant;
 import com.techmorphosis.grassroot.utils.ErrorUtils;
-import com.techmorphosis.grassroot.utils.SettingPreference;
+import com.techmorphosis.grassroot.utils.PreferenceUtils;
 import com.techmorphosis.grassroot.utils.UtilClass;
 
 import java.util.HashSet;
@@ -142,8 +142,8 @@ public class RemoveMembersActivity extends PortraitActivity implements MemberLis
     }
 
     private void saveRemoval() {
-        final String phoneNumber = SettingPreference.getuser_mobilenumber(this);
-        final String code = SettingPreference.getuser_token(this);
+        final String phoneNumber = PreferenceUtils.getuser_mobilenumber(this);
+        final String code = PreferenceUtils.getuser_token(this);
         grassrootRestService.getApi().removeGroupMembers(phoneNumber, code, groupUid, membersToRemove)
                 .enqueue(new Callback<GenericResponse>() {
                     @Override

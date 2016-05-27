@@ -18,7 +18,7 @@ import com.techmorphosis.grassroot.R;
 import com.techmorphosis.grassroot.ui.activities.HomeScreenActivity;
 import com.techmorphosis.grassroot.ui.activities.NotBuiltActivity;
 import com.techmorphosis.grassroot.ui.activities.ViewVote;
-import com.techmorphosis.grassroot.utils.SettingPreference;
+import com.techmorphosis.grassroot.utils.PreferenceUtils;
 
 import java.util.List;
 
@@ -124,10 +124,10 @@ public class GcmListenerService extends com.google.android.gms.gcm.GcmListenerSe
 
     public void incrementNotificationCounter() {
 
-        int notificationcount = SettingPreference.getIsNotificationcounter(getApplicationContext());
+        int notificationcount = PreferenceUtils.getIsNotificationcounter(getApplicationContext());
         Log.e(TAG, "b4 notificationcount is " + notificationcount);
         notificationcount++;
-        SettingPreference.setIsNotificationcounter(getApplicationContext(), notificationcount);
+        PreferenceUtils.setIsNotificationcounter(getApplicationContext(), notificationcount);
         Log.e(TAG, "after notificationcount is " + notificationcount);
 
     }

@@ -19,7 +19,7 @@ import com.techmorphosis.grassroot.R;
 import com.techmorphosis.grassroot.ui.views.RecyclerTouchListener;
 import com.techmorphosis.grassroot.adapters.NavigationDrawerAdapter;
 import com.techmorphosis.grassroot.models.NavDrawerItem;
-import com.techmorphosis.grassroot.utils.SettingPreference;
+import com.techmorphosis.grassroot.utils.PreferenceUtils;
 
 import java.util.ArrayList;
 
@@ -115,7 +115,7 @@ public class NavigationDrawerFragment extends Fragment {
 
     private void initDisplayName()
     {
-        displayName.setText(SettingPreference.getuser_name(getActivity()));
+        displayName.setText(PreferenceUtils.getuser_name(getActivity()));
     }
 
 
@@ -182,7 +182,7 @@ public class NavigationDrawerFragment extends Fragment {
     public  void updateNotificationDrawers(int position)
     {
 
-        displayName.setText(SettingPreference.getuser_name(getActivity()));
+        displayName.setText(PreferenceUtils.getuser_name(getActivity()));
 
         for (int i = 0; i < draweritems.size(); i++) {
             NavDrawerItem item= (NavDrawerItem) draweritems.get(i);
@@ -207,7 +207,7 @@ public class NavigationDrawerFragment extends Fragment {
     public  void updateNotificationDrawersname()
     {
 
-        displayName.setText(SettingPreference.getuser_name(getActivity()));
+        displayName.setText(PreferenceUtils.getuser_name(getActivity()));
 
     }
 

@@ -6,7 +6,7 @@ import android.content.SharedPreferences;
 /**
  * Created by user on 09-Oct-15.
  */
-public class SettingPreference {
+public class PreferenceUtils {
 
     // Shared Preferences
     SharedPreferences pref;
@@ -28,6 +28,7 @@ public class SettingPreference {
     private static final String PREF_USER_token = "Pref_user_token";
     private static final String PREF_TypeID = "Pref_type_id";
     private static final String PREF_Type = "Pref_type";
+
     private static final String PREF_HAS_SAVE_CLICKED = "Pref_save_clicked";
 
     private static final String IS_NOTIFICATION_COUNTER = "IsNotificationCounter";

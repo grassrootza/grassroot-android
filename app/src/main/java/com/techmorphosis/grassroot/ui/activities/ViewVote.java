@@ -25,13 +25,9 @@ import com.techmorphosis.grassroot.services.model.EventModel;
 import com.techmorphosis.grassroot.services.model.EventResponse;
 import com.techmorphosis.grassroot.services.model.GenericResponse;
 import com.techmorphosis.grassroot.utils.ErrorUtils;
-import com.techmorphosis.grassroot.utils.ProgressBarCircularIndeterminate;
-import com.techmorphosis.grassroot.utils.SettingPreference;
+import com.techmorphosis.grassroot.ui.views.ProgressBarCircularIndeterminate;
+import com.techmorphosis.grassroot.utils.PreferenceUtils;
 
-
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.TimeZone;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -169,8 +165,8 @@ public class ViewVote extends PortraitActivity {
 
     private void init() {
         grassrootRestService = new GrassrootRestService(this);
-        phoneNumber = SettingPreference.getuser_mobilenumber(this);
-        code = SettingPreference.getuser_token(this);
+        phoneNumber = PreferenceUtils.getuser_mobilenumber(this);
+        code = PreferenceUtils.getuser_token(this);
         viewVote();
     }
 

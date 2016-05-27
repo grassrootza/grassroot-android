@@ -17,11 +17,10 @@ import android.telephony.PhoneNumberUtils;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Toast;
 
 import com.techmorphosis.grassroot.models.Contact;
 import com.techmorphosis.grassroot.services.model.Member;
-import com.techmorphosis.grassroot.ui.DialogFragment.NotificationDialog;
+import com.techmorphosis.grassroot.ui.fragments.NotificationDialog;
 import com.techmorphosis.grassroot.ui.activities.PhoneBookContactsActivity;
 import com.techmorphosis.grassroot.ui.fragments.AlertDialogFragment;
 import com.techmorphosis.grassroot.interfaces.AlertDialogListener;
@@ -50,7 +49,7 @@ public class UtilClass {
     public static String MAKE;
     public static String MODEL;
     public static String OS;
-    FragmentTransaction mTransaction;
+
     public Snackbar snackBar;
 
     public UtilClass() {

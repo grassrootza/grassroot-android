@@ -5,7 +5,6 @@ import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
 import android.text.TextUtils;
 import android.util.Log;
@@ -27,7 +26,7 @@ import com.techmorphosis.grassroot.ui.fragments.MemberListFragment;
 import com.techmorphosis.grassroot.utils.Constant;
 import com.techmorphosis.grassroot.utils.ErrorUtils;
 import com.techmorphosis.grassroot.utils.PermissionUtils;
-import com.techmorphosis.grassroot.utils.SettingPreference;
+import com.techmorphosis.grassroot.utils.PreferenceUtils;
 import com.techmorphosis.grassroot.utils.UtilClass;
 
 import java.util.ArrayList;
@@ -191,8 +190,8 @@ public class CreateGroupActivity extends PortraitActivity implements MemberListF
     private void groupCreationWS(){
 
         showProgress();
-        String mobileNumber = SettingPreference.getuser_mobilenumber(CreateGroupActivity.this);
-        String code = SettingPreference.getuser_token(CreateGroupActivity.this);
+        String mobileNumber = PreferenceUtils.getuser_mobilenumber(CreateGroupActivity.this);
+        String code = PreferenceUtils.getuser_token(CreateGroupActivity.this);
         String groupName = et_groupname.getText().toString().trim().replaceAll(regexForName, "");
         String groupDescription = et_group_description.getText().toString().trim();
 
@@ -205,7 +204,7 @@ public class CreateGroupActivity extends PortraitActivity implements MemberListF
                     public void onResponse(Call<GenericResponse> call, Response<GenericResponse> response) {
                         if (response.isSuccessful()) {
                             progressDialog.hide(); // this is leaking ...
-                            SettingPreference.setisHasgroup(getApplicationContext(), true);
+                            PreferenceUtils.setisHasgroup(getApplicationContext(), true);
                             Intent result = new Intent();
                             // todo : add the created group to the intent
                             setResult(RESULT_OK);

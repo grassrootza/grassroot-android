@@ -1,4 +1,4 @@
-package com.techmorphosis.grassroot.ui.DialogFragment.Profile;
+package com.techmorphosis.grassroot.ui.fragments;
 
 import android.annotation.SuppressLint;
 import android.app.DialogFragment;
@@ -16,8 +16,8 @@ import android.widget.Button;
 import android.widget.EditText;
 
 import com.techmorphosis.grassroot.R;
-import com.techmorphosis.grassroot.utils.SimpleTextWatcher;
-import com.techmorphosis.grassroot.utils.Utils;
+import com.techmorphosis.grassroot.interfaces.SimpleTextWatcher;
+import com.techmorphosis.grassroot.utils.DialogUtils;
 
 
 public class EditItemDialog extends DialogFragment {
@@ -81,7 +81,7 @@ public class EditItemDialog extends DialogFragment {
 				.setNegativeButton(R.string.pp_Cancel, new DialogInterface.OnClickListener() {
 					@Override
 					public void onClick(DialogInterface dialog, int which) {
-						Utils.hideSoftInputFrom(getActivity(), editText);
+						DialogUtils.hideSoftInputFrom(getActivity(), editText);
 						dialog.dismiss();
 					}
 				})
@@ -90,7 +90,7 @@ public class EditItemDialog extends DialogFragment {
 					public void onClick(DialogInterface dialog, int which) {
 						getListener().onTitleModified(
 								editText.getText().toString().trim());
-						Utils.hideSoftInputFrom(getActivity(), editText);
+						DialogUtils.hideSoftInputFrom(getActivity(), editText);
 						dialog.dismiss();
 					}
 				});

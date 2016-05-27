@@ -126,8 +126,8 @@ public class LocationUtils implements GoogleApiClient.ConnectionCallbacks, Googl
     }
 
     private void storeUserLocation(double latitude, double longitude) {
-        String userNumber = SettingPreference.getuser_mobilenumber(callingActivity);
-        String userToken = SettingPreference.getuser_token(callingActivity);
+        String userNumber = PreferenceUtils.getuser_mobilenumber(callingActivity);
+        String userToken = PreferenceUtils.getuser_token(callingActivity);
 
         if (userNumber == null || userToken == null)
             throw new UnsupportedOperationException("Error! Environment not set up to do this");

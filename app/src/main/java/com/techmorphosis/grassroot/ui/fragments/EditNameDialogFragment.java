@@ -1,4 +1,4 @@
-package com.techmorphosis.grassroot.ui.DialogFragment.Profile;
+package com.techmorphosis.grassroot.ui.fragments;
 
 import android.app.DialogFragment;
 import android.os.Bundle;
@@ -15,7 +15,7 @@ import android.widget.TextView;
 import com.techmorphosis.grassroot.R;
 import com.techmorphosis.grassroot.adapters.DefaultAdapter;
 import com.techmorphosis.grassroot.models.NavDrawerItem;
-import com.techmorphosis.grassroot.utils.MDRootLayout;
+import com.techmorphosis.grassroot.ui.views.MDRootLayout;
 
 import java.util.ArrayList;
 import java.util.Arrays;

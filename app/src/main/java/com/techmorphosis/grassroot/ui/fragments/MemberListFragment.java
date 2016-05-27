@@ -19,7 +19,7 @@ import com.techmorphosis.grassroot.services.model.Member;
 import com.techmorphosis.grassroot.services.model.MemberList;
 import com.techmorphosis.grassroot.ui.views.RecyclerTouchListener;
 import com.techmorphosis.grassroot.utils.ErrorUtils;
-import com.techmorphosis.grassroot.utils.SettingPreference;
+import com.techmorphosis.grassroot.utils.PreferenceUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -232,8 +232,8 @@ public class MemberListFragment extends Fragment {
         if (groupUid == null)
             throw new UnsupportedOperationException("Cannot retrieve group members from null group uid");
 
-        String userPhoneNumber = SettingPreference.getuser_mobilenumber(this.getContext());
-        String userSessionCode = SettingPreference.getuser_token(this.getContext());
+        String userPhoneNumber = PreferenceUtils.getuser_mobilenumber(this.getContext());
+        String userSessionCode = PreferenceUtils.getuser_token(this.getContext());
 
         Log.d(TAG, "inside MemberListFragment, retrieving group members for uid = " + groupUid);
 

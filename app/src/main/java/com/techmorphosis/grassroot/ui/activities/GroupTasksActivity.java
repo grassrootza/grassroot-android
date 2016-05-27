@@ -31,7 +31,7 @@ import com.techmorphosis.grassroot.ui.views.CustomItemAnimator;
 import com.techmorphosis.grassroot.utils.Constant;
 import com.techmorphosis.grassroot.utils.ErrorUtils;
 import com.techmorphosis.grassroot.utils.MenuUtils;
-import com.techmorphosis.grassroot.utils.SettingPreference;
+import com.techmorphosis.grassroot.utils.PreferenceUtils;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -150,8 +150,8 @@ public class GroupTasksActivity extends PortraitActivity implements TaskListList
 
     private void init() {
         grassrootRestService = new GrassrootRestService(this);
-        phoneNumber = SettingPreference.getuser_mobilenumber(this);
-        code = SettingPreference.getuser_token(this);
+        phoneNumber = PreferenceUtils.getuser_mobilenumber(this);
+        code = PreferenceUtils.getuser_token(this);
         filterFlags = new HashMap<>();
         viewedTasksList = new ArrayList<>();
         resetFilterFlags();

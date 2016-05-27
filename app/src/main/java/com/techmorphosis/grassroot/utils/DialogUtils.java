@@ -1,7 +1,9 @@
 package com.techmorphosis.grassroot.utils;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.res.ColorStateList;
+import android.content.res.Resources;
 import android.content.res.TypedArray;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
@@ -12,6 +14,9 @@ import android.support.annotation.ColorRes;
 import android.support.annotation.NonNull;
 import android.util.TypedValue;
 import android.view.View;
+import android.view.inputmethod.InputMethodManager;
+
+import com.techmorphosis.grassroot.enums.GravityEnum;
 
 
 /**
@@ -28,6 +33,27 @@ public class DialogUtils {
 //            a.recycle();
 //        }
 //    }
+
+    /**
+     * Hide Soft Keyboard from Dialogs with new Thread
+     * @param context
+     * @param view
+     */
+    public static void hideSoftInputFrom(final Context context, final View view) {
+        new Runnable() {
+            @Override
+            public void run() {
+                InputMethodManager imm =
+                        (InputMethodManager) context.getSystemService(Activity.INPUT_METHOD_SERVICE);
+                imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+            }
+        }.run();
+    }
+
+    public static int dpToPx(float dp, Resources resources){
+        float px = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dp, resources.getDisplayMetrics());
+        return (int) px;
+    }
 
     public static int adjustAlpha(int color, @SuppressWarnings("SameParameterValue") float factor) {
         int alpha = Math.round(Color.alpha(color) * factor);

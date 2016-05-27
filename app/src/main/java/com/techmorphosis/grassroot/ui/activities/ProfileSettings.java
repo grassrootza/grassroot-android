@@ -21,13 +21,11 @@ import com.techmorphosis.grassroot.interfaces.ClickListener;
 import com.techmorphosis.grassroot.services.GrassrootRestService;
 import com.techmorphosis.grassroot.services.model.GenericResponse;
 import com.techmorphosis.grassroot.services.model.ProfileResponse;
-import com.techmorphosis.grassroot.ui.DialogFragment.Profile.EditItemDialog;
-import com.techmorphosis.grassroot.ui.DialogFragment.Profile.EditNameDialogFragment;
+import com.techmorphosis.grassroot.ui.fragments.EditItemDialog;
+import com.techmorphosis.grassroot.ui.fragments.EditNameDialogFragment;
 import com.techmorphosis.grassroot.ui.views.RecyclerTouchListener;
-import com.techmorphosis.grassroot.utils.SettingPreference;
+import com.techmorphosis.grassroot.utils.PreferenceUtils;
 
-
-import java.util.ArrayList;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -78,8 +76,8 @@ public class ProfileSettings extends PortraitActivity implements EditItemDialog.
 
     private void getProfileSettings() {
 
-        final String phoneNumber = SettingPreference.getuser_mobilenumber(this);
-        final String code = SettingPreference.getuser_token(this);
+        final String phoneNumber = PreferenceUtils.getuser_mobilenumber(this);
+        final String code = PreferenceUtils.getuser_token(this);
         grassrootRestService.getApi().getUserProfile(phoneNumber,code).enqueue(new Callback<ProfileResponse>() {
             @Override
             public void onResponse(Call<ProfileResponse> call, Response<ProfileResponse> response) {
@@ -106,17 +104,17 @@ public class ProfileSettings extends PortraitActivity implements EditItemDialog.
         final ProgressDialog progressDialog = new ProgressDialog(this);
         String prgMessage = "Please Wait";
         progressDialog.setMessage(prgMessage);
-        final String phoneNumber = SettingPreference.getuser_mobilenumber(this);
-        final String code = SettingPreference.getuser_token(this);
+        final String phoneNumber = PreferenceUtils.getuser_mobilenumber(this);
+        final String code = PreferenceUtils.getuser_token(this);
         progressDialog.show();
         grassrootRestService.getApi().updateProfile(phoneNumber,code, username, language,alertPreference).enqueue(new Callback<GenericResponse>() {
             @Override
             public void onResponse(Call<GenericResponse> call, Response<GenericResponse> response) {
                 progressDialog.dismiss();
                 if (response.isSuccessful()) {
-                    SettingPreference.setuser_name(ProfileSettings.this, username);
-                    SettingPreference.setPrefLanguage(ProfileSettings.this, language);
-                    SettingPreference.setPrefAlert(ProfileSettings.this, alertPreference);
+                    PreferenceUtils.setuser_name(ProfileSettings.this, username);
+                    PreferenceUtils.setPrefLanguage(ProfileSettings.this, language);
+                    PreferenceUtils.setPrefAlert(ProfileSettings.this, alertPreference);
                 }
             }
             @Override
@@ -133,7 +131,7 @@ public class ProfileSettings extends PortraitActivity implements EditItemDialog.
 
     private void setAllViews() {
         txtPpUsername.setText(username);
-        txtPpNumber.setText(SettingPreference.getuser_mobilenumber(ProfileSettings.this));
+        txtPpNumber.setText(PreferenceUtils.getuser_mobilenumber(ProfileSettings.this));
         mRecyclerView();
         btnupdate.setVisibility(View.VISIBLE);
     }
@@ -169,7 +167,7 @@ public class ProfileSettings extends PortraitActivity implements EditItemDialog.
 
                 switch (position) {
                     case 0://UpdateName
-                        EditItemDialog.newInstance(SettingPreference.getuser_name(ProfileSettings.this)).show(getFragmentManager(), EditItemDialog.TAG);
+                        EditItemDialog.newInstance(PreferenceUtils.getuser_name(ProfileSettings.this)).show(getFragmentManager(), EditItemDialog.TAG);
                         break;
 
                     case 1://language

@@ -29,7 +29,7 @@ import com.techmorphosis.grassroot.slideDateTimePicker.SlideDateTimeListener;
 import com.techmorphosis.grassroot.slideDateTimePicker.SlideDateTimePicker;
 import com.techmorphosis.grassroot.utils.Constant;
 import com.techmorphosis.grassroot.utils.ErrorUtils;
-import com.techmorphosis.grassroot.utils.SettingPreference;
+import com.techmorphosis.grassroot.utils.PreferenceUtils;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -140,7 +140,7 @@ public class CreateVoteActivity extends PortraitActivity {
 
         txtDescCount.setText("0/160"); // todo : convert to constant
         txtTitleCount.setText("0/35");
-        txtPostedname.setText("Posted by " + SettingPreference.getuser_name(CreateVoteActivity.this));
+        txtPostedname.setText("Posted by " + PreferenceUtils.getuser_name(CreateVoteActivity.this));
 
         swImmediate.setChecked(true);
         swNotifyall.setChecked(true);
@@ -256,8 +256,8 @@ public class CreateVoteActivity extends PortraitActivity {
     private void  callVoteWS() {
 
         // todo : convert member list into list of UIDs
-        final String phoneNumber = SettingPreference.getuser_mobilenumber(this);
-        final String code = SettingPreference.getuser_token(this);
+        final String phoneNumber = PreferenceUtils.getuser_mobilenumber(this);
+        final String code = PreferenceUtils.getuser_token(this);
         final String title = et_title_cv.getText().toString();
         final String description = et_description_cv.getText().toString(); // todo: make sure can handle empty descs
         final String closingTime = Constant.isoDateTimeSDF.format(selectedDate);
