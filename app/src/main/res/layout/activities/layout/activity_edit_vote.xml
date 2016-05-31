@@ -6,7 +6,7 @@
     android:layout_height="match_parent"
     xmlns:card_view="http://schemas.android.com/apk/res-auto"
     android:background="@color/off_white_background"
-    tools:context=".ui.activities.EditVoteActivity"
+    tools:context="org.grassroot.android.ui.activities.EditVoteActivity"
 
     >
 

@@ -6,7 +6,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/list_background_pressed"
-    tools:context=".ui.activities.GroupTasksActivity">
+    tools:context="org.grassroot.android.ui.activities.GroupTasksActivity">
 
     <android.support.v7.widget.Toolbar
         android:id="@+id/ga_toolbar"

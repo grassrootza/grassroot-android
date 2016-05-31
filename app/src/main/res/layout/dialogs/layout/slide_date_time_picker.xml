@@ -6,12 +6,12 @@
     android:layout_height="match_parent"
     android:orientation="vertical">
 
-    <com.techmorphosis.grassroot.slideDateTimePicker.SlidingTabLayout
+    <org.grassroot.android.slideDateTimePicker.SlidingTabLayout
         android:id="@+id/slidingTabLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />
 
-    <com.techmorphosis.grassroot.slideDateTimePicker.CustomViewPager
+    <org.grassroot.android.slideDateTimePicker.CustomViewPager
         android:id="@+id/viewPager"
         android:layout_width="match_parent"
         android:layout_height="0dp"

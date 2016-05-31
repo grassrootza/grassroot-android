@@ -4,7 +4,7 @@
     android:id="@+id/rl_root_nc"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="com.techmorphosis.grassroot.ui.activities.NotificationCenter">
+    tools:context="org.grassroot.android.ui.activities.NotificationCenter">
 
 
     <android.support.v7.widget.Toolbar
@@ -39,7 +39,7 @@
     </android.support.v7.widget.RecyclerView>
 
 
-    <com.techmorphosis.grassroot.ui.views.ProgressBarCircularIndeterminate
+    <org.grassroot.android.ui.views.ProgressBarCircularIndeterminate
         android:id="@+id/prg_nc"
         android:layout_width="32dp"
         android:layout_height="32dp"
@@ -47,7 +47,7 @@
         android:background="@color/primaryColor"
         android:visibility="gone">
 
-    </com.techmorphosis.grassroot.ui.views.ProgressBarCircularIndeterminate>
+    </org.grassroot.android.ui.views.ProgressBarCircularIndeterminate>
 
     <TextView
         android:id="@+id/txt_prg_nc"

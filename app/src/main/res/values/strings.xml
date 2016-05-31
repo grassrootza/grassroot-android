@@ -298,8 +298,11 @@
     <string name="nc_txt_">v</string>
 
     <string name="USER_ALREADY_PART">User already part of group</string>
-    <string name="sender_id">681116473953@gcm.googleapis.com</string>
-    <string name="project_id">681116473953</string>
+
+
+    <!--todo : make these read project build (debug/signed/etc) and change correspondingly -->
+    <string name="sender_id">13953357197@gcm.googleapis.com</string>
+    <string name="project_id">13953357197</string>
 
     <!-- GCM strings ; todo: put these in config or somewhere not disclosed when source is opened -->
     <string name="Server_API_Key">AIzaSyBFEX10lX_KITAXL0hifg_M1ctRd4ACG2A</string>

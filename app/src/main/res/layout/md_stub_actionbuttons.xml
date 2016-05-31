@@ -2,7 +2,7 @@
     xmlns:tools="http://schemas.android.com/tools">
 
 
-    <com.techmorphosis.grassroot.ui.views.MDButton
+    <org.grassroot.android.ui.views.MDButton
         android:id="@+id/buttonDefaultPositive"
         style="@style/Button"
         android:text="@string/pp_Cancel"

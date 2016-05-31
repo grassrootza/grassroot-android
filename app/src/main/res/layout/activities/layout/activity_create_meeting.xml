@@ -2,7 +2,7 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:card_view="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    tools:context=".ui.activities.CreateMeetingActivity"
+    tools:context="org.grassroot.android.ui.activities.CreateMeetingActivity"
 
     android:id="@+id/cmtg_rl_root"
     android:layout_width="match_parent"
