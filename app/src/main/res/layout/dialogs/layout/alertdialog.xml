@@ -19,7 +19,7 @@
         android:id="@+id/bt_right"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_centerInParent="true"
+        android:layout_alignParentRight="true"
         android:layout_below="@+id/txt_message"
         android:background="@drawable/dark_background"
         android:textSize="@dimen/txt_medium"
@@ -40,11 +40,9 @@
         android:background="@drawable/dark_background"
         android:layout_marginRight="10dp"
         android:textColor="@color/primaryColor"
-        tools:text="Yes"
+        android:text="Yes"
         android:textSize="@dimen/txt_medium"
         android:padding="5dp"
-        android:textAllCaps="true"
-
-        />
+        android:textAllCaps="true" />
 
 </RelativeLayout>

@@ -1,5 +1,6 @@
 package org.grassroot.android.ui.activities;
 
+import android.app.DialogFragment;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
@@ -21,6 +22,7 @@ import com.github.clans.fab.FloatingActionMenu;
 import org.grassroot.android.R;
 import org.grassroot.android.adapters.TasksAdapter;
 import org.grassroot.android.interfaces.AlertDialogListener;
+import org.grassroot.android.interfaces.ConfirmDialogListener;
 import org.grassroot.android.interfaces.TaskListListener;
 import org.grassroot.android.services.GrassrootRestService;
 import org.grassroot.android.services.NoConnectivityException;
@@ -28,6 +30,7 @@ import org.grassroot.android.services.model.GenericResponse;
 import org.grassroot.android.services.model.TaskModel;
 import org.grassroot.android.services.model.TaskResponse;
 import org.grassroot.android.ui.fragments.AlertDialogFragment;
+import org.grassroot.android.ui.fragments.ConfirmCancelDialogFragment;
 import org.grassroot.android.ui.fragments.FilterFragment;
 import org.grassroot.android.ui.views.CustomItemAnimator;
 import org.grassroot.android.utils.Constant;
@@ -319,7 +322,7 @@ public class GroupTasksActivity extends PortraitActivity implements TaskListList
 
         Call<GenericResponse> restCall;
         final String msgSuccess, msgAlreadyResponded;
-        Log.e(TAG, "responing to task with uid = " +taskUid);
+        Log.e(TAG, "responding to task with uid = " +taskUid);
         if (taskType.equals("VOTE")) {
             restCall = grassrootRestService.getApi().castVote(taskUid, phoneNumber, code, response);
             msgSuccess = getString(R.string.ga_Votesend);
@@ -339,10 +342,7 @@ public class GroupTasksActivity extends PortraitActivity implements TaskListList
         } else {
             throw new UnsupportedOperationException("Responding to neither vote nor meeting! Error somewhere");
         }
-
-
     }
-
 
     public void onCardClick(View view, final int position) {
         view.setOnClickListener(new View.OnClickListener() {
@@ -397,20 +397,14 @@ public class GroupTasksActivity extends PortraitActivity implements TaskListList
         return b;
     }
 
-
-    private void confirmAction(final String taskType, final Call<GenericResponse> restCall, final String response, final String msgSuccess
-            , final String msgAlreadyResponded) {
+    public void confirmAction(final String taskType, final Call<GenericResponse> restCall, final String response,
+                              final String msgSuccess, final String msgAlreadyResponded) {
 
         Log.e(TAG, "confirmAction" + taskType);
-        String confirmationMessage = generateConfirmationMessage(taskType, response);
-        alertDialogFragment = UtilClass.showAlertDialog(getFragmentManager(),getString(R.string.Confirm_Action), confirmationMessage, "Yes", "No", true, new AlertDialogListener() {
+        int message = generateConfirmationMessage(taskType, response);
+        DialogFragment newFragment = ConfirmCancelDialogFragment.newInstance(message, new ConfirmDialogListener() {
             @Override
-            public void setRightButton() {//no
-                alertDialogFragment.dismiss();
-            }
-            @Override
-            public void setLeftButton() {
-                alertDialogFragment.dismiss();
+            public void doConfirmClicked() {
                 restCall.enqueue(new Callback<GenericResponse>() {
                     @Override
                     public void onResponse(Call<GenericResponse> call, Response<GenericResponse> response) {
@@ -439,26 +433,26 @@ public class GroupTasksActivity extends PortraitActivity implements TaskListList
                 });
             }
         });
+        newFragment.show(getFragmentManager(), "dialog");
     }
 
 
-    private String generateConfirmationMessage(final String taskType, final String response) {
-        String confirmationMessage = null;
+    private int generateConfirmationMessage(final String taskType, final String response) {
+        int confirmationMessage;
 
-        Log.d(TAG, "Generating confirmtion message.");
+        Log.d(TAG, "Generating confirmation message.");
         switch (taskType) {
             case "VOTE":
-                confirmationMessage = (response.equalsIgnoreCase("Yes")) ? getString(R.string.RESPOND_YES)
-                        : getString(R.string.RESPOND_NO);
+                confirmationMessage = (response.equalsIgnoreCase("Yes")) ? R.string.RESPOND_YES : R.string.RESPOND_NO;
                 break;
             case "MEETING":
-                confirmationMessage = (response.equalsIgnoreCase("Yes")) ? getString(R.string.RSVP_YES)
-                        : getString(R.string.RSVP_NO);
+                confirmationMessage = (response.equalsIgnoreCase("Yes")) ? R.string.RSVP_YES : R.string.RSVP_NO;
                 break;
             case "TODO":
-                confirmationMessage = getString(R.string.TODO_COMPLETED);
+                confirmationMessage = R.string.TODO_COMPLETED;
                 break;
             default:
+                throw new UnsupportedOperationException("cannot have unknown task type");
         }
         return confirmationMessage;
 

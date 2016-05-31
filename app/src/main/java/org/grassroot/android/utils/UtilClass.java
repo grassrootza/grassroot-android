@@ -63,12 +63,14 @@ public class UtilClass {
         snackBar.show();
     }
 
+    // todo: switch all of these to ConfirmCancel or other variants
     public static AlertDialogFragment showAlertDialog(FragmentManager manager,String title, String message, String left, String right,
-                                               Boolean flag, AlertDialogListener alertDialogListener) {
+                                               Boolean cancellable, AlertDialogListener alertDialogListener) {
         AlertDialogFragment alertDialogFragment = new AlertDialogFragment();
         Bundle b = new Bundle();
-        b.putString("message", message);
-        b.putBoolean("cancelable", flag);
+
+        if (message != null) b.putString("message", message);
+        b.putBoolean(Constant.CANCELLABLE, cancellable);
         b.putString("left", left);
         b.putString("right",right);
         b.putString("title", title);

@@ -5,10 +5,10 @@
 package org.grassroot.android.interfaces;
 
 
-public interface AlertDialogListener
-{
+public interface AlertDialogListener {
 
     void setRightButton();
 
     void setLeftButton();
+
 }

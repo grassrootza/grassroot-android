@@ -330,4 +330,7 @@
     <string name="Confirm_Removal">Remove Members?</string>
     <string name="Log_Out">Log Out</string>
 
+    <string name="alert_confirm">Confirm</string>
+    <string name="alert_cancel">Cancel</string>
+
 </resources>

@@ -47,6 +47,8 @@ public class Constant {
     public static final String ENTITY_TYPE = "entity_type";
     public static final String BODY = "body";
 
+    public static final String CANCELLABLE = "cancellable";
+
     public static final SimpleDateFormat isoDateTimeSDF = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
 
     /**
