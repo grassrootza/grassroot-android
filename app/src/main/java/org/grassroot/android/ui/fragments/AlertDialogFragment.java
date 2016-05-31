@@ -5,7 +5,6 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.Window;
 import android.widget.TextView;
 
 import org.grassroot.android.R;
@@ -39,9 +38,10 @@ public class AlertDialogFragment extends DialogFragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.alertdialog, container, false);
         ButterKnife.bind(this, view);
-        getDialog().getWindow().requestFeature(Window.FEATURE_NO_TITLE);
         return view;
     }
+
+
 
     @OnClick(R.id.bt_left)
     public void leftButtonListener() {
@@ -63,6 +63,7 @@ public class AlertDialogFragment extends DialogFragment {
             bt_left.setText(b.getString("left"));
             bt_right.setText(b.getString("right"));
             getDialog().setCancelable(cancel);
+            getDialog().setTitle(b.getString("title"));
         } else {
             txtMessage.setText("error");
         }

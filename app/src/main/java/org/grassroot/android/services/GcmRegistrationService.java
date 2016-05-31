@@ -7,6 +7,7 @@ import android.util.Log;
 
 import com.google.android.gms.gcm.GoogleCloudMessaging;
 import com.google.android.gms.iid.InstanceID;
+
 import org.grassroot.android.R;
 import org.grassroot.android.services.model.GenericResponse;
 import org.grassroot.android.utils.PreferenceUtils;
@@ -34,7 +35,7 @@ public class GcmRegistrationService extends IntentService {
     @Override
     protected void onHandleIntent(Intent intent)  {
 
-        Log.e(TAG, "registering with project ID: " + R.string.project_id);
+        Log.e(TAG, "registering with project ID: " + getString(R.string.project_id));
 
         try {
 
@@ -57,7 +58,6 @@ public class GcmRegistrationService extends IntentService {
                             if (response.isSuccessful()) {
                                 PreferenceUtils.setIsGcmEnabled(GcmRegistrationService.this, true);
                             } else {
-                                //Falling back to gcm upstream even though its more unreliable
                                 try {
                                     GoogleCloudMessaging.getInstance(GcmRegistrationService.this).send(getString(R.string.sender_id),messageId,data);
                                 } catch (IOException e1) {
@@ -65,7 +65,6 @@ public class GcmRegistrationService extends IntentService {
                                 }
                             }
                         }
-
                         @Override
                         public void onFailure(Call<GenericResponse> call, Throwable t) {
                             Log.e(TAG, "Error! Got a network error in service, and can't do anything with it");

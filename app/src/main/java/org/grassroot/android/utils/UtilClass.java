@@ -63,18 +63,19 @@ public class UtilClass {
         snackBar.show();
     }
 
-    public static AlertDialogFragment showAlertDialog(FragmentManager manager, String message, String left, String right,
-                                                      Boolean flag, AlertDialogListener alertDialogListener) {
-        AlertDialogFragment ss2 = new AlertDialogFragment();
+    public static AlertDialogFragment showAlertDialog(FragmentManager manager,String title, String message, String left, String right,
+                                               Boolean flag, AlertDialogListener alertDialogListener) {
+        AlertDialogFragment alertDialogFragment = new AlertDialogFragment();
         Bundle b = new Bundle();
         b.putString("message", message);
         b.putBoolean("cancelable", flag);
         b.putString("left", left);
         b.putString("right",right);
-        ss2.setArguments(b);
-        ss2.setListener(alertDialogListener);
-        ss2.show(manager,null);
-        return ss2;
+        b.putString("title", title);
+        alertDialogFragment.setArguments(b);
+        alertDialogFragment.setListener(alertDialogListener);
+        alertDialogFragment.show(manager,null);
+        return alertDialogFragment;
     }
 
     public static NotificationDialog showAlertDialog(android.support.v4.app.FragmentManager fragmentmanager, String s, String s1, String s2, String s3, boolean flag, AlertDialogListener alertdialoglistener)

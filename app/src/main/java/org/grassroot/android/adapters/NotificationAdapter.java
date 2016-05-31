@@ -26,15 +26,14 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
 
     private List<Notification> notifications = new ArrayList<>();
     private static final String TAG = "NotificationAdapter";
-    private Activity activity;
 
     public NotificationAdapter(ArrayList<Notification> dataList) {
         this.notifications = dataList;
 
     }
 
-    public NotificationAdapter(Activity activity) {
-        this.activity = activity;
+    public NotificationAdapter() {
+
     }
 
     @Override

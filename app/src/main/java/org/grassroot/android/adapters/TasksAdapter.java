@@ -166,6 +166,8 @@ public class TasksAdapter extends RecyclerView.Adapter<TasksAdapter.GA_ViewHolde
     private void hasNotRespondedButCanAction(GA_ViewHolder holder, TaskModel model) { //all grey
         holder.iv3.setImageResource(R.drawable.ic_no_vote_inactive);
         holder.iv2.setImageResource(R.drawable.ic_vote_inactive);
+        holder.iv3.setEnabled(true);
+        holder.iv2.setEnabled(true);
         setResponseListener(holder.iv2, model, "Yes");
         setResponseListener(holder.iv3, model, "No");
     }

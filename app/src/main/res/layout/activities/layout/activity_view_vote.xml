@@ -463,6 +463,8 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_alignParentBottom="true"
+            android:visibility="gone"
+            android:clickable="false"
             style="@style/Button_white"
             android:text="@string/vv_bt_editvote"
             android:layout_marginTop="10dp"

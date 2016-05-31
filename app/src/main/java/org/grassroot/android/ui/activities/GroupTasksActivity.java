@@ -20,18 +20,21 @@ import android.widget.RelativeLayout;
 import com.github.clans.fab.FloatingActionMenu;
 import org.grassroot.android.R;
 import org.grassroot.android.adapters.TasksAdapter;
+import org.grassroot.android.interfaces.AlertDialogListener;
 import org.grassroot.android.interfaces.TaskListListener;
 import org.grassroot.android.services.GrassrootRestService;
 import org.grassroot.android.services.NoConnectivityException;
 import org.grassroot.android.services.model.GenericResponse;
 import org.grassroot.android.services.model.TaskModel;
 import org.grassroot.android.services.model.TaskResponse;
+import org.grassroot.android.ui.fragments.AlertDialogFragment;
 import org.grassroot.android.ui.fragments.FilterFragment;
 import org.grassroot.android.ui.views.CustomItemAnimator;
 import org.grassroot.android.utils.Constant;
 import org.grassroot.android.utils.ErrorUtils;
 import org.grassroot.android.utils.MenuUtils;
 import org.grassroot.android.utils.PreferenceUtils;
+import org.grassroot.android.utils.UtilClass;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -81,6 +84,7 @@ public class GroupTasksActivity extends PortraitActivity implements TaskListList
     ImageView imNoInternet;
 
     private TasksAdapter group_activitiesAdapter;
+    private AlertDialogFragment alertDialogFragment;
 
     public List<TaskModel> fullTasksList; // stores all the tasks we get from server
     public List<TaskModel> viewedTasksList; // on filtering, stores only those we have selected
@@ -113,7 +117,7 @@ public class GroupTasksActivity extends PortraitActivity implements TaskListList
         init();
         setUpViews();
         initRecyclerView();
-        groupActivitiesWS();
+        getTasks();
     }
 
     @Override
@@ -186,7 +190,7 @@ public class GroupTasksActivity extends PortraitActivity implements TaskListList
 
     }
 
-    private void groupActivitiesWS() {
+    private void getTasks() {
         mProgressBar.setVisibility(View.VISIBLE);
         fullTasksList = new ArrayList<>();
 
@@ -315,48 +319,28 @@ public class GroupTasksActivity extends PortraitActivity implements TaskListList
 
         Call<GenericResponse> restCall;
         final String msgSuccess, msgAlreadyResponded;
+        Log.e(TAG, "responing to task with uid = " +taskUid);
         if (taskType.equals("VOTE")) {
             restCall = grassrootRestService.getApi().castVote(taskUid, phoneNumber, code, response);
             msgSuccess = getString(R.string.ga_Votesend);
             msgAlreadyResponded = getString(R.string.ga_VoteFailure);
+            confirmAction(taskType,restCall,response,msgSuccess,msgAlreadyResponded);
         } else if (taskType.equals("MEETING")) {
             restCall = grassrootRestService.getApi().rsvp(taskUid, phoneNumber, code, response);
             msgSuccess = getString(R.string.ga_Meetingsend);
             msgAlreadyResponded = getString(R.string.ga_VoteFailure);
+            confirmAction(taskType,restCall,response,msgSuccess,msgAlreadyResponded);
+
         } else if (taskType.equals("TODO")) {
             restCall = grassrootRestService.getApi().completeTodo(phoneNumber, code, taskUid);
             msgSuccess = getString(R.string.ga_ToDocompleted);
             msgAlreadyResponded = getString(R.string.ga_ToDoFailure);
+            confirmAction(taskType,restCall,response,msgSuccess,msgAlreadyResponded);
         } else {
             throw new UnsupportedOperationException("Responding to neither vote nor meeting! Error somewhere");
         }
 
-        restCall.enqueue(new Callback<GenericResponse>() {
-            @Override
-            public void onResponse(Call<GenericResponse> call, Response<GenericResponse> response) {
-                mProgressBar.setVisibility(View.INVISIBLE);
-                if (response.isSuccessful()) {
-                    showSnackBar(msgSuccess);
-                    groupActivitiesWS(); // refresh list of tasks (todo: make efficient, just refresh one activity)
-                } else {
-                    if (response.code() == 409) { // todo: check this is right, and use constant, not hard code
-                        showSnackBar(msgAlreadyResponded);
-                    } else {
-                        showSnackBar(getString(R.string.Unknown_error));
-                    }
-                }
-            }
 
-            @Override
-            public void onFailure(Call<GenericResponse> call, Throwable t) {
-                mProgressBar.setVisibility(View.INVISIBLE);
-                if (t instanceof NoConnectivityException) {
-                    imNoInternet.setVisibility(View.VISIBLE);
-                } else {
-                    ErrorUtils.handleNetworkError(GroupTasksActivity.this, rlActivityRoot, t);
-                }
-            }
-        });
     }
 
 
@@ -365,9 +349,9 @@ public class GroupTasksActivity extends PortraitActivity implements TaskListList
             @Override
             public void onClick(View v) {
                 TaskModel model = viewedTasksList.get(position); // todo : check this
-                Log.e(TAG,"positions is " + position);
-                Log.e(TAG,"title is " + model.getTitle());
-                Log.e(TAG,"type is " + model.getType());
+                Log.e(TAG, "positions is " + position);
+                Log.e(TAG, "title is " + model.getTitle());
+                Log.e(TAG, "type is " + model.getType());
                 if (model.getType().equalsIgnoreCase("VOTE")) {
                     Intent vote_view = new Intent(GroupTasksActivity.this, ViewVoteActivity.class);
                     vote_view.putExtra("id", model.getId());
@@ -413,4 +397,71 @@ public class GroupTasksActivity extends PortraitActivity implements TaskListList
         return b;
     }
 
+
+    private void confirmAction(final String taskType, final Call<GenericResponse> restCall, final String response, final String msgSuccess
+            , final String msgAlreadyResponded) {
+
+        Log.e(TAG, "confirmAction" + taskType);
+        String confirmationMessage = generateConfirmationMessage(taskType, response);
+        alertDialogFragment = UtilClass.showAlertDialog(getFragmentManager(),getString(R.string.Confirm_Action), confirmationMessage, "Yes", "No", true, new AlertDialogListener() {
+            @Override
+            public void setRightButton() {//no
+                alertDialogFragment.dismiss();
+            }
+            @Override
+            public void setLeftButton() {
+                alertDialogFragment.dismiss();
+                restCall.enqueue(new Callback<GenericResponse>() {
+                    @Override
+                    public void onResponse(Call<GenericResponse> call, Response<GenericResponse> response) {
+                        mProgressBar.setVisibility(View.INVISIBLE);
+                        if (response.isSuccessful()) {
+                            showSnackBar(msgSuccess);
+                            getTasks(); // refresh list of tasks (todo: make efficient, just refresh one activity)
+                        } else {
+                            if (response.code() == 409) { // todo: check this is right, and use constant, not hard code
+                                showSnackBar(msgAlreadyResponded);
+                            } else {
+                                showSnackBar(getString(R.string.Unknown_error));
+                            }
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(Call<GenericResponse> call, Throwable t) {
+                        mProgressBar.setVisibility(View.INVISIBLE);
+                        if (t instanceof NoConnectivityException) {
+                            imNoInternet.setVisibility(View.VISIBLE);
+                        } else {
+                            ErrorUtils.handleNetworkError(GroupTasksActivity.this, rlActivityRoot, t);
+                        }
+                    }
+                });
+            }
+        });
+    }
+
+
+    private String generateConfirmationMessage(final String taskType, final String response) {
+        String confirmationMessage = null;
+
+        Log.d(TAG, "Generating confirmtion message.");
+        switch (taskType) {
+            case "VOTE":
+                confirmationMessage = (response.equalsIgnoreCase("Yes")) ? getString(R.string.RESPOND_YES)
+                        : getString(R.string.RESPOND_NO);
+                break;
+            case "MEETING":
+                confirmationMessage = (response.equalsIgnoreCase("Yes")) ? getString(R.string.RSVP_YES)
+                        : getString(R.string.RSVP_NO);
+                break;
+            case "TODO":
+                confirmationMessage = getString(R.string.TODO_COMPLETED);
+                break;
+            default:
+        }
+        return confirmationMessage;
+
+
+    }
 }

@@ -194,7 +194,7 @@
 
     <!--View Vote--> <!--vv-->
     <string name="vv_tv_toolbar">VIEW VOTE</string>
-    <string name="vv_bt_editvote">Edit Vote</string>
+    <string name="vv_bt_editvote">Modify Vote</string>
     <string name="vv_rl_vote_header">Do you agree or disagree?</string>
     <string name="vv_yes">Yes</string>
     <string name="vv_no">No</string>
@@ -319,5 +319,15 @@
     <string name="bs_BR_name">Blank Screen</string>
     <string name="wait_message">Please wait...</string>
     <string name="profile_updated">Profile Updated</string>
+    <string name="RESPOND_YES">You have clicked on \'Yes\'. Do you want to proceed with the vote?</string>
+    <string name="RESPOND_NO">You have clicked on \'No\'. Do you want to proceed with the vote?</string>
+    <string name="RSVP_YES">You have marked yourself as attending the meeting. Proceed?</string>
+    <string name="RSVP_NO">You have marked yourself as not attending the meeting. Proceed?</string>
+    <string name="TODO_COMPLETED">Are you you want to mark the TODO as completed?</string>
+    <string name="Title_Dialog_GroupJoin">Group Join Request</string>
+    <string name="Title_Join_Request_Sent">Join Request Sent!</string>
+    <string name="Confirm_Action">Complete Action?</string>
+    <string name="Confirm_Removal">Remove Members?</string>
+    <string name="Log_Out">Log Out</string>
 
 </resources>

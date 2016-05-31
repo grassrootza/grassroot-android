@@ -17,6 +17,7 @@ import android.util.Log;
 import org.grassroot.android.R;
 import org.grassroot.android.ui.activities.NotBuiltActivity;
 import org.grassroot.android.ui.activities.ViewVoteActivity;
+import org.grassroot.android.utils.Constant;
 import org.grassroot.android.utils.PreferenceUtils;
 
 import java.util.List;
@@ -30,12 +31,11 @@ public class GcmListenerService extends com.google.android.gms.gcm.GcmListenerSe
     private static final String STACK_KEY = "stack_key";
 
 
-
     @Override
     public void onMessageReceived(String from, Bundle data) {
-                incrementNotificationCounter();
-                sendNotification(data);
-
+        Log.e(TAG, "message received, from : " + from);
+        incrementNotificationCounter();
+        sendNotification(data);
     }
 
     @Override
@@ -52,50 +52,47 @@ public class GcmListenerService extends com.google.android.gms.gcm.GcmListenerSe
 
     private void sendNotification(Bundle msg) {
 
-        Log.d(TAG, "Received a push notification from server");
-       // Intent resultIntent = generateResultIntent(msg);
-       // resultIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK|Intent.FLAG_ACTIVITY_SINGLE_TOP);
-       // PendingIntent resultPendingIntent = PendingIntent.getActivity(getBaseContext(), 0,
-             //   resultIntent,PendingIntent.FLAG_ONE_SHOT);
-        generateResultIntent(msg).cancel();
+        Log.e(TAG, "Received a push notification from server, looks like: + " + msg.toString());
         PendingIntent resultPendingIntent = generateResultIntent(msg);
-        NotificationManager mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        long when = System.currentTimeMillis();
+        NotificationManager mNotificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
         if (Build.VERSION.SDK_INT >= 21) {
 
             NotificationCompat.InboxStyle inboxStyle = new NotificationCompat.InboxStyle();
-            NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(getApplicationContext());
+            NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(this);
             Notification notification = mBuilder.setSmallIcon((Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP)
-                    ? R.drawable.ic_notification_icon : R.drawable.app_icon).setTicker(msg.getString("title")).setWhen(0)
+                    ? R.drawable.ic_notification_icon : R.drawable.app_icon).setTicker(msg.getString("title")).setWhen(when)
                     .setAutoCancel(true)
-                    .setContentTitle(msg.getString("title"))
+                    .setContentTitle(msg.getString(Constant.TITLE))
                     .setStyle(inboxStyle)
                     .setContentIntent(resultPendingIntent)
                     .setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION))
-                    .setLargeIcon(BitmapFactory.decodeResource(getBaseContext().getResources(), R.drawable.app_icon))
-                    .setContentText(msg.getString("body"))
-                    //.setGroup(STACK_KEY)
+                    .setLargeIcon(BitmapFactory.decodeResource(getResources(), R.drawable.app_icon))
+                    .setContentText(msg.getString(Constant.BODY))
+                    .setGroup(STACK_KEY)
                     .build();
-
-            mNotificationManager.notify(msg.getString("id"), 0, notification);
-
+            mNotificationManager.notify(msg.getString(Constant.UID), (int) System.currentTimeMillis(), notification);
         } else {
-            NotificationCompat.Builder mNotifyBuilder = new NotificationCompat.Builder(getBaseContext())
-                    .setContentTitle(msg.getString("title"))
-                    .setContentText(msg.getString("body"))
+            Log.e(TAG, "notification received, following KitKat branch");
+            NotificationCompat.Builder mNotifyBuilder = new NotificationCompat.Builder(this);
+            Notification notification = mNotifyBuilder
+                    .setContentTitle(msg.getString(Constant.TITLE))
+                    .setWhen(when)
+                    .setContentText(msg.getString(Constant.BODY))
                     .setAutoCancel(true)
                     .setSmallIcon(R.drawable.app_icon)
-                    .setContentIntent(resultPendingIntent);
-                  //  .setGroup(STACK_KEY);
+                    .setContentIntent(resultPendingIntent)
+                    .setGroup(STACK_KEY)
+                    .build();
+
 
             int defaults = 0;
             defaults = defaults | Notification.DEFAULT_LIGHTS;
             defaults = defaults | Notification.DEFAULT_SOUND;
             mNotifyBuilder.setDefaults(defaults);
-            mNotificationManager.notify(msg.getString("id"), 0, mNotifyBuilder.build());
+            mNotificationManager.notify(msg.getString(Constant.UID), (int) System.currentTimeMillis(), notification);
 
         }
-
-
     }
 
     public boolean isAppIsInBackground(Context context) {
@@ -126,39 +123,39 @@ public class GcmListenerService extends com.google.android.gms.gcm.GcmListenerSe
 
     public void incrementNotificationCounter() {
 
-        int notificationcount = PreferenceUtils.getIsNotificationcounter(getApplicationContext());
+        int notificationcount = PreferenceUtils.getIsNotificationcounter(this);
         Log.e(TAG, "b4 notificationcount is " + notificationcount);
         notificationcount++;
-        PreferenceUtils.setIsNotificationcounter(getApplicationContext(), notificationcount);
+        PreferenceUtils.setIsNotificationcounter(this, notificationcount);
         Log.e(TAG, "after notificationcount is " + notificationcount);
 
     }
 
 
     private PendingIntent generateResultIntent(Bundle msg) {
-        TaskStackBuilder stackBuilder = TaskStackBuilder.create(getBaseContext());
+
+        Log.e(TAG, "generateResultIntent called, with message bundle: " + msg.toString());
+
         Intent resultIntent;
-        if (msg.getString("entity_type").equalsIgnoreCase("vote")) {
-            resultIntent = new Intent(getBaseContext(), ViewVoteActivity.class);
-            stackBuilder.addParentStack(ViewVoteActivity.class);
-            resultIntent.putExtra("id", msg.getString("id"));
+        if (msg.getString(Constant.ENTITY_TYPE).equalsIgnoreCase("vote")) {
+            resultIntent = new Intent(this, ViewVoteActivity.class);
+            ;
         } else {
-            resultIntent = new Intent(getBaseContext(), NotBuiltActivity.class);
-
+            resultIntent = new Intent(this, NotBuiltActivity.class);
         }
-        resultIntent.putExtra("entity_type", msg.getString("entity_type"));
-        Log.d(TAG, msg.getString("entity_type"));
-        resultIntent.putExtra("title", msg.getString("title"));
-        resultIntent.putExtra("body", msg.getString("body"));
-        resultIntent.putExtra("id", msg.getString("id"));
+        resultIntent.putExtra(Constant.ENTITY_TYPE, msg.getString(Constant.ENTITY_TYPE));
+        resultIntent.putExtra(Constant.TITLE, msg.getString(Constant.TITLE));
+        resultIntent.putExtra(Constant.BODY, msg.getString(Constant.BODY));
+        resultIntent.putExtra(Constant.UID, msg.getString(Constant.UID));
+        resultIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
 
-        stackBuilder.addNextIntent(resultIntent);
+        PendingIntent resultPendingIntent = PendingIntent.getActivity(this, (int) System.currentTimeMillis(), resultIntent, PendingIntent.FLAG_CANCEL_CURRENT);
+        Log.e(TAG, "generateResultIntent exiting, with intent: " + resultPendingIntent.toString());
 
-        return stackBuilder.getPendingIntent(0, PendingIntent.FLAG_CANCEL_CURRENT);
+        return resultPendingIntent;
 
 
     }
-
 
 
 }

@@ -132,7 +132,7 @@ public class HomeScreenActivity extends PortraitActivity implements NavigationDr
 
 
     private void logout() {
-        alertDialogFragment = UtilClass.showAlertDialog(getFragmentManager(), getString(R.string.Logout_message), "Yes", "No", true, new AlertDialogListener() {
+        alertDialogFragment = UtilClass.showAlertDialog(getFragmentManager(),getString(R.string.Log_Out), getString(R.string.Logout_message), "Yes", "No", true, new AlertDialogListener() {
             @Override
             public void setRightButton() {//no
                 alertDialogFragment.dismiss();

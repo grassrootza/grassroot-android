@@ -125,7 +125,7 @@ public class RemoveMembersActivity extends PortraitActivity implements MemberLis
             finish();
         } else {
             final String message = String.format("You are about to remove %d members. Are you sure?", membersToRemove.size());
-            dialogFragment = UtilClass.showAlertDialog(getFragmentManager(), message, "Cancel", "Confirm", true,
+            dialogFragment = UtilClass.showAlertDialog(getFragmentManager(),getString(R.string.Confirm_Removal), message, "Cancel", "Confirm", true,
                     new AlertDialogListener() {
                         @Override
                         public void setLeftButton() {

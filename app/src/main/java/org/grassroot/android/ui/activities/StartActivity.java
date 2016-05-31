@@ -51,14 +51,13 @@ import retrofit2.Response;
 /**
  * Created by admin on 22-Dec-15.
  */
-@SuppressLint("NewApi")
 public class StartActivity extends PortraitActivity implements HomeScreenViewFragment.OnHomeScreenInteractionListener,
         RegisterScreenFragment.OnRegisterScreenInteractionListener, LoginScreenFragment.OnLoginScreenInteractionListener,
         OtpScreenFragment.OnOtpScreenFragmentListener {
     //will fix once we start with mvp implementation
 
     private Handler defaultHandler;
-    private String TAG = StartActivity.class.getSimpleName();
+    private String TAG = StartActivity.class.getCanonicalName();
 
     private Snackbar snackBar;
     private DisplayMetrics displayMetrics;
@@ -103,6 +102,18 @@ public class StartActivity extends PortraitActivity implements HomeScreenViewFra
         super.onCreate(bundle);
         Thread.setDefaultUncaughtExceptionHandler(new TopExceptionHandler(this));
 
+        Intent intent = getIntent();
+        if(intent.hasExtra("type") && intent.getStringExtra("type").compareTo("notification")==0) {
+            Intent redirect = new Intent(getIntent());
+            Log.d(TAG, getIntent().toString());
+            if (getIntent().getStringExtra("entity_type").equalsIgnoreCase("vote")) {
+                redirect.setClass(this, ViewVoteActivity.class);
+
+            }
+            startActivity(redirect);
+        }
+
+        Log.e(TAG, intent.toString());
         if (!PreferenceUtils.getisLoggedIn(this)) {
             setContentView(R.layout.start);
             ButterKnife.bind(this);
@@ -136,6 +147,22 @@ public class StartActivity extends PortraitActivity implements HomeScreenViewFra
                     finish();
                 }
             }, Constant.shortDelay);
+        }
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+
+        //This is a hack for the kit-kat/lollipop bug
+        if(intent.hasExtra("type") && intent.getStringExtra("type").compareTo("notification")==0) {
+            Intent redirect = new Intent(getIntent());
+            Log.d(TAG, getIntent().toString());
+            if (getIntent().getStringExtra("entity_type").equalsIgnoreCase("vote")) {
+                redirect.setClass(this, ViewVoteActivity.class);
+
+            }
+            startActivity(redirect);
         }
     }
 

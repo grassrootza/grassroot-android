@@ -116,7 +116,7 @@ public class GroupJoinActivity extends PortraitActivity implements OnClickListen
             @Override
             public void onClick(View view, int position) {
                 uid = joinrequestList.get(position).getId();
-                alertDialog = UtilClass.showAlertDialog(getFragmentManager(),
+                alertDialog = showAlertDialog(getFragmentManager(),getString(R.string.Title_Dialog_GroupJoin),
                         getString(R.string.alertbox), "NO", "YES", false, new AlertDialogListener() {
                     @Override
                     public void setRightButton() {
@@ -265,7 +265,7 @@ public class GroupJoinActivity extends PortraitActivity implements OnClickListen
                     public void onResponse(Call<GenericResponse> call, Response<GenericResponse> response) {
                         progressDialog.dismiss();
                         if (response.isSuccessful()) {
-                            alertDialog = UtilClass.showAlertDialog(getFragmentManager(), "Your request has been sent ", "", "OK", false, new AlertDialogListener() {
+                            alertDialog = showAlertDialog(getFragmentManager(),getString(R.string.Title_Join_Request_Sent) ,"Your request has been sent ", "", "OK", false, new AlertDialogListener() {
                                 @Override
                                 public void setRightButton() {
                                     finish();

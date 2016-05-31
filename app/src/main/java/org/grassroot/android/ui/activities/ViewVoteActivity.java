@@ -24,6 +24,7 @@ import org.grassroot.android.services.GrassrootRestService;
 import org.grassroot.android.services.model.EventModel;
 import org.grassroot.android.services.model.EventResponse;
 import org.grassroot.android.services.model.GenericResponse;
+import org.grassroot.android.utils.Constant;
 import org.grassroot.android.utils.ErrorUtils;
 import org.grassroot.android.ui.views.ProgressBarCircularIndeterminate;
 import org.grassroot.android.utils.PreferenceUtils;
@@ -135,13 +136,11 @@ public class ViewVoteActivity extends PortraitActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_view_vote);
         ButterKnife.bind(this);
-        findAllViews();
         if (getIntent() != null) {
-            voteid = getIntent().getExtras().getString("id");
+            voteid = getIntent().getExtras().getString(Constant.UID);
         }
         setUpToolbar();
         init();
-
 
     }
 
@@ -166,12 +165,12 @@ public class ViewVoteActivity extends PortraitActivity {
         grassrootRestService = new GrassrootRestService(this);
         phoneNumber = PreferenceUtils.getuser_mobilenumber(this);
         code = PreferenceUtils.getuser_token(this);
-        viewVote();
+        updateView();
     }
 
-    private void viewVote() {
+    private void updateView() {
         showProgress();
-        getVote();
+        fetchVoteDetails();
     }
 
 
@@ -182,7 +181,7 @@ public class ViewVoteActivity extends PortraitActivity {
 
     }
 
-    private void getVote() {
+    private void fetchVoteDetails() {
         grassrootRestService.getApi().viewVote(phoneNumber, code, voteid).enqueue(new Callback<EventResponse>() {
             @Override
             public void onResponse(Call<EventResponse> call, Response<EventResponse> response) {
@@ -191,7 +190,6 @@ public class ViewVoteActivity extends PortraitActivity {
                     eventModel = response.body().getEventModel();
                     setView(eventModel);
                 }
-
             }
 
             @Override
@@ -232,135 +230,16 @@ public class ViewVoteActivity extends PortraitActivity {
         canEdit = model.isCanEdit();
         deadline = model.getDeadline();
         description = model.getDescription();
-        votemeeting(model);
+
+        toggleActionButtons(model);
+
         if (model.isCanEdit()) {
-            bt_editVote.setEnabled(true);
+            bt_editVote.setClickable(true);
+            bt_editVote.setVisibility(View.VISIBLE);
         }
         progressBarCircularIndeterminate.setVisibility(View.GONE);
         txtPrg.setVisibility(View.GONE);
         rlVvMainLayout.setVisibility(View.VISIBLE);
-
-    }
-
-    private void votemeeting(EventModel model) {
-        canAction(model);
-    }
-
-    private void canAction(EventModel model) {
-        if (model.getCanAction()) {
-            if (model.getHasResponded()) {
-                canActionIsTrue(model);
-            } else {
-                canActionIsTrue2(model);
-            }
-        } else if (!model.getCanAction()) {
-            canActionIsFalse(model);
-        }
-
-    }
-
-    private void canActionIsTrue2(EventModel model) {
-        thumbsUp.setEnabled(true);
-        thumbsDown.setEnabled(true);
-
-        //Thumbs down
-        thumbsUp.setImageResource(R.drawable.ic_no_vote_inactive);
-        //Thumbs up
-        thumbsDown.setImageResource(R.drawable.ic_vote_inactive);
-
-    }
-
-
-    private void canActionIsTrue(EventModel model) {
-        if (model.getReply().equalsIgnoreCase("Yes")) {
-
-            //Thumbs up
-            thumbsUp.setImageResource(R.drawable.ic_vote_active);
-
-            //Thumbs down
-            thumbsDown.setImageResource(R.drawable.ic_no_vote_inactive);
-
-            thumbsUp.setEnabled(false);
-            thumbsDown.setEnabled(true);
-
-
-        } else if (model.getReply().equalsIgnoreCase("No")) {
-
-            //Thumbs up
-            thumbsUp.setImageResource(R.drawable.ic_vote_inactive);
-            //Thumbs down
-            thumbsDown.setImageResource(R.drawable.ic_no_vote_active);
-            thumbsUp.setEnabled(true);
-            thumbsDown.setEnabled(false);
-
-        } else if (model.getReply().equalsIgnoreCase("NO_RESPONSE")) {
-            //Thumbs up
-            thumbsUp.setImageResource(R.drawable.ic_vote_inactive);
-            //Thumbs down
-            thumbsDown.setImageResource(R.drawable.ic_no_vote_inactive);
-            thumbsUp.setEnabled(true);
-            thumbsDown.setEnabled(true);
-        }
-
-
-    }
-
-    private void canActionIsFalse(EventModel model) {
-        thumbsUp.setEnabled(false);
-        thumbsDown.setEnabled(false);
-        if (model.getReply().equalsIgnoreCase("Yes")) {
-            //Thumbs up
-            thumbsUp.setImageResource(R.drawable.ic_vote_active);
-            //Thumbs down
-            thumbsDown.setImageResource(R.drawable.ic_no_vote_inactive);
-
-        } else if (model.getReply().equalsIgnoreCase("No")) {
-
-            //Thumbs up
-            thumbsUp.setImageResource(R.drawable.ic_vote_inactive);
-            //Thumbs down
-            thumbsDown.setImageResource(R.drawable.ic_no_vote_active);
-
-
-        } else if (model.getReply().equalsIgnoreCase("NO_RESPONSE")) {
-            //Thumbs up
-            thumbsUp.setImageResource(R.drawable.ic_vote_inactive);
-            //Thumbs down
-            thumbsDown.setImageResource(R.drawable.ic_no_vote_inactive);
-
-        }
-
-
-    }
-
-
-    private void castVote(String response) {
-
-        grassrootRestService.getApi().castVote(voteid, phoneNumber, code, response).
-                enqueue(new Callback<GenericResponse>() {
-                    @Override
-                    public void onResponse(Call<GenericResponse> call, Response<GenericResponse> response) {
-                        if (response.isSuccessful()) {
-                            showSnackBar(getString(R.string.ga_Votesend), "", "", "", Snackbar.LENGTH_SHORT);
-                            viewVote();
-                        }
-
-                    }
-
-                    @Override
-                    public void onFailure(Call<GenericResponse> call, Throwable t) {
-                        progressBarCircularIndeterminate.setVisibility(View.GONE);
-                        txtPrg.setVisibility(View.GONE);
-                        ErrorUtils.handleNetworkError(ViewVoteActivity.this, errorLayout, t);
-                    }
-                });
-    }
-
-
-    private void findAllViews() {
-
-        bt_editVote.setEnabled(false);
-        //Add onPreDrawListener
         mLinearLayout.getViewTreeObserver().addOnPreDrawListener(
                 new ViewTreeObserver.OnPreDrawListener() {
 
@@ -373,6 +252,88 @@ public class ViewVoteActivity extends PortraitActivity {
                         mLinearLayout.measure(widthSpec, heightSpec);
                         mAnimator = slideAnimator(0, mLinearLayout.getMeasuredHeight());
                         return true;
+                    }
+                });
+
+    }
+
+    private void toggleActionButtons(EventModel model) {
+        if (model.getCanAction()) {
+            if (model.getHasResponded()) {
+                hasRespondedButCanAction(model);
+            } else {
+                hasNotRespondedAndCanAction(model);
+            }
+        } else if (!model.getCanAction()) {
+            cannotAction(model);
+        }
+    }
+
+    private void hasNotRespondedAndCanAction(EventModel model) {
+        thumbsUp.setEnabled(true);
+        thumbsDown.setEnabled(true);
+        thumbsUp.setImageResource(R.drawable.ic_no_vote_inactive);
+        thumbsDown.setImageResource(R.drawable.ic_vote_inactive);
+    }
+
+    private void hasRespondedButCanAction(EventModel model) {
+        if (model.getReply().equalsIgnoreCase("Yes")) {
+            thumbsUp.setImageResource(R.drawable.ic_vote_active);
+            thumbsDown.setImageResource(R.drawable.ic_no_vote_inactive);
+            thumbsUp.setEnabled(false);
+            thumbsDown.setEnabled(true);
+
+        } else if (model.getReply().equalsIgnoreCase("No")) {
+            thumbsUp.setImageResource(R.drawable.ic_vote_inactive);
+            thumbsDown.setImageResource(R.drawable.ic_no_vote_active);
+            thumbsUp.setEnabled(true);
+            thumbsDown.setEnabled(false);
+
+        } else if (model.getReply().equalsIgnoreCase("NO_RESPONSE")) {
+            thumbsUp.setImageResource(R.drawable.ic_vote_inactive);
+            thumbsDown.setImageResource(R.drawable.ic_no_vote_inactive);
+            thumbsUp.setEnabled(true);
+            thumbsDown.setEnabled(true);
+        }
+
+    }
+
+    private void cannotAction(EventModel model) {
+        thumbsUp.setEnabled(false);
+        thumbsDown.setEnabled(false);
+        if (model.getReply().equalsIgnoreCase("Yes")) {
+            thumbsUp.setImageResource(R.drawable.ic_vote_active);
+            thumbsDown.setImageResource(R.drawable.ic_no_vote_inactive);
+
+        } else if (model.getReply().equalsIgnoreCase("No")) {
+            thumbsUp.setImageResource(R.drawable.ic_vote_inactive);
+            thumbsDown.setImageResource(R.drawable.ic_no_vote_active);
+
+
+        } else if (model.getReply().equalsIgnoreCase("NO_RESPONSE")) {
+            thumbsUp.setImageResource(R.drawable.ic_vote_inactive);
+            thumbsDown.setImageResource(R.drawable.ic_no_vote_inactive);
+
+        }
+
+    }
+
+    private void castVote(String response) {
+
+        grassrootRestService.getApi().castVote(voteid, phoneNumber, code, response).
+                enqueue(new Callback<GenericResponse>() {
+                    @Override
+                    public void onResponse(Call<GenericResponse> call, Response<GenericResponse> response) {
+                        if (response.isSuccessful()) {
+                            showSnackBar(getString(R.string.ga_Votesend), "", "", "", Snackbar.LENGTH_SHORT);
+                            updateView();
+                        }
+                    }
+                    @Override
+                    public void onFailure(Call<GenericResponse> call, Throwable t) {
+                        progressBarCircularIndeterminate.setVisibility(View.GONE);
+                        txtPrg.setVisibility(View.GONE);
+                        ErrorUtils.handleNetworkError(ViewVoteActivity.this, errorLayout, t);
                     }
                 });
     }
@@ -388,7 +349,6 @@ public class ViewVoteActivity extends PortraitActivity {
         castVote("Yes");
     }
 
-
     @OnClick(R.id.expandable)
     public void onExpandableHeaderClickClick(View v) {
         if (mLinearLayout.getVisibility() == View.GONE) {
@@ -398,7 +358,6 @@ public class ViewVoteActivity extends PortraitActivity {
             ivExpand.setImageResource(R.drawable.ic_arrow_down);
             collapse();
         }
-
 
     }
 
@@ -416,15 +375,14 @@ public class ViewVoteActivity extends PortraitActivity {
     }
 
 
-    private void expand() {
-        //set Visible
+    @OnClick(R.id.iv_expand)
+    public void expand() {
         mLinearLayout.setVisibility(View.VISIBLE);
         mAnimator.start();
     }
 
     private void collapse() {
         int finalHeight = mLinearLayout.getHeight();
-
         ValueAnimator mAnimator = slideAnimator(finalHeight, 0);
         mAnimator.addListener(new Animator.AnimatorListener() {
             @Override
@@ -432,15 +390,12 @@ public class ViewVoteActivity extends PortraitActivity {
                 //Height=0, but it set visibility to GONE
                 mLinearLayout.setVisibility(View.GONE);
             }
-
             @Override
             public void onAnimationStart(Animator animator) {
             }
-
             @Override
             public void onAnimationCancel(Animator animator) {
             }
-
             @Override
             public void onAnimationRepeat(Animator animator) {
             }
@@ -470,7 +425,6 @@ public class ViewVoteActivity extends PortraitActivity {
 
 
         if (resultCode == 1 && requestCode == 1) {
-
             Log.e(this.TAG, "resultCode==1 ");
             if (data != null) {
                 showSnackBar(getString(R.string.vv_voteup), "", "", "", Snackbar.LENGTH_SHORT);
@@ -481,7 +435,6 @@ public class ViewVoteActivity extends PortraitActivity {
             }
         } else {
             Log.e(this.TAG, "resultCode==2");
-
         }
     }
 
@@ -496,13 +449,11 @@ public class ViewVoteActivity extends PortraitActivity {
                     if (type.equalsIgnoreCase("VoteMeeting")) {
                         castVote(response);
                     } else {
-                        viewVote();
-
+                        updateView();
                     }
                 }
             });
         }
-
         snackbar.show();
 
     }

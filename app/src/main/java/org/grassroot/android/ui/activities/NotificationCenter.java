@@ -84,7 +84,7 @@ public class NotificationCenter extends PortraitActivity {
 
     private void init() {
         grassrootRestService = new GrassrootRestService(this);
-        notificationAdapter = new NotificationAdapter(this);
+        notificationAdapter = new NotificationAdapter();
         rcNc.setAdapter(notificationAdapter);
         getNotifications(null, null);
     }

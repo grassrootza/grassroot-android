@@ -42,6 +42,10 @@ public class Constant {
     public static final String ROLE_ORDINARY_MEMBER  = "ROLE_ORDINARY_MEMBER";
 
     public static final String NO_GROUP_TASKS = "NO_GROUP_ACTIVITIES";
+    public static final String UID = "id";
+    public static final String TITLE = "title";
+    public static final String ENTITY_TYPE = "entity_type";
+    public static final String BODY = "body";
 
     public static final SimpleDateFormat isoDateTimeSDF = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
 
