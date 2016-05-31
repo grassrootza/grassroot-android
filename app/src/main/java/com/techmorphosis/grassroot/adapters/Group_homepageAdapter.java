@@ -81,6 +81,7 @@ public class Group_homepageAdapter  extends RecyclerView.Adapter<Group_homepageA
         }
         else if (Integer.parseInt(model.groupMemberCount) > 2)
         {
+            holder.profileV1.setVisibility(View.VISIBLE);
             holder.profileV2.setVisibility(View.VISIBLE);
             holder.profileV3.setVisibility(View.VISIBLE);
             holder.profileV3.setText("+" + String.valueOf(Integer.parseInt(model.groupMemberCount) - 2));

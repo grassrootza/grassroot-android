@@ -129,6 +129,7 @@
         android:background="@color/background"
         android:clipToPadding="false"
         android:visibility="gone"
+
         />
     <include
         android:id="@+id/error_layout"
@@ -145,7 +146,7 @@
         android:layout_height="32dp"
         android:background="@color/primaryColor"
         android:layout_centerInParent="true"
-        android:visibility="visible"
+        android:visibility="gone"
         ></com.techmorphosis.grassroot.utils.ProgressBarCircularIndeterminate>
 
     <TextView
@@ -155,7 +156,7 @@
         android:text="@string/cg_contacs_loading"
         android:layout_below="@+id/prg_pb"
         android:layout_centerHorizontal="true"
-        android:visibility="visible"
+        android:visibility="gone"
         />
 
 </RelativeLayout>

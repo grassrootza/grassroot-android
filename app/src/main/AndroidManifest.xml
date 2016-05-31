@@ -67,7 +67,8 @@
         <activity
             android:name=".ui.activities.Create_Group"
             android:label="@string/title_activity_create__group"
-            android:windowSoftInputMode="adjustPan" />
+            android:windowSoftInputMode="adjustPan"
+            />
         <activity
             android:name=".ui.activities.PhoneBookContacts"
             android:label="@string/title_activity_join__request" />
@@ -98,7 +99,8 @@
             android:name=".ui.activities.CreateVote"
             android:label="@string/title_activity_create_vote"
             android:theme="@style/AppTheme"
-            android:windowSoftInputMode="adjustPan" />
+            android:windowSoftInputMode="adjustResize"
+            />
         <activity android:name=".ui.activities.VoteNotifyMembers" />
         <activity android:name=".ui.activities.NotificationCenter">
         </activity>
