@@ -82,16 +82,30 @@
     <!--HomeScreen Activity & Screens-->
     <string name="joingroup">REQUEST TO JOIN A GROUP</string>
     <string name="startgroup">START A GROUP</string>
-    <string name="bt_save">Save</string>
+    <string name="bt_save">Save</string> <!-- probably duplicated, todo : clean up -->
     <string name="bt_cancel">Cancel</string>
+
     <string name="ghp_toolbar_title">Your groups</string>
     <string name="ghp_search_group_name">Group name</string>
-    <string name="tv_dialog_bottom_title">Quick Add</string>
+    <string name="tv_dialog_bottom_title">Quick add</string>
     <string name="title_activity_blank">Blank</string>
+
     <string name="sort_title">Sort groups by:</string>
     <string name="date">Date of last action</string>
     <string name="role">Your role</string>
     <string name="Default">Clear</string>
+
+    <string name="join_code_prefix">Join code: *134*1994*</string>
+    <string name="date_time_pattern">%1$s on %2$s</string>
+    <string name="desc_body_pattern">%1$s: %2$s</string>
+    <string name="past_meeting_prefix">Last meeting</string>
+    <string name="future_meeting_prefix">Next meeting</string>
+    <string name="past_vote_prefix">Last vote</string>
+    <string name="future_vote_prefix">Next vote</string>
+    <string name="group_created_prefix">Group created</string>
+    <string name="member_added_prefix">Member added</string>
+    <string name="group_other_prefix">Last change</string>
+
     <string name="gm_add_member">ADD MEMBER</string>
     <string name="gm_view_members">VIEW MEMBERS</string>
     <string name="gm_edit_settings">EDIT GROUP</string>
@@ -276,7 +290,7 @@
     </string-array>
     <string name="title_activity_create_vote">CreateVote</string>
 
-    <!--Notify members--><!--nm-->
+    <!--Notify members-->
     <string name="nm_txt_tlb">Notify Members</string>
     <string name="nm_bt_done">Done</string>
     <string name="nm_cratevote_msg">Vote created successfully</string>
@@ -284,9 +298,7 @@
     <string name="nm_description_error_msg">Please enter Description</string>
     <string name="nm_closingtime_msg">Please enter Closing Time</string>
 
-    <!--end-->
-
-    <!--alerts-->
+    <!--reminder options-->
     <string name="one_day">Send reminder <b>1 day</b> ahead</string>
     <string name="half_day">Send reminder <b>half a day</b> ahead</string>
     <string name="one_hour">Send reminder <b>1 hour</b> ahead</string>
@@ -298,7 +310,6 @@
     <string name="nc_txt_">v</string>
 
     <string name="USER_ALREADY_PART">User already part of group</string>
-
 
     <!--todo : make these read project build (debug/signed/etc) and change correspondingly -->
     <string name="sender_id">13953357197@gcm.googleapis.com</string>

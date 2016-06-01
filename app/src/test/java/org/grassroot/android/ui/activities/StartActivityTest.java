@@ -1,4 +1,4 @@
-package com.org.grassroot.ui.activities;
+package org.grassroot.android.ui.activities;
 
 import android.content.Context;
 import android.content.Intent;
@@ -6,7 +6,7 @@ import android.content.SharedPreferences;
 import android.os.Build;
 
 import com.google.android.gms.common.ConnectionResult;
-import com.org.grassroot.BuildConfig;
+import com.grassroot.android.BuildConfig;
 
 import org.junit.After;
 import org.junit.Before;

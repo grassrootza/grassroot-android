@@ -1,8 +1,8 @@
-package com.org.grassroot.ui.activities;
+package org.grassroot.android.ui.activities;
 
 import android.os.Build;
 
-import com.org.grassroot.BuildConfig;
+import com.grassroot.android.BuildConfig;
 
 import org.junit.Before;
 import org.junit.Test;

@@ -5,7 +5,7 @@
     android:layout_height="fill_parent"
     android:background="@drawable/im_bg"
     android:orientation="vertical"
-    tools:context="com.org.macbee.ui.activities.StartActivity"
+    tools:context="org.grassroot.android.ui.activities.StartActivity"
     android:id="@+id/rl_start"
 
     >

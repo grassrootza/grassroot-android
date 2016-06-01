@@ -231,7 +231,7 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment {
             throw new UnsupportedOperationException("ERROR! This should not be called without a valid position");
 
         Group groupUpdated = userGroups.get(position);
-        if (groupUpdated.getId().equals(groupUid)) {
+        if (groupUpdated.getGroupUid().equals(groupUid)) {
             String mobileNumber = PreferenceUtils.getuser_mobilenumber(getContext());
             String code = PreferenceUtils.getuser_token(getContext());
             grassrootRestService.getApi().getSingleGroup(mobileNumber, code, groupUid)
@@ -410,7 +410,7 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment {
             public void onClick(View v) {
                 menu1.close(true);
                 Intent openGroupTasks = MenuUtils.constructIntent(getActivity(), GroupTasksActivity.class,
-                        userGroups.get(position).getId(), userGroups.get(position).getGroupName());
+                        userGroups.get(position).getGroupUid(), userGroups.get(position).getGroupName());
                 startActivity(openGroupTasks);
             }
         });
@@ -422,7 +422,7 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment {
             public boolean onLongClick(View v) {
                 Group dialog_model = userGroups.get(position);
                 GroupQuickTaskModalFragment dialog = new GroupQuickTaskModalFragment();
-                dialog.setGroupParameters(dialog_model.getId(), dialog_model.getGroupName());
+                dialog.setGroupParameters(dialog_model.getGroupUid(), dialog_model.getGroupName());
 
                 Bundle args = new Bundle();
                 args.putBoolean("Meeting", dialog_model.getPermissions().contains("GROUP_PERMISSION_CREATE_GROUP_MEETING"));
@@ -443,7 +443,7 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment {
                 GroupQuickMemberModalFragment dialog = new GroupQuickMemberModalFragment();
 
                 Bundle args = new Bundle();
-                args.putString(Constant.GROUPUID_FIELD, grpMembership.getId());
+                args.putString(Constant.GROUPUID_FIELD, grpMembership.getGroupUid());
                 args.putString(Constant.GROUPNAME_FIELD, grpMembership.getGroupName());
                 args.putInt(Constant.INDEX_FIELD, position);
 

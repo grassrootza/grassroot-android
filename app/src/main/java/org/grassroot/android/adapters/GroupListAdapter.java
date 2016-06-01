@@ -1,5 +1,6 @@
 package org.grassroot.android.adapters;
 
+import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -11,6 +12,7 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import org.grassroot.android.R;
+import org.grassroot.android.interfaces.GroupConstants;
 import org.grassroot.android.services.model.Group;
 import org.grassroot.android.ui.fragments.HomeGroupListFragment;
 
@@ -32,7 +34,7 @@ public class GroupListAdapter extends RecyclerView.Adapter<GroupListAdapter.GHP_
 
     List<Group> displayedGroups;
 
-    private static final SimpleDateFormat outputSDF = new SimpleDateFormat("EEE, d MMM, ''yy");
+    private static final SimpleDateFormat outputSDF = new SimpleDateFormat("EEE, d MMM");
 
     public GroupListAdapter(List<Group> groups, HomeGroupListFragment activity) {
         this.displayedGroups = groups;
@@ -65,14 +67,21 @@ public class GroupListAdapter extends RecyclerView.Adapter<GroupListAdapter.GHP_
         Group group = displayedGroups.get(position);
 
         final String groupOrganizerDescription = "Organizer: " + group.getGroupCreator();
-        final String groupDescription = group.getDescription();
-        final int visibility = (groupDescription == null || groupDescription.trim().equals("")) ? View.GONE : View.VISIBLE;
-
         holder.txtGroupname.setText(group.getGroupName());
         holder.txtGroupownername.setText(groupOrganizerDescription);
-        holder.txtGroupdesc.setText(groupDescription);
-        holder.txtGroupdesc.setVisibility(visibility);
 
+        if (GroupConstants.NO_JOIN_CODE.equals(group.getJoinCode())) {
+            final String groupDescription = group.getDescription();
+            final int visibility = (groupDescription == null || groupDescription.trim().equals("")) ? View.GONE : View.VISIBLE;
+            holder.txtGroupdesc.setText(String.format(activity.getString(R.string.desc_body_pattern),
+                    getChangePrefix(group), groupDescription));
+            holder.txtGroupdesc.setVisibility(visibility);
+        } else {
+            final String tokenCode = activity.getString(R.string.join_code_prefix) + group.getJoinCode() + "#";
+            holder.txtGroupdesc.setText(tokenCode);
+        }
+
+        // todo : check later if there's a more efficient way to do this?
         int height = holder.profileV1.getDrawable().getIntrinsicWidth();
         int width = holder.profileV1.getDrawable().getIntrinsicHeight();
 
@@ -83,17 +92,35 @@ public class GroupListAdapter extends RecyclerView.Adapter<GroupListAdapter.GHP_
         holder.profileV2.setLayoutParams(params);
         holder.profileV1.setVisibility(View.VISIBLE);
         holder.profileV2.setVisibility(View.VISIBLE);
+
         holder.profileV2.setText("+" + String.valueOf(group.getGroupMemberCount()));
 
-        Date date = group.getDate();
-        String datePrefix = date.after(new Date()) ? "Next event: "  : "Last event: ";
-        holder.datetime.setText(datePrefix + outputSDF.format(date));
+        holder.datetime.setText(String.format(activity.getString(R.string.date_time_pattern),
+                getChangePrefix(group), outputSDF.format(group.getDate())));
 
         activity.addGroupRowLongClickListener(holder.cardView, position);
         activity.addGroupRowShortClickListener(holder.cardView, position);
         activity.addGroupRowMemberNumberClickListener(holder.memberIcons, position);
     }
 
+    private String getChangePrefix(Group group) {
+        switch (group.getLastChangeType()) {
+            case GroupConstants.MEETING_CALLED:
+                return (group.getDate().after(new Date()) ? activity.getString(R.string.future_meeting_prefix)
+                        : activity.getString(R.string.past_meeting_prefix));
+            case GroupConstants.VOTE_CALLED:
+                return (group.getDate().after(new Date())) ? activity.getString(R.string.future_vote_prefix)
+                        : activity.getString(R.string.past_vote_prefix);
+            case GroupConstants.GROUP_CREATED:
+                return activity.getString(R.string.group_created_prefix);
+            case GroupConstants.MEMBER_ADDED:
+                return activity.getString(R.string.member_added_prefix);
+            case GroupConstants.GROUP_MOD_OTHER:
+                return activity.getString(R.string.group_other_prefix);
+            default:
+                throw new UnsupportedOperationException("Error! Should only be one of standard change types");
+        }
+    }
 
     @Override
     public int getItemCount() {

@@ -19,12 +19,15 @@ public class Group implements Parcelable, Comparable<Group> {
 
     private static final String TAG = Group.class.getCanonicalName();
 
-    private String id;
+    private String groupUid;
     private String groupName;
-    private String description;
     private String groupCreator;
     private String role;
     private Integer groupMemberCount;
+
+    private String joinCode;
+    private String lastChangeType;
+    private String description;
 
     private Date date;
     private DateTime dateTime;
@@ -32,12 +35,12 @@ public class Group implements Parcelable, Comparable<Group> {
 
     private List<String> permissions = new ArrayList<>(); // todo: convert this to a set so can do fast hashing
 
-    public String getId() {
-        return id;
+    public String getGroupUid() {
+        return groupUid;
     }
 
-    public void setId(String id) {
-        this.id = id;
+    public void setGroupUid(String groupUid) {
+        this.groupUid = groupUid;
     }
 
     public String getGroupName() {
@@ -80,6 +83,10 @@ public class Group implements Parcelable, Comparable<Group> {
         this.dateTime = dateTime;
     }
 
+    public String getJoinCode() { return joinCode; }
+
+    public String getLastChangeType() { return lastChangeType; }
+
     public Date getDate() {
         if (date == null) {
             constructDate();
@@ -113,18 +120,6 @@ public class Group implements Parcelable, Comparable<Group> {
         this.date = calendar.getTime();
     }
 
-    public String getDateTimeFull() {
-
-        if (date == null) {
-            constructDate();
-        }
-
-        SimpleDateFormat formatter = new SimpleDateFormat("dd-MM-yy:HH:mm:SS");
-        dateTimeFull = formatter.format(date);
-
-        return dateTimeFull;
-    }
-
     @Override
     public int describeContents() {
         return 0;
@@ -132,7 +127,7 @@ public class Group implements Parcelable, Comparable<Group> {
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
-        dest.writeString(this.id);
+        dest.writeString(this.groupUid);
         dest.writeString(this.groupName);
         dest.writeString(this.description);
         dest.writeString(this.groupCreator);
@@ -143,7 +138,7 @@ public class Group implements Parcelable, Comparable<Group> {
     }
 
     protected Group(Parcel in) {
-        id = in.readString();
+        groupUid = in.readString();
         groupName = in.readString();
         description = in.readString();
         groupCreator = in.readString();

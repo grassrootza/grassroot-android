@@ -135,7 +135,7 @@
         android:visibility="gone"
         />
 
-    <com.org.grassroot.utils.ProgressBarCircularIndeterminate
+    <org.grassroot.android.utils.ProgressBarCircularIndeterminate
         android:id="@+id/prg_pb"
         android:layout_width="32dp"
         android:layout_height="32dp"

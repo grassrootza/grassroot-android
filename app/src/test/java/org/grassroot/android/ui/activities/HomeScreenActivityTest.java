@@ -1,4 +1,4 @@
-package com.org.grassroot.ui.activities;
+package org.grassroot.android.ui.activities;
 
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -6,8 +6,8 @@ import android.net.http.WelcomeFragment;
 import android.os.Build;
 import android.support.v4.widget.DrawerLayout;
 
-import com.org.grassroot.BuildConfig;
-import com.org.grassroot.R;
+import com.grassroot.android.BuildConfig;
+import com.grassroot.android.R;
 
 
 
