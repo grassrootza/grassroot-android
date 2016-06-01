@@ -18,6 +18,7 @@ import android.widget.TextView;
 import com.github.clans.fab.FloatingActionButton;
 import com.github.clans.fab.FloatingActionMenu;
 import org.grassroot.android.R;
+import org.grassroot.android.events.GroupCreatedEvent;
 import org.grassroot.android.models.Contact;
 import org.grassroot.android.services.GrassrootRestService;
 import org.grassroot.android.services.model.GenericResponse;
@@ -28,6 +29,7 @@ import org.grassroot.android.utils.ErrorUtils;
 import org.grassroot.android.utils.PermissionUtils;
 import org.grassroot.android.utils.PreferenceUtils;
 import org.grassroot.android.utils.UtilClass;
+import org.greenrobot.eventbus.EventBus;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -48,6 +50,7 @@ public class CreateGroupActivity extends PortraitActivity implements MemberListF
 
     private String TAG = CreateGroupActivity.class.getSimpleName();
     private static final String regexForName = "[^a-zA-Z0-9 ]";
+
 
     @BindView(R.id.rl_cg_root)
     RelativeLayout rlCgRoot;
@@ -203,11 +206,12 @@ public class CreateGroupActivity extends PortraitActivity implements MemberListF
                     @Override
                     public void onResponse(Call<GenericResponse> call, Response<GenericResponse> response) {
                         if (response.isSuccessful()) {
-                            progressDialog.hide(); // this is leaking ...
+                            hideProgress();
                             PreferenceUtils.setisHasgroup(getApplicationContext(), true);
                             Intent result = new Intent();
                             // todo : add the created group to the intent
                             setResult(RESULT_OK);
+                            EventBus.getDefault().post(new GroupCreatedEvent());
                             finish();
                         } else {
                             // todo: process and handle error, if any (shouldn't be)
@@ -262,6 +266,7 @@ public class CreateGroupActivity extends PortraitActivity implements MemberListF
     }
 
     private void hideProgress(){
+        progressDialog.dismiss();
     }
 
     private void snackBar(Context applicationContext, String message, String Action_title, int lengthShort) {

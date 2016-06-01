@@ -242,7 +242,6 @@ public class ViewVoteActivity extends PortraitActivity {
         rlVvMainLayout.setVisibility(View.VISIBLE);
         mLinearLayout.getViewTreeObserver().addOnPreDrawListener(
                 new ViewTreeObserver.OnPreDrawListener() {
-
                     @Override
                     public boolean onPreDraw() {
                         mLinearLayout.getViewTreeObserver().removeOnPreDrawListener(this);
@@ -349,7 +348,7 @@ public class ViewVoteActivity extends PortraitActivity {
         castVote("Yes");
     }
 
-    @OnClick(R.id.expandable)
+    @OnClick(R.id.iv_expand)
     public void onExpandableHeaderClickClick(View v) {
         if (mLinearLayout.getVisibility() == View.GONE) {
             ivExpand.setImageResource(R.drawable.ic_arrow_up);
@@ -374,8 +373,6 @@ public class ViewVoteActivity extends PortraitActivity {
         }
     }
 
-
-    @OnClick(R.id.iv_expand)
     public void expand() {
         mLinearLayout.setVisibility(View.VISIBLE);
         mAnimator.start();
@@ -389,6 +386,7 @@ public class ViewVoteActivity extends PortraitActivity {
             public void onAnimationEnd(Animator animator) {
                 //Height=0, but it set visibility to GONE
                 mLinearLayout.setVisibility(View.GONE);
+
             }
             @Override
             public void onAnimationStart(Animator animator) {

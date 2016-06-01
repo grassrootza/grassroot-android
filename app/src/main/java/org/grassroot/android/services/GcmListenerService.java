@@ -147,7 +147,7 @@ public class GcmListenerService extends com.google.android.gms.gcm.GcmListenerSe
         resultIntent.putExtra(Constant.TITLE, msg.getString(Constant.TITLE));
         resultIntent.putExtra(Constant.BODY, msg.getString(Constant.BODY));
         resultIntent.putExtra(Constant.UID, msg.getString(Constant.UID));
-        resultIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        resultIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK );
 
         PendingIntent resultPendingIntent = PendingIntent.getActivity(this, (int) System.currentTimeMillis(), resultIntent, PendingIntent.FLAG_CANCEL_CURRENT);
         Log.e(TAG, "generateResultIntent exiting, with intent: " + resultPendingIntent.toString());

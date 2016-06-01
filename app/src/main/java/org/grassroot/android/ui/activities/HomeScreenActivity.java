@@ -11,6 +11,7 @@ import android.util.Log;
 import android.view.Gravity;
 
 import org.grassroot.android.R;
+import org.grassroot.android.events.GroupCreatedEvent;
 import org.grassroot.android.ui.fragments.NotificationDialog;
 import org.grassroot.android.ui.fragments.AlertDialogFragment;
 import org.grassroot.android.ui.fragments.HomeGroupListFragment;
@@ -20,6 +21,8 @@ import org.grassroot.android.utils.Constant;
 import org.grassroot.android.utils.PreferenceUtils;
 import org.grassroot.android.utils.UtilClass;
 import org.grassroot.android.interfaces.AlertDialogListener;
+import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -28,6 +31,7 @@ public class HomeScreenActivity extends PortraitActivity implements NavigationDr
         WelcomeFragment.FragmentCallbacks, HomeGroupListFragment.FragmentCallbacks {
 
     private static final String TAG = HomeScreenActivity.class.getCanonicalName();
+
 
     @BindView(R.id.drawer_layout)
     DrawerLayout drawer;
@@ -45,6 +49,7 @@ public class HomeScreenActivity extends PortraitActivity implements NavigationDr
         drawerFrag = (NavigationDrawerFragment) getFragmentManager().findFragmentById(R.id.navigation_drawer);
         drawerFrag.setUp(R.id.navigation_drawer, drawer);
         ButterKnife.bind(this);
+        EventBus.getDefault().register(this);
         setUpHomeFragment();
     }
 
@@ -52,8 +57,10 @@ public class HomeScreenActivity extends PortraitActivity implements NavigationDr
         mainFragment = PreferenceUtils.getisHasgroup(this) ? new HomeGroupListFragment() : new WelcomeFragment();
         getSupportFragmentManager().beginTransaction()
                 .replace(R.id.fragment_container, mainFragment)
-                .commit();
+                .commitAllowingStateLoss();
     }
+
+
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -151,8 +158,23 @@ public class HomeScreenActivity extends PortraitActivity implements NavigationDr
     }
 
     @Override
+    protected void onDestroy() {
+        EventBus.getDefault().unregister(this);
+        super.onDestroy();
+    }
+
+    @Override
     public void menuClick() { // Getting data from fragment
         if (drawer != null) drawer.openDrawer(GravityCompat.START);
+    }
+
+
+    @Subscribe
+    public void onEvent(GroupCreatedEvent event){
+        mainFragment = new HomeGroupListFragment();
+        getSupportFragmentManager().beginTransaction()
+                .replace(R.id.fragment_container, mainFragment)
+                .commitAllowingStateLoss();
     }
 
 

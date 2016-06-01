@@ -46,7 +46,7 @@ public class AlertDialogFragment extends DialogFragment {
             style = DialogFragment.STYLE_NO_TITLE;
         } else {
             Log.e(TAG, "found a title! here : " + title);
-            getDialog().setTitle(title);
+          //  getDialog().setTitle(title);
             style = DialogFragment.STYLE_NORMAL;
         }
         setStyle(style, 0);
