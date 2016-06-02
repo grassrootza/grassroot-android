@@ -65,6 +65,7 @@ public class Constant {
     public static final int activityCallMeeting = 8;
     public static final int activityCallVote = 9;
     public static final int activityRecordTodo = 10;
+    public static final int activityNetworkSettings = 20; //todo request code for network, will have to do it robustly
 
     public static final int alertAskForContactPermission = 91;
 

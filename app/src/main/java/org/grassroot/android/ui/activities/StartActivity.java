@@ -20,6 +20,7 @@ import android.widget.ImageView;
 import android.widget.RelativeLayout;
 
 import org.grassroot.android.R;
+import org.grassroot.android.events.NetworkActivityResultsEvent;
 import org.grassroot.android.services.GcmRegistrationService;
 import org.grassroot.android.services.GrassrootRestService;
 import org.grassroot.android.services.model.GenericResponse;
@@ -35,6 +36,7 @@ import org.grassroot.android.utils.LocationUtils;
 import org.grassroot.android.utils.NetworkUtils;
 import org.grassroot.android.utils.PreferenceUtils;
 import org.grassroot.android.utils.TopExceptionHandler;
+import org.greenrobot.eventbus.EventBus;
 
 import java.util.List;
 
@@ -401,6 +403,13 @@ public class StartActivity extends PortraitActivity implements HomeScreenViewFra
                         ErrorUtils.handleNetworkError(StartActivity.this, rlStart, t);
                     }
                 });
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        EventBus.getDefault().post(new NetworkActivityResultsEvent(requestCode, resultCode,data));
+
     }
 
     /**

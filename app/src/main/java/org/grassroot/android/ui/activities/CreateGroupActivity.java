@@ -101,7 +101,6 @@ public class CreateGroupActivity extends PortraitActivity implements MemberListF
     }
 
     private void init() {
-        grassrootRestService = new GrassrootRestService(this);
         memberListFragment = new MemberListFragment();
         mapMembersContacts = new HashMap<>();
     }
@@ -184,13 +183,13 @@ public class CreateGroupActivity extends PortraitActivity implements MemberListF
 
     private void validate_allFields() {
         if (!(TextUtils.isEmpty(et_groupname.getText().toString().trim().replaceAll(regexForName, "")))) {
-            groupCreationWS();
+            createGroup();
         } else {
             snackBar(getApplicationContext(), getResources().getString(R.string.et_groupname), "", Snackbar.LENGTH_SHORT);
         }
     }
 
-    private void groupCreationWS(){
+    private void createGroup(){
 
         showProgress();
         String mobileNumber = PreferenceUtils.getuser_mobilenumber(CreateGroupActivity.this);
@@ -275,7 +274,7 @@ public class CreateGroupActivity extends PortraitActivity implements MemberListF
             snackBar.setAction(Action_title, new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    groupCreationWS();
+                    createGroup();
                 }
             });
         }

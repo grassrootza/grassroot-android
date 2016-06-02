@@ -56,7 +56,6 @@ public class ProfileSettings extends PortraitActivity implements EditItemDialog.
     private String username;
     private String language;
     private String alertPreference;
-    private GrassrootRestService grassrootRestService;
 
 
     @Override
@@ -64,7 +63,7 @@ public class ProfileSettings extends PortraitActivity implements EditItemDialog.
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_profile_settings);
         ButterKnife.bind(this);
-        grassrootRestService = new GrassrootRestService(this);
+
         getProfileSettings();
 
     }
@@ -73,7 +72,7 @@ public class ProfileSettings extends PortraitActivity implements EditItemDialog.
 
         final String phoneNumber = PreferenceUtils.getuser_mobilenumber(this);
         final String code = PreferenceUtils.getuser_token(this);
-        grassrootRestService.getApi().getUserProfile(phoneNumber,code).enqueue(new Callback<ProfileResponse>() {
+        GrassrootRestService.getInstance().getApi().getUserProfile(phoneNumber,code).enqueue(new Callback<ProfileResponse>() {
             @Override
             public void onResponse(Call<ProfileResponse> call, Response<ProfileResponse> response) {
                 if (response.isSuccessful()) {
@@ -100,7 +99,7 @@ public class ProfileSettings extends PortraitActivity implements EditItemDialog.
         final String phoneNumber = PreferenceUtils.getuser_mobilenumber(this);
         final String code = PreferenceUtils.getuser_token(this);
         progressDialog.show();
-        grassrootRestService.getApi().updateProfile(phoneNumber, code, username, language, alertPreference).enqueue(new Callback<GenericResponse>() {
+        GrassrootRestService.getInstance().getApi().updateProfile(phoneNumber, code, username, language, alertPreference).enqueue(new Callback<GenericResponse>() {
             @Override
             public void onResponse(Call<GenericResponse> call, Response<GenericResponse> response) {
                 progressDialog.dismiss();

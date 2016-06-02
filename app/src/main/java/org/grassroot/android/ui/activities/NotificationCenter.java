@@ -65,7 +65,6 @@ public class NotificationCenter extends PortraitActivity {
     private Integer pageNumber = 0;
     private Integer totalPages = 0;
     private Integer pageSize = null;
-    private GrassrootRestService grassrootRestService;
     private NotificationAdapter notificationAdapter;
     private List<Notification> notifications = new ArrayList<>();
     private int firstVisibleItem, totalItemCount, lastVisibileItem;
@@ -83,7 +82,7 @@ public class NotificationCenter extends PortraitActivity {
     }
 
     private void init() {
-        grassrootRestService = new GrassrootRestService(this);
+
         notificationAdapter = new NotificationAdapter();
         rcNc.setAdapter(notificationAdapter);
         getNotifications(null, null);
@@ -172,7 +171,7 @@ public class NotificationCenter extends PortraitActivity {
         String phoneNumber = PreferenceUtils.getuser_mobilenumber(this);
         String code = PreferenceUtils.getuser_token(this);
         prgNc.setVisibility(View.VISIBLE);
-        grassrootRestService.getApi().getUserNotifications(phoneNumber, code, page, size).enqueue(new Callback<NotificationList>() {
+        GrassrootRestService.getInstance().getApi().getUserNotifications(phoneNumber, code, page, size).enqueue(new Callback<NotificationList>() {
             @Override
             public void onResponse(Call<NotificationList> call, Response<NotificationList> response) {
                 if (response.isSuccessful()) {

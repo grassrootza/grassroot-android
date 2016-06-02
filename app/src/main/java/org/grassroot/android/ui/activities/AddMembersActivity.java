@@ -50,7 +50,6 @@ public class AddMembersActivity extends AppCompatActivity implements MemberListF
     private int groupPosition; // in case called from a list, so can update selectively
 
     private boolean newMemberListStarted;
-    private GrassrootRestService grassrootRestService;
     private MemberListFragment existingMemberListFragment;
     private MemberListFragment newMemberListFragment;
     private HashMap<String, Member> membersFromContacts;
@@ -179,11 +178,11 @@ public class AddMembersActivity extends AppCompatActivity implements MemberListF
     }
 
     private void postNewMembersToGroup(final List<Member> membersToAdd) {
-        grassrootRestService = new GrassrootRestService(this);
+
         String mobileNumber = PreferenceUtils.getuser_mobilenumber(getApplicationContext());
         String sessionCode = PreferenceUtils.getuser_token(getApplicationContext());
 
-        grassrootRestService.getApi()
+        GrassrootRestService.getInstance().getApi()
                 .addGroupMembers(groupUid, mobileNumber, sessionCode, membersToAdd)
                 .enqueue(new Callback<GenericResponse>() {
                     @Override

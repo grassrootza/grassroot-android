@@ -53,7 +53,6 @@ public class GroupJoinActivity extends PortraitActivity implements OnClickListen
 
     private static final String TAG = GroupJoinActivity.class.getSimpleName();
 
-    private GrassrootRestService grassrootRestService;
 
     @BindView(R.id.toolbar)
     Toolbar toolbar;
@@ -140,7 +139,6 @@ public class GroupJoinActivity extends PortraitActivity implements OnClickListen
 
 
     private void init() {
-        grassrootRestService = new GrassrootRestService(this);
         joinrequestList = new ArrayList<>();
     }
 
@@ -228,7 +226,7 @@ public class GroupJoinActivity extends PortraitActivity implements OnClickListen
         imNOResults.setVisibility(View.INVISIBLE);
         imServerError.setVisibility(View.INVISIBLE);
 
-        grassrootRestService.getApi().search(searchTerm)
+        GrassrootRestService.getInstance().getApi().search(searchTerm)
                 .enqueue(new Callback<GroupSearchResponse>() {
                     @Override
                     public void onResponse(Call<GroupSearchResponse> call, Response<GroupSearchResponse> response) {
@@ -259,7 +257,7 @@ public class GroupJoinActivity extends PortraitActivity implements OnClickListen
         progressDialog.show();
         String phoneNumber = PreferenceUtils.getuser_mobilenumber(this);
         String code = PreferenceUtils.getuser_token(this);
-        grassrootRestService.getApi().groupJoinRequest(phoneNumber,code,uid)
+        GrassrootRestService.getInstance().getApi().groupJoinRequest(phoneNumber,code,uid)
                 .enqueue(new Callback<GenericResponse>() {
                     @Override
                     public void onResponse(Call<GenericResponse> call, Response<GenericResponse> response) {

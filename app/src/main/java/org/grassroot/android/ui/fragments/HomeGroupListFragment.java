@@ -23,6 +23,8 @@ import com.github.clans.fab.FloatingActionButton;
 import com.github.clans.fab.FloatingActionMenu;
 import org.grassroot.android.R;
 import org.grassroot.android.adapters.GroupListAdapter;
+import org.grassroot.android.events.NetworkActivityResultsEvent;
+import org.grassroot.android.interfaces.NetworkErrorDialogListener;
 import org.grassroot.android.interfaces.SortInterface;
 import org.grassroot.android.services.GrassrootRestService;
 import org.grassroot.android.services.NoConnectivityException;
@@ -36,6 +38,8 @@ import org.grassroot.android.utils.Constant;
 import org.grassroot.android.utils.ErrorUtils;
 import org.grassroot.android.utils.MenuUtils;
 import org.grassroot.android.utils.PreferenceUtils;
+import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -104,7 +108,7 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment {
     public boolean date_click = false, role_click = false, defaults_click = false;
 
     private FragmentCallbacks mCallbacks;
-    private GrassrootRestService grassrootRestService;
+
 
     @Override
     public void onAttach(Context context) {
@@ -126,6 +130,7 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.activity_group__homepage, container, false);
         ButterKnife.bind(this, view);
+        EventBus.getDefault().register(this);
         return view;
     }
 
@@ -139,7 +144,7 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment {
     }
 
     private void init() {
-        grassrootRestService = new GrassrootRestService(this.getContext());
+       // grassrootRestService = new GrassrootRestService(this.getContext());
         userGroups = new ArrayList<>();
         ivGhpSort.setEnabled(false);
         ivGhpSearch.setEnabled(false);
@@ -171,7 +176,8 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment {
 
         mProgressBar.setVisibility(View.VISIBLE);
 
-        Call<GroupResponse> call = grassrootRestService.getApi().getUserGroups(mobileNumber, userCode);
+
+        Call<GroupResponse> call = GrassrootRestService.getInstance().getApi().getUserGroups(mobileNumber, userCode);
         call.enqueue(new Callback<GroupResponse>() {
             @Override
             public void onResponse(Call<GroupResponse> call, Response<GroupResponse> response) {
@@ -196,7 +202,14 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment {
                     errorLayout.setVisibility(View.VISIBLE);
                     imNoInternet.setVisibility(View.VISIBLE);
                 } else {
-                    ErrorUtils.handleNetworkError(getContext(), rlGhpRoot, t);
+                    Log.e(TAG, t.getMessage());
+                    ErrorUtils.connectivityError(HomeGroupListFragment.this, R.string.No_network, new NetworkErrorDialogListener() {
+                        @Override
+                        public void retryClicked() {
+                            fetchGroupList();
+                        }
+                    });
+                   // ErrorUtils.handleNetworkError(getContext(), rlGhpRoot, t);
                 }
             }
         });
@@ -207,7 +220,7 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment {
     in time, rather than doing a full refresh, and don't need to worry about progress bar, etc
      */
     public void refreshGroupList() {
-        grassrootRestService.getApi().getUserGroups(mobileNumber, userCode).enqueue(new Callback<GroupResponse>() {
+        GrassrootRestService.getInstance().getApi().getUserGroups(mobileNumber, userCode).enqueue(new Callback<GroupResponse>() {
             @Override
             public void onResponse(Call<GroupResponse> call, Response<GroupResponse> response) {
                 if (response.isSuccessful()) {
@@ -234,7 +247,7 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment {
         if (groupUpdated.getGroupUid().equals(groupUid)) {
             String mobileNumber = PreferenceUtils.getuser_mobilenumber(getContext());
             String code = PreferenceUtils.getuser_token(getContext());
-            grassrootRestService.getApi().getSingleGroup(mobileNumber, code, groupUid)
+            GrassrootRestService.getInstance().getApi().getSingleGroup(mobileNumber, code, groupUid)
                     .enqueue(new Callback<GroupResponse>() {
                         @Override
                         public void onResponse(Call<GroupResponse> call, Response<GroupResponse> response) {
@@ -393,10 +406,14 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment {
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
+        Log.e(TAG,"results_for_Activity");
         if (resultCode == Activity.RESULT_OK && requestCode == Constant.activityCreateGroup) {
             Log.e(TAG, "got the result in the fragment, code : " + requestCode);
             insertGroup(0);
         }
+            fetchGroupList();
+            //todo
+
     }
 
     @OnClick({R.id.im_no_results, R.id.im_no_internet,R.id.im_server_error})
@@ -464,5 +481,13 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment {
         super.onDetach();
         mCallbacks = null;
         Log.e("onDetach", "Detached");
+    }
+
+    @Subscribe
+    public void onEvent(NetworkActivityResultsEvent networkActivityResultsEvent){
+        Log.e(TAG, "onEvent");
+        fetchGroupList();
+
+
     }
 }

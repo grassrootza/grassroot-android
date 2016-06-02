@@ -38,11 +38,10 @@ public class LocationUtils implements GoogleApiClient.ConnectionCallbacks, Googl
 
     private Location lastKnownLocation;
 
-    private GrassrootRestService grassrootRestService;
+
 
     public LocationUtils(Activity activity) {
         callingActivity = activity;
-        grassrootRestService = new GrassrootRestService(activity);
         if (googleApiClient == null) {
             googleApiClient = new GoogleApiClient.Builder(activity)
                     .addConnectionCallbacks(this)
@@ -132,7 +131,7 @@ public class LocationUtils implements GoogleApiClient.ConnectionCallbacks, Googl
         if (userNumber == null || userToken == null)
             throw new UnsupportedOperationException("Error! Environment not set up to do this");
 
-        grassrootRestService.getApi()
+        GrassrootRestService.getInstance().getApi()
                 .logLocation(userNumber, userToken, latitude, longitude)
                 .enqueue(new Callback<GenericResponse>() {
                     @Override
