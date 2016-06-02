@@ -21,6 +21,7 @@ import android.widget.RelativeLayout;
 import com.github.clans.fab.FloatingActionMenu;
 import org.grassroot.android.R;
 import org.grassroot.android.adapters.TasksAdapter;
+import org.grassroot.android.events.TaskAddedEvent;
 import org.grassroot.android.interfaces.AlertDialogListener;
 import org.grassroot.android.interfaces.ConfirmDialogListener;
 import org.grassroot.android.interfaces.TaskListListener;
@@ -38,6 +39,8 @@ import org.grassroot.android.utils.ErrorUtils;
 import org.grassroot.android.utils.MenuUtils;
 import org.grassroot.android.utils.PreferenceUtils;
 import org.grassroot.android.utils.UtilClass;
+import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -107,6 +110,7 @@ public class GroupTasksActivity extends PortraitActivity implements TaskListList
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_group__activities);
         ButterKnife.bind(this);
+        EventBus.getDefault().register(this);
 
         Bundle extras = getIntent().getExtras();
 
@@ -120,6 +124,7 @@ public class GroupTasksActivity extends PortraitActivity implements TaskListList
         init();
         setUpViews();
         initRecyclerView();
+
         getTasks();
     }
 
@@ -153,6 +158,12 @@ public class GroupTasksActivity extends PortraitActivity implements TaskListList
             default:
                 return super.onOptionsItemSelected(item);
         }
+    }
+
+    @Override
+    protected void onDestroy() {
+        EventBus.getDefault().unregister(this);
+        super.onDestroy();
     }
 
     private void init() {
@@ -434,6 +445,11 @@ public class GroupTasksActivity extends PortraitActivity implements TaskListList
             }
         });
         newFragment.show(getFragmentManager(), "dialog");
+    }
+
+    @Subscribe
+    public void onEvent(TaskAddedEvent event){
+        getTasks();
     }
 
 
