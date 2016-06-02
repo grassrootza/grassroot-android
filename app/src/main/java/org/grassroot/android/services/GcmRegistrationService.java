@@ -25,7 +25,6 @@ import retrofit2.Response;
 public class GcmRegistrationService extends IntentService {
 
     private static final String TAG = GcmRegistrationService.class.getCanonicalName();
-    private GrassrootRestService grassrootRestService;
 
     //default constructor required by Android
     public GcmRegistrationService() {
@@ -39,7 +38,7 @@ public class GcmRegistrationService extends IntentService {
 
         try {
 
-            grassrootRestService = new GrassrootRestService(this);
+
             String token = InstanceID.getInstance(this).getToken(getString(R.string.project_id),
                     GoogleCloudMessaging.INSTANCE_ID_SCOPE, null);
             String phoneNumber = intent.getStringExtra("phoneNumber");
@@ -50,7 +49,7 @@ public class GcmRegistrationService extends IntentService {
             data.putString("phoneNumber", phoneNumber);
             data.putString("action", "REGISTER");
 
-            grassrootRestService.getApi()
+            GrassrootRestService.getInstance().getApi()
                     .pushRegistration(phoneNumber,code, token)
                     .enqueue(new Callback<GenericResponse>() {
                         @Override

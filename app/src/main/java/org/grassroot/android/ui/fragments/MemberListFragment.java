@@ -47,7 +47,6 @@ public class MemberListFragment extends Fragment {
 
     private MemberListListener mListener;
     private MemberClickListener clickListener;
-    private GrassrootRestService grassrootRestService;
     private MemberListAdapter userListAdapter;
 
     @BindView(R.id.mlist_frag_recycler_view)
@@ -159,9 +158,7 @@ public class MemberListFragment extends Fragment {
         if (userListAdapter == null) {
             userListAdapter = new MemberListAdapter(this.getContext());
         }
-        if (groupUid != null) {
-            this.grassrootRestService = new GrassrootRestService(this.getContext());
-        }
+
     }
 
     @Override
@@ -237,7 +234,7 @@ public class MemberListFragment extends Fragment {
 
         Log.d(TAG, "inside MemberListFragment, retrieving group members for uid = " + groupUid);
 
-        grassrootRestService.getApi()
+        GrassrootRestService.getInstance().getApi()
                 .getGroupMembers(groupUid, userPhoneNumber, userSessionCode, selectedByDefault)
                 .enqueue(new Callback<MemberList>() {
                     @Override

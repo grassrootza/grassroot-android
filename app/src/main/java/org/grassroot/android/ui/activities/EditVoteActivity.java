@@ -17,6 +17,7 @@ import android.widget.TextView;
 import org.grassroot.android.R;
 import org.grassroot.android.interfaces.NetworkErrorDialogListener;
 import org.grassroot.android.services.GrassrootRestService;
+import org.grassroot.android.services.NoConnectivityException;
 import org.grassroot.android.services.model.GenericResponse;
 import org.grassroot.android.slideDateTimePicker.SlideDateTimeListener;
 import org.grassroot.android.slideDateTimePicker.SlideDateTimePicker;
@@ -203,14 +204,15 @@ public class EditVoteActivity extends PortraitActivity {
         String phoneNumber = PreferenceUtils.getuser_mobilenumber(this);
         String code = PreferenceUtils.getuser_token(this);
         description = et_description.getText().toString();
-        showProgress();
-        GrassrootRestService grassrootRestService = new GrassrootRestService(this);
-        grassrootRestService.getApi().editVote(phoneNumber, code, voteId, title, description,
+
+      //  showProgress();
+        GrassrootRestService.getInstance().getApi().editVote(phoneNumber, code, voteId, title, description,
                 closingTime + UtilClass.timeZone()).enqueue(new Callback<GenericResponse>() {
             @Override
             public void onResponse(Call<GenericResponse> call, Response<GenericResponse> response) {
+                Log.e(TAG, "calling service");
+                hideProgress();
                 if (response.isSuccessful()) {
-                    hideProgress();
                     Intent close = new Intent();
                     close.putExtra("description", et_description.getText().toString());
                     close.putExtra("deadline", txtEvDeadline.getText().toString());
@@ -221,7 +223,11 @@ public class EditVoteActivity extends PortraitActivity {
 
             @Override
             public void onFailure(Call<GenericResponse> call, Throwable t) {
-                hideProgress();
+                if (t instanceof NoConnectivityException) {
+
+                }
+               // hideProgress();
+                Log.e(TAG, t.toString());
                 handleNetworkError(R.string.No_network);
             }
         });

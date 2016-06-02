@@ -60,8 +60,7 @@ public class CreateTaskFragment extends Fragment {
 
     private static final String TAG = CreateTaskFragment.class.getCanonicalName();
 
-    // todo: really likely we want this to be static rather than instantiated
-    private GrassrootRestService grassrootRestService;
+
     private String groupUid;
     private String taskType;
 
@@ -236,9 +235,6 @@ public class CreateTaskFragment extends Fragment {
 
     public Call<GenericResponse> setUpApiCall() {
 
-        if (grassrootRestService == null) {
-            grassrootRestService = new GrassrootRestService(getContext());
-        }
 
         final String phoneNumber = PreferenceUtils.getuser_mobilenumber(getContext());
         final String code = PreferenceUtils.getuser_token(getContext());
@@ -258,13 +254,13 @@ public class CreateTaskFragment extends Fragment {
         switch (taskType) {
             case TaskConstants.MEETING:
                 final String location = etLocationInput.getText().toString();
-                return grassrootRestService.getApi().createMeeting(phoneNumber, code, groupUid,
+                return GrassrootRestService.getInstance().getApi().createMeeting(phoneNumber, code, groupUid,
                         title, description, dateTimeISO, minutes, location, memberUids);
             case TaskConstants.VOTE:
-                return grassrootRestService.getApi().createVote(phoneNumber, code, groupUid, title,
+                return GrassrootRestService.getInstance().getApi().createVote(phoneNumber, code, groupUid, title,
                         description, dateTimeISO, minutes, memberUids, false);
             case TaskConstants.TODO:
-                return grassrootRestService.getApi().createTodo(phoneNumber, code, groupUid, title,
+                return GrassrootRestService.getInstance().getApi().createTodo(phoneNumber, code, groupUid, title,
                         description, dateTimeISO, minutes, memberUids);
             default:
                 throw new UnsupportedOperationException("Error! Missing task type in call");

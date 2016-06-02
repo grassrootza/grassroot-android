@@ -1,5 +1,6 @@
 package org.grassroot.android.services;
 
+import android.app.Application;
 import android.content.Context;
 import android.support.annotation.Nullable;
 
@@ -36,12 +37,14 @@ import retrofit2.http.Query;
 /**
  * Created by paballo on 2016/05/03.
  */
-public class GrassrootRestService {
+public class GrassrootRestService extends Application {
 
     private static final String GRASSROOT_SERVER_URL = Constant.stagingUrl;
     private RestApi mRestApi;
+    private static GrassrootRestService instance;
 
-    // todo: consider switching to static (but then requires handling connection manager differently...)
+    //default constructor required by android
+    public GrassrootRestService(){}
 
     public GrassrootRestService(Context context) {
 
@@ -62,6 +65,16 @@ public class GrassrootRestService {
         mRestApi = retrofit.create(RestApi.class);
     }
 
+
+    public synchronized static GrassrootRestService getInstance(){
+        return instance;
+
+    }
+
+
+
+
+
     private static GsonConverterFactory buildGsonConverterFactory() {
         GsonBuilder gsonBuilder = new GsonBuilder();
 
@@ -70,6 +83,28 @@ public class GrassrootRestService {
         Gson myGson = gsonBuilder.create();
 
         return GsonConverterFactory.create(myGson);
+    }
+
+    @Override
+    public void onCreate() {
+        super.onCreate();
+
+        HttpLoggingInterceptor logging = new HttpLoggingInterceptor();
+        logging.setLevel(HttpLoggingInterceptor.Level.BASIC);
+
+        OkHttpClient client = new OkHttpClient.Builder()
+                .addInterceptor(logging)
+                .addNetworkInterceptor(new ConnectivityInterceptor(GrassrootRestService.this))
+                .addNetworkInterceptor(new HeaderInterceptor())
+                .build();
+
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl(GRASSROOT_SERVER_URL)
+                .addConverterFactory(GsonConverterFactory.create())
+                .client(client).build();
+
+        mRestApi = retrofit.create(RestApi.class);
+        instance = new GrassrootRestService(this);
     }
 
     public RestApi getApi() {

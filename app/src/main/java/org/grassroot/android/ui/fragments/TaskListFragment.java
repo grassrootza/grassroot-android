@@ -43,11 +43,6 @@ public class TaskListFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        init();
-    }
-
-    private void init() {
-        grassrootRestService = new GrassrootRestService(this.getContext());
     }
 
     @Override
