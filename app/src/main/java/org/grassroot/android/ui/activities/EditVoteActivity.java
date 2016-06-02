@@ -15,11 +15,13 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import org.grassroot.android.R;
+import org.grassroot.android.interfaces.NetworkErrorDialogListener;
 import org.grassroot.android.services.GrassrootRestService;
-import org.grassroot.android.services.NoConnectivityException;
 import org.grassroot.android.services.model.GenericResponse;
 import org.grassroot.android.slideDateTimePicker.SlideDateTimeListener;
 import org.grassroot.android.slideDateTimePicker.SlideDateTimePicker;
+import org.grassroot.android.ui.fragments.NetworkErrorDialogFragment;
+import org.grassroot.android.utils.ErrorUtils;
 import org.grassroot.android.utils.PreferenceUtils;
 import org.grassroot.android.utils.UtilClass;
 
@@ -175,7 +177,7 @@ public class EditVoteActivity extends PortraitActivity {
 
     @OnClick(R.id.bt_editVote)
     public void save() {
-        editVoteWS();
+        updateVoteDetails();
     }
 
     private void showProgress() {
@@ -188,7 +190,7 @@ public class EditVoteActivity extends PortraitActivity {
 
     }
 
-    private void hidePreogress() {
+    private void hideProgress() {
 
         if ((progressDialog != null) && progressDialog.isShowing()) {
             progressDialog.dismiss();
@@ -196,7 +198,7 @@ public class EditVoteActivity extends PortraitActivity {
 
     }
 
-    private void editVoteWS() {
+    private void updateVoteDetails() {
 
         String phoneNumber = PreferenceUtils.getuser_mobilenumber(this);
         String code = PreferenceUtils.getuser_token(this);
@@ -208,7 +210,7 @@ public class EditVoteActivity extends PortraitActivity {
             @Override
             public void onResponse(Call<GenericResponse> call, Response<GenericResponse> response) {
                 if (response.isSuccessful()) {
-                    hidePreogress();
+                    hideProgress();
                     Intent close = new Intent();
                     close.putExtra("description", et_description.getText().toString());
                     close.putExtra("deadline", txtEvDeadline.getText().toString());
@@ -219,9 +221,24 @@ public class EditVoteActivity extends PortraitActivity {
 
             @Override
             public void onFailure(Call<GenericResponse> call, Throwable t) {
-                if (t instanceof NoConnectivityException) {
-                    showSnackBar(getString(R.string.No_network), Snackbar.LENGTH_INDEFINITE, getString(R.string.Retry));
-                }
+                hideProgress();
+                handleNetworkError(R.string.No_network);
+            }
+        });
+
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        updateVoteDetails();
+    }
+
+    private void handleNetworkError(int message) {
+        ErrorUtils.connectivityError(this, message,new NetworkErrorDialogListener() {
+            @Override
+            public void retryClicked() {
+                updateVoteDetails();
             }
         });
 
@@ -250,7 +267,7 @@ public class EditVoteActivity extends PortraitActivity {
             snackbar.setAction(actionButtontext, new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    editVoteWS();
+                    updateVoteDetails();
                 }
             });
 
