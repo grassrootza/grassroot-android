@@ -124,7 +124,7 @@
     <string name="lm_check_all">Select all</string>
     <string name="clear_all">Clear all</string>
 
-    <!--    Create Group--><!--cg-->
+    <!-- Create Group--><!--cg-->
     <string name="Add">Add</string>
     <string name="cg_title">Create new group</string>
     <string name="cg_group_name">Group name</string>
@@ -168,6 +168,42 @@
     <string name="ga_newToDo">NEW TODO</string>
     <string name="ga_addMembers">ADD MEMBERS</string>
 
+    <!-- Create tasks strings -->
+    <string name="ctsk_desc_header">Add notes</string>
+    <string name="ctsk_assign_members_prefix">You have selected</string>
+    <string name="ctsk_assign_member_suffix">member</string> <!-- todo : use android getplural instead -->
+    <string name="ctsk_assign_members_suffix">members</string>
+
+    <string name="cmtg_title">Call a meeting</string>
+    <string name="cmtg_button">Call</string>
+    <string name="cmtg_title_hint">Meeting subject</string>
+    <string name="cmtg_datetime">Meeting date and time</string>
+    <string name="cmtg_desc_hint">Longer description or notes on the meeting</string>
+    <string name="cmtg_invite_all">Invite whole group</string>
+    <string name="cmtg_config_reminders_heading">Configure reminder</string>
+    <string name="cmtg_location_hint">Meeting location</string>
+
+    <string name="cvote_title">Call a vote</string>
+    <string name="cvote_subject">Vote subject</string>
+    <string name="cvote_datetime">Closing time</string>
+    <string name="cvote_desc_hint">Add extra notes on the vote subject</string>
+    <string name="cvote_invite_all">Vote includes all members</string>
+    <string name="cvote_button">Call</string>
+
+    <string name="ctodo_title">Record a todo</string>
+    <string name="ctodo_subject">The action to complete</string>
+    <string name="ctodo_datetime">Due date</string>
+    <string name="ctodo_desc_hint">Add extra notes on the action</string>
+    <string name="ctodo_invite_all">Assigned to whole group</string>
+    <string name="ctodo_button">Record</string>
+
+    <string name="ctsk_meeting_assigned_success">Done! Meeting called of %d members</string>
+    <string name="ctsk_meeting_all_success">Done! Meeting called of whole group</string>
+    <string name="ctsk_vote_assigned_success">Done! Vote called of %d members</string>
+    <string name="ctsk_vote_all_success">Done! Vote called of whole group</string>
+    <string name="ctsk_todo_assigned_success">Done! Action assigned to %d members</string>
+    <string name="ctsk_todo_all_success">Done! Action assigned to whole group</string>
+
     <!--Profile--><!--pp-->
     <string name="pp_txt_toolbar">Profile Settings</string>
     <string name="pp_bt_update">Update</string>
@@ -193,19 +229,6 @@
     <string name="ev_description">Description</string>
     <string name="ev_closing">Closing time</string>
 
-    <string name="cv_notify_member_prefix">You have selected</string>
-    <string name="cv_notify_member_suffix_one">member</string>
-    <string name="cv_notify_member_suffix_two">members</string>
-    <string name="nm_vote_members_msg">Please select at least one member</string>
-
-    <!--Create Vote--> <!--cv-->
-    <string name="cv_bt_call_vote">Call Vote</string>
-    <string name="cv_txt_tlb">Create Vote</string>
-    <string name="cv_et_title">Title</string>
-    <string name="cv_et_desc">Edit Description</string>
-    <string name="cv_config_alerts_title">Configure alerts</string>
-    <string name="cv_notify_group_title">Notify entire group</string>
-
     <!--View Vote--> <!--vv-->
     <string name="vv_tv_toolbar">VIEW VOTE</string>
     <string name="vv_bt_editvote">Modify Vote</string>
@@ -217,18 +240,6 @@
     <string name="vv_numberOfUsers">Number of User</string>
     <string name="vv_numberNoRSVP">Number of RSVP</string>
     <string name="vv_voteup">Vote Details Updated Successfully</string>
-
-    <!-- Create meeting -->
-    <string name="cmtg_title">Call a meeting</string>
-    <string name="cmtg_btn_call">Call</string>
-    <string name="cmtg_title_hint">Meeting subject</string>
-    <string name="cmtg_called_by">Called by</string>
-    <string name="cmtg_desc_hint">Longer description or notes on the meeting</string>
-    <string name="cmtg_date_time_desc">Meeting date and time</string>
-    <string name="cmtg_config_reminders_heading">Configure reminder</string>
-    <string name="cmtg_invite_all">Invite whole group</string>
-    <string name="cmtg_location_hint">Meeting location</string>
-    <string name="cmtg_desc_header">Add notes</string>
 
     <!--FAQ-->
     <string name="fq_txt_toolbar">FAQs</string>

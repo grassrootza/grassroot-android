@@ -13,6 +13,7 @@ import android.widget.ImageView;
 
 import org.grassroot.android.R;
 import org.grassroot.android.ui.activities.CreateMeetingActivity;
+import org.grassroot.android.ui.activities.CreateTodoActivity;
 import org.grassroot.android.ui.activities.CreateVoteActivity;
 import org.grassroot.android.ui.activities.NotBuiltActivity;
 import org.grassroot.android.utils.Constant;
@@ -90,9 +91,8 @@ public class GroupQuickTaskModalFragment extends android.support.v4.app.DialogFr
     @OnClick(R.id.ic_home_to_do_active)
     public void icHomeToDoActive() {
         if (todoPermitted) {
-            Intent ToDo = new Intent(getActivity(), NotBuiltActivity.class);
-            ToDo.putExtra("title", "ToDo");
-            startActivity(ToDo);
+            Intent todo = MenuUtils.constructIntent(getContext(), CreateTodoActivity.class, groupUid, groupName);
+            getActivity().startActivityForResult(todo, Constant.activityRecordTodo);
             getDialog().dismiss();
         } else {
             getDialog().dismiss();
@@ -104,8 +104,7 @@ public class GroupQuickTaskModalFragment extends android.support.v4.app.DialogFr
     public void icHomeVoteActive() {
         if (votePermitted) {
             Intent Vote = MenuUtils.constructIntent(getContext(), CreateVoteActivity.class, groupUid, groupName);
-            Vote.putExtra("title", "Vote");
-            startActivity(Vote);
+            getActivity().startActivityForResult(Vote, Constant.activityCallVote);
             getDialog().dismiss();
         } else {
             getDialog().dismiss();
@@ -116,7 +115,7 @@ public class GroupQuickTaskModalFragment extends android.support.v4.app.DialogFr
     @OnClick(R.id.ic_home_call_meeting_active)
     public void icHomeCallMeetingActive() {
         if (meetingPermitted) {
-            Log.e(TAG, "about to start meeting for result!");
+            Log.d(TAG, "about to start meeting for result!");
             Intent Meeting = MenuUtils.constructIntent(getContext(), CreateMeetingActivity.class, groupUid, groupName);
             getActivity().startActivityForResult(Meeting, Constant.activityCallMeeting);
             getDialog().dismiss();

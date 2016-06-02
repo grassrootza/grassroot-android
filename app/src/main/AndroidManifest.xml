@@ -22,10 +22,10 @@
     <uses-permission android:name="android.permission.GET_ACCOUNTS" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
 
-
-
-    <permission android:name="org.grassroot.android.permission.C2D_MESSAGE"
+    <permission
+        android:name="org.grassroot.android.permission.C2D_MESSAGE"
         android:protectionLevel="signature" />
+
     <uses-permission android:name="com.techmorphosis.grassroot.permission.C2D_MESSAGE" />
 
     <application
@@ -33,7 +33,6 @@
         android:icon="@drawable/app_icon"
         android:label="@string/app_name"
         android:theme="@style/AppTheme">
-
         <meta-data
             android:name="io.fabric.ApiKey"
             android:value="a7c7f0c500c90b9563ff8801718ab0b391792bc3" />
@@ -41,82 +40,77 @@
         <receiver
             android:name="com.google.android.gms.gcm.GcmReceiver"
             android:exported="true"
-            android:permission="com.google.android.c2dm.permission.SEND" >
+            android:permission="com.google.android.c2dm.permission.SEND">
             <intent-filter>
                 <action android:name="com.google.android.c2dm.intent.RECEIVE" />
                 <action android:name="com.google.android.c2dm.intent.REGISTRATION" />
+
                 <category android:name="com.techmorphosis.grassroot" />
             </intent-filter>
         </receiver>
-
 
         <service android:name=".services.GcmRegistrationService" />
 
         <!-- Core activities -->
 
         <activity
-            android:name="org.grassroot.android.ui.activities.StartActivity"
+            android:name=".ui.activities.StartActivity"
             android:launchMode="singleTop">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
         <activity
-            android:name="org.grassroot.android.ui.activities.HomeScreenActivity"
+            android:name=".ui.activities.HomeScreenActivity"
             android:configChanges="keyboardHidden|orientation"
             android:label="@string/app_name"
-            android:screenOrientation="portrait"
-            android:launchMode="singleTask" />
-
+            android:launchMode="singleTask"
+            android:screenOrientation="portrait" />
         <activity
-            android:name="org.grassroot.android.ui.activities.GroupTasksActivity"
-            android:parentActivityName="org.grassroot.android.ui.activities.HomeScreenActivity"/>
-
+            android:name=".ui.activities.GroupTasksActivity"
+            android:parentActivityName=".ui.activities.HomeScreenActivity" />
         <activity
-            android:name="org.grassroot.android.ui.activities.NewTaskMenuActivity"
-            android:noHistory="true"/>
+            android:name=".ui.activities.NewTaskMenuActivity"
+            android:noHistory="true" />
 
         <!-- Group management activities -->
         <activity
-            android:name="org.grassroot.android.ui.activities.CreateGroupActivity"
+            android:name=".ui.activities.CreateGroupActivity"
             android:label="@string/title_activity_create__group"
             android:windowSoftInputMode="adjustPan" />
-
         <activity
-            android:name="org.grassroot.android.ui.activities.AddMembersActivity"
+            android:name=".ui.activities.AddMembersActivity"
             android:label="@string/title_activity_add_members"
             android:screenOrientation="portrait" />
-
         <activity
-            android:name="org.grassroot.android.ui.activities.RemoveMembersActivity"
+            android:name=".ui.activities.RemoveMembersActivity"
             android:label="@string/title_activity_remove_members"
-            android:parentActivityName="org.grassroot.android.ui.activities.GroupTasksActivity"/> <!-- todo: reorder to home -->
+            android:parentActivityName=".ui.activities.GroupTasksActivity" /> <!-- todo: reorder to home -->
 
         <activity
-            android:name="org.grassroot.android.ui.activities.GroupMembersActivity"
+            android:name=".ui.activities.GroupMembersActivity"
             android:label="@string/title_activity_group_members"
-            android:parentActivityName="org.grassroot.android.ui.activities.HomeScreenActivity" />
-
+            android:parentActivityName=".ui.activities.HomeScreenActivity" />
         <activity
-            android:name="org.grassroot.android.ui.activities.GroupJoinActivity"
+            android:name=".ui.activities.GroupJoinActivity"
             android:label="@string/title_activity_join__request" />
 
         <!-- Contact book and related activities -->
         <activity
-            android:name="org.grassroot.android.ui.activities.PhoneBookContactsActivity"
+            android:name=".ui.activities.PhoneBookContactsActivity"
             android:label="@string/title_activity_phone_book_contacts" />
         <activity
-            android:name="org.grassroot.android.ui.activities.SelectPhoneNumberActivity"
+            android:name=".ui.activities.SelectPhoneNumberActivity"
             android:label="@string/title_activity_dilog"
             android:theme="@style/MyDialog" />
         <activity
-            android:name="org.grassroot.android.ui.activities.AddContactManually"
+            android:name=".ui.activities.AddContactManually"
             android:label="@string/title_activity_add_contact_manually"
             android:theme="@style/AppTheme" />
         <activity
-            android:name="org.grassroot.android.ui.activities.NotBuiltActivity"
+            android:name=".ui.activities.NotBuiltActivity"
             android:label="@string/title_activity_blank"
             android:theme="@style/AppTheme" />
 
@@ -129,56 +123,55 @@
 
         <!-- Vote related activities -->
 
-        <activity android:name="org.grassroot.android.ui.activities.ViewVoteActivity"
+        <activity
+            android:name=".ui.activities.ViewVoteActivity"
             android:exported="true"
             android:parentActivityName=".ui.activities.StartActivity">
-        <intent-filter>
-            <action android:name="VOTE" />
-            <category android:name="android.intent.category.DEFAULT" />
-        </intent-filter>
+            <intent-filter>
+                <action android:name="VOTE" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value=".ui.activities.StartActivity"/>
-
-
+                android:value=".ui.activities.StartActivity" />
         </activity>
-
         <activity
-            android:name="org.grassroot.android.ui.activities.EditVoteActivity"
+            android:name=".ui.activities.EditVoteActivity"
             android:windowSoftInputMode="adjustPan" />
-        <activity android:name="org.grassroot.android.ui.activities.ProfileSettings"/>
-
+        <activity android:name=".ui.activities.ProfileSettings" />
         <activity
-            android:name="org.grassroot.android.ui.activities.CreateVoteActivity"
+            android:name=".ui.activities.CreateVoteActivity"
             android:label="@string/title_activity_create_vote"
             android:theme="@style/AppTheme"
-            android:windowSoftInputMode="adjustResize"
-            />
+            android:windowSoftInputMode="adjustResize" />
 
+        <!-- Todo related activities -->
+        <activity
+            android:name=".ui.activities.CreateTodoActivity"
+            android:label="@string/ctodo_title"
+            android:theme="@style/AppTheme" />
 
         <!-- Navigation drawer / system activities -->
-        <activity android:name="org.grassroot.android.ui.activities.NotificationCenter"/>
-
-        <activity android:name="org.grassroot.android.ui.activities.FAQActivity" />
-
+        <activity android:name=".ui.activities.NotificationCenter" />
+        <activity android:name=".ui.activities.FAQActivity" />
 
         <service
-            android:name="org.grassroot.android.services.GcmListenerService"
-            android:exported="true" >
+            android:name=".services.GcmListenerService"
+            android:exported="true">
             <intent-filter>
                 <action android:name="com.google.android.c2dm.intent.RECEIVE" />
             </intent-filter>
         </service>
-
         <service
-            android:name="org.grassroot.android.services.InstanceIDListenerService"
+            android:name=".services.InstanceIDListenerService"
             android:exported="true">
             <intent-filter>
                 <action android:name="com.google.android.gms.iid.InstanceID" />
             </intent-filter>
         </service>
-
-        <service android:name="org.grassroot.android.services.GcmRegistrationService" />
+        <service android:name=".services.GcmRegistrationService" />
 
     </application>
 

@@ -63,6 +63,8 @@ public class Constant {
     public static final int activityCreateGroup = 6;
     public static final int activitySelectGroupMembers = 7;
     public static final int activityCallMeeting = 8;
+    public static final int activityCallVote = 9;
+    public static final int activityRecordTodo = 10;
 
     public static final int alertAskForContactPermission = 91;
 

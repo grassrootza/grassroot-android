@@ -1,12 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/rl_root_cv"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/off_white_background">
 
     <android.support.v7.widget.Toolbar
-        android:id="@+id/cvote_tlb"
+        android:id="@+id/ctodo_tlb"
         android:layout_width="match_parent"
         android:layout_height="?actionBarSize"
         android:background="@color/primaryColor"
@@ -16,11 +15,10 @@
     </android.support.v7.widget.Toolbar>
 
     <FrameLayout
-        android:id="@+id/cvote_fl_fragment"
-        android:layout_below="@id/cvote_tlb"
+        android:id="@+id/ctodo_fl_fragment"
+        android:layout_below="@id/ctodo_tlb"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
-
     </FrameLayout>
 
 </RelativeLayout>

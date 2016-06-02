@@ -62,8 +62,7 @@ public class NewTaskMenuActivity extends AppCompatActivity {
 
     @OnClick(R.id.bt_todo)
     public void onTodoButtonClick() {
-        Intent todo = new Intent(this, NotBuiltActivity.class);
-        todo.putExtra("title", "ToDO");
+        Intent todo = MenuUtils.constructIntent(this, CreateTodoActivity.class, groupUid, groupName);
         startActivity(todo);
     }
 

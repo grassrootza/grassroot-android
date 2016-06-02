@@ -211,6 +211,15 @@ public class GrassrootRestService {
                                             @Query("location") String location,
                                             @Query("members") Set<String> memberUids);
 
+        // create t-do
+        @POST("logbook/create/{phoneNumber}/{code}/{parentUid}")
+        Call<GenericResponse> createTodo(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
+                                         @Path("parentUid") String parentUid, @Query("title") String title,
+                                         @Query("description") String description,
+                                         @Query("dueDate") String dueDate,
+                                         @Query("reminderMinutes") int reminderMinutes,
+                                         @Query("members") Set<String> membersAssigned);
+
 
         //Profile settings
         @GET("user/profile/settings/{phoneNumber}/{code}")

@@ -13,21 +13,18 @@ import org.grassroot.android.utils.Constant;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 
-public class CreateVoteActivity extends PortraitActivity {
-
-    private static final String TAG = CreateVoteActivity.class.getCanonicalName();
+public class CreateTodoActivity extends PortraitActivity {
 
     private String groupUid;
+    private CreateTaskFragment createTaskFragment;
 
-    @BindView(R.id.cvote_tlb)
+    @BindView(R.id.ctodo_tlb)
     Toolbar toolbar;
-
-    private CreateTaskFragment ctskFragment;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_create_vote);
+        setContentView(R.layout.activity_create_todo);
         ButterKnife.bind(this);
 
         Bundle b = getIntent().getExtras();
@@ -41,7 +38,7 @@ public class CreateVoteActivity extends PortraitActivity {
     }
 
     private void setUpToolbar() {
-        setTitle(R.string.cvote_title);
+        setTitle(R.string.ctodo_title);
         setSupportActionBar(toolbar);
         toolbar.setNavigationIcon(R.drawable.btn_back_wt);
         toolbar.setNavigationOnClickListener(new View.OnClickListener() {
@@ -53,14 +50,14 @@ public class CreateVoteActivity extends PortraitActivity {
     }
 
     private void launchFragment() {
-        ctskFragment = new CreateTaskFragment();
+        createTaskFragment = new CreateTaskFragment();
         Bundle args = new Bundle();
-        args.putString(TaskConstants.TASK_TYPE_FIELD, TaskConstants.VOTE);
+        args.putString(TaskConstants.TASK_TYPE_FIELD, TaskConstants.TODO);
         args.putString(GroupConstants.UID_FIELD, groupUid);
-        ctskFragment.setArguments(args);
+        createTaskFragment.setArguments(args);
 
         getSupportFragmentManager().beginTransaction()
-                .add(R.id.cvote_fl_fragment, ctskFragment)
+                .add(R.id.ctodo_fl_fragment, createTaskFragment)
                 .commit();
     }
 }
