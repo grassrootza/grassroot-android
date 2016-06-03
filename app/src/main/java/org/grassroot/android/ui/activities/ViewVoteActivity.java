@@ -20,6 +20,7 @@ import android.widget.TextView;
 
 import org.grassroot.android.R;
 
+import org.grassroot.android.interfaces.NetworkErrorDialogListener;
 import org.grassroot.android.services.GrassrootRestService;
 import org.grassroot.android.services.model.EventModel;
 import org.grassroot.android.services.model.EventResponse;
@@ -125,7 +126,6 @@ public class ViewVoteActivity extends PortraitActivity {
     private String description;
     private String deadline;
     private boolean canEdit;
-    private GrassrootRestService grassrootRestService;
     private String phoneNumber;
     private String code;
     private EventModel eventModel;
@@ -162,7 +162,6 @@ public class ViewVoteActivity extends PortraitActivity {
     }
 
     private void init() {
-        grassrootRestService = new GrassrootRestService(this);
         phoneNumber = PreferenceUtils.getuser_mobilenumber(this);
         code = PreferenceUtils.getuser_token(this);
         updateView();
@@ -182,7 +181,7 @@ public class ViewVoteActivity extends PortraitActivity {
     }
 
     private void fetchVoteDetails() {
-        grassrootRestService.getApi().viewVote(phoneNumber, code, voteid).enqueue(new Callback<EventResponse>() {
+        GrassrootRestService.getInstance().getApi().viewVote(phoneNumber, code, voteid).enqueue(new Callback<EventResponse>() {
             @Override
             public void onResponse(Call<EventResponse> call, Response<EventResponse> response) {
                 if (response.isSuccessful()) {
@@ -195,7 +194,13 @@ public class ViewVoteActivity extends PortraitActivity {
             @Override
             public void onFailure(Call<EventResponse> call, Throwable t) {
                 progressBarCircularIndeterminate.setVisibility(View.GONE);
-                ErrorUtils.handleNetworkError(ViewVoteActivity.this, errorLayout, t);
+                ErrorUtils.connectivityError(ViewVoteActivity.this, R.string.No_network, new NetworkErrorDialogListener() {
+                    @Override
+                    public void retryClicked() {
+                     updateView();
+                    }
+                });
+              //  ErrorUtils.handleNetworkError(ViewVoteActivity.this, errorLayout, t);
             }
         });
 
@@ -317,9 +322,9 @@ public class ViewVoteActivity extends PortraitActivity {
 
     }
 
-    private void castVote(String response) {
+    private void castVote(final String response) {
 
-        grassrootRestService.getApi().castVote(voteid, phoneNumber, code, response).
+        GrassrootRestService.getInstance().getApi().castVote(voteid, phoneNumber, code, response).
                 enqueue(new Callback<GenericResponse>() {
                     @Override
                     public void onResponse(Call<GenericResponse> call, Response<GenericResponse> response) {
@@ -332,7 +337,15 @@ public class ViewVoteActivity extends PortraitActivity {
                     public void onFailure(Call<GenericResponse> call, Throwable t) {
                         progressBarCircularIndeterminate.setVisibility(View.GONE);
                         txtPrg.setVisibility(View.GONE);
-                        ErrorUtils.handleNetworkError(ViewVoteActivity.this, errorLayout, t);
+                        ErrorUtils.connectivityError(ViewVoteActivity.this, R.string.No_network, new NetworkErrorDialogListener() {
+                            @Override
+                            public void retryClicked() {
+                                castVote(response);
+                            }
+                        });
+
+
+                       // ErrorUtils.handleNetworkError(ViewVoteActivity.this, errorLayout, t);
                     }
                 });
     }
@@ -432,6 +445,7 @@ public class ViewVoteActivity extends PortraitActivity {
                 description = data.getStringExtra("description");
             }
         } else {
+             updateView();
             Log.e(this.TAG, "resultCode==2");
         }
     }

@@ -46,7 +46,6 @@ public class RemoveMembersActivity extends PortraitActivity implements MemberLis
     private MemberListFragment memberListFragment;
     private AlertDialogFragment dialogFragment;
 
-    private GrassrootRestService grassrootRestService;
     private Set<String> membersToRemove;
 
     @BindView(R.id.rl_rm_root)
@@ -80,7 +79,7 @@ public class RemoveMembersActivity extends PortraitActivity implements MemberLis
         setUpToolbar();
         setUpMemberListFragment();
 
-        grassrootRestService = new GrassrootRestService(this);
+
     }
 
     @Override
@@ -144,7 +143,7 @@ public class RemoveMembersActivity extends PortraitActivity implements MemberLis
     private void saveRemoval() {
         final String phoneNumber = PreferenceUtils.getuser_mobilenumber(this);
         final String code = PreferenceUtils.getuser_token(this);
-        grassrootRestService.getApi().removeGroupMembers(phoneNumber, code, groupUid, membersToRemove)
+        GrassrootRestService.getInstance().getApi().removeGroupMembers(phoneNumber, code, groupUid, membersToRemove)
                 .enqueue(new Callback<GenericResponse>() {
                     @Override
                     public void onResponse(Call<GenericResponse> call, Response<GenericResponse> response) {

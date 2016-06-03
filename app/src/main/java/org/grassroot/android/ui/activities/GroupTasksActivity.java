@@ -21,8 +21,10 @@ import android.widget.RelativeLayout;
 import com.github.clans.fab.FloatingActionMenu;
 import org.grassroot.android.R;
 import org.grassroot.android.adapters.TasksAdapter;
+import org.grassroot.android.events.TaskAddedEvent;
 import org.grassroot.android.interfaces.AlertDialogListener;
 import org.grassroot.android.interfaces.ConfirmDialogListener;
+import org.grassroot.android.interfaces.NetworkErrorDialogListener;
 import org.grassroot.android.interfaces.TaskListListener;
 import org.grassroot.android.services.GrassrootRestService;
 import org.grassroot.android.services.NoConnectivityException;
@@ -38,6 +40,8 @@ import org.grassroot.android.utils.ErrorUtils;
 import org.grassroot.android.utils.MenuUtils;
 import org.grassroot.android.utils.PreferenceUtils;
 import org.grassroot.android.utils.UtilClass;
+import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -100,13 +104,13 @@ public class GroupTasksActivity extends PortraitActivity implements TaskListList
     private List<TaskModel> meetingList; // stores the meetings, only created if user hits filter
     private List<TaskModel> toDoList; // stores the todos, only created if user hits filter
 
-    private GrassrootRestService grassrootRestService;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_group__activities);
         ButterKnife.bind(this);
+        EventBus.getDefault().register(this);
 
         Bundle extras = getIntent().getExtras();
 
@@ -120,6 +124,7 @@ public class GroupTasksActivity extends PortraitActivity implements TaskListList
         init();
         setUpViews();
         initRecyclerView();
+
         getTasks();
     }
 
@@ -155,8 +160,13 @@ public class GroupTasksActivity extends PortraitActivity implements TaskListList
         }
     }
 
+    @Override
+    protected void onDestroy() {
+        EventBus.getDefault().unregister(this);
+        super.onDestroy();
+    }
+
     private void init() {
-        grassrootRestService = new GrassrootRestService(this);
         phoneNumber = PreferenceUtils.getuser_mobilenumber(this);
         code = PreferenceUtils.getuser_token(this);
         filterFlags = new HashMap<>();
@@ -197,7 +207,7 @@ public class GroupTasksActivity extends PortraitActivity implements TaskListList
         mProgressBar.setVisibility(View.VISIBLE);
         fullTasksList = new ArrayList<>();
 
-        grassrootRestService.getApi()
+        GrassrootRestService.getInstance().getApi()
                 .getGroupTasks(groupUid, phoneNumber, code)
                 .enqueue(new Callback<TaskResponse>() {
                     @Override
@@ -218,15 +228,27 @@ public class GroupTasksActivity extends PortraitActivity implements TaskListList
                     }
 
                     @Override
-                    public void onFailure(Call<TaskResponse> call, Throwable t) {
+                    public void onFailure(Call<TaskResponse> call, Throwable t)  {
                         Log.e(TAG, "Inside getActivities ... Here is the failure! " + t.getMessage());
                         mProgressBar.setVisibility(View.INVISIBLE);
                         if (t instanceof NoConnectivityException)
                             imNoInternet.setVisibility(View.VISIBLE);
                         else
-                            ErrorUtils.handleNetworkError(GroupTasksActivity.this, rlActivityRoot, t);
+                            ErrorUtils.connectivityError(GroupTasksActivity.this, R.string.No_network, new NetworkErrorDialogListener() {
+                                @Override
+                                public void retryClicked() {
+                                    getTasks();
+                                }
+                            });
+                          //  ErrorUtils.handleNetworkError(GroupTasksActivity.this, rlActivityRoot, t);
                     }
                 });
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        getTasks();
     }
 
     private void resetViewToAllTasks() {
@@ -324,18 +346,18 @@ public class GroupTasksActivity extends PortraitActivity implements TaskListList
         final String msgSuccess, msgAlreadyResponded;
         Log.e(TAG, "responding to task with uid = " +taskUid);
         if (taskType.equals("VOTE")) {
-            restCall = grassrootRestService.getApi().castVote(taskUid, phoneNumber, code, response);
+            restCall = GrassrootRestService.getInstance().getApi().castVote(taskUid, phoneNumber, code, response);
             msgSuccess = getString(R.string.ga_Votesend);
             msgAlreadyResponded = getString(R.string.ga_VoteFailure);
             confirmAction(taskType,restCall,response,msgSuccess,msgAlreadyResponded);
         } else if (taskType.equals("MEETING")) {
-            restCall = grassrootRestService.getApi().rsvp(taskUid, phoneNumber, code, response);
+            restCall = GrassrootRestService.getInstance().getApi().rsvp(taskUid, phoneNumber, code, response);
             msgSuccess = getString(R.string.ga_Meetingsend);
             msgAlreadyResponded = getString(R.string.ga_VoteFailure);
             confirmAction(taskType,restCall,response,msgSuccess,msgAlreadyResponded);
 
         } else if (taskType.equals("TODO")) {
-            restCall = grassrootRestService.getApi().completeTodo(phoneNumber, code, taskUid);
+            restCall = GrassrootRestService.getInstance().getApi().completeTodo(phoneNumber, code, taskUid);
             msgSuccess = getString(R.string.ga_ToDocompleted);
             msgAlreadyResponded = getString(R.string.ga_ToDoFailure);
             confirmAction(taskType,restCall,response,msgSuccess,msgAlreadyResponded);
@@ -343,6 +365,8 @@ public class GroupTasksActivity extends PortraitActivity implements TaskListList
             throw new UnsupportedOperationException("Responding to neither vote nor meeting! Error somewhere");
         }
     }
+
+
 
     public void onCardClick(View view, final int position) {
         view.setOnClickListener(new View.OnClickListener() {
@@ -434,6 +458,13 @@ public class GroupTasksActivity extends PortraitActivity implements TaskListList
             }
         });
         newFragment.show(getFragmentManager(), "dialog");
+    }
+
+
+
+    @Subscribe
+    public void onEvent(TaskAddedEvent event){
+        getTasks();
     }
 
 

@@ -1,12 +1,17 @@
 package org.grassroot.android.utils;
 
+import android.app.Activity;
 import android.content.Context;
 import android.graphics.Color;
 import android.support.design.widget.Snackbar;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentActivity;
 import android.util.Log;
 import android.view.View;
 
+import org.grassroot.android.interfaces.NetworkErrorDialogListener;
 import org.grassroot.android.services.NoConnectivityException;
+import org.grassroot.android.ui.fragments.NetworkErrorDialogFragment;
 
 import java.io.IOException;
 import java.net.SocketTimeoutException;
@@ -46,6 +51,13 @@ public class ErrorUtils {
         final String errorText =  "Connectivity error! On calling URL: " + e.getUriAttempted();
         Snackbar snackBar = Snackbar.make(holder, errorText, Snackbar.LENGTH_INDEFINITE);
         snackBar.show();
+    }
+
+
+    public static void connectivityError(Activity context, int message, NetworkErrorDialogListener networkErrorDialogListener){
+        NetworkErrorDialogFragment networkErrorDialogFragment = NetworkErrorDialogFragment.newInstance(message, networkErrorDialogListener);
+        networkErrorDialogFragment.show(context.getFragmentManager(), "error_dialog");
+
     }
 
     public static void hostError(View holder, UnknownHostException e) {

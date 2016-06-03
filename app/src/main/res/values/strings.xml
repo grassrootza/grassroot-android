@@ -26,7 +26,7 @@
     <string name="et_mobile_register">Cellphone number</string>
 
     <!-- Error messages -->
-    <string name="No_network">Your Network Connection does not seem to be work properly.\n Click to try again</string>
+    <string name="No_network">You dont seem to have a working internet connection.</string>
     <string name="Retry">RETRY</string>
     <string name="Unknown_error">Oops, an error occurred. Try again later.</string>
     <string name="Either_field_empty">Please enter all fields to proceed.</string>
@@ -326,16 +326,7 @@
     <string name="sender_id">13953357197@gcm.googleapis.com</string>
     <string name="project_id">13953357197</string>
 
-    <!-- GCM strings ; todo: put these in config or somewhere not disclosed when source is opened -->
-    <string name="Server_API_Key">AIzaSyBFEX10lX_KITAXL0hifg_M1ctRd4ACG2A</string>
-    <string name="Android_API_Key">AIzaSyCQIcVV-FKNkHTJaXJdSqfeVUFvqAHYfSs</string>
-    <string name="Testing_Key">AIzaSyAb7cyP_Hl069fA1dD4AITDDX3_3XCshs8</string>
-    <string name="Production_Key">AIzaSyAbcDXh1pfh3PsJU-Hprm9aEKhVcUBz3Rg</string>
 
-    <string name="gcm_send_message">Token retrieved and sent to server! You can now use gcmsender to send downstream messages to this app.</string>
-    <string name="registering_message">Generating InstanceID token...</string>
-    <string name="token_error_message">An error occurred while either fetching the InstanceID token, sending the fetched token to the server
-        or subscribing to the PubSub topic. Please try running the sample again.</string>
 
     <!--Blank screen--><!--bs-->
     <string name="bs_BR_name">Blank Screen</string>
