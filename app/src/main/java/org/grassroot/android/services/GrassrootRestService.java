@@ -109,7 +109,7 @@ public class GrassrootRestService {
                                                 @Query("phoneNumbers") String[] phoneNumbers);
 
         @POST("group/create/new/{phoneNumber}/{code}/{groupName}/{description}")
-        Call<GenericResponse> createGroupNew(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
+        Call<GroupResponse> createGroupNew(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
                                              @Path("groupName") String groupName, @Path("description") String groupDescription,
                                              @Body List<Member> membersToAdd);
 

@@ -53,7 +53,7 @@ public class Constant {
 
     /**
      * RESULT CODES FOR ACTIVITIES
-     * todo : make an enum with to/from int
+     * todo : make an enum with to/from int, or do bitmasking etc
      */
     public static final int activityContactSelection = 1;
     public static final int activityManualMemberEntry = 2;
@@ -65,6 +65,7 @@ public class Constant {
     public static final int activityCallMeeting = 8;
     public static final int activityCallVote = 9;
     public static final int activityRecordTodo = 10;
+    public static final int activityCreateTask = 11;
 
     public static final int alertAskForContactPermission = 91;
 

@@ -1,5 +1,6 @@
 package org.grassroot.android.adapters;
 
+import android.content.Context;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
@@ -30,15 +31,23 @@ public class GroupListAdapter extends RecyclerView.Adapter<GroupListAdapter.GHP_
 
     private String TAG = GroupListAdapter.class.getSimpleName();
 
-    private final HomeGroupListFragment activity;
+    private final Context context;
+    private final GroupRowListener listener;
 
     List<Group> displayedGroups;
 
     private static final SimpleDateFormat outputSDF = new SimpleDateFormat("EEE, d MMM");
 
-    public GroupListAdapter(List<Group> groups, HomeGroupListFragment activity) {
+    public interface GroupRowListener {
+        void onGroupRowShortClick(Group group);
+        void onGroupRowLongClick(Group group);
+        void onGroupRowMemberClick(Group group, int position);
+    }
+
+    public GroupListAdapter(List<Group> groups, HomeGroupListFragment fragment) {
         this.displayedGroups = groups;
-        this.activity = activity;
+        this.context = fragment.getContext();
+        this.listener = fragment;
     }
 
     // todo: consider moving these back out to fragment (esp given notifyDataSet being bad..)
@@ -61,10 +70,12 @@ public class GroupListAdapter extends RecyclerView.Adapter<GroupListAdapter.GHP_
     }
 
     @Override
-    public void onBindViewHolder(GHP_ViewHolder holder, int position) {
+    public void onBindViewHolder(GHP_ViewHolder holder, final int position) {
+
+        // todo : this is a bit of a mess, see if possible to simplify
 
         holder.itemView.setLongClickable(true);
-        Group group = displayedGroups.get(position);
+        final Group group = displayedGroups.get(position);
 
         final String groupOrganizerDescription = "Organizer: " + group.getGroupCreator();
         holder.txtGroupname.setText(group.getGroupName());
@@ -73,17 +84,17 @@ public class GroupListAdapter extends RecyclerView.Adapter<GroupListAdapter.GHP_
         if (GroupConstants.NO_JOIN_CODE.equals(group.getJoinCode())) {
             final String groupDescription = group.getDescription();
             final int visibility = (groupDescription == null || groupDescription.trim().equals("")) ? View.GONE : View.VISIBLE;
-            holder.txtGroupdesc.setText(String.format(activity.getString(R.string.desc_body_pattern),
+            holder.txtGroupdesc.setText(String.format(context.getString(R.string.desc_body_pattern),
                     getChangePrefix(group), groupDescription));
             holder.txtGroupdesc.setVisibility(visibility);
         } else {
-            final String tokenCode = activity.getString(R.string.join_code_prefix) + group.getJoinCode() + "#";
+            final String tokenCode = context.getString(R.string.join_code_prefix) + group.getJoinCode() + "#";
             holder.txtGroupdesc.setText(tokenCode);
         }
 
         // todo : check later if there's a more efficient way to do this?
-        int height = holder.profileV1.getDrawable().getIntrinsicWidth();
-        int width = holder.profileV1.getDrawable().getIntrinsicHeight();
+        final int height = holder.profileV1.getDrawable().getIntrinsicWidth();
+        final int width = holder.profileV1.getDrawable().getIntrinsicHeight();
 
         RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) holder.profileV2.getLayoutParams();
         params.height = height;
@@ -95,28 +106,46 @@ public class GroupListAdapter extends RecyclerView.Adapter<GroupListAdapter.GHP_
 
         holder.profileV2.setText("+" + String.valueOf(group.getGroupMemberCount()));
 
-        holder.datetime.setText(String.format(activity.getString(R.string.date_time_pattern),
+        holder.datetime.setText(String.format(context.getString(R.string.date_time_pattern),
                 getChangePrefix(group), outputSDF.format(group.getDate())));
 
-        activity.addGroupRowLongClickListener(holder.cardView, position);
-        activity.addGroupRowShortClickListener(holder.cardView, position);
-        activity.addGroupRowMemberNumberClickListener(holder.memberIcons, position);
+        holder.cardView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                listener.onGroupRowShortClick(group);
+            }
+        });
+
+        holder.cardView.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View view) {
+                listener.onGroupRowLongClick(group);
+                return true;
+            }
+        });
+
+        holder.memberIcons.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                listener.onGroupRowMemberClick(group, position);
+            }
+        });
     }
 
     private String getChangePrefix(Group group) {
         switch (group.getLastChangeType()) {
             case GroupConstants.MEETING_CALLED:
-                return (group.getDate().after(new Date()) ? activity.getString(R.string.future_meeting_prefix)
-                        : activity.getString(R.string.past_meeting_prefix));
+                return (group.getDate().after(new Date()) ? context.getString(R.string.future_meeting_prefix)
+                        : context.getString(R.string.past_meeting_prefix));
             case GroupConstants.VOTE_CALLED:
-                return (group.getDate().after(new Date())) ? activity.getString(R.string.future_vote_prefix)
-                        : activity.getString(R.string.past_vote_prefix);
+                return (group.getDate().after(new Date())) ? context.getString(R.string.future_vote_prefix)
+                        : context.getString(R.string.past_vote_prefix);
             case GroupConstants.GROUP_CREATED:
-                return activity.getString(R.string.group_created_prefix);
+                return context.getString(R.string.group_created_prefix);
             case GroupConstants.MEMBER_ADDED:
-                return activity.getString(R.string.member_added_prefix);
+                return context.getString(R.string.member_added_prefix);
             case GroupConstants.GROUP_MOD_OTHER:
-                return activity.getString(R.string.group_other_prefix);
+                return context.getString(R.string.group_other_prefix);
             default:
                 throw new UnsupportedOperationException("Error! Should only be one of standard change types");
         }
@@ -143,6 +172,7 @@ public class GroupListAdapter extends RecyclerView.Adapter<GroupListAdapter.GHP_
     public void addGroup(int position, Group group) {
         displayedGroups.add(position, group);
         notifyItemInserted(position);
+        notifyDataSetChanged(); // ugh, again, item inserted is not working! really need to figure out / fix
     }
 
     public void setGroupList(List<Group> groupList) {

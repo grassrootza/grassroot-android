@@ -23,6 +23,7 @@ import com.github.clans.fab.FloatingActionButton;
 import com.github.clans.fab.FloatingActionMenu;
 import org.grassroot.android.R;
 import org.grassroot.android.adapters.GroupListAdapter;
+import org.grassroot.android.interfaces.GroupConstants;
 import org.grassroot.android.interfaces.SortInterface;
 import org.grassroot.android.services.GrassrootRestService;
 import org.grassroot.android.services.NoConnectivityException;
@@ -49,7 +50,7 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class HomeGroupListFragment extends android.support.v4.app.Fragment {
+public class HomeGroupListFragment extends android.support.v4.app.Fragment implements GroupListAdapter.GroupRowListener {
 
     private String TAG = HomeGroupListFragment.class.getSimpleName();
 
@@ -132,6 +133,7 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment {
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Log.e(TAG, "and ... activity created again");
         init();
         setUpRecyclerView();
         setUpSwipeRefresh();
@@ -257,10 +259,10 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment {
     }
 
     // called after creating a group
-    public void insertGroup(final int position) {
+    public void insertGroup(final int position, final Group group) {
         // todo : actually add it, for now, just do a refresh
-        Log.e(TAG, "refreshing groups!");
-        refreshGroupList();
+        Log.e(TAG, "adding a group! at position " + position + ", the group looks like : " + group);
+        groupListRowAdapter.addGroup(0, group);
     }
 
     private void setUpRecyclerView() {
@@ -395,7 +397,9 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment {
         super.onActivityResult(requestCode, resultCode, data);
         if (resultCode == Activity.RESULT_OK && requestCode == Constant.activityCreateGroup) {
             Log.e(TAG, "got the result in the fragment, code : " + requestCode);
-            insertGroup(0);
+            Group createdGroup = data.getParcelableExtra(GroupConstants.OBJECT_FIELD);
+            Log.e(TAG, "createdGroup returned! with UID: " + createdGroup);
+            insertGroup(0, createdGroup);
         }
     }
 
@@ -404,59 +408,44 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment {
         fetchGroupList();
     }
 
-    public void addGroupRowShortClickListener(View element, final int position) {
-        element.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                menu1.close(true);
-                Intent openGroupTasks = MenuUtils.constructIntent(getActivity(), GroupTasksActivity.class,
-                        userGroups.get(position).getGroupUid(), userGroups.get(position).getGroupName());
-                startActivity(openGroupTasks);
-            }
-        });
+    @Override
+    public void onGroupRowShortClick(Group group) {
+        menu1.close(true);
+        Intent openGroupTasks = MenuUtils.constructIntent(getActivity(), GroupTasksActivity.class,
+                group.getGroupUid(), group.getGroupName());
+        startActivity(openGroupTasks);
     }
 
-    public void addGroupRowLongClickListener(View element, final int position) {
-        element.setOnLongClickListener(new View.OnLongClickListener() {
-            @Override
-            public boolean onLongClick(View v) {
-                Group dialog_model = userGroups.get(position);
-                GroupQuickTaskModalFragment dialog = new GroupQuickTaskModalFragment();
-                dialog.setGroupParameters(dialog_model.getGroupUid(), dialog_model.getGroupName());
+    @Override
+    public void onGroupRowLongClick(Group group) {
+        GroupQuickTaskModalFragment dialog = new GroupQuickTaskModalFragment();
+        dialog.setGroupParameters(group.getGroupUid(), group.getGroupName());
 
-                Bundle args = new Bundle();
-                args.putBoolean("Meeting", dialog_model.getPermissions().contains("GROUP_PERMISSION_CREATE_GROUP_MEETING"));
-                args.putBoolean("Vote", dialog_model.getPermissions().contains("GROUP_PERMISSION_CREATE_GROUP_VOTE"));
-                args.putBoolean("ToDo", dialog_model.getPermissions().contains("GROUP_PERMISSION_CREATE_LOGBOOK_ENTRY"));
-                dialog.setArguments(args);
-                dialog.show(getFragmentManager(), "GroupQuickTaskModalFragment");
-                return true;
-            }
-        });
+        Bundle args = new Bundle();
+        args.putBoolean("Meeting", group.getPermissions().contains("GROUP_PERMISSION_CREATE_GROUP_MEETING"));
+        args.putBoolean("Vote", group.getPermissions().contains("GROUP_PERMISSION_CREATE_GROUP_VOTE"));
+        args.putBoolean("ToDo", group.getPermissions().contains("GROUP_PERMISSION_CREATE_LOGBOOK_ENTRY"));
+        dialog.setArguments(args);
+        dialog.show(getFragmentManager(), "GroupQuickTaskModalFragment");
     }
 
-    public void addGroupRowMemberNumberClickListener(View element, final int position) {
-        element.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Group grpMembership = userGroups.get(position);
-                GroupQuickMemberModalFragment dialog = new GroupQuickMemberModalFragment();
+    @Override
+    public void onGroupRowMemberClick(Group group, int position) {
+        GroupQuickMemberModalFragment dialog = new GroupQuickMemberModalFragment();
 
-                Bundle args = new Bundle();
-                args.putString(Constant.GROUPUID_FIELD, grpMembership.getGroupUid());
-                args.putString(Constant.GROUPNAME_FIELD, grpMembership.getGroupName());
-                args.putInt(Constant.INDEX_FIELD, position);
+        Bundle args = new Bundle();
+        args.putString(Constant.GROUPUID_FIELD, group.getGroupUid());
+        args.putString(Constant.GROUPNAME_FIELD, group.getGroupName());
+        args.putInt(Constant.INDEX_FIELD, position); // todo : use hashmaps maybe
 
-                // todo: make these boolean getters in the grpMembership thing
-                args.putBoolean("addMember", grpMembership.getPermissions().contains("GROUP_PERMISSION_ADD_GROUP_MEMBER"));
-                args.putBoolean("viewMembers", grpMembership.getPermissions().contains("GROUP_PERMISSION_SEE_MEMBER_DETAILS"));
-                args.putBoolean("editSettings", grpMembership.getPermissions().contains("GROUP_PERMISSION_UPDATE_GROUP_DETAILS"));
-                args.putBoolean("removeMembers", grpMembership.getPermissions().contains("GROUP_PERMISSION_DELETE_GROUP_MEMBER"));
+        // todo: make these boolean getters in the grpMembership thing
+        args.putBoolean("addMember", group.getPermissions().contains("GROUP_PERMISSION_ADD_GROUP_MEMBER"));
+        args.putBoolean("viewMembers", group.getPermissions().contains("GROUP_PERMISSION_SEE_MEMBER_DETAILS"));
+        args.putBoolean("editSettings", group.getPermissions().contains("GROUP_PERMISSION_UPDATE_GROUP_DETAILS"));
+        args.putBoolean("removeMembers", group.getPermissions().contains("GROUP_PERMISSION_DELETE_GROUP_MEMBER"));
 
-                dialog.setArguments(args);
-                dialog.show(getFragmentManager(), "GroupQuickMemberModalFragment");
-            }
-        });
+        dialog.setArguments(args);
+        dialog.show(getFragmentManager(), "GroupQuickMemberModalFragment");
     }
 
     @Override
