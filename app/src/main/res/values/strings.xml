@@ -26,7 +26,7 @@
     <string name="et_mobile_register">Cellphone number</string>
 
     <!-- Error messages -->
-    <string name="No_network">You seem not to be connected to the internet.</string>
+    <string name="No_network">You dont seem to have a working internet connection.</string>
     <string name="Retry">RETRY</string>
     <string name="Unknown_error">Oops, an error occurred. Try again later.</string>
     <string name="Either_field_empty">Please enter all fields to proceed.</string>

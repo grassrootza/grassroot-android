@@ -85,7 +85,6 @@ public class CreateGroupActivity extends PortraitActivity implements MemberListF
     private MemberListFragment memberListFragment;
 
     private Snackbar snackBar;
-    private GrassrootRestService grassrootRestService;
     private ProgressDialog progressDialog;
 
     @Override
@@ -201,7 +200,7 @@ public class CreateGroupActivity extends PortraitActivity implements MemberListF
 
         List<Member> groupMembers = memberListFragment.getSelectedMembers();
 
-        grassrootRestService.getApi()
+        GrassrootRestService.getInstance().getApi()
                 .createGroupNew(mobileNumber, code, groupName, groupDescription, groupMembers)
                 .enqueue(new Callback<GroupResponse>() {
                     @Override

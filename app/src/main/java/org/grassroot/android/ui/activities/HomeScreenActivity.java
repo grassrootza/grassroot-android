@@ -12,10 +12,12 @@ import android.view.Gravity;
 
 import org.grassroot.android.R;
 import org.grassroot.android.interfaces.AlertDialogListener;
+import org.grassroot.android.events.GroupCreatedEvent;
+import org.grassroot.android.events.NetworkActivityResultsEvent;
+import org.grassroot.android.ui.fragments.NotificationDialog;
 import org.grassroot.android.ui.fragments.AlertDialogFragment;
 import org.grassroot.android.ui.fragments.HomeGroupListFragment;
 import org.grassroot.android.ui.fragments.NavigationDrawerFragment;
-import org.grassroot.android.ui.fragments.NotificationDialog;
 import org.grassroot.android.ui.fragments.WelcomeFragment;
 import org.grassroot.android.utils.Constant;
 import org.grassroot.android.utils.PreferenceUtils;
@@ -58,7 +60,12 @@ public class HomeScreenActivity extends PortraitActivity implements NavigationDr
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (resultCode == RESULT_OK && data != null) {
+        if(requestCode == Constant.activityNetworkSettings){
+            EventBus.getDefault().post(new NetworkActivityResultsEvent());
+            Log.e(TAG, "even fired");
+        }
+        else if (resultCode == RESULT_OK && data != null) {
+            Log.e(TAG, "results okay");
             if (requestCode == Constant.activityAddMembersToGroup || requestCode == Constant.activityRemoveMembers) {
                 Log.d(TAG, "Got a result from add or remove members to group!");
                 int groupPosition = data.getIntExtra(Constant.INDEX_FIELD, -1);

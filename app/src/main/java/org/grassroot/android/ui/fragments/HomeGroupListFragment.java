@@ -114,7 +114,7 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment imple
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
-        Activity activity = (Activity)context;
+        Activity activity = (Activity) context;
         try {
             mCallbacks = (FragmentCallbacks) activity;
             Log.e("onAttach", "Attached");
@@ -146,7 +146,7 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment imple
     }
 
     private void init() {
-       // grassrootRestService = new GrassrootRestService(this.getContext());
+        // grassrootRestService = new GrassrootRestService(this.getContext());
         userGroups = new ArrayList<>();
         ivGhpSort.setEnabled(false);
         ivGhpSearch.setEnabled(false);
@@ -205,13 +205,13 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment imple
                     imNoInternet.setVisibility(View.VISIBLE);
                 } else {
                     Log.e(TAG, t.getMessage());
-                    ErrorUtils.connectivityError(HomeGroupListFragment.this, R.string.No_network, new NetworkErrorDialogListener() {
+                    ErrorUtils.connectivityError(getActivity(), R.string.No_network, new NetworkErrorDialogListener() {
                         @Override
                         public void retryClicked() {
                             fetchGroupList();
                         }
                     });
-                   // ErrorUtils.handleNetworkError(getContext(), rlGhpRoot, t);
+                    // ErrorUtils.handleNetworkError(getContext(), rlGhpRoot, t);
                 }
             }
         });
@@ -236,7 +236,13 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment imple
 
             @Override
             public void onFailure(Call<GroupResponse> call, Throwable t) {
-                ErrorUtils.handleNetworkError(getContext(), rlGhpRoot, t);
+                ErrorUtils.connectivityError(getActivity(), R.string.No_network, new NetworkErrorDialogListener() {
+                    @Override
+                    public void retryClicked() {
+                        refreshGroupList();
+                    }
+                });
+              //  ErrorUtils.handleNetworkError(getContext(), rlGhpRoot, t);
             }
         });
     }
@@ -263,7 +269,13 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment imple
 
                         @Override
                         public void onFailure(Call<GroupResponse> call, Throwable t) {
-                            ErrorUtils.handleNetworkError(getContext(), rlGhpRoot, t);
+                            ErrorUtils.connectivityError(getActivity(), R.string.No_network, new NetworkErrorDialogListener() {
+                                @Override
+                                public void retryClicked() {
+                                    updateSingleGroup(position,groupUid);
+                                }
+                            });
+                         //   ErrorUtils.handleNetworkError(getContext(), rlGhpRoot, t);
                         }
                     });
         } else {
@@ -313,8 +325,8 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment imple
 
             for (Group group : userGroups) {
                 if (group.getGroupName().trim().toLowerCase(Locale.getDefault()).contains(searchwords)) {
-                    Log.e(TAG,"model.groupName.trim() " + group.getGroupName().trim().toLowerCase(Locale.getDefault()));
-                    Log.e(TAG,"searchwords is " + searchwords);
+                    Log.e(TAG, "model.groupName.trim() " + group.getGroupName().trim().toLowerCase(Locale.getDefault()));
+                    Log.e(TAG, "searchwords is " + searchwords);
                     filteredGroups.add(group);
                 } else {
                     //Log.e(TAG,"not found");
@@ -414,12 +426,12 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment imple
             Log.e(TAG, "createdGroup returned! with UID: " + createdGroup);
             insertGroup(0, createdGroup);
         }
-            fetchGroupList();
-            //todo
+        fetchGroupList();
+        //todo
 
     }
 
-    @OnClick({R.id.im_no_results, R.id.im_no_internet,R.id.im_server_error})
+    @OnClick({R.id.im_no_results, R.id.im_no_internet, R.id.im_server_error})
     public void onClick() {
         fetchGroupList();
     }
@@ -464,6 +476,9 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment imple
         dialog.show(getFragmentManager(), "GroupQuickMemberModalFragment");
     }
 
+
+
+
     @Override
     public void onDetach() {
         super.onDetach();
@@ -476,6 +491,6 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment imple
         Log.e(TAG, "onEvent");
         fetchGroupList();
 
-
     }
+
 }
