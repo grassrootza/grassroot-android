@@ -92,7 +92,7 @@ public class GroupQuickTaskModalFragment extends android.support.v4.app.DialogFr
     public void icHomeToDoActive() {
         if (todoPermitted) {
             Intent todo = MenuUtils.constructIntent(getContext(), CreateTodoActivity.class, groupUid, groupName);
-            getActivity().startActivityForResult(todo, Constant.activityRecordTodo);
+            getActivity().startActivityForResult(todo, Constant.activityCreateTask);
             getDialog().dismiss();
         } else {
             getDialog().dismiss();
@@ -104,7 +104,7 @@ public class GroupQuickTaskModalFragment extends android.support.v4.app.DialogFr
     public void icHomeVoteActive() {
         if (votePermitted) {
             Intent Vote = MenuUtils.constructIntent(getContext(), CreateVoteActivity.class, groupUid, groupName);
-            getActivity().startActivityForResult(Vote, Constant.activityCallVote);
+            getActivity().startActivityForResult(Vote, Constant.activityCreateTask);
             getDialog().dismiss();
         } else {
             getDialog().dismiss();
@@ -117,7 +117,7 @@ public class GroupQuickTaskModalFragment extends android.support.v4.app.DialogFr
         if (meetingPermitted) {
             Log.d(TAG, "about to start meeting for result!");
             Intent Meeting = MenuUtils.constructIntent(getContext(), CreateMeetingActivity.class, groupUid, groupName);
-            getActivity().startActivityForResult(Meeting, Constant.activityCallMeeting);
+            getActivity().startActivityForResult(Meeting, Constant.activityCreateTask);
             getDialog().dismiss();
         } else {
             getDialog().dismiss();

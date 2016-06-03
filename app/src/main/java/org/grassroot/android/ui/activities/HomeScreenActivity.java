@@ -11,6 +11,7 @@ import android.util.Log;
 import android.view.Gravity;
 
 import org.grassroot.android.R;
+import org.grassroot.android.interfaces.AlertDialogListener;
 import org.grassroot.android.events.GroupCreatedEvent;
 import org.grassroot.android.events.NetworkActivityResultsEvent;
 import org.grassroot.android.ui.fragments.NotificationDialog;
@@ -21,9 +22,7 @@ import org.grassroot.android.ui.fragments.WelcomeFragment;
 import org.grassroot.android.utils.Constant;
 import org.grassroot.android.utils.PreferenceUtils;
 import org.grassroot.android.utils.UtilClass;
-import org.grassroot.android.interfaces.AlertDialogListener;
 import org.greenrobot.eventbus.EventBus;
-import org.greenrobot.eventbus.Subscribe;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -33,14 +32,12 @@ public class HomeScreenActivity extends PortraitActivity implements NavigationDr
 
     private static final String TAG = HomeScreenActivity.class.getCanonicalName();
 
-
     @BindView(R.id.drawer_layout)
     DrawerLayout drawer;
 
     private Fragment mainFragment;
     private NavigationDrawerFragment drawerFrag;
     private AlertDialogFragment alertDialogFragment;
-    private NotificationDialog notificationDialog;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,7 +47,6 @@ public class HomeScreenActivity extends PortraitActivity implements NavigationDr
         drawerFrag = (NavigationDrawerFragment) getFragmentManager().findFragmentById(R.id.navigation_drawer);
         drawerFrag.setUp(R.id.navigation_drawer, drawer);
         ButterKnife.bind(this);
-        EventBus.getDefault().register(this);
         setUpHomeFragment();
     }
 
@@ -60,8 +56,6 @@ public class HomeScreenActivity extends PortraitActivity implements NavigationDr
                 .replace(R.id.fragment_container, mainFragment)
                 .commit();
     }
-
-
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -76,13 +70,13 @@ public class HomeScreenActivity extends PortraitActivity implements NavigationDr
         else if (resultCode == RESULT_OK && data != null) {
             Log.e(TAG, "results okay");
             if (requestCode == Constant.activityAddMembersToGroup || requestCode == Constant.activityRemoveMembers) {
-                Log.e(TAG, "Got a result from add or remove members to group!");
+                Log.d(TAG, "Got a result from add or remove members to group!");
                 int groupPosition = data.getIntExtra(Constant.INDEX_FIELD, -1);
                 String groupUid = data.getStringExtra(Constant.GROUPUID_FIELD);
                 HomeGroupListFragment hgl = (HomeGroupListFragment) mainFragment;
                 hgl.updateSingleGroup(groupPosition, groupUid);
-            } else if (requestCode == Constant.activityCallMeeting) {
-                Log.e(TAG, "Called a meeting! Display the thing");
+            } else if (requestCode == Constant.activityCreateTask) {
+                Log.d(TAG, "Created a task! Display the thing");
                 HomeGroupListFragment hgl = (HomeGroupListFragment) mainFragment;
                 hgl.showSuccessMessage(data);
             }
@@ -168,6 +162,7 @@ public class HomeScreenActivity extends PortraitActivity implements NavigationDr
 
     @Override
     protected void onDestroy() {
+        Log.e(TAG, "event destroyed!");
         EventBus.getDefault().unregister(this);
         super.onDestroy();
     }
@@ -177,24 +172,13 @@ public class HomeScreenActivity extends PortraitActivity implements NavigationDr
         if (drawer != null) drawer.openDrawer(GravityCompat.START);
     }
 
-
-    @Subscribe
-    public void onEvent(GroupCreatedEvent event){
-        mainFragment = new HomeGroupListFragment();
-        getSupportFragmentManager().beginTransaction()
-                .replace(R.id.fragment_container, mainFragment)
-                .commitAllowingStateLoss();
-    }
-
-
     @Override
     protected void onResume() {
         super.onResume();
+        Log.e(TAG, "resuming homescreenactivity!");
 
         if (PreferenceUtils.getPrefHasSaveClicked(this)) {
             PreferenceUtils.setPrefHasSaveClicked(this, false);
         }
-
-
     }
 }

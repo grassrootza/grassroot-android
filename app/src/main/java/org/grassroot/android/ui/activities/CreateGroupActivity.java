@@ -19,9 +19,11 @@ import com.github.clans.fab.FloatingActionButton;
 import com.github.clans.fab.FloatingActionMenu;
 import org.grassroot.android.R;
 import org.grassroot.android.events.GroupCreatedEvent;
+import org.grassroot.android.interfaces.GroupConstants;
 import org.grassroot.android.models.Contact;
 import org.grassroot.android.services.GrassrootRestService;
 import org.grassroot.android.services.model.GenericResponse;
+import org.grassroot.android.services.model.GroupResponse;
 import org.grassroot.android.services.model.Member;
 import org.grassroot.android.ui.fragments.MemberListFragment;
 import org.grassroot.android.utils.Constant;
@@ -200,15 +202,17 @@ public class CreateGroupActivity extends PortraitActivity implements MemberListF
 
         GrassrootRestService.getInstance().getApi()
                 .createGroupNew(mobileNumber, code, groupName, groupDescription, groupMembers)
-                .enqueue(new Callback<GenericResponse>() {
+                .enqueue(new Callback<GroupResponse>() {
                     @Override
-                    public void onResponse(Call<GenericResponse> call, Response<GenericResponse> response) {
+                    public void onResponse(Call<GroupResponse> call, Response<GroupResponse> response) {
                         if (response.isSuccessful()) {
                             hideProgress();
                             PreferenceUtils.setisHasgroup(getApplicationContext(), true);
-                            Intent result = new Intent();
-                            // todo : add the created group to the intent
-                            setResult(RESULT_OK);
+                            Intent resultIntent = new Intent();
+                            Log.e(TAG, "here's the response body: " + response.body().toString());
+                            resultIntent.putExtra(GroupConstants.OBJECT_FIELD, response.body().getGroups().get(0));
+                            setResult(RESULT_OK, resultIntent);
+                            Log.e(TAG, "returning group created! with UID : " + response.body().getGroups().get(0).getGroupUid());
                             EventBus.getDefault().post(new GroupCreatedEvent());
                             finish();
                         } else {
@@ -217,7 +221,7 @@ public class CreateGroupActivity extends PortraitActivity implements MemberListF
                     }
 
                     @Override
-                    public void onFailure(Call<GenericResponse> call, Throwable t) {
+                    public void onFailure(Call<GroupResponse> call, Throwable t) {
                         hideProgress();
                         ErrorUtils.handleNetworkError(CreateGroupActivity.this, rlCgRoot, t);
                     }

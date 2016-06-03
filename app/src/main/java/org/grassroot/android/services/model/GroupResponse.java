@@ -87,5 +87,14 @@ public class GroupResponse {
         this.groups = groups;
     }
 
+    @Override
+    public String toString() {
+        return "GroupResponse{" +
+                "status='" + status + '\'' +
+                ", code=" + code +
+                ", message='" + message + '\'' +
+                ", groups=" + groups.toString() +
+                '}';
+    }
 }
 

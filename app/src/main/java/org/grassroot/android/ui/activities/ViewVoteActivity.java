@@ -197,7 +197,7 @@ public class ViewVoteActivity extends PortraitActivity {
                 ErrorUtils.connectivityError(ViewVoteActivity.this, R.string.No_network, new NetworkErrorDialogListener() {
                     @Override
                     public void retryClicked() {
-                       fetchVoteDetails();
+                     updateView();
                     }
                 });
               //  ErrorUtils.handleNetworkError(ViewVoteActivity.this, errorLayout, t);
@@ -445,7 +445,7 @@ public class ViewVoteActivity extends PortraitActivity {
                 description = data.getStringExtra("description");
             }
         } else {
-            fetchVoteDetails();
+             updateView();
             Log.e(this.TAG, "resultCode==2");
         }
     }

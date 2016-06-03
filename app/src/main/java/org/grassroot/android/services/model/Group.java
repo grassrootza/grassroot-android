@@ -2,10 +2,11 @@ package org.grassroot.android.services.model;
 
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.util.Log;
 
 import org.grassroot.android.utils.Constant;
 
-import java.text.SimpleDateFormat;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Comparator;
@@ -16,8 +17,6 @@ import java.util.List;
  * Created by paballo on 2016/05/04.
  */
 public class Group implements Parcelable, Comparable<Group> {
-
-    private static final String TAG = Group.class.getCanonicalName();
 
     private String groupUid;
     private String groupName;
@@ -31,7 +30,7 @@ public class Group implements Parcelable, Comparable<Group> {
 
     private Date date;
     private DateTime dateTime;
-    private String dateTimeFull;
+    private String dateTimeStringISO;
 
     private List<String> permissions = new ArrayList<>(); // todo: convert this to a set so can do fast hashing
 
@@ -85,12 +84,33 @@ public class Group implements Parcelable, Comparable<Group> {
 
     public String getJoinCode() { return joinCode; }
 
+    public String getDateTimeStringISO() {
+        if (dateTimeStringISO == null || dateTimeStringISO.equals("")) {
+            dateTimeStringISO = Constant.isoDateTimeSDF.format(getDate());
+            return dateTimeStringISO;
+        } else {
+            return dateTimeStringISO;
+        }
+    }
+
     public String getLastChangeType() { return lastChangeType; }
 
     public Date getDate() {
         if (date == null) {
-            constructDate();
-            return date;
+            if (dateTime != null) {
+                constructDate();
+                return date;
+            } else if (dateTimeStringISO != null && !dateTimeStringISO.equals("")) {
+                try {
+                    date = Constant.isoDateTimeSDF.parse(dateTimeStringISO);
+                    return date;
+                } catch (ParseException e) {
+                    e.printStackTrace();
+                    return null;
+                }
+            } else {
+                throw new UnsupportedOperationException("Error! Group needs at least one source of a datetime");
+            }
         } else {
             return date;
         }
@@ -105,11 +125,9 @@ public class Group implements Parcelable, Comparable<Group> {
     }
 
     private void constructDate() {
-        //get the current date as Calendar object
         Calendar calendar = Calendar.getInstance();
 
-        // NB: because Java 7 datetime is unbelievably bad, and Android still uses it, make sure to set these in order
-
+        // NB: Java 7 datetime requires these to be set in order (argh, for Joda/Java8)
         calendar.set(Calendar.YEAR, dateTime.getYear());
         calendar.set(Calendar.MONTH, dateTime.getMonthValue() - 1);
         calendar.set(Calendar.DAY_OF_MONTH, dateTime.getDayOfMonth());
@@ -133,7 +151,9 @@ public class Group implements Parcelable, Comparable<Group> {
         dest.writeString(this.groupCreator);
         dest.writeString(this.role);
         dest.writeInt(this.groupMemberCount);
-        dest.writeString(this.dateTimeFull);
+        dest.writeString(getDateTimeStringISO());
+        dest.writeString(this.lastChangeType);
+        dest.writeString(this.joinCode);
         dest.writeStringList(this.permissions);
     }
 
@@ -143,7 +163,10 @@ public class Group implements Parcelable, Comparable<Group> {
         description = in.readString();
         groupCreator = in.readString();
         role = in.readString();
-        dateTimeFull = in.readString();
+        groupMemberCount = in.readInt();
+        dateTimeStringISO = in.readString();
+        lastChangeType = in.readString();
+        joinCode = in.readString();
         permissions = in.createStringArrayList();
     }
 
@@ -186,4 +209,13 @@ public class Group implements Parcelable, Comparable<Group> {
             }
         }
     };
+
+    @Override
+    public String toString() {
+        return "Group{" +
+                "groupUid='" + groupUid + '\'' +
+                ", lastChangeType='" + lastChangeType + '\'' +
+                ", groupName='" + groupName + '\'' +
+                '}';
+    }
 }
