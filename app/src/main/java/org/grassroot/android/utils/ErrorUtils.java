@@ -59,14 +59,6 @@ public class ErrorUtils {
         networkErrorDialogFragment.show(context.getFragmentManager(), "error_dialog");
 
     }
-    //for fragments
-    public static void connectivityError(Fragment context, int message, NetworkErrorDialogListener networkErrorDialogListener){
-        NetworkErrorDialogFragment networkErrorDialogFragment = NetworkErrorDialogFragment.newInstance(message, networkErrorDialogListener);
-        networkErrorDialogFragment.show(context.getActivity().getFragmentManager(), "error_dialog");
-    }
-
-
-
 
     public static void hostError(View holder, UnknownHostException e) {
         final String errorText = "Host error! With message: " + e.getMessage();

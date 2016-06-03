@@ -20,6 +20,7 @@ import android.widget.TextView;
 
 import org.grassroot.android.R;
 
+import org.grassroot.android.interfaces.NetworkErrorDialogListener;
 import org.grassroot.android.services.GrassrootRestService;
 import org.grassroot.android.services.model.EventModel;
 import org.grassroot.android.services.model.EventResponse;
@@ -193,7 +194,13 @@ public class ViewVoteActivity extends PortraitActivity {
             @Override
             public void onFailure(Call<EventResponse> call, Throwable t) {
                 progressBarCircularIndeterminate.setVisibility(View.GONE);
-                ErrorUtils.handleNetworkError(ViewVoteActivity.this, errorLayout, t);
+                ErrorUtils.connectivityError(ViewVoteActivity.this, R.string.No_network, new NetworkErrorDialogListener() {
+                    @Override
+                    public void retryClicked() {
+                       fetchVoteDetails();
+                    }
+                });
+              //  ErrorUtils.handleNetworkError(ViewVoteActivity.this, errorLayout, t);
             }
         });
 
@@ -315,7 +322,7 @@ public class ViewVoteActivity extends PortraitActivity {
 
     }
 
-    private void castVote(String response) {
+    private void castVote(final String response) {
 
         GrassrootRestService.getInstance().getApi().castVote(voteid, phoneNumber, code, response).
                 enqueue(new Callback<GenericResponse>() {
@@ -330,7 +337,15 @@ public class ViewVoteActivity extends PortraitActivity {
                     public void onFailure(Call<GenericResponse> call, Throwable t) {
                         progressBarCircularIndeterminate.setVisibility(View.GONE);
                         txtPrg.setVisibility(View.GONE);
-                        ErrorUtils.handleNetworkError(ViewVoteActivity.this, errorLayout, t);
+                        ErrorUtils.connectivityError(ViewVoteActivity.this, R.string.No_network, new NetworkErrorDialogListener() {
+                            @Override
+                            public void retryClicked() {
+                                castVote(response);
+                            }
+                        });
+
+
+                       // ErrorUtils.handleNetworkError(ViewVoteActivity.this, errorLayout, t);
                     }
                 });
     }
@@ -430,6 +445,7 @@ public class ViewVoteActivity extends PortraitActivity {
                 description = data.getStringExtra("description");
             }
         } else {
+            fetchVoteDetails();
             Log.e(this.TAG, "resultCode==2");
         }
     }

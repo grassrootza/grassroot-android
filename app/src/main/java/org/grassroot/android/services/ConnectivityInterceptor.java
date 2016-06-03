@@ -33,7 +33,7 @@ public class ConnectivityInterceptor implements Interceptor {
         Log.e(TAG,"This was called.");
         NetworkInfo activeNetwork = connectivityManager.getActiveNetworkInfo();
         if (activeNetwork == null || !activeNetwork.isConnectedOrConnecting()) {
-            throw new NoConnectivityException("No connectivity", chain.request().url().toString());
+//            throw new NoConnectivityException("No connectivity", chain.request().url().toString());
         }
         Request request = chain.request();
         Response response = chain.proceed(request);

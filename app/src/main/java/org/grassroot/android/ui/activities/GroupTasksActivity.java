@@ -24,6 +24,7 @@ import org.grassroot.android.adapters.TasksAdapter;
 import org.grassroot.android.events.TaskAddedEvent;
 import org.grassroot.android.interfaces.AlertDialogListener;
 import org.grassroot.android.interfaces.ConfirmDialogListener;
+import org.grassroot.android.interfaces.NetworkErrorDialogListener;
 import org.grassroot.android.interfaces.TaskListListener;
 import org.grassroot.android.services.GrassrootRestService;
 import org.grassroot.android.services.NoConnectivityException;
@@ -227,15 +228,27 @@ public class GroupTasksActivity extends PortraitActivity implements TaskListList
                     }
 
                     @Override
-                    public void onFailure(Call<TaskResponse> call, Throwable t) {
+                    public void onFailure(Call<TaskResponse> call, Throwable t)  {
                         Log.e(TAG, "Inside getActivities ... Here is the failure! " + t.getMessage());
                         mProgressBar.setVisibility(View.INVISIBLE);
                         if (t instanceof NoConnectivityException)
                             imNoInternet.setVisibility(View.VISIBLE);
                         else
-                            ErrorUtils.handleNetworkError(GroupTasksActivity.this, rlActivityRoot, t);
+                            ErrorUtils.connectivityError(GroupTasksActivity.this, R.string.No_network, new NetworkErrorDialogListener() {
+                                @Override
+                                public void retryClicked() {
+                                    getTasks();
+                                }
+                            });
+                          //  ErrorUtils.handleNetworkError(GroupTasksActivity.this, rlActivityRoot, t);
                     }
                 });
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        getTasks();
     }
 
     private void resetViewToAllTasks() {
@@ -353,6 +366,8 @@ public class GroupTasksActivity extends PortraitActivity implements TaskListList
         }
     }
 
+
+
     public void onCardClick(View view, final int position) {
         view.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -444,6 +459,8 @@ public class GroupTasksActivity extends PortraitActivity implements TaskListList
         });
         newFragment.show(getFragmentManager(), "dialog");
     }
+
+
 
     @Subscribe
     public void onEvent(TaskAddedEvent event){

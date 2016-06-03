@@ -1,12 +1,11 @@
 package org.grassroot.android.ui.fragments;
 
 import android.app.Dialog;
-
 import android.app.DialogFragment;
 import android.content.DialogInterface;
 import android.os.Bundle;
-
 import android.support.v7.app.AlertDialog;
+import android.util.Log;
 
 import org.grassroot.android.R;
 import org.grassroot.android.interfaces.NetworkErrorDialogListener;
@@ -17,6 +16,7 @@ import org.grassroot.android.interfaces.NetworkErrorDialogListener;
 public class NetworkErrorDialogFragment extends DialogFragment {
 
     NetworkErrorDialogListener mListener;
+    private static final  String TAG = NetworkErrorDialogFragment.class.getCanonicalName();
 
     public void setListener(NetworkErrorDialogListener listener) {
         this.mListener = listener;
@@ -39,8 +39,10 @@ public class NetworkErrorDialogFragment extends DialogFragment {
 
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
+
         int message = getArguments().getInt("message");
-        return new AlertDialog.Builder(getActivity())
+        Log.e(TAG, getActivity().getLocalClassName());
+       return new AlertDialog.Builder(getActivity())
                 .setMessage(message)
                 .setPositiveButton("Retry", new DialogInterface.OnClickListener() {
                     @Override

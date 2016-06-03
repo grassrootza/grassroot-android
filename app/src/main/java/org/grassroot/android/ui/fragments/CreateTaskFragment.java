@@ -25,6 +25,7 @@ import android.widget.TextView;
 
 import org.grassroot.android.R;
 import org.grassroot.android.interfaces.GroupConstants;
+import org.grassroot.android.interfaces.NetworkErrorDialogListener;
 import org.grassroot.android.interfaces.TaskConstants;
 import org.grassroot.android.services.GrassrootRestService;
 import org.grassroot.android.services.model.GenericResponse;
@@ -228,7 +229,13 @@ public class CreateTaskFragment extends Fragment {
             @Override
             public void onFailure(Call<GenericResponse> call, Throwable t) {
                 // todo: improve and fix this
-                ErrorUtils.handleNetworkError(getActivity(), vContainer, t);
+                ErrorUtils.connectivityError(getActivity(), R.string.No_network, new NetworkErrorDialogListener() {
+                    @Override
+                    public void retryClicked() {
+                      createTask();
+                    }
+                });
+             //   ErrorUtils.handleNetworkError(getActivity(), vContainer, t);
             }
         });
     }
