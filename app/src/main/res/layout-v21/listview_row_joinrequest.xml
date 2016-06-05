@@ -59,7 +59,7 @@
             android:id="@+id/txt_groupdesc"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textColor="@color/textcolor"
+            android:textColor="@color/text_grey"
             android:gravity="center_vertical"
             android:textSize="@dimen/txt_small"
             android:text="Truncated of description of latest events"

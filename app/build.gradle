@@ -5,67 +5,102 @@ buildscript {
 
     dependencies {
         classpath 'io.fabric.tools:gradle:1.+'
+
     }
 }
+
 apply plugin: 'com.android.application'
 apply plugin: 'io.fabric'
+apply plugin: 'com.neenbedankt.android-apt'
+// apply plugin: 'me.tatarka.retrolambda'
 
 repositories {
+    mavenCentral()
     maven { url 'https://maven.fabric.io/public' }
 }
 
 
 android {
     compileSdkVersion 23
-    buildToolsVersion "23.0.2"
+    buildToolsVersion "23.0.3"
 
     repositories {
         mavenCentral()
     }
 
-    sourceSets{
-        main{
-            res.srcDirs = [
-                    'src/main/res',
-                    'src/main/res/layout/fragments',
-                    'src/main/res/layout/adapter_itemview',
-                    'src/main/res/layout/slideDateTimePicker'
-            ]
-        }
-    }
-
     defaultConfig {
-        applicationId "com.techmorphosis.grassroot"
+        applicationId "org.grassroot.android"
         minSdkVersion 14
-        targetSdkVersion 21
+        targetSdkVersion 23
         versionCode 1
         versionName "1.0"
     }
+
     buildTypes {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+
+    packagingOptions {
+        exclude 'META-INF/services/javax.annotation.processing.Processor'
+
+    }
+
+    sourceSets {
+        main {
+            res.srcDirs = [
+                    'src/main/res',
+                    'src/main/res/layout/activities',
+                    'src/main/res/layout/fragments',
+                    'src/main/res/layout/dialogs',
+                    'src/main/res/layout/listviews'
+            ]
+        }
+    }
 }
 
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
-    compile 'com.android.support:appcompat-v7:23.1.1'
-    compile 'com.android.support:design:23.1.1'
-    compile 'com.android.volley:volley:1.0.0'
-    compile 'com.android.support:recyclerview-v7:23.1.1'
-    compile 'com.viewpagerindicator:library:2.4.1@aar'
-    compile 'com.github.clans:fab:1.6.2'
 
-    compile 'com.android.support:cardview-v7:23.1.1'
-    apply plugin: 'com.google.gms.google-services'
-    compile "com.google.android.gms:play-services-gcm:8.3.0"
+    testCompile 'junit:junit:4.12'
+    testCompile 'org.robolectric:robolectric:3.0'
+    testCompile "org.robolectric:shadows-support-v4:3.0"
+    testCompile "org.robolectric:shadows-play-services:3.0-rc2"
+    testCompile 'org.mockito:mockito-core:1.+'
+
+
+    compile 'com.android.support:appcompat-v7:23.4.0'
+    compile 'com.android.support:design:23.4.0'
+    compile 'com.android.support:recyclerview-v7:23.4.0'
+
+    compile 'com.android.support:appcompat-v7:23.4.0'
+    compile 'com.android.support:design:23.4.0'
+    compile 'com.android.support:recyclerview-v7:23.4.0'
+    compile 'com.android.support:cardview-v7:23.4.0'
+
+    compile 'com.viewpagerindicator:library:2.4.1@aar'
+    compile 'com.github.clans:fab:1.6.3'
+    compile 'com.jakewharton:butterknife:8.0.0'
+    apt 'com.jakewharton:butterknife-compiler:8.0.0'
+
+    compile 'com.squareup.retrofit:retrofit:2.0.0-beta2'
+    compile 'com.squareup.retrofit2:converter-gson:2.0.0'
+    compile 'com.squareup.okhttp3:logging-interceptor:3.2.0'
+
+    compile 'com.wdullaer:materialdatetimepicker:2.3.0'
+
+
+    compile "com.google.android.gms:play-services-gcm:8.4.0"
+    compile "com.google.android.gms:play-services-location:8.4.0"
+    compile 'org.greenrobot:eventbus:3.0.0'
+
 
     compile('com.crashlytics.sdk.android:crashlytics:2.5.5@aar') {
         transitive = true;
     }
-
+    apply plugin: 'com.google.gms.google-services'
 
 
 }

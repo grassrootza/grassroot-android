@@ -1,0 +1,198 @@
+<RelativeLayout
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    xmlns:fab="http://schemas.android.com/apk/res-auto"
+    android:background="@color/list_background_pressed"
+    android:id="@+id/rl_ghp_root">
+
+    <!-- todo :clean up number of layouts in here -->
+    <RelativeLayout
+        android:id="@+id/rl_container"
+        android:layout_width="match_parent"
+        android:layout_height="?android:actionBarSize"
+        android:background="@color/primaryColor"
+        android:elevation="5dp">
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal">
+
+            <RelativeLayout
+                android:id="@+id/rl_simple"
+                android:layout_width="match_parent"
+                android:layout_height="?actionBarSize"
+                android:background="@color/primaryColor"
+                android:layout_gravity="center_vertical"
+                android:visibility="visible">
+
+                <ImageView
+                    android:id="@+id/iv_ghp_drawer"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:src="@drawable/btn_navigation"
+                    android:layout_alignParentLeft="true"
+                    android:layout_centerVertical="true"
+                    android:paddingRight="16dp"
+                    android:paddingLeft="16dp"
+                    android:background="@drawable/button_alpha_rlsimple" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/ghp_toolbar_title"
+                    android:layout_centerVertical="true"
+                    android:textColor="@color/white"
+                    android:layout_toRightOf="@id/iv_ghp_drawer"
+                    android:textSize="@dimen/txt_large" />
+
+                <ImageView
+                    android:id="@+id/iv_ghp_search"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:src="@drawable/btn_search"
+                    android:layout_centerVertical="true"
+                    android:layout_toLeftOf="@+id/iv_ghp_sort"
+                    android:paddingRight="16dp"
+                    android:paddingLeft="16dp"
+                    android:background="@drawable/button_alpha_rlsimple" />
+
+
+                <ImageView
+                    android:id="@+id/iv_ghp_sort"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:src="@drawable/btn_sort"
+                    android:layout_alignParentRight="true"
+                    android:layout_centerVertical="true"
+                    android:paddingRight="16dp"
+                    android:paddingLeft="16dp"
+                    android:background="@drawable/button_alpha_rlsimple" />
+
+            </RelativeLayout>
+
+            <RelativeLayout
+                android:id="@+id/rl_search"
+                android:layout_width="match_parent"
+                android:layout_height="?actionBarSize"
+                android:background="@color/white"
+                android:visibility="gone">
+
+                <ImageView
+                    android:id="@+id/iv_rl_search"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:src="@drawable/btn_search_gray"
+                    android:paddingLeft="15dp"
+                    android:layout_centerVertical="true"
+                    android:background="@drawable/button_alpha"
+                    android:layout_alignParentLeft="true" />
+
+                <EditText
+                    android:id="@+id/et_search"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_toLeftOf="@+id/iv_cross"
+                    android:layout_toRightOf="@+id/iv_rl_search"
+                    android:background="@drawable/edittext_border"
+                    android:layout_centerVertical="true"
+                    android:paddingLeft="5dp"
+                    android:paddingRight="5dp"
+                    android:singleLine="true"
+                    android:imeOptions="actionSearch"
+                    android:hint="@string/ghp_search_group_name" />
+
+                <ImageView
+                    android:id="@+id/iv_cross"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:src="@drawable/btn_close"
+                    android:paddingRight="15dp"
+                    android:layout_centerVertical="true"
+                    android:background="@drawable/button_alpha"
+                    android:layout_alignParentRight="true"  />
+
+            </RelativeLayout>
+        </FrameLayout>
+    </RelativeLayout>
+
+
+    <android.support.v4.widget.SwipeRefreshLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:id="@+id/gl_swipe_refresh"
+        android:layout_below="@+id/rl_container"
+        android:layout_marginLeft="5dp"
+        android:layout_marginRight="5dp"
+        android:paddingTop="10dp"
+        android:clipToPadding="false">
+
+        <android.support.v7.widget.RecyclerView
+            android:id="@+id/recycler_view"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            tools:listitem="@layout/row_group_homepage"
+            android:visibility="gone">
+
+        </android.support.v7.widget.RecyclerView>
+
+    </android.support.v4.widget.SwipeRefreshLayout>
+
+    <ProgressBar
+        android:id="@+id/progressBar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:indeterminateDrawable="@drawable/custom_progress_background"
+        android:visibility="gone" />
+
+    <include
+        android:id="@+id/error_layout"
+        android:layout_height="wrap_content"
+        android:layout_width="wrap_content"
+        layout="@layout/error_layout"
+        android:layout_centerInParent="true"
+        android:visibility="gone"
+
+        />
+
+    <com.github.clans.fab.FloatingActionMenu
+        android:id="@+id/menu1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentRight="true"
+        android:paddingRight="10dp"
+        android:paddingBottom="10dp"
+        android:paddingLeft="10dp"
+        fab:menu_labels_ellipsize="end"
+        fab:menu_labels_singleLine="true"
+        fab:menu_backgroundColor="@android:color/transparent"
+
+        fab:menu_shadowColor="#444"
+        fab:menu_colorNormal="#FFB805"
+        fab:menu_colorPressed="#F2AB00"
+        fab:menu_colorRipple="#D99200" >
+
+        <com.github.clans.fab.FloatingActionButton
+            android:id="@+id/ic_fab_join_group"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/ic_fab_join_group"
+            fab:fab_label="Join a group"
+            style="@style/MenuButtonsStyle"
+            android:visibility="gone" />
+
+        <com.github.clans.fab.FloatingActionButton
+            android:id="@+id/ic_fab_start_group"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/ic_fab_start_group"
+            fab:fab_label="Start a group"
+            style="@style/MenuButtonsStyle"
+            android:visibility="gone" />
+
+    </com.github.clans.fab.FloatingActionMenu>
+</RelativeLayout>

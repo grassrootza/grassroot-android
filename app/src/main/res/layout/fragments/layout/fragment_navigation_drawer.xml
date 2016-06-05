@@ -4,77 +4,67 @@ xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_height="match_parent"
     xmlns:tools="http://schemas.android.com/tools"
     tools:context=".NavigationDrawerFragment"
-    android:background="@color/white"
+    android:background="#fafafa"
     >
 
-    <LinearLayout
-        android:id="@+id/header_layout"
+    <RelativeLayout
+        android:id="@+id/nav_header_container"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
+        android:layout_height="140dp"
+        android:layout_alignParentTop="true"
+        android:background="@color/buttoncolor"
         >
 
-        <RelativeLayout
-            android:id="@+id/nav_header_container"
-            android:layout_width="match_parent"
-            android:layout_height="140dp"
-            android:layout_alignParentTop="true"
-            android:background="@color/primaryColor"
-            >
-
-            <TextView
-                android:id="@+id/displayName"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textColor="@color/white"
-                android:textSize="@dimen/txt_large"
-                android:textStyle="bold"
-                android:layout_alignParentBottom="true"
-                android:padding="@dimen/padding"
-                />
-
-
-        </RelativeLayout>
-
-        <View
-            android:id="@+id/divider"
-            android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:background="@color/black"
-
+        <TextView
+            android:id="@+id/displayName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/white"
+            android:textSize="@dimen/txt_large"
+            android:textStyle="bold"
+            android:layout_alignParentBottom="true"
+            android:padding="@dimen/padding"
             />
 
 
-    </LinearLayout>
+    </RelativeLayout>
 
-    <android.support.v7.widget.RecyclerView
-        android:id="@+id/rv_nav_items"
+    <View
+
+        android:id="@+id/divider"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:choiceMode="singleChoice"
-        android:divider="@null"
-        android:dividerHeight="0dp"
-        tools:context=".NavigationDrawerFragment"
-        android:listSelector="@drawable/list_selector"
-        android:background="@color/white"
-        tools:listitem="@layout/listview_row_navigationdrawer"
-        android:layout_below="@+id/header_layout"
+        android:layout_height="1dp"
+        android:layout_centerInParent="true"
+        android:background="@color/black"
+        android:layout_below="@id/nav_header_container"
 
         />
 
-
-
     <LinearLayout
-        android:id="@+id/footer"
+        android:layout_below="@id/divider"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="match_parent"
         android:orientation="vertical"
-        android:background="@color/white"
-        android:layout_alignParentBottom="true"
-
+        android:paddingLeft="10dp"
+        android:background="@color/windowBackground"
         >
+
+
+        <android.support.v7.widget.RecyclerView
+            android:id="@+id/rv_nav_items"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:choiceMode="singleChoice"
+            android:divider="@null"
+            android:dividerHeight="0dp"
+            tools:context=".NavigationDrawerFragment"
+            android:listSelector="@drawable/list_selector"
+            android:background="#fafafa"
+            android:layout_weight="1"
+
+            />
+
         <TextView
-            android:paddingLeft="10dp"
 
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -86,8 +76,6 @@ xmlns:android="http://schemas.android.com/apk/res/android"
             />
 
         <TextView
-            android:paddingLeft="10dp"
-
             android:id="@+id/txt_version"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -98,7 +86,10 @@ xmlns:android="http://schemas.android.com/apk/res/android"
 
             />
 
+
     </LinearLayout>
+
+
 
 
 

@@ -1,0 +1,45 @@
+<LinearLayout
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+
+    >
+
+    <LinearLayout
+        android:id="@+id/ll_toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="?actionBarSize"
+        android:orientation="horizontal"
+        android:background="@color/primaryColor"
+        >
+        <ImageView
+            android:id="@+id/iv_back"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:src="@drawable/btn_back_wt"
+            android:padding="16dp"
+            />
+        <TextView
+            android:id="@+id/txt_toolbar_title"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:textSize="@dimen/txt_large"
+            android:text="Vote"
+            android:gravity="center"
+            android:textColor="@color/white"
+            android:paddingLeft="@dimen/padding"
+            />
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/txt_title"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:text="Vote"
+        android:textSize="40sp"
+        android:textStyle="bold"
+        android:gravity="center"
+        android:textColor="@color/cg_title"
+        />
+    </LinearLayout>

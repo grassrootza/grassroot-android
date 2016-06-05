@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:fab="http://schemas.android.com/apk/res-auto"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:id="@+id/rl_am_root"
+    style="@style/AppTheme">
+
+    <LinearLayout
+        android:id="@+id/am_toolbar_home"
+        android:layout_width="match_parent"
+        android:layout_height="?android:actionBarSize"
+        android:orientation="horizontal"
+        android:background="@color/primaryColor">
+
+        <ImageView
+            android:id="@+id/am_iv_crossimage"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:src="@drawable/btn_close_white"
+            android:layout_gravity="center_vertical"
+            android:paddingRight="16dp"
+            android:paddingLeft="16dp"
+            android:background="@drawable/button_alpha_rlsimple" />
+
+        <TextView
+            android:id="@+id/am_txt_toolbar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="@dimen/txt_large"
+            android:layout_gravity="center_vertical"
+            android:text="@string/am_title"
+            android:textColor="@color/white" />
+
+    </LinearLayout>
+
+    <android.support.design.widget.CoordinatorLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@id/am_toolbar_home"
+        android:layout_above="@+id/am_bt_save">
+
+        <android.support.design.widget.AppBarLayout
+            android:id="@+id/am_app_bar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <android.support.design.widget.CollapsingToolbarLayout
+                android:id="@+id/am_ctl"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingBottom="16dp"
+                android:paddingLeft="10dp"
+                app:expandedTitleMarginEnd="30dp"
+                app:expandedTitleMarginStart="10dp"
+                app:layout_scrollFlags="scroll|exitUntilCollapsed"
+                app:layout_collapseMode="parallax">
+
+                <TextView
+                    style="@style/GiantHeader"
+                    android:id="@+id/am_tv_groupname"
+                    android:text="@string/cg_group_name"
+                    android:elegantTextHeight="true" />
+
+            </android.support.design.widget.CollapsingToolbarLayout>
+
+        </android.support.design.widget.AppBarLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_below="@id/am_app_bar"
+            android:layout_marginTop="10dp"
+            android:id="@+id/ll_am_member_lists"
+            app:layout_behavior="@string/appbar_scrolling_view_behavior">
+
+            <TextView
+                style="@style/MemberListHeader"
+                android:id="@+id/tv_am_new_members_title"
+                android:visibility="gone"
+                android:text="@string/member_list_new_members_header" />
+
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/am_new_member_list_container">
+            </RelativeLayout>
+
+            <TextView
+                style="@style/MemberListHeader"
+                android:id="@+id/tv_am_existing_members_title"
+                android:text="@string/member_list_default_header" />
+
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/am_existing_member_list_container">
+
+            </RelativeLayout>
+
+        </LinearLayout>
+
+        <com.github.clans.fab.FloatingActionMenu
+
+            android:id="@+id/am_add_member_options"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginRight="16dp"
+
+            app:layout_anchor="@id/am_app_bar"
+            app:layout_anchorGravity="bottom|right|end"
+
+            fab:menu_shadowColor="#444"
+            fab:menu_colorNormal="#FFB805"
+            fab:menu_colorPressed="#F2AB00"
+            fab:menu_colorRipple="#D99200"
+            fab:menu_openDirection="down"
+
+            app:layout_collapseMode="parallax"
+            app:layout_scrollFlags="scroll|enterAlways">
+
+            <com.github.clans.fab.FloatingActionButton
+                android:id="@+id/icon_add_member_manually"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/ic_fab_edit"
+                fab:fab_label="Add manually"
+                style="@style/MenuButtonsStyle"
+                android:visibility="gone" />
+
+            <com.github.clans.fab.FloatingActionButton
+                android:id="@+id/icon_add_from_contacts"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/ic_fab_call"
+                fab:fab_label="Add via contacts"
+                style="@style/MenuButtonsStyle"
+                android:visibility="gone"/>
+
+        </com.github.clans.fab.FloatingActionMenu>
+
+    </android.support.design.widget.CoordinatorLayout>
+
+    <Button
+        android:id="@+id/am_bt_save"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textAllCaps="true"
+        android:text="@string/bt_save"
+        android:textSize="@dimen/txt_large"
+        android:layout_marginBottom="20dp"
+        android:textColor="@drawable/green_txt"
+        android:background="@drawable/register"
+        android:layout_alignParentBottom="true"
+        android:layout_marginLeft="16dp"
+        android:layout_marginRight="16dp"
+        />
+
+</RelativeLayout>
+

@@ -2,7 +2,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#eeeeee">
+    android:background="@color/primaryColor">
 
     <android.support.v7.widget.Toolbar
         android:id="@+id/toolbar"
@@ -14,103 +14,81 @@
         app:contentInsetStart="0dp"
         app:theme="@style/ThemeOverlay.AppCompat.Dark">
 
-        <TextView
+        <!-- <TextView
             android:id="@+id/txt_welcometitle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textColor="#fff"
-            android:textSize="18sp"
-
-            />
-
+            android:textSize="18sp" /> -->
 
     </android.support.v7.widget.Toolbar>
 
 
-    <LinearLayout
+    <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_below="@id/toolbar"
-        android:orientation="vertical"
-        android:weightSum="1">
+        android:layout_below="@id/toolbar">
 
-        <LinearLayout
+        <RelativeLayout
             android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="0.75"
-            android:layout_below="@+id/toolbar"
-            >
+            android:layout_height="match_parent"
+            android:layout_marginLeft="@dimen/padding"
+            android:layout_marginRight="@dimen/padding"
+            android:gravity="center_vertical|center_horizontal"
+            android:layout_above="@+id/ll_welcome_actions">
 
-            <RelativeLayout
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:orientation="vertical">
+            <TextView
+                android:id="@+id/wl_tv_header"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerHorizontal="true"
 
-                <android.support.v4.view.ViewPager
-                    android:id="@+id/pager"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                     />
+                android:textColor="@color/white"
+                android:textSize="@dimen/Headersize"
+                android:textStyle="bold"
+                android:text="Welcome to Grassroot"/>
 
-                <com.viewpagerindicator.CirclePageIndicator
-                    android:id="@+id/indicator"
-                    style="@style/AppTheme"
-                    android:layout_width="match_parent"
-                    android:layout_height="30dp"
-                    android:layout_alignParentLeft="true"
-                    android:layout_alignParentStart="true"
-                    android:layout_marginTop="165dp"
-                    android:padding="15dp"
-                    app:fillColor="#fff"
-                    app:pageColor="@android:color/transparent"
-                    app:radius="05dp"
-                    app:strokeColor="@color/primaryColorDark" />
+            <TextView
+                android:gravity="left"
+                android:id="@+id/wl_tv_subtext"
+                android:layout_below="@id/wl_tv_header"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:singleLine="false"
+                android:padding="@dimen/padding"
 
+                android:textColor="@color/white"
+                android:textSize="@dimen/txt_large"
+                android:text="@string/txt_welcome_para" />
 
-            </RelativeLayout>
-
-        </LinearLayout>
+        </RelativeLayout>
 
 
         <LinearLayout
+            android:id="@+id/ll_welcome_actions"
             android:layout_width="match_parent"
-            android:layout_height="0dip"
+            android:layout_height="wrap_content"
             android:layout_marginBottom="15dp"
-            android:layout_weight="0.3"
+            android:layout_alignParentBottom="true"
             android:orientation="vertical"
-            android:padding="16dp"
+            android:padding="16dp">
 
-            >
-
-
+            <!-- todo: figure out why second button is smaller -->
             <Button
                 android:id="@+id/bt_joingroup"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="10dp"
-                android:background="@drawable/login"
+                style="@style/NewTaskButton"
                 android:text="@string/joingroup"
-                android:textAllCaps="false"
-                android:textColor="@drawable/white_txt"
-                android:textSize="@dimen/txt_medium"
-
-
-                />
-
+                android:textSize="@dimen/txt_medium" />
 
             <Button
                 android:id="@+id/bt_startgroup"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:background="@drawable/register"
+                style="@style/NewTaskButton"
                 android:text="@string/startgroup"
-                android:textAllCaps="false"
-                android:textColor="@drawable/green_txt"
                 android:textSize="@dimen/txt_medium"
+                android:textStyle="bold" />
 
-                />
         </LinearLayout>
 
 
-    </LinearLayout>
+    </RelativeLayout>
 </RelativeLayout>

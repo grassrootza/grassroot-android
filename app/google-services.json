@@ -1,20 +1,20 @@
 {
   "project_info": {
-    "project_number": "681116473953",
-    "project_id": "grassroot-1265"
+    "project_number": "13953357197",
+    "project_id": "grassroot-staging-android"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:681116473953:android:2ce6bba7eeb6f212",
+        "mobilesdk_app_id": "1:13953357197:android:340d87f1d0f24062",
         "android_client_info": {
-          "package_name": "com.techmorphosis.grassroot"
+          "package_name": "org.grassroot.android"
         }
       },
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyCQIcVV-FKNkHTJaXJdSqfeVUFvqAHYfSs"
+          "current_key": "AIzaSyBs-GMA4PmpIMFXQInvwPCWZ-xQ3Nzk7_w"
         }
       ],
       "services": {

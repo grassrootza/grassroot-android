@@ -1,7 +1,32 @@
-.gradle
-/local.properties
-/.idea/workspace.xml
-/.idea/libraries
-.DS_Store
-/build
-/captures
+### Java Compiled Files
+*.class
+
+### Java Package Files
+*.jar
+*.war
+*.ear
+*.apk
+
+### General temp files
+*.tmp
+*.bak
+*.swp
+tmp/
+
+### JetBrains template
+*.iml
+*.ipr
+*.iws
+
+### Plugin-specific files:
+out/
+**/.idea/**
+**/.idea_modules/**
+atlassian-ide-plugin.xml
+
+### Gradle files
+**/.gradle
+**/build
+**/.DS_Store
+local.properties
+captures

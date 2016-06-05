@@ -1,0 +1,94 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:id="@+id/rl_root"
+     tools:context="org.grassroot.android.ui.activities.GroupJoinActivity">
+
+
+    <android.support.v7.widget.Toolbar
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="?android:actionBarSize"
+        android:background="@color/primaryColor"
+        >
+        
+        <TextView
+            android:id="@+id/am_txt_toolbar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="@dimen/txt_large"
+            android:textColor="@color/white"
+            android:text="@string/search"
+            android:textAllCaps="true"
+            android:layout_gravity="center"
+            android:textStyle="bold"
+            />
+
+    </android.support.v7.widget.Toolbar>
+
+    <RelativeLayout
+        android:id="@+id/rl"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/primaryColor"
+        android:layout_below="@+id/toolbar"
+        android:paddingLeft="12dp"
+        android:paddingRight="12dp"
+        android:paddingBottom="10dp"
+        >
+
+        <EditText
+            android:id="@+id/et_searchbox"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="@string/search_box"
+            android:drawableRight="@drawable/btn_search_gray"
+            android:drawablePadding="3dp"
+            android:background="#d2f2e0"
+            android:padding="10dp"
+            android:textSize="@dimen/txt_medium"
+            android:singleLine="true"
+            android:imeOptions="actionSearch"
+            />
+
+    </RelativeLayout>
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_below="@+id/rl"
+
+            >
+
+            <include
+                android:id="@+id/error_layout"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerInParent="true"
+                layout="@layout/error_layout"
+                android:visibility="gone"
+
+                >
+
+            </include>
+
+            <android.support.v7.widget.RecyclerView
+                android:id="@+id/jr_RecyclerView"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:scrollbars="none"
+                android:background="@color/light_background"
+                android:paddingLeft="10dp"
+                android:paddingRight="10dp"
+                android:paddingTop="8dp"
+                android:clipToPadding="false"
+                >
+
+            </android.support.v7.widget.RecyclerView>
+
+
+
+
+        </RelativeLayout>
+
+</RelativeLayout>

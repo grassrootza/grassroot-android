@@ -1,0 +1,88 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:paddingLeft="16dp"
+    android:paddingRight="16dp"
+    android:background="#00000000"
+    android:id="@+id/add_member_manual"
+    android:animateLayoutChanges="true">
+
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_centerVertical="true"
+        android:layout_centerHorizontal="true">
+
+        <android.support.design.widget.TextInputLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/amm_til_name"
+            android:layout_marginBottom="10dp">
+
+            <EditText
+                android:id="@+id/amm_et_name"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="@string/et_userName"
+                android:padding="10dp"
+                android:singleLine="true"
+                android:layout_marginBottom="5dp"
+                android:textColorHint="#ccc"
+                android:inputType="textPersonName|textCapWords"
+                android:textColor="#000"
+                android:drawableRight="@drawable/ic_user"
+                android:maxLength="15" />
+
+        </android.support.design.widget.TextInputLayout>
+
+        <android.support.design.widget.TextInputLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/mobile"
+            android:layout_below="@+id/amm_til_name">
+
+            <EditText
+                android:id="@+id/amm_et_number"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="@string/et_mobile_register"
+                android:padding="10dp"
+                android:singleLine="true"
+                android:textColorHint="#ccc"
+                android:ems="10"
+                android:inputType="phone"
+                android:textColor="#000"
+                android:drawableRight="@drawable/ic_call"
+                android:maxLength="10"
+                android:imeOptions="actionDone"
+
+                />
+        </android.support.design.widget.TextInputLayout>
+
+
+        <Button
+            android:id="@+id/amm_bt_add"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textAllCaps="false"
+            android:textColor="#fff"
+            android:background="@drawable/buttonrounded_corner"
+            android:layout_marginTop="20dp"
+            android:text="@string/Add"
+            android:textSize="@dimen/txt_medium"
+            android:layout_below="@+id/mobile"
+            />
+
+
+
+
+    </RelativeLayout>
+
+
+
+
+
+</RelativeLayout>
+

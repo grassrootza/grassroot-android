@@ -5,7 +5,7 @@
     android:layout_height="fill_parent"
     android:background="@drawable/im_bg"
     android:orientation="vertical"
-    tools:context="com.techmorphosis.macbee.ui.activities.StartActivity"
+    tools:context="org.grassroot.android.ui.activities.StartActivity"
     android:id="@+id/rl_start"
 
     >
@@ -58,9 +58,7 @@
             android:layout_margin="10.0dip"
             android:padding="10.0dip"
             android:src="@drawable/btn_back_green"
-            android:visibility="invisible"
-            android:background="@drawable/profile_bg"
-            />
+            android:visibility="invisible" />
 
         <View
             android:layout_width="fill_parent"

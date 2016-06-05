@@ -4,38 +4,38 @@
     <!--styles-->
     <color name="primaryColor">#207A33</color>
     <color name="primaryColorDark">#339661</color>
+    <color name="textSecondaryColorDark">#8A000000</color>
     <color name="windowBackground">#fafafa</color>
+    <color name="iconActive">#FFFF8D</color>
 
-    <color name="fabcolor">#FFB805</color>
-
-        <!--RainBow color-->
     <color name="white">#fff</color>
     <color name="black">#000</color>
-    <color name="transparent">#00000000</color>
     <color name="red">#FF0000</color>
     <color name="orange">#FFBF00</color>
-    <color name="yellow">#F0ED0F</color>
+    <color name="transparent">#00000000</color>
 
-    <!--Unknown-->
-    <color name="background">#eeeeee</color>
+    <color name="buttoncolor">#207A33</color>
+    <color name="light_background">#EEEEEE</color>
     <color name="dark_background">#ddd</color>
     <color name="list_background">#fafafa</color>
     <color name="list_background_pressed">#eeeeee</color>
-    <color name="textbg">#efefef</color>
-    <color name="textcolor">#b4b4b4</color>
-    <color name="view">#b4b4b4</color>
-    <color name="listview_pressed">#FFdddddd</color>
-    <color name="RecyclerView_background">#ECEFF1</color>
-    <color name="cg_title">#999999</color>
-    <color name="drawer_bg">#B6B6B6</color>
 
+    <color name="text_beige">#EFEFEF</color>
+    <color name="text_grey">#B4B4B4</color>
+    <color name="view">#B4B4B4</color>
+    <color name="off_white_background">#ECEFF1</color>
 
+    <color name="yellow">#F0ED0F</color>
     <color name="white_transparent">#20FFFFFF</color>
+
+    <color name="dark_grey_text">#424242</color>
 
     <!--RateUs Scree-->
     <color name="grey_dialog_bg">#fff5f5f5</color>
     <color name="grey">#ff3e3e3e</color>
 
+    <color name="cg_title">#999999</color>
+    <color name="mlist_title">#207A33</color>
 
     <!-- used as background colors for contacts that don't have photos -->
     <integer-array name="contacts_text_background_colors">
@@ -53,6 +53,7 @@
     <!--++++++++++++++++++++-->
     <!--listview item colors-->
     <!--++++++++++++++++++++-->
+    <color name="listview_pressed">#FFdddddd</color>
     <color name="listview_focused">#FF7dbcd3</color>
     <color name="listview_checked">#FFededed</color>
 
@@ -60,8 +61,7 @@
 
     <color name="grey_divider">#7e7e7e</color>
 
-
-        <!--View Vote-->
+    <!--View Vote-->
     <color name="vv_title">#4d4d4d</color>
     <color name="vv_postedby">#0d0d0d</color>
     <color name="vv_divider">#4d4d4d</color>
@@ -77,14 +77,12 @@
     <color name="vv_yes">#4aca85</color>
     <color name="vv_no">#e84343</color>
 
-            <!--Edit Vote-->
+    <!--Edit Vote-->
     <color name="ev_txt_counter">#0d0d0d</color>
     <color name="ev_et_description">#0d0d0d</color>
 
-        <!--notifications-->
+    <!--notifications-->
     <color name="nc_date">#b4b4b4</color>
-
-
     <item name="gray_holo_dark" type="color">#ff464646</item>
     <item name="gray_holo_light" type="color">#ffd0d0d0</item>
 

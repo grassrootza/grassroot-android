@@ -1,0 +1,156 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                xmlns:tools="http://schemas.android.com/tools"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:id="@+id/rl_phonebook_root">
+
+    <RelativeLayout
+        android:id="@+id/rl_container"
+        android:layout_width="match_parent"
+        android:layout_height="?android:actionBarSize"
+        android:background="@color/primaryColor"
+
+        >
+    
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_gravity="center_horizontal"
+
+            >
+            
+            <RelativeLayout
+                android:id="@+id/rl_simple"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:background="@color/primaryColor"
+                android:visibility="visible"
+
+                >
+                <ImageView
+                    android:id="@+id/iv_back"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:src="@drawable/btn_back_wt"
+                    android:paddingLeft="16dp"
+                    android:background="@drawable/button_alpha_rlsimple"
+                    android:layout_alignParentLeft="true"
+                    />
+
+
+                <ImageView
+                    android:id="@+id/iv_search"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:src="@drawable/btn_search"
+                    android:paddingRight="16dp"
+                    android:paddingLeft="16dp"
+                    android:background="@drawable/button_alpha_rlsimple"
+                    android:layout_alignParentRight="true"
+
+                    />
+            </RelativeLayout>
+
+
+
+            <RelativeLayout
+                android:id="@+id/rl_search"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@color/white"
+                android:visibility="gone"
+                >
+
+
+
+                <ImageView
+                    android:id="@+id/iv_rl_search"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/btn_search_gray"
+                    android:paddingLeft="15dp"
+                    android:layout_centerVertical="true"
+                    android:background="@drawable/button_alpha"
+                    android:layout_alignParentLeft="true"
+
+                    />
+
+                <EditText
+                    android:id="@+id/et_search"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_toLeftOf="@+id/iv_cross"
+                    android:layout_toRightOf="@+id/iv_rl_search"
+                    android:background="@drawable/edittext_border"
+                    android:layout_centerVertical="true"
+                    android:paddingLeft="5dp"
+                    android:paddingRight="5dp"
+                    android:singleLine="true"
+                    android:imeOptions="actionSearch"
+                    />
+                
+                <ImageView
+                    android:id="@+id/iv_cross"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/btn_close"
+                    android:paddingRight="15dp"
+                    android:layout_centerVertical="true"
+                    android:background="@drawable/button_alpha"
+                    android:layout_alignParentRight="true"
+                    />
+            </RelativeLayout>
+
+
+        </FrameLayout>
+
+    </RelativeLayout>
+
+    
+    <org.grassroot.android.ContactLib.PinnedHeaderListView
+        android:id="@android:id/list"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:cacheColorHint="@android:color/transparent"
+        android:divider="@null"
+        android:dividerHeight="0px"
+        android:fadeScrollbars="false"
+        android:fastScrollEnabled="true"
+        android:listSelector="@drawable/listview_selector"
+        android:scrollingCache="false"
+        android:layout_below="@+id/rl_container"
+        tools:listitem="@layout/listview_item"
+        android:paddingTop="10dp"
+        android:background="@color/light_background"
+        android:clipToPadding="false"
+        android:visibility="gone" />
+
+    <include
+        android:id="@+id/error_layout"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        layout="@layout/qube_error_layout"
+        android:layout_centerInParent="true"
+        android:visibility="gone"
+        />
+
+    <org.grassroot.android.utils.ProgressBarCircularIndeterminate
+        android:id="@+id/prg_pb"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:background="@color/primaryColor"
+        android:layout_centerInParent="true"
+        android:visibility="gone"
+        />
+
+    <TextView
+        android:id="@+id/txt_prg_pb"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/cg_contacs_loading"
+        android:layout_below="@+id/prg_pb"
+        android:layout_centerHorizontal="true"
+        android:visibility="gone" />
+
+</RelativeLayout>

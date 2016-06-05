@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:id="@+id/rl_rm_root"
+    style="@style/AppTheme">
+
+    <android.support.v7.widget.Toolbar
+        android:id="@+id/rm_toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="?actionBarSize"
+        android:background="@color/primaryColor"
+        android:gravity="center_vertical"
+        android:elevation="4dp"
+        android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar">
+
+    </android.support.v7.widget.Toolbar>
+
+    <android.support.design.widget.CoordinatorLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@id/rm_toolbar"
+        android:layout_above="@+id/rm_ll_footer">
+
+        <android.support.design.widget.AppBarLayout
+            android:id="@+id/rm_app_bar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <android.support.design.widget.CollapsingToolbarLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingBottom="16dp"
+                android:paddingLeft="10dp"
+                app:expandedTitleMarginEnd="30dp"
+                app:expandedTitleMarginStart="10dp"
+                app:layout_scrollFlags="scroll|exitUntilCollapsed"
+                app:layout_collapseMode="parallax">
+
+                <TextView
+                    style="@style/GiantHeader"
+                    android:id="@+id/rm_tv_groupname"
+                    android:text="@string/cg_group_name"
+                    android:elegantTextHeight="true" />
+
+            </android.support.design.widget.CollapsingToolbarLayout>
+
+        </android.support.design.widget.AppBarLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_below="@id/am_app_bar"
+            android:layout_marginTop="10dp"
+            android:id="@+id/ll_rm_member_lists"
+            app:layout_behavior="@string/appbar_scrolling_view_behavior">
+
+            <TextView
+                style="@style/MemberListHeader"
+                android:id="@+id/tv_am_existing_members_title"
+                android:text="@string/member_list_default_header" />
+
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/rm_member_list_container">
+            </RelativeLayout>
+
+        </LinearLayout>
+
+    </android.support.design.widget.CoordinatorLayout>
+
+    <RelativeLayout
+        android:id="@+id/rm_ll_footer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true">
+
+        <Button
+            android:id="@+id/rm_bt_cancel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_toLeftOf="@+id/rm_bt_save"
+
+            android:minWidth="88dp"
+            android:minHeight="36dp"
+
+            android:text="@string/bt_cancel"
+            android:textSize="@dimen/txt_medium"
+            android:textColor="@color/textSecondaryColorDark"
+
+            android:background="@drawable/button_flat_white"
+
+            android:layout_marginBottom="20dp"
+            />
+
+        <Button
+            android:id="@+id/rm_bt_save"
+            style="@style/ButtonFlat"
+            android:text="@string/bt_save"
+            android:textColor="@color/primaryColor"
+            android:layout_alignParentRight="true"
+            android:layout_marginBottom="20dp"
+            android:layout_marginLeft="20dp"
+            android:layout_marginRight="20dp"
+            />
+
+    </RelativeLayout>
+
+</RelativeLayout>
+

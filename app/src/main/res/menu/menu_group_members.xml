@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <item
+        android:id="@+id/mi_icon_filter"
+        android:title="Filter"
+        android:icon="@drawable/btn_filter"
+        app:showAsAction="ifRoom" />
+
+    <item
+        android:id="@+id/mi_icon_search"
+        android:title="Search"
+        android:icon="@drawable/btn_search"
+        app:showAsAction="ifRoom" />
+
+    <!-- todo : permissions -->
+    <item android:id="@+id/mi_add_members"
+        android:title="Add members"
+        app:showAsAction="never" />
+
+    <item android:id="@+id/mi_remove_members"
+        android:title="Remove members"
+        app:showAsAction="never" />
+
+    <item android:id="@+id/mi_group_settings"
+        android:title="Group settings"
+        app:showAsAction="never" />
+
+</menu>
