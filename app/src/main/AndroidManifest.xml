@@ -71,7 +71,9 @@
             android:screenOrientation="portrait" />
         <activity
             android:name=".ui.activities.GroupTasksActivity"
-            android:parentActivityName=".ui.activities.HomeScreenActivity" />
+            android:label="@string/title_activity_group_tasks"
+            android:parentActivityName=".ui.activities.HomeScreenActivity"
+            android:theme="@style/AppTheme" />
         <activity
             android:name=".ui.activities.NewTaskMenuActivity"
             android:noHistory="true" />

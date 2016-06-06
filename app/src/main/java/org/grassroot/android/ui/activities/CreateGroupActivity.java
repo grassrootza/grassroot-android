@@ -22,7 +22,6 @@ import org.grassroot.android.events.GroupCreatedEvent;
 import org.grassroot.android.interfaces.GroupConstants;
 import org.grassroot.android.models.Contact;
 import org.grassroot.android.services.GrassrootRestService;
-import org.grassroot.android.services.model.GenericResponse;
 import org.grassroot.android.services.model.GroupResponse;
 import org.grassroot.android.services.model.Member;
 import org.grassroot.android.ui.fragments.MemberListFragment;
@@ -201,7 +200,7 @@ public class CreateGroupActivity extends PortraitActivity implements MemberListF
         List<Member> groupMembers = memberListFragment.getSelectedMembers();
 
         GrassrootRestService.getInstance().getApi()
-                .createGroupNew(mobileNumber, code, groupName, groupDescription, groupMembers)
+                .createGroup(mobileNumber, code, groupName, groupDescription, groupMembers)
                 .enqueue(new Callback<GroupResponse>() {
                     @Override
                     public void onResponse(Call<GroupResponse> call, Response<GroupResponse> response) {

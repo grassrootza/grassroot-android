@@ -39,7 +39,7 @@ import retrofit2.http.Query;
  */
 public class GrassrootRestService extends Application {
 
-    private static final String GRASSROOT_SERVER_URL = Constant.stagingUrl;
+    private static final String GRASSROOT_SERVER_URL = Constant.restUrl;
     private RestApi mRestApi;
     private static GrassrootRestService instance;
 
@@ -47,7 +47,6 @@ public class GrassrootRestService extends Application {
     public GrassrootRestService(){}
 
     public GrassrootRestService(Context context) {
-
         HttpLoggingInterceptor logging = new HttpLoggingInterceptor();
         logging.setLevel(HttpLoggingInterceptor.Level.BASIC);
 
@@ -65,15 +64,9 @@ public class GrassrootRestService extends Application {
         mRestApi = retrofit.create(RestApi.class);
     }
 
-
     public synchronized static GrassrootRestService getInstance(){
         return instance;
-
     }
-
-
-
-
 
     private static GsonConverterFactory buildGsonConverterFactory() {
         GsonBuilder gsonBuilder = new GsonBuilder();
@@ -135,18 +128,10 @@ public class GrassrootRestService extends Application {
         Call<GenericResponse> logLocation(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
                                           @Path("latitude") double latitude, @Path("longitude") double longitude);
 
-         //create new group
-        @POST("group/create/{phoneNumber}/{code}")
-        Call<GenericResponse> createGroup(@Path("phoneNumber") String phoneNumber,
-                                                @Path("code") String code,
-                                                @Query("groupName") String groupName,
-                                                @Query("description") String description,
-                                                @Query("phoneNumbers") String[] phoneNumbers);
-
         @POST("group/create/new/{phoneNumber}/{code}/{groupName}/{description}")
-        Call<GroupResponse> createGroupNew(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
-                                             @Path("groupName") String groupName, @Path("description") String groupDescription,
-                                             @Body List<Member> membersToAdd);
+        Call<GroupResponse> createGroup(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
+                                        @Path("groupName") String groupName, @Path("description") String groupDescription,
+                                        @Body List<Member> membersToAdd);
 
          //user groups
         @GET("group/list/{phoneNumber}/{code}")
@@ -166,8 +151,13 @@ public class GrassrootRestService extends Application {
         @GET("group/search")
         Call<GroupSearchResponse> search(@Query("searchTerm") String searchTerm);
 
-        @GET("task/list/{id}/{phoneNumber}/{code}")
-        Call<TaskResponse> getGroupTasks(@Path("id") String groupUid, @Path("phoneNumber") String phoneNumber, @Path("code") String code);
+        // get and respond to tasks
+
+        @GET("task/list/{phoneNumber}/{code}")
+        Call<TaskResponse> getUserTasks(@Path("phoneNumber") String phoneNumber, @Path("code") String code);
+
+        @GET("task/list/{phoneNumber}/{code}/{parentUid}")
+        Call<TaskResponse> getGroupTasks(@Path("phoneNumber") String phoneNumber, @Path("code") String code, @Path("parentUid") String groupUid);
 
         //cast vote
         @GET("vote/do/{id}/{phoneNumber}/{code}")

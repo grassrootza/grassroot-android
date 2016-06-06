@@ -40,7 +40,8 @@ import retrofit2.Response;
 
 public class ViewVoteActivity extends PortraitActivity {
 
-    private static final String TAG = "ViewVoteActivity";
+    private static final String TAG = ViewVoteActivity.class.getCanonicalName();
+
     @BindView(R.id.vv_toolbar)
     Toolbar vvToolbar;
     @BindView(R.id.txt_toolbar)

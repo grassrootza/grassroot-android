@@ -248,7 +248,8 @@
         <item name="android:textSize">@dimen/txt_medium</item>
         <item name="android:singleLine">true</item>
         <item name="android:textColor">@color/dark_grey_text</item>
-        <item name="android:layout_marginBottom">15dp</item> <!-- todo: fix this hack for alignment -->
+        <item name="android:layout_marginBottom">15dp
+        </item> <!-- todo: fix this hack for alignment -->
     </style>
 
     <style name="ReminderSwitch">
@@ -283,7 +284,6 @@
     <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
 
     <style name="MyDialog" parent="@android:style/Theme.Dialog"></style>
-
 
 
 </resources>
