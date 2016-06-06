@@ -12,6 +12,7 @@
     <string name="title_activity_dilog">DialogActivity</string>
     <string name="title_activity_group_members">View members</string>
     <string name="title_activity_remove_members">Remove members</string>
+    <string name="title_activity_group_tasks">GroupTasksActivity</string>
 
     <string name="register"><u>Forgot password?</u></string>
 
@@ -327,7 +328,6 @@
     <string name="project_id">13953357197</string>
 
 
-
     <!--Blank screen--><!--bs-->
     <string name="bs_BR_name">Blank Screen</string>
     <string name="wait_message">Please wait...</string>
@@ -345,5 +345,6 @@
 
     <string name="alert_confirm">Confirm</string>
     <string name="alert_cancel">Cancel</string>
+
 
 </resources>

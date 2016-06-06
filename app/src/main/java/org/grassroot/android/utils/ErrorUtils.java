@@ -92,4 +92,9 @@ public class ErrorUtils {
         snackbar.show();
     }
 
+    public static void showSnackBar(View holder, final int messageRes, int length) {
+        Snackbar snackbar = Snackbar.make(holder, messageRes, length);
+        snackbar.show();
+    }
+
 }

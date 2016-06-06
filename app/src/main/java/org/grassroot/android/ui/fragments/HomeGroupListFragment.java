@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.os.SystemClock;
 import android.support.design.widget.Snackbar;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -27,6 +28,7 @@ import org.grassroot.android.events.NetworkActivityResultsEvent;
 import org.grassroot.android.interfaces.NetworkErrorDialogListener;
 import org.grassroot.android.interfaces.GroupConstants;
 import org.grassroot.android.interfaces.SortInterface;
+import org.grassroot.android.interfaces.TaskConstants;
 import org.grassroot.android.services.GrassrootRestService;
 import org.grassroot.android.services.NoConnectivityException;
 import org.grassroot.android.services.model.Group;
@@ -37,7 +39,6 @@ import org.grassroot.android.ui.activities.GroupTasksActivity;
 import org.grassroot.android.ui.views.CustomItemAnimator;
 import org.grassroot.android.utils.Constant;
 import org.grassroot.android.utils.ErrorUtils;
-import org.grassroot.android.utils.MenuUtils;
 import org.grassroot.android.utils.PreferenceUtils;
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
@@ -298,7 +299,7 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment imple
     }
 
     private void setUpSwipeRefresh() {
-        glSwipeRefresh.setColorSchemeColors(getResources().getColor(R.color.primaryColor));
+        glSwipeRefresh.setColorSchemeColors(ContextCompat.getColor(getActivity(), R.color.primaryColor));
         glSwipeRefresh.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
@@ -439,8 +440,10 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment imple
     @Override
     public void onGroupRowShortClick(Group group) {
         menu1.close(true);
-        Intent openGroupTasks = MenuUtils.constructIntent(getActivity(), GroupTasksActivity.class,
-                group.getGroupUid(), group.getGroupName());
+        //Intent openGroupTasks = MenuUtils.constructIntent(getActivity(), GroupTasksActivity.class,
+                //group.getGroupUid(), group.getGroupName());
+        Intent openGroupTasks = new Intent(getActivity(), GroupTasksActivity.class);
+        openGroupTasks.putExtra(GroupConstants.OBJECT_FIELD, group);
         startActivity(openGroupTasks);
     }
 
@@ -450,9 +453,9 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment imple
         dialog.setGroupParameters(group.getGroupUid(), group.getGroupName());
 
         Bundle args = new Bundle();
-        args.putBoolean("Meeting", group.getPermissions().contains("GROUP_PERMISSION_CREATE_GROUP_MEETING"));
-        args.putBoolean("Vote", group.getPermissions().contains("GROUP_PERMISSION_CREATE_GROUP_VOTE"));
-        args.putBoolean("ToDo", group.getPermissions().contains("GROUP_PERMISSION_CREATE_LOGBOOK_ENTRY"));
+        args.putBoolean(TaskConstants.MEETING, group.getPermissions().contains(GroupConstants.PERM_CREATE_MTG));
+        args.putBoolean(TaskConstants.VOTE, group.getPermissions().contains(GroupConstants.PERM_CALL_VOTE));
+        args.putBoolean(TaskConstants.TODO, group.getPermissions().contains(GroupConstants.PERM_CREATE_TODO));
         dialog.setArguments(args);
         dialog.show(getFragmentManager(), "GroupQuickTaskModalFragment");
     }
@@ -467,10 +470,10 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment imple
         args.putInt(Constant.INDEX_FIELD, position); // todo : use hashmaps maybe
 
         // todo: make these boolean getters in the grpMembership thing
-        args.putBoolean("addMember", group.getPermissions().contains("GROUP_PERMISSION_ADD_GROUP_MEMBER"));
-        args.putBoolean("viewMembers", group.getPermissions().contains("GROUP_PERMISSION_SEE_MEMBER_DETAILS"));
-        args.putBoolean("editSettings", group.getPermissions().contains("GROUP_PERMISSION_UPDATE_GROUP_DETAILS"));
-        args.putBoolean("removeMembers", group.getPermissions().contains("GROUP_PERMISSION_DELETE_GROUP_MEMBER"));
+        args.putBoolean("addMember", group.getPermissions().contains(GroupConstants.PERM_ADD_MEMBER));
+        args.putBoolean("viewMembers", group.getPermissions().contains(GroupConstants.PERM_VIEW_MEMBERS));
+        args.putBoolean("editSettings", group.getPermissions().contains(GroupConstants.PERM_GROUP_SETTNGS));
+        args.putBoolean("removeMembers", group.getPermissions().contains(GroupConstants.PERM_DEL_MEMBER));
 
         dialog.setArguments(args);
         dialog.show(getFragmentManager(), "GroupQuickMemberModalFragment");

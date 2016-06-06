@@ -12,7 +12,13 @@ public interface TaskConstants {
     String TODO = "TODO";
 
     String TASK_TYPE_FIELD = "taskType";
+    String NO_TASKS_FOUND = "NO_GROUP_ACTIVITIES"; // todo: change literal on server nad here
+
+    String TODO_PENDING = "pending";
+    String TODO_DONE = "completed";
+    String TODO_OVERDUE = "overdue";
 
     SimpleDateFormat dateDisplayFormatWithHours = new SimpleDateFormat("HH:mm dd-MM");
+    SimpleDateFormat dateDisplayWithDayName = new SimpleDateFormat("H:mm, EEE, d MMM");
 
 }
