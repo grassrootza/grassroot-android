@@ -19,17 +19,18 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import org.grassroot.android.R;
+import org.grassroot.android.events.TaskAddedEvent;
 import org.grassroot.android.interfaces.GroupConstants;
 import org.grassroot.android.interfaces.NetworkErrorDialogListener;
 import org.grassroot.android.interfaces.TaskConstants;
 import org.grassroot.android.services.GrassrootRestService;
 import org.grassroot.android.services.model.GenericResponse;
 import org.grassroot.android.services.model.Member;
+import org.grassroot.android.services.model.TaskResponse;
 import org.grassroot.android.slideDateTimePicker.SlideDateTimeListener;
 import org.grassroot.android.slideDateTimePicker.SlideDateTimePicker;
 import org.grassroot.android.utils.Constant;
@@ -37,6 +38,7 @@ import org.grassroot.android.utils.ErrorUtils;
 import org.grassroot.android.utils.MenuUtils;
 import org.grassroot.android.utils.PreferenceUtils;
 import org.grassroot.android.utils.UtilClass;
+import org.greenrobot.eventbus.EventBus;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -212,14 +214,16 @@ public class CreateTaskFragment extends Fragment {
     }
 
     public void createTask() {
-        setUpApiCall().enqueue(new Callback<GenericResponse>() {
+        setUpApiCall().enqueue(new Callback<TaskResponse>() {
             @Override
-            public void onResponse(Call<GenericResponse> call, Response<GenericResponse> response) {
+            public void onResponse(Call<TaskResponse> call, Response<TaskResponse> response) {
                 // todo: check for actual success
                 if (response.isSuccessful()) {
                     Intent i = new Intent();
                     i.putExtra(Constant.SUCCESS_MESSAGE, generateSuccessString());
                     getActivity().setResult(Activity.RESULT_OK, i);
+                    Log.e(TAG, "putting task created event on the bus ...");
+                    EventBus.getDefault().post(new TaskAddedEvent(response.body().getTasks().get(0)));
                     getActivity().finish(); // todo : make sure this is okay
                 } else {
                     ErrorUtils.showSnackBar(vContainer, "Error! Something went wrong", Snackbar.LENGTH_LONG, "", null);
@@ -227,7 +231,7 @@ public class CreateTaskFragment extends Fragment {
             }
 
             @Override
-            public void onFailure(Call<GenericResponse> call, Throwable t) {
+            public void onFailure(Call<TaskResponse> call, Throwable t) {
                 // todo: improve and fix this
                 ErrorUtils.connectivityError(getActivity(), R.string.No_network, new NetworkErrorDialogListener() {
                     @Override
@@ -241,7 +245,7 @@ public class CreateTaskFragment extends Fragment {
         });
     }
 
-    public Call<GenericResponse> setUpApiCall() {
+    public Call<TaskResponse> setUpApiCall() {
 
 
         final String phoneNumber = PreferenceUtils.getuser_mobilenumber(getContext());

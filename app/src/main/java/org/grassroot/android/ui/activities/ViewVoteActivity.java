@@ -25,6 +25,7 @@ import org.grassroot.android.services.GrassrootRestService;
 import org.grassroot.android.services.model.EventModel;
 import org.grassroot.android.services.model.EventResponse;
 import org.grassroot.android.services.model.GenericResponse;
+import org.grassroot.android.services.model.TaskResponse;
 import org.grassroot.android.utils.Constant;
 import org.grassroot.android.utils.ErrorUtils;
 import org.grassroot.android.ui.views.ProgressBarCircularIndeterminate;
@@ -327,9 +328,9 @@ public class ViewVoteActivity extends PortraitActivity {
     private void castVote(final String response) {
 
         GrassrootRestService.getInstance().getApi().castVote(voteid, phoneNumber, code, response).
-                enqueue(new Callback<GenericResponse>() {
+                enqueue(new Callback<TaskResponse>() {
                     @Override
-                    public void onResponse(Call<GenericResponse> call, Response<GenericResponse> response) {
+                    public void onResponse(Call<TaskResponse> call, Response<TaskResponse> response) {
                         if (response.isSuccessful()) {
                             showSnackBar(getString(R.string.ga_Votesend), "", "", "", Snackbar.LENGTH_SHORT);
                             updateView();
@@ -337,7 +338,7 @@ public class ViewVoteActivity extends PortraitActivity {
                         ErrorUtils.handleServerError(rlVvMainLayout,ViewVoteActivity.this,response);
                     }
                     @Override
-                    public void onFailure(Call<GenericResponse> call, Throwable t) {
+                    public void onFailure(Call<TaskResponse> call, Throwable t) {
                         progressBarCircularIndeterminate.setVisibility(View.GONE);
                         txtPrg.setVisibility(View.GONE);
                         ErrorUtils.connectivityError(ViewVoteActivity.this, R.string.No_network, new NetworkErrorDialogListener() {
