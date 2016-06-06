@@ -41,10 +41,9 @@ public class NetworkErrorDialogFragment extends DialogFragment {
     public Dialog onCreateDialog(Bundle savedInstanceState) {
 
         int message = getArguments().getInt("message");
-        Log.e(TAG, getActivity().getLocalClassName());
        return new AlertDialog.Builder(getActivity())
                 .setMessage(message)
-                .setPositiveButton("Retry", new DialogInterface.OnClickListener() {
+                .setPositiveButton(R.string.Alert_Retry, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialogInterface, int i) {
                         mListener.retryClicked();
@@ -57,7 +56,7 @@ public class NetworkErrorDialogFragment extends DialogFragment {
 
                     }
                 })
-                .setNeutralButton("Check Network Settings", new DialogInterface.OnClickListener(){
+                .setNeutralButton(R.string.Network_Settings, new DialogInterface.OnClickListener(){
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         mListener.checkNetworkSettingsClicked(getActivity());

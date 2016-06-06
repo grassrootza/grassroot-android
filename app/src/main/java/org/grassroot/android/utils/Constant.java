@@ -72,4 +72,11 @@ public class Constant {
 
     public static final double testLatitude = 31.215263;
     public static final double testLongitude = 121.476291;
+
+
+    //HTTP Status codes
+
+    public static final int INTERNAL_SERVER_ERROR = 500;
+    public static final int CONFLICT = 409;
+    public static final int UNAUTHORISED = 401;
 }

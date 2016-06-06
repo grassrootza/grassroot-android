@@ -234,8 +234,9 @@ public class CreateTaskFragment extends Fragment {
                     public void retryClicked() {
                       createTask();
                     }
+
                 });
-             //   ErrorUtils.handleNetworkError(getActivity(), vContainer, t);
+
             }
         });
     }

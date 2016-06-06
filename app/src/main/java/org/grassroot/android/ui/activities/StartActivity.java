@@ -1,6 +1,5 @@
 package org.grassroot.android.ui.activities;
 
-import android.annotation.SuppressLint;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
@@ -20,7 +19,6 @@ import android.widget.ImageView;
 import android.widget.RelativeLayout;
 
 import org.grassroot.android.R;
-import org.grassroot.android.events.NetworkActivityResultsEvent;
 import org.grassroot.android.services.GcmRegistrationService;
 import org.grassroot.android.services.GrassrootRestService;
 import org.grassroot.android.services.model.GenericResponse;
@@ -36,7 +34,6 @@ import org.grassroot.android.utils.LocationUtils;
 import org.grassroot.android.utils.NetworkUtils;
 import org.grassroot.android.utils.PreferenceUtils;
 import org.grassroot.android.utils.TopExceptionHandler;
-import org.greenrobot.eventbus.EventBus;
 
 import java.util.List;
 
@@ -393,7 +390,8 @@ public class StartActivity extends PortraitActivity implements HomeScreenViewFra
                             startActivity(homeScreenIntent);
                             finish();
                         } else {
-                            showSnackBar(getApplicationContext(), "", getResources().getString(R.string.INVALID_TOKEN), "", 0, Snackbar.LENGTH_SHORT);
+                            ErrorUtils.handleServerError(rlStart, StartActivity.this, response);
+                            //showSnackBar(getApplicationContext(), "", getResources().getString(R.string.INVALID_TOKEN), "", 0, Snackbar.LENGTH_SHORT);
                         }
                     }
 

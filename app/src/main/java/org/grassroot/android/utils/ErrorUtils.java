@@ -2,6 +2,7 @@ package org.grassroot.android.utils;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Color;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
@@ -9,13 +10,19 @@ import android.support.v4.app.FragmentActivity;
 import android.util.Log;
 import android.view.View;
 
+import org.grassroot.android.R;
+import org.grassroot.android.interfaces.AlertDialogListener;
 import org.grassroot.android.interfaces.NetworkErrorDialogListener;
 import org.grassroot.android.services.NoConnectivityException;
+import org.grassroot.android.ui.activities.StartActivity;
+import org.grassroot.android.ui.fragments.AlertDialogFragment;
 import org.grassroot.android.ui.fragments.NetworkErrorDialogFragment;
 
 import java.io.IOException;
 import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
+
+import retrofit2.Response;
 
 
 /**
@@ -43,6 +50,32 @@ public class ErrorUtils {
             otherIOError(errorViewHolder, (IOException) e);
         } else {
             Log.e(TAG, "Error! Should not be another kind of error here! Output: " + e.toString());
+        }
+    }
+
+    public static void handleServerError(View holder, final Activity activity, Response response){
+
+        switch (response.code()){
+            case Constant.UNAUTHORISED:
+                showSnackBar(holder,activity.getString(R.string.INVALID_TOKEN),Snackbar.LENGTH_INDEFINITE,"Log Out", new View.OnClickListener(){
+                    @Override
+                    public void onClick(View v) {
+                        PreferenceUtils.clearAll(activity.getApplicationContext());
+                        Intent open = new Intent(activity, StartActivity.class);
+                        activity.startActivity(open);
+                        activity.finish();
+                    }
+                });
+                break;
+            case Constant.CONFLICT:
+                Snackbar.make(holder, R.string.Alert_Already_Responded, Snackbar.LENGTH_LONG).show();
+                break;
+
+            case Constant.INTERNAL_SERVER_ERROR:
+                Snackbar.make(holder, "Something went wrong.  Please try again later...", Snackbar.LENGTH_INDEFINITE).show();
+                break;
+
+
         }
     }
 

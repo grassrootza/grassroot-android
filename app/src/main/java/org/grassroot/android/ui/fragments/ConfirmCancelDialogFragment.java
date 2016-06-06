@@ -29,6 +29,8 @@ public class ConfirmCancelDialogFragment extends DialogFragment {
         return frag;
     }
 
+
+
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
         int message = getArguments().getInt("message");

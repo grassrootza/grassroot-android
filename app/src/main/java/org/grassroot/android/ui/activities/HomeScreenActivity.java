@@ -60,7 +60,9 @@ public class HomeScreenActivity extends PortraitActivity implements NavigationDr
         Log.d(TAG, "onActivityResults, request_code = " + requestCode + ", result code = " + resultCode);
         super.onActivityResult(requestCode, resultCode, data);
         if(requestCode == Constant.activityNetworkSettings) {
-            EventBus.getDefault().post(new NetworkActivityResultsEvent());
+            HomeGroupListFragment hgl = (HomeGroupListFragment) mainFragment;
+            hgl.fetchGroupList();
+          //  EventBus.getDefault().post(new NetworkActivityResultsEvent());
             Log.d(TAG, "event fired");
         }
         else if (resultCode == RESULT_OK && data != null) {

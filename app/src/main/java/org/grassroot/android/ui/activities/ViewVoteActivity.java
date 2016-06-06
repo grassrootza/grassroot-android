@@ -190,6 +190,7 @@ public class ViewVoteActivity extends PortraitActivity {
                     eventModel = response.body().getEventModel();
                     setView(eventModel);
                 }
+                ErrorUtils.handleServerError(rlVvMainLayout,ViewVoteActivity.this, response);
             }
 
             @Override
@@ -333,6 +334,7 @@ public class ViewVoteActivity extends PortraitActivity {
                             showSnackBar(getString(R.string.ga_Votesend), "", "", "", Snackbar.LENGTH_SHORT);
                             updateView();
                         }
+                        ErrorUtils.handleServerError(rlVvMainLayout,ViewVoteActivity.this,response);
                     }
                     @Override
                     public void onFailure(Call<GenericResponse> call, Throwable t) {
@@ -344,7 +346,6 @@ public class ViewVoteActivity extends PortraitActivity {
                                 castVote(response);
                             }
                         });
-
 
                        // ErrorUtils.handleNetworkError(ViewVoteActivity.this, errorLayout, t);
                     }

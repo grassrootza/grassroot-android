@@ -21,7 +21,6 @@ import org.grassroot.android.services.NoConnectivityException;
 import org.grassroot.android.services.model.GenericResponse;
 import org.grassroot.android.slideDateTimePicker.SlideDateTimeListener;
 import org.grassroot.android.slideDateTimePicker.SlideDateTimePicker;
-import org.grassroot.android.ui.fragments.NetworkErrorDialogFragment;
 import org.grassroot.android.utils.ErrorUtils;
 import org.grassroot.android.utils.PreferenceUtils;
 import org.grassroot.android.utils.UtilClass;
@@ -218,7 +217,10 @@ public class EditVoteActivity extends PortraitActivity {
                     close.putExtra("deadline", txtEvDeadline.getText().toString());
                     setResult(1, close);
                     finish();
+                    return;
                 }
+                    ErrorUtils.handleServerError(rlVvMainLayout,EditVoteActivity.this,response);
+
             }
 
             @Override
@@ -226,7 +228,7 @@ public class EditVoteActivity extends PortraitActivity {
                 if (t instanceof NoConnectivityException) {
 
                 }
-               // hideProgress();
+                hideProgress();
                 Log.e(TAG, t.toString());
                 handleNetworkError(R.string.No_network);
             }
@@ -246,6 +248,7 @@ public class EditVoteActivity extends PortraitActivity {
             public void retryClicked() {
                 updateVoteDetails();
             }
+
         });
 
     }

@@ -69,6 +69,7 @@ public class UtilClass {
         AlertDialogFragment alertDialogFragment = new AlertDialogFragment();
         Bundle b = new Bundle();
 
+
         if (message != null) b.putString("message", message);
         b.putBoolean(Constant.CANCELLABLE, cancellable);
         b.putString("left", left);

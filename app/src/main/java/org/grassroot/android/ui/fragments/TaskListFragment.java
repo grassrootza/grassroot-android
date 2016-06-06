@@ -111,9 +111,10 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
                     } else {
                         groupTasksAdapter.changeToTaskList(response.body().getTasks());
                     }
-                } else {
-                    // todo: handle error
+                    return;
+
                 }
+                ErrorUtils.handleServerError(rcTaskView, getActivity(),response);
             }
 
             @Override

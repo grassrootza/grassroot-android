@@ -147,7 +147,7 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment imple
     }
 
     private void init() {
-        // grassrootRestService = new GrassrootRestService(this.getContext());
+
         userGroups = new ArrayList<>();
         ivGhpSort.setEnabled(false);
         ivGhpSearch.setEnabled(false);
@@ -175,15 +175,15 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment imple
      * Method executed to retrieve and populate list of groups. Note: this does not handle the absence
      * of a connection very well, at all. Will probably need to rethink.
      */
-    private void fetchGroupList() {
-
-        mProgressBar.setVisibility(View.VISIBLE);
-
+    public void fetchGroupList() {
 
         Call<GroupResponse> call = GrassrootRestService.getInstance().getApi().getUserGroups(mobileNumber, userCode);
+        showProgress();
         call.enqueue(new Callback<GroupResponse>() {
             @Override
             public void onResponse(Call<GroupResponse> call, Response<GroupResponse> response) {
+
+                hideProgress();
                 if (response.isSuccessful()) {
                     GroupResponse groups = response.body();
                     userGroups.addAll(groups.getGroups());
@@ -191,16 +191,18 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment imple
                     groupListRowAdapter.addData(userGroups);
                     ivGhpSearch.setEnabled(true);
                     ivGhpSort.setEnabled(true);
-                    mProgressBar.setVisibility(View.INVISIBLE);
                     rcGroupList.setVisibility(View.VISIBLE);
                 } else {
-                    Snackbar.make(rlGhpRoot, getString(R.string.Unknown_error), Snackbar.LENGTH_INDEFINITE).show();
+                    Log.e(TAG, response.message());
+                    ErrorUtils.handleServerError(rlGhpRoot,getActivity(),response);
+                  //  Snackbar.make(rlGhpRoot, getString(R.string.Unknown_error), Snackbar.LENGTH_INDEFINITE).show();
                 }
             }
 
             @Override
             public void onFailure(Call<GroupResponse> call, Throwable t) {
-                mProgressBar.setVisibility(View.INVISIBLE);
+
+                hideProgress();
                 if (t instanceof NoConnectivityException) {
                     errorLayout.setVisibility(View.VISIBLE);
                     imNoInternet.setVisibility(View.VISIBLE);
@@ -211,11 +213,21 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment imple
                         public void retryClicked() {
                             fetchGroupList();
                         }
+
                     });
-                    // ErrorUtils.handleNetworkError(getContext(), rlGhpRoot, t);
+
                 }
             }
         });
+    }
+
+
+    private void showProgress(){
+        mProgressBar.setVisibility(View.VISIBLE);
+    }
+
+    private void hideProgress(){
+        mProgressBar.setVisibility(View.INVISIBLE);
     }
 
     /*
@@ -276,7 +288,6 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment imple
                                     updateSingleGroup(position,groupUid);
                                 }
                             });
-                         //   ErrorUtils.handleNetworkError(getContext(), rlGhpRoot, t);
                         }
                     });
         } else {
@@ -427,8 +438,7 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment imple
             Log.e(TAG, "createdGroup returned! with UID: " + createdGroup);
             insertGroup(0, createdGroup);
         }
-        fetchGroupList();
-        //todo
+
 
     }
 

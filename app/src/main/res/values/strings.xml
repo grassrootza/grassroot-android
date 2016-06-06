@@ -330,6 +330,8 @@
 
     <!--Blank screen--><!--bs-->
     <string name="bs_BR_name">Blank Screen</string>
+
+
     <string name="wait_message">Please wait...</string>
     <string name="profile_updated">Profile Updated</string>
     <string name="RESPOND_YES">You have clicked on \'Yes\'. Do you want to proceed with the vote?</string>
@@ -345,6 +347,9 @@
 
     <string name="alert_confirm">Confirm</string>
     <string name="alert_cancel">Cancel</string>
+    <string name="Network_Settings">Check Network Settings</string>
+    <string name="Alert_Retry">Retry</string>
+    <string name="Alert_Already_Responded">You have already responded to the event.</string>
 
 
 </resources>
