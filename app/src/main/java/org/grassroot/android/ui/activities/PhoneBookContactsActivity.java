@@ -1,6 +1,5 @@
 package org.grassroot.android.ui.activities;
 
-import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
@@ -9,14 +8,15 @@ import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.ListView;
+import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 
-import org.grassroot.android.ContactLib.PinnedHeaderListView;
-import org.grassroot.android.interfaces.ContactListRequester;
 import org.grassroot.android.R;
 import org.grassroot.android.adapters.ContactsAdapter;
-import org.grassroot.android.services.GetContactListAsync;
+import org.grassroot.android.interfaces.ContactListRequester;
 import org.grassroot.android.models.Contact;
+import org.grassroot.android.services.GetContactListAsync;
 import org.grassroot.android.utils.Constant;
 import org.grassroot.android.utils.PermissionUtils;
 import org.grassroot.android.utils.UtilClass;
@@ -50,8 +50,8 @@ public class PhoneBookContactsActivity extends PortraitActivity implements Conta
     private int multiNumberPosition =-1;
     private UtilClass utilClass;
 
-    @BindView(android.R.id.list) // android.R?
-            PinnedHeaderListView mListView;
+    @BindView(R.id.phone_book_list)
+    ListView mListView;
 
     @BindView(R.id.rl_phonebook_root)
     RelativeLayout rlPhonebookRoot;
@@ -71,7 +71,8 @@ public class PhoneBookContactsActivity extends PortraitActivity implements Conta
     @BindView(R.id.iv_back)
     ImageView ivBack;
 
-    ProgressDialog progressBar;
+    @BindView(R.id.prg_pb)
+    ProgressBar progressBar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -137,8 +138,8 @@ public class PhoneBookContactsActivity extends PortraitActivity implements Conta
         mAdapter = new ContactsAdapter(contactsDisplayed, getApplicationContext());
         mListView.setAdapter(mAdapter);
         mListView.setOnScrollListener(mAdapter);
-        mListView.setEnableHeaderTransparencyChanges(false);
-        progressBar.cancel();
+        // mListView.setEnableHeaderTransparencyChanges(false);
+        progressBar.setVisibility(View.GONE);
     }
 
     private Map<String, Contact> assemblePhoneMap(List<Contact> contactList) {
@@ -171,7 +172,7 @@ public class PhoneBookContactsActivity extends PortraitActivity implements Conta
      * note : probably want to switch this to using recycler view on item click ... likely more robust
      */
 
-    @OnItemClick(android.R.id.list)
+    @OnItemClick(R.id.phone_book_list)
     public void selectMember(int position) {
 
         multiNumberPosition = position;
@@ -280,15 +281,8 @@ public class PhoneBookContactsActivity extends PortraitActivity implements Conta
     }
 
     private void setUpProgressBar() {
-        progressBar = new ProgressDialog(PhoneBookContactsActivity.this);
-        progressBar.setMessage("Searching...");
-        progressBar.setCancelable(false);
-        progressBar.show();
+        progressBar.setVisibility(View.VISIBLE);
         Log.d(TAG, "inside phoneBookContactsActivity ... progressBar created");
     }
 
 }
-
-
-
-

@@ -6,10 +6,12 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Filter;
+import android.widget.Filterable;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import org.grassroot.android.ContactLib.SearchablePinnedHeaderListViewAdapter;
+import org.grassroot.android.ContactLib.BaseSectionedListViewAdapter;
 import org.grassroot.android.ContactLib.StringArrayAlphabetIndexer;
 import org.grassroot.android.R;
 import org.grassroot.android.models.Contact;
@@ -21,35 +23,58 @@ import java.util.Locale;
 /**
  * Created by admin on 04-Apr-16.
  */
-// ////////////////////////////////////////////////////////////
-// ContactsAdapter //
-// //////////////////
-public class ContactsAdapter extends SearchablePinnedHeaderListViewAdapter<Contact>
-{
+public class ContactsAdapter extends BaseSectionedListViewAdapter implements Filterable {
+
     public  Context mcontext;
     private LayoutInflater mInflater;
     private ArrayList<Contact> mContacts;
-    private final int CONTACT_PHOTO_IMAGE_SIZE;
-    private final int[] PHOTO_TEXT_BACKGROUND_COLORS;
+
     private String TAG= ContactsAdapter.class.getSimpleName();
     ArrayList<Contact> oldContacts;
 
+    private ArrayList<Contact> mFilterListCopy;
+    private final Filter mFilter;
+
     @Override
     public CharSequence getSectionTitle(int sectionIndex) {
-        return ((StringArrayAlphabetIndexer.AlphaBetSection)getSections()[sectionIndex]).getName();
+        return ((StringArrayAlphabetIndexer.AlphaBetSection) getSections()[sectionIndex]).getName();
     }
 
     public ContactsAdapter(final ArrayList<Contact> contacts, Context context) {
-        mInflater= LayoutInflater.from(context);
+        mInflater=LayoutInflater.from(context);
         this.mcontext=context;
         setData(contacts);
-        PHOTO_TEXT_BACKGROUND_COLORS=context.getResources().getIntArray(R.array.contacts_text_background_colors);
-        CONTACT_PHOTO_IMAGE_SIZE=context.getResources().getDimensionPixelSize(
-                R.dimen.list_item__contact_imageview_size);
+
+        mFilter = new Filter() {
+            CharSequence lastConstraint = null;
+
+            @Override
+            protected FilterResults performFiltering(final CharSequence constraint) {
+                if (constraint == null || constraint.length() == 0)
+                    return null;
+                final ArrayList<Contact> newFilterArray = new ArrayList<Contact>();
+                final FilterResults results = new FilterResults();
+                for (final Contact item : getOriginalList())
+                    if (doFilter(item, constraint))
+                        newFilterArray.add(item);
+                results.values = newFilterArray;
+                results.count = newFilterArray.size();
+                return results;
+            }
+
+            @SuppressWarnings("unchecked")
+            @Override
+            protected void publishResults(final CharSequence constraint, final FilterResults results) {
+                mFilterListCopy = results == null ? null : (ArrayList<Contact>) results.values;
+                final boolean needRefresh = !TextUtils.equals(constraint, lastConstraint);
+                lastConstraint = constraint == null ? null : constraint;
+                if (needRefresh)
+                    notifyDataSetChanged();
+            }
+        };
     }
 
-    public void setData(final ArrayList<Contact> contacts)
-    {
+    public void setData(final ArrayList<Contact> contacts) {
         this.mContacts=contacts;
         oldContacts = new ArrayList<>();
         oldContacts.addAll(contacts);
@@ -59,11 +84,26 @@ public class ContactsAdapter extends SearchablePinnedHeaderListViewAdapter<Conta
 
     private String[] generateContactNames(final List<Contact> contacts)
     {
-        final ArrayList<String> contactNames=new ArrayList<String>();
+        final ArrayList<String> contactNames=new ArrayList<>();
         if(contacts!=null)
             for(final Contact contactEntity : contacts)
                 contactNames.add(contactEntity.name);
         return contactNames.toArray(new String[contactNames.size()]);
+    }
+
+    @Override
+    public Filter getFilter() {
+        return mFilter;
+    }
+
+    @Override
+    public int getCount() {
+        return mContacts.size();
+    }
+
+    @Override
+    public Contact getItem(int i) {
+        return mContacts.get(i);
     }
 
     @Override
@@ -100,9 +140,7 @@ public class ContactsAdapter extends SearchablePinnedHeaderListViewAdapter<Conta
         return rootView;
     }
 
-    @Override
-    public boolean doFilter(final Contact item, final CharSequence constraint)
-    {
+    public boolean doFilter(final Contact item, final CharSequence constraint) {
         if(TextUtils.isEmpty(constraint))
             return true;
         final String displayName=item.name;
@@ -110,12 +148,10 @@ public class ContactsAdapter extends SearchablePinnedHeaderListViewAdapter<Conta
                 .contains(constraint.toString().toLowerCase(Locale.getDefault()));
     }
 
-    @Override
     public ArrayList<Contact> getOriginalList()
     {
         return mContacts;
     }
-
 
     public void filter(String search_string) {
 
@@ -142,8 +178,6 @@ public class ContactsAdapter extends SearchablePinnedHeaderListViewAdapter<Conta
             }
         }
         notifyDataSetChanged();
-
-
     }
 
     // /////////////////////////////////////////////////////////////////////////////////////

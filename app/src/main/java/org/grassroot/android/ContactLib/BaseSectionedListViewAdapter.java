@@ -9,8 +9,7 @@ import android.widget.SectionIndexer;
 import android.widget.TextView;
 
 
-public abstract class BasePinnedHeaderListViewAdapter extends BaseAdapter implements SectionIndexer, OnScrollListener,
-    PinnedHeaderListView.PinnedHeaderAdapter
+public abstract class BaseSectionedListViewAdapter extends BaseAdapter implements SectionIndexer
   {
 	private SectionIndexer _sectionIndexer;
 	private boolean mHeaderViewVisible = true;
@@ -26,7 +25,8 @@ public abstract class BasePinnedHeaderListViewAdapter extends BaseAdapter implem
 	public abstract CharSequence getSectionTitle(int sectionIndex);
 
 	protected void bindSectionHeader(final TextView headerView, final View dividerView, final int position) {
-		final int sectionIndex = getSectionForPosition(position);
+
+        final int sectionIndex = getSectionForPosition(position);
 		if (getPositionForSection(sectionIndex) == position) {
 			final CharSequence title = getSectionTitle(sectionIndex);
 			headerView.setText(title);
@@ -46,39 +46,6 @@ public abstract class BasePinnedHeaderListViewAdapter extends BaseAdapter implem
 				dividerView.setVisibility(View.VISIBLE);
 		if (!mHeaderViewVisible)
 			headerView.setVisibility(View.GONE);
-	}
-
-	@Override
-	public int getPinnedHeaderState(final int position) {
-		if (_sectionIndexer == null || getCount() == 0 || !mHeaderViewVisible)
-			return PINNED_HEADER_GONE;
-		if (position < 0)
-			return PINNED_HEADER_GONE;
-		// The header should get pushed up if the top item shown
-		// is the last item in a section for a particular letter.
-		final int section = getSectionForPosition(position);
-		final int nextSectionPosition = getPositionForSection(section + 1);
-		if (nextSectionPosition != -1 && position == nextSectionPosition - 1)
-			return PINNED_HEADER_PUSHED_UP;
-		return PINNED_HEADER_VISIBLE;
-	}
-
-	public void setHeaderViewVisible(final boolean isHeaderViewVisible) {
-		mHeaderViewVisible = isHeaderViewVisible;
-	}
-
-	public boolean isHeaderViewVisible() {
-		return this.mHeaderViewVisible;
-	}
-
-	@Override
-	public void onScroll(final AbsListView view, final int firstVisibleItem, final int visibleItemCount,
-			final int totalItemCount) {
-		((PinnedHeaderListView) view).configureHeaderView(firstVisibleItem);
-	}
-
-	@Override
-	public void onScrollStateChanged(final AbsListView arg0, final int arg1) {
 	}
 
 	@Override

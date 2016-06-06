@@ -8,16 +8,12 @@
         android:id="@+id/rl_container"
         android:layout_width="match_parent"
         android:layout_height="?android:actionBarSize"
-        android:background="@color/primaryColor"
-
-        >
+        android:background="@color/primaryColor">
     
         <FrameLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_gravity="center_horizontal"
-
-            >
+            android:layout_gravity="center_horizontal">
             
             <RelativeLayout
                 android:id="@+id/rl_simple"
@@ -25,9 +21,8 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_vertical"
                 android:background="@color/primaryColor"
-                android:visibility="visible"
+                android:visibility="visible">
 
-                >
                 <ImageView
                     android:id="@+id/iv_back"
                     android:layout_width="wrap_content"
@@ -35,8 +30,7 @@
                     android:src="@drawable/btn_back_wt"
                     android:paddingLeft="16dp"
                     android:background="@drawable/button_alpha_rlsimple"
-                    android:layout_alignParentLeft="true"
-                    />
+                    android:layout_alignParentLeft="true" />
 
 
                 <ImageView
@@ -47,22 +41,16 @@
                     android:paddingRight="16dp"
                     android:paddingLeft="16dp"
                     android:background="@drawable/button_alpha_rlsimple"
-                    android:layout_alignParentRight="true"
+                    android:layout_alignParentRight="true" />
 
-                    />
             </RelativeLayout>
-
-
 
             <RelativeLayout
                 android:id="@+id/rl_search"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:background="@color/white"
-                android:visibility="gone"
-                >
-
-
+                android:visibility="gone">
 
                 <ImageView
                     android:id="@+id/iv_rl_search"
@@ -72,9 +60,7 @@
                     android:paddingLeft="15dp"
                     android:layout_centerVertical="true"
                     android:background="@drawable/button_alpha"
-                    android:layout_alignParentLeft="true"
-
-                    />
+                    android:layout_alignParentLeft="true" />
 
                 <EditText
                     android:id="@+id/et_search"
@@ -87,8 +73,7 @@
                     android:paddingLeft="5dp"
                     android:paddingRight="5dp"
                     android:singleLine="true"
-                    android:imeOptions="actionSearch"
-                    />
+                    android:imeOptions="actionSearch" />
                 
                 <ImageView
                     android:id="@+id/iv_cross"
@@ -98,18 +83,15 @@
                     android:paddingRight="15dp"
                     android:layout_centerVertical="true"
                     android:background="@drawable/button_alpha"
-                    android:layout_alignParentRight="true"
-                    />
+                    android:layout_alignParentRight="true" />
+
             </RelativeLayout>
-
-
         </FrameLayout>
-
     </RelativeLayout>
 
     
-    <org.grassroot.android.ContactLib.PinnedHeaderListView
-        android:id="@android:id/list"
+    <ListView
+        android:id="@+id/phone_book_list"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:cacheColorHint="@android:color/transparent"
@@ -135,7 +117,7 @@
         android:visibility="gone"
         />
 
-    <org.grassroot.android.utils.ProgressBarCircularIndeterminate
+    <ProgressBar
         android:id="@+id/prg_pb"
         android:layout_width="32dp"
         android:layout_height="32dp"
