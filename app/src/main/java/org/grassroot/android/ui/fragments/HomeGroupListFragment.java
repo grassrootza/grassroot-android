@@ -208,6 +208,8 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment imple
                     imNoInternet.setVisibility(View.VISIBLE);
                 } else {
                     Log.e(TAG, t.getMessage());
+                    errorLayout.setVisibility(View.VISIBLE);
+                    imNoInternet.setVisibility(View.VISIBLE);
                     ErrorUtils.connectivityError(getActivity(), R.string.No_network, new NetworkErrorDialogListener() {
                         @Override
                         public void retryClicked() {
@@ -224,6 +226,8 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment imple
 
     private void showProgress(){
         mProgressBar.setVisibility(View.VISIBLE);
+        errorLayout.setVisibility(View.INVISIBLE);
+        imNoInternet.setVisibility(View.INVISIBLE);
     }
 
     private void hideProgress(){

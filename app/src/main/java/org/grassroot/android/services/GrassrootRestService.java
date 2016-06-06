@@ -156,7 +156,7 @@ public class GrassrootRestService extends Application {
         @GET("task/list/{phoneNumber}/{code}")
         Call<TaskResponse> getUserTasks(@Path("phoneNumber") String phoneNumber, @Path("code") String code);
 
-        @GET("task/list/{phoneNumber}/{code}/{parentUid}")
+        @GET("task/list/{parentUid}/{phoneNumber}/{code}")
         Call<TaskResponse> getGroupTasks(@Path("phoneNumber") String phoneNumber, @Path("code") String code, @Path("parentUid") String groupUid);
 
         //cast vote
