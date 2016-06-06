@@ -4,14 +4,11 @@ import android.app.Application;
 import android.content.Context;
 import android.support.annotation.Nullable;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import org.grassroot.android.services.model.EventResponse;
 import org.grassroot.android.services.model.GenericResponse;
 import org.grassroot.android.services.model.GroupResponse;
 import org.grassroot.android.services.model.GroupSearchResponse;
 import org.grassroot.android.services.model.Member;
-import org.grassroot.android.services.model.MemberDeserializer;
 import org.grassroot.android.services.model.MemberList;
 import org.grassroot.android.services.model.NotificationList;
 import org.grassroot.android.services.model.ProfileResponse;
@@ -66,16 +63,6 @@ public class GrassrootRestService extends Application {
 
     public synchronized static GrassrootRestService getInstance(){
         return instance;
-    }
-
-    private static GsonConverterFactory buildGsonConverterFactory() {
-        GsonBuilder gsonBuilder = new GsonBuilder();
-
-        // add any custom deserializers here
-        gsonBuilder.registerTypeAdapter(Member.class, new MemberDeserializer());
-        Gson myGson = gsonBuilder.create();
-
-        return GsonConverterFactory.create(myGson);
     }
 
     @Override
@@ -161,21 +148,21 @@ public class GrassrootRestService extends Application {
 
         //cast vote
         @GET("vote/do/{id}/{phoneNumber}/{code}")
-        Call<GenericResponse> castVote(@Path("id") String voteId,
+        Call<TaskResponse> castVote(@Path("id") String voteId,
                                              @Path("phoneNumber") String phoneNumber,
                                              @Path("code") String code,
                                              @Query("response") String response);
 
         //rsvp for a meeting
         @GET("meeting/rsvp/{id}/{phoneNumber}/{code}")
-        Call<GenericResponse> rsvp(@Path("id") String voteId,
+        Call<TaskResponse> rsvp(@Path("id") String voteId,
                                    @Path("phoneNumber") String phoneNumber,
                                    @Path("code") String code,
                                    @Query("response") String response);
 
         //complete logbook
         @GET("logbook/complete/{phoneNumber}/{code}/{id}")
-        Call<GenericResponse> completeTodo(@Path("phoneNumber") String phoneNumber,
+        Call<TaskResponse> completeTodo(@Path("phoneNumber") String phoneNumber,
                                                  @Path("code") String code,
                                                  @Path("id") String todoId);
 
@@ -219,7 +206,7 @@ public class GrassrootRestService extends Application {
 
         //create vote
         @POST("vote/create/{id}/{phoneNumber}/{code}")
-        Call<GenericResponse> createVote(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
+        Call<TaskResponse> createVote(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
                                          @Path("id") String groupId, @Query("title") String title,
                                          @Query("description") String description,
                                          @Query("closingTime") String closingTime,
@@ -228,7 +215,7 @@ public class GrassrootRestService extends Application {
 
         // create meeting
         @POST("meeting/create/{phoneNumber}/{code}/{parentUid}")
-        Call<GenericResponse> createMeeting(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
+        Call<TaskResponse> createMeeting(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
                                             @Path("parentUid") String parentUid, @Query("title") String title,
                                             @Query("description") String description,
                                             @Query("eventStartDateTime") String dateTimeISO,
@@ -238,7 +225,7 @@ public class GrassrootRestService extends Application {
 
         // create t-do
         @POST("logbook/create/{phoneNumber}/{code}/{parentUid}")
-        Call<GenericResponse> createTodo(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
+        Call<TaskResponse> createTodo(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
                                          @Path("parentUid") String parentUid, @Query("title") String title,
                                          @Query("description") String description,
                                          @Query("dueDate") String dueDate,

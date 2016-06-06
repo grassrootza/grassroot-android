@@ -13,9 +13,13 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import org.grassroot.android.R;
+import org.grassroot.android.events.TaskAddedEvent;
+import org.grassroot.android.events.TaskChangedEvent;
 import org.grassroot.android.interfaces.TaskConstants;
 import org.grassroot.android.services.model.TaskModel;
 import org.grassroot.android.utils.Constant;
+import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -31,28 +35,48 @@ import butterknife.ButterKnife;
  */
 public class TasksAdapter extends RecyclerView.Adapter<TasksAdapter.TaskViewHolder> {
 
-    private final TaskListListener listener;
-    private List<TaskModel> viewedTasks;
+    private static final String TAG = TasksAdapter.class.getCanonicalName();
 
+    private final TaskListListener listener;
+    private final String parentUid;
+
+    private List<TaskModel> viewedTasks;
     private List<TaskModel> fullTaskList;
     private Map<String, List<TaskModel>> decomposedList;
 
     private final int primaryColor, textColor, secondaryColor;
 
-    private static final String TAG = TasksAdapter.class.getCanonicalName();
-
     public interface TaskListListener {
-        void respondToTask(String taskUid, String taskType, String response);
+        void respondToTask(String taskUid, String taskType, String response, int position);
         void onCardClick(int position, String taskUid, String taskType);
     }
 
-
-    public TasksAdapter(TaskListListener listListener, Context context) {
+    // note : pass in parentUid as null if the task list is for all of a user's groups / entities
+    public TasksAdapter(TaskListListener listListener, Context context, String parentUid) {
+        this.parentUid = parentUid;
         this.listener = listListener;
         this.primaryColor = ContextCompat.getColor(context, R.color.primaryColor);
         this.textColor = ContextCompat.getColor(context, R.color.black);
         this.secondaryColor = ContextCompat.getColor(context, R.color.text_grey);
         this.viewedTasks = new ArrayList<>();
+    }
+
+    public void registerForEvents() {
+        Log.d(TAG, "registering for events");
+        EventBus.getDefault().register(this);
+    }
+
+    public void deRegisterEvents() {
+        Log.d(TAG, "deregistering for events");
+        EventBus.getDefault().unregister(this);
+    }
+
+    @Override
+    public void onDetachedFromRecyclerView(RecyclerView recyclerView) {
+        // note :this is not called often ... may be more efficient to unregister in a custom method?
+        super.onDetachedFromRecyclerView(recyclerView);
+        Log.e(TAG, "cleaning up task adapter!");
+        EventBus.getDefault().unregister(this);
     }
 
     @Override
@@ -66,29 +90,30 @@ public class TasksAdapter extends RecyclerView.Adapter<TasksAdapter.TaskViewHold
     public void onBindViewHolder(TaskViewHolder holder, final int position) {
         final TaskModel taskModel = viewedTasks.get(position);
         taskModel.resetResponseFlags(); // since we can't trust Android's construction mechanism (todo : revisit)
-        setCardListener(holder.cardView, position, taskModel);
-        setUpCardImagesAndView(taskModel, holder);
+        setCardListener(holder.cardView, taskModel, position);
+        setUpCardImagesAndView(taskModel, holder, position);
     }
 
-    private void setCardListener(CardView view, final int position, final TaskModel task) {
+    private void setCardListener(CardView view, final TaskModel task, final int position) {
         view.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                listener.onCardClick(position, task.getId(), task.getType());
+                // listener.onCardClick(position, task.getId(), task.getType());
             }
         });
     }
 
-    private void setResponseListener(ImageView icon, final TaskModel task, final String response) {
+    private void setResponseListener(ImageView icon, final TaskModel task, final String response, final int position) {
         icon.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                listener.respondToTask(task.getId(), task.getType(), response);
+                Log.e(TAG, "icon clicked!");
+                listener.respondToTask(task.getId(), task.getType(), response, position);
             }
         });
     }
 
-    private void setUpCardImagesAndView(final TaskModel task, TaskViewHolder holder) {
+    private void setUpCardImagesAndView(final TaskModel task, TaskViewHolder holder, final int position) {
 
         holder.txtTitle.setText(task.getTitle());
         holder.txtTaskCallerName.setText("Posted by " + task.getName());
@@ -105,15 +130,15 @@ public class TasksAdapter extends RecyclerView.Adapter<TasksAdapter.TaskViewHold
         switch (task.getType()) {
             case TaskConstants.MEETING:
                 holder.iv_type.setImageResource(R.drawable.ic_home_call_meeting_active);
-                setUpVoteOrMeeting(holder, task);
+                setUpVoteOrMeeting(holder, task, position);
                 break;
             case TaskConstants.VOTE:
                 holder.iv_type.setImageResource(R.drawable.ic_home_vote_active);
-                setUpVoteOrMeeting(holder, task);
+                setUpVoteOrMeeting(holder, task, position);
                 break;
             case TaskConstants.TODO:
                 holder.iv_type.setImageResource(R.drawable.ic_home_to_do_active);
-                setUpToDo(holder, task);
+                setUpToDo(holder, task, position);
                 break;
             default:
                 throw new UnsupportedOperationException("Task holder without a valid task type!");
@@ -127,12 +152,12 @@ public class TasksAdapter extends RecyclerView.Adapter<TasksAdapter.TaskViewHold
         viewHolder.divider.setBackgroundColor(isCardPrimary ? textColor : secondaryColor);
     }
 
-    private void setUpToDo(TaskViewHolder holder, final TaskModel task) {
+    private void setUpToDo(TaskViewHolder holder, final TaskModel task, final int position) {
         holder.iv1.setImageResource(R.drawable.ic_group_to_do_pending_inactive); //pending icon
         holder.iv2.setImageResource(R.drawable.ic_vote_tick_inactive); //completed icon
         holder.iv3.setImageResource(R.drawable.ic_group_to_do_overdue_inactive); //overdue icon
 
-        if (task.isCanMarkCompleted()) setResponseListener(holder.iv2, task, "COMPLETED");
+        if (task.isCanMarkCompleted()) setResponseListener(holder.iv2, task, "COMPLETED", position);
         holder.iv2.setEnabled(task.isCanMarkCompleted());
         holder.iv3.setEnabled(false);
 
@@ -149,20 +174,20 @@ public class TasksAdapter extends RecyclerView.Adapter<TasksAdapter.TaskViewHold
         }
     }
 
-    private void setUpVoteOrMeeting(TaskViewHolder holder, final TaskModel task) {
+    private void setUpVoteOrMeeting(TaskViewHolder holder, final TaskModel task, final int position) {
         holder.iv1.setImageResource(task.hasResponded() ? R.drawable.ic_vote_tick_active : R.drawable.ic_vote_tick_inactive);
         if (task.canAction()) {
             if (task.hasResponded()) {
-                hasRespondedButCanAction(holder, task);
+                hasRespondedButCanAction(holder, task, position);
             } else {
-                hasNotRespondedButCanAction(holder, task);
+                hasNotRespondedButCanAction(holder, task, position);
             }
         } else if (!task.canAction()) {
             cannotRespond(holder, task);
         }
     }
 
-    private void hasRespondedButCanAction(TaskViewHolder holder, TaskModel model) {
+    private void hasRespondedButCanAction(TaskViewHolder holder, TaskModel model, final int position) {
         boolean repliedYes = model.getReply().equalsIgnoreCase("yes");
         boolean repliedNo = model.getReply().equalsIgnoreCase("no");
 
@@ -170,27 +195,29 @@ public class TasksAdapter extends RecyclerView.Adapter<TasksAdapter.TaskViewHold
         holder.iv3.setImageResource(repliedNo ? R.drawable.ic_no_vote_active : R.drawable.ic_no_vote_inactive);
 
         if (model.isCanRespondYes())
-            setResponseListener(holder.iv2, model, "Yes");
+            setResponseListener(holder.iv2, model, "Yes", position);
         else
             holder.iv2.setEnabled(false);
 
         if (model.isCanRespondNo())
-            setResponseListener(holder.iv3, model, "No");
+            setResponseListener(holder.iv3, model, "No", position);
         else
             holder.iv3.setEnabled(false);
 
     }
 
-    private void hasNotRespondedButCanAction(TaskViewHolder holder, TaskModel model) { //all grey
+    private void hasNotRespondedButCanAction(TaskViewHolder holder, final TaskModel model, final int position) {
+        Log.d(TAG, "setting up micro interaction responses, for event : " + model.getTitle());
         holder.iv3.setImageResource(R.drawable.ic_no_vote_inactive);
         holder.iv2.setImageResource(R.drawable.ic_vote_inactive);
         holder.iv3.setEnabled(true);
         holder.iv2.setEnabled(true);
-        setResponseListener(holder.iv2, model, "Yes");
-        setResponseListener(holder.iv3, model, "No");
+        setResponseListener(holder.iv2, model, "Yes", position);
+        setResponseListener(holder.iv3, model, "No", position);
     }
 
     private void cannotRespond(TaskViewHolder holder, TaskModel model) {
+        Log.d(TAG, "setting up icons for no response, for event: " + model.getTitle());
         holder.iv2.setImageResource(model.getReply().equalsIgnoreCase("Yes") ? R.drawable.ic_vote_active : R.drawable.ic_vote_inactive);
         holder.iv3.setImageResource(model.getReply().equalsIgnoreCase("No") ? R.drawable.ic_no_vote_active : R.drawable.ic_no_vote_inactive);
         holder.iv2.setEnabled(false);
@@ -202,16 +229,6 @@ public class TasksAdapter extends RecyclerView.Adapter<TasksAdapter.TaskViewHold
         return viewedTasks.size();
     }
 
-    public void clearTasks() {
-        int size = this.viewedTasks.size();
-        if (size > 0) {
-            for (int i = 0; i < size; i++) {
-                viewedTasks.remove(0);
-            }
-            this.notifyItemRangeRemoved(0, size);
-        }
-    }
-
     public void changeToTaskList(List<TaskModel> tasksToView) {
         // todo: optimize this, a lot, is used in filtering what can be quite large lists
         if (viewedTasks == null) {
@@ -221,6 +238,29 @@ public class TasksAdapter extends RecyclerView.Adapter<TasksAdapter.TaskViewHold
         }
         viewedTasks.addAll(tasksToView); // not great, but otherwise run into lots of errors because of assignment etc
         notifyDataSetChanged(); // very bad, just a stopgap
+    }
+
+    // todo : for both of these, work out why only notifyDateSetChanged is causing redraw, and handle filters
+    @Subscribe
+    public void onTaskCreated(TaskAddedEvent event) {
+        Log.d(TAG, "task created! stick it at the top, if it matches this UID: " + parentUid);
+        if (parentUid == null || parentUid.equals(event.getTaskCreated().getParentUid())) {
+            final TaskModel task = event.getTaskCreated();
+            viewedTasks.add(0, task);
+            notifyItemInserted(0);
+            notifyDataSetChanged(); // todo : as everywhere else, work out why single item change isn't working
+            Log.d(TAG, "added task to list!");
+        }
+    }
+
+    @Subscribe
+    public void onTaskChanged(TaskChangedEvent event) {
+        Log.d(TAG, "task changed! update its icons, if it is in this group");
+        if (parentUid == null || parentUid.equals(event.getTaskModel().getParentUid())) {
+            final TaskModel updatedTask = event.getTaskModel();
+            viewedTasks.set(event.getPosition(), updatedTask);
+            notifyItemChanged(event.getPosition());
+        }
     }
 
     /*

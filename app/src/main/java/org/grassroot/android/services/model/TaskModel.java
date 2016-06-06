@@ -22,6 +22,8 @@ public class TaskModel implements Parcelable, Comparable<TaskModel> {
     private String description;
     private String name;
     private String type;
+
+    private String parentUid;
     private String parentName;
 
     private String deadline;
@@ -73,6 +75,9 @@ public class TaskModel implements Parcelable, Comparable<TaskModel> {
     public void setName(String name) {
         this.name = name;
     }
+
+    public String getParentUid() { return parentUid; }
+    public void setParentUid(String parentUid) { this.parentUid = parentUid; }
 
     public String getType() {
         return type;

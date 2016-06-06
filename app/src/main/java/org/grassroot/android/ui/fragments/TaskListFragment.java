@@ -16,6 +16,7 @@ import android.view.ViewGroup;
 
 import org.grassroot.android.R;
 import org.grassroot.android.adapters.TasksAdapter;
+import org.grassroot.android.events.TaskChangedEvent;
 import org.grassroot.android.interfaces.ConfirmDialogListener;
 import org.grassroot.android.interfaces.GroupConstants;
 import org.grassroot.android.interfaces.TaskConstants;
@@ -25,6 +26,7 @@ import org.grassroot.android.services.model.TaskResponse;
 import org.grassroot.android.ui.activities.ViewVoteActivity;
 import org.grassroot.android.utils.ErrorUtils;
 import org.grassroot.android.utils.PreferenceUtils;
+import org.greenrobot.eventbus.EventBus;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -84,12 +86,28 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
         Log.e(TAG, "creating fragment!");
         setUpSwipeRefresh();
         rcTaskView.setLayoutManager(new LinearLayoutManager(getActivity()));
-        groupTasksAdapter = new TasksAdapter(this, getActivity());
+        groupTasksAdapter = new TasksAdapter(this, getActivity(), groupUid);
         rcTaskView.setAdapter(groupTasksAdapter);
 
         fetchTaskList();
 
         return viewToReturn;
+    }
+
+    @Override
+    public void onResume() {
+        if (groupTasksAdapter != null) {
+            groupTasksAdapter.registerForEvents();
+        }
+        super.onResume();
+    }
+
+    @Override
+    public void onPause() {
+        if (groupTasksAdapter != null) {
+            groupTasksAdapter.deRegisterEvents();
+        }
+        super.onPause();
     }
 
     private void fetchTaskList() {
@@ -143,9 +161,9 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
      */
 
     @Override
-    public void respondToTask(String taskUid, String taskType, String response) {
+    public void respondToTask(String taskUid, String taskType, String response, int position) {
 
-        Call<GenericResponse> restCall;
+        Call<TaskResponse> restCall;
         final int confirmationMessage, msgSuccess, msgAlreadyResponded;
 
         Log.e(TAG, "responding to task with uid = " +taskUid);
@@ -172,21 +190,21 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
                 throw new UnsupportedOperationException("Responding to neither vote nor meeting! Error somewhere");
         }
 
-        confirmAction(restCall, msgSuccess, msgAlreadyResponded, confirmationMessage);
+        confirmAction(restCall, msgSuccess, msgAlreadyResponded, confirmationMessage, position);
     }
 
-    public void confirmAction(final Call<GenericResponse> restCall, final int msgSuccess, final int msgAlreadyResponded,
-                              final int message) {
+    public void confirmAction(final Call<TaskResponse> restCall, final int msgSuccess, final int msgAlreadyResponded,
+                              final int message, final int position) {
 
         DialogFragment newFragment = ConfirmCancelDialogFragment.newInstance(message, new ConfirmDialogListener() {
             @Override
             public void doConfirmClicked() {
-                restCall.enqueue(new Callback<GenericResponse>() {
+                restCall.enqueue(new Callback<TaskResponse>() {
                     @Override
-                    public void onResponse(Call<GenericResponse> call, Response<GenericResponse> response) {
+                    public void onResponse(Call<TaskResponse> call, Response<TaskResponse> response) {
                         if (response.isSuccessful()) {
                             ErrorUtils.showSnackBar(container, msgSuccess, Snackbar.LENGTH_LONG);
-                            // refresh list of tasks (todo: make efficient, just refresh one activity)
+                            EventBus.getDefault().post(new TaskChangedEvent(position, response.body().getTasks().get(0)));
                         } else {
                             if (response.code() == 409) { // todo: check this is right, and use constant, not hard code
                                 ErrorUtils.showSnackBar(container, msgAlreadyResponded, Snackbar.LENGTH_LONG);
@@ -197,7 +215,7 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
                     }
 
                     @Override
-                    public void onFailure(Call<GenericResponse> call, Throwable t) {
+                    public void onFailure(Call<TaskResponse> call, Throwable t) {
                         ErrorUtils.handleNetworkError(getActivity(), container, t);
                     }
                 });
