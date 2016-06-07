@@ -195,7 +195,6 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment imple
                 } else {
                     Log.e(TAG, response.message());
                     ErrorUtils.handleServerError(rlGhpRoot,getActivity(),response);
-                  //  Snackbar.make(rlGhpRoot, getString(R.string.Unknown_error), Snackbar.LENGTH_INDEFINITE).show();
                 }
             }
 
@@ -215,7 +214,6 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment imple
                         public void retryClicked() {
                             fetchGroupList();
                         }
-
                     });
 
                 }

@@ -72,7 +72,7 @@ public class ErrorUtils {
                 break;
 
             case Constant.INTERNAL_SERVER_ERROR:
-                Snackbar.make(holder, "Something went wrong.  Please try again later...", Snackbar.LENGTH_INDEFINITE).show();
+                Snackbar.make(holder, R.string.Unknown_error, Snackbar.LENGTH_INDEFINITE).show();
                 break;
 
 
