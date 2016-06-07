@@ -7,7 +7,6 @@ import android.util.Log;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
-import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
@@ -61,15 +60,8 @@ public class PhoneBookContactsActivity extends PortraitActivity implements Conta
 
     @BindView(R.id.rl_search)
     RelativeLayout rlSearch;
-    @BindView(R.id.iv_search)
-    ImageView ivSearch;
     @BindView(R.id.et_search)
     EditText et_search;
-
-    @BindView(R.id.iv_cross)
-    ImageView ivCross;
-    @BindView(R.id.iv_back)
-    ImageView ivBack;
 
     @BindView(R.id.prg_pb)
     ProgressBar progressBar;
@@ -137,8 +129,6 @@ public class PhoneBookContactsActivity extends PortraitActivity implements Conta
         contactsDisplayed.addAll(returnedContactList);
         mAdapter = new ContactsAdapter(contactsDisplayed, getApplicationContext());
         mListView.setAdapter(mAdapter);
-        mListView.setOnScrollListener(mAdapter);
-        // mListView.setEnableHeaderTransparencyChanges(false);
         progressBar.setVisibility(View.GONE);
     }
 
@@ -250,7 +240,7 @@ public class PhoneBookContactsActivity extends PortraitActivity implements Conta
     private void Filter(String s) {
         String search_string= s.toLowerCase(Locale.getDefault());
         Log.d(TAG, "search_string is " + search_string);
-        mAdapter.filter(search_string);
+        mAdapter.getFilter().filter(search_string);
     }
 
     @OnClick(R.id.iv_cross)

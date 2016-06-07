@@ -1,4 +1,4 @@
-package org.grassroot.android.ContactLib;
+package org.grassroot.android.services;
 
 import android.annotation.SuppressLint;
 import android.net.Uri;
