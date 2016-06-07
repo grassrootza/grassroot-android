@@ -496,7 +496,6 @@
         android:layout_height="wrap_content"
         android:layout_below="@+id/progressBarCircularIndeterminate"
         android:layout_centerHorizontal="true"
-        android:text="Please Wait.."
         android:visibility="gone"
 
         />

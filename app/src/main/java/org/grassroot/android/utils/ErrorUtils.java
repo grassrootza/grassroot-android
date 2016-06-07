@@ -14,7 +14,10 @@ import org.grassroot.android.R;
 import org.grassroot.android.interfaces.AlertDialogListener;
 import org.grassroot.android.interfaces.NetworkErrorDialogListener;
 import org.grassroot.android.services.NoConnectivityException;
+import org.grassroot.android.ui.activities.GroupJoinActivity;
+import org.grassroot.android.ui.activities.GroupTasksActivity;
 import org.grassroot.android.ui.activities.StartActivity;
+import org.grassroot.android.ui.activities.ViewVoteActivity;
 import org.grassroot.android.ui.fragments.AlertDialogFragment;
 import org.grassroot.android.ui.fragments.NetworkErrorDialogFragment;
 
@@ -35,9 +38,10 @@ public class ErrorUtils {
     /**
      * Utility method to intercept and deal with common errors, in particular absence of a network
      * connection. Most / all display logic for error handling should be concentrated in here.
-     * @param context The context where the error occurred
+     *
+     * @param context         The context where the error occurred
      * @param errorViewHolder A holder for where to display the snackbar or alert dialog
-     * @param e The error thrown
+     * @param e               The error thrown
      */
     public static void handleNetworkError(Context context, View errorViewHolder, Throwable e) {
         if (e instanceof NoConnectivityException) {
@@ -53,26 +57,34 @@ public class ErrorUtils {
         }
     }
 
-    public static void handleServerError(View holder, final Activity activity, Response response){
+    public static void handleServerError(final View holder, final Activity activity, final Response response) {
 
-        switch (response.code()){
+        switch (response.code()) {
             case Constant.UNAUTHORISED:
-                showSnackBar(holder,activity.getString(R.string.INVALID_TOKEN),Snackbar.LENGTH_INDEFINITE,"Log Out", new View.OnClickListener(){
-                    @Override
-                    public void onClick(View v) {
-                        PreferenceUtils.clearAll(activity.getApplicationContext());
-                        Intent open = new Intent(activity, StartActivity.class);
-                        activity.startActivity(open);
-                        activity.finish();
-                    }
-                });
+                showSnackBar(holder, activity.getString(R.string.INVALID_TOKEN), Snackbar.LENGTH_INDEFINITE,
+                        activity.getString(R.string.LOG_OUT), new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                PreferenceUtils.clearAll(activity.getApplicationContext());
+                                Intent open = new Intent(activity, StartActivity.class);
+                                activity.startActivity(open);
+                                activity.finish();
+                            }
+                        });
                 break;
             case Constant.CONFLICT:
-                Snackbar.make(holder, R.string.Alert_Already_Responded, Snackbar.LENGTH_LONG).show();
+                 if(activity instanceof ViewVoteActivity || activity instanceof GroupTasksActivity){
+                     Snackbar.make(holder, R.string.Alert_Already_Responded, Snackbar.LENGTH_LONG).show();
+                 }
+                else if(activity instanceof GroupJoinActivity){
+                     Snackbar.make(holder,activity.getString(R.string.USER_ALREADY_PART),Snackbar.LENGTH_LONG);
+                 }
                 break;
-
             case Constant.INTERNAL_SERVER_ERROR:
                 Snackbar.make(holder, R.string.Unknown_error, Snackbar.LENGTH_INDEFINITE).show();
+                break;
+            case Constant.NOT_FOUND:
+                Snackbar.make(holder, R.string.GROUP_NOT_FOUND, Snackbar.LENGTH_LONG).show();
                 break;
 
 
@@ -81,13 +93,13 @@ public class ErrorUtils {
 
     public static void connectivityError(View holder, NoConnectivityException e) {
         // todo : all sorts of things for persisting, asking to turn on, etc
-        final String errorText =  "Connectivity error! On calling URL: " + e.getUriAttempted();
+        final String errorText = "Connectivity error! On calling URL: " + e.getUriAttempted();
         Snackbar snackBar = Snackbar.make(holder, errorText, Snackbar.LENGTH_INDEFINITE);
         snackBar.show();
     }
 
 
-    public static void connectivityError(Activity context, int message, NetworkErrorDialogListener networkErrorDialogListener){
+    public static void connectivityError(Activity context, int message, NetworkErrorDialogListener networkErrorDialogListener) {
         NetworkErrorDialogFragment networkErrorDialogFragment = NetworkErrorDialogFragment.newInstance(message, networkErrorDialogListener);
         networkErrorDialogFragment.show(context.getFragmentManager(), "error_dialog");
 

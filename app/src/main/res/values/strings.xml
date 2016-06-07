@@ -323,10 +323,6 @@
 
     <string name="USER_ALREADY_PART">User already part of group</string>
 
-    <!--todo : make these read project build (debug/signed/etc) and change correspondingly -->
-    <string name="sender_id">13953357197@gcm.googleapis.com</string>
-    <string name="project_id">13953357197</string>
-
 
     <!--Blank screen--><!--bs-->
     <string name="bs_BR_name">Blank Screen</string>
@@ -350,6 +346,8 @@
     <string name="Network_Settings">Check Network Settings</string>
     <string name="Alert_Retry">Retry</string>
     <string name="Alert_Already_Responded">You have already responded to the event.</string>
+    <string name="LOG_OUT">Log Out</string>
+    <string name="GROUP_NOT_FOUND">No groups matching your key were found.</string>
 
 
 </resources>
