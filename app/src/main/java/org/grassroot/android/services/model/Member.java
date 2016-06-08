@@ -4,6 +4,7 @@ import android.os.Parcel;
 import android.os.Parcelable;
 import android.util.Log;
 
+import org.grassroot.android.interfaces.GroupConstants;
 import org.grassroot.android.utils.Constant;
 
 /**
@@ -22,6 +23,7 @@ public class Member implements Parcelable {
     private String roleName;
 
     private String contactId; // only set locally, if we retrieve member from contacts
+    private String contactLookupKey;
     private boolean selected;
 
     @Override
@@ -46,12 +48,21 @@ public class Member implements Parcelable {
         selected = true;
     }
 
+    // todo : probably remove, soon-ish
     public Member(String phoneNumber, String displayName, String roleName, String contactId) {
         this.phoneNumber = phoneNumber;
         this.displayName = displayName;
-        this.roleName = (roleName != null) ? roleName : Constant.ROLE_ORDINARY_MEMBER;
+        this.roleName = (roleName != null) ? roleName : GroupConstants.ROLE_ORDINARY_MEMBER;
         this.contactId = contactId;
         this.selected = true;
+    }
+
+    public Member(String phoneNumber, String displayName, String roleName, String contactLookupKey, boolean selected) {
+        this.phoneNumber = phoneNumber;
+        this.displayName = displayName;
+        this.roleName = (roleName != null) ? roleName : GroupConstants.ROLE_ORDINARY_MEMBER;
+        this.contactLookupKey = contactLookupKey;
+        this.selected = selected;
     }
 
     public static final Creator<Member> CREATOR = new Creator<Member>() {
@@ -94,6 +105,8 @@ public class Member implements Parcelable {
 
     public void setContactId(String contactId) { this.contactId = contactId; }
 
+    public String getContactLookupKey() { return contactLookupKey; }
+
     public boolean isSelected() { return selected; }
 
     public void setSelected(boolean selected) { this.selected = selected; }
@@ -111,13 +124,13 @@ public class Member implements Parcelable {
 
         if (memberUid != null ? !memberUid.equals(member.memberUid) : member.memberUid != null)
             return false;
-        return contactId != null ? contactId.equals(member.contactId) : member.contactId == null;
+        return contactLookupKey != null ? contactLookupKey.equals(member.contactLookupKey) : member.contactLookupKey == null;
     }
 
     @Override
     public int hashCode() {
         int result = memberUid != null ? memberUid.hashCode() : 0;
-        result = 31 * result + (contactId != null ? contactId.hashCode() : 0);
+        result = 31 * result + (contactLookupKey != null ? contactLookupKey.hashCode() : 0);
         return result;
     }
 
@@ -128,6 +141,7 @@ public class Member implements Parcelable {
                 ", phoneNumber='" + phoneNumber + '\'' +
                 ", displayName='" + displayName + '\'' +
                 ", contactId=" + contactId + '\'' +
+                ", contactKey=" + contactLookupKey + '\'' +
                 ", selected=" + selected + '\'' +
                 '}';
     }

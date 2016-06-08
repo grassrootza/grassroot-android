@@ -13,6 +13,7 @@ import android.widget.TextView;
 import com.github.clans.fab.FloatingActionButton;
 import com.github.clans.fab.FloatingActionMenu;
 import org.grassroot.android.R;
+import org.grassroot.android.interfaces.GroupConstants;
 import org.grassroot.android.models.Contact;
 import org.grassroot.android.services.GrassrootRestService;
 import org.grassroot.android.services.model.GenericResponse;
@@ -235,7 +236,8 @@ public class AddMembersActivity extends AppCompatActivity implements MemberListF
             setNewMembersVisible();
             List<Member> newMembers = new ArrayList<>();
             for (Contact contact : returnedContacts) {
-                Member m = new Member(contact.selectedNumber, contact.name, Constant.ROLE_ORDINARY_MEMBER, contact.contact_ID);
+                Member m = new Member(contact.selectedNumber, contact.name,
+                        GroupConstants.ROLE_ORDINARY_MEMBER, contact.contact_ID);
                 membersFromContacts.put(contact.contact_ID, m);
                 newMembers.add(m);
             }
@@ -254,7 +256,7 @@ public class AddMembersActivity extends AppCompatActivity implements MemberListF
 
     private void processManualMemberResult(Intent data) {
         Member newMember = new Member(data.getStringExtra("selectedNumber"), data.getStringExtra("name"),
-                Constant.ROLE_ORDINARY_MEMBER, null);
+                GroupConstants.ROLE_ORDINARY_MEMBER, null);
         newMemberListFragment.addMembers(Collections.singletonList(newMember));
         setNewMembersVisible();
     }

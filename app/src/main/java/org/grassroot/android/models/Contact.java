@@ -20,6 +20,17 @@ public class Contact implements Parcelable {
     public List<String> numbers;
     public String selectedNumber;
     public String contact_ID;
+    public String lookupKey;
+
+    public Contact() {
+    }
+
+    public Contact(String lookupKey,String name) {
+        this.lookupKey = lookupKey;
+        this.name = name;
+    }
+
+    public void setName(String name) { this.name = name; }
 
     @Override
     public int describeContents() {
@@ -34,9 +45,7 @@ public class Contact implements Parcelable {
         dest.writeStringList(this.numbers);
         dest.writeString(this.selectedNumber);
         dest.writeString(this.contact_ID);
-    }
-
-    public Contact() {
+        dest.writeString(this.lookupKey);
     }
 
     protected Contact(Parcel in) {
@@ -46,6 +55,7 @@ public class Contact implements Parcelable {
         this.numbers = in.createStringArrayList();
         this.selectedNumber = in.readString();
         this.contact_ID = in.readString();
+        this.lookupKey = in.readString();
     }
 
     public static final Parcelable.Creator<Contact> CREATOR = new Parcelable.Creator<Contact>() {
@@ -60,13 +70,6 @@ public class Contact implements Parcelable {
         }
     };
 
-    public static List<Member> convertToMembers(List<Contact> contacts, String roleName) {
-        List<Member> members = new ArrayList<>();
-        for (final Contact c : contacts)
-            members.add(new Member(c.selectedNumber, c.name, roleName, c.contact_ID));
-        return members;
-    }
-
     // todo: optimize the hell out of this
     public static List<Contact> convertFromMembers(List<Member> members) {
         List<Contact> contacts = new ArrayList<>();
@@ -77,6 +80,7 @@ public class Contact implements Parcelable {
             c.name = m.getDisplayName();
             c.isSelected = m.isSelected();
             c.contact_ID = m.getContactId();
+            c.lookupKey = m.getContactLookupKey();
             contacts.add(c);
         }
         return contacts;
@@ -89,12 +93,12 @@ public class Contact implements Parcelable {
 
         Contact contact = (Contact) o;
 
-        return contact_ID != null ? contact_ID.equals(contact.contact_ID) : contact.contact_ID == null;
+        return lookupKey != null ? lookupKey.equals(contact.lookupKey) : contact.lookupKey== null;
     }
 
     @Override
     public int hashCode() {
-        return contact_ID != null ? contact_ID.hashCode() : 0;
+        return lookupKey != null ? lookupKey.hashCode() : 0;
     }
 
     @Override
@@ -103,7 +107,7 @@ public class Contact implements Parcelable {
                 "name='" + name + '\'' +
                 ", selectedNumber=" + selectedNumber +
                 ", numbers=" + numbers +
-                ", contactId=" + contact_ID +
+                ", lookupKey=" + lookupKey +
                 '}';
     }
 }

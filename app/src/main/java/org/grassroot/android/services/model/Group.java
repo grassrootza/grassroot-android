@@ -2,8 +2,8 @@ package org.grassroot.android.services.model;
 
 import android.os.Parcel;
 import android.os.Parcelable;
-import android.util.Log;
 
+import org.grassroot.android.interfaces.GroupConstants;
 import org.grassroot.android.utils.Constant;
 
 import java.text.ParseException;
@@ -200,9 +200,10 @@ public class Group implements Parcelable, Comparable<Group> {
         private int compareRoleNames(String roleFirst, String roleSecond) {
             if (roleFirst.equals(roleSecond)) {
                 return 0;
-            } else if (roleFirst.equals(Constant.ROLE_ORDINARY_MEMBER)) {
+            } else if (roleFirst.equals(GroupConstants.ROLE_ORDINARY_MEMBER)) {
                 return -1;
-            } else if (roleFirst.equals(Constant.ROLE_COMMITTEE_MEMBER) && roleSecond.equals(Constant.ROLE_GROUP_ORGANIZER)) {
+            } else if (roleFirst.equals(GroupConstants.ROLE_COMMITTEE_MEMBER) &&
+                    roleSecond.equals(GroupConstants.ROLE_GROUP_ORGANIZER)) {
                 return -1;
             } else {
                 return 1;

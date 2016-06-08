@@ -47,7 +47,7 @@ public class MemberListFragment extends Fragment {
 
     private MemberListListener mListener;
     private MemberClickListener clickListener;
-    private MemberListAdapter userListAdapter;
+    private MemberListAdapter memberListAdapter;
 
     @BindView(R.id.mlist_frag_recycler_view)
     RecyclerView memberListRecyclerView;
@@ -79,39 +79,39 @@ public class MemberListFragment extends Fragment {
 
     public void setShowSelected(boolean showSelected) {
         this.showSelected = showSelected;
-        if (userListAdapter != null)
-            userListAdapter.setShowSelected(showSelected);
+        if (memberListAdapter != null)
+            memberListAdapter.setShowSelected(showSelected);
     }
 
     public void addMembers(List<Member> members) {
-        if (userListAdapter != null) {
-            userListAdapter.addMembers(members);
+        if (memberListAdapter != null) {
+            memberListAdapter.addMembers(members);
         }
     }
 
     public void removeMember(Member member) {
-        if (userListAdapter != null) {
-            userListAdapter.removeMember(member);
+        if (memberListAdapter != null) {
+            memberListAdapter.removeMember(member);
         }
     }
 
     public void removeMembers(List<Member> members) {
-        if (userListAdapter != null) {
-            userListAdapter.removeMembers(members);
+        if (memberListAdapter != null) {
+            memberListAdapter.removeMembers(members);
         }
     }
 
     public List<Member> getMemberList() {
-        return this.userListAdapter.getMembers();
+        return this.memberListAdapter.getMembers();
     }
 
     public List<Member> getSelectedMembers() {
         // Java 8 Lambdas would be really nice here ...
         if (!showSelected) {
-            return userListAdapter.getMembers();
+            return memberListAdapter.getMembers();
         } else {
             List<Member> membersToReturn = new ArrayList<>();
-            for (Member m : userListAdapter.getMembers()) {
+            for (Member m : memberListAdapter.getMembers()) {
                 if (m.isSelected()) membersToReturn.add(m);
             }
             return membersToReturn;
@@ -119,17 +119,17 @@ public class MemberListFragment extends Fragment {
     }
 
     public void selectAllMembers() {
-        for (Member m : userListAdapter.getMembers()) {
+        for (Member m : memberListAdapter.getMembers()) {
             m.setSelected(true);
         }
-        userListAdapter.notifyDataSetChanged(); // todo : as elsewhere, use more efficient method
+        memberListAdapter.notifyDataSetChanged(); // todo : as elsewhere, use more efficient method
     }
 
     public void unselectAllMembers() {
-        for (Member m : userListAdapter.getMembers()) {
+        for (Member m : memberListAdapter.getMembers()) {
             m.setSelected(false);
         }
-        userListAdapter.notifyDataSetChanged();
+        memberListAdapter.notifyDataSetChanged();
     }
 
     public void setID(String ID) { this.ID = ID; }
@@ -155,8 +155,8 @@ public class MemberListFragment extends Fragment {
     }
 
     private void init() {
-        if (userListAdapter == null) {
-            userListAdapter = new MemberListAdapter(this.getContext());
+        if (memberListAdapter == null) {
+            memberListAdapter = new MemberListAdapter(this.getContext());
         }
 
     }
@@ -172,8 +172,8 @@ public class MemberListFragment extends Fragment {
 
     private void setUpRecyclerView() {
         memberListRecyclerView.setLayoutManager(new LinearLayoutManager(this.getContext()));
-        memberListRecyclerView.setAdapter(userListAdapter);
-        userListAdapter.setShowSelected(showSelected);
+        memberListRecyclerView.setAdapter(memberListAdapter);
+        memberListAdapter.setShowSelected(showSelected);
         if (groupUid != null)
             fetchGroupMembers();
         if (canDismissItems)
@@ -195,8 +195,8 @@ public class MemberListFragment extends Fragment {
             public void onSwiped(RecyclerView.ViewHolder viewHolder, int direction) {
                 int swipedPosition = viewHolder.getAdapterPosition();
                 // todo: revisit whether we really need this
-                clickListener.onMemberDismissed(swipedPosition, userListAdapter.getMemberUid(swipedPosition));
-                userListAdapter.removeMembers(new int[]{swipedPosition});
+                clickListener.onMemberDismissed(swipedPosition, memberListAdapter.getMemberUid(swipedPosition));
+                memberListAdapter.removeMembers(new int[]{swipedPosition});
             }
         };
 
@@ -213,14 +213,14 @@ public class MemberListFragment extends Fragment {
                 new ClickListener() {
                     @Override
                     public void onClick(View view, int position) {
-                        userListAdapter.toggleMemberSelected(position);
-                        clickListener.onMemberClicked(position, userListAdapter.getMemberUid(position));
+                        memberListAdapter.toggleMemberSelected(position);
+                        clickListener.onMemberClicked(position, memberListAdapter.getMemberUid(position));
                     }
 
                     @Override
                     public void onLongClick(View view, int position) {
-                        userListAdapter.toggleMemberSelected(position);
-                        clickListener.onMemberClicked(position, userListAdapter.getMemberUid(position));
+                        memberListAdapter.toggleMemberSelected(position);
+                        clickListener.onMemberClicked(position, memberListAdapter.getMemberUid(position));
                     }
         }));
     }
@@ -241,7 +241,7 @@ public class MemberListFragment extends Fragment {
                     public void onResponse(Call<MemberList> call, Response<MemberList> response) {
                         if (response.isSuccessful()) {
                             List<Member> membersReturned = response.body().getMembers();
-                            userListAdapter.addMembers(membersReturned);
+                            memberListAdapter.addMembers(membersReturned);
                         } else {
                             // todo: handle error, via a dialog box
                         }

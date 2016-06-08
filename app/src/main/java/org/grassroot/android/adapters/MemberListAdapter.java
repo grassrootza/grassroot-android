@@ -55,7 +55,6 @@ public class MemberListAdapter extends RecyclerView.Adapter<MemberListAdapter.Vi
     }
 
     public void addMembers(List<Member> memberList) {
-        Log.d(TAG, members.size() + " members so far, add these to adaptor: " + memberList.toString());
         members.addAll(memberList);
         this.notifyDataSetChanged(); // todo : as everywhere, optimize this, later
     }

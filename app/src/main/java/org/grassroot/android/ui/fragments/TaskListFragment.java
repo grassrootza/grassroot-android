@@ -17,7 +17,6 @@ import android.view.ViewGroup;
 import org.grassroot.android.R;
 import org.grassroot.android.adapters.TasksAdapter;
 import org.grassroot.android.events.TaskChangedEvent;
-import org.grassroot.android.interfaces.ConfirmDialogListener;
 import org.grassroot.android.interfaces.GroupConstants;
 import org.grassroot.android.interfaces.TaskConstants;
 import org.grassroot.android.services.GrassrootRestService;
@@ -197,7 +196,7 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
     public void confirmAction(final Call<TaskResponse> restCall, final int msgSuccess, final int msgAlreadyResponded,
                               final int message, final int position) {
 
-        DialogFragment newFragment = ConfirmCancelDialogFragment.newInstance(message, new ConfirmDialogListener() {
+        DialogFragment newFragment = ConfirmCancelDialogFragment.newInstance(message, new ConfirmCancelDialogFragment.ConfirmDialogListener() {
             @Override
             public void doConfirmClicked() {
                 restCall.enqueue(new Callback<TaskResponse>() {

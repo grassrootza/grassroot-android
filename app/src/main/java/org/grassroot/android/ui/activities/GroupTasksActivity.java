@@ -29,10 +29,9 @@ public class GroupTasksActivity extends PortraitActivity {
     private Group groupMembership;
     private TaskListFragment taskListFragment;
 
-    @BindView(R.id.gta_root_layout)
-    RelativeLayout rootLayout;
     @BindView(R.id.gta_toolbar)
     Toolbar toolbar;
+
     @BindView(R.id.gta_fragment_holder)
     FrameLayout fragmentHolder;
 

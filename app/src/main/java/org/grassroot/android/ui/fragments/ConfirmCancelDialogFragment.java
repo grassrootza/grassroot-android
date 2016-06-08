@@ -7,12 +7,15 @@ import android.os.Bundle;
 import android.support.v7.app.AlertDialog;
 
 import org.grassroot.android.R;
-import org.grassroot.android.interfaces.ConfirmDialogListener;
 
 /**
  * Created by luke on 2016/05/31.
  */
 public class ConfirmCancelDialogFragment extends DialogFragment {
+
+    public interface ConfirmDialogListener {
+        void doConfirmClicked();
+    }
 
     private ConfirmDialogListener mListener;
 
@@ -28,8 +31,6 @@ public class ConfirmCancelDialogFragment extends DialogFragment {
         frag.setListener(listener);
         return frag;
     }
-
-
 
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {

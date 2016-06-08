@@ -24,6 +24,7 @@ import org.grassroot.android.models.Contact;
 import org.grassroot.android.services.GrassrootRestService;
 import org.grassroot.android.services.model.GroupResponse;
 import org.grassroot.android.services.model.Member;
+import org.grassroot.android.ui.fragments.ContactSelectionFragment;
 import org.grassroot.android.ui.fragments.MemberListFragment;
 import org.grassroot.android.utils.Constant;
 import org.grassroot.android.utils.ErrorUtils;
@@ -33,9 +34,12 @@ import org.grassroot.android.utils.UtilClass;
 import org.greenrobot.eventbus.EventBus;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -47,11 +51,10 @@ import retrofit2.Response;
 
 import static butterknife.OnTextChanged.Callback.AFTER_TEXT_CHANGED;
 
-public class CreateGroupActivity extends PortraitActivity implements MemberListFragment.MemberListListener, MemberListFragment.MemberClickListener {
+public class CreateGroupActivity extends PortraitActivity implements
+        MemberListFragment.MemberListListener, MemberListFragment.MemberClickListener, ContactSelectionFragment.ContactSelectionListener {
 
-    private String TAG = CreateGroupActivity.class.getSimpleName();
-    private static final String regexForName = "[^a-zA-Z0-9 ]";
-
+    private static final String TAG = CreateGroupActivity.class.getSimpleName();
 
     @BindView(R.id.rl_cg_root)
     RelativeLayout rlCgRoot;
@@ -76,14 +79,16 @@ public class CreateGroupActivity extends PortraitActivity implements MemberListF
     @BindView(R.id.cg_txt_toolbar)
     TextView txtToolbar;
     @BindView(R.id.et_groupname)
-    EditText et_groupname; // complaints in latest library asking for TextInputEditText but that throws no class errors, todo: fix
+    EditText et_groupname;
     @BindView(R.id.cg_iv_crossimage)
     ImageView ivCrossimage;
 
     private Map<String, Member> mapMembersContacts;
     private MemberListFragment memberListFragment;
 
-    private Snackbar snackBar;
+    private ContactSelectionFragment contactSelectionFragment;
+    private boolean onMainScreen;
+
     private ProgressDialog progressDialog;
 
     @Override
@@ -93,7 +98,7 @@ public class CreateGroupActivity extends PortraitActivity implements MemberListF
         ButterKnife.bind(this);
 
         progressDialog = new ProgressDialog(this);
-        progressDialog.setMessage("Please wait..");
+        progressDialog.setMessage("Please wait...");
 
         init();
         setUpViews();
@@ -102,11 +107,12 @@ public class CreateGroupActivity extends PortraitActivity implements MemberListF
 
     private void init() {
         memberListFragment = new MemberListFragment();
+        contactSelectionFragment = new ContactSelectionFragment();
         mapMembersContacts = new HashMap<>();
+        onMainScreen = true;
     }
 
     private void setUpViews() {
-
         addMemberOptions.setOnMenuToggleListener(new FloatingActionMenu.OnMenuToggleListener() {
             @Override
             public void onMenuToggle(boolean opened) {
@@ -126,7 +132,13 @@ public class CreateGroupActivity extends PortraitActivity implements MemberListF
 
     @OnClick(R.id.cg_iv_crossimage)
     public void ivCrossimage() {
-        finish();
+        if (!onMainScreen) {
+            // note : this means we do not save / return the contacts on cross clicked
+            getSupportFragmentManager().popBackStack();
+            onMainScreen = true;
+        } else {
+            finish();
+        }
     }
 
     @OnTextChanged(value = R.id.et_group_description, callback = AFTER_TEXT_CHANGED)
@@ -136,18 +148,11 @@ public class CreateGroupActivity extends PortraitActivity implements MemberListF
 
     @OnClick(R.id.icon_add_from_contacts)
     public void icon_add_from_contacts() {
-        try {
-            addMemberOptions.close(true);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
+        addMemberOptions.close(true);
         if (!PermissionUtils.contactReadPermissionGranted(this)) {
             PermissionUtils.requestReadContactsPermission(this);
         } else {
-            ArrayList<Contact> preSelectedList = new ArrayList<>(Contact.convertFromMembers(memberListFragment.getSelectedMembers()));
-            Log.e(TAG, "calling phone book, with these pre-selected: " + preSelectedList.toString());
-            UtilClass.callPhoneBookActivity(this, preSelectedList, null);
+            launchContactSelectionFragment();
         }
     }
 
@@ -155,37 +160,77 @@ public class CreateGroupActivity extends PortraitActivity implements MemberListF
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (requestCode == Constant.alertAskForContactPermission && grantResults.length > 0) {
-            ArrayList<Contact> preSelectedList = new ArrayList<>(Contact.convertFromMembers(memberListFragment.getSelectedMembers()));
-            PermissionUtils.checkPermGrantedAndLaunchPhoneBook(this, grantResults[0], preSelectedList);
+            launchContactSelectionFragment();
         }
+    }
+
+    private void launchContactSelectionFragment() {
+        Set<Contact> preSelectedSet = new HashSet<>(Contact.convertFromMembers(memberListFragment.getSelectedMembers()));
+
+        onMainScreen = false;
+        contactSelectionFragment.setContactsToPreselect(preSelectedSet);
+        getSupportFragmentManager()
+                .beginTransaction()
+                .add(R.id.cg_body_root, contactSelectionFragment)
+                .addToBackStack(null)
+                .commit();
+    }
+
+    private void closeContactSelectionFragment() {
+        onMainScreen = true;
+        getSupportFragmentManager()
+                .beginTransaction()
+                .remove(contactSelectionFragment)
+                .commit();
+    }
+
+    @Override
+    public void onContactSelectionComplete(List<Contact> contactsAdded, Set<Contact> contactsRemoved) {
+
+        Log.e(TAG, "contacts added! these: " + contactsAdded.toString() + ", and removed: " + contactsRemoved.toString());
+
+        List<Member> membersToAdd = new ArrayList<>();
+        List<Member> membersToRemove = new ArrayList<>();
+
+        for (Contact c : contactsAdded) {
+            Member m = new Member(c.selectedNumber, c.name, GroupConstants.ROLE_ORDINARY_MEMBER, c.lookupKey, true);
+            mapMembersContacts.put(c.lookupKey, m);
+            membersToAdd.add(m);
+        }
+
+        for (Contact c : contactsRemoved) {
+            Member m = mapMembersContacts.get(c.lookupKey);
+            if (m != null) {
+                membersToRemove.add(m);
+            }
+        }
+
+        if (!membersToAdd.isEmpty())
+            memberListFragment.addMembers(membersToAdd);
+        if (!membersToRemove.isEmpty())
+            memberListFragment.removeMembers(membersToRemove);
+
+        closeContactSelectionFragment();
+
     }
 
     @OnClick(R.id.icon_add_member_manually)
     public void ic_edit_call() {
-        try {
-            addMemberOptions.close(true);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        addMemberOptions.close(true);
         startActivityForResult(new Intent(CreateGroupActivity.this, AddContactManually.class), Constant.activityManualMemberEntry);
     }
 
     @OnClick(R.id.cg_bt_save)
     public void save() {
-        try {
-            addMemberOptions.close(true);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        addMemberOptions.close(true);
         validate_allFields();
-
     }
 
     private void validate_allFields() {
-        if (!(TextUtils.isEmpty(et_groupname.getText().toString().trim().replaceAll(regexForName, "")))) {
+        if (!(TextUtils.isEmpty(et_groupname.getText().toString().trim().replaceAll(Constant.regexAlphaNumeric, "")))) {
             createGroup();
         } else {
-            snackBar(getApplicationContext(), getResources().getString(R.string.et_groupname), "", Snackbar.LENGTH_SHORT);
+            ErrorUtils.showSnackBar(rlCgRoot, R.string.et_groupname, Snackbar.LENGTH_SHORT);
         }
     }
 
@@ -194,7 +239,7 @@ public class CreateGroupActivity extends PortraitActivity implements MemberListF
         showProgress();
         String mobileNumber = PreferenceUtils.getuser_mobilenumber(CreateGroupActivity.this);
         String code = PreferenceUtils.getuser_token(CreateGroupActivity.this);
-        String groupName = et_groupname.getText().toString().trim().replaceAll(regexForName, "");
+        String groupName = et_groupname.getText().toString().trim().replaceAll(Constant.regexAlphaNumeric, "");
         String groupDescription = et_group_description.getText().toString().trim();
 
         List<Member> groupMembers = memberListFragment.getSelectedMembers();
@@ -215,7 +260,8 @@ public class CreateGroupActivity extends PortraitActivity implements MemberListF
                             EventBus.getDefault().post(new GroupCreatedEvent());
                             finish();
                         } else {
-                            // todo: process and handle error, if any (shouldn't be)
+                            hideProgress();
+                            ErrorUtils.showSnackBar(rlCgRoot, R.string.generic_error, Snackbar.LENGTH_SHORT);
                         }
                     }
 
@@ -230,35 +276,12 @@ public class CreateGroupActivity extends PortraitActivity implements MemberListF
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-
-        List<Member> membersToAdd = new ArrayList<>();
-        List<Member> membersToRemove = new ArrayList<>();
-
         if (resultCode == Activity.RESULT_OK && data != null) {
-            if (requestCode == Constant.activityContactSelection) {
-                final ArrayList<Contact> contactsAdded = data.getParcelableArrayListExtra(Constant.contactsAdded);
-                for (Contact c : contactsAdded) {
-                    Member m = new Member(c.selectedNumber, c.name, Constant.ROLE_ORDINARY_MEMBER, c.contact_ID);
-                    mapMembersContacts.put(c.contact_ID, m);
-                    membersToAdd.add(m);
-                }
-                final ArrayList<Contact> contactsRemoved = data.getParcelableArrayListExtra(Constant.contactsRemoved);
-                for (Contact c : contactsRemoved) {
-                    // todo : null pointer checks etc
-                    membersToRemove.add(mapMembersContacts.get(c.contact_ID));
-                }
-            } else if (requestCode == Constant.activityManualMemberEntry) {
+            if (requestCode == Constant.activityManualMemberEntry) {
                 Member newMember = new Member(data.getStringExtra("selectedNumber"), data.getStringExtra("name"),
-                        Constant.ROLE_ORDINARY_MEMBER, null);
-                membersToAdd.add(newMember);
+                        GroupConstants.ROLE_ORDINARY_MEMBER, null);
+                memberListFragment.addMembers(Collections.singletonList(newMember));
             }
-
-            // todo : optimizing & cleaning these (e.g., going to call notify data changed twice ...)
-
-            if (!membersToAdd.isEmpty())
-                memberListFragment.addMembers(membersToAdd);
-            if (!membersToRemove.isEmpty())
-                memberListFragment.removeMembers(membersToRemove);
         }
     }
 
@@ -268,19 +291,6 @@ public class CreateGroupActivity extends PortraitActivity implements MemberListF
 
     private void hideProgress(){
         progressDialog.dismiss();
-    }
-
-    private void snackBar(Context applicationContext, String message, String Action_title, int lengthShort) {
-        snackBar = Snackbar.make(rlCgRoot, message, lengthShort);
-        if (!Action_title.isEmpty()) {
-            snackBar.setAction(Action_title, new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    createGroup();
-                }
-            });
-        }
-        snackBar.show();
     }
 
     @Override

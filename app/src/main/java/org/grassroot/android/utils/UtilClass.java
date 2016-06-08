@@ -19,6 +19,7 @@ import android.view.ViewGroup;
 
 import org.grassroot.android.models.Contact;
 import org.grassroot.android.services.model.Member;
+import org.grassroot.android.ui.activities.ContactSelectionActivity;
 import org.grassroot.android.ui.fragments.NotificationDialog;
 import org.grassroot.android.ui.activities.PhoneBookContactsActivity;
 import org.grassroot.android.ui.fragments.AlertDialogFragment;
@@ -120,7 +121,7 @@ public class UtilClass {
 
     public static void callPhoneBookActivity(Activity callingActivity, ArrayList<Contact> preSelectedList,
                                              ArrayList<Contact> removeList) {
-        Intent phoneBookIntent = new Intent(callingActivity, PhoneBookContactsActivity.class);
+        Intent phoneBookIntent = new Intent(callingActivity, ContactSelectionActivity.class);
         if (preSelectedList != null) phoneBookIntent.putParcelableArrayListExtra(Constant.filteredList, preSelectedList);
         if (removeList != null) phoneBookIntent.putParcelableArrayListExtra(Constant.doNotDisplayContacts, removeList);
         callingActivity.startActivityForResult(phoneBookIntent, Constant.activityContactSelection);
@@ -147,6 +148,17 @@ public class UtilClass {
         // todo: throw an error, etc
         Log.d(TAG, "error! tried to reformat, couldn't, here is phone number = " + normalizedNumber);
         return normalizedNumber;
+    }
+
+    public static boolean checkIfLocalNumber(String phoneNumber) {
+        // todo: might be able to do this much quicker if use Google overall libPhoneNumber, but whole lib for this is heavy
+        final String normalized = PhoneNumberUtils.stripSeparators(phoneNumber);
+        Log.d(TAG, "inside contact list, normalized number : " + normalized);
+        if (normalized.charAt(0) == '0' && normalized.length() == 10)
+            return true;
+        if (normalized.substring(0,3).equals("+27") || normalized.substring(0,2).equals("27"))
+            return true;
+        return false;
     }
 
     public static Set<String> convertMembersToUids(Set<Member> members) {

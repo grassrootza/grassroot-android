@@ -27,21 +27,23 @@ public class StringArrayAlphabetIndexer extends SectionedSectionIndexer {
         //get all of the headers of the sections and their sections-items:
         Map<String, ArrayList<String>> headerToSectionItemsMap = new HashMap<>();
         Set<String> alphabetSet= new TreeSet<String>();
+
         for(String item : items) {
             String firstLetter= TextUtils.isEmpty(item) ? " " :
-                    useOnlyUppercaseHeaders? item.substring(0,1).toUpperCase(Locale.getDefault()): item.substring(0,1);
+                    useOnlyUppercaseHeaders ? item.substring(0,1).toUpperCase(Locale.getDefault()): item.substring(0,1);
             ArrayList<String> sectionItems = headerToSectionItemsMap.get(firstLetter);
             if(sectionItems==null)
-                headerToSectionItemsMap.put(firstLetter,sectionItems=new ArrayList<String>());
+                headerToSectionItemsMap.put(firstLetter, sectionItems = new ArrayList<>());
             sectionItems.add(item);
             alphabetSet.add(firstLetter);
         }
 
         SimpleSection[] sections=new SimpleSection[alphabetSet.size()];
+
         int i=0;
         for(String headerTitle : alphabetSet) {
-            ArrayList<String> sectionItems=headerToSectionItemsMap.get(headerTitle);
-            SimpleSection simpleSection=new AlphaBetSection(sectionItems);
+            ArrayList<String> sectionItems = headerToSectionItemsMap.get(headerTitle);
+            SimpleSection simpleSection= new AlphaBetSection(sectionItems);
             simpleSection.setName(headerTitle);
             sections[i++]=simpleSection;
         }
@@ -49,8 +51,8 @@ public class StringArrayAlphabetIndexer extends SectionedSectionIndexer {
     }
 
     public static class AlphaBetSection extends SimpleSection {
-        private ArrayList<String> items;
 
+        private ArrayList<String> items;
         private AlphaBetSection(ArrayList<String> items)
         {
             this.items=items;

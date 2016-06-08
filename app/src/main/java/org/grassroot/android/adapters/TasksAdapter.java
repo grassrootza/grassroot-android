@@ -17,7 +17,6 @@ import org.grassroot.android.events.TaskAddedEvent;
 import org.grassroot.android.events.TaskChangedEvent;
 import org.grassroot.android.interfaces.TaskConstants;
 import org.grassroot.android.services.model.TaskModel;
-import org.grassroot.android.utils.Constant;
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 
@@ -277,14 +276,14 @@ public class TasksAdapter extends RecyclerView.Adapter<TasksAdapter.TaskViewHold
         List<TaskModel> toDoList = new ArrayList<>();
 
         for (TaskModel tm : fullTaskList) {
-            if (Constant.MEETING.equals(tm.getType())) meetingList.add(tm);
-            else if (Constant.VOTE.equals(tm.getType())) voteList.add(tm);
-            else if (Constant.TODO.equals(tm.getType())) toDoList.add(tm);
+            if (TaskConstants.MEETING.equals(tm.getType())) meetingList.add(tm);
+            else if (TaskConstants.VOTE.equals(tm.getType())) voteList.add(tm);
+            else if (TaskConstants.TODO.equals(tm.getType())) toDoList.add(tm);
         }
 
-        decomposedList.put(Constant.MEETING, meetingList);
-        decomposedList.put(Constant.VOTE, voteList);
-        decomposedList.put(Constant.TODO, toDoList);
+        decomposedList.put(TaskConstants.MEETING, meetingList);
+        decomposedList.put(TaskConstants.VOTE, voteList);
+        decomposedList.put(TaskConstants.TODO, toDoList);
 
         Log.d(TAG, String.format("decomposed task list, sizes: %d total, %d votes, %d mtgs, %d todos, took %d msecs", fullTaskList.size(),
                 voteList.size(), meetingList.size(), toDoList.size(), SystemClock.currentThreadTimeMillis() - startTime));

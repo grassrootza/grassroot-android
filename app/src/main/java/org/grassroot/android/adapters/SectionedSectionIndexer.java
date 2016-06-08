@@ -7,7 +7,6 @@ public class SectionedSectionIndexer implements SectionIndexer {
     private final SimpleSection[] mSectionArray;
 
     public SectionedSectionIndexer(final SimpleSection[] sections) {
-
         mSectionArray = sections;
         int previousIndex = 0;
         for (int i = 0; i < mSectionArray.length; ++i) {

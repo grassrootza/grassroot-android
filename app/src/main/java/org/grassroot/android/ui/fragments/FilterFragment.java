@@ -13,7 +13,7 @@ import android.view.Window;
 import android.widget.TextView;
 
 import org.grassroot.android.R;
-import org.grassroot.android.utils.Constant;
+import org.grassroot.android.interfaces.TaskConstants;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -53,9 +53,9 @@ public class FilterFragment extends DialogFragment {
         super.onActivityCreated(savedInstanceState);
         Bundle b = getArguments();
         if (b != null) {
-            filterVote = b.getBoolean(Constant.VOTE);
-            filterMeeting = b.getBoolean(Constant.MEETING);
-            filterTodo = b.getBoolean(Constant.TODO);
+            filterVote = b.getBoolean(TaskConstants.VOTE);
+            filterMeeting = b.getBoolean(TaskConstants.MEETING);
+            filterTodo = b.getBoolean(TaskConstants.TODO);
         } else {
             filterVote = false;
             filterMeeting = false;
@@ -104,7 +104,7 @@ public class FilterFragment extends DialogFragment {
     @OnClick(R.id.tv_Vote)
     public void tvVoteClick() {
         filterVote = !filterVote;
-        callClickOrClear(Constant.VOTE, filterVote);
+        callClickOrClear(TaskConstants.VOTE, filterVote);
         getDialog().dismiss();
     }
 
@@ -112,14 +112,14 @@ public class FilterFragment extends DialogFragment {
     @OnClick(R.id.tv_meeting)
     public void meetingClick() {
         filterMeeting = !filterMeeting;
-        callClickOrClear(Constant.MEETING, filterMeeting);
+        callClickOrClear(TaskConstants.MEETING, filterMeeting);
         getDialog().dismiss();
     }
 
     @OnClick(R.id.tv_todo)
     public void toDoClick() {
         filterTodo = !filterTodo;
-        callClickOrClear(Constant.TODO, filterTodo);
+        callClickOrClear(TaskConstants.TODO, filterTodo);
         getDialog().dismiss();
     }
 

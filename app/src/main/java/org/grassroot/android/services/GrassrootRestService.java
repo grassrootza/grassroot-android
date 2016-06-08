@@ -115,7 +115,7 @@ public class GrassrootRestService extends Application {
         Call<GenericResponse> logLocation(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
                                           @Path("latitude") double latitude, @Path("longitude") double longitude);
 
-        @POST("group/create/new/{phoneNumber}/{code}/{groupName}/{description}")
+        @POST("group/create/{phoneNumber}/{code}/{groupName}/{description}")
         Call<GroupResponse> createGroup(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
                                         @Path("groupName") String groupName, @Path("description") String groupDescription,
                                         @Body List<Member> membersToAdd);

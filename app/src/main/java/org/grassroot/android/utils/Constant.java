@@ -13,6 +13,8 @@ public class Constant {
     public static long mediumDelay = 500L;
     public static long longDelay = 1000L;
 
+    public static final String regexAlphaNumeric = "[^a-zA-Z0-9 ]";
+
     public static final String stagingUrl = "http://staging.grassroot.org.za/api/";
     public static final String localUrl = "http://10.0.2.2:8080/api/";
 
@@ -32,14 +34,6 @@ public class Constant {
     public static final String SHOW_HEADER_FLAG = "show_header";
     public static final String SHOW_ACTION_BUTTON_FLAG = "show_action_button";
     public static final String SUCCESS_MESSAGE = "success_message";
-
-    public static final String VOTE = "VOTE";
-    public static final String MEETING = "MEETING";
-    public static final String TODO = "TODO";
-
-    public static final String ROLE_GROUP_ORGANIZER  = "ROLE_GROUP_ORGANIZER";
-    public static final String ROLE_COMMITTEE_MEMBER = "ROLE_COMMITTEE_MEMBER";
-    public static final String ROLE_ORDINARY_MEMBER  = "ROLE_ORDINARY_MEMBER";
 
     public static final String NO_GROUP_TASKS = "NO_GROUP_ACTIVITIES";
     public static final String UID = "id";
@@ -62,9 +56,6 @@ public class Constant {
     public static final int activityRemoveMembers = 5;
     public static final int activityCreateGroup = 6;
     public static final int activitySelectGroupMembers = 7;
-    public static final int activityCallMeeting = 8;
-    public static final int activityCallVote = 9;
-    public static final int activityRecordTodo = 10;
     public static final int activityNetworkSettings = 20; //todo request code for network, will have to do it robustly
     public static final int activityCreateTask = 11;
 
@@ -73,6 +64,9 @@ public class Constant {
     public static final double testLatitude = 31.215263;
     public static final double testLongitude = 121.476291;
 
+    /* LOADER CODES */
+
+    public static final int loaderContacts = 1;
 
     //HTTP Status codes
 
