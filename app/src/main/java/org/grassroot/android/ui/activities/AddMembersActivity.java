@@ -3,6 +3,7 @@ package org.grassroot.android.ui.activities;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.SystemClock;
+import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
@@ -18,6 +19,7 @@ import org.grassroot.android.models.Contact;
 import org.grassroot.android.services.GrassrootRestService;
 import org.grassroot.android.services.model.GenericResponse;
 import org.grassroot.android.services.model.Member;
+import org.grassroot.android.ui.fragments.ContactSelectionFragment;
 import org.grassroot.android.ui.fragments.MemberListFragment;
 import org.grassroot.android.utils.Constant;
 import org.grassroot.android.utils.ErrorUtils;
@@ -28,7 +30,9 @@ import org.grassroot.android.utils.UtilClass;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -40,11 +44,10 @@ import retrofit2.Response;
 /**
  * Created by luke on 2016/05/05.
  */
-public class AddMembersActivity extends AppCompatActivity implements MemberListFragment.MemberListListener, MemberListFragment.MemberClickListener {
+public class AddMembersActivity extends AppCompatActivity implements
+        MemberListFragment.MemberListListener, MemberListFragment.MemberClickListener, ContactSelectionFragment.ContactSelectionListener {
 
     private static final String TAG = AddMembersActivity.class.getSimpleName();
-    private static final String EXISTING_ID = "existingMembers";
-    private static final String NEW_ID = "newMembers";
 
     private String groupUid;
     private String groupName;
@@ -53,10 +56,16 @@ public class AddMembersActivity extends AppCompatActivity implements MemberListF
     private boolean newMemberListStarted;
     private MemberListFragment existingMemberListFragment;
     private MemberListFragment newMemberListFragment;
+
+    private ContactSelectionFragment contactSelectionFragment;
+    private Set<Contact> contactsToFilter;
     private HashMap<String, Member> membersFromContacts;
+    private boolean onMainScreen;
 
     @BindView(R.id.rl_am_root)
     RelativeLayout amRlRoot;
+    @BindView(R.id.am_txt_toolbar)
+    TextView toolbarTitle;
 
     @BindView(R.id.am_add_member_options)
     FloatingActionMenu addMemberOptions;
@@ -75,11 +84,6 @@ public class AddMembersActivity extends AppCompatActivity implements MemberListF
 
     @BindView(R.id.am_existing_member_list_container)
     RelativeLayout existingMemberContainer;
-    @BindView(R.id.tv_am_existing_members_title)
-    TextView existingMembersTitle;
-
-    @BindView(R.id.am_bt_save)
-    Button btnSave;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -105,7 +109,11 @@ public class AddMembersActivity extends AppCompatActivity implements MemberListF
         this.groupUid = extras.getString(Constant.GROUPUID_FIELD);
         this.groupName = extras.getString(Constant.GROUPNAME_FIELD);
         this.groupPosition = extras.getInt(Constant.INDEX_FIELD);
+
+        this.contactSelectionFragment = new ContactSelectionFragment();
         this.membersFromContacts = new HashMap<>();
+        this.contactsToFilter = new HashSet<>();
+        this.onMainScreen = true;
     }
 
     private void setupFloatingActionButtons() {
@@ -121,7 +129,6 @@ public class AddMembersActivity extends AppCompatActivity implements MemberListF
     private void setupExistingMemberRecyclerView() {
         existingMemberListFragment = new MemberListFragment();
         existingMemberListFragment.setGroupUid(groupUid);
-        existingMemberListFragment.setID(EXISTING_ID);
         getSupportFragmentManager().beginTransaction()
                 .add(R.id.am_existing_member_list_container, existingMemberListFragment)
                 .commit();
@@ -130,7 +137,6 @@ public class AddMembersActivity extends AppCompatActivity implements MemberListF
     private void setupNewMemberRecyclerView() {
         newMemberListFragment = new MemberListFragment();
         newMemberListFragment.setGroupUid(null);
-        newMemberListFragment.setID(NEW_ID);
         newMemberListFragment.setCanDismissItems(true);
         newMemberListFragment.setShowSelected(true);
 
@@ -139,20 +145,49 @@ public class AddMembersActivity extends AppCompatActivity implements MemberListF
                 .commit();
     }
 
-    @OnClick(R.id.am_iv_crossimage)
-    public void closeMenu() { finish(); }
-
     @OnClick(R.id.icon_add_from_contacts)
     public void addFromContacts() {
         addMemberOptions.close(true);
         if (!PermissionUtils.contactReadPermissionGranted(getApplicationContext())) {
             PermissionUtils.requestReadContactsPermission(this);
         } else {
-            ArrayList<Contact> contactsSelected = !newMemberListStarted ? new ArrayList<Contact>() :
-                    new ArrayList<>(Contact.convertFromMembers(newMemberListFragment.getSelectedMembers()));
-            UtilClass.callPhoneBookActivity(this, contactsSelected,
-                    new ArrayList<>(Contact.convertFromMembers(existingMemberListFragment.getMemberList())));
+            launchContactSelectionFragment();
         }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (PermissionUtils.checkContactsPermissionGranted(requestCode, grantResults)) {
+            launchContactSelectionFragment();
+        }
+    }
+
+    private void launchContactSelectionFragment() {
+        Set<Contact> contactsSelected = !newMemberListStarted ? new HashSet<Contact>() :
+                new HashSet<>(Contact.convertFromMembers(newMemberListFragment.getSelectedMembers()));
+
+        contactSelectionFragment.setContactsToPreselect(contactsSelected);
+        Log.e(TAG, "setting contacts to filter ... set of " + contactsToFilter.size() + " elements");
+        contactSelectionFragment.setContactsToFilter(contactsToFilter);
+
+        onMainScreen = false;
+        toolbarTitle.setText(R.string.cs_title);
+
+        getSupportFragmentManager()
+                .beginTransaction()
+                .add(R.id.am_body_container, contactSelectionFragment)
+                .addToBackStack(null)
+                .commit();
+    }
+
+    private void closeContactSelectionFragment() {
+        onMainScreen = true;
+        toolbarTitle.setText(R.string.am_title);
+        getSupportFragmentManager()
+                .beginTransaction()
+                .remove(contactSelectionFragment)
+                .commit();
     }
 
     @OnClick(R.id.icon_add_member_manually)
@@ -162,80 +197,14 @@ public class AddMembersActivity extends AppCompatActivity implements MemberListF
         startActivityForResult(intent, Constant.activityManualMemberEntry); // todo: filter so can't add existing member
     }
 
-    @OnClick(R.id.am_bt_save)
-    public void commitResultsAndExit() {
-        if (newMemberListFragment != null) {
-            final List<Member> membersToAdd = newMemberListFragment.getSelectedMembers();
-            if (membersToAdd != null && membersToAdd.size() > 0) {
-                postNewMembersToGroup(membersToAdd);
-            } else {
-                // todo :show a snack bar or something
-                finish();
-            }
-        } else {
-            Log.i(TAG, "Exited with no members to add!");
-            finish();
-        }
-    }
-
-    private void postNewMembersToGroup(final List<Member> membersToAdd) {
-
-        String mobileNumber = PreferenceUtils.getuser_mobilenumber(getApplicationContext());
-        String sessionCode = PreferenceUtils.getuser_token(getApplicationContext());
-
-        GrassrootRestService.getInstance().getApi()
-                .addGroupMembers(groupUid, mobileNumber, sessionCode, membersToAdd)
-                .enqueue(new Callback<GenericResponse>() {
-                    @Override
-                    public void onResponse(Call<GenericResponse> call, Response<GenericResponse> response) {
-                        if (response.isSuccessful()) {
-                            // todo : maybe, maybe a progress bar
-                            Log.i(TAG, "Finished adding these members: " + membersToAdd.toString());
-                            Intent i = new Intent();
-                            i.putExtra(Constant.GROUPUID_FIELD, groupUid);
-                            i.putExtra(Constant.INDEX_FIELD, groupPosition);
-                            setResult(RESULT_OK, i);
-                            finish();
-                        } else {
-                            // todo: handle error gracefully
-                        }
-                    }
-
-                    @Override
-                    public void onFailure(Call<GenericResponse> call, Throwable t) {
-                        ErrorUtils.handleNetworkError(AddMembersActivity.this, amRlRoot, t);
-                    }
-                });
-    }
-
     @Override
-    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (requestCode == Constant.alertAskForContactPermission && grantResults.length > 0) {
-            PermissionUtils.checkPermGrantedAndLaunchPhoneBook(this, grantResults[0], new ArrayList<Contact>());
-        }
-    }
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-
-        if (resultCode == RESULT_OK) {
-            if (requestCode == Constant.activityContactSelection && data != null) {
-                addContactsToMembers(data);
-            } else if (requestCode == Constant.activityManualMemberEntry) {
-                processManualMemberResult(data);
-            }
-        }
-    }
-
-    private void addContactsToMembers(Intent data) {
+    public void onContactSelectionComplete(List<Contact> contactsAdded, Set<Contact> contactsRemoved) {
         Long start = SystemClock.currentThreadTimeMillis();
-        ArrayList<Contact> returnedContacts = data.getParcelableArrayListExtra(Constant.contactsAdded);
-        if (!returnedContacts.isEmpty()) {
+
+        if (!contactsAdded.isEmpty()) {
             setNewMembersVisible();
             List<Member> newMembers = new ArrayList<>();
-            for (Contact contact : returnedContacts) {
+            for (Contact contact : contactsAdded) {
                 Member m = new Member(contact.selectedNumber, contact.name,
                         GroupConstants.ROLE_ORDINARY_MEMBER, contact.contact_ID);
                 membersFromContacts.put(contact.contact_ID, m);
@@ -245,20 +214,25 @@ public class AddMembersActivity extends AppCompatActivity implements MemberListF
             Log.d(TAG, String.format("added contacts to fragment, in all took %d msecs", SystemClock.currentThreadTimeMillis() - start));
         }
 
-        ArrayList<Contact> removedContacts = data.getParcelableArrayListExtra(Constant.contactsRemoved);
-        if (!removedContacts.isEmpty()) {
-            Log.e(TAG, "removing contacts! these ones : " + removedContacts.toString());
-            for (Contact contact : removedContacts) {
+        if (!contactsRemoved.isEmpty()) {
+            Log.e(TAG, "removing contacts! these ones : " + contactsRemoved.toString());
+            for (Contact contact : contactsRemoved) {
                 newMemberListFragment.removeMember(membersFromContacts.get(contact.contact_ID));
             }
         }
+
+        closeContactSelectionFragment();
     }
 
-    private void processManualMemberResult(Intent data) {
-        Member newMember = new Member(data.getStringExtra("selectedNumber"), data.getStringExtra("name"),
-                GroupConstants.ROLE_ORDINARY_MEMBER, null);
-        newMemberListFragment.addMembers(Collections.singletonList(newMember));
-        setNewMembersVisible();
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (resultCode == RESULT_OK && requestCode == Constant.activityManualMemberEntry) {
+            Member newMember = new Member(data.getStringExtra("selectedNumber"), data.getStringExtra("name"),
+                    GroupConstants.ROLE_ORDINARY_MEMBER, null);
+            newMemberListFragment.addMembers(Collections.singletonList(newMember));
+            setNewMembersVisible();
+        }
     }
 
     private void setNewMembersVisible() {
@@ -278,9 +252,70 @@ public class AddMembersActivity extends AppCompatActivity implements MemberListF
         }
     }
 
+    @OnClick(R.id.am_iv_crossimage)
+    public void closeMenu() {
+        if (onMainScreen) {
+            finish();
+        } else {
+            getSupportFragmentManager().popBackStack();
+            onMainScreen = true;
+            toolbarTitle.setText(R.string.am_title);
+        }
+    }
+
+    @OnClick(R.id.am_bt_save)
+    public void commitResultsAndExit() {
+        if (newMemberListFragment != null) {
+            final List<Member> membersToAdd = newMemberListFragment.getSelectedMembers();
+            if (membersToAdd != null && membersToAdd.size() > 0) {
+                postNewMembersToGroup(membersToAdd);
+            } else {
+                // todo :show a snack bar or something
+                finish();
+            }
+        } else {
+            Log.d(TAG, "Exited with no members to add!");
+            finish();
+        }
+    }
+
+    private void postNewMembersToGroup(final List<Member> membersToAdd) {
+        final String mobileNumber = PreferenceUtils.getuser_mobilenumber(getApplicationContext());
+        final String sessionCode = PreferenceUtils.getuser_token(getApplicationContext());
+        GrassrootRestService.getInstance().getApi()
+                .addGroupMembers(groupUid, mobileNumber, sessionCode, membersToAdd)
+                .enqueue(new Callback<GenericResponse>() {
+                    @Override
+                    public void onResponse(Call<GenericResponse> call, Response<GenericResponse> response) {
+                        if (response.isSuccessful()) {
+                            // todo : maybe, maybe a progress dialog
+                            Intent i = new Intent();
+                            i.putExtra(Constant.GROUPUID_FIELD, groupUid);
+                            i.putExtra(Constant.INDEX_FIELD, groupPosition);
+                            setResult(RESULT_OK, i);
+                            finish();
+                        } else {
+                            ErrorUtils.showSnackBar(amRlRoot, R.string.generic_error, Snackbar.LENGTH_SHORT);
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(Call<GenericResponse> call, Throwable t) {
+                        ErrorUtils.handleNetworkError(AddMembersActivity.this, amRlRoot, t);
+                    }
+                });
+    }
+
     @Override
     public void onMemberListInitiated(MemberListFragment fragment) {
 
+    }
+
+    @Override
+    public void onMemberListPopulated(List<Member> memberList) {
+        Log.e(TAG, "returned members: " + memberList);
+        contactsToFilter = new HashSet<>(Contact.convertFromMembers(memberList));
+        Log.e(TAG, "contacts created: " + contactsToFilter);
     }
 
     @Override

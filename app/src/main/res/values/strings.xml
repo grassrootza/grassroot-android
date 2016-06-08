@@ -141,17 +141,17 @@
     <string name="gm_new_task_lc">Call new event</string>
 
     <!-- Phone book and other strings -->
+    <string name="cs_title">Select contacts</string>
     <string name="action_search">Search...</string>
     <string name="cg_contacs_loading">Scanning all your contacts....</string>
     <string name="cg_dialog_title">Select any one number</string>
-    <string name="cg_valid_number">The number selected is not a valid South African phone number. Please select a different number</string>
     <string name="title_activity_alert_dialog">AlertDialogActivity</string>
     <string name="title_activity_add_contact_manually">AddContactManually</string>
     <string name="contact_manually">The number selected is not a valid South African phone number. Please select a different number</string>
     <string name="prg_message">Please wait...</string>
+
     <string name="et_groupname">Please enter Group name</string>
     <string name="GROUP_CREATED">Group created successfully</string>
-    <string name="empty_contact">Selected name does not have contact number</string>
     <string name="title_activity_group__homepage">Group_Homepage</string>
 
     <!--GroupTasksActivity -->

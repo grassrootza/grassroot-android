@@ -5,10 +5,8 @@
 package org.grassroot.android.utils;
 
 import android.animation.ValueAnimator;
-import android.app.Activity;
 import android.app.FragmentManager;
 import android.content.Context;
-import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.design.widget.Snackbar;
@@ -17,16 +15,12 @@ import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 
-import org.grassroot.android.models.Contact;
-import org.grassroot.android.services.model.Member;
-import org.grassroot.android.ui.activities.ContactSelectionActivity;
-import org.grassroot.android.ui.fragments.NotificationDialog;
-import org.grassroot.android.ui.activities.PhoneBookContactsActivity;
-import org.grassroot.android.ui.fragments.AlertDialogFragment;
 import org.grassroot.android.interfaces.AlertDialogListener;
+import org.grassroot.android.services.model.Member;
+import org.grassroot.android.ui.fragments.AlertDialogFragment;
+import org.grassroot.android.ui.fragments.NotificationDialog;
 
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashSet;
 import java.util.List;
@@ -117,14 +111,6 @@ public class UtilClass {
         Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("GMT"), Locale.getDefault());
         String   timeZone = new SimpleDateFormat("Z").format(calendar.getTime());
         return timeZone.substring(0, 3) + ":"+ timeZone.substring(3, 5);
-    }
-
-    public static void callPhoneBookActivity(Activity callingActivity, ArrayList<Contact> preSelectedList,
-                                             ArrayList<Contact> removeList) {
-        Intent phoneBookIntent = new Intent(callingActivity, ContactSelectionActivity.class);
-        if (preSelectedList != null) phoneBookIntent.putParcelableArrayListExtra(Constant.filteredList, preSelectedList);
-        if (removeList != null) phoneBookIntent.putParcelableArrayListExtra(Constant.doNotDisplayContacts, removeList);
-        callingActivity.startActivityForResult(phoneBookIntent, Constant.activityContactSelection);
     }
 
     // since google's libPhoneNumber is a mammoth 1mb JAR, not including, but hand rolling

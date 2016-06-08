@@ -6,11 +6,6 @@ import android.content.Context;
 import android.content.pm.PackageManager;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
-import android.util.Log;
-
-import org.grassroot.android.models.Contact;
-
-import java.util.ArrayList;
 
 /**
  * Created by luke on 2016/05/05.
@@ -31,13 +26,10 @@ public class PermissionUtils {
         ActivityCompat.requestPermissions(callingActivity, new String[]{Manifest.permission.READ_CONTACTS}, Constant.alertAskForContactPermission);
     }
 
-    public static void checkPermGrantedAndLaunchPhoneBook(Activity callingActivity, int grantResult, ArrayList<Contact> filteredList) {
-        if (grantResult == PackageManager.PERMISSION_GRANTED) {
-            Log.e(TAG, "User granted us permission!");
-            UtilClass.callPhoneBookActivity(callingActivity, filteredList, null);
-        } else {
-            Log.e(TAG, "User denied us permission!");
-        }
+    public static boolean checkContactsPermissionGranted(int requestCode, int[] grantResults) {
+        return (requestCode == Constant.alertAskForContactPermission) &&
+                (grantResults.length > 0) &&
+                (grantResults[0] == PackageManager.PERMISSION_GRANTED);
     }
 
 }

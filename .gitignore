@@ -30,3 +30,6 @@ atlassian-ide-plugin.xml
 **/.DS_Store
 local.properties
 captures
+
+### Private keys
+**/private_keys.xml

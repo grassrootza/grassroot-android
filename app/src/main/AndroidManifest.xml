@@ -102,16 +102,6 @@
 
         <!-- Contact book and related activities -->
         <activity
-            android:name=".ui.activities.PhoneBookContactsActivity"
-            android:label="@string/title_activity_phone_book_contacts" />
-        <activity
-            android:name=".ui.activities.ContactSelectionActivity"
-            android:label="New Contact Activity" />
-        <activity
-            android:name=".ui.activities.SelectPhoneNumberActivity"
-            android:label="@string/title_activity_dilog"
-            android:theme="@style/MyDialog" />
-        <activity
             android:name=".ui.activities.AddContactManually"
             android:label="@string/title_activity_add_contact_manually"
             android:theme="@style/AppTheme" />

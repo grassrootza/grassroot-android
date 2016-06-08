@@ -6,7 +6,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
-import android.widget.Filterable;
 import android.widget.ImageView;
 import android.widget.SectionIndexer;
 import android.widget.TextView;
@@ -15,11 +14,7 @@ import org.grassroot.android.R;
 import org.grassroot.android.models.Contact;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-
-import butterknife.BindView;
-import butterknife.ButterKnife;
 
 /**
  * Created by luke on 2016/06/07.

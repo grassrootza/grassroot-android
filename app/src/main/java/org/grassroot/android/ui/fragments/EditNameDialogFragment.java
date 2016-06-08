@@ -33,6 +33,7 @@ public class EditNameDialogFragment extends DialogFragment   implements
     ArrayList<NavDrawerItem> arrayList= new ArrayList<>();
     private ListView listview;
     private TextView title;
+
     private DefaultAdapter adapter;
     protected MDRootLayout view;
     //private MDButton button;

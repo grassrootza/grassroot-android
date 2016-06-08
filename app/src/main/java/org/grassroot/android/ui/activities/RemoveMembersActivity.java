@@ -14,6 +14,7 @@ import org.grassroot.android.R;
 import org.grassroot.android.interfaces.AlertDialogListener;
 import org.grassroot.android.services.GrassrootRestService;
 import org.grassroot.android.services.model.GenericResponse;
+import org.grassroot.android.services.model.Member;
 import org.grassroot.android.ui.fragments.AlertDialogFragment;
 import org.grassroot.android.ui.fragments.MemberListFragment;
 import org.grassroot.android.utils.Constant;
@@ -22,6 +23,7 @@ import org.grassroot.android.utils.PreferenceUtils;
 import org.grassroot.android.utils.UtilClass;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import butterknife.BindView;
@@ -166,6 +168,11 @@ public class RemoveMembersActivity extends PortraitActivity implements MemberLis
     public void onMemberListInitiated(MemberListFragment fragment) {
         // todo : reexamine the case for this listener
         Log.e(TAG, "Fragment initiated ...");
+    }
+
+    @Override
+    public void onMemberListPopulated(List<Member> memberList) {
+
     }
 
     @Override

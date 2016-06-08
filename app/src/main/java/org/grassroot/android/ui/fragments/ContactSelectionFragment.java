@@ -25,8 +25,10 @@ import org.grassroot.android.utils.UtilClass;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import butterknife.BindView;
@@ -51,7 +53,8 @@ public class ContactSelectionFragment extends Fragment implements
 
     private List<Contact> retrievedContacts;
 
-    private Set<Contact> contactsToFilter;
+    private Map<String, Contact> contactFilterMap;
+
     private Set<Contact> contactsToPreselect;
     private Set<Contact> contactsRemoved;
 
@@ -60,12 +63,20 @@ public class ContactSelectionFragment extends Fragment implements
 
     public ContactSelectionFragment() { }
 
-    public void setContactsToFilter(Set<Contact> contactsToFilter) {
-        this.contactsToFilter = contactsToFilter;
-    }
-
     public void setContactsToPreselect(Set<Contact> contactsToPreselect) {
         this.contactsToPreselect = contactsToPreselect;
+    }
+
+    public void setContactsToFilter(Set<Contact> contactsToFilter) {
+        contactFilterMap = new HashMap<>();
+        for (Contact c : contactsToFilter) {
+            final List<String> nums = c.numbers;
+            if (!nums.isEmpty()) {
+                for (String number : nums) {
+                    contactFilterMap.put(UtilClass.formatNumberToE164(number), c);
+                }
+            }
+        }
     }
 
     @Override
@@ -81,8 +92,6 @@ public class ContactSelectionFragment extends Fragment implements
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (contactsToFilter == null)
-            contactsToFilter = new HashSet<>(); // use setters -- this just guards against null pointers
         if (contactsToPreselect == null)
             contactsToPreselect = new HashSet<>();
         if (contactsRemoved == null)
@@ -98,10 +107,11 @@ public class ContactSelectionFragment extends Fragment implements
         return viewToReturn;
     }
 
-    // todo: consider where to put this, given need to permission check, if use without wrapper activity
+    // keep an eye out on this only being called when fragment is added to stack, not too early
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
+        Log.d(TAG, "loading contacts ...");
         getLoaderManager().initLoader(Constant.loaderContacts, null, this);
     }
 
@@ -169,7 +179,9 @@ public class ContactSelectionFragment extends Fragment implements
             retrievedContacts.clear();
         }
 
-        Log.e(TAG, "inside assembleContacts, just got cursor with : " + contactHolder.getCount() + " elements");
+        Log.d(TAG, "inside assembleContacts, just got cursor with : " + contactHolder.getCount() + " elements");
+
+        final boolean filteringActive = contactFilterMap != null && !contactFilterMap.isEmpty();
 
         if (contactHolder.getCount() > 0) {
 
@@ -190,8 +202,9 @@ public class ContactSelectionFragment extends Fragment implements
 
                 if (thisPhoneList != null) {
                     if (thisPhoneList.getCount() > 0) {
-                        final Contact contactToAdd = constructContact(contactHolder, nameIndex, lookupKey[0], thisPhoneList);
-                        if (contactToAdd != null && !contactsToFilter.contains(contactToAdd)) {
+                        final Contact contactToAdd = constructContact(contactHolder, nameIndex, lookupKey[0], thisPhoneList,
+                                filteringActive);
+                        if (contactToAdd != null) {
                             retrievedContacts.add(contactToAdd);
                         }
                     }
@@ -202,24 +215,22 @@ public class ContactSelectionFragment extends Fragment implements
             contactHolder.moveToPosition(-1); // reset, in case cursor is reused via stack management
         }
 
-        Log.e(TAG, String.format("Processed %d contacts, resulting in final list of %d entities, in %d msecs",
+        Log.d(TAG, String.format("Processed %d contacts, resulting in final list of %d entities, in %d msecs",
                 contactHolder.getCount(), retrievedContacts.size(), SystemClock.currentThreadTimeMillis() - startTime));
 
     }
 
     private Contact constructContact(final Cursor contactHolder, final int nameIndex,
-                                     final String lookupKey, final Cursor phoneList) {
+                                     final String lookupKey, final Cursor phoneList, boolean filteringActive) {
 
         Contact contact = null;
         final int phoneIndex = phoneList.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER);
-
-        Log.e(TAG, "constructing contact, preselected set = " + contactsToPreselect.toString());
 
         // todo: shift the local number checking into a regex passed to the cursor
         if (phoneList.getCount() == 1) {
             phoneList.moveToFirst();
             final String phone = phoneList.getString(phoneIndex);
-            if (UtilClass.checkIfLocalNumber(phone)) {
+            if (UtilClass.checkIfLocalNumber(phone) && !isNumberInFilterMap(phone)) {
                 contact = new Contact(lookupKey, contactHolder.getString(nameIndex));
                 contact.selectedNumber = phone;
                 contact.numbers = Collections.singletonList(phone);
@@ -228,7 +239,9 @@ public class ContactSelectionFragment extends Fragment implements
             while (phoneList.moveToNext()) {
                 final String phone = phoneList.getString(phoneIndex);
                 if (UtilClass.checkIfLocalNumber(phone)) {
-                    if (contact == null) {
+                    if (isNumberInFilterMap(phone)) {
+                        return null;
+                    } else if (contact == null) {
                         contact = new Contact(lookupKey, contactHolder.getString(nameIndex));
                         contact.numbers = new ArrayList<>();
                     }
@@ -241,6 +254,12 @@ public class ContactSelectionFragment extends Fragment implements
             contact.isSelected = true;
 
         return contact;
+    }
+
+    private boolean isNumberInFilterMap(String phone) {
+        if (contactFilterMap == null) return false;
+        if (contactFilterMap.get(UtilClass.formatNumberToE164(phone)) == null) return false;
+        return true;
     }
 
     /**

@@ -2,7 +2,6 @@ package org.grassroot.android.ui.activities;
 
 import android.app.Activity;
 import android.app.ProgressDialog;
-import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.Snackbar;
@@ -17,6 +16,7 @@ import android.widget.TextView;
 
 import com.github.clans.fab.FloatingActionButton;
 import com.github.clans.fab.FloatingActionMenu;
+
 import org.grassroot.android.R;
 import org.grassroot.android.events.GroupCreatedEvent;
 import org.grassroot.android.interfaces.GroupConstants;
@@ -30,7 +30,6 @@ import org.grassroot.android.utils.Constant;
 import org.grassroot.android.utils.ErrorUtils;
 import org.grassroot.android.utils.PermissionUtils;
 import org.grassroot.android.utils.PreferenceUtils;
-import org.grassroot.android.utils.UtilClass;
 import org.greenrobot.eventbus.EventBus;
 
 import java.util.ArrayList;
@@ -59,9 +58,6 @@ public class CreateGroupActivity extends PortraitActivity implements
     @BindView(R.id.rl_cg_root)
     RelativeLayout rlCgRoot;
 
-    @BindView(R.id.cg_new_member_list_container)
-    RelativeLayout memberListContainer;
-
     @BindView(R.id.cg_add_member_options)
     FloatingActionMenu addMemberOptions;
     @BindView(R.id.icon_add_member_manually)
@@ -71,8 +67,6 @@ public class CreateGroupActivity extends PortraitActivity implements
 
     @BindView(R.id.tv_counter)
     TextView tvCounter;
-    @BindView(R.id.cg_bt_save)
-    Button btnSelection;
     @BindView(R.id.et_group_description)
     EditText et_group_description;
 
@@ -159,7 +153,7 @@ public class CreateGroupActivity extends PortraitActivity implements
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (requestCode == Constant.alertAskForContactPermission && grantResults.length > 0) {
+        if (PermissionUtils.checkContactsPermissionGranted(requestCode, grantResults)) {
             launchContactSelectionFragment();
         }
     }
@@ -298,6 +292,11 @@ public class CreateGroupActivity extends PortraitActivity implements
         // todo: use this to handle fragment setting up & observation, instead of create at start...
         memberListFragment.setShowSelected(true);
         memberListFragment.setCanDismissItems(true);
+    }
+
+    @Override
+    public void onMemberListPopulated(List<Member> memberList) {
+
     }
 
     @Override

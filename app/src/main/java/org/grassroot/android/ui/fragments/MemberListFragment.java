@@ -39,7 +39,7 @@ public class MemberListFragment extends Fragment {
 
     // since android's framework is so abysmal, an equals comparison on fragment at different stages in its lifecycle fails
     // hence have to create this horrible hack just to be able to compare fragments ...
-    private String ID;
+
     private String groupUid;
     private boolean canDismissItems;
     private boolean showSelected;
@@ -56,6 +56,7 @@ public class MemberListFragment extends Fragment {
 
     public interface MemberListListener {
         void onMemberListInitiated(MemberListFragment fragment);
+        void onMemberListPopulated(List<Member> memberList);
     }
 
     public interface MemberClickListener {
@@ -132,7 +133,6 @@ public class MemberListFragment extends Fragment {
         memberListAdapter.notifyDataSetChanged();
     }
 
-    public void setID(String ID) { this.ID = ID; }
 
     @Override
     public void onAttach(Context context) {
@@ -240,8 +240,9 @@ public class MemberListFragment extends Fragment {
                     @Override
                     public void onResponse(Call<MemberList> call, Response<MemberList> response) {
                         if (response.isSuccessful()) {
-                            List<Member> membersReturned = response.body().getMembers();
+                            final List<Member> membersReturned = response.body().getMembers();
                             memberListAdapter.addMembers(membersReturned);
+                            mListener.onMemberListPopulated(membersReturned);
                         } else {
                             // todo: handle error, via a dialog box
                         }

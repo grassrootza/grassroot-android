@@ -20,6 +20,7 @@ import org.grassroot.android.utils.Constant;
 import org.grassroot.android.utils.MenuUtils;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -130,6 +131,11 @@ public class GroupMembersActivity extends PortraitActivity implements MemberList
         if (selectMembers && membersSelected != null) {
             memberListFragment.addMembers(membersSelected);
         }
+    }
+
+    @Override
+    public void onMemberListPopulated(List<Member> memberList) {
+
     }
 
     @Override
