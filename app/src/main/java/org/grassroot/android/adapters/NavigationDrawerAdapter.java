@@ -17,8 +17,11 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import org.grassroot.android.R;
+import org.grassroot.android.events.NotificationEvent;
 import org.grassroot.android.models.NavDrawerItem;
 import org.grassroot.android.utils.PreferenceUtils;
+import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
 
 import java.util.ArrayList;
 
@@ -31,17 +34,19 @@ public class NavigationDrawerAdapter extends RecyclerView.Adapter<NavigationDraw
     private Context mContext;
     private LayoutInflater inflater;
     private AnimatorSet set;
+    private MyViewHolder holder;
 
-    public  NavigationDrawerAdapter(Context context,ArrayList<NavDrawerItem> data) {
-        this.data=data;
-        this.mContext=context;
-        this.inflater=LayoutInflater.from(context);
+    public NavigationDrawerAdapter(Context context, ArrayList<NavDrawerItem> data) {
+        this.data = data;
+        this.mContext = context;
+        this.inflater = LayoutInflater.from(context);
+
     }
 
     @Override
     public MyViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         View view = inflater.inflate(R.layout.listview_row_navigationdrawer, parent, false);
-        MyViewHolder holder= new MyViewHolder(view);
+        holder = new MyViewHolder(view);
         return holder;
     }
 
@@ -70,7 +75,7 @@ public class NavigationDrawerAdapter extends RecyclerView.Adapter<NavigationDraw
             Log.e(TAG, "notificationcount is " + notificationcount);
             holder.txtTitleCounter.setText("" + notificationcount);
 
-            if (notificationcount>0) {
+            if (notificationcount > 0) {
                 set = (AnimatorSet) AnimatorInflater.loadAnimator(mContext, R.animator.flip);
                 set.setTarget(holder.txtTitleCounter);
                 set.start();
@@ -89,7 +94,7 @@ public class NavigationDrawerAdapter extends RecyclerView.Adapter<NavigationDraw
     }
 
 
-    public static  class MyViewHolder extends  RecyclerView.ViewHolder {
+    public static class MyViewHolder extends RecyclerView.ViewHolder {
         private final RelativeLayout rlDrawerRow;
         TextView title;
         TextView txtTitleCounter;
@@ -99,8 +104,10 @@ public class NavigationDrawerAdapter extends RecyclerView.Adapter<NavigationDraw
             super(itemView);
             rlDrawerRow = (RelativeLayout) itemView.findViewById(R.id.rl_drawer_row);
             title = (TextView) itemView.findViewById(R.id.txt_title);
-            titleicon  = (ImageView) itemView.findViewById(R.id.iv_titleicon);
+            titleicon = (ImageView) itemView.findViewById(R.id.iv_titleicon);
             txtTitleCounter = (TextView) itemView.findViewById(R.id.txt_title_counter);
         }
     }
+
+
 }

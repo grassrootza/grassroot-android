@@ -137,9 +137,13 @@ public class UtilClass {
     }
 
     public static boolean checkIfLocalNumber(String phoneNumber) {
+
         // todo: might be able to do this much quicker if use Google overall libPhoneNumber, but whole lib for this is heavy
         final String normalized = PhoneNumberUtils.stripSeparators(phoneNumber);
         Log.d(TAG, "inside contact list, normalized number : " + normalized);
+        if(normalized.length() < 10){
+            return false;
+        }
         if (normalized.charAt(0) == '0' && normalized.length() == 10)
             return true;
         if (normalized.substring(0,3).equals("+27") || normalized.substring(0,2).equals("27"))

@@ -40,7 +40,7 @@ public class GrassrootRestService extends Application {
     private RestApi mRestApi;
     private static GrassrootRestService instance;
 
-    //default constructor required by android
+    //default constructor required instantiation by the loaders
     public GrassrootRestService(){}
 
     private GrassrootRestService(Context context) {

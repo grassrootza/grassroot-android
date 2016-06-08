@@ -16,10 +16,13 @@ import android.widget.TextView;
 import org.grassroot.android.BuildConfig;
 import org.grassroot.android.R;
 import org.grassroot.android.adapters.NavigationDrawerAdapter;
+import org.grassroot.android.events.NotificationEvent;
 import org.grassroot.android.interfaces.ClickListener;
 import org.grassroot.android.models.NavDrawerItem;
 import org.grassroot.android.ui.views.RecyclerTouchListener;
 import org.grassroot.android.utils.PreferenceUtils;
+import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
 
 import java.util.ArrayList;
 
@@ -28,6 +31,8 @@ import butterknife.ButterKnife;
 
 
 public class NavigationDrawerFragment extends Fragment {
+
+    public static final String TAG = NavigationDrawerFragment.class.getCanonicalName();
 
     private View mFragmentContainerView;
     private NavigationDrawerCallbacks mCallbacks;
@@ -61,6 +66,7 @@ public class NavigationDrawerFragment extends Fragment {
         } else {
            // selectItem(mCurrentSelectedPosition);
         }
+        EventBus.getDefault().register(this);
     }
 
     @Override
@@ -122,6 +128,11 @@ public class NavigationDrawerFragment extends Fragment {
         mCallbacks= (NavigationDrawerCallbacks) activity;
     }
 
+    @Override
+    public void onResume() {
+        super.onResume();
+    }
+
     public interface NavigationDrawerCallbacks {
         void onNavigationDrawerItemSelected(int position);
     }
@@ -140,6 +151,20 @@ public class NavigationDrawerFragment extends Fragment {
         if (mCallbacks != null) {
             mCallbacks.onNavigationDrawerItemSelected(position);
         }
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        EventBus.getDefault().unregister(this);
+    }
+
+    @Subscribe
+    public void onNewNotificationEvent(NotificationEvent event) {
+        Log.e(TAG, "redraw navigation drawer");
+        int notificationCount = event.getNotificationCount();
+        Log.e(TAG, "notification count" +notificationCount);
+        drawerAdapter.notifyDataSetChanged();
     }
 
 }

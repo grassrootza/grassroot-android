@@ -20,6 +20,7 @@ import android.widget.TextView;
 
 import org.grassroot.android.R;
 
+import org.grassroot.android.events.NotificationEvent;
 import org.grassroot.android.interfaces.NetworkErrorDialogListener;
 import org.grassroot.android.services.GrassrootRestService;
 import org.grassroot.android.services.model.EventModel;
@@ -30,6 +31,7 @@ import org.grassroot.android.utils.Constant;
 import org.grassroot.android.utils.ErrorUtils;
 import org.grassroot.android.ui.views.ProgressBarCircularIndeterminate;
 import org.grassroot.android.utils.PreferenceUtils;
+import org.greenrobot.eventbus.EventBus;
 
 
 import butterknife.BindView;
@@ -143,6 +145,12 @@ public class ViewVoteActivity extends PortraitActivity {
         ButterKnife.bind(this);
         if (getIntent() != null) {
             voteid = getIntent().getExtras().getString(Constant.UID);
+            if(getIntent().hasExtra(Constant.NOTIFICATION_ID)){
+                int notificationCount = PreferenceUtils.getIsNotificationcounter(this);
+                Log.e(TAG, "count " + notificationCount);
+                PreferenceUtils.setIsNotificationcounter(this,--notificationCount);
+                EventBus.getDefault().post(new NotificationEvent(--notificationCount));
+            }
         }
         setUpToolbar();
         init();

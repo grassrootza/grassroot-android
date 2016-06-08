@@ -15,10 +15,12 @@ import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.TaskStackBuilder;
 import android.util.Log;
 import org.grassroot.android.R;
+import org.grassroot.android.events.NotificationEvent;
 import org.grassroot.android.ui.activities.NotBuiltActivity;
 import org.grassroot.android.ui.activities.ViewVoteActivity;
 import org.grassroot.android.utils.Constant;
 import org.grassroot.android.utils.PreferenceUtils;
+import org.greenrobot.eventbus.EventBus;
 
 import java.util.List;
 
@@ -29,6 +31,7 @@ public class GcmListenerService extends com.google.android.gms.gcm.GcmListenerSe
 
     private static final String TAG = GcmListenerService.class.getCanonicalName();
     private static final String STACK_KEY = "stack_key";
+    private int notificationId;
 
 
     @Override
@@ -90,7 +93,7 @@ public class GcmListenerService extends com.google.android.gms.gcm.GcmListenerSe
             defaults = defaults | Notification.DEFAULT_LIGHTS;
             defaults = defaults | Notification.DEFAULT_SOUND;
             mNotifyBuilder.setDefaults(defaults);
-            mNotificationManager.notify(msg.getString(Constant.UID), (int) System.currentTimeMillis(), notification);
+            mNotificationManager.notify(msg.getString(Constant.UID), notificationId, notification);
 
         }
     }
@@ -127,6 +130,7 @@ public class GcmListenerService extends com.google.android.gms.gcm.GcmListenerSe
         Log.e(TAG, "b4 notificationcount is " + notificationcount);
         notificationcount++;
         PreferenceUtils.setIsNotificationcounter(this, notificationcount);
+      //  EventBus.getDefault().post(new NotificationEvent(notificationcount)); todo this currently thorwing an exception
         Log.e(TAG, "after notificationcount is " + notificationcount);
 
     }
@@ -137,6 +141,7 @@ public class GcmListenerService extends com.google.android.gms.gcm.GcmListenerSe
         Log.e(TAG, "generateResultIntent called, with message bundle: " + msg.toString());
 
         Intent resultIntent;
+        notificationId = (int)System.currentTimeMillis();
         if (msg.getString(Constant.ENTITY_TYPE).equalsIgnoreCase("vote")) {
             resultIntent = new Intent(this, ViewVoteActivity.class);
             ;
@@ -147,7 +152,9 @@ public class GcmListenerService extends com.google.android.gms.gcm.GcmListenerSe
         resultIntent.putExtra(Constant.TITLE, msg.getString(Constant.TITLE));
         resultIntent.putExtra(Constant.BODY, msg.getString(Constant.BODY));
         resultIntent.putExtra(Constant.UID, msg.getString(Constant.UID));
-        resultIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK );
+        resultIntent.putExtra(Constant.NOTIFICATION_ID, notificationId);
+
+
 
         PendingIntent resultPendingIntent = PendingIntent.getActivity(this, (int) System.currentTimeMillis(), resultIntent, PendingIntent.FLAG_CANCEL_CURRENT);
         Log.e(TAG, "generateResultIntent exiting, with intent: " + resultPendingIntent.toString());
@@ -157,5 +164,12 @@ public class GcmListenerService extends com.google.android.gms.gcm.GcmListenerSe
 
     }
 
+    public static void cancelNotification(int notificationId, Context context){
 
-}
+            NotificationManager nMgr = (NotificationManager) context.getSystemService(NOTIFICATION_SERVICE);
+            nMgr.cancel(notificationId);
+        }
+    }
+
+
+

@@ -257,7 +257,7 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment imple
                         refreshGroupList();
                     }
                 });
-              //  ErrorUtils.handleNetworkError(getContext(), rlGhpRoot, t);
+
             }
         });
     }
