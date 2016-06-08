@@ -93,7 +93,6 @@ public class StartActivity extends PortraitActivity implements HomeScreenViewFra
     RelativeLayout rlStart;
 
     private ProgressDialog progressDialog;
-    private GrassrootRestService grassrootRestService;
 
 
     @Override
@@ -125,7 +124,6 @@ public class StartActivity extends PortraitActivity implements HomeScreenViewFra
             }
 
             defaultHandler = new Handler();
-            grassrootRestService = new GrassrootRestService(this);
             displayMetrics = getApplicationContext().getResources().getDisplayMetrics();
             height = displayMetrics.heightPixels;
             showHomeScreen();
@@ -223,9 +221,9 @@ public class StartActivity extends PortraitActivity implements HomeScreenViewFra
 
     private void textResend() {
         if (registerscreen) {
-            registerWS(userName, mobileNumber);
+            register(userName, mobileNumber);
         } else if (loginscreen) {
-            loginWS(mobileNumber);
+            login(mobileNumber);
         }
     }
 
@@ -275,12 +273,12 @@ public class StartActivity extends PortraitActivity implements HomeScreenViewFra
      * @param et_userName The name the user has entered
      * @param et_mobile_register The phone number they wish to register
      */
-    private void registerWS(final String et_userName, final String et_mobile_register) {
+    private void register(final String et_userName, final String et_mobile_register) {
 
-        Log.d(TAG, "inside StartActivity ... calling registerWS");
+        Log.d(TAG, "inside StartActivity ... calling register");
         progressDialog.show();
         registerscreen = true;
-        grassrootRestService.getApi()
+        GrassrootRestService.getInstance().getApi()
                 .addUser(et_mobile_register,et_userName)
                 .enqueue(new Callback<GenericResponse>() {
                     @Override
@@ -317,15 +315,15 @@ public class StartActivity extends PortraitActivity implements HomeScreenViewFra
      * todo: if the user is not registered, redirect to registration screen instead of just error
      * @param mobile_number The number the user entered
      */
-    private void loginWS(String mobile_number) {
+    private void login(String mobile_number) {
 
-        Log.d(TAG, "inside StartActivity ... calling loginWS");
+        Log.d(TAG, "inside StartActivity ... calling login");
 
         mobileNumber = mobile_number;
         progressDialog.show();
         loginscreen = true;
 
-        grassrootRestService.getApi()
+        GrassrootRestService.getInstance().getApi()
                 .login(mobile_number)
                 .enqueue(new Callback<GenericResponse>() {
                     @Override
@@ -368,7 +366,7 @@ public class StartActivity extends PortraitActivity implements HomeScreenViewFra
      */
     private void verifyRegistration(final String mobileNumber, String tokenCode){
         progressDialog.show();
-        grassrootRestService.getApi()
+        GrassrootRestService.getInstance().getApi()
                 .verify(mobileNumber,tokenCode)
                 .enqueue(new Callback<TokenResponse>() {
                     @Override
@@ -416,7 +414,7 @@ public class StartActivity extends PortraitActivity implements HomeScreenViewFra
      */
     private void authenticateLogin(final String mobileNumber, String code){
         progressDialog.show();
-        grassrootRestService.getApi()
+        GrassrootRestService.getInstance().getApi()
                 .authenticate(mobileNumber,code)
                 .enqueue(new Callback<TokenResponse>() {
                     @Override
@@ -482,12 +480,12 @@ public class StartActivity extends PortraitActivity implements HomeScreenViewFra
             snackBar.setAction(textLabel, new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    if (type.equals("registerWS")) {
-                        registerWS(userName,mobileNumber);
+                    if (type.equals("register")) {
+                        register(userName,mobileNumber);
                         snackBar.dismiss();
                         // getNotification();
-                    } else if (type.equals("loginWS")) {
-                        loginWS(mobileNumber);
+                    } else if (type.equals("login")) {
+                        login(mobileNumber);
                         snackBar.dismiss();
                     } else if (type.equals("OtpWS")) {
                         snackBar.dismiss();
@@ -584,7 +582,7 @@ public class StartActivity extends PortraitActivity implements HomeScreenViewFra
                     et_mobile_login.requestFocus();
                     et_mobile_login.setError(getResources().getString(R.string.Cellphone_number_invalid));
                 } else {
-                    loginWS(et_mobile_login.getText().toString());
+                    login(et_mobile_login.getText().toString());
                 }
             }
         }
@@ -616,7 +614,7 @@ public class StartActivity extends PortraitActivity implements HomeScreenViewFra
                     et_mobile_register.requestFocus();
                     et_mobile_register.setError(getResources().getString(R.string.Cellphone_number_invalid));
                 } else {
-                   registerWS(et_userName.getText().toString(), et_mobile_register.getText().toString());
+                   register(et_userName.getText().toString(), et_mobile_register.getText().toString());
                 }
             }
         }

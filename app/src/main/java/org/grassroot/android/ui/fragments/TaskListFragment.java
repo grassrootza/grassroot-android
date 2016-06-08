@@ -1,8 +1,11 @@
 package org.grassroot.android.ui.fragments;
 
 import android.app.DialogFragment;
+import android.app.ProgressDialog;
 import android.content.Intent;
+import android.media.Image;
 import android.os.Bundle;
+import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
@@ -13,11 +16,15 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
+import android.widget.ProgressBar;
+import android.widget.RelativeLayout;
 
 import org.grassroot.android.R;
 import org.grassroot.android.adapters.TasksAdapter;
 import org.grassroot.android.events.TaskChangedEvent;
 import org.grassroot.android.interfaces.GroupConstants;
+import org.grassroot.android.interfaces.NetworkErrorDialogListener;
 import org.grassroot.android.interfaces.TaskConstants;
 import org.grassroot.android.services.GrassrootRestService;
 import org.grassroot.android.services.model.GenericResponse;
@@ -32,6 +39,7 @@ import java.util.Map;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import butterknife.OnClick;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -54,6 +62,16 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
     SwipeRefreshLayout swipeRefreshLayout;
     @BindView(R.id.tl_recycler_view)
     RecyclerView rcTaskView;
+
+    @BindView(R.id.tl_error_layout)
+    RelativeLayout errorLayout;
+    @Nullable
+    @BindView(R.id.im_no_internet)
+    ImageView imNoInternet;
+
+    @Nullable
+    @BindView(R.id.progressBar)
+    ProgressBar progressBar;
 
     private boolean filteringActive;
     private Map<String, Boolean> filterFlags;
@@ -112,6 +130,8 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
     private void fetchTaskList() {
 
         swipeRefreshLayout.setRefreshing(true);
+        hideErrorLayout();
+        showProgress();
 
         Call<TaskResponse> call = (groupUid != null) ?
                 GrassrootRestService.getInstance().getApi().getGroupTasks(phoneNumber, code, groupUid) :
@@ -120,6 +140,7 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
         call.enqueue(new Callback<TaskResponse>() {
             @Override
             public void onResponse(Call<TaskResponse> call, Response<TaskResponse> response) {
+                hideProgress();
                 if (response.isSuccessful()) {
                     swipeRefreshLayout.setRefreshing(false);
                     TaskResponse taskResponse = response.body();
@@ -137,9 +158,36 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
             @Override
             public void onFailure(Call<TaskResponse> call, Throwable t) {
                 swipeRefreshLayout.setRefreshing(false);
-                ErrorUtils.handleNetworkError(getActivity(), container, t);
+                showErrorLayout();
+                hideProgress();
+                ErrorUtils.connectivityError(getActivity(), R.string.No_network, new NetworkErrorDialogListener() {
+                    @Override
+                    public void retryClicked() {
+                        fetchTaskList();
+                    }
+                });
             }
         });
+    }
+
+    private void showProgress(){
+        progressBar.setVisibility(View.VISIBLE);
+    }
+
+    private void hideProgress(){
+        progressBar.setVisibility(View.INVISIBLE);
+    }
+
+    private void showErrorLayout(){
+        errorLayout.setVisibility(View.VISIBLE);
+        imNoInternet.setVisibility(View.VISIBLE);
+    }
+
+    private void hideErrorLayout(){
+
+        errorLayout.setVisibility(View.GONE);
+        imNoInternet.setVisibility(View.VISIBLE);
+
     }
 
     /*
@@ -206,13 +254,8 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
                             ErrorUtils.showSnackBar(container, msgSuccess, Snackbar.LENGTH_LONG);
                             EventBus.getDefault().post(new TaskChangedEvent(position, response.body().getTasks().get(0)));
                         } else {
-                            if (response.code() == 409) { // todo: check this is right, and use constant, not hard code
-                                ErrorUtils.showSnackBar(container, msgAlreadyResponded, Snackbar.LENGTH_LONG);
-                            } else {
-                                ErrorUtils.showSnackBar(container, R.string.Unknown_error, Snackbar.LENGTH_LONG);
-                            }
-                        }
-                    }
+                                ErrorUtils.handleServerError(container, getActivity(),response);
+                    }}
 
                     @Override
                     public void onFailure(Call<TaskResponse> call, Throwable t) {
@@ -235,6 +278,10 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
         }
     }
 
+    @OnClick(R.id.im_no_internet)
+    public void onNoInternetClick(){
+        fetchTaskList();
+    }
     /*
     HANDLE FILTERING
      */
@@ -282,5 +329,6 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
         filterFlags.put(TaskConstants.MEETING, false);
         filterFlags.put(TaskConstants.TODO, false);
     }
+
 
 }

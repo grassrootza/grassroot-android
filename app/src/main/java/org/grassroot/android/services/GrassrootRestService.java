@@ -43,7 +43,7 @@ public class GrassrootRestService extends Application {
     //default constructor required by android
     public GrassrootRestService(){}
 
-    public GrassrootRestService(Context context) {
+    private GrassrootRestService(Context context) {
         HttpLoggingInterceptor logging = new HttpLoggingInterceptor();
         logging.setLevel(HttpLoggingInterceptor.Level.BASIC);
 
@@ -143,7 +143,7 @@ public class GrassrootRestService extends Application {
         @GET("task/list/{phoneNumber}/{code}")
         Call<TaskResponse> getUserTasks(@Path("phoneNumber") String phoneNumber, @Path("code") String code);
 
-        @GET("task/list/{parentUid}/{phoneNumber}/{code}")
+        @GET("task/list/{phoneNumber}/{code}/{parentUid}")
         Call<TaskResponse> getGroupTasks(@Path("phoneNumber") String phoneNumber, @Path("code") String code, @Path("parentUid") String groupUid);
 
         //cast vote
@@ -223,7 +223,7 @@ public class GrassrootRestService extends Application {
                                             @Query("location") String location,
                                             @Query("members") Set<String> memberUids);
 
-        // create t-do
+        // create to-do
         @POST("logbook/create/{phoneNumber}/{code}/{parentUid}")
         Call<TaskResponse> createTodo(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
                                          @Path("parentUid") String parentUid, @Query("title") String title,

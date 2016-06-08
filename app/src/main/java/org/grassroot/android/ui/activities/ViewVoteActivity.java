@@ -69,6 +69,8 @@ public class ViewVoteActivity extends PortraitActivity {
     LinearLayout rlVvMainLayout;
     @BindView(R.id.progressBarCircularIndeterminate)
     ProgressBarCircularIndeterminate progressBarCircularIndeterminate;
+    @BindView(R.id.error_layout)
+    RelativeLayout erroLayout;
     @BindView(R.id.txt_prg)
     TextView txtPrg;
     @BindView(R.id.bt_editVote)
@@ -99,8 +101,7 @@ public class ViewVoteActivity extends PortraitActivity {
     ImageView thumbsDown;
     @BindView(R.id.thumbs_up)
     ImageView thumbsUp;
-    @BindView(R.id.error_layout)
-    View errorLayout;
+
     @BindView(R.id.ll_maybe)
     LinearLayout llMaybe;
     @BindView(R.id.txt_maybe)
@@ -123,6 +124,8 @@ public class ViewVoteActivity extends PortraitActivity {
     TextView txtNumberNoRSVP;
     @BindView(R.id.count_numberNoRSVP)
     TextView countNumberNoRSVP;
+    @BindView(R.id.ll_no_internet)
+    LinearLayout imNoInternet;
     private String voteid;
     private String title;
     private String description;
@@ -177,6 +180,7 @@ public class ViewVoteActivity extends PortraitActivity {
 
     private void showProgress() {
         rlVvMainLayout.setVisibility(View.GONE);
+        erroLayout.setVisibility(View.GONE);
         progressBarCircularIndeterminate.setVisibility(View.VISIBLE);
         txtPrg.setVisibility(View.VISIBLE);
 
@@ -196,6 +200,10 @@ public class ViewVoteActivity extends PortraitActivity {
 
             @Override
             public void onFailure(Call<EventResponse> call, Throwable t) {
+                txtPrg.setVisibility(View.INVISIBLE);
+                erroLayout.setVisibility(View.VISIBLE);
+                imNoInternet.setVisibility(View.VISIBLE);
+                txtPrg.setVisibility(View.GONE);
                 progressBarCircularIndeterminate.setVisibility(View.GONE);
                 ErrorUtils.connectivityError(ViewVoteActivity.this, R.string.No_network, new NetworkErrorDialogListener() {
                     @Override
@@ -203,7 +211,7 @@ public class ViewVoteActivity extends PortraitActivity {
                      updateView();
                     }
                 });
-              //  ErrorUtils.handleNetworkError(ViewVoteActivity.this, errorLayout, t);
+
             }
         });
 
@@ -340,7 +348,8 @@ public class ViewVoteActivity extends PortraitActivity {
                     @Override
                     public void onFailure(Call<TaskResponse> call, Throwable t) {
                         progressBarCircularIndeterminate.setVisibility(View.GONE);
-                        txtPrg.setVisibility(View.GONE);
+                        erroLayout.setVisibility(View.VISIBLE);
+
                         ErrorUtils.connectivityError(ViewVoteActivity.this, R.string.No_network, new NetworkErrorDialogListener() {
                             @Override
                             public void retryClicked() {
@@ -387,6 +396,11 @@ public class ViewVoteActivity extends PortraitActivity {
             startActivityForResult(i, 1);
 
         }
+    }
+
+    @OnClick(R.id.error_layout)
+    public void onErrorLayoutClick(){
+        fetchVoteDetails();
     }
 
     public void expand() {

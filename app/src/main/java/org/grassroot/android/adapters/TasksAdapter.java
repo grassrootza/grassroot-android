@@ -47,6 +47,7 @@ public class TasksAdapter extends RecyclerView.Adapter<TasksAdapter.TaskViewHold
 
     public interface TaskListListener {
         void respondToTask(String taskUid, String taskType, String response, int position);
+
         void onCardClick(int position, String taskUid, String taskType);
     }
 
@@ -97,7 +98,7 @@ public class TasksAdapter extends RecyclerView.Adapter<TasksAdapter.TaskViewHold
         view.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                // listener.onCardClick(position, task.getId(), task.getType());
+                listener.onCardClick(position, task.getId(), task.getType());
             }
         });
     }
@@ -254,8 +255,9 @@ public class TasksAdapter extends RecyclerView.Adapter<TasksAdapter.TaskViewHold
 
     @Subscribe
     public void onTaskChanged(TaskChangedEvent event) {
-        Log.d(TAG, "task changed! update its icons, if it is in this group");
+        Log.e(TAG, "task changed! update its icons, if it is in this group");
         if (parentUid == null || parentUid.equals(event.getTaskModel().getParentUid())) {
+            Log.e(TAG,event.getTaskModel().getParentUid());
             final TaskModel updatedTask = event.getTaskModel();
             viewedTasks.set(event.getPosition(), updatedTask);
             notifyItemChanged(event.getPosition());
@@ -306,7 +308,8 @@ public class TasksAdapter extends RecyclerView.Adapter<TasksAdapter.TaskViewHold
 
     public void addOrRemoveTaskType(final String taskType, final boolean add) {
         final List<TaskModel> tasks = decomposedList.get(taskType);
-        if (tasks == null) throw new UnsupportedOperationException("Error! Calling add remove with invalid type");
+        if (tasks == null)
+            throw new UnsupportedOperationException("Error! Calling add remove with invalid type");
 
         if (!add) {
             viewedTasks.remove(tasks);
