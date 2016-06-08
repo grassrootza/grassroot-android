@@ -143,7 +143,7 @@
     <!-- Phone book and other strings -->
     <string name="cs_title">Select contacts</string>
     <string name="action_search">Search...</string>
-    <string name="cg_contacs_loading">Scanning all your contacts....</string>
+    <string name="cs_loading_contacts">Loading your contacts....</string>
     <string name="cg_dialog_title">Select any one number</string>
     <string name="title_activity_alert_dialog">AlertDialogActivity</string>
     <string name="title_activity_add_contact_manually">AddContactManually</string>

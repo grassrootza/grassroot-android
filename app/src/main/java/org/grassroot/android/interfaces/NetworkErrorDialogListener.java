@@ -1,12 +1,10 @@
 package org.grassroot.android.interfaces;
 
 import android.app.Activity;
-import android.content.Context;
 import android.content.Intent;
-import android.support.v4.app.Fragment;
 import android.util.Log;
 
-import org.grassroot.android.ui.fragments.NetworkErrorDialogFragment;
+import org.grassroot.android.fragments.NetworkErrorDialogFragment;
 import org.grassroot.android.utils.Constant;
 
 /**

@@ -4,16 +4,16 @@ import android.app.Application;
 import android.content.Context;
 import android.support.annotation.Nullable;
 
-import org.grassroot.android.services.model.EventResponse;
-import org.grassroot.android.services.model.GenericResponse;
-import org.grassroot.android.services.model.GroupResponse;
-import org.grassroot.android.services.model.GroupSearchResponse;
-import org.grassroot.android.services.model.Member;
-import org.grassroot.android.services.model.MemberList;
-import org.grassroot.android.services.model.NotificationList;
-import org.grassroot.android.services.model.ProfileResponse;
-import org.grassroot.android.services.model.TaskResponse;
-import org.grassroot.android.services.model.TokenResponse;
+import org.grassroot.android.models.EventResponse;
+import org.grassroot.android.models.GenericResponse;
+import org.grassroot.android.models.GroupResponse;
+import org.grassroot.android.models.GroupSearchResponse;
+import org.grassroot.android.models.Member;
+import org.grassroot.android.models.MemberList;
+import org.grassroot.android.models.NotificationList;
+import org.grassroot.android.models.ProfileResponse;
+import org.grassroot.android.models.TaskResponse;
+import org.grassroot.android.models.TokenResponse;
 import org.grassroot.android.utils.Constant;
 
 import java.util.List;

@@ -18,7 +18,7 @@ import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.LocationSettingsRequest;
 import com.google.android.gms.location.LocationSettingsResult;
 import org.grassroot.android.services.GrassrootRestService;
-import org.grassroot.android.services.model.GenericResponse;
+import org.grassroot.android.models.GenericResponse;
 
 import retrofit2.Call;
 import retrofit2.Callback;

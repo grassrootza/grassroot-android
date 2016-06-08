@@ -5,21 +5,17 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
 import android.support.design.widget.Snackbar;
-import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentActivity;
 import android.util.Log;
 import android.view.View;
 
 import org.grassroot.android.R;
-import org.grassroot.android.interfaces.AlertDialogListener;
 import org.grassroot.android.interfaces.NetworkErrorDialogListener;
 import org.grassroot.android.services.NoConnectivityException;
-import org.grassroot.android.ui.activities.GroupJoinActivity;
-import org.grassroot.android.ui.activities.GroupTasksActivity;
-import org.grassroot.android.ui.activities.StartActivity;
-import org.grassroot.android.ui.activities.ViewVoteActivity;
-import org.grassroot.android.ui.fragments.AlertDialogFragment;
-import org.grassroot.android.ui.fragments.NetworkErrorDialogFragment;
+import org.grassroot.android.activities.GroupJoinActivity;
+import org.grassroot.android.activities.GroupTasksActivity;
+import org.grassroot.android.activities.StartActivity;
+import org.grassroot.android.activities.ViewVoteActivity;
+import org.grassroot.android.fragments.NetworkErrorDialogFragment;
 
 import java.io.IOException;
 import java.net.SocketTimeoutException;

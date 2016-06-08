@@ -8,7 +8,7 @@
     android:layout_height="match_parent"
     android:fitsSystemWindows="true"
     android:background="@color/list_background_pressed"
-    tools:context=".ui.activities.GroupTasksActivity">
+    tools:context=".activities.GroupTasksActivity">
 
     <android.support.design.widget.AppBarLayout
         android:id="@+id/gta_appbar"

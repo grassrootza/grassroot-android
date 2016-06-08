@@ -1,6 +1,5 @@
 package org.grassroot.android.adapters;
 
-import android.app.Activity;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -10,7 +9,7 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import org.grassroot.android.R;
-import org.grassroot.android.services.model.Notification;
+import org.grassroot.android.models.Notification;
 
 import java.util.ArrayList;
 import java.util.List;

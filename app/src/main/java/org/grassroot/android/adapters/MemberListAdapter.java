@@ -10,7 +10,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import org.grassroot.android.R;
-import org.grassroot.android.services.model.Member;
+import org.grassroot.android.models.Member;
 
 import java.util.ArrayList;
 import java.util.List;

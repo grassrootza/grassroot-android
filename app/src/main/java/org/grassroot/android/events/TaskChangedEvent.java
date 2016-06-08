@@ -1,6 +1,6 @@
 package org.grassroot.android.events;
 
-import org.grassroot.android.services.model.TaskModel;
+import org.grassroot.android.models.TaskModel;
 
 /**
  * Created by luke on 2016/06/06.

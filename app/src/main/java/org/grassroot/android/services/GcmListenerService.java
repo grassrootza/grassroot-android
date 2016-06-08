@@ -12,15 +12,12 @@ import android.media.RingtoneManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.NotificationCompat;
-import android.support.v4.app.TaskStackBuilder;
 import android.util.Log;
 import org.grassroot.android.R;
-import org.grassroot.android.events.NotificationEvent;
-import org.grassroot.android.ui.activities.NotBuiltActivity;
-import org.grassroot.android.ui.activities.ViewVoteActivity;
+import org.grassroot.android.activities.NotBuiltActivity;
+import org.grassroot.android.activities.ViewVoteActivity;
 import org.grassroot.android.utils.Constant;
 import org.grassroot.android.utils.PreferenceUtils;
-import org.greenrobot.eventbus.EventBus;
 
 import java.util.List;
 

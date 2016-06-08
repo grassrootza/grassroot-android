@@ -1,7 +1,6 @@
 package org.grassroot.android.adapters;
 
 import android.content.Context;
-import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -14,8 +13,8 @@ import android.widget.TextView;
 
 import org.grassroot.android.R;
 import org.grassroot.android.interfaces.GroupConstants;
-import org.grassroot.android.services.model.Group;
-import org.grassroot.android.ui.fragments.HomeGroupListFragment;
+import org.grassroot.android.models.Group;
+import org.grassroot.android.fragments.HomeGroupListFragment;
 
 import java.text.SimpleDateFormat;
 import java.util.Collections;

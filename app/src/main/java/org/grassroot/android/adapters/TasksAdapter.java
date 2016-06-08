@@ -16,7 +16,7 @@ import org.grassroot.android.R;
 import org.grassroot.android.events.TaskAddedEvent;
 import org.grassroot.android.events.TaskChangedEvent;
 import org.grassroot.android.interfaces.TaskConstants;
-import org.grassroot.android.services.model.TaskModel;
+import org.grassroot.android.models.TaskModel;
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 

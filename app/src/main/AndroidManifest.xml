@@ -55,7 +55,7 @@
         <!-- Core activities -->
 
         <activity
-            android:name=".ui.activities.StartActivity"
+            android:name=".activities.StartActivity"
             android:launchMode="singleTop">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -64,65 +64,65 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".ui.activities.HomeScreenActivity"
+            android:name=".activities.HomeScreenActivity"
             android:configChanges="keyboardHidden|orientation"
             android:label="@string/app_name"
             android:launchMode="singleTask"
             android:screenOrientation="portrait" />
         <activity
-            android:name=".ui.activities.GroupTasksActivity"
+            android:name=".activities.GroupTasksActivity"
             android:label="@string/title_activity_group_tasks"
-            android:parentActivityName=".ui.activities.HomeScreenActivity"
+            android:parentActivityName=".activities.HomeScreenActivity"
             android:theme="@style/AppTheme" />
         <activity
-            android:name=".ui.activities.NewTaskMenuActivity"
+            android:name=".activities.NewTaskMenuActivity"
             android:noHistory="true" />
 
         <!-- Group management activities -->
         <activity
-            android:name=".ui.activities.CreateGroupActivity"
+            android:name=".activities.CreateGroupActivity"
             android:label="@string/title_activity_create__group"
             android:windowSoftInputMode="adjustPan" />
         <activity
-            android:name=".ui.activities.AddMembersActivity"
+            android:name=".activities.AddMembersActivity"
             android:label="@string/title_activity_add_members"
             android:screenOrientation="portrait" />
         <activity
-            android:name=".ui.activities.RemoveMembersActivity"
+            android:name=".activities.RemoveMembersActivity"
             android:label="@string/title_activity_remove_members"
-            android:parentActivityName=".ui.activities.GroupTasksActivity" /> <!-- todo: reorder to home -->
+            android:parentActivityName=".activities.GroupTasksActivity" /> <!-- todo: reorder to home -->
 
         <activity
-            android:name=".ui.activities.GroupMembersActivity"
+            android:name=".activities.GroupMembersActivity"
             android:label="@string/title_activity_group_members"
-            android:parentActivityName=".ui.activities.HomeScreenActivity" />
+            android:parentActivityName=".activities.HomeScreenActivity" />
         <activity
-            android:name=".ui.activities.GroupJoinActivity"
+            android:name=".activities.GroupJoinActivity"
             android:label="@string/title_activity_join__request" />
 
         <!-- Contact book and related activities -->
         <activity
-            android:name=".ui.activities.AddContactManually"
+            android:name=".activities.AddContactManually"
             android:label="@string/title_activity_add_contact_manually"
             android:theme="@style/AppTheme" />
         <activity
-            android:name=".ui.activities.NotBuiltActivity"
+            android:name=".activities.NotBuiltActivity"
             android:label="@string/title_activity_blank"
             android:theme="@style/AppTheme" />
 
         <!-- Meeting related activities -->
 
         <activity
-            android:name=".ui.activities.CreateMeetingActivity"
+            android:name=".activities.CreateMeetingActivity"
             android:label="@string/cmtg_title"
             android:theme="@style/AppTheme" />
 
         <!-- Vote related activities -->
 
         <activity
-            android:name=".ui.activities.ViewVoteActivity"
+            android:name=".activities.ViewVoteActivity"
             android:exported="true"
-            android:parentActivityName=".ui.activities.StartActivity">
+            android:parentActivityName=".activities.StartActivity">
             <intent-filter>
                 <action android:name="VOTE" />
 
@@ -131,27 +131,27 @@
 
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value=".ui.activities.StartActivity" />
+                android:value=".activities.StartActivity" />
         </activity>
         <activity
-            android:name=".ui.activities.EditVoteActivity"
+            android:name=".activities.EditVoteActivity"
             android:windowSoftInputMode="adjustPan" />
-        <activity android:name=".ui.activities.ProfileSettings" />
+        <activity android:name=".activities.ProfileSettings" />
         <activity
-            android:name=".ui.activities.CreateVoteActivity"
+            android:name=".activities.CreateVoteActivity"
             android:label="@string/title_activity_create_vote"
             android:theme="@style/AppTheme"
             android:windowSoftInputMode="adjustResize" />
 
         <!-- Todo related activities -->
         <activity
-            android:name=".ui.activities.CreateTodoActivity"
+            android:name=".activities.CreateTodoActivity"
             android:label="@string/ctodo_title"
             android:theme="@style/AppTheme" />
 
         <!-- Navigation drawer / system activities -->
-        <activity android:name=".ui.activities.NotificationCenter" />
-        <activity android:name=".ui.activities.FAQActivity" />
+        <activity android:name=".activities.NotificationCenter" />
+        <activity android:name=".activities.FAQActivity" />
 
         <service
             android:name=".services.GcmListenerService"

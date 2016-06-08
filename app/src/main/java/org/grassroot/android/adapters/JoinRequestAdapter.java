@@ -8,7 +8,7 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import org.grassroot.android.R;
-import org.grassroot.android.services.model.GroupSearchModel;
+import org.grassroot.android.models.GroupSearchModel;
 
 
 import java.util.List;

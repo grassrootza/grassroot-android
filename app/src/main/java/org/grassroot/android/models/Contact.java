@@ -3,7 +3,6 @@ package org.grassroot.android.models;
 import android.os.Parcel;
 import android.os.Parcelable;
 
-import org.grassroot.android.services.model.Member;
 import org.grassroot.android.utils.UtilClass;
 
 import java.util.ArrayList;

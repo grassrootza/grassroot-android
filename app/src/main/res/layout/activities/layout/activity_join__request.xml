@@ -2,7 +2,7 @@
     xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:id="@+id/rl_root"
-     tools:context="org.grassroot.android.ui.activities.GroupJoinActivity">
+     tools:context=".activities.GroupJoinActivity">
 
 
     <android.support.v7.widget.Toolbar

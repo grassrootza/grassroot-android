@@ -9,7 +9,7 @@ import com.google.android.gms.gcm.GoogleCloudMessaging;
 import com.google.android.gms.iid.InstanceID;
 
 import org.grassroot.android.R;
-import org.grassroot.android.services.model.GenericResponse;
+import org.grassroot.android.models.GenericResponse;
 import org.grassroot.android.utils.PreferenceUtils;
 
 import java.io.IOException;

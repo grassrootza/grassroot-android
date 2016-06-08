@@ -16,9 +16,9 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import org.grassroot.android.interfaces.AlertDialogListener;
-import org.grassroot.android.services.model.Member;
-import org.grassroot.android.ui.fragments.AlertDialogFragment;
-import org.grassroot.android.ui.fragments.NotificationDialog;
+import org.grassroot.android.models.Member;
+import org.grassroot.android.fragments.AlertDialogFragment;
+import org.grassroot.android.fragments.NotificationDialog;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;

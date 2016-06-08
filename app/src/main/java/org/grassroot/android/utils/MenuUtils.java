@@ -3,8 +3,10 @@ package org.grassroot.android.utils;
 import android.content.Context;
 import android.content.Intent;
 
-import org.grassroot.android.services.model.Member;
-import org.grassroot.android.ui.activities.GroupMembersActivity;
+import org.grassroot.android.interfaces.GroupConstants;
+import org.grassroot.android.models.Group;
+import org.grassroot.android.models.Member;
+import org.grassroot.android.activities.GroupMembersActivity;
 
 import java.util.ArrayList;
 
@@ -17,6 +19,12 @@ public final class MenuUtils {
         Intent i = new Intent(callingContext, toActivityClass);
         i.putExtra(Constant.GROUPUID_FIELD, groupUid);
         i.putExtra(Constant.GROUPNAME_FIELD, groupName);
+        return i;
+    }
+
+    public static Intent constructIntent(Context callingContext, Class toActivityClass, Group group) {
+        Intent i = new Intent(callingContext, toActivityClass);
+        i.putExtra(GroupConstants.OBJECT_FIELD, group);
         return i;
     }
 
