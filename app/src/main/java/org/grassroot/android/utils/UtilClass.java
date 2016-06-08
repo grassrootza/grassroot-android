@@ -53,11 +53,6 @@ public class UtilClass {
         MODEL = Build.MODEL;
     }
 
-    public void showsnackBar(View v, Context applicationContext, String message) {
-        snackBar= Snackbar.make(v, message, Snackbar.LENGTH_SHORT);
-        snackBar.show();
-    }
-
     // todo: switch all of these to ConfirmCancel or other variants
     public static AlertDialogFragment showAlertDialog(FragmentManager manager,String title, String message, String left, String right,
                                                Boolean cancellable, AlertDialogListener alertDialogListener) {

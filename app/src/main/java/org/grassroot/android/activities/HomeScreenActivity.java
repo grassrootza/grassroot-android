@@ -9,13 +9,17 @@ import android.util.Log;
 import android.view.Gravity;
 
 import org.grassroot.android.R;
+import org.grassroot.android.fragments.NewTaskMenuFragment;
 import org.grassroot.android.interfaces.AlertDialogListener;
+import org.grassroot.android.interfaces.GroupConstants;
 import org.grassroot.android.interfaces.NavigationConstants;
 import org.grassroot.android.fragments.AlertDialogFragment;
 import org.grassroot.android.fragments.HomeGroupListFragment;
 import org.grassroot.android.fragments.NavigationDrawerFragment;
 import org.grassroot.android.fragments.WelcomeFragment;
+import org.grassroot.android.models.Group;
 import org.grassroot.android.utils.Constant;
+import org.grassroot.android.utils.MenuUtils;
 import org.grassroot.android.utils.PreferenceUtils;
 import org.grassroot.android.utils.UtilClass;
 import org.greenrobot.eventbus.EventBus;
@@ -24,7 +28,7 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 
 public class HomeScreenActivity extends PortraitActivity implements NavigationDrawerFragment.NavigationDrawerCallbacks,
-        WelcomeFragment.FragmentCallbacks, HomeGroupListFragment.FragmentCallbacks {
+        WelcomeFragment.FragmentCallbacks, HomeGroupListFragment.GroupListFragmentListener, NewTaskMenuFragment.NewTaskMenuListener {
 
     private static final String TAG = HomeScreenActivity.class.getCanonicalName();
 
@@ -34,6 +38,7 @@ public class HomeScreenActivity extends PortraitActivity implements NavigationDr
     private Fragment mainFragment;
     private NavigationDrawerFragment drawerFrag;
     private AlertDialogFragment alertDialogFragment;
+    private NewTaskMenuFragment newTaskMenuFragment;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -59,10 +64,7 @@ public class HomeScreenActivity extends PortraitActivity implements NavigationDr
         if(requestCode == Constant.activityNetworkSettings) {
             HomeGroupListFragment hgl = (HomeGroupListFragment) mainFragment;
             hgl.fetchGroupList();
-          //  EventBus.getDefault().post(new NetworkActivityResultsEvent());
-            Log.d(TAG, "event fired");
-        }
-        else if (resultCode == RESULT_OK && data != null) {
+        } else if (resultCode == RESULT_OK && data != null) {
             if (requestCode == Constant.activityAddMembersToGroup || requestCode == Constant.activityRemoveMembers) {
                 Log.d(TAG, "Got a result from add or remove members to group!");
                 int groupPosition = data.getIntExtra(Constant.INDEX_FIELD, -1);
@@ -125,8 +127,32 @@ public class HomeScreenActivity extends PortraitActivity implements NavigationDr
     }
 
     @Override
+    public void groupRowClick(Group group) {
+        if (group.isHasTasks()) {
+            startActivity(MenuUtils.constructIntent(this, GroupTasksActivity.class, group));
+        } else {
+            newTaskMenuFragment = new NewTaskMenuFragment();
+            newTaskMenuFragment.setArguments(MenuUtils.groupArgument(group));
+            getSupportFragmentManager().beginTransaction()
+                    .setCustomAnimations(R.anim.up_from_bottom, R.anim.down_from_top)
+                    .add(R.id.drawer_layout, newTaskMenuFragment, NewTaskMenuFragment.class.getCanonicalName())
+                    .addToBackStack(null)
+                    .commit();
+        }
+    }
+
+    @Override
     public void menuClick() { // Getting data from fragment
         if (drawer != null) drawer.openDrawer(GravityCompat.START);
     }
 
+    @Override
+    public void menuCloseClicked() {
+        newTaskMenuFragment = (NewTaskMenuFragment) getSupportFragmentManager()
+                .findFragmentByTag(NewTaskMenuFragment.class.getCanonicalName()) ;
+        getSupportFragmentManager().beginTransaction()
+                .setCustomAnimations(R.anim.push_down_in, R.anim.push_down_out)
+                .remove(newTaskMenuFragment)
+                .commit();
+    }
 }

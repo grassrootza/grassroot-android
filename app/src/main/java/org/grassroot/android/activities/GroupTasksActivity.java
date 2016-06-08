@@ -5,12 +5,12 @@ import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.widget.FrameLayout;
 
 import org.grassroot.android.R;
+import org.grassroot.android.fragments.NewTaskMenuFragment;
+import org.grassroot.android.fragments.TaskListFragment;
 import org.grassroot.android.interfaces.GroupConstants;
 import org.grassroot.android.models.Group;
-import org.grassroot.android.fragments.TaskListFragment;
 import org.grassroot.android.utils.Constant;
 import org.grassroot.android.utils.MenuUtils;
 
@@ -21,18 +21,16 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 
-public class GroupTasksActivity extends PortraitActivity {
+public class GroupTasksActivity extends PortraitActivity implements NewTaskMenuFragment.NewTaskMenuListener {
 
     private static final String TAG = GroupTasksActivity.class.getCanonicalName();
 
     private Group groupMembership;
     private TaskListFragment taskListFragment;
+    private NewTaskMenuFragment newTaskMenuFragment;
 
     @BindView(R.id.gta_toolbar)
     Toolbar toolbar;
-
-    @BindView(R.id.gta_fragment_holder)
-    FrameLayout fragmentHolder;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -46,6 +44,9 @@ public class GroupTasksActivity extends PortraitActivity {
         }
 
         groupMembership = extras.getParcelable(GroupConstants.OBJECT_FIELD);
+        newTaskMenuFragment = new NewTaskMenuFragment();
+        newTaskMenuFragment.setArguments(MenuUtils.groupArgument(groupMembership));
+
         setUpViews();
         setUpFragment();
     }
@@ -86,8 +87,11 @@ public class GroupTasksActivity extends PortraitActivity {
 
     @OnClick(R.id.gta_fab)
     public void openNewTaskMenu() {
-        // todo : use / pass permissions
-        startActivity(MenuUtils.constructIntent(GroupTasksActivity.this, NewTaskMenuActivity.class, groupMembership));
+        getSupportFragmentManager().beginTransaction()
+                .setCustomAnimations(R.anim.up_from_bottom, R.anim.down_from_top)
+                .add(R.id.gta_root_layout, newTaskMenuFragment)
+                .addToBackStack(null)
+                .commit();
     }
 
     @Override
@@ -115,4 +119,11 @@ public class GroupTasksActivity extends PortraitActivity {
         }
     }
 
+    @Override
+    public void menuCloseClicked() {
+        getSupportFragmentManager().beginTransaction()
+                .setCustomAnimations(R.anim.push_down_in, R.anim.push_down_out)
+                .remove(newTaskMenuFragment)
+                .commit();
+    }
 }

@@ -16,6 +16,8 @@ import org.grassroot.android.activities.AddMembersActivity;
 import org.grassroot.android.activities.GroupMembersActivity;
 import org.grassroot.android.activities.HomeScreenActivity;
 import org.grassroot.android.activities.RemoveMembersActivity;
+import org.grassroot.android.interfaces.GroupConstants;
+import org.grassroot.android.models.Group;
 import org.grassroot.android.utils.Constant;
 import org.grassroot.android.utils.MenuUtils;
 
@@ -35,6 +37,7 @@ public class GroupQuickMemberModalFragment extends android.support.v4.app.Dialog
     @BindView(R.id.ic_remove_members_active)
     ImageView icRemoveMembersIcon;
 
+    private Group group;
     private String groupUid;
     private String groupName;
     private int groupPosition;
@@ -62,20 +65,26 @@ public class GroupQuickMemberModalFragment extends android.support.v4.app.Dialog
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
-
         Bundle b = getArguments();
-        if (b == null) { throw new UnsupportedOperationException("Error! Null arguments passed to modal"); }
+        if (b == null) {
+            throw new UnsupportedOperationException("Error! Null arguments passed to modal");
+        }
 
         Log.d(TAG, "inside quickGroupMemberBundle, passed bundle = " + b.toString());
+        group = b.getParcelable(GroupConstants.OBJECT_FIELD);
+        groupPosition = b.getInt(Constant.INDEX_FIELD);
 
-        this.groupUid = b.getString(Constant.GROUPUID_FIELD);
-        this.groupName = b.getString(Constant.GROUPNAME_FIELD);
-        this.groupPosition = b.getInt(Constant.INDEX_FIELD);
+        if (group == null) {
+            throw new UnsupportedOperationException("Error! Fragment called without group object");
+        }
 
-        addMemberPermitted = b.getBoolean("addMember");
-        viewMembersPermitted = b.getBoolean("viewMembers");
-        removeMembersPermitted = b.getBoolean("removeMembers");
-        editSettingsPermitted = b.getBoolean("editSettings");
+        groupUid = group.getGroupUid();
+        groupName = group.getGroupName();
+
+        addMemberPermitted = group.canAddMembers();
+        viewMembersPermitted = group.canViewMembers();
+        removeMembersPermitted = group.canDeleteMembers();
+        editSettingsPermitted = group.canEditGroup();
 
         int addIcon = addMemberPermitted ? R.drawable.ic_add_circle_active_24dp : R.drawable.ic_add_circle_inactive_24dp;
         int viewIcon = viewMembersPermitted ? R.drawable.ic_list_icon_active_24dp : R.drawable.ic_list_icon_inactive_24dp;
@@ -102,7 +111,7 @@ public class GroupQuickMemberModalFragment extends android.support.v4.app.Dialog
     @OnClick(R.id.ic_home_view_members_active)
     public  void gmViewMembersIconListener() {
         if (viewMembersPermitted) {
-            Intent viewMembers = MenuUtils.constructIntent(getActivity(), GroupMembersActivity.class, groupUid, groupName);
+            Intent viewMembers = MenuUtils.constructIntent(getActivity(), GroupMembersActivity.class, group);
             viewMembers.putExtra(Constant.PARENT_TAG_FIELD, HomeScreenActivity.class.getCanonicalName());
             startActivity(viewMembers);
             getDialog().dismiss();

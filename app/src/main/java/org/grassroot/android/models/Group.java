@@ -29,8 +29,10 @@ public class Group implements Parcelable, Comparable<Group> {
     private String description;
 
     private Date date;
-    private DateTime dateTime;
+    private DateTime dateTime; // used in JSON conversion
     private String dateTimeStringISO;
+
+    private boolean hasTasks;
 
     private List<String> permissions = new ArrayList<>(); // todo: convert this to a set so can do fast hashing
 
@@ -66,23 +68,13 @@ public class Group implements Parcelable, Comparable<Group> {
         return role;
     }
 
-    public void setRole(String role) {
-        this.role = role;
-    }
-
     public Integer getGroupMemberCount() {
         return groupMemberCount;
     }
 
-    public DateTime getDateTime() {
-        return dateTime;
-    }
-
-    public void setDateTime(DateTime dateTime) {
-        this.dateTime = dateTime;
-    }
-
     public String getJoinCode() { return joinCode; }
+
+    public boolean isHasTasks() { return hasTasks; }
 
     public String getDateTimeStringISO() {
         if (dateTimeStringISO == null || dateTimeStringISO.equals("")) {
@@ -124,6 +116,36 @@ public class Group implements Parcelable, Comparable<Group> {
         this.permissions = permissions;
     }
 
+    /* Helper methods to centralize checking permissions */
+
+    public boolean canCallMeeting() {
+        return permissions.contains(GroupConstants.PERM_CREATE_MTG);
+    }
+
+    public boolean canCallVote() {
+        return permissions.contains(GroupConstants.PERM_CALL_VOTE);
+    }
+
+    public boolean canCreateTodo() {
+        return permissions.contains(GroupConstants.PERM_CREATE_TODO);
+    }
+
+    public boolean canAddMembers() {
+        return permissions.contains(GroupConstants.PERM_ADD_MEMBER);
+    }
+
+    public boolean canViewMembers() {
+        return permissions.contains(GroupConstants.PERM_VIEW_MEMBERS);
+    }
+
+    public boolean canDeleteMembers() {
+        return permissions.contains(GroupConstants.PERM_DEL_MEMBER);
+    }
+
+    public boolean canEditGroup() {
+        return permissions.contains(GroupConstants.PERM_GROUP_SETTNGS);
+    }
+
     private void constructDate() {
         Calendar calendar = Calendar.getInstance();
 
@@ -154,6 +176,7 @@ public class Group implements Parcelable, Comparable<Group> {
         dest.writeString(getDateTimeStringISO());
         dest.writeString(this.lastChangeType);
         dest.writeString(this.joinCode);
+        dest.writeInt(hasTasks ? 1 : 0);
         dest.writeStringList(this.permissions);
     }
 
@@ -167,6 +190,7 @@ public class Group implements Parcelable, Comparable<Group> {
         dateTimeStringISO = in.readString();
         lastChangeType = in.readString();
         joinCode = in.readString();
+        hasTasks = in.readInt() != 0;
         permissions = in.createStringArrayList();
     }
 

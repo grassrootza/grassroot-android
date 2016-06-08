@@ -2,6 +2,7 @@ package org.grassroot.android.utils;
 
 import android.content.Context;
 import android.content.Intent;
+import android.os.Bundle;
 
 import org.grassroot.android.interfaces.GroupConstants;
 import org.grassroot.android.models.Group;
@@ -26,6 +27,12 @@ public final class MenuUtils {
         Intent i = new Intent(callingContext, toActivityClass);
         i.putExtra(GroupConstants.OBJECT_FIELD, group);
         return i;
+    }
+
+    public static Bundle groupArgument(Group group) {
+        Bundle b = new Bundle();
+        b.putParcelable(GroupConstants.OBJECT_FIELD, group);
+        return b;
     }
 
     public static Intent memberSelectionIntent(Context callingContext, String groupUid, String TAG,

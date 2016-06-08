@@ -109,23 +109,23 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment imple
 
     public boolean date_click = false, role_click = false, defaults_click = false;
 
-    private FragmentCallbacks mCallbacks;
-
+    private GroupListFragmentListener mCallbacks;
 
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
         Activity activity = (Activity) context;
         try {
-            mCallbacks = (FragmentCallbacks) activity;
+            mCallbacks = (GroupListFragmentListener) activity;
             Log.e("onAttach", "Attached");
         } catch (ClassCastException e) {
             throw new ClassCastException("Activity must implement Fragment One.");
         }
     }
 
-    public interface FragmentCallbacks {
+    public interface GroupListFragmentListener {
         void menuClick();
+        void groupRowClick(Group group);
     }
 
     @Override
@@ -435,13 +435,10 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment imple
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (resultCode == Activity.RESULT_OK && requestCode == Constant.activityCreateGroup) {
-            Log.e(TAG, "got the result in the fragment, code : " + requestCode);
             Group createdGroup = data.getParcelableExtra(GroupConstants.OBJECT_FIELD);
-            Log.e(TAG, "createdGroup returned! with UID: " + createdGroup);
+            Log.d(TAG, "createdGroup returned! with UID: " + createdGroup);
             insertGroup(0, createdGroup);
         }
-
-
     }
 
     @OnClick({R.id.im_no_results, R.id.im_no_internet, R.id.im_server_error})
@@ -452,18 +449,13 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment imple
     @Override
     public void onGroupRowShortClick(Group group) {
         menu1.close(true);
-        //Intent openGroupTasks = MenuUtils.constructIntent(getActivity(), GroupTasksActivity.class,
-                //group.getGroupUid(), group.getGroupName());
-        Intent openGroupTasks = new Intent(getActivity(), GroupTasksActivity.class);
-        openGroupTasks.putExtra(GroupConstants.OBJECT_FIELD, group);
-        startActivity(openGroupTasks);
+        mCallbacks.groupRowClick(group);
     }
 
     @Override
     public void onGroupRowLongClick(Group group) {
         GroupQuickTaskModalFragment dialog = new GroupQuickTaskModalFragment();
         dialog.setGroupParameters(group.getGroupUid(), group.getGroupName());
-
         Bundle args = new Bundle();
         args.putBoolean(TaskConstants.MEETING, group.getPermissions().contains(GroupConstants.PERM_CREATE_MTG));
         args.putBoolean(TaskConstants.VOTE, group.getPermissions().contains(GroupConstants.PERM_CALL_VOTE));
@@ -475,24 +467,12 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment imple
     @Override
     public void onGroupRowMemberClick(Group group, int position) {
         GroupQuickMemberModalFragment dialog = new GroupQuickMemberModalFragment();
-
         Bundle args = new Bundle();
-        args.putString(Constant.GROUPUID_FIELD, group.getGroupUid());
-        args.putString(Constant.GROUPNAME_FIELD, group.getGroupName());
-        args.putInt(Constant.INDEX_FIELD, position); // todo : use hashmaps maybe
-
-        // todo: make these boolean getters in the grpMembership thing
-        args.putBoolean("addMember", group.getPermissions().contains(GroupConstants.PERM_ADD_MEMBER));
-        args.putBoolean("viewMembers", group.getPermissions().contains(GroupConstants.PERM_VIEW_MEMBERS));
-        args.putBoolean("editSettings", group.getPermissions().contains(GroupConstants.PERM_GROUP_SETTNGS));
-        args.putBoolean("removeMembers", group.getPermissions().contains(GroupConstants.PERM_DEL_MEMBER));
-
+        args.putParcelable(GroupConstants.OBJECT_FIELD, group);
+        args.putInt(Constant.INDEX_FIELD, position);
         dialog.setArguments(args);
         dialog.show(getFragmentManager(), "GroupQuickMemberModalFragment");
     }
-
-
-
 
     @Override
     public void onDetach() {

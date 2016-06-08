@@ -75,7 +75,7 @@
             android:parentActivityName=".activities.HomeScreenActivity"
             android:theme="@style/AppTheme" />
         <activity
-            android:name=".activities.NewTaskMenuActivity"
+            android:name=".fragments.NewTaskMenuFragment"
             android:noHistory="true" />
 
         <!-- Group management activities -->

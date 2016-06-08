@@ -159,7 +159,6 @@ public class CreateGroupActivity extends PortraitActivity implements
 
     private void launchContactSelectionFragment() {
         Set<Contact> preSelectedSet = new HashSet<>(Contact.convertFromMembers(memberListFragment.getSelectedMembers()));
-
         onMainScreen = false;
         contactSelectionFragment.setContactsToPreselect(preSelectedSet);
         getSupportFragmentManager()

@@ -13,9 +13,13 @@ import android.widget.TextView;
 
 import com.github.clans.fab.FloatingActionButton;
 import com.github.clans.fab.FloatingActionMenu;
+
 import org.grassroot.android.R;
-import org.grassroot.android.models.Member;
 import org.grassroot.android.fragments.MemberListFragment;
+import org.grassroot.android.fragments.NewTaskMenuFragment;
+import org.grassroot.android.interfaces.GroupConstants;
+import org.grassroot.android.models.Group;
+import org.grassroot.android.models.Member;
 import org.grassroot.android.utils.Constant;
 import org.grassroot.android.utils.MenuUtils;
 
@@ -30,10 +34,11 @@ import butterknife.OnClick;
  * Created by luke on 2016/05/18.
  */
 public class GroupMembersActivity extends PortraitActivity implements MemberListFragment.MemberListListener,
-        MemberListFragment.MemberClickListener {
+        MemberListFragment.MemberClickListener, NewTaskMenuFragment.NewTaskMenuListener {
 
     private static final String TAG = GroupMembersActivity.class.getCanonicalName();
 
+    private Group group;
     private String groupUid;
     private String groupName;
     private String parentTag;
@@ -42,6 +47,7 @@ public class GroupMembersActivity extends PortraitActivity implements MemberList
     private ArrayList<Member> membersSelected; // better Java practice is declare interface, but Android.
 
     private MemberListFragment memberListFragment;
+    private NewTaskMenuFragment newTaskMenuFragment;
 
     @BindView(R.id.lm_toolbar)
     Toolbar lmToolbar;
@@ -71,30 +77,37 @@ public class GroupMembersActivity extends PortraitActivity implements MemberList
         Bundle extras = getIntent().getExtras();
         if (extras == null) {
             throw new UnsupportedOperationException("Group member activity attempted without necessary arguments");
-        } else {
-            groupUid = extras.getString(Constant.GROUPUID_FIELD);
-            groupName = extras.getString(Constant.GROUPNAME_FIELD);
-            parentTag = extras.getString(Constant.PARENT_TAG_FIELD);
-
-            selectMembers = extras.getBoolean(Constant.SELECT_FIELD, false);
-            boolean showGroupHeader = extras.getBoolean(Constant.SHOW_HEADER_FLAG, true);
-            boolean showActionButton = extras.getBoolean(Constant.SHOW_ACTION_BUTTON_FLAG, true);
-
-            if (selectMembers) {
-                membersSelected = extras.getParcelableArrayList(Constant.SELECTED_MEMBERS_FIELD);
-            }
-
-            floatingMenu.setVisibility(showActionButton ? View.VISIBLE : View.GONE);
-            btnDone.setVisibility(showActionButton ? View.GONE : View.VISIBLE);
-
-            tvGroupName.setVisibility(showGroupHeader ? View.VISIBLE : View.GONE);
-            tvExistingMembers.setVisibility(showGroupHeader ? View.VISIBLE : View.GONE);
-            llCheckAllClearAll.setVisibility(showGroupHeader ? View.GONE : View.VISIBLE);
-
-            setUpToolbar();
-            setUpFloatingMenu();
-            setUpMemberListFragment();
         }
+
+        group = extras.getParcelable(GroupConstants.OBJECT_FIELD);
+        if (group == null) {
+            throw new UnsupportedOperationException("Error! Group member activity called without group");
+        }
+
+        groupUid = group.getGroupUid();
+        groupName = group.getGroupName();
+        parentTag = extras.getString(Constant.PARENT_TAG_FIELD);
+        selectMembers = extras.getBoolean(Constant.SELECT_FIELD, false);
+
+        boolean showGroupHeader = extras.getBoolean(Constant.SHOW_HEADER_FLAG, true);
+        boolean showActionButton = extras.getBoolean(Constant.SHOW_ACTION_BUTTON_FLAG, true);
+
+        if (selectMembers) {
+            membersSelected = extras.getParcelableArrayList(Constant.SELECTED_MEMBERS_FIELD);
+        }
+
+        floatingMenu.setVisibility(showActionButton ? View.VISIBLE : View.GONE);
+        btnDone.setVisibility(showActionButton ? View.GONE : View.VISIBLE);
+        tvGroupName.setVisibility(showGroupHeader ? View.VISIBLE : View.GONE);
+        tvExistingMembers.setVisibility(showGroupHeader ? View.VISIBLE : View.GONE);
+        llCheckAllClearAll.setVisibility(showGroupHeader ? View.GONE : View.VISIBLE);
+
+        newTaskMenuFragment = new NewTaskMenuFragment();
+        newTaskMenuFragment.setArguments(MenuUtils.groupArgument(group));
+
+        setUpToolbar();
+        setUpFloatingMenu();
+        setUpMemberListFragment();
     }
 
     private void setUpToolbar() {
@@ -187,10 +200,13 @@ public class GroupMembersActivity extends PortraitActivity implements MemberList
 
     @OnClick(R.id.lm_fab_new_task)
     public void launchNewTask() {
+        // todo: tell new task menu to not include "add members" & only allow it if at least one permission
         floatingMenu.close(true);
-        Intent i = MenuUtils.constructIntent(this, NewTaskMenuActivity.class, groupUid, groupName);
-        // todo: tell new task menu to not include "add members"
-        startActivity(i);
+        getSupportFragmentManager().beginTransaction()
+                .setCustomAnimations(R.anim.up_from_bottom, R.anim.down_from_top)
+                .add(R.id.rl_lm_root, newTaskMenuFragment)
+                .addToBackStack(null)
+                .commit();
     }
 
     @Override
@@ -217,7 +233,6 @@ public class GroupMembersActivity extends PortraitActivity implements MemberList
         return i;
     }
 
-
     private Intent getParentActivityIntentImpl() {
         Intent i = null;
         int flags = Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP;
@@ -234,4 +249,11 @@ public class GroupMembersActivity extends PortraitActivity implements MemberList
         return i;
     }
 
+    @Override
+    public void menuCloseClicked() {
+        getSupportFragmentManager().beginTransaction()
+                .setCustomAnimations(R.anim.push_down_in, R.anim.push_down_out)
+                .remove(newTaskMenuFragment)
+                .commit();
+    }
 }

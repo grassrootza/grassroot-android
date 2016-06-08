@@ -37,9 +37,6 @@ public class MemberListFragment extends Fragment {
 
     private static final String TAG = MemberListFragment.class.getCanonicalName();
 
-    // since android's framework is so abysmal, an equals comparison on fragment at different stages in its lifecycle fails
-    // hence have to create this horrible hack just to be able to compare fragments ...
-
     private String groupUid;
     private boolean canDismissItems;
     private boolean showSelected;
@@ -137,7 +134,6 @@ public class MemberListFragment extends Fragment {
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
-
         try {
             mListener = (MemberListListener) context;
         } catch (ClassCastException e) {
