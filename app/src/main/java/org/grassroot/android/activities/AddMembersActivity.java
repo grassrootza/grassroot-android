@@ -293,7 +293,7 @@ public class AddMembersActivity extends AppCompatActivity implements
                             setResult(RESULT_OK, i);
                             finish();
                         } else {
-                            ErrorUtils.showSnackBar(amRlRoot, R.string.generic_error, Snackbar.LENGTH_SHORT);
+                            ErrorUtils.showSnackBar(amRlRoot, R.string.error_generic, Snackbar.LENGTH_SHORT);
                         }
                     }
 

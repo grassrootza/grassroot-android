@@ -253,7 +253,7 @@ public class CreateGroupActivity extends PortraitActivity implements
                             finish();
                         } else {
                             hideProgress();
-                            ErrorUtils.showSnackBar(rlCgRoot, R.string.generic_error, Snackbar.LENGTH_SHORT);
+                            ErrorUtils.showSnackBar(rlCgRoot, R.string.error_generic, Snackbar.LENGTH_SHORT);
                         }
                     }
 

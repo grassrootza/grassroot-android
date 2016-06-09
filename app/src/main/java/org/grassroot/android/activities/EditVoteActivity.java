@@ -230,7 +230,7 @@ public class EditVoteActivity extends PortraitActivity {
                 }
                 hideProgress();
                 Log.e(TAG, t.toString());
-                handleNetworkError(R.string.No_network);
+                handleNetworkError(R.string.error_no_network);
             }
         });
 

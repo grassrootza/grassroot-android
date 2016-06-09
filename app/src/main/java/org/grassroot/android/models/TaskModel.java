@@ -4,6 +4,7 @@ import android.os.Parcel;
 import android.os.Parcelable;
 import android.util.Log;
 
+import org.grassroot.android.interfaces.TaskConstants;
 import org.grassroot.android.utils.Constant;
 
 import java.text.ParseException;
@@ -17,8 +18,9 @@ public class TaskModel implements Parcelable, Comparable<TaskModel> {
 
     private static final String TAG = TaskModel.class.getCanonicalName();
 
-    private String id;
+    private String taskUid;
     private String title;
+    private String location;
     private String description;
     private String name;
     private String type;
@@ -44,15 +46,11 @@ public class TaskModel implements Parcelable, Comparable<TaskModel> {
     private boolean canRespondNo;
     private boolean canMarkCompleted;
 
-
     public TaskModel() {
     }
 
-    public String getId() {
-        return id;
-    }
-    public void setId(String id) {
-        this.id = id;
+    public String getTaskUid() {
+        return taskUid;
     }
 
     public String getTitle() {
@@ -69,22 +67,16 @@ public class TaskModel implements Parcelable, Comparable<TaskModel> {
         this.description = description;
     }
 
+    public String getLocation() { return location; }
+
     public String getName() {
         return name;
     }
-    public void setName(String name) {
-        this.name = name;
-    }
 
     public String getParentUid() { return parentUid; }
-    public void setParentUid(String parentUid) { this.parentUid = parentUid; }
 
     public String getType() {
         return type;
-    }
-
-    public String getDeadline() {
-        return deadline;
     }
 
     public Date getDeadlineDate() {
@@ -132,6 +124,14 @@ public class TaskModel implements Parcelable, Comparable<TaskModel> {
     public void setCanMarkCompleted(boolean b) { this.canMarkCompleted = b; }
     public boolean isCanMarkCompleted() { return canMarkCompleted; }
 
+    public boolean respondedYes() {
+        return hasResponded && TaskConstants.RESPONSE_YES.equals(reply);
+    }
+
+    public boolean respondedNo() {
+        return hasResponded && TaskConstants.RESPONSE_NO.equals(reply);
+    }
+
     @Override
     public int describeContents() {
         return 0;
@@ -139,9 +139,10 @@ public class TaskModel implements Parcelable, Comparable<TaskModel> {
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
-        dest.writeString(this.id);
+        dest.writeString(this.taskUid);
         dest.writeString(this.title);
         dest.writeString(this.description);
+        dest.writeString(this.location);
         dest.writeString(this.name);
         dest.writeString(this.type);
         dest.writeString(this.deadline);
@@ -155,9 +156,10 @@ public class TaskModel implements Parcelable, Comparable<TaskModel> {
 
     protected TaskModel(Parcel in) {
         Log.e(TAG, "Assembling from parcel!");
-        this.id = in.readString();
+        this.taskUid = in.readString();
         this.title = in.readString();
         this.description = in.readString();
+        this.location = in.readString();
         this.name = in.readString();
         this.type = in.readString();
         this.deadline = in.readString();
@@ -217,12 +219,12 @@ public class TaskModel implements Parcelable, Comparable<TaskModel> {
 
         TaskModel taskModel = (TaskModel) o;
 
-        return id != null ? id.equals(taskModel.id) : taskModel.id == null;
+        return taskUid != null ? taskUid.equals(taskModel.taskUid) : taskModel.taskUid == null;
 
     }
 
     @Override
     public int hashCode() {
-        return id != null ? id.hashCode() : 0;
+        return taskUid != null ? taskUid.hashCode() : 0;
     }
 }

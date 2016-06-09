@@ -1,8 +1,9 @@
 package org.grassroot.android.fragments;
 
-import android.app.Activity;
-import android.app.Fragment;
+import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
+import android.support.v4.app.Fragment;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
@@ -15,9 +16,14 @@ import android.widget.TextView;
 
 import org.grassroot.android.BuildConfig;
 import org.grassroot.android.R;
+import org.grassroot.android.activities.FAQActivity;
+import org.grassroot.android.activities.NotificationCenter;
+import org.grassroot.android.activities.ProfileSettings;
+import org.grassroot.android.activities.StartActivity;
 import org.grassroot.android.adapters.NavigationDrawerAdapter;
 import org.grassroot.android.events.NotificationEvent;
 import org.grassroot.android.interfaces.ClickListener;
+import org.grassroot.android.interfaces.NavigationConstants;
 import org.grassroot.android.models.NavDrawerItem;
 import org.grassroot.android.ui.views.RecyclerTouchListener;
 import org.grassroot.android.utils.PreferenceUtils;
@@ -36,14 +42,10 @@ public class NavigationDrawerFragment extends Fragment {
 
     private View mFragmentContainerView;
     private NavigationDrawerCallbacks mCallbacks;
-    private int mCurrentSelectedPosition=0;
-    private boolean mFromSavedInstanceState;
 
-    private static final String STATE_SELECTED_POSITION = "selected_navigation_drawer_position";
     ArrayList draweritems;
 
     private NavigationDrawerAdapter drawerAdapter;
-    private DrawerLayout mDrawerLayout;
 
     @BindView(R.id.rv_nav_items)
     RecyclerView mDrawerRecyclerView;
@@ -52,20 +54,32 @@ public class NavigationDrawerFragment extends Fragment {
     @BindView(R.id.displayName)
     TextView displayName;
 
+    public interface NavigationDrawerCallbacks {
+        void onNavigationDrawerItemSelected(int position);
+    }
+
     public NavigationDrawerFragment() {
         // Required empty public constructor
     }
 
     @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        Log.e(TAG, "ZOG: NAV: attaching listener!");
+        try {
+            mCallbacks = (NavigationDrawerCallbacks) context;
+        } catch (ClassCastException e) {
+            throw new UnsupportedOperationException("Error! Activity must implement listener");
+        }
+    }
+
+    public void setUp(int fragmentId, DrawerLayout drawerLayout) {
+        mFragmentContainerView = getActivity().findViewById(fragmentId);
+    }
+
+    @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        if (savedInstanceState != null) {
-            mCurrentSelectedPosition = savedInstanceState.getInt(STATE_SELECTED_POSITION);
-            mFromSavedInstanceState = true;
-        } else {
-           // selectItem(mCurrentSelectedPosition);
-        }
         EventBus.getDefault().register(this);
     }
 
@@ -73,6 +87,7 @@ public class NavigationDrawerFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
 
+        Log.e(TAG, "ZOG: NAV: inflating view!");
         View view = inflater.inflate(R.layout.fragment_navigation_drawer, container, false);
         ButterKnife.bind(this, view);
 
@@ -112,7 +127,7 @@ public class NavigationDrawerFragment extends Fragment {
         return view ;
     }
 
-    public  ArrayList<NavDrawerItem> getData() {
+    public ArrayList<NavDrawerItem> getData() {
         draweritems = new ArrayList<>();
         draweritems.add(new NavDrawerItem(getString(R.string.Profile),R.drawable.ic_profile,R.drawable.ic_profile_green,false));
         draweritems.add(new NavDrawerItem(getString(R.string.FAQs),R.drawable.ic_faq,R.drawable.ic_faq_green,false));
@@ -121,36 +136,39 @@ public class NavigationDrawerFragment extends Fragment {
         return draweritems;
     }
 
-
-    @Override
-    public void onAttach(Activity activity) {
-        super.onAttach(activity);
-        mCallbacks= (NavigationDrawerCallbacks) activity;
-    }
-
-    @Override
-    public void onResume() {
-        super.onResume();
-    }
-
-    public interface NavigationDrawerCallbacks {
-        void onNavigationDrawerItemSelected(int position);
-    }
-
-    public void setUp(int fragmentId, DrawerLayout drawerLayout) {
-        mFragmentContainerView = getActivity().findViewById(fragmentId);
-        mDrawerLayout = drawerLayout;
-    }
-
     private void selectItem(int position) {
-        mCurrentSelectedPosition = position;
 
-        if (mDrawerLayout != null) {
-            mDrawerLayout.closeDrawer(mFragmentContainerView);
+        // handle common & reusable things here, pass back more complex or context-dependent to activity
+        switch (position) {
+            case NavigationConstants.HOME_NAV_PROFILE:
+                startActivity(new Intent(getActivity(), ProfileSettings.class));
+                break;
+            case NavigationConstants.HOME_NAV_FAQ:
+                startActivity(new Intent(getActivity(), FAQActivity.class));
+                break;
+            case NavigationConstants.HOME_NAV_NOTIFICATIONS:
+                startActivity(new Intent(getActivity(), NotificationCenter.class));
+                break;
+            case NavigationConstants.HOME_NAV_LOGOUT:
+                logout();
+                break;
+            default:
+                // todo : put in handling non-standard items
         }
-        if (mCallbacks != null) {
-            mCallbacks.onNavigationDrawerItemSelected(position);
-        }
+        mCallbacks.onNavigationDrawerItemSelected(position);
+    }
+
+    private void logout() {
+        ConfirmCancelDialogFragment confirmDialog = ConfirmCancelDialogFragment.newInstance(R.string.logout_message, new ConfirmCancelDialogFragment.ConfirmDialogListener() {
+                    @Override
+                    public void doConfirmClicked() {
+                        PreferenceUtils.clearAll(getActivity());
+                        Intent open = new Intent(getActivity(), StartActivity.class);
+                        startActivity(open);
+                    }
+                });
+
+        confirmDialog.show(getActivity().getFragmentManager(), "logout");
     }
 
     @Override
@@ -163,7 +181,7 @@ public class NavigationDrawerFragment extends Fragment {
     public void onNewNotificationEvent(NotificationEvent event) {
         Log.e(TAG, "redraw navigation drawer");
         int notificationCount = event.getNotificationCount();
-        Log.e(TAG, "notification count" +notificationCount);
+        Log.e(TAG, "notification count" + notificationCount);
         drawerAdapter.notifyDataSetChanged();
     }
 

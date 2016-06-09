@@ -2,13 +2,17 @@ package org.grassroot.android.activities;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.NavUtils;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 
 import org.grassroot.android.R;
 import org.grassroot.android.fragments.NewTaskMenuFragment;
 import org.grassroot.android.fragments.TaskListFragment;
+import org.grassroot.android.fragments.ViewTaskFragment;
 import org.grassroot.android.interfaces.GroupConstants;
 import org.grassroot.android.models.Group;
 import org.grassroot.android.utils.Constant;
@@ -37,6 +41,7 @@ public class GroupTasksActivity extends PortraitActivity implements NewTaskMenuF
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_group_tasks);
         ButterKnife.bind(this);
+
         final Bundle extras = getIntent().getExtras();
 
         if (extras == null) {
@@ -99,6 +104,9 @@ public class GroupTasksActivity extends PortraitActivity implements NewTaskMenuF
         final String groupUid = groupMembership.getGroupUid();
         final String groupName = groupMembership.getGroupName();
         switch (item.getItemId()) {
+            case android.R.id.home:
+                handleUpButton();
+                return true;
             case R.id.mi_icon_filter:
                 taskListFragment.filter();
                 return true;
@@ -117,6 +125,18 @@ public class GroupTasksActivity extends PortraitActivity implements NewTaskMenuF
             default:
                 return super.onOptionsItemSelected(item);
         }
+    }
+
+    private void handleUpButton() {
+        Fragment frag = getSupportFragmentManager().findFragmentByTag(ViewTaskFragment.class.getCanonicalName());
+        Log.d(TAG, "found this fragment: " + frag);
+        if (frag != null && frag.isVisible())
+            getSupportFragmentManager().beginTransaction()
+                    .setCustomAnimations(R.anim.push_down_in, R.anim.push_down_out)
+                    .remove(frag)
+                    .commit();
+        else
+            NavUtils.navigateUpFromSameTask(this);
     }
 
     @Override

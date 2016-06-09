@@ -35,7 +35,6 @@ import org.grassroot.android.models.Group;
 import org.grassroot.android.models.GroupResponse;
 import org.grassroot.android.activities.CreateGroupActivity;
 import org.grassroot.android.activities.GroupJoinActivity;
-import org.grassroot.android.activities.GroupTasksActivity;
 import org.grassroot.android.ui.views.CustomItemAnimator;
 import org.grassroot.android.utils.Constant;
 import org.grassroot.android.utils.ErrorUtils;
@@ -209,7 +208,7 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment imple
                     Log.e(TAG, t.getMessage());
                     errorLayout.setVisibility(View.VISIBLE);
                     imNoInternet.setVisibility(View.VISIBLE);
-                    ErrorUtils.connectivityError(getActivity(), R.string.No_network, new NetworkErrorDialogListener() {
+                    ErrorUtils.connectivityError(getActivity(), R.string.error_no_network, new NetworkErrorDialogListener() {
                         @Override
                         public void retryClicked() {
                             fetchGroupList();
@@ -251,7 +250,7 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment imple
 
             @Override
             public void onFailure(Call<GroupResponse> call, Throwable t) {
-                ErrorUtils.connectivityError(getActivity(), R.string.No_network, new NetworkErrorDialogListener() {
+                ErrorUtils.connectivityError(getActivity(), R.string.error_no_network, new NetworkErrorDialogListener() {
                     @Override
                     public void retryClicked() {
                         refreshGroupList();
@@ -284,7 +283,7 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment imple
 
                         @Override
                         public void onFailure(Call<GroupResponse> call, Throwable t) {
-                            ErrorUtils.connectivityError(getActivity(), R.string.No_network, new NetworkErrorDialogListener() {
+                            ErrorUtils.connectivityError(getActivity(), R.string.error_no_network, new NetworkErrorDialogListener() {
                                 @Override
                                 public void retryClicked() {
                                     updateSingleGroup(position,groupUid);

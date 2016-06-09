@@ -89,6 +89,22 @@
         <item name="android:textColor">@color/black</item>
     </style>
 
+    <style name="CardViewBoldNormal">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:padding">2dp</item>
+        <item name="android:textColor">@color/dark_grey_text</item>
+        <item name="android:textSize">@dimen/txt_small</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <style name="CardViewBodyText">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textColor">@color/dark_grey_text</item>
+        <item name="android:textSize">@dimen/txt_small</item>
+    </style>
+
     <style name="CardViewFinePrint">
         <item name="android:layout_height">wrap_content</item>
         <item name="android:layout_width">match_parent</item>
@@ -154,6 +170,15 @@
         <item name="cardBackgroundColor">#fff</item>
     </style>
 
+    <style name="ListItemSmall">
+        <item name="android:padding">@dimen/padding_half</item>
+        <item name="android:layout_margin">@dimen/margin_small</item>
+        <item name="android:ellipsize">end</item>
+        <item name="android:singleLine">true</item>
+        <item name="android:textSize">@dimen/txt_small</item>
+        <item name="android:textColor">@color/black</item>
+    </style>
+
 
     <style name="text_medium" tools:ignore="NewApi">
         <item name="android:textSize">@dimen/txt_medium</item>
@@ -215,6 +240,17 @@
 
     <!-- CALL MEETING / VOTES / ETC STYLES -->
 
+    <style name="RootCardView" parent="CardView">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginLeft">10dp</item>
+        <item name="android:layout_marginRight">10dp</item>
+        <item name="cardBackgroundColor">@color/white</item>
+        <item name="cardCornerRadius">5dp</item>
+        <item name="cardElevation">3dp</item>
+        <item name="contentPadding">10dp</item>
+    </style>
+
     <style name="FormCardView" parent="CardView">
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">wrap_content</item>
@@ -224,6 +260,10 @@
         <item name="cardBackgroundColor">@color/white</item>
         <item name="cardCornerRadius">3dp</item>
         <item name="cardElevation">3dp</item>
+    </style>
+
+    <style name="FormCardViewLightGrey" parent="FormCardView">
+        <item name="cardBackgroundColor">@color/md_grey_50</item>
     </style>
 
     <style name="TextCharCounter">
@@ -283,7 +323,7 @@
 
     <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
 
-    <style name="MyDialog" parent="@android:style/Theme.Dialog"></style>
+    <style name="MyDialog" parent="@android:style/Theme.Dialog" />
 
 
 </resources>

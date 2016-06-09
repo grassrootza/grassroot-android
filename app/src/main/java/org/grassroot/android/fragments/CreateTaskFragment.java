@@ -62,7 +62,6 @@ public class CreateTaskFragment extends Fragment {
 
     private static final String TAG = CreateTaskFragment.class.getCanonicalName();
 
-
     private String groupUid;
     private String taskType;
 
@@ -232,7 +231,7 @@ public class CreateTaskFragment extends Fragment {
             @Override
             public void onFailure(Call<TaskResponse> call, Throwable t) {
                 // todo: improve and fix this
-                ErrorUtils.connectivityError(getActivity(), R.string.No_network, new NetworkErrorDialogListener() {
+                ErrorUtils.connectivityError(getActivity(), R.string.error_no_network, new NetworkErrorDialogListener() {
                     @Override
                     public void retryClicked() {
                       createTask();
@@ -408,6 +407,7 @@ public class CreateTaskFragment extends Fragment {
 
     private ValueAnimator descriptionExpandAnimator;
     private ValueAnimator descriptionContractAnimator;
+
     @BindView(R.id.ctsk_cv_description)
     CardView descriptionCard;
     @BindView(R.id.ctsk_rl_desc_body)

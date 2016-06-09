@@ -30,7 +30,7 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/No_reult_txt"
+            android:text="@string/error_no_results_found"
             android:textStyle="normal"
             android:textColor="@color/primaryColor"
             android:textSize="@dimen/txt_large"
@@ -62,7 +62,7 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/No_network_txt"
+            android:text="@string/error_no_network"
             android:textColor="@color/primaryColor"
             android:textSize="@dimen/txt_large"
             android:layout_marginTop="20dp"
@@ -94,7 +94,7 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/Unknown_error_txt"
+            android:text="@string/error_generic"
             android:textStyle="normal"
             android:textColor="@color/primaryColor"
             android:textSize="@dimen/txt_large"

@@ -6,19 +6,16 @@ package org.grassroot.android.utils;
 
 import android.animation.ValueAnimator;
 import android.app.FragmentManager;
-import android.content.Context;
-import android.os.Build;
 import android.os.Bundle;
-import android.support.design.widget.Snackbar;
 import android.telephony.PhoneNumberUtils;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 
-import org.grassroot.android.interfaces.AlertDialogListener;
-import org.grassroot.android.models.Member;
 import org.grassroot.android.fragments.AlertDialogFragment;
 import org.grassroot.android.fragments.NotificationDialog;
+import org.grassroot.android.interfaces.AlertDialogListener;
+import org.grassroot.android.models.Member;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -30,9 +27,6 @@ import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-// Referenced classes of package com.techmorphosis.Utils:
-//            AlertDialogListener, DeliveryScheduleListner
-
 public class UtilClass {
 
     private static final String TAG = UtilClass.class.getCanonicalName();
@@ -40,18 +34,6 @@ public class UtilClass {
     private static final Pattern zaPhoneE164 = Pattern.compile("27[6,7,8]\\d{8}");
     private static final Pattern zaPhoneE164Plus = Pattern.compile("\\+27[6,7,8]\\d{8}");
     private static final Pattern nationalRegex = Pattern.compile("0[6,7,8]\\d{8}");
-
-    public static String MAKE;
-    public static String MODEL;
-    public static String OS;
-
-    public Snackbar snackBar;
-
-    public UtilClass() {
-        OS = Build.VERSION.RELEASE;
-        MAKE = Build.MANUFACTURER;
-        MODEL = Build.MODEL;
-    }
 
     // todo: switch all of these to ConfirmCancel or other variants
     public static AlertDialogFragment showAlertDialog(FragmentManager manager,String title, String message, String left, String right,
@@ -71,8 +53,7 @@ public class UtilClass {
         return alertDialogFragment;
     }
 
-    public static NotificationDialog showAlertDialog(android.support.v4.app.FragmentManager fragmentmanager, String s, String s1, String s2, String s3, boolean flag, AlertDialogListener alertdialoglistener)
-    {
+    public static NotificationDialog showAlertDialog(android.support.v4.app.FragmentManager fragmentmanager, String s, String s1, String s2, String s3, boolean flag, AlertDialogListener alertdialoglistener) {
         NotificationDialog ss1 = NotificationDialog.newInstance(s, s1, s2, s3, flag);
         ss1.setListener(alertdialoglistener);
         ss1.setCancelable(false);

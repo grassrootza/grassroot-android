@@ -4,8 +4,7 @@
               android:layout_width="match_parent"
               android:layout_height="wrap_content"
               android:orientation="horizontal"
-              tools:ignore="UnusedAttribute"
-    >
+              tools:ignore="UnusedAttribute">
 
     <!--just a background view for the header, so that it won't interfere with the headers changes and row-clicking-->
 

@@ -212,7 +212,7 @@ public class ViewVoteActivity extends PortraitActivity {
                 imNoInternet.setVisibility(View.VISIBLE);
                 txtPrg.setVisibility(View.GONE);
                 progressBarCircularIndeterminate.setVisibility(View.GONE);
-                ErrorUtils.connectivityError(ViewVoteActivity.this, R.string.No_network, new NetworkErrorDialogListener() {
+                ErrorUtils.connectivityError(ViewVoteActivity.this, R.string.error_no_network, new NetworkErrorDialogListener() {
                     @Override
                     public void retryClicked() {
                      updateView();
@@ -357,7 +357,7 @@ public class ViewVoteActivity extends PortraitActivity {
                         progressBarCircularIndeterminate.setVisibility(View.GONE);
                         erroLayout.setVisibility(View.VISIBLE);
 
-                        ErrorUtils.connectivityError(ViewVoteActivity.this, R.string.No_network, new NetworkErrorDialogListener() {
+                        ErrorUtils.connectivityError(ViewVoteActivity.this, R.string.error_no_network, new NetworkErrorDialogListener() {
                             @Override
                             public void retryClicked() {
                                 castVote(response);

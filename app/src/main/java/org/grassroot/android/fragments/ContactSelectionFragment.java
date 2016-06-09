@@ -19,7 +19,7 @@ import android.view.ViewGroup;
 import android.widget.ListView;
 
 import org.grassroot.android.R;
-import org.grassroot.android.adapters.ContactsAdapter2;
+import org.grassroot.android.adapters.ContactsAdapter;
 import org.grassroot.android.models.Contact;
 import org.grassroot.android.utils.Constant;
 import org.grassroot.android.utils.UtilClass;
@@ -49,7 +49,7 @@ public class ContactSelectionFragment extends Fragment implements
 
     private static final String TAG = ContactSelectionFragment.class.getCanonicalName();
 
-    private ContactsAdapter2 adapter;
+    private ContactsAdapter adapter;
     private ContactSelectionListener listener;
 
     private List<Contact> retrievedContacts;
@@ -105,7 +105,7 @@ public class ContactSelectionFragment extends Fragment implements
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View viewToReturn = inflater.inflate(R.layout.fragment_contact_selection, container, false);
         ButterKnife.bind(this, viewToReturn);
-        adapter = new ContactsAdapter2(this.getContext(), R.id.tv_person_name);
+        adapter = new ContactsAdapter(this.getContext(), R.id.tv_person_name);
         contactListView.setAdapter(adapter);
         return viewToReturn;
     }

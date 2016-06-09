@@ -2,6 +2,7 @@ package org.grassroot.android.activities;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
@@ -125,7 +126,7 @@ public class RemoveMembersActivity extends PortraitActivity implements MemberLis
         if (membersToRemove.isEmpty()) {
             finish();
         } else {
-            final String message = String.format("You are about to remove %d members. Are you sure?", membersToRemove.size());
+            final String message = String.format(getString(R.string.rm_confirm_number), membersToRemove.size());
             dialogFragment = UtilClass.showAlertDialog(getFragmentManager(),getString(R.string.Confirm_Removal), message, "Cancel", "Confirm", true,
                     new AlertDialogListener() {
                         @Override

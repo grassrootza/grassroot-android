@@ -15,15 +15,16 @@
     <color name="transparent">#00000000</color>
 
     <color name="buttoncolor">#207A33</color>
+    <color name="off_white_background">#ECEFF1</color>
     <color name="light_background">#EEEEEE</color>
-    <color name="dark_background">#ddd</color>
-    <color name="list_background">#fafafa</color>
-    <color name="list_background_pressed">#eeeeee</color>
+    <color name="dark_background">#DDD</color>
+    <color name="md_grey_50">#FAFAFA</color>
+    <color name="md_grey_200">#EEEEEE</color>
 
     <color name="text_beige">#EFEFEF</color>
     <color name="text_grey">#B4B4B4</color>
     <color name="view">#B4B4B4</color>
-    <color name="off_white_background">#ECEFF1</color>
+
 
     <color name="yellow">#F0ED0F</color>
     <color name="white_transparent">#20FFFFFF</color>

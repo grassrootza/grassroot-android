@@ -12,6 +12,7 @@ import org.grassroot.android.models.Member;
 import org.grassroot.android.models.MemberList;
 import org.grassroot.android.models.NotificationList;
 import org.grassroot.android.models.ProfileResponse;
+import org.grassroot.android.models.RsvpListModel;
 import org.grassroot.android.models.TaskResponse;
 import org.grassroot.android.models.TokenResponse;
 import org.grassroot.android.utils.Constant;
@@ -93,6 +94,9 @@ public class GrassrootRestService extends Application {
 
     public interface RestApi {
 
+        /*
+        SECTION : User login, authentication, etc calls
+         */
         @GET("user/add/{phoneNumber}/{displayName}")
         Call<GenericResponse> addUser(@Path("phoneNumber") String phoneNumber,
                                       @Path("displayName") String displayName);
@@ -115,12 +119,37 @@ public class GrassrootRestService extends Application {
         Call<GenericResponse> logLocation(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
                                           @Path("latitude") double latitude, @Path("longitude") double longitude);
 
+        @POST("gcm/register/{phoneNumber}/{code}")
+        Call<GenericResponse> pushRegistration(@Path("phoneNumber") String phoneNumber,
+                                               @Path("code") String code,
+                                               @Query("registration_id") String regId);
+
+        //retrieve notifications
+        @GET("notification/list/{phoneNumber}/{code}")
+        Call<NotificationList> getUserNotifications(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
+                                                    @Nullable @Query("page") Integer page
+                , @Nullable @Query("size") Integer size);
+
+        //Profile settings
+        @GET("user/profile/settings/{phoneNumber}/{code}")
+        Call<ProfileResponse> getUserProfile(@Path("phoneNumber") String phoneNumber,
+                                             @Path("code") String code);
+
+        //Update profile settings
+        @POST("user/profile/settings/update/{phoneNumber}/{code}")
+        Call<GenericResponse> updateProfile(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
+                                            @Query("displayName") String displayName, @Query("language") String language,
+                                            @Query("alertPreference") String preference);
+
+        /*
+        SECTION : Group related calls
+         */
+
         @POST("group/create/{phoneNumber}/{code}/{groupName}/{description}")
         Call<GroupResponse> createGroup(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
                                         @Path("groupName") String groupName, @Path("description") String groupDescription,
                                         @Body List<Member> membersToAdd);
-
-         //user groups
+        //user groups
         @GET("group/list/{phoneNumber}/{code}")
         Call<GroupResponse> getUserGroups(@Path("phoneNumber") String phoneNumber,
                                           @Path("code") String code);
@@ -134,17 +163,59 @@ public class GrassrootRestService extends Application {
         Call<GenericResponse> groupJoinRequest(@Path("phoneNumber") String phoneNumber,
                                                      @Path("code") String code,
                                                      @Query("uid" )String uid);
+
         //search for public groups
         @GET("group/search")
         Call<GroupSearchResponse> search(@Query("searchTerm") String searchTerm);
 
-        // get and respond to tasks
 
+        // retrieve group members
+        @GET("group/members/list/{phoneNumber}/{code}/{groupUid}/{selected}")
+        Call<MemberList> getGroupMembers(@Path("groupUid") String groupUid, @Path("phoneNumber") String phoneNumber,
+                                         @Path("code") String code, @Path("selected") boolean selected);
+
+        // add members to a group
+        @Headers("Content-Type: application/json")
+        @POST("group/members/add/{phoneNumber}/{code}/{uid}")
+        Call<GenericResponse> addGroupMembers(@Path("uid") String groupUid, @Path("phoneNumber") String phoneNumber,
+                                              @Path("code") String code, @Body List<Member> membersToAdd);
+
+        // remove members from a group
+        @POST("group/members/remove/{phoneNumber}/{code}/{groupUid}")
+        Call<GenericResponse> removeGroupMembers(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
+                                                 @Path("groupUid") String groupUid, @Query("memberUids") Set<String> memberUids);
+
+        /*
+        SECTION: Fetch tasks, and task details
+         */
+
+        // get all the tasks for a user
         @GET("task/list/{phoneNumber}/{code}")
         Call<TaskResponse> getUserTasks(@Path("phoneNumber") String phoneNumber, @Path("code") String code);
 
+        // get all the tasks for a group
         @GET("task/list/{phoneNumber}/{code}/{parentUid}")
-        Call<TaskResponse> getGroupTasks(@Path("phoneNumber") String phoneNumber, @Path("code") String code, @Path("parentUid") String groupUid);
+        Call<TaskResponse> getGroupTasks(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
+                                         @Path("parentUid") String groupUid);
+
+        // fetch a task (of any type)
+        @GET("task/fetch/{phoneNumber}/{code}/{taskUid}/{taskType}")
+        Call<TaskResponse> fetchTaskEntity(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
+                                           @Path("taskUid") String taskUid, @Path("taskType") String taskType);
+
+        //view vote
+        @GET("vote/view/{id}/{phoneNumber}/{code}")
+        Call<EventResponse> viewVote(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
+                                     @Path("id") String id);
+
+        // get meeting RSVP list
+        @GET("meeting/rsvps/{phoneNumber}/{code}/{meetingUid}")
+        Call<RsvpListModel> fetchMeetingRsvps(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
+                                              @Path("meetingUid") String meetingUid);
+
+        /*
+        SECTION: RESPOND TO TASKS
+         */
 
         //cast vote
         @GET("vote/do/{id}/{phoneNumber}/{code}")
@@ -166,43 +237,9 @@ public class GrassrootRestService extends Application {
                                                  @Path("code") String code,
                                                  @Path("id") String todoId);
 
-
-        // retrieve group members
-        @GET("group/members/list/{phoneNumber}/{code}/{groupUid}/{selected}")
-        Call<MemberList> getGroupMembers(@Path("groupUid") String groupUid, @Path("phoneNumber") String phoneNumber,
-                                         @Path("code") String code, @Path("selected") boolean selected);
-
-        @Headers("Content-Type: application/json")
-        @POST("group/members/add/{phoneNumber}/{code}/{uid}")
-        Call<GenericResponse> addGroupMembers(@Path("uid") String groupUid, @Path("phoneNumber") String phoneNumber,
-                                              @Path("code") String code, @Body List<Member> membersToAdd);
-
-        @POST("group/members/remove/{phoneNumber}/{code}/{groupUid}")
-        Call<GenericResponse> removeGroupMembers(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
-                                                 @Path("groupUid") String groupUid, @Query("memberUids") Set<String> memberUids);
-
-        @POST("gcm/register/{phoneNumber}/{code}")
-        Call<GenericResponse> pushRegistration(@Path("phoneNumber") String phoneNumber,
-                                                     @Path("code") String code,
-                                                     @Query("registration_id") String regId);
-
-        //retrieve notifications
-        @GET("notification/list/{phoneNumber}/{code}")
-        Call<NotificationList> getUserNotifications(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
-                                                    @Nullable @Query("page") Integer page
-                , @Nullable @Query("size") Integer size);
-
-
-       //view vote
-        @GET("vote/view/{id}/{phoneNumber}/{code}")
-        Call<EventResponse> viewVote(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
-                                     @Path("id") String id);
-
-        //edit vote
-        @POST("vote/update/{id}/{phoneNumber}/{code}")
-        Call<GenericResponse> editVote(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
-                                 @Path("id") String id,@Query("title") String title, @Query("description") String description,
-                                       @Query("closingTime") String closingTime);
+        /*
+        SECTION : CREATE TASKS
+         */
 
         //create vote
         @POST("vote/create/{id}/{phoneNumber}/{code}")
@@ -223,6 +260,7 @@ public class GrassrootRestService extends Application {
                                             @Query("location") String location,
                                             @Query("members") Set<String> memberUids);
 
+
         // create to-do
         @POST("logbook/create/{phoneNumber}/{code}/{parentUid}")
         Call<TaskResponse> createTodo(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
@@ -232,20 +270,15 @@ public class GrassrootRestService extends Application {
                                          @Query("reminderMinutes") int reminderMinutes,
                                          @Query("members") Set<String> membersAssigned);
 
+        /*
+        SECTION : EDIT TASKS
+         */
 
-        //Profile settings
-        @GET("user/profile/settings/{phoneNumber}/{code}")
-        Call<ProfileResponse> getUserProfile(@Path("phoneNumber") String phoneNumber,
-                                             @Path("code") String code);
-
-        //Update profile settings
-        @POST("user/profile/settings/update/{phoneNumber}/{code}")
-        Call<GenericResponse> updateProfile(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
-                                            @Query("displayName") String displayName, @Query("language") String language,
-        @Query("alertPreference") String preference);
-
-
-
+        //edit vote
+        @POST("vote/update/{id}/{phoneNumber}/{code}")
+        Call<GenericResponse> editVote(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
+                                       @Path("id") String id,@Query("title") String title, @Query("description") String description,
+                                       @Query("closingTime") String closingTime);
 
     }
 

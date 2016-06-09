@@ -236,7 +236,7 @@ public class GroupJoinActivity extends PortraitActivity implements OnClickListen
                     public void onFailure(Call<GroupSearchResponse> call, Throwable t) {
                         progressDialog.dismiss();
                         showNetworkErrorLayout();
-                        ErrorUtils.connectivityError(GroupJoinActivity.this, R.string.No_network, new NetworkErrorDialogListener() {
+                        ErrorUtils.connectivityError(GroupJoinActivity.this, R.string.error_no_network, new NetworkErrorDialogListener() {
                             @Override
                             public void retryClicked() {
                                 search();
@@ -308,7 +308,7 @@ public class GroupJoinActivity extends PortraitActivity implements OnClickListen
                     @Override
                     public void onFailure(Call<GenericResponse> call, Throwable t) {
                         progressDialog.dismiss();
-                        ErrorUtils.connectivityError(GroupJoinActivity.this, R.string.No_network, new NetworkErrorDialogListener() {
+                        ErrorUtils.connectivityError(GroupJoinActivity.this, R.string.error_no_network, new NetworkErrorDialogListener() {
                             @Override
                             public void retryClicked() {
                                 sendJoinRequest();

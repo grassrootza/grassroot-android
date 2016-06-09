@@ -19,16 +19,16 @@ import java.util.List;
 /**
  * Created by luke on 2016/06/07.
  */
-public class ContactsAdapter2 extends ArrayAdapter<Contact> implements SectionIndexer{
+public class ContactsAdapter extends ArrayAdapter<Contact> implements SectionIndexer{
 
-    private static final String TAG = ContactsAdapter2.class.getCanonicalName();
+    private static final String TAG = ContactsAdapter.class.getCanonicalName();
 
     private final Context mContext;
 
     private List<Contact> contactsToDisplay;
     private StringArrayAlphabetIndexer indexer;
 
-    public ContactsAdapter2(Context context, int resource) {
+    public ContactsAdapter(Context context, int resource) {
         super(context, resource);
         mContext = context;
     }

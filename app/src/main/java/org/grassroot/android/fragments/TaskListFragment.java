@@ -157,7 +157,7 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
                 swipeRefreshLayout.setRefreshing(false);
                 showErrorLayout();
                 hideProgress();
-                ErrorUtils.connectivityError(getActivity(), R.string.No_network, new NetworkErrorDialogListener() {
+                ErrorUtils.connectivityError(getActivity(), R.string.error_no_network, new NetworkErrorDialogListener() {
                     @Override
                     public void retryClicked() {
                         fetchTaskList();
@@ -251,7 +251,7 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
                             ErrorUtils.showSnackBar(container, msgSuccess, Snackbar.LENGTH_LONG);
                             EventBus.getDefault().post(new TaskChangedEvent(position, response.body().getTasks().get(0)));
                         } else {
-                                ErrorUtils.handleServerError(container, getActivity(),response);
+                            ErrorUtils.handleServerError(container, getActivity(),response);
                     }}
 
                     @Override
@@ -272,6 +272,14 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
             Intent vote_view = new Intent(getActivity(), ViewVoteActivity.class);
             vote_view.putExtra("id", taskUid);
             startActivity(vote_view);
+        }
+        if (TaskConstants.MEETING.equals(taskType)) {
+            ViewTaskFragment taskFragment = ViewTaskFragment.newInstance(taskType, taskUid);
+            getFragmentManager().beginTransaction()
+                    .setCustomAnimations(R.anim.up_from_bottom, R.anim.down_from_top)
+                    .add(container.getId(), taskFragment, ViewTaskFragment.class.getCanonicalName())
+                    .addToBackStack(null)
+                    .commit();
         }
     }
 

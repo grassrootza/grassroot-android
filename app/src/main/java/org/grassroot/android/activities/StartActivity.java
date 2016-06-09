@@ -296,7 +296,7 @@ public class StartActivity extends PortraitActivity implements HomeScreenViewFra
                                 setUpOtpScreen();
                             }
                         } else {
-                            showSnackBar(getApplicationContext(), "", getResources().getString(R.string.USER_ALREADY_EXISTS), "", 0, Snackbar.LENGTH_SHORT);
+                            showSnackBar(getApplicationContext(), "", getResources().getString(R.string.error_user_exists), "", 0, Snackbar.LENGTH_SHORT);
                         }
                     }
 

@@ -20,7 +20,7 @@
                     android:id="@+id/header"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginBottom="@dimen/halfpadding">
+                    android:layout_marginBottom="@dimen/padding_half">
 
                     <ImageView
                         android:id="@+id/iv_type"
@@ -88,8 +88,8 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_below="@+id/divider"
-                    android:paddingBottom="@dimen/halfpadding"
-                    android:paddingTop="@dimen/halfpadding"
+                    android:paddingBottom="@dimen/padding_half"
+                    android:paddingTop="@dimen/padding_half"
                     >
 
                     <ImageView

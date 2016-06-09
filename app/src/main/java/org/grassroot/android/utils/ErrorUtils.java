@@ -77,7 +77,7 @@ public class ErrorUtils {
                  }
                 break;
             case Constant.INTERNAL_SERVER_ERROR:
-                Snackbar.make(holder, R.string.Unknown_error, Snackbar.LENGTH_INDEFINITE).show();
+                Snackbar.make(holder, R.string.error_generic, Snackbar.LENGTH_INDEFINITE).show();
                 break;
             case Constant.NOT_FOUND:
                 Snackbar.make(holder, R.string.GROUP_NOT_FOUND, Snackbar.LENGTH_LONG).show();

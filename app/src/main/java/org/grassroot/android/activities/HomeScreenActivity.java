@@ -9,14 +9,13 @@ import android.util.Log;
 import android.view.Gravity;
 
 import org.grassroot.android.R;
-import org.grassroot.android.fragments.NewTaskMenuFragment;
-import org.grassroot.android.interfaces.AlertDialogListener;
-import org.grassroot.android.interfaces.GroupConstants;
-import org.grassroot.android.interfaces.NavigationConstants;
 import org.grassroot.android.fragments.AlertDialogFragment;
 import org.grassroot.android.fragments.HomeGroupListFragment;
 import org.grassroot.android.fragments.NavigationDrawerFragment;
+import org.grassroot.android.fragments.NewTaskMenuFragment;
 import org.grassroot.android.fragments.WelcomeFragment;
+import org.grassroot.android.interfaces.AlertDialogListener;
+import org.grassroot.android.interfaces.NavigationConstants;
 import org.grassroot.android.models.Group;
 import org.grassroot.android.utils.Constant;
 import org.grassroot.android.utils.MenuUtils;
@@ -36,15 +35,15 @@ public class HomeScreenActivity extends PortraitActivity implements NavigationDr
     DrawerLayout drawer;
 
     private Fragment mainFragment;
+
     private NavigationDrawerFragment drawerFrag;
-    private AlertDialogFragment alertDialogFragment;
     private NewTaskMenuFragment newTaskMenuFragment;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_homescreen);
-        drawerFrag = (NavigationDrawerFragment) getFragmentManager().findFragmentById(R.id.navigation_drawer);
+        drawerFrag = (NavigationDrawerFragment) getSupportFragmentManager().findFragmentById(R.id.navigation_drawer);
         drawerFrag.setUp(R.id.navigation_drawer, drawer);
         ButterKnife.bind(this);
         setUpHomeFragment();
@@ -57,11 +56,12 @@ public class HomeScreenActivity extends PortraitActivity implements NavigationDr
                 .commit();
     }
 
+    // todo : convert these to using event bus
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         Log.d(TAG, "onActivityResults, request_code = " + requestCode + ", result code = " + resultCode);
         super.onActivityResult(requestCode, resultCode, data);
-        if(requestCode == Constant.activityNetworkSettings) {
+        if (requestCode == Constant.activityNetworkSettings) {
             HomeGroupListFragment hgl = (HomeGroupListFragment) mainFragment;
             hgl.fetchGroupList();
         } else if (resultCode == RESULT_OK && data != null) {
@@ -83,40 +83,6 @@ public class HomeScreenActivity extends PortraitActivity implements NavigationDr
         if (drawer != null) {
             drawer.closeDrawer(Gravity.LEFT);
         }
-
-        switch (position) {
-            case NavigationConstants.HOME_NAV_PROFILE:
-                startActivity(new Intent(getApplicationContext(), ProfileSettings.class));
-                break;
-            case NavigationConstants.HOME_NAV_FAQ:
-                startActivity(new Intent(HomeScreenActivity.this, FAQActivity.class));
-                break;
-            case NavigationConstants.HOME_NAV_NOTIFICATIONS:
-                startActivity(new Intent(HomeScreenActivity.this, NotificationCenter.class));
-                break;
-            case NavigationConstants.HOME_NAV_LOGOUT:
-                logout();
-        }
-    }
-
-
-    private void logout() {
-        alertDialogFragment = UtilClass.showAlertDialog(getFragmentManager(),getString(R.string.Log_Out), getString(R.string.Logout_message), "Yes", "No", true, new AlertDialogListener() {
-            @Override
-            public void setRightButton() {//no
-                alertDialogFragment.dismiss();
-            }
-
-            @Override
-            public void setLeftButton() {
-                //Yes
-                PreferenceUtils.clearAll(getApplicationContext());
-                Intent open = new Intent(HomeScreenActivity.this, StartActivity.class);
-                startActivity(open);
-                finish();
-                alertDialogFragment.dismiss();
-            }
-        });
     }
 
     @Override

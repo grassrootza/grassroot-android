@@ -98,7 +98,7 @@ public class TasksAdapter extends RecyclerView.Adapter<TasksAdapter.TaskViewHold
         view.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                listener.onCardClick(position, task.getId(), task.getType());
+                listener.onCardClick(position, task.getTaskUid(), task.getType());
             }
         });
     }
@@ -108,7 +108,7 @@ public class TasksAdapter extends RecyclerView.Adapter<TasksAdapter.TaskViewHold
             @Override
             public void onClick(View v) {
                 Log.e(TAG, "icon clicked!");
-                listener.respondToTask(task.getId(), task.getType(), response, position);
+                listener.respondToTask(task.getTaskUid(), task.getType(), response, position);
             }
         });
     }
@@ -188,8 +188,8 @@ public class TasksAdapter extends RecyclerView.Adapter<TasksAdapter.TaskViewHold
     }
 
     private void hasRespondedButCanAction(TaskViewHolder holder, TaskModel model, final int position) {
-        boolean repliedYes = model.getReply().equalsIgnoreCase("yes");
-        boolean repliedNo = model.getReply().equalsIgnoreCase("no");
+        boolean repliedYes = model.respondedYes();
+        boolean repliedNo = model.respondedNo();
 
         holder.iv2.setImageResource(repliedYes ? R.drawable.ic_vote_active : R.drawable.ic_vote_inactive);
         holder.iv3.setImageResource(repliedNo ? R.drawable.ic_no_vote_active : R.drawable.ic_no_vote_inactive);
@@ -218,8 +218,8 @@ public class TasksAdapter extends RecyclerView.Adapter<TasksAdapter.TaskViewHold
 
     private void cannotRespond(TaskViewHolder holder, TaskModel model) {
         Log.d(TAG, "setting up icons for no response, for event: " + model.getTitle());
-        holder.iv2.setImageResource(model.getReply().equalsIgnoreCase("Yes") ? R.drawable.ic_vote_active : R.drawable.ic_vote_inactive);
-        holder.iv3.setImageResource(model.getReply().equalsIgnoreCase("No") ? R.drawable.ic_no_vote_active : R.drawable.ic_no_vote_inactive);
+        holder.iv2.setImageResource(model.respondedYes() ? R.drawable.ic_vote_active : R.drawable.ic_vote_inactive);
+        holder.iv3.setImageResource(model.respondedNo() ? R.drawable.ic_no_vote_active : R.drawable.ic_no_vote_inactive);
         holder.iv2.setEnabled(false);
         holder.iv3.setEnabled(false);
     }
