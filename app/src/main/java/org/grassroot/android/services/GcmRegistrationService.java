@@ -32,13 +32,23 @@ public class GcmRegistrationService extends IntentService {
     }
 
     @Override
-    protected void onHandleIntent(Intent intent)  {
+    protected void onHandleIntent(Intent intent) {
 
-        Log.e(TAG, "registering with project ID: " + getString(R.string.project_id));
+        if (intent.hasExtra(getString(R.string.GCM_UNREGISTER))) {
+            unRegister();
 
+        } else {
+            register(intent);
+        }
+    }
+
+    private String generateMessageId(String phoneNumber) {
+        return phoneNumber + "_".concat(String.valueOf(Calendar.getInstance().getTimeInMillis()));
+
+    }
+
+    private void register(Intent intent) {
         try {
-
-
             String token = InstanceID.getInstance(this).getToken(getString(R.string.project_id),
                     GoogleCloudMessaging.INSTANCE_ID_SCOPE, null);
             String phoneNumber = intent.getStringExtra("phoneNumber");
@@ -50,7 +60,7 @@ public class GcmRegistrationService extends IntentService {
             data.putString("action", "REGISTER");
 
             GrassrootRestService.getInstance().getApi()
-                    .pushRegistration(phoneNumber,code, token)
+                    .pushRegistration(phoneNumber, code, token)
                     .enqueue(new Callback<GenericResponse>() {
                         @Override
                         public void onResponse(Call<GenericResponse> call, Response<GenericResponse> response) {
@@ -58,12 +68,13 @@ public class GcmRegistrationService extends IntentService {
                                 PreferenceUtils.setIsGcmEnabled(GcmRegistrationService.this, true);
                             } else {
                                 try {
-                                    GoogleCloudMessaging.getInstance(GcmRegistrationService.this).send(getString(R.string.sender_id),messageId,data);
+                                    GoogleCloudMessaging.getInstance(GcmRegistrationService.this).send(getString(R.string.sender_id), messageId, data);
                                 } catch (IOException e1) {
                                     e1.printStackTrace();
                                 }
                             }
                         }
+
                         @Override
                         public void onFailure(Call<GenericResponse> call, Throwable t) {
                             Log.e(TAG, "Error! Got a network error in service, and can't do anything with it");
@@ -73,15 +84,36 @@ public class GcmRegistrationService extends IntentService {
 
         } catch (IOException e) {
             Log.e(TAG, "Push registration failed, for project ID: " + R.string.project_id + ", and scope: "
-                + GoogleCloudMessaging.INSTANCE_ID_SCOPE);
+                    + GoogleCloudMessaging.INSTANCE_ID_SCOPE);
             e.printStackTrace();
         }
-
     }
 
-    private String generateMessageId(String phoneNumber){
-        return phoneNumber +"_".concat(String.valueOf(Calendar.getInstance().getTimeInMillis()));
 
+    private void unRegister() {
 
+        try {
+            InstanceID.getInstance(this).deleteInstanceID();
+            String phoneNumber = PreferenceUtils.getuser_mobilenumber(this);
+            String code = PreferenceUtils.getuser_token(this);
+            GrassrootRestService.getInstance().getApi().pushUnregister(phoneNumber,code).enqueue(new Callback<GenericResponse>() {
+                @Override
+                public void onResponse(Call<GenericResponse> call, Response<GenericResponse> response) {
+                    if (response.isSuccessful()) {
+                        PreferenceUtils.clearAll(getApplicationContext());
+                        Log.e(TAG, "Gcm unregistration successful");
+
+                    }
+                }
+
+                @Override
+                public void onFailure(Call<GenericResponse> call, Throwable t) {
+                    Log.d(TAG, "this is a background call, cant show user anything.  Fail silently");
+                }
+            });
+        } catch (IOException e) {
+            Log.e(TAG, "Push uregistration failed, for project ID: " + R.string.project_id + ", and scope: "
+                    + GoogleCloudMessaging.INSTANCE_ID_SCOPE);
+        }
     }
 }

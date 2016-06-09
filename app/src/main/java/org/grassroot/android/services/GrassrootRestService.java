@@ -37,7 +37,7 @@ import retrofit2.http.Query;
  */
 public class GrassrootRestService extends Application {
 
-    private static final String GRASSROOT_SERVER_URL = Constant.restUrl;
+    private static final String GRASSROOT_SERVER_URL = Constant.stagingUrl;
     private RestApi mRestApi;
     private static GrassrootRestService instance;
 
@@ -127,8 +127,8 @@ public class GrassrootRestService extends Application {
         //retrieve notifications
         @GET("notification/list/{phoneNumber}/{code}")
         Call<NotificationList> getUserNotifications(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
-                                                    @Nullable @Query("page") Integer page
-                , @Nullable @Query("size") Integer size);
+                                                    @Nullable @Query("page") Integer page,
+                                                    @Nullable @Query("size") Integer size);
 
         //Profile settings
         @GET("user/profile/settings/{phoneNumber}/{code}")
@@ -141,14 +141,24 @@ public class GrassrootRestService extends Application {
                                             @Query("displayName") String displayName, @Query("language") String language,
                                             @Query("alertPreference") String preference);
 
+        @GET("gcm/deregister/{phoneNumber}/{code}")
+        Call<GenericResponse> pushUnregister(@Path("phoneNumber") String phoneNumber,
+                                             @Path("code") String code);
+
+
+        //update notification read status
+        @POST("notification/update/read/{phoneNumber}/{code}")
+        Call<GenericResponse> updateRead(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
+                                         @Query("uid") String uid);
+
         /*
         SECTION : Group related calls
          */
-
         @POST("group/create/{phoneNumber}/{code}/{groupName}/{description}")
         Call<GroupResponse> createGroup(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
                                         @Path("groupName") String groupName, @Path("description") String groupDescription,
                                         @Body List<Member> membersToAdd);
+
         //user groups
         @GET("group/list/{phoneNumber}/{code}")
         Call<GroupResponse> getUserGroups(@Path("phoneNumber") String phoneNumber,
@@ -164,10 +174,10 @@ public class GrassrootRestService extends Application {
                                                      @Path("code") String code,
                                                      @Query("uid" )String uid);
 
+
         //search for public groups
         @GET("group/search")
         Call<GroupSearchResponse> search(@Query("searchTerm") String searchTerm);
-
 
         // retrieve group members
         @GET("group/members/list/{phoneNumber}/{code}/{groupUid}/{selected}")
@@ -237,9 +247,11 @@ public class GrassrootRestService extends Application {
                                                  @Path("code") String code,
                                                  @Path("id") String todoId);
 
+
         /*
         SECTION : CREATE TASKS
          */
+
 
         //create vote
         @POST("vote/create/{id}/{phoneNumber}/{code}")

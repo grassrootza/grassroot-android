@@ -40,7 +40,7 @@ public class Constant {
     public static final String TITLE = "title";
     public static final String ENTITY_TYPE = "entity_type";
     public static final String BODY = "body";
-    public static final String NOTIFICATION_ID = "notificationId";
+    public static final String NOTIFICATION_UID = "notificationUid";
 
     public static final String CANCELLABLE = "cancellable";
 

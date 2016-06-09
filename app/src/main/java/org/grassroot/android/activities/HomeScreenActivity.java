@@ -9,7 +9,6 @@ import android.util.Log;
 import android.view.Gravity;
 
 import org.grassroot.android.R;
-import org.grassroot.android.fragments.AlertDialogFragment;
 import org.grassroot.android.fragments.HomeGroupListFragment;
 import org.grassroot.android.fragments.NavigationDrawerFragment;
 import org.grassroot.android.fragments.NewTaskMenuFragment;
@@ -17,6 +16,7 @@ import org.grassroot.android.fragments.WelcomeFragment;
 import org.grassroot.android.interfaces.AlertDialogListener;
 import org.grassroot.android.interfaces.NavigationConstants;
 import org.grassroot.android.models.Group;
+import org.grassroot.android.services.GcmRegistrationService;
 import org.grassroot.android.utils.Constant;
 import org.grassroot.android.utils.MenuUtils;
 import org.grassroot.android.utils.PreferenceUtils;
@@ -115,10 +115,16 @@ public class HomeScreenActivity extends PortraitActivity implements NavigationDr
     @Override
     public void menuCloseClicked() {
         newTaskMenuFragment = (NewTaskMenuFragment) getSupportFragmentManager()
-                .findFragmentByTag(NewTaskMenuFragment.class.getCanonicalName()) ;
+                .findFragmentByTag(NewTaskMenuFragment.class.getCanonicalName());
         getSupportFragmentManager().beginTransaction()
                 .setCustomAnimations(R.anim.push_down_in, R.anim.push_down_out)
                 .remove(newTaskMenuFragment)
                 .commit();
     }
+
+
+
 }
+
+
+

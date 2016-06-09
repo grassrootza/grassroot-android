@@ -26,6 +26,7 @@ import org.grassroot.android.services.GrassrootRestService;
 import org.grassroot.android.models.EventModel;
 import org.grassroot.android.models.EventResponse;
 import org.grassroot.android.models.TaskResponse;
+import org.grassroot.android.services.NotificationUpdateService;
 import org.grassroot.android.utils.Constant;
 import org.grassroot.android.utils.ErrorUtils;
 import org.grassroot.android.ui.views.ProgressBarCircularIndeterminate;
@@ -144,16 +145,18 @@ public class ViewVoteActivity extends PortraitActivity {
         ButterKnife.bind(this);
         if (getIntent() != null) {
             voteid = getIntent().getExtras().getString(Constant.UID);
-            if(getIntent().hasExtra(Constant.NOTIFICATION_ID)){
+            if (getIntent().hasExtra(Constant.NOTIFICATION_UID)) {
+                String notificationUid = getIntent().getStringExtra(Constant.NOTIFICATION_UID);
+                Log.e(TAG, "notificationUid " + notificationUid);
                 int notificationCount = PreferenceUtils.getIsNotificationcounter(this);
                 Log.e(TAG, "count " + notificationCount);
-                PreferenceUtils.setIsNotificationcounter(this,--notificationCount);
+                NotificationUpdateService.updateNotificationStatus(this,notificationUid);
+                PreferenceUtils.setIsNotificationcounter(this, --notificationCount);
                 EventBus.getDefault().post(new NotificationEvent(--notificationCount));
             }
         }
         setUpToolbar();
         init();
-
     }
 
     private void setUpToolbar() {
@@ -202,7 +205,7 @@ public class ViewVoteActivity extends PortraitActivity {
                     eventModel = response.body().getEventModel();
                     setView(eventModel);
                 }
-                ErrorUtils.handleServerError(rlVvMainLayout,ViewVoteActivity.this, response);
+                ErrorUtils.handleServerError(rlVvMainLayout, ViewVoteActivity.this, response);
             }
 
             @Override
@@ -215,7 +218,7 @@ public class ViewVoteActivity extends PortraitActivity {
                 ErrorUtils.connectivityError(ViewVoteActivity.this, R.string.error_no_network, new NetworkErrorDialogListener() {
                     @Override
                     public void retryClicked() {
-                     updateView();
+                        updateView();
                     }
                 });
 
@@ -350,8 +353,9 @@ public class ViewVoteActivity extends PortraitActivity {
                             showSnackBar(getString(R.string.ga_Votesend), "", "", "", Snackbar.LENGTH_SHORT);
                             updateView();
                         }
-                        ErrorUtils.handleServerError(rlVvMainLayout,ViewVoteActivity.this,response);
+                        ErrorUtils.handleServerError(rlVvMainLayout, ViewVoteActivity.this, response);
                     }
+
                     @Override
                     public void onFailure(Call<TaskResponse> call, Throwable t) {
                         progressBarCircularIndeterminate.setVisibility(View.GONE);
@@ -364,10 +368,11 @@ public class ViewVoteActivity extends PortraitActivity {
                             }
                         });
 
-                       // ErrorUtils.handleNetworkError(ViewVoteActivity.this, errorLayout, t);
                     }
                 });
     }
+
+
 
 
     @OnClick(R.id.thumbs_down)
@@ -406,7 +411,7 @@ public class ViewVoteActivity extends PortraitActivity {
     }
 
     @OnClick(R.id.error_layout)
-    public void onErrorLayoutClick(){
+    public void onErrorLayoutClick() {
         fetchVoteDetails();
     }
 
@@ -425,12 +430,15 @@ public class ViewVoteActivity extends PortraitActivity {
                 mLinearLayout.setVisibility(View.GONE);
 
             }
+
             @Override
             public void onAnimationStart(Animator animator) {
             }
+
             @Override
             public void onAnimationCancel(Animator animator) {
             }
+
             @Override
             public void onAnimationRepeat(Animator animator) {
             }
@@ -469,7 +477,7 @@ public class ViewVoteActivity extends PortraitActivity {
                 description = data.getStringExtra("description");
             }
         } else {
-             updateView();
+            updateView();
             Log.e(this.TAG, "resultCode==2");
         }
     }

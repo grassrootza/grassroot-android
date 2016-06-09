@@ -49,4 +49,9 @@ public class Notification {
     public boolean isDelivered() {
         return delivered;
     }
+
+    //to update the moel locally
+    public void setIsRead(){
+        read =true;
+    }
 }
