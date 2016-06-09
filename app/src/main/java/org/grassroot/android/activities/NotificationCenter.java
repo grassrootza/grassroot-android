@@ -1,6 +1,7 @@
 package org.grassroot.android.activities;
 
 import android.content.Intent;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
@@ -15,14 +16,18 @@ import android.widget.TextView;
 
 import org.grassroot.android.R;
 import org.grassroot.android.adapters.NotificationAdapter;
+import org.grassroot.android.events.NotificationEvent;
 import org.grassroot.android.interfaces.ClickListener;
+import org.grassroot.android.services.GcmListenerService;
 import org.grassroot.android.services.GrassrootRestService;
 import org.grassroot.android.models.Notification;
 import org.grassroot.android.models.NotificationList;
+import org.grassroot.android.services.NotificationUpdateService;
 import org.grassroot.android.ui.views.RecyclerTouchListener;
 import org.grassroot.android.utils.ErrorUtils;
 import org.grassroot.android.ui.views.ProgressBarCircularIndeterminate;
 import org.grassroot.android.utils.PreferenceUtils;
+import org.greenrobot.eventbus.EventBus;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -75,6 +80,7 @@ public class NotificationCenter extends PortraitActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_notification_center);
         ButterKnife.bind(this);
+        GcmListenerService.cleatNotifications(this);
         setUpToolbar();
         setRecylerview();
         init();
@@ -110,6 +116,7 @@ public class NotificationCenter extends PortraitActivity {
                     @Override
                     public void onClick(View view, int position) {
                         Notification notification = notificationAdapter.getNotifications().get(position);
+                        updateNotificationStatus(notification);
                         Log.d(TAG, "clicked on item" + position);
                         Log.d(TAG, notification.getMessage());
                         Intent openactivity = null;
@@ -154,7 +161,7 @@ public class NotificationCenter extends PortraitActivity {
                 Log.e(TAG, "pageNumber" + pageNumber);
                 Log.e(TAG, "totalItemCount"+totalItemCount);
 
-                if (pageNumber <= totalPages &&  totalItemCount <= (lastVisibileItem + 10) && !isLoading) {
+                if (pageNumber <totalPages &&  totalItemCount <= (lastVisibileItem + 10) && !isLoading) {
                     prgNcPaging.setVisibility(View.VISIBLE);
                     pageNumber = ++pageNumber;
                     isLoading = true;
@@ -204,17 +211,6 @@ public class NotificationCenter extends PortraitActivity {
 
     }
 
-    private void showProgress(Integer page){
-        if(page!=null && page <1){
-            prgNc.setVisibility(View.VISIBLE);
-            prgNcPaging.setVisibility(View.INVISIBLE);
-        }
-        else{
-            prgNcPaging.setVisibility(View.VISIBLE);
-            prgNc.setVisibility(View.INVISIBLE);
-        }
-
-    }
 
     private void hideProgess(){
         prgNc.setVisibility(View.GONE);
@@ -227,5 +223,17 @@ public class NotificationCenter extends PortraitActivity {
         if (v == llNoInternet || v == llNoResult || v == llNoResult)
             getNotifications(null, null);
 
+    }
+
+    private void updateNotificationStatus(Notification notification) {
+        if (!notification.isRead()) {
+            String uid = notification.getUid();
+            notification.setIsRead();
+            notificationAdapter.notifyDataSetChanged();
+            int notificationCount = PreferenceUtils.getIsNotificationcounter(this);
+            NotificationUpdateService.updateNotificationStatus(this, uid);
+            PreferenceUtils.setIsNotificationcounter(this, --notificationCount);
+            EventBus.getDefault().post(new NotificationEvent(--notificationCount));
+        }
     }
 }

@@ -168,7 +168,10 @@
             </intent-filter>
         </service>
         <service android:name=".services.GcmRegistrationService" />
-
+        <service
+            android:name=".services.NotificationUpdateService"
+            android:enabled="true"
+            android:exported="true"></service>
     </application>
 
 </manifest>

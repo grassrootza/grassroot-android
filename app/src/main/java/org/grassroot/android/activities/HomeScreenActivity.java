@@ -8,16 +8,20 @@ import android.support.v4.widget.DrawerLayout;
 import android.util.Log;
 import android.view.Gravity;
 
+import com.google.android.gms.iid.InstanceIDListenerService;
+
 import org.grassroot.android.R;
-import org.grassroot.android.fragments.NewTaskMenuFragment;
-import org.grassroot.android.interfaces.AlertDialogListener;
-import org.grassroot.android.interfaces.GroupConstants;
-import org.grassroot.android.interfaces.NavigationConstants;
 import org.grassroot.android.fragments.AlertDialogFragment;
 import org.grassroot.android.fragments.HomeGroupListFragment;
 import org.grassroot.android.fragments.NavigationDrawerFragment;
+import org.grassroot.android.fragments.NewTaskMenuFragment;
 import org.grassroot.android.fragments.WelcomeFragment;
+import org.grassroot.android.interfaces.AlertDialogListener;
+import org.grassroot.android.interfaces.NavigationConstants;
+import org.grassroot.android.models.GenericResponse;
 import org.grassroot.android.models.Group;
+import org.grassroot.android.services.GcmRegistrationService;
+import org.grassroot.android.services.GrassrootRestService;
 import org.grassroot.android.utils.Constant;
 import org.grassroot.android.utils.MenuUtils;
 import org.grassroot.android.utils.PreferenceUtils;
@@ -26,6 +30,9 @@ import org.greenrobot.eventbus.EventBus;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class HomeScreenActivity extends PortraitActivity implements NavigationDrawerFragment.NavigationDrawerCallbacks,
         WelcomeFragment.FragmentCallbacks, HomeGroupListFragment.GroupListFragmentListener, NewTaskMenuFragment.NewTaskMenuListener {
@@ -61,7 +68,7 @@ public class HomeScreenActivity extends PortraitActivity implements NavigationDr
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         Log.d(TAG, "onActivityResults, request_code = " + requestCode + ", result code = " + resultCode);
         super.onActivityResult(requestCode, resultCode, data);
-        if(requestCode == Constant.activityNetworkSettings) {
+        if (requestCode == Constant.activityNetworkSettings) {
             HomeGroupListFragment hgl = (HomeGroupListFragment) mainFragment;
             hgl.fetchGroupList();
         } else if (resultCode == RESULT_OK && data != null) {
@@ -101,7 +108,7 @@ public class HomeScreenActivity extends PortraitActivity implements NavigationDr
 
 
     private void logout() {
-        alertDialogFragment = UtilClass.showAlertDialog(getFragmentManager(),getString(R.string.Log_Out), getString(R.string.Logout_message), "Yes", "No", true, new AlertDialogListener() {
+        alertDialogFragment = UtilClass.showAlertDialog(getFragmentManager(), getString(R.string.Log_Out), getString(R.string.Logout_message), "Yes", "No", true, new AlertDialogListener() {
             @Override
             public void setRightButton() {//no
                 alertDialogFragment.dismiss();
@@ -110,7 +117,10 @@ public class HomeScreenActivity extends PortraitActivity implements NavigationDr
             @Override
             public void setLeftButton() {
                 //Yes
-                PreferenceUtils.clearAll(getApplicationContext());
+                Log.e(TAG, "logout");
+                Intent gcmRegistrationIntent = new Intent(HomeScreenActivity.this, GcmRegistrationService.class);
+                gcmRegistrationIntent.putExtra(getString(R.string.GCM_UNREGISTER), true);
+                startService(gcmRegistrationIntent);
                 Intent open = new Intent(HomeScreenActivity.this, StartActivity.class);
                 startActivity(open);
                 finish();
@@ -149,10 +159,16 @@ public class HomeScreenActivity extends PortraitActivity implements NavigationDr
     @Override
     public void menuCloseClicked() {
         newTaskMenuFragment = (NewTaskMenuFragment) getSupportFragmentManager()
-                .findFragmentByTag(NewTaskMenuFragment.class.getCanonicalName()) ;
+                .findFragmentByTag(NewTaskMenuFragment.class.getCanonicalName());
         getSupportFragmentManager().beginTransaction()
                 .setCustomAnimations(R.anim.push_down_in, R.anim.push_down_out)
                 .remove(newTaskMenuFragment)
                 .commit();
     }
+
+
+
 }
+
+
+

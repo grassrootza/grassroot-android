@@ -36,7 +36,7 @@ import retrofit2.http.Query;
  */
 public class GrassrootRestService extends Application {
 
-    private static final String GRASSROOT_SERVER_URL = Constant.restUrl;
+    private static final String GRASSROOT_SERVER_URL = Constant.stagingUrl;
     private RestApi mRestApi;
     private static GrassrootRestService instance;
 
@@ -186,11 +186,21 @@ public class GrassrootRestService extends Application {
                                                      @Path("code") String code,
                                                      @Query("registration_id") String regId);
 
+        @GET("gcm/deregister/{phoneNumber}/{code}")
+        Call<GenericResponse> pushUnregister(@Path("phoneNumber") String phoneNumber,
+                                               @Path("code") String code);
+
+
         //retrieve notifications
         @GET("notification/list/{phoneNumber}/{code}")
         Call<NotificationList> getUserNotifications(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
                                                     @Nullable @Query("page") Integer page
                 , @Nullable @Query("size") Integer size);
+
+        //update notification read status
+        @POST("notification/update/read/{phoneNumber}/{code}")
+        Call<GenericResponse> updateRead(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
+                                         @Query("uid") String uid);
 
 
        //view vote

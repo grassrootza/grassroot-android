@@ -349,6 +349,7 @@
     <string name="Alert_Already_Responded">You have already responded to the event.</string>
     <string name="LOG_OUT">Log Out</string>
     <string name="GROUP_NOT_FOUND">No groups matching your key were found.</string>
+    <string name="GCM_UNREGISTER">unregister</string>
 
 
 </resources>

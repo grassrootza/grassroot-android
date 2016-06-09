@@ -68,8 +68,7 @@ public class NavigationDrawerAdapter extends RecyclerView.Adapter<NavigationDraw
             holder.title.setTextColor(mContext.getResources().getColor(R.color.black));
         }
 
-        // todo: make this not terrible
-        if (position == 2) {
+        if (myDrawerModel.getTitle().equalsIgnoreCase(mContext.getString(R.string.Notifications))) {
             holder.txtTitleCounter.setVisibility(View.VISIBLE);
             int notificationcount = PreferenceUtils.getIsNotificationcounter(mContext);
             Log.e(TAG, "notificationcount is " + notificationcount);
