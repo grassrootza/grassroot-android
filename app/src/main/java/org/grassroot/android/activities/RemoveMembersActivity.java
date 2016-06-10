@@ -2,7 +2,6 @@ package org.grassroot.android.activities;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
@@ -12,16 +11,14 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import org.grassroot.android.R;
-import org.grassroot.android.interfaces.AlertDialogListener;
-import org.grassroot.android.services.GrassrootRestService;
+import org.grassroot.android.fragments.MemberListFragment;
+import org.grassroot.android.fragments.dialogs.ConfirmCancelDialogFragment;
 import org.grassroot.android.models.GenericResponse;
 import org.grassroot.android.models.Member;
-import org.grassroot.android.fragments.AlertDialogFragment;
-import org.grassroot.android.fragments.MemberListFragment;
+import org.grassroot.android.services.GrassrootRestService;
 import org.grassroot.android.utils.Constant;
 import org.grassroot.android.utils.ErrorUtils;
 import org.grassroot.android.utils.PreferenceUtils;
-import org.grassroot.android.utils.UtilClass;
 
 import java.util.HashSet;
 import java.util.List;
@@ -47,7 +44,6 @@ public class RemoveMembersActivity extends PortraitActivity implements MemberLis
     private int groupPosition;
 
     private MemberListFragment memberListFragment;
-    private AlertDialogFragment dialogFragment;
 
     private Set<String> membersToRemove;
 
@@ -127,19 +123,12 @@ public class RemoveMembersActivity extends PortraitActivity implements MemberLis
             finish();
         } else {
             final String message = String.format(getString(R.string.rm_confirm_number), membersToRemove.size());
-            dialogFragment = UtilClass.showAlertDialog(getFragmentManager(),getString(R.string.Confirm_Removal), message, "Cancel", "Confirm", true,
-                    new AlertDialogListener() {
-                        @Override
-                        public void setLeftButton() {
-                            dialogFragment.dismiss();
-                        }
-
-                        @Override
-                        public void setRightButton() {
-                            saveRemoval();
-                            dialogFragment.dismiss();
-                        }
-                    });
+            ConfirmCancelDialogFragment.newInstance(message, new ConfirmCancelDialogFragment.ConfirmDialogListener() {
+                @Override
+                public void doConfirmClicked() {
+                    saveRemoval();
+                }
+            }).show(getSupportFragmentManager(), "confirm");
         }
     }
 

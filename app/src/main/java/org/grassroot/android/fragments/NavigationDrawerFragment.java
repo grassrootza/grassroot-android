@@ -22,6 +22,7 @@ import org.grassroot.android.activities.ProfileSettingsActivity;
 import org.grassroot.android.activities.StartActivity;
 import org.grassroot.android.adapters.NavigationDrawerAdapter;
 import org.grassroot.android.events.NotificationEvent;
+import org.grassroot.android.fragments.dialogs.ConfirmCancelDialogFragment;
 import org.grassroot.android.interfaces.ClickListener;
 import org.grassroot.android.interfaces.NavigationConstants;
 import org.grassroot.android.models.NavDrawerItem;
@@ -168,7 +169,7 @@ public class NavigationDrawerFragment extends Fragment {
                     }
                 });
 
-        confirmDialog.show(getActivity().getFragmentManager(), "logout");
+        confirmDialog.show(getFragmentManager(), "logout");
     }
 
     @Override

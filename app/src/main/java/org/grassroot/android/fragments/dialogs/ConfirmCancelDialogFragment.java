@@ -1,9 +1,9 @@
-package org.grassroot.android.fragments;
+package org.grassroot.android.fragments.dialogs;
 
 import android.app.Dialog;
-import android.app.DialogFragment;
 import android.content.DialogInterface;
 import android.os.Bundle;
+import android.support.v4.app.DialogFragment;
 import android.support.v7.app.AlertDialog;
 
 import org.grassroot.android.R;
@@ -27,6 +27,17 @@ public class ConfirmCancelDialogFragment extends DialogFragment {
         ConfirmCancelDialogFragment frag = new ConfirmCancelDialogFragment();
         Bundle args = new Bundle();
         args.putInt("message", message);
+        args.putBoolean("custom", false);
+        frag.setArguments(args);
+        frag.setListener(listener);
+        return frag;
+    }
+
+    public static ConfirmCancelDialogFragment newInstance(String message, ConfirmDialogListener listener) {
+        ConfirmCancelDialogFragment frag = new ConfirmCancelDialogFragment();
+        Bundle args = new Bundle();
+        args.putString("message", message);
+        args.putBoolean("custom", true);
         frag.setArguments(args);
         frag.setListener(listener);
         return frag;
@@ -34,11 +45,16 @@ public class ConfirmCancelDialogFragment extends DialogFragment {
 
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
-        int message = getArguments().getInt("message");
+        AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+        Bundle args = getArguments();
 
-        return new AlertDialog.Builder(getActivity())
-                .setMessage(message)
-                .setPositiveButton(R.string.alert_confirm, new DialogInterface.OnClickListener() {
+        if (args.getBoolean("custom")) {
+            builder.setTitle(args.getString("message"));
+        } else {
+            builder.setTitle(args.getInt("message"));
+        }
+
+        builder.setPositiveButton(R.string.alert_confirm, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialogInterface, int i) {
                         mListener.doConfirmClicked();
@@ -49,8 +65,9 @@ public class ConfirmCancelDialogFragment extends DialogFragment {
                     public void onClick(DialogInterface dialogInterface, int i) {
                         ConfirmCancelDialogFragment.this.getDialog().cancel();
                     }
-                })
-                .create();
+                });
+
+        return builder.create();
     }
 
 }

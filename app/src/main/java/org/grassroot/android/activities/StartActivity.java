@@ -19,21 +19,20 @@ import android.widget.ImageView;
 import android.widget.RelativeLayout;
 
 import org.grassroot.android.R;
-import org.grassroot.android.services.GcmRegistrationService;
-import org.grassroot.android.services.GrassrootRestService;
-import org.grassroot.android.models.GenericResponse;
-import org.grassroot.android.models.Token;
-import org.grassroot.android.models.TokenResponse;
 import org.grassroot.android.fragments.HomeScreenViewFragment;
 import org.grassroot.android.fragments.LoginScreenFragment;
 import org.grassroot.android.fragments.OtpScreenFragment;
 import org.grassroot.android.fragments.RegisterScreenFragment;
+import org.grassroot.android.models.GenericResponse;
+import org.grassroot.android.models.Token;
+import org.grassroot.android.models.TokenResponse;
+import org.grassroot.android.services.GcmRegistrationService;
+import org.grassroot.android.services.GrassrootRestService;
 import org.grassroot.android.utils.Constant;
 import org.grassroot.android.utils.ErrorUtils;
 import org.grassroot.android.utils.LocationUtils;
 import org.grassroot.android.utils.NetworkUtils;
 import org.grassroot.android.utils.PreferenceUtils;
-import org.grassroot.android.utils.TopExceptionHandler;
 
 import java.util.List;
 
@@ -98,7 +97,6 @@ public class StartActivity extends PortraitActivity implements HomeScreenViewFra
     @Override
     protected void onCreate(Bundle bundle) {
         super.onCreate(bundle);
-        Thread.setDefaultUncaughtExceptionHandler(new TopExceptionHandler(this));
 
         Intent intent = getIntent();
         if(intent.hasExtra("type") && intent.getStringExtra("type").compareTo("notification")==0) {

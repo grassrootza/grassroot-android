@@ -1,9 +1,9 @@
 package org.grassroot.android.fragments;
 
-import android.app.DialogFragment;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
+import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.widget.SwipeRefreshLayout;
@@ -20,6 +20,7 @@ import android.widget.RelativeLayout;
 import org.grassroot.android.R;
 import org.grassroot.android.adapters.TasksAdapter;
 import org.grassroot.android.events.TaskChangedEvent;
+import org.grassroot.android.fragments.dialogs.ConfirmCancelDialogFragment;
 import org.grassroot.android.interfaces.GroupConstants;
 import org.grassroot.android.interfaces.NetworkErrorDialogListener;
 import org.grassroot.android.interfaces.TaskConstants;
@@ -260,7 +261,7 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
         });
 
         // todo: this seems awkward ... may want to switch to using app.Fragment, given only supporting v4.0+
-        newFragment.show(getActivity().getFragmentManager(), "dialog");
+        newFragment.show(getFragmentManager(), "dialog");
     }
 
     @Override

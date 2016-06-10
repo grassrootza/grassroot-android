@@ -1,7 +1,7 @@
 package org.grassroot.android.activities;
 
+import android.app.ProgressDialog;
 import android.content.Intent;
-import android.graphics.Color;
 import android.os.Bundle;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
@@ -18,14 +18,13 @@ import org.grassroot.android.R;
 import org.grassroot.android.adapters.NotificationAdapter;
 import org.grassroot.android.events.NotificationEvent;
 import org.grassroot.android.interfaces.ClickListener;
-import org.grassroot.android.services.GcmListenerService;
-import org.grassroot.android.services.GrassrootRestService;
 import org.grassroot.android.models.Notification;
 import org.grassroot.android.models.NotificationList;
+import org.grassroot.android.services.GcmListenerService;
+import org.grassroot.android.services.GrassrootRestService;
 import org.grassroot.android.services.NotificationUpdateService;
 import org.grassroot.android.ui.views.RecyclerTouchListener;
 import org.grassroot.android.utils.ErrorUtils;
-import org.grassroot.android.ui.views.ProgressBarCircularIndeterminate;
 import org.grassroot.android.utils.PreferenceUtils;
 import org.greenrobot.eventbus.EventBus;
 
@@ -50,12 +49,12 @@ public class NotificationCenter extends PortraitActivity {
     TextView txtTlbNc;
     @BindView(R.id.rl_root_nc)
     RelativeLayout rlRootNc;
-    @BindView(R.id.prg_nc)
-    ProgressBarCircularIndeterminate prgNc;
-    @BindView(R.id.txt_prg_nc)
-    TextView txtPrgNc;
+
+    private ProgressDialog progressDialog;
+
     @BindView(R.id.prg_nc_paging)
     ProgressBar prgNcPaging;
+
     @BindView(R.id.error_layout)
     View errorLayout;
     @BindView(R.id.ll_no_result)
@@ -176,10 +175,11 @@ public class NotificationCenter extends PortraitActivity {
     }
 
     private void getNotifications(Integer page, Integer size) {
-
         String phoneNumber = PreferenceUtils.getuser_mobilenumber(this);
         String code = PreferenceUtils.getuser_token(this);
-        prgNc.setVisibility(View.VISIBLE);
+        progressDialog = new ProgressDialog(this);
+        progressDialog.setMessage(getString(R.string.prg_message));
+        progressDialog.show();
         GrassrootRestService.getInstance().getApi().getUserNotifications(phoneNumber, code, page, size).enqueue(new Callback<NotificationList>() {
             @Override
             public void onResponse(Call<NotificationList> call, Response<NotificationList> response) {
@@ -189,10 +189,6 @@ public class NotificationCenter extends PortraitActivity {
                     notifications = response.body().getNotificationWrapper().getNotifications();
                     pageNumber = response.body().getNotificationWrapper().getPageNumber();
                     totalPages = response.body().getNotificationWrapper().getTotalPages();
-
-
-                    txtPrgNc.setVisibility(View.GONE);
-
                     rcNc.setVisibility(View.VISIBLE);
                     if (pageNumber > 1) {
                         notificationAdapter.updateData(notifications);
@@ -215,9 +211,8 @@ public class NotificationCenter extends PortraitActivity {
 
     }
 
-
     private void hideProgess(){
-        prgNc.setVisibility(View.GONE);
+        progressDialog.hide();
         prgNcPaging.setVisibility(View.GONE);
     }
 

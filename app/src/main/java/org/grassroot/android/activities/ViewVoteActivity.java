@@ -29,7 +29,6 @@ import org.grassroot.android.models.TaskResponse;
 import org.grassroot.android.services.NotificationUpdateService;
 import org.grassroot.android.utils.Constant;
 import org.grassroot.android.utils.ErrorUtils;
-import org.grassroot.android.ui.views.ProgressBarCircularIndeterminate;
 import org.grassroot.android.utils.PreferenceUtils;
 import org.greenrobot.eventbus.EventBus;
 
@@ -70,13 +69,8 @@ public class ViewVoteActivity extends PortraitActivity {
     @BindView(R.id.rl_vv_main_layout)
     LinearLayout rlVvMainLayout;
 
-    @BindView(R.id.progressBarCircularIndeterminate)
-    ProgressBarCircularIndeterminate progressBarCircularIndeterminate;
-
     @BindView(R.id.error_layout)
     RelativeLayout erroLayout;
-    @BindView(R.id.txt_prg)
-    TextView txtPrg;
     @BindView(R.id.bt_editVote)
     Button bt_editVote;
     @BindView(R.id.expandable)
@@ -194,9 +188,6 @@ public class ViewVoteActivity extends PortraitActivity {
     private void showProgress() {
         rlVvMainLayout.setVisibility(View.GONE);
         erroLayout.setVisibility(View.GONE);
-        progressBarCircularIndeterminate.setVisibility(View.VISIBLE);
-        txtPrg.setVisibility(View.VISIBLE);
-
     }
 
     private void fetchVoteDetails() {
@@ -214,11 +205,8 @@ public class ViewVoteActivity extends PortraitActivity {
 
             @Override
             public void onFailure(Call<EventResponse> call, Throwable t) {
-                txtPrg.setVisibility(View.INVISIBLE);
                 erroLayout.setVisibility(View.VISIBLE);
                 imNoInternet.setVisibility(View.VISIBLE);
-                txtPrg.setVisibility(View.GONE);
-                progressBarCircularIndeterminate.setVisibility(View.GONE);
                 ErrorUtils.connectivityError(ViewVoteActivity.this, R.string.error_no_network, new NetworkErrorDialogListener() {
                     @Override
                     public void retryClicked() {
@@ -267,8 +255,6 @@ public class ViewVoteActivity extends PortraitActivity {
             bt_editVote.setClickable(true);
             bt_editVote.setVisibility(View.VISIBLE);
         }
-        progressBarCircularIndeterminate.setVisibility(View.GONE);
-        txtPrg.setVisibility(View.GONE);
         rlVvMainLayout.setVisibility(View.VISIBLE);
         mLinearLayout.getViewTreeObserver().addOnPreDrawListener(
                 new ViewTreeObserver.OnPreDrawListener() {
@@ -362,7 +348,6 @@ public class ViewVoteActivity extends PortraitActivity {
 
                     @Override
                     public void onFailure(Call<TaskResponse> call, Throwable t) {
-                        progressBarCircularIndeterminate.setVisibility(View.GONE);
                         erroLayout.setVisibility(View.VISIBLE);
 
                         ErrorUtils.connectivityError(ViewVoteActivity.this, R.string.error_no_network, new NetworkErrorDialogListener() {

@@ -14,8 +14,8 @@ import android.widget.Toast;
 
 import org.grassroot.android.R;
 import org.grassroot.android.adapters.ProfileAdapter;
-import org.grassroot.android.fragments.EditItemDialog;
-import org.grassroot.android.fragments.RadioSelectDialogFragment;
+import org.grassroot.android.fragments.dialogs.EditTextDialogFragment;
+import org.grassroot.android.fragments.dialogs.RadioSelectDialogFragment;
 import org.grassroot.android.interfaces.ClickListener;
 import org.grassroot.android.models.GenericResponse;
 import org.grassroot.android.models.ProfileResponse;
@@ -31,7 +31,7 @@ import retrofit2.Callback;
 import retrofit2.Response;
 
 public class ProfileSettingsActivity extends PortraitActivity implements
-        EditItemDialog.OnEditItemListener, RadioSelectDialogFragment.RadioChoiceListener {
+        EditTextDialogFragment.EditTextDialogListener, RadioSelectDialogFragment.RadioChoiceListener {
 
     private static final String TAG = ProfileSettingsActivity.class.getSimpleName();
 
@@ -156,7 +156,9 @@ public class ProfileSettingsActivity extends PortraitActivity implements
 
                 switch (position) {
                     case 0://UpdateName
-                        EditItemDialog.newInstance(PreferenceUtils.getuser_name(ProfileSettingsActivity.this)).show(getFragmentManager(), EditItemDialog.TAG);
+                        final String currentName = PreferenceUtils.getuser_name(getApplicationContext());
+                        EditTextDialogFragment.newInstance(R.string.pp_name_dialog, currentName, ProfileSettingsActivity.this)
+                                .show(getSupportFragmentManager(), "displayname");
                         break;
 
                     case 1://language : todo : add "confirm" button
@@ -183,14 +185,13 @@ public class ProfileSettingsActivity extends PortraitActivity implements
     }
 
     @Override
-    public void onTitleModified(String newTitle) {
-        txtPpUsername.setText(newTitle);
-        username = newTitle;
-
+    public void radioButtonPicked(int position, String identifier) {
+        language = getResources().getStringArray(R.array.languagekey)[position]; // uh : actually set this
     }
 
     @Override
-    public void radioButtonPicked(int position, String identifier) {
-        language = getResources().getStringArray(R.array.languagekey)[position]; // uh : actually set this
+    public void confirmClicked(String textEntered) {
+        txtPpUsername.setText(textEntered);
+        username = textEntered;
     }
 }
