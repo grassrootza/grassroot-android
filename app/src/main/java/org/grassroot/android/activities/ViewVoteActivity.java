@@ -200,6 +200,7 @@ public class ViewVoteActivity extends PortraitActivity {
     }
 
     private void fetchVoteDetails() {
+        Log.e(TAG, "fetching vote details");
         GrassrootRestService.getInstance().getApi().viewVote(phoneNumber, code, voteid).enqueue(new Callback<EventResponse>() {
             @Override
             public void onResponse(Call<EventResponse> call, Response<EventResponse> response) {

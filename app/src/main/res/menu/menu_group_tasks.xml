@@ -8,6 +8,10 @@
         android:icon="@drawable/btn_filter"
         app:showAsAction="ifRoom" />
 
+    <item android:id="@+id/mi_view_join_code"
+        android:title="View join code"
+        app:showAsAction="never" />
+
     <item android:id="@+id/mi_view_members"
         android:title="View members"
         app:showAsAction="never" />

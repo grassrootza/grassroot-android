@@ -8,8 +8,10 @@ import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 
 import org.grassroot.android.R;
+import org.grassroot.android.fragments.JoinCodeFragment;
 import org.grassroot.android.fragments.NewTaskMenuFragment;
 import org.grassroot.android.fragments.TaskListFragment;
 import org.grassroot.android.fragments.ViewTaskFragment;
@@ -32,6 +34,7 @@ public class GroupTasksActivity extends PortraitActivity implements NewTaskMenuF
     private Group groupMembership;
     private TaskListFragment taskListFragment;
     private NewTaskMenuFragment newTaskMenuFragment;
+    private JoinCodeFragment joinCodeFragment;
 
     @BindView(R.id.gta_toolbar)
     Toolbar toolbar;
@@ -59,6 +62,7 @@ public class GroupTasksActivity extends PortraitActivity implements NewTaskMenuF
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
         final Set<String> perms = new HashSet<>(groupMembership.getPermissions());
+        menu.findItem(R.id.mi_view_join_code).setVisible(true);
         menu.findItem(R.id.mi_add_members).setVisible(perms.contains(GroupConstants.PERM_ADD_MEMBER));
         menu.findItem(R.id.mi_remove_members).setVisible(perms.contains(GroupConstants.PERM_DEL_MEMBER));
         menu.findItem(R.id.mi_view_members).setVisible(perms.contains(GroupConstants.PERM_VIEW_MEMBERS));
@@ -111,6 +115,9 @@ public class GroupTasksActivity extends PortraitActivity implements NewTaskMenuF
             case R.id.mi_icon_filter:
                 taskListFragment.filter();
                 return true;
+            case R.id.mi_view_join_code:
+                setUpJoinCodeFragment();
+                return true;
             case R.id.mi_view_members:
                 Intent viewMembers = MenuUtils.constructIntent(this, GroupMembersActivity.class, groupUid, groupName);
                 viewMembers.putExtra(Constant.PARENT_TAG_FIELD, GroupTasksActivity.class.getCanonicalName());
@@ -138,6 +145,16 @@ public class GroupTasksActivity extends PortraitActivity implements NewTaskMenuF
                     .commit();
         else
             NavUtils.navigateUpFromSameTask(this);
+    }
+
+    private void setUpJoinCodeFragment(){
+        String joinCode = groupMembership.getJoinCode();
+        joinCodeFragment = JoinCodeFragment.newInstance(joinCode);
+        getSupportFragmentManager().beginTransaction()
+                .replace(R.id.gta_fragment_holder, joinCodeFragment)
+                .addToBackStack(null)
+                .commit();
+
     }
 
     @Override

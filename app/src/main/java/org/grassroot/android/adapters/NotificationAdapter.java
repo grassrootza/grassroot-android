@@ -54,6 +54,7 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
         if(notification.isRead()){
             Log.e(TAG, "notification was read, default color");
         }else{
+            Log.e(TAG, "notification not read, change color");
             holder.mainView.setCardBackgroundColor(Color.LTGRAY);
         }
 

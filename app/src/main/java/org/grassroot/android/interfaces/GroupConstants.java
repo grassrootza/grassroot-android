@@ -12,6 +12,7 @@ public interface GroupConstants {
     String NAME_FIELD = "groupName";
 
     String NO_JOIN_CODE = "NONE";
+    String JOIN_CODE = "joinCode";
 
     String MEETING_CALLED = "MEETING";
     String VOTE_CALLED = "VOTE";
@@ -24,6 +25,8 @@ public interface GroupConstants {
     String ROLE_GROUP_ORGANIZER  = "ROLE_GROUP_ORGANIZER";
     String ROLE_COMMITTEE_MEMBER = "ROLE_COMMITTEE_MEMBER";
     String ROLE_ORDINARY_MEMBER  = "ROLE_ORDINARY_MEMBER";
+
+
 
     String NO_GROUP_TASKS = "NO_GROUP_ACTIVITIES";
 

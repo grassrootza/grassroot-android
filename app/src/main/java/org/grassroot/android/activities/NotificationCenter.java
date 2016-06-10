@@ -163,7 +163,9 @@ public class NotificationCenter extends PortraitActivity {
 
                 if (pageNumber <totalPages &&  totalItemCount <= (lastVisibileItem + 10) && !isLoading) {
                     prgNcPaging.setVisibility(View.VISIBLE);
-                    pageNumber = ++pageNumber;
+                    if(pageNumber ==1 ){
+                      pageNumber++;
+                    }
                     isLoading = true;
                     getNotifications(pageNumber, pageSize);
 
@@ -187,6 +189,8 @@ public class NotificationCenter extends PortraitActivity {
                     notifications = response.body().getNotificationWrapper().getNotifications();
                     pageNumber = response.body().getNotificationWrapper().getPageNumber();
                     totalPages = response.body().getNotificationWrapper().getTotalPages();
+
+
                     txtPrgNc.setVisibility(View.GONE);
 
                     rcNc.setVisibility(View.VISIBLE);
@@ -232,8 +236,9 @@ public class NotificationCenter extends PortraitActivity {
             notificationAdapter.notifyDataSetChanged();
             int notificationCount = PreferenceUtils.getIsNotificationcounter(this);
             NotificationUpdateService.updateNotificationStatus(this, uid);
+            if(notificationCount >0){
             PreferenceUtils.setIsNotificationcounter(this, --notificationCount);
             EventBus.getDefault().post(new NotificationEvent(--notificationCount));
-        }
+        }}
     }
 }

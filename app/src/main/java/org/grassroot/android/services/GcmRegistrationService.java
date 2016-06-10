@@ -96,13 +96,12 @@ public class GcmRegistrationService extends IntentService {
             InstanceID.getInstance(this).deleteInstanceID();
             String phoneNumber = PreferenceUtils.getuser_mobilenumber(this);
             String code = PreferenceUtils.getuser_token(this);
-            GrassrootRestService.getInstance().getApi().pushUnregister(phoneNumber,code).enqueue(new Callback<GenericResponse>() {
+            GrassrootRestService.getInstance().getApi().pushUnregister(phoneNumber, code).enqueue(new Callback<GenericResponse>() {
                 @Override
                 public void onResponse(Call<GenericResponse> call, Response<GenericResponse> response) {
                     if (response.isSuccessful()) {
                         PreferenceUtils.clearAll(getApplicationContext());
                         Log.e(TAG, "Gcm unregistration successful");
-
                     }
                 }
 
@@ -116,4 +115,8 @@ public class GcmRegistrationService extends IntentService {
                     + GoogleCloudMessaging.INSTANCE_ID_SCOPE);
         }
     }
+
+
 }
+
+
