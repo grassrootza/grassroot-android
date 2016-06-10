@@ -92,9 +92,10 @@ public class GroupTasksActivity extends PortraitActivity implements NewTaskMenuF
 
     @OnClick(R.id.gta_fab)
     public void openNewTaskMenu() {
+        Log.e(TAG, "replacing fragment!");
         getSupportFragmentManager().beginTransaction()
                 .setCustomAnimations(R.anim.up_from_bottom, R.anim.down_from_top)
-                .add(R.id.gta_root_layout, newTaskMenuFragment)
+                .replace(R.id.gta_root_layout, newTaskMenuFragment)
                 .addToBackStack(null)
                 .commit();
     }

@@ -1,10 +1,11 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
     xmlns:card_view="http://schemas.android.com/apk/res-auto"
     android:id="@+id/vt_root_layout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
     android:background="@color/md_grey_200"
+    android:clickable="true"
     tools:context=".fragments.ViewTaskFragment">
 
     <!-- todo : decide if we need a scrollview around this -->
@@ -159,7 +160,7 @@
                         android:src="@drawable/ic_arrow_down"/>
 
                     <android.support.v7.widget.RecyclerView
-                        android:id="@+id/vt_response_list"
+                        android:id="@+id/vt_mtg_response_list"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_below="@id/vt_responses_count"
@@ -167,6 +168,14 @@
                         android:visibility="gone">
 
                     </android.support.v7.widget.RecyclerView>
+
+                    <include
+                        layout="@layout/list_vote_totals"
+                        android:id="@+id/vt_vote_response_details"
+                        android:layout_below="@id/vt_responses_count"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:visibility="gone" />
 
                 </RelativeLayout>
 

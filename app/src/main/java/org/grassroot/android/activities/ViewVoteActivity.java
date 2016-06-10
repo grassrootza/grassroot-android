@@ -69,8 +69,10 @@ public class ViewVoteActivity extends PortraitActivity {
     ScrollView scrollView;
     @BindView(R.id.rl_vv_main_layout)
     LinearLayout rlVvMainLayout;
+
     @BindView(R.id.progressBarCircularIndeterminate)
     ProgressBarCircularIndeterminate progressBarCircularIndeterminate;
+
     @BindView(R.id.error_layout)
     RelativeLayout erroLayout;
     @BindView(R.id.txt_prg)
@@ -128,6 +130,7 @@ public class ViewVoteActivity extends PortraitActivity {
     TextView countNumberNoRSVP;
     @BindView(R.id.ll_no_internet)
     LinearLayout imNoInternet;
+
     private String voteid;
     private String title;
     private String description;

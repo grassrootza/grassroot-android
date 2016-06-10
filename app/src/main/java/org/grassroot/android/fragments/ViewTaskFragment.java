@@ -22,12 +22,15 @@ import android.widget.TextView;
 import org.grassroot.android.R;
 import org.grassroot.android.adapters.MtgRsvpAdapter;
 import org.grassroot.android.interfaces.TaskConstants;
+import org.grassroot.android.models.ResponseTotalsModel;
 import org.grassroot.android.models.RsvpListModel;
 import org.grassroot.android.models.TaskModel;
 import org.grassroot.android.models.TaskResponse;
 import org.grassroot.android.services.GrassrootRestService;
 import org.grassroot.android.utils.ErrorUtils;
 import org.grassroot.android.utils.PreferenceUtils;
+
+import java.util.Date;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -77,8 +80,10 @@ public class ViewTaskFragment extends Fragment {
     TextView tvResponsesCount;
     @BindView(R.id.vt_ic_responses_expand)
     ImageView icResponsesExpand;
-    @BindView(R.id.vt_response_list)
+    @BindView(R.id.vt_mtg_response_list)
     RecyclerView rcResponseList;
+    @BindView(R.id.vt_vote_response_details)
+    LinearLayout llVoteResponseDetails;
 
     private MtgRsvpAdapter mtgRsvpAdapter;
 
@@ -204,18 +209,42 @@ public class ViewTaskFragment extends Fragment {
                     task.respondedYes() ? getString(R.string.vt_mtg_attended) : getString(R.string.vt_mtg_notattend);
             tvResponseHeader.setText(String.format(getString(R.string.vt_mtg_response_past), suffix));
             llResponseIcons.setVisibility(View.GONE);
-            respondCard.setCardElevation(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 2, getResources().getDisplayMetrics()));
+            diminishResponseCard();
         }
 
         setMeetingRsvpView();
     }
 
     private void setViewForVote() {
+        tvTitle.setText(R.string.vt_vote_title);
+        tvHeader.setText(task.getTitle());
+        tvLocation.setVisibility(View.GONE);
+        tvPostedBy.setText(String.format(getString(R.string.vt_vote_posted), task.getName()));
+        tvDateTime.setText(String.format(getString(R.string.vt_vote_datetime),
+                TaskConstants.dateDisplayFormatWithHours.format(task.getDeadlineDate())));
+
+        if (task.canAction()) {
+            tvResponseHeader.setText(!task.hasResponded() ? getString(R.string.vt_vote_responseq) : textHasRespondedCanChange());
+            llResponseIcons.setVisibility(View.VISIBLE);
+            setUpResponseIconsCanAction();
+        } else {
+            final String suffix = !task.hasResponded() ? getString(R.string.vt_vote_no_response) :
+                    task.respondedYes() ? getString(R.string.vt_vote_voted_yes) : getString(R.string.vt_vote_voted_no);
+            tvResponseHeader.setText(String.format(getString(R.string.vt_vote_response_past), suffix));
+            llResponseIcons.setVisibility(View.GONE);
+            diminishResponseCard();
+        }
+
+        setVoteResponseView();
 
     }
 
     private void setViewForToDo() {
 
+    }
+
+    private void diminishResponseCard() {
+        respondCard.setCardElevation(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 2, getResources().getDisplayMetrics()));
     }
 
     private void setUpResponseIconsCanAction() {
@@ -290,6 +319,8 @@ public class ViewTaskFragment extends Fragment {
                         getString(R.string.vt_mtg_not_attending);
                 return String.format(getString(R.string.vt_mtg_responded_can_action), suffix);
             case TaskConstants.VOTE:
+                final String suffix2 = task.respondedYes() ? getString(R.string.vt_vote_yes) : getString(R.string.vt_vote_no);
+                return String.format(getString(R.string.vt_vote_responded_can_action), suffix2);
             case TaskConstants.TODO:
             default:
                 return "";
@@ -317,7 +348,8 @@ public class ViewTaskFragment extends Fragment {
                                     rsvps.getNumberInvited(), rsvps.getNumberYes()));
                             if (rsvps.isCanViewRsvps()) {
                                 icResponsesExpand.setVisibility(View.VISIBLE);
-                                displayMeetingRsvpDetails(rsvps);
+                                mtgRsvpAdapter.setMapOfResponses(rsvps.getRsvpResponses());
+                                canViewResponses = true;
                             } else {
                                 icResponsesExpand.setVisibility(View.GONE);
                             }
@@ -333,24 +365,78 @@ public class ViewTaskFragment extends Fragment {
                 });
     }
 
-    private void displayMeetingRsvpDetails(RsvpListModel rsvps) {
-        Log.e(TAG, "okay, got map with this many responses : " + rsvps.getRsvpResponses().size());
-        mtgRsvpAdapter.setMapOfResponses(rsvps.getRsvpResponses());
-        canViewResponses = true;
+    private void setVoteResponseView() {
+        tvResponsesCount.setText(task.getDeadlineDate().after(new Date()) ? R.string.vt_vote_count_open :
+                R.string.vt_vote_count_closed);
+        GrassrootRestService.getInstance().getApi().fetchVoteTotals(phoneNumber, code, taskUid)
+                .enqueue(new Callback<ResponseTotalsModel>() {
+                    @Override
+                    public void onResponse(Call<ResponseTotalsModel> call, Response<ResponseTotalsModel> response) {
+                        if (response.isSuccessful()) {
+                            ResponseTotalsModel totals = response.body();
+                            displayVoteTotals(totals);
+                            canViewResponses = true;
+                        } else {
+                            Log.e(TAG, "error! printing: " + response.errorBody());
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(Call<ResponseTotalsModel> call, Throwable t) {
+                        handleNoNetwork();
+                    }
+                });
+    }
+
+    private void displayVoteTotals(ResponseTotalsModel model) {
+        TextView tvYes = (TextView) llVoteResponseDetails.findViewById(R.id.count_yes);
+        TextView tvNo = (TextView) llVoteResponseDetails.findViewById(R.id.count_no);
+        TextView tvAbstain = (TextView) llVoteResponseDetails.findViewById(R.id.count_abstain);
+        TextView tvNoResponse = (TextView) llVoteResponseDetails.findViewById(R.id.count_no_response);
+
+        tvYes.setText(String.valueOf(model.getYes()));
+        tvNo.setText(String.valueOf(model.getNo()));
+        tvAbstain.setText(String.valueOf(model.getAbstained()));
+        tvNoResponse.setText(String.valueOf(model.getNumberNoReply())); // todo : change this
     }
 
     // do we want animation? seems expensive, for little gain, here. maybe, when polish this in general
     @OnClick(R.id.vt_cv_response_list)
-    public void toggleResponseList() {
+    public void slideOutDetails() {
+        Log.e(TAG, "viewing responses!");
         if (canViewResponses) {
-            Log.d(TAG, "toggling recycler view, should have items : " + rcResponseList.getAdapter().getItemCount());
-            if (rcResponseList.getVisibility() != View.VISIBLE) {
-                rcResponseList.setVisibility(View.VISIBLE);
-                icResponsesExpand.setImageResource(R.drawable.ic_arrow_up);
-            } else {
-                rcResponseList.setVisibility(View.GONE);
-                icResponsesExpand.setImageResource(R.drawable.ic_arrow_down);
+            switch (taskType) {
+                case TaskConstants.MEETING:
+                    toggleResponseList();
+                    break;
+                case TaskConstants.VOTE:
+                    toggleVoteDetails();
+                    break;
+                case TaskConstants.TODO:
+                    break;
             }
+        }
+    }
+
+    public void toggleResponseList() {
+        Log.d(TAG, "toggling recycler view, should have items : " + rcResponseList.getAdapter().getItemCount());
+        if (rcResponseList.getVisibility() != View.VISIBLE) {
+            rcResponseList.setVisibility(View.VISIBLE);
+            icResponsesExpand.setImageResource(R.drawable.ic_arrow_up);
+        } else {
+            rcResponseList.setVisibility(View.GONE);
+            icResponsesExpand.setImageResource(R.drawable.ic_arrow_down);
+        }
+    }
+
+    public void toggleVoteDetails() {
+        Log.e(TAG, "toggling vote details!");
+        if (llVoteResponseDetails.getVisibility() != View.VISIBLE) {
+            llVoteResponseDetails.setVisibility(View.VISIBLE);
+            icResponsesExpand.setImageResource(R.drawable.ic_arrow_up);
+        } else {
+            llVoteResponseDetails.setVisibility(View.GONE);
+            icResponsesExpand.setImageResource(R.drawable.ic_arrow_down);
         }
     }
 
@@ -364,7 +450,8 @@ public class ViewTaskFragment extends Fragment {
                 return response.equals(TaskConstants.RESPONSE_YES) ? R.string.vt_snackbar_response_attend :
                         R.string.vt_snackbar_response_notattend;
             case TaskConstants.VOTE:
-                break;
+                return response.equals(TaskConstants.RESPONSE_YES) ? R.string.vt_vote_snackbar_yes :
+                        R.string.vt_vote_snackbar_no;
             case TaskConstants.TODO:
                 break;
         }

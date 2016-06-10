@@ -41,6 +41,8 @@ public class ResponseTotalsModel {
         return numberOfRsvp;
     }
 
+    public int getNumberNoReply() { return numberOfUsers - (yes + no + abstained); }
+
     @Override
     public String toString() {
         return "ResponseTotalsModel{" +

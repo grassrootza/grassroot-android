@@ -268,12 +268,8 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
 
     @Override
     public void onCardClick(int position, String taskUid, String taskType) {
-        if (TaskConstants.VOTE.equals(taskType)) {
-            Intent vote_view = new Intent(getActivity(), ViewVoteActivity.class);
-            vote_view.putExtra("id", taskUid);
-            startActivity(vote_view);
-        }
-        if (TaskConstants.MEETING.equals(taskType)) {
+        if (TaskConstants.MEETING.equals(taskType) || TaskConstants.VOTE.equals(taskType)) {
+            // todo: use a callback to tell activity to switch up icon to cross
             ViewTaskFragment taskFragment = ViewTaskFragment.newInstance(taskType, taskUid);
             getFragmentManager().beginTransaction()
                     .setCustomAnimations(R.anim.up_from_bottom, R.anim.down_from_top)

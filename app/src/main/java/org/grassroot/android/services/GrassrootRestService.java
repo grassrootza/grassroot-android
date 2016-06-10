@@ -12,6 +12,7 @@ import org.grassroot.android.models.Member;
 import org.grassroot.android.models.MemberList;
 import org.grassroot.android.models.NotificationList;
 import org.grassroot.android.models.ProfileResponse;
+import org.grassroot.android.models.ResponseTotalsModel;
 import org.grassroot.android.models.RsvpListModel;
 import org.grassroot.android.models.TaskResponse;
 import org.grassroot.android.models.TokenResponse;
@@ -222,6 +223,10 @@ public class GrassrootRestService extends Application {
         @GET("meeting/rsvps/{phoneNumber}/{code}/{meetingUid}")
         Call<RsvpListModel> fetchMeetingRsvps(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
                                               @Path("meetingUid") String meetingUid);
+
+        @GET("vote/totals/{phoneNumber}/{code}/{voteUid}")
+        Call<ResponseTotalsModel> fetchVoteTotals(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
+                                                  @Path("voteUid") String voteUid);
 
         /*
         SECTION: RESPOND TO TASKS
