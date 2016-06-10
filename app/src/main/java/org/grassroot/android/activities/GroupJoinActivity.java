@@ -2,15 +2,15 @@ package org.grassroot.android.activities;
 
 import android.app.ProgressDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.support.design.widget.Snackbar;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
-import android.text.Editable;
-import android.text.TextWatcher;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
@@ -23,20 +23,19 @@ import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
-import org.grassroot.android.interfaces.ClickListener;
 import org.grassroot.android.R;
-import org.grassroot.android.interfaces.NetworkErrorDialogListener;
-import org.grassroot.android.ui.views.CustomItemAnimator;
-import org.grassroot.android.ui.views.RecyclerTouchListener;
 import org.grassroot.android.adapters.JoinRequestAdapter;
-import org.grassroot.android.services.GrassrootRestService;
+import org.grassroot.android.fragments.dialogs.ConfirmCancelDialogFragment;
+import org.grassroot.android.interfaces.ClickListener;
+import org.grassroot.android.interfaces.NetworkErrorDialogListener;
 import org.grassroot.android.models.GenericResponse;
 import org.grassroot.android.models.GroupSearchModel;
 import org.grassroot.android.models.GroupSearchResponse;
-import org.grassroot.android.fragments.AlertDialogFragment;
+import org.grassroot.android.services.GrassrootRestService;
+import org.grassroot.android.ui.views.CustomItemAnimator;
+import org.grassroot.android.ui.views.RecyclerTouchListener;
 import org.grassroot.android.utils.ErrorUtils;
 import org.grassroot.android.utils.PreferenceUtils;
-import org.grassroot.android.interfaces.AlertDialogListener;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -44,16 +43,16 @@ import java.util.List;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
+import butterknife.OnEditorAction;
+import butterknife.OnTextChanged;
+import butterknife.OnTouch;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-import static org.grassroot.android.utils.UtilClass.showAlertDialog;
-
 public class GroupJoinActivity extends PortraitActivity implements OnClickListener {
 
     private static final String TAG = GroupJoinActivity.class.getSimpleName();
-
 
     @BindView(R.id.toolbar)
     Toolbar toolbar;
@@ -79,7 +78,6 @@ public class GroupJoinActivity extends PortraitActivity implements OnClickListen
 
     private boolean btn_close;
     private Snackbar snackbar;
-    private AlertDialogFragment alertDialog;
     private String uid;
 
     private ProgressDialog progressDialog;
@@ -88,11 +86,11 @@ public class GroupJoinActivity extends PortraitActivity implements OnClickListen
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Log.e(TAG, "activity created!");
         setContentView(R.layout.activity_join__request);
         progressDialog = new ProgressDialog(this);
         progressDialog.setMessage(prgMessage);
         ButterKnife.bind(this);
-        setUpSearchBox();
         setUpToolbar();
         init();
         setUpRecyclerView();
@@ -103,7 +101,6 @@ public class GroupJoinActivity extends PortraitActivity implements OnClickListen
         // in content do not change the layout size of the RecyclerView
         jrRecyclerView.setHasFixedSize(true);
 
-        // use a linear layout manager
         jrRecyclerView.setLayoutManager(new LinearLayoutManager(this));
         jrRecyclerView.setItemAnimator(new CustomItemAnimator());
 
@@ -116,19 +113,12 @@ public class GroupJoinActivity extends PortraitActivity implements OnClickListen
             @Override
             public void onClick(View view, int position) {
                 uid = joinrequestList.get(position).getId();
-                alertDialog = showAlertDialog(getFragmentManager(), getString(R.string.Title_Dialog_GroupJoin),
-                        getString(R.string.alertbox), "NO", "YES", false, new AlertDialogListener() {
-                            @Override
-                            public void setRightButton() {
-                                sendJoinRequest();
-                                alertDialog.dismiss();
-                            }
-
-                            @Override
-                            public void setLeftButton() {
-                                alertDialog.dismiss();
-                            }
-                        });
+                ConfirmCancelDialogFragment.newInstance(R.string.alertbox, new ConfirmCancelDialogFragment.ConfirmDialogListener() {
+                    @Override
+                    public void doConfirmClicked() {
+                        sendJoinRequest();
+                    }
+                }).show(getSupportFragmentManager(), "confirm");
             }
 
             @Override
@@ -143,79 +133,56 @@ public class GroupJoinActivity extends PortraitActivity implements OnClickListen
         joinrequestList = new ArrayList<>();
     }
 
-    private void setUpSearchBox() {
-        et_searchbox.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+    @OnTextChanged(R.id.et_searchbox)
+    public void setSearchCross(CharSequence s) {
+        if (s.length() > 0) {
+            et_searchbox.setCompoundDrawablesWithIntrinsicBounds(0, 0, R.drawable.btn_close, 0);
+            btn_close = true;
+        } else {
+            et_searchbox.setCompoundDrawablesWithIntrinsicBounds(0, 0, R.drawable.btn_search_gray, 0);
+            btn_close = false;
+        }
+    }
 
-            }
-
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-
-            }
-
-            @Override
-            public void afterTextChanged(Editable s) {
-                if (s.length() > 0) {
-                    et_searchbox.setCompoundDrawablesWithIntrinsicBounds(0, 0, R.drawable.btn_close, 0);
-                    btn_close = true;
-                } else {
-                    et_searchbox.setCompoundDrawablesWithIntrinsicBounds(0, 0, R.drawable.btn_search_gray, 0);
-                    btn_close = false;
+    @OnTouch(R.id.et_searchbox)
+    public boolean setTextBlank(View v, MotionEvent event) {
+        if (event.getAction() == MotionEvent.ACTION_UP) {
+            if (event.getRawX() >= (et_searchbox.getRight() - et_searchbox.getTotalPaddingRight())) {
+                // your action here
+                if (btn_close) {
+                    //   search();
+                    et_searchbox.setText("");
                 }
-
+                return true;
             }
-        });
+        }
+        return false;
+    }
 
-        et_searchbox.setOnTouchListener(new View.OnTouchListener() {
-            @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                if (event.getAction() == MotionEvent.ACTION_UP) {
-                    if (event.getRawX() >= (et_searchbox.getRight() - et_searchbox.getTotalPaddingRight())) {
-                        // your action here
-                        if (btn_close) {
-                            //   search();
-                            et_searchbox.setText("");
-                        }
+    @OnEditorAction(R.id.et_searchbox)
+    public boolean takeAction(TextView v, int actionId, KeyEvent event) {
+        if (actionId == EditorInfo.IME_ACTION_SEARCH || event.getKeyCode() == KeyEvent.KEYCODE_ENTER) {
+            Log.e(TAG, "action pressed!");
+            InputMethodManager imm = (InputMethodManager) getApplicationContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+            imm.hideSoftInputFromWindow(getCurrentFocus().getWindowToken(), 0);
 
-                        return true;
-                    }
-                }
-                return false;
+            if (et_searchbox.getText().toString().trim().isEmpty()) {
+                showSnackBar(getString(R.string.validate_search_box), "", Snackbar.LENGTH_SHORT);
+            } else {
+                search();
             }
-        });
-
-        et_searchbox.setOnEditorActionListener(new TextView.OnEditorActionListener() {
-            @Override
-            public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
-                if (actionId == EditorInfo.IME_ACTION_SEARCH) {
-                    try {
-                        InputMethodManager imm = (InputMethodManager) getApplicationContext().getSystemService(Context.INPUT_METHOD_SERVICE);
-                        imm.hideSoftInputFromWindow(getCurrentFocus().getWindowToken(), 0);
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-
-                    if (et_searchbox.getText().toString().trim().isEmpty()) {
-                        showSnackBar(getString(R.string.validate_search_box), "", Snackbar.LENGTH_SHORT);
-                    } else {
-                        search();
-                    }
-                }
-                return false;
-            }
-        });
-
+            return true;
+        } else {
+            return false;
+        }
     }
 
     private void search() {
 
         String searchTerm = et_searchbox.getText().toString().trim();
-        Log.e(TAG, "search");
-
         joinrequestList.clear();
         hideErrorLayout();
+
         GrassrootRestService.getInstance().getApi().search(searchTerm)
                 .enqueue(new Callback<GroupSearchResponse>() {
                     @Override
@@ -286,23 +253,18 @@ public class GroupJoinActivity extends PortraitActivity implements OnClickListen
                     public void onResponse(Call<GenericResponse> call, Response<GenericResponse> response) {
                         progressDialog.dismiss();
                         if (response.isSuccessful()) {
-                            alertDialog = showAlertDialog(getFragmentManager(), getString(R.string.Title_Join_Request_Sent), "Your request has been sent ", "", "OK", false, new AlertDialogListener() {
-                                @Override
-                                public void setRightButton() {
-                                    finish();
-                                    alertDialog.dismiss();
-                                }
-
-                                @Override
-                                public void setLeftButton() {
-
-                                }
-                            });
+                            AlertDialog.Builder builder = new AlertDialog.Builder(GroupJoinActivity.this);
+                            builder.setMessage(R.string.Title_Join_Request_Sent)
+                                    .setPositiveButton(R.string.pp_OK, new DialogInterface.OnClickListener() {
+                                        @Override
+                                        public void onClick(DialogInterface dialogInterface, int i) {
+                                            finish();
+                                        }
+                                    }).create().show();
                             return;
                         }
                         ErrorUtils.handleServerError(rlRoot, GroupJoinActivity.this, response);
                         showSnackBar(getString(R.string.USER_ALREADY_PART), "", snackbar.LENGTH_LONG);
-
                     }
 
                     @Override

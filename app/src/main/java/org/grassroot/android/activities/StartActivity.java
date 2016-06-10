@@ -38,7 +38,6 @@ import org.grassroot.android.utils.ErrorUtils;
 import org.grassroot.android.utils.LocationUtils;
 import org.grassroot.android.utils.NetworkUtils;
 import org.grassroot.android.utils.PreferenceUtils;
-import org.grassroot.android.utils.TopExceptionHandler;
 import org.greenrobot.eventbus.EventBus;
 
 import java.util.List;
@@ -108,7 +107,7 @@ public class StartActivity extends PortraitActivity implements HomeScreenViewFra
     @Override
     protected void onCreate(Bundle bundle) {
         super.onCreate(bundle);
-        Thread.setDefaultUncaughtExceptionHandler(new TopExceptionHandler(this));
+
 
         if (getIntent().hasExtra(Constant.NOTIFICATION_UID)) {
             setContentView(R.layout.notification_layout);

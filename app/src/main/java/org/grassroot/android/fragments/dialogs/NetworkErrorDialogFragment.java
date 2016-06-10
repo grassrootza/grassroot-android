@@ -1,4 +1,4 @@
-package org.grassroot.android.fragments;
+package org.grassroot.android.fragments.dialogs;
 
 import android.app.Dialog;
 import android.app.DialogFragment;

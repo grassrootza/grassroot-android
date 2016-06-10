@@ -5,16 +5,11 @@
 package org.grassroot.android.utils;
 
 import android.animation.ValueAnimator;
-import android.app.FragmentManager;
-import android.os.Bundle;
 import android.telephony.PhoneNumberUtils;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 
-import org.grassroot.android.fragments.AlertDialogFragment;
-import org.grassroot.android.fragments.NotificationDialog;
-import org.grassroot.android.interfaces.AlertDialogListener;
 import org.grassroot.android.models.Member;
 
 import java.text.SimpleDateFormat;
@@ -34,33 +29,6 @@ public class UtilClass {
     private static final Pattern zaPhoneE164 = Pattern.compile("27[6,7,8]\\d{8}");
     private static final Pattern zaPhoneE164Plus = Pattern.compile("\\+27[6,7,8]\\d{8}");
     private static final Pattern nationalRegex = Pattern.compile("0[6,7,8]\\d{8}");
-
-    // todo: switch all of these to ConfirmCancel or other variants
-    public static AlertDialogFragment showAlertDialog(FragmentManager manager,String title, String message, String left, String right,
-                                               Boolean cancellable, AlertDialogListener alertDialogListener) {
-        AlertDialogFragment alertDialogFragment = new AlertDialogFragment();
-        Bundle b = new Bundle();
-
-
-        if (message != null) b.putString("message", message);
-        b.putBoolean(Constant.CANCELLABLE, cancellable);
-        b.putString("left", left);
-        b.putString("right",right);
-        b.putString("title", title);
-        alertDialogFragment.setArguments(b);
-        alertDialogFragment.setListener(alertDialogListener);
-        alertDialogFragment.show(manager,null);
-        return alertDialogFragment;
-    }
-
-    public static NotificationDialog showAlertDialog(android.support.v4.app.FragmentManager fragmentmanager, String s, String s1, String s2, String s3, boolean flag, AlertDialogListener alertdialoglistener) {
-        NotificationDialog ss1 = NotificationDialog.newInstance(s, s1, s2, s3, flag);
-        ss1.setListener(alertdialoglistener);
-        ss1.setCancelable(false);
-        ss1.show(fragmentmanager, null);
-        return ss1;
-    }
-
 
     public static ValueAnimator createSlidingAnimator(final ViewGroup viewGroup, boolean expand) {
         final int widthSpec = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED);

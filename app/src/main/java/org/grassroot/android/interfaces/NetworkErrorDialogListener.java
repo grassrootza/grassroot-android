@@ -4,7 +4,7 @@ import android.app.Activity;
 import android.content.Intent;
 import android.util.Log;
 
-import org.grassroot.android.fragments.NetworkErrorDialogFragment;
+import org.grassroot.android.fragments.dialogs.NetworkErrorDialogFragment;
 import org.grassroot.android.utils.Constant;
 
 /**

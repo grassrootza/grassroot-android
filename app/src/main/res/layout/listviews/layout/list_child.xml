@@ -16,7 +16,7 @@
         android:layout_marginBottom="5dp"
         android:textColor="@color/black"
         tools:text="The internet seems to be down. Please check it and try later"
-        android:textSize="@dimen/txt_medium" />.
+        android:textSize="@dimen/txt_medium" />
 
 
 </LinearLayout>

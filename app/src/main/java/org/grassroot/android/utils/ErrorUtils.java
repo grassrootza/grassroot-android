@@ -15,7 +15,7 @@ import org.grassroot.android.activities.GroupJoinActivity;
 import org.grassroot.android.activities.GroupTasksActivity;
 import org.grassroot.android.activities.StartActivity;
 import org.grassroot.android.activities.ViewVoteActivity;
-import org.grassroot.android.fragments.NetworkErrorDialogFragment;
+import org.grassroot.android.fragments.dialogs.NetworkErrorDialogFragment;
 
 import java.io.IOException;
 import java.net.SocketTimeoutException;

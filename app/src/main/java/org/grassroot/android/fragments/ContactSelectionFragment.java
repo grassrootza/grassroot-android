@@ -20,6 +20,7 @@ import android.widget.ListView;
 
 import org.grassroot.android.R;
 import org.grassroot.android.adapters.ContactsAdapter;
+import org.grassroot.android.fragments.dialogs.PickNumberDialogFragment;
 import org.grassroot.android.models.Contact;
 import org.grassroot.android.utils.Constant;
 import org.grassroot.android.utils.UtilClass;
@@ -116,7 +117,7 @@ public class ContactSelectionFragment extends Fragment implements
         super.onActivityCreated(savedInstanceState);
         getLoaderManager().initLoader(Constant.loaderContacts, null, this);
         progressDialog = new ProgressDialog(getContext());
-        progressDialog.setTitle(R.string.cs_loading_contacts);
+        progressDialog.setMessage(getString(R.string.cs_loading_contacts));
         progressDialog.show();
     }
 
