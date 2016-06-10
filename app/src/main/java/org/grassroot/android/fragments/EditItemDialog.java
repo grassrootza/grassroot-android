@@ -27,7 +27,6 @@ public class EditItemDialog extends DialogFragment {
 	public static final String ARG_ITEM_POSITION = "position";
 	private String username;
 
-
 	private int mPosition;
 
 	public EditItemDialog() {

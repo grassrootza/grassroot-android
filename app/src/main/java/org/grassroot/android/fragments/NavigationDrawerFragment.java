@@ -18,7 +18,7 @@ import org.grassroot.android.BuildConfig;
 import org.grassroot.android.R;
 import org.grassroot.android.activities.FAQActivity;
 import org.grassroot.android.activities.NotificationCenter;
-import org.grassroot.android.activities.ProfileSettings;
+import org.grassroot.android.activities.ProfileSettingsActivity;
 import org.grassroot.android.activities.StartActivity;
 import org.grassroot.android.adapters.NavigationDrawerAdapter;
 import org.grassroot.android.events.NotificationEvent;
@@ -141,7 +141,7 @@ public class NavigationDrawerFragment extends Fragment {
         // handle common & reusable things here, pass back more complex or context-dependent to activity
         switch (position) {
             case NavigationConstants.HOME_NAV_PROFILE:
-                startActivity(new Intent(getActivity(), ProfileSettings.class));
+                startActivity(new Intent(getActivity(), ProfileSettingsActivity.class));
                 break;
             case NavigationConstants.HOME_NAV_FAQ:
                 startActivity(new Intent(getActivity(), FAQActivity.class));
