@@ -16,8 +16,10 @@ import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 import org.grassroot.android.R;
 import org.grassroot.android.activities.NotBuiltActivity;
+import org.grassroot.android.activities.StartActivity;
 import org.grassroot.android.activities.ViewVoteActivity;
 import org.grassroot.android.events.NotificationEvent;
+import org.grassroot.android.interfaces.TaskConstants;
 import org.grassroot.android.utils.Constant;
 import org.grassroot.android.utils.PreferenceUtils;
 import org.greenrobot.eventbus.EventBus;
@@ -140,17 +142,12 @@ public class GcmListenerService extends com.google.android.gms.gcm.GcmListenerSe
 
         Log.e(TAG, "generateResultIntent called, with message bundle: " + msg.toString());
 
-        Intent resultIntent;
-        if (msg.getString(Constant.ENTITY_TYPE).equalsIgnoreCase("vote")) {
-            resultIntent = new Intent(this, ViewVoteActivity.class);
-            ;
-        } else {
-            resultIntent = new Intent(this, NotBuiltActivity.class);
-        }
-        resultIntent.putExtra(Constant.ENTITY_TYPE, msg.getString(Constant.ENTITY_TYPE));
+
+        Intent resultIntent = new Intent(this, StartActivity.class);
+        resultIntent.putExtra(TaskConstants.TASK_TYPE_FIELD, msg.getString(Constant.ENTITY_TYPE));
         resultIntent.putExtra(Constant.TITLE, msg.getString(Constant.TITLE));
         resultIntent.putExtra(Constant.BODY, msg.getString(Constant.BODY));
-        resultIntent.putExtra(Constant.UID, msg.getString(Constant.UID));
+        resultIntent.putExtra(TaskConstants.TASK_UID_FIELD, msg.getString(Constant.UID));
         resultIntent.putExtra(Constant.NOTIFICATION_UID, msg.getString(Constant.NOTIFICATION_UID));
 
         PendingIntent resultPendingIntent = PendingIntent.getActivity(this, (int) (int)System.currentTimeMillis(), resultIntent, PendingIntent.FLAG_CANCEL_CURRENT);

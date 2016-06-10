@@ -19,7 +19,6 @@
             android:id="@+id/txt_toolbar"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/vv_tv_toolbar"
             android:textColor="@color/white"
             android:textSize="@dimen/txt_large" />
     </android.support.v7.widget.Toolbar>

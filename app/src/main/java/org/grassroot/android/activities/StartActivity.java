@@ -17,8 +17,12 @@ import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
+import android.widget.TextView;
 
 import org.grassroot.android.R;
+import org.grassroot.android.events.NotificationEvent;
+import org.grassroot.android.fragments.ViewTaskFragment;
+import org.grassroot.android.interfaces.TaskConstants;
 import org.grassroot.android.services.GcmRegistrationService;
 import org.grassroot.android.services.GrassrootRestService;
 import org.grassroot.android.models.GenericResponse;
@@ -28,12 +32,14 @@ import org.grassroot.android.fragments.HomeScreenViewFragment;
 import org.grassroot.android.fragments.LoginScreenFragment;
 import org.grassroot.android.fragments.OtpScreenFragment;
 import org.grassroot.android.fragments.RegisterScreenFragment;
+import org.grassroot.android.services.NotificationUpdateService;
 import org.grassroot.android.utils.Constant;
 import org.grassroot.android.utils.ErrorUtils;
 import org.grassroot.android.utils.LocationUtils;
 import org.grassroot.android.utils.NetworkUtils;
 import org.grassroot.android.utils.PreferenceUtils;
 import org.grassroot.android.utils.TopExceptionHandler;
+import org.greenrobot.eventbus.EventBus;
 
 import java.util.List;
 
@@ -81,6 +87,10 @@ public class StartActivity extends PortraitActivity implements HomeScreenViewFra
     public ImageView ivBack;
 
     @Nullable
+    @BindView(R.id.txt_toolbar)
+    TextView txt_toolbar;
+
+    @Nullable
     @BindView(R.id.iv_splashlogo)
     public ImageView iv_splashlogo;
 
@@ -100,67 +110,53 @@ public class StartActivity extends PortraitActivity implements HomeScreenViewFra
         super.onCreate(bundle);
         Thread.setDefaultUncaughtExceptionHandler(new TopExceptionHandler(this));
 
-        Intent intent = getIntent();
-        if(intent.hasExtra("type") && intent.getStringExtra("type").compareTo("notification")==0) {
-            Intent redirect = new Intent(getIntent());
-            Log.d(TAG, getIntent().toString());
-            if (getIntent().getStringExtra("entity_type").equalsIgnoreCase("vote")) {
-                redirect.setClass(this, ViewVoteActivity.class);
-
-            }
-            startActivity(redirect);
-        }
-
-        Log.e(TAG, intent.toString());
-        if (!PreferenceUtils.getisLoggedIn(this)) {
-            setContentView(R.layout.start);
+        if (getIntent().hasExtra(Constant.NOTIFICATION_UID)) {
+            setContentView(R.layout.notification_layout);
             ButterKnife.bind(this);
+            handleNotificationIntent(getIntent());
 
-            progressDialog = new ProgressDialog(this);
-            progressDialog.setMessage(getResources().getString(R.string.txt_pls_wait));
 
-            if (!NetworkUtils.isNetworkAvailable(StartActivity.this)) {
-                PreferenceUtils.setisLoggedIn(this, false);
-            }
-
-            defaultHandler = new Handler();
-            displayMetrics = getApplicationContext().getResources().getDisplayMetrics();
-            height = displayMetrics.heightPixels;
-            showHomeScreen();
         } else {
-            setContentView(R.layout.splashscreen);
-            ButterKnife.bind(this);
-            if (iv_splashlogo != null) {
-                iv_splashlogo.setVisibility(View.VISIBLE);
-            }
-            this.locationUtils = new LocationUtils(this);
-            locationUtils.connect();
-            new Handler().postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    Intent intent;
-                    intent = new Intent(StartActivity.this, HomeScreenActivity.class);
-                    startActivity(intent);
-                    finish();
+            if (!PreferenceUtils.getisLoggedIn(this)) {
+                setContentView(R.layout.start);
+                ButterKnife.bind(this);
+
+                progressDialog = new ProgressDialog(this);
+                progressDialog.setMessage(getResources().getString(R.string.txt_pls_wait));
+
+                if (!NetworkUtils.isNetworkAvailable(StartActivity.this)) {
+                    PreferenceUtils.setisLoggedIn(this, false);
                 }
-            }, Constant.shortDelay);
+
+                defaultHandler = new Handler();
+                displayMetrics = getApplicationContext().getResources().getDisplayMetrics();
+                height = displayMetrics.heightPixels;
+                showHomeScreen();
+            } else {
+                setContentView(R.layout.splashscreen);
+                ButterKnife.bind(this);
+                if (iv_splashlogo != null) {
+                    iv_splashlogo.setVisibility(View.VISIBLE);
+                }
+                this.locationUtils = new LocationUtils(this);
+                locationUtils.connect();
+                new Handler().postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        Intent intent;
+                        intent = new Intent(StartActivity.this, HomeScreenActivity.class);
+                        startActivity(intent);
+                        finish();
+                    }
+                }, Constant.shortDelay);
+            }
         }
     }
 
     @Override
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
-
-        //This is a hack for the kit-kat/lollipop bug
-        if(intent.hasExtra("type") && intent.getStringExtra("type").compareTo("notification")==0) {
-            Intent redirect = new Intent(getIntent());
-            Log.d(TAG, getIntent().toString());
-            if (getIntent().getStringExtra("entity_type").equalsIgnoreCase("vote")) {
-                redirect.setClass(this, ViewVoteActivity.class);
-
-            }
-            startActivity(redirect);
-        }
+        handleNotificationIntent(intent);
     }
 
     private void showHomeScreen() {
@@ -170,7 +166,8 @@ public class StartActivity extends PortraitActivity implements HomeScreenViewFra
                         rl_homelogo.animate().translationY((float) (-height / 6)).setDuration(Constant.mediumDelay);
                         defaultHandler.postDelayed(
                                 new Runnable() {
-                                    public void run() {setUpHomeScreen();
+                                    public void run() {
+                                        setUpHomeScreen();
                                     }
                                 }, Constant.mediumDelay);
                     }
@@ -231,10 +228,10 @@ public class StartActivity extends PortraitActivity implements HomeScreenViewFra
         if (et_otp.getText().toString().isEmpty()) {
             et_otp.setError(getResources().getString(R.string.OTP_empty));
         } else {
-            if(loginscreen) {
+            if (loginscreen) {
                 authenticateLogin(mobileNumber, et_otp.getText().toString());
             } else {
-                verifyRegistration(mobileNumber,et_otp.getText().toString());
+                verifyRegistration(mobileNumber, et_otp.getText().toString());
             }
         }
     }
@@ -260,7 +257,7 @@ public class StartActivity extends PortraitActivity implements HomeScreenViewFra
                 rl_homelogo.animate().translationY((float) (-height / 6)).scaleX(1).scaleY(1);
             }
             getSupportFragmentManager().popBackStack();
-            if(getSupportFragmentManager().getBackStackEntryCount() == 1){
+            if (getSupportFragmentManager().getBackStackEntryCount() == 1) {
                 ivBack.setVisibility(View.INVISIBLE);
             }
 
@@ -270,7 +267,8 @@ public class StartActivity extends PortraitActivity implements HomeScreenViewFra
     /**
      * Method that calls the registration REST service, and then shows the one time pin screen, or an error message
      * todo: just skip straight to login if the number exists
-     * @param et_userName The name the user has entered
+     *
+     * @param et_userName        The name the user has entered
      * @param et_mobile_register The phone number they wish to register
      */
     private void register(final String et_userName, final String et_mobile_register) {
@@ -279,7 +277,7 @@ public class StartActivity extends PortraitActivity implements HomeScreenViewFra
         progressDialog.show();
         registerscreen = true;
         GrassrootRestService.getInstance().getApi()
-                .addUser(et_mobile_register,et_userName)
+                .addUser(et_mobile_register, et_userName)
                 .enqueue(new Callback<GenericResponse>() {
                     @Override
                     public void onResponse(Call<GenericResponse> call, Response<GenericResponse> response) {
@@ -313,6 +311,7 @@ public class StartActivity extends PortraitActivity implements HomeScreenViewFra
     /**
      * Call the login web service, sending the mobile number to the server and generating an OTP
      * todo: if the user is not registered, redirect to registration screen instead of just error
+     *
      * @param mobile_number The number the user entered
      */
     private void login(String mobile_number) {
@@ -329,7 +328,7 @@ public class StartActivity extends PortraitActivity implements HomeScreenViewFra
                     @Override
                     public void onResponse(Call<GenericResponse> call, Response<GenericResponse> response) {
                         progressDialog.dismiss();
-                        if(response.isSuccessful()) {
+                        if (response.isSuccessful()) {
                             data = (String) response.body().getData(); // this is asking for trouble, refactor
                             if (otpscreen) {
                                 Log.e(TAG, "not calling setUpOtpScreen");
@@ -361,13 +360,14 @@ public class StartActivity extends PortraitActivity implements HomeScreenViewFra
 
     /**
      * Verify that the code received by SMS is the OTP, for verification and hence registration
+     *
      * @param mobileNumber Phone number attempting to log in or register
-     * @param tokenCode The token code entered by the user
+     * @param tokenCode    The token code entered by the user
      */
-    private void verifyRegistration(final String mobileNumber, String tokenCode){
+    private void verifyRegistration(final String mobileNumber, String tokenCode) {
         progressDialog.show();
         GrassrootRestService.getInstance().getApi()
-                .verify(mobileNumber,tokenCode)
+                .verify(mobileNumber, tokenCode)
                 .enqueue(new Callback<TokenResponse>() {
                     @Override
                     public void onResponse(Call<TokenResponse> call, Response<TokenResponse> response) {
@@ -409,13 +409,14 @@ public class StartActivity extends PortraitActivity implements HomeScreenViewFra
 
     /**
      * Authenticate a login, that the user with this mobile number should have this code (tbc)
+     *
      * @param mobileNumber The mobile number entered
-     * @param code The code entered by the user
+     * @param code         The code entered by the user
      */
-    private void authenticateLogin(final String mobileNumber, String code){
+    private void authenticateLogin(final String mobileNumber, String code) {
         progressDialog.show();
         GrassrootRestService.getInstance().getApi()
-                .authenticate(mobileNumber,code)
+                .authenticate(mobileNumber, code)
                 .enqueue(new Callback<TokenResponse>() {
                     @Override
                     public void onResponse(Call<TokenResponse> call, Response<TokenResponse> response) {
@@ -431,7 +432,7 @@ public class StartActivity extends PortraitActivity implements HomeScreenViewFra
                             Boolean hasGroups = response.body().getHasGroups();
                             String displayname = response.body().getDisplayName();
 
-                            if(!PreferenceUtils.getIsGcmEnabled(StartActivity.this)){
+                            if (!PreferenceUtils.getIsGcmEnabled(StartActivity.this)) {
                                 Intent gcmRegistrationIntent = new Intent(StartActivity.this, GcmRegistrationService.class);
                                 gcmRegistrationIntent.putExtra("phoneNumber", mobileNumber);
                                 startService(gcmRegistrationIntent);
@@ -464,12 +465,13 @@ public class StartActivity extends PortraitActivity implements HomeScreenViewFra
 
     /**
      * Displays snack bar with some text, and possibility to link to an action
-     * @param context Context in which it is called
-     * @param type The type (currently "" in most calls...)
-     * @param message The message to display
+     *
+     * @param context   Context in which it is called
+     * @param type      The type (currently "" in most calls...)
+     * @param message   The message to display
      * @param textLabel A text label for taking an action
-     * @param color The color of the snackbar
-     * @param length The length of the snackbar
+     * @param color     The color of the snackbar
+     * @param length    The length of the snackbar
      */
     public void showSnackBar(Context context, final String type, String message, String textLabel, int color, int length) {
 
@@ -481,7 +483,7 @@ public class StartActivity extends PortraitActivity implements HomeScreenViewFra
                 @Override
                 public void onClick(View v) {
                     if (type.equals("register")) {
-                        register(userName,mobileNumber);
+                        register(userName, mobileNumber);
                         snackBar.dismiss();
                         // getNotification();
                     } else if (type.equals("login")) {
@@ -558,8 +560,34 @@ public class StartActivity extends PortraitActivity implements HomeScreenViewFra
         }
         return null;
     }
-    
-    private void switchFragments(Fragment fragment){
+
+    private void handleNotificationIntent(Intent intent) {
+        //may redundant to check for null, but just to be safe
+
+                Log.e(TAG, "recieved notification");
+                String notificationUid = getIntent().getStringExtra(Constant.NOTIFICATION_UID);
+                String taskUid = intent.getExtras().getString(TaskConstants.TASK_UID_FIELD);
+                String tasKType = intent.getExtras().getString(TaskConstants.TASK_TYPE_FIELD);
+
+                Log.e(TAG, "notificationUid " + notificationUid);
+               Log.e(TAG, "taskUid " + taskUid);
+               Log.e(TAG, "tasktype " + tasKType);
+               txt_toolbar.setText(tasKType);
+               ViewTaskFragment viewTaskFragment = ViewTaskFragment.newInstance(tasKType, taskUid);
+               getSupportFragmentManager().beginTransaction()
+                        .replace(R.id.fl_content, viewTaskFragment)
+                        .commit();
+                int notificationCount = PreferenceUtils.getIsNotificationcounter(this);
+                Log.e(TAG, "count " + notificationCount);
+                NotificationUpdateService.updateNotificationStatus(this, notificationUid);
+                PreferenceUtils.setIsNotificationcounter(this, --notificationCount);
+                EventBus.getDefault().post(new NotificationEvent(--notificationCount));
+
+
+
+        }
+
+    private void switchFragments(Fragment fragment) {
         getSupportFragmentManager().beginTransaction()
                 .setCustomAnimations(R.anim.a_slide_in_right, R.anim.a_slide_out_left, R.anim.a_slide_in_left, R.anim.a_slide_out_right)
                 .replace(R.id.fl_content, fragment)
@@ -590,10 +618,10 @@ public class StartActivity extends PortraitActivity implements HomeScreenViewFra
 
     private void registerFormValidation(EditText et_userName, EditText et_mobile_register) {
         if (et_userName.getText().toString().trim().isEmpty() || et_mobile_register.getText().toString().isEmpty()) {
-            if(et_userName.getText().toString().trim().isEmpty() && !et_mobile_register.getText().toString().isEmpty()) {
+            if (et_userName.getText().toString().trim().isEmpty() && !et_mobile_register.getText().toString().isEmpty()) {
                 et_userName.requestFocus();
                 et_userName.setError(getResources().getString(R.string.Either_field_empty));
-            } else if(et_mobile_register.getText().toString().isEmpty()  &&  !et_userName.getText().toString().isEmpty()) {
+            } else if (et_mobile_register.getText().toString().isEmpty() && !et_userName.getText().toString().isEmpty()) {
                 et_mobile_register.requestFocus();
                 et_mobile_register.setError(getResources().getString(R.string.Cellphone_number_empty));
             } else {
@@ -614,7 +642,7 @@ public class StartActivity extends PortraitActivity implements HomeScreenViewFra
                     et_mobile_register.requestFocus();
                     et_mobile_register.setError(getResources().getString(R.string.Cellphone_number_invalid));
                 } else {
-                   register(et_userName.getText().toString(), et_mobile_register.getText().toString());
+                    register(et_userName.getText().toString(), et_mobile_register.getText().toString());
                 }
             }
         }

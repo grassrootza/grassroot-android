@@ -146,18 +146,7 @@ public class ViewVoteActivity extends PortraitActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_view_vote);
         ButterKnife.bind(this);
-        if (getIntent() != null) {
-            voteid = getIntent().getExtras().getString(Constant.UID);
-            if (getIntent().hasExtra(Constant.NOTIFICATION_UID)) {
-                String notificationUid = getIntent().getStringExtra(Constant.NOTIFICATION_UID);
-                Log.e(TAG, "notificationUid " + notificationUid);
-                int notificationCount = PreferenceUtils.getIsNotificationcounter(this);
-                Log.e(TAG, "count " + notificationCount);
-                NotificationUpdateService.updateNotificationStatus(this,notificationUid);
-                PreferenceUtils.setIsNotificationcounter(this, --notificationCount);
-                EventBus.getDefault().post(new NotificationEvent(--notificationCount));
-            }
-        }
+
         setUpToolbar();
         init();
     }

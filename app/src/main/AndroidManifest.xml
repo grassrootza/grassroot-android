@@ -56,11 +56,17 @@
 
         <activity
             android:name=".activities.StartActivity"
+            android:exported="true"
             android:launchMode="singleTop">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="NOTIFICATION" />
+
+                <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
         <activity
@@ -119,20 +125,7 @@
 
         <!-- Vote related activities -->
 
-        <activity
-            android:name=".activities.ViewVoteActivity"
-            android:exported="true"
-            android:parentActivityName=".activities.StartActivity">
-            <intent-filter>
-                <action android:name="VOTE" />
-
-                <category android:name="android.intent.category.DEFAULT" />
-            </intent-filter>
-
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value=".activities.StartActivity" />
-        </activity>
+        <activity android:name=".activities.ViewVoteActivity"></activity>
         <activity
             android:name=".activities.EditVoteActivity"
             android:windowSoftInputMode="adjustPan" />
@@ -171,7 +164,8 @@
         <service
             android:name=".services.NotificationUpdateService"
             android:enabled="true"
-            android:exported="true"></service>
+            android:exported="true" />
+
     </application>
 
 </manifest>

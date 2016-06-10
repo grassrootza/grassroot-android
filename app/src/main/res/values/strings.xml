@@ -380,5 +380,6 @@
     <string name="LOG_OUT">Log Out</string>
     <string name="GROUP_NOT_FOUND">No groups matching your key were found.</string>
     <string name="GCM_UNREGISTER">unregister</string>
+    <string name="title_activity_notification">NotificationActivity</string>
 
 </resources>
