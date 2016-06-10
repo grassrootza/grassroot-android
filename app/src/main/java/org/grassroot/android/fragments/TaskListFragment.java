@@ -1,7 +1,6 @@
 package org.grassroot.android.fragments;
 
 import android.app.DialogFragment;
-import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
@@ -24,9 +23,8 @@ import org.grassroot.android.events.TaskChangedEvent;
 import org.grassroot.android.interfaces.GroupConstants;
 import org.grassroot.android.interfaces.NetworkErrorDialogListener;
 import org.grassroot.android.interfaces.TaskConstants;
-import org.grassroot.android.services.GrassrootRestService;
 import org.grassroot.android.models.TaskResponse;
-import org.grassroot.android.activities.ViewVoteActivity;
+import org.grassroot.android.services.GrassrootRestService;
 import org.grassroot.android.utils.ErrorUtils;
 import org.grassroot.android.utils.PreferenceUtils;
 import org.greenrobot.eventbus.EventBus;
@@ -96,8 +94,7 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
         View viewToReturn = inflater.inflate(R.layout.fragment_task_list, container, false);
         ButterKnife.bind(this, viewToReturn);
         this.container = container;
-
-        Log.e(TAG, "creating fragment!");
+        
         setUpSwipeRefresh();
         rcTaskView.setLayoutManager(new LinearLayoutManager(getActivity()));
         groupTasksAdapter = new TasksAdapter(this, getActivity(), groupUid);

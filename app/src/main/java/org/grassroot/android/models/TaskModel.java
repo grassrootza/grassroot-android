@@ -34,6 +34,7 @@ public class TaskModel implements Parcelable, Comparable<TaskModel> {
 
     private Boolean hasResponded;
     private Boolean canAction;
+    private boolean canEdit;
     private String reply;
 
     private Boolean wholeGroupAssigned;
@@ -95,6 +96,8 @@ public class TaskModel implements Parcelable, Comparable<TaskModel> {
         return canAction;
     }
 
+    public boolean isCanEdit() { return canEdit; }
+
     public String getReply() {
         return reply;
     }
@@ -147,8 +150,9 @@ public class TaskModel implements Parcelable, Comparable<TaskModel> {
         dest.writeString(this.type);
         dest.writeString(this.deadline);
         dest.writeString(this.deadlineISO);
-        dest.writeValue(this.hasResponded);
-        dest.writeValue(this.canAction);
+        dest.writeInt(this.hasResponded ? 1 : 0);
+        dest.writeInt(this.canAction ? 1 : 0);
+        dest.writeInt(this.canEdit ? 1 : 0);
         dest.writeString(this.reply);
         dest.writeString(this.completedYes);
         dest.writeString(this.completedNo);
@@ -164,8 +168,9 @@ public class TaskModel implements Parcelable, Comparable<TaskModel> {
         this.type = in.readString();
         this.deadline = in.readString();
         this.deadlineISO = in.readString();
-        this.hasResponded = (Boolean) in.readValue(Boolean.class.getClassLoader());
-        this.canAction = (Boolean) in.readValue(Boolean.class.getClassLoader());
+        this.hasResponded = in.readInt() != 0;
+        this.canAction = in.readInt() != 0;
+        this.canEdit = in.readInt() != 0;
         this.reply = in.readString();
         this.completedYes = in.readString();
         this.completedNo = in.readString();
@@ -226,5 +231,13 @@ public class TaskModel implements Parcelable, Comparable<TaskModel> {
     @Override
     public int hashCode() {
         return taskUid != null ? taskUid.hashCode() : 0;
+    }
+
+    @Override
+    public String toString() {
+        return "TaskModel{" +
+                "type='" + type + '\'' +
+                ", canEdit=" + canEdit +
+                '}';
     }
 }

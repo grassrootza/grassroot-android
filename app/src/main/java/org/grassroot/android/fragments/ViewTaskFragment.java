@@ -1,6 +1,7 @@
 package org.grassroot.android.fragments;
 
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
@@ -14,13 +15,18 @@ import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import org.grassroot.android.R;
+import org.grassroot.android.activities.EditVoteActivity;
+import org.grassroot.android.activities.NotBuiltActivity;
 import org.grassroot.android.adapters.MtgRsvpAdapter;
+import org.grassroot.android.interfaces.NetworkErrorDialogListener;
 import org.grassroot.android.interfaces.TaskConstants;
 import org.grassroot.android.models.ResponseTotalsModel;
 import org.grassroot.android.models.RsvpListModel;
@@ -49,6 +55,7 @@ public class ViewTaskFragment extends Fragment {
     private String phoneNumber;
     private String code;
     private boolean canViewResponses;
+    private MtgRsvpAdapter mtgRsvpAdapter;
 
     private ViewGroup mContainer;
 
@@ -85,10 +92,16 @@ public class ViewTaskFragment extends Fragment {
     @BindView(R.id.vt_vote_response_details)
     LinearLayout llVoteResponseDetails;
 
-    private MtgRsvpAdapter mtgRsvpAdapter;
+    @BindView(R.id.vt_bt_modify)
+    Button btModifyTask;
 
+    // todo : may be able to simplify, a lot, this seems a lot of stuff
     @BindView(R.id.vt_progress_bar)
     ProgressBar progressBar;
+    @BindView(R.id.error_layout)
+    RelativeLayout errorLayout;
+    @BindView(R.id.ll_no_internet)
+    LinearLayout imNoInternet;
 
     public ViewTaskFragment() { }
 
@@ -167,13 +180,14 @@ public class ViewTaskFragment extends Fragment {
             @Override
             public void onFailure(Call<TaskResponse> call, Throwable t) {
                 progressBar.setVisibility(View.GONE);
-                handleNoNetwork();
+                handleNoNetwork("FETCH");
             }
         });
     }
 
     private void setUpViews() {
         tvDescription.setVisibility(TextUtils.isEmpty(task.getDescription()) ? View.GONE : View.VISIBLE);
+
         switch (taskType) {
             case TaskConstants.MEETING:
                 setViewForMeeting();
@@ -212,6 +226,11 @@ public class ViewTaskFragment extends Fragment {
             diminishResponseCard();
         }
 
+        if (task.isCanEdit()) {
+            btModifyTask.setVisibility(View.VISIBLE);
+            btModifyTask.setText(R.string.vt_mtg_modify);
+        }
+
         setMeetingRsvpView();
     }
 
@@ -235,8 +254,12 @@ public class ViewTaskFragment extends Fragment {
             diminishResponseCard();
         }
 
-        setVoteResponseView();
+        if (task.isCanEdit()) {
+            btModifyTask.setVisibility(View.VISIBLE);
+            btModifyTask.setText(R.string.vt_vote_modify);
+        }
 
+        setVoteResponseView();
     }
 
     private void setViewForToDo() {
@@ -270,7 +293,7 @@ public class ViewTaskFragment extends Fragment {
 
             @Override
             public void onFailure(Call<TaskResponse> call, Throwable t) {
-                handleNoNetwork();
+                handleNoNetwork("RESPOND_YES");
             }
         });
     }
@@ -291,7 +314,7 @@ public class ViewTaskFragment extends Fragment {
 
             @Override
             public void onFailure(Call<TaskResponse> call, Throwable t) {
-                handleNoNetwork();
+                handleNoNetwork("RESPOND_NO");
             }
         });
     }
@@ -360,7 +383,7 @@ public class ViewTaskFragment extends Fragment {
 
                     @Override
                     public void onFailure(Call<RsvpListModel> call, Throwable t) {
-                        handleNoNetwork();
+                        handleNoNetwork("MTG_RSVP");
                     }
                 });
     }
@@ -383,7 +406,7 @@ public class ViewTaskFragment extends Fragment {
 
                     @Override
                     public void onFailure(Call<ResponseTotalsModel> call, Throwable t) {
-                        handleNoNetwork();
+                        handleNoNetwork("VOTE_TOTALS");
                     }
                 });
     }
@@ -441,8 +464,32 @@ public class ViewTaskFragment extends Fragment {
     }
 
     /*
-    SECTION : MISCELLANEOUS HELPER METHODS
+    SECTION : MISCELLANEOUS HELPER METHODS AND INTENT TRIGGERS
      */
+
+    @OnClick(R.id.vt_bt_modify)
+    public void modifyTask() {
+        if (task.isCanEdit()) {
+            switch (taskType) {
+                case TaskConstants.MEETING:
+                    // todo : make this more efficient
+                    Intent editMtg = new Intent(getActivity(), NotBuiltActivity.class);
+                    editMtg.putExtra("title", "Modify meeting");
+                    startActivity(editMtg);
+                    break;
+                case TaskConstants.VOTE:
+                    Intent editVote = new Intent(getActivity(), EditVoteActivity.class);
+                    editVote.putExtra("description", task.getDescription());
+                    editVote.putExtra("deadline", task.getDeadlineDate());
+                    editVote.putExtra("voteid", task.getTaskUid());
+                    editVote.putExtra("title", task.getTitle());
+                    startActivityForResult(editVote, 1);
+                    break;
+                case TaskConstants.TODO:
+                    break;
+            }
+        }
+    }
 
     private int snackBarMsg(String response) {
         switch (taskType) {
@@ -458,15 +505,33 @@ public class ViewTaskFragment extends Fragment {
         return -1;
     }
 
-    private void handleNoNetwork() {
-        /*erroLayout.setVisibility(View.VISIBLE);
-                imNoInternet.setVisibility(View.VISIBLE);
-                ErrorUtils.connectivityError(ViewVoteActivity.this, R.string.No_network, new NetworkErrorDialogListener() {
-                    @Override
-                    public void retryClicked() {
-                        updateView();
-                    }
-                });*/
+    private void handleNoNetwork(final String retryTag) {
+        errorLayout.setVisibility(View.VISIBLE);
+        imNoInternet.setVisibility(View.VISIBLE);
+        ErrorUtils.connectivityError(getActivity(), R.string.error_no_network, new NetworkErrorDialogListener() {
+            @Override
+            public void retryClicked() {
+                switch (retryTag) {
+                    case "FETCH":
+                        retrieveTaskDetails();
+                        break;
+                    case "RESPOND_YES":
+                        doRespondYes();
+                        break;
+                    case "RESPOND_NO":
+                        doRespondNo();
+                        break;
+                    case "MTG_RSVP":
+                        setMeetingRsvpView();
+                        break;
+                    case "VOTE_TOTALS":
+                        setVoteResponseView();
+                        break;
+                    default:
+                        retrieveTaskDetails();
+                }
+            }
+        });
     }
 
     private void handleUnknownError(Response<TaskResponse> response) {

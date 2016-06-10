@@ -202,6 +202,7 @@
     </style>
 
     <style name="Button_white" tools:ignore="NewApi">
+        <item name="android:layout_height">wrap_content</item>
         <item name="android:textSize">@dimen/txt_medium</item>
         <item name="android:textColor">@drawable/white_txt</item>
         <item name="android:singleLine">true</item>
@@ -209,7 +210,6 @@
         <item name="android:background">@drawable/login</item>
         <item name="android:layout_marginLeft">10dp</item>
         <item name="android:layout_marginRight">10dp</item>
-        <item name="android:layout_marginBottom">20dp</item>
     </style>
 
     <style name="Button" tools:ignore="NewApi">

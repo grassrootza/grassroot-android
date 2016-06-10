@@ -228,6 +228,7 @@
     <string name="vt_rlist_response_no">Can\'t attend</string>
     <string name="vt_rlist_response_none">No response</string>
     <string name="vt_mtg_response_count">%1$d people invited, %2$d confirmed</string>
+    <string name="vt_mtg_modify">Change meeting</string>
 
     <string name="vt_vote_toolbar">VIEW VOTE</string>
     <string name="vt_vote_title">Vote on:</string>
@@ -250,6 +251,7 @@
     <string name="vt_row_no">Voted no</string>
     <string name="vt_row_abstain">Abstained</string>
     <string name="vt_row_no_reply">No response</string>
+    <string name="vt_vote_modify">Extend vote</string>
 
     <string name="vv_tv_toolbar">VIEW VOTE</string>
     <string name="vv_bt_editvote">Modify Vote</string>
