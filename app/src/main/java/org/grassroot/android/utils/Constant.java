@@ -23,10 +23,7 @@ public class Constant {
 
     public static final String restUrl = BuildConfig.BUILD_TYPE.equals("release") ? stagingUrl : localUrl;
 
-    public static final String filteredList = "filteredList";
-    public static final String contactsAdded = "contactsAdded";
-    public static final String contactsRemoved = "contactsRemoved";
-    public static final String doNotDisplayContacts = "doNotDisplayContacts";
+    public static final String USER_TOKEN = "user_token";
 
     public static final String GROUPUID_FIELD = "groupUid";
     public static final String GROUPNAME_FIELD = "groupName";

@@ -9,13 +9,13 @@ import android.util.Log;
 import android.view.View;
 
 import org.grassroot.android.R;
-import org.grassroot.android.interfaces.NetworkErrorDialogListener;
-import org.grassroot.android.services.NoConnectivityException;
 import org.grassroot.android.activities.GroupSearchActivity;
 import org.grassroot.android.activities.GroupTasksActivity;
 import org.grassroot.android.activities.StartActivity;
-import org.grassroot.android.activities.ViewVoteActivity;
+import org.grassroot.android.activities.ViewTaskActivity;
 import org.grassroot.android.fragments.dialogs.NetworkErrorDialogFragment;
+import org.grassroot.android.interfaces.NetworkErrorDialogListener;
+import org.grassroot.android.services.NoConnectivityException;
 
 import java.io.IOException;
 import java.net.SocketTimeoutException;
@@ -69,7 +69,7 @@ public class ErrorUtils {
                         });
                 break;
             case Constant.CONFLICT:
-                 if(activity instanceof ViewVoteActivity || activity instanceof GroupTasksActivity){
+                 if(activity instanceof ViewTaskActivity || activity instanceof GroupTasksActivity) {
                      Snackbar.make(holder, R.string.Alert_Already_Responded, Snackbar.LENGTH_LONG).show();
                  }
                 else if(activity instanceof GroupSearchActivity){

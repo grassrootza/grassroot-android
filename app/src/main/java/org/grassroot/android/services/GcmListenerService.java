@@ -14,10 +14,9 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
+
 import org.grassroot.android.R;
-import org.grassroot.android.activities.NotBuiltActivity;
-import org.grassroot.android.activities.StartActivity;
-import org.grassroot.android.activities.ViewVoteActivity;
+import org.grassroot.android.activities.ViewTaskActivity;
 import org.grassroot.android.events.NotificationEvent;
 import org.grassroot.android.interfaces.TaskConstants;
 import org.grassroot.android.utils.Constant;
@@ -59,12 +58,15 @@ public class GcmListenerService extends com.google.android.gms.gcm.GcmListenerSe
         PendingIntent resultPendingIntent = generateResultIntent(msg);
         long when = System.currentTimeMillis();
         NotificationManager mNotificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-        if (Build.VERSION.SDK_INT >= 21) {
 
+        if (Build.VERSION.SDK_INT >= 21) {
             NotificationCompat.InboxStyle inboxStyle = new NotificationCompat.InboxStyle();
             NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(this);
-            Notification notification = mBuilder.setSmallIcon((Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP)
-                    ? R.drawable.ic_notification_icon : R.drawable.app_icon).setTicker(msg.getString("title")).setWhen(when)
+            mBuilder.setSmallIcon((Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP)
+                    ? R.drawable.ic_notification_icon : R.drawable.app_icon);
+            Notification notification = mBuilder
+                    .setTicker(msg.getString("title"))
+                    .setWhen(when)
                     .setAutoCancel(true)
                     .setContentTitle(msg.getString(Constant.TITLE))
                     .setStyle(inboxStyle)
@@ -88,13 +90,11 @@ public class GcmListenerService extends com.google.android.gms.gcm.GcmListenerSe
                     .setGroup(STACK_KEY)
                     .build();
 
-
             int defaults = 0;
             defaults = defaults | Notification.DEFAULT_LIGHTS;
             defaults = defaults | Notification.DEFAULT_SOUND;
             mNotifyBuilder.setDefaults(defaults);
             mNotificationManager.notify(msg.getString(Constant.UID),(int)System.currentTimeMillis(), notification);
-
         }
     }
 
@@ -125,7 +125,6 @@ public class GcmListenerService extends com.google.android.gms.gcm.GcmListenerSe
 
 
     public void incrementNotificationCounter() {
-
         final int  currentCount = PreferenceUtils.getIsNotificationcounter(this);
         new Handler(getMainLooper()).post(new Runnable() {
             @Override
@@ -134,30 +133,27 @@ public class GcmListenerService extends com.google.android.gms.gcm.GcmListenerSe
             }
         });
         PreferenceUtils.setIsNotificationcounter(this, currentCount+1);
-
     }
 
 
     private PendingIntent generateResultIntent(Bundle msg) {
+        Log.d(TAG, "generateResultIntent called, with message bundle: " + msg.toString());
+        Intent resultIntent = new Intent(this, ViewTaskActivity.class);
 
-        Log.e(TAG, "generateResultIntent called, with message bundle: " + msg.toString());
-
-
-        Intent resultIntent = new Intent(this, StartActivity.class);
         resultIntent.putExtra(TaskConstants.TASK_TYPE_FIELD, msg.getString(Constant.ENTITY_TYPE));
-        resultIntent.putExtra(Constant.TITLE, msg.getString(Constant.TITLE));
-        resultIntent.putExtra(Constant.BODY, msg.getString(Constant.BODY));
         resultIntent.putExtra(TaskConstants.TASK_UID_FIELD, msg.getString(Constant.UID));
         resultIntent.putExtra(Constant.NOTIFICATION_UID, msg.getString(Constant.NOTIFICATION_UID));
 
-        PendingIntent resultPendingIntent = PendingIntent.getActivity(this, (int) (int)System.currentTimeMillis(), resultIntent, PendingIntent.FLAG_CANCEL_CURRENT);
-        Log.e(TAG, "generateResultIntent exiting, with intent: " + resultPendingIntent.toString());
+        PendingIntent resultPendingIntent = PendingIntent.getActivity
+                (this, (int) System.currentTimeMillis(),
+                resultIntent, PendingIntent.FLAG_CANCEL_CURRENT);
 
+        Log.e(TAG, "and generateResultIntent exits, with intent: " + resultPendingIntent.toString());
         return resultPendingIntent;
 
     }
 
-    public static void cleatNotifications(Context context){
+    public static void clearNotifications(Context context){
             NotificationManager nMgr = (NotificationManager) context.getSystemService(NOTIFICATION_SERVICE);
             nMgr.cancelAll();
         }

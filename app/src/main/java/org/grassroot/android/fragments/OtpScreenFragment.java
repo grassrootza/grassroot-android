@@ -5,6 +5,7 @@ import android.content.Context;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -26,6 +27,8 @@ import butterknife.OnClick;
  * Created by paballo on 2016/04/26.
  */
 public class OtpScreenFragment extends Fragment {
+
+    private static final String TAG = OtpScreenFragment.class.getSimpleName();
 
     @BindView(R.id.et_otp)
     EditText et_otp;
@@ -69,6 +72,7 @@ public class OtpScreenFragment extends Fragment {
         View view = inflater.inflate(R.layout.container_otp, container, false);
         ButterKnife.bind(this, view);
         et_otp.setText(getArguments().getString("verification_code"));
+        purpose = getArguments().getString("purpose");
         return view;
     }
 
@@ -89,6 +93,7 @@ public class OtpScreenFragment extends Fragment {
         if (TextUtils.isEmpty(et_otp.getText().toString())) {
             et_otp.setError(getResources().getString(R.string.OTP_empty));
         } else {
+            Log.e(TAG, "OTP submit clicked, for purpose: " + purpose);
             onOtpScreenFragmentListener.onOtpSubmitButtonClick(et_otp.getText().toString(), purpose);
         }
     }

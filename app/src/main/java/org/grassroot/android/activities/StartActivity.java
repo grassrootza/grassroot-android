@@ -28,6 +28,7 @@ import org.grassroot.android.fragments.OtpScreenFragment;
 import org.grassroot.android.fragments.RegisterScreenFragment;
 import org.grassroot.android.fragments.ViewTaskFragment;
 import org.grassroot.android.interfaces.NavigationConstants;
+import org.grassroot.android.interfaces.NotificationConstants;
 import org.grassroot.android.interfaces.TaskConstants;
 import org.grassroot.android.models.GenericResponse;
 import org.grassroot.android.models.Token;
@@ -100,28 +101,12 @@ public class StartActivity extends PortraitActivity implements HomeScreenViewFra
     private ProgressDialog progressDialog;
 
     @Override
-    protected void onNewIntent(Intent intent) {
-        super.onNewIntent(intent);
-        handleNotificationIntent(intent);
-    }
-
-    private void handleNotification() {
-        setContentView(R.layout.notification_layout);
-        ButterKnife.bind(this);
-        handleNotificationIntent(getIntent());
-    }
-
-    @Override
     protected void onCreate(Bundle bundle) {
         super.onCreate(bundle);
-        if (getIntent().hasExtra(Constant.NOTIFICATION_UID)) {
-            handleNotification();
+        if (PreferenceUtils.getisLoggedIn(this)) {
+            userIsLoggedIn();
         } else {
-            if (PreferenceUtils.getisLoggedIn(this)) {
-                userIsLoggedIn();
-            } else {
-                userIsNotLoggedIn();
-            }
+            userIsNotLoggedIn();
         }
     }
 
@@ -255,16 +240,16 @@ public class StartActivity extends PortraitActivity implements HomeScreenViewFra
                         progressDialog.dismiss();
                         if (response.isSuccessful()) {
                             Token token = response.body().getToken();
+
                             PreferenceUtils.setuser_token(StartActivity.this, token.getCode());
                             PreferenceUtils.setuser_mobilenumber(StartActivity.this, mobileNumber);
                             PreferenceUtils.setisLoggedIn(StartActivity.this, true);
                             PreferenceUtils.setuser_phonetoken(StartActivity.this, mobileNumber + "/" + token.getCode());
-                            // PreferenceUtils.setuser_name(StartActivity.this, userName);
 
                             Log.d(TAG, "getPREF_Phone_Token is " + PreferenceUtils.getPREF_Phone_Token(StartActivity.this));
-                            Intent gcmRegistrationIntent = new Intent(StartActivity.this, GcmRegistrationService.class);
-                            gcmRegistrationIntent.putExtra("phoneNumber", mobileNumber);
-                            startService(gcmRegistrationIntent);
+
+                            registerOrRefreshGCM(mobileNumber);
+
                             Intent homeScreenIntent = new Intent(StartActivity.this, HomeScreenActivity.class);
                             startActivity(homeScreenIntent);
                             finish();
@@ -294,8 +279,6 @@ public class StartActivity extends PortraitActivity implements HomeScreenViewFra
      * @param mobile_number The number the user entered
      */
     private void requestLogin(String mobile_number) {
-
-        Log.d(TAG, "inside StartActivity ... calling login");
 
         mobileNumber = mobile_number;
         progressDialog.show();
@@ -344,21 +327,21 @@ public class StartActivity extends PortraitActivity implements HomeScreenViewFra
                     public void onResponse(Call<TokenResponse> call, Response<TokenResponse> response) {
                         progressDialog.dismiss();
                         if (response.isSuccessful()) {
+
                             Token token = response.body().getToken();
+
                             PreferenceUtils.setuser_token(StartActivity.this, token.getCode());
                             PreferenceUtils.setuser_mobilenumber(StartActivity.this, mobileNumber);
+
                             PreferenceUtils.setisLoggedIn(StartActivity.this, true);
                             PreferenceUtils.setuser_phonetoken(StartActivity.this, mobileNumber + "/" + token.getCode());
+
                             Log.i(TAG, "getPREF_Phone_Token is " + PreferenceUtils.getPREF_Phone_Token(StartActivity.this));
 
                             Boolean hasGroups = response.body().getHasGroups();
                             String displayname = response.body().getDisplayName();
 
-                            if (!PreferenceUtils.getIsGcmEnabled(StartActivity.this)) {
-                                Intent gcmRegistrationIntent = new Intent(StartActivity.this, GcmRegistrationService.class);
-                                gcmRegistrationIntent.putExtra("phoneNumber", mobileNumber);
-                                startService(gcmRegistrationIntent);
-                            }
+                            registerOrRefreshGCM(mobileNumber);
 
                             if (hasGroups) {
                                 PreferenceUtils.setisHasgroup(StartActivity.this, true);
@@ -383,6 +366,13 @@ public class StartActivity extends PortraitActivity implements HomeScreenViewFra
                     }
                 });
 
+    }
+
+    private void registerOrRefreshGCM(final String phoneNumber) {
+        Intent gcmRegistrationIntent = new Intent(StartActivity.this, GcmRegistrationService.class);
+        gcmRegistrationIntent.putExtra(NotificationConstants.ACTION, NotificationConstants.GCM_REGISTER);
+        gcmRegistrationIntent.putExtra(NotificationConstants.PHONE_NUMBER, phoneNumber);
+        startService(gcmRegistrationIntent);
     }
 
     @Optional
@@ -455,29 +445,6 @@ public class StartActivity extends PortraitActivity implements HomeScreenViewFra
         } else if (REGISTER.equals(purpose)) {
             verifyRegistration(mobileNumber, otp);
         }
-    }
-
-    private void handleNotificationIntent(Intent intent) {
-        //may redundant to check for null, but just to be safe
-
-        Log.e(TAG, "recieved notification");
-        String notificationUid = getIntent().getStringExtra(Constant.NOTIFICATION_UID);
-        String taskUid = intent.getExtras().getString(TaskConstants.TASK_UID_FIELD);
-        String tasKType = intent.getExtras().getString(TaskConstants.TASK_TYPE_FIELD);
-
-        Log.e(TAG, "notificationUid " + notificationUid + ", taskUid = " + taskUid + ", taskType = " + tasKType);
-
-        txt_toolbar.setText(tasKType);
-        ViewTaskFragment viewTaskFragment = ViewTaskFragment.newInstance(tasKType, taskUid);
-        getSupportFragmentManager().beginTransaction()
-                .replace(R.id.fl_content, viewTaskFragment)
-                .commit();
-
-        int notificationCount = PreferenceUtils.getIsNotificationcounter(this);
-        Log.e(TAG, "count " + notificationCount);
-        NotificationUpdateService.updateNotificationStatus(this, notificationUid);
-        PreferenceUtils.setIsNotificationcounter(this, --notificationCount);
-        EventBus.getDefault().post(new NotificationEvent(--notificationCount));
     }
 
     private void switchFragments(Fragment fragment) {

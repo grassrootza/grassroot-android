@@ -11,6 +11,7 @@
     <string name="title_activity_group_members">View members</string>
     <string name="title_activity_remove_members">Remove members</string>
     <string name="title_activity_group_tasks">GroupTasksActivity</string>
+    <string name="title_activity_view_task">ViewTaskActivity</string>
 
     <!-- Welcome, register, OTP screens -->
     <string name="txt_pls_wait">Please wait...</string>

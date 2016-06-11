@@ -18,6 +18,7 @@ import org.grassroot.android.R;
 import org.grassroot.android.adapters.NotificationAdapter;
 import org.grassroot.android.events.NotificationEvent;
 import org.grassroot.android.interfaces.ClickListener;
+import org.grassroot.android.interfaces.TaskConstants;
 import org.grassroot.android.models.Notification;
 import org.grassroot.android.models.NotificationList;
 import org.grassroot.android.services.GcmListenerService;
@@ -79,7 +80,7 @@ public class NotificationCenter extends PortraitActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_notification_center);
         ButterKnife.bind(this);
-        GcmListenerService.cleatNotifications(this);
+        GcmListenerService.clearNotifications(this);
         setUpToolbar();
         setRecylerview();
         init();
@@ -116,23 +117,11 @@ public class NotificationCenter extends PortraitActivity {
                     public void onClick(View view, int position) {
                         Notification notification = notificationAdapter.getNotifications().get(position);
                         updateNotificationStatus(notification);
-                        Log.d(TAG, "clicked on item" + position);
-                        Log.d(TAG, notification.getMessage());
-                        Intent openactivity = null;
-                        switch (notification.getEntityType().toLowerCase()) {
-                            case "vote":
-                                openactivity = new Intent(NotificationCenter.this, ViewVoteActivity.class);
-                                openactivity.putExtra("id", notification.getEntityUid());
-                                break;
-                            case "meeting":
-                                openactivity = new Intent(NotificationCenter.this, NotBuiltActivity.class);
-                                openactivity.putExtra("title", "Meeting");
-                                break;
-                            case "todo":
-                                openactivity = new Intent(NotificationCenter.this, NotBuiltActivity.class);
-                                openactivity.putExtra("title", "ToDo");
-                                break;
-                        }
+                        Log.d(TAG, "clicked on item" + position + ", with message: " + notification.getMessage());
+
+                        Intent openactivity = new Intent(NotificationCenter.this, ViewTaskActivity.class);
+                        openactivity.putExtra(TaskConstants.TASK_UID_FIELD, notification.getEntityUid());
+                        openactivity.putExtra(TaskConstants.TASK_TYPE_FIELD, notification.getEntityType());
                         startActivity(openactivity);
                     }
 

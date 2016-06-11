@@ -69,6 +69,7 @@
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
+
         <activity
             android:name=".activities.HomeScreenActivity"
             android:configChanges="keyboardHidden|orientation"
@@ -80,9 +81,6 @@
             android:label="@string/title_activity_group_tasks"
             android:parentActivityName=".activities.HomeScreenActivity"
             android:theme="@style/AppTheme" />
-        <activity
-            android:name=".fragments.NewTaskMenuFragment"
-            android:noHistory="true" />
 
         <!-- Group management activities -->
         <activity
@@ -116,6 +114,17 @@
             android:label="@string/title_activity_blank"
             android:theme="@style/AppTheme" />
 
+        <!-- General task activities -->
+        <activity
+            android:name=".activities.ViewTaskActivity"
+            android:label="@string/title_activity_view_task"
+            android:theme="@style/AppTheme"
+            android:parentActivityName=".activities.StartActivity">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".activities.StartActivity"/>
+        </activity>
+
         <!-- Meeting related activities -->
 
         <activity
@@ -125,16 +134,15 @@
 
         <!-- Vote related activities -->
 
-        <activity android:name=".activities.ViewVoteActivity"></activity>
-        <activity
-            android:name=".activities.EditVoteActivity"
-            android:windowSoftInputMode="adjustPan" />
-        <activity android:name=".activities.ProfileSettingsActivity" />
         <activity
             android:name=".activities.CreateVoteActivity"
             android:label="@string/title_activity_create_vote"
             android:theme="@style/AppTheme"
             android:windowSoftInputMode="adjustResize" />
+
+        <activity
+            android:name=".activities.EditVoteActivity"
+            android:windowSoftInputMode="adjustPan" />
 
         <!-- Todo related activities -->
         <activity
@@ -145,6 +153,7 @@
         <!-- Navigation drawer / system activities -->
         <activity android:name=".activities.NotificationCenter" />
         <activity android:name=".activities.FAQActivity" />
+        <activity android:name=".activities.ProfileSettingsActivity" />
 
         <service
             android:name=".services.GcmListenerService"

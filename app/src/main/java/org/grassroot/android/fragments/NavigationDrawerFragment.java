@@ -25,8 +25,11 @@ import org.grassroot.android.events.NotificationEvent;
 import org.grassroot.android.fragments.dialogs.ConfirmCancelDialogFragment;
 import org.grassroot.android.interfaces.ClickListener;
 import org.grassroot.android.interfaces.NavigationConstants;
+import org.grassroot.android.interfaces.NotificationConstants;
 import org.grassroot.android.models.NavDrawerItem;
+import org.grassroot.android.services.GcmRegistrationService;
 import org.grassroot.android.ui.views.RecyclerTouchListener;
+import org.grassroot.android.utils.Constant;
 import org.grassroot.android.utils.PreferenceUtils;
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
@@ -163,13 +166,25 @@ public class NavigationDrawerFragment extends Fragment {
         ConfirmCancelDialogFragment confirmDialog = ConfirmCancelDialogFragment.newInstance(R.string.logout_message, new ConfirmCancelDialogFragment.ConfirmDialogListener() {
                     @Override
                     public void doConfirmClicked() {
-                        PreferenceUtils.clearAll(getActivity());
+                        unregisterGcm();
+                        PreferenceUtils.clearAll(getActivity().getApplicationContext());
                         Intent open = new Intent(getActivity(), StartActivity.class);
                         startActivity(open);
                     }
                 });
 
         confirmDialog.show(getFragmentManager(), "logout");
+    }
+
+    // todo : move this onto a background thread?
+    private void unregisterGcm() {
+        Log.e(TAG, "unregistering from GCM ...");
+        final Context context = getActivity().getApplicationContext();
+        Intent gcmUnregister = new Intent(getActivity(), GcmRegistrationService.class);
+        gcmUnregister.putExtra(NotificationConstants.ACTION, NotificationConstants.GCM_UNREGISTER);
+        gcmUnregister.putExtra(NotificationConstants.PHONE_NUMBER, PreferenceUtils.getuser_mobilenumber(context));
+        gcmUnregister.putExtra(Constant.USER_TOKEN, PreferenceUtils.getuser_token(context));
+        getActivity().startService(gcmUnregister);
     }
 
     @Override

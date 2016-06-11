@@ -114,34 +114,4 @@ public class UtilClass {
         }
         return uids;
     }
-
-    //getResources().getString(R.string.Cellphone_number_empty)
-    public boolean validatePhoneNumber(EditText input, String errorMessage) {
-        final String number = input.getText().toString();
-        if (TextUtils.isEmpty(number)) {
-            input.requestFocus();
-            input.setError(errorMessage);
-            return false;
-        } else {
-            if (number.length() != 10 && number.length() < 10) {
-                input.requestFocus();
-                input.setError(errorMessage);
-                return false;
-            } else {
-                if (Integer.parseInt(String.valueOf(number.charAt(0))) != 0) {
-                    input.requestFocus();
-                    input.setError(errorMessage);
-                    return false;
-                } else if (Integer.parseInt(String.valueOf(number.charAt(1))) == 0 ||
-                        Integer.parseInt(String.valueOf(number.charAt(1))) == 9) {
-                    input.requestFocus();
-                    input.setError(errorMessage);
-                    return false;
-                } else {
-                    return true;
-                }
-            }
-        }
-    }
-
 }
