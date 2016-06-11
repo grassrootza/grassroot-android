@@ -15,7 +15,7 @@ import android.widget.Button;
 
 import org.grassroot.android.R;
 import org.grassroot.android.activities.CreateGroupActivity;
-import org.grassroot.android.activities.GroupJoinActivity;
+import org.grassroot.android.activities.GroupSearchActivity;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -73,7 +73,7 @@ public class WelcomeFragment extends android.support.v4.app.Fragment {
 
     @OnClick(R.id.bt_joingroup)
     public void joingroup() {
-        startActivity(new Intent(getActivity(), GroupJoinActivity.class));
+        startActivity(new Intent(getActivity(), GroupSearchActivity.class));
     }
 
     public interface FragmentCallbacks {

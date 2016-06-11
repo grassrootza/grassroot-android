@@ -103,7 +103,7 @@
             android:label="@string/title_activity_group_members"
             android:parentActivityName=".activities.HomeScreenActivity" />
         <activity
-            android:name=".activities.GroupJoinActivity"
+            android:name=".activities.GroupSearchActivity"
             android:label="@string/title_activity_join__request" />
 
         <!-- Contact book and related activities -->

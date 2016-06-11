@@ -11,7 +11,7 @@ import android.view.View;
 import org.grassroot.android.R;
 import org.grassroot.android.interfaces.NetworkErrorDialogListener;
 import org.grassroot.android.services.NoConnectivityException;
-import org.grassroot.android.activities.GroupJoinActivity;
+import org.grassroot.android.activities.GroupSearchActivity;
 import org.grassroot.android.activities.GroupTasksActivity;
 import org.grassroot.android.activities.StartActivity;
 import org.grassroot.android.activities.ViewVoteActivity;
@@ -72,7 +72,7 @@ public class ErrorUtils {
                  if(activity instanceof ViewVoteActivity || activity instanceof GroupTasksActivity){
                      Snackbar.make(holder, R.string.Alert_Already_Responded, Snackbar.LENGTH_LONG).show();
                  }
-                else if(activity instanceof GroupJoinActivity){
+                else if(activity instanceof GroupSearchActivity){
                      Snackbar.make(holder,activity.getString(R.string.USER_ALREADY_PART),Snackbar.LENGTH_LONG);
                  }
                 break;

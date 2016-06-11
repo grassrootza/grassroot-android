@@ -33,7 +33,7 @@ android {
         minSdkVersion 14
         targetSdkVersion 23
         versionCode 1
-        versionName "1.0"
+        versionName "0.1"
     }
 
     buildTypes {
@@ -43,9 +43,19 @@ android {
         }
     }
 
+    productFlavors {
+        staging {
+            applicationId "org.grassroot.android.staging"
+            versionName "0.1-staging"
+        }
+        production {
+            applicationId "org.grassroot.android.production"
+            versionName "0.1-production"
+        }
+    }
+
     packagingOptions {
         exclude 'META-INF/services/javax.annotation.processing.Processor'
-
     }
 
     sourceSets {

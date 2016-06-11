@@ -16,7 +16,7 @@ import android.widget.TextView;
 
 import org.grassroot.android.R;
 import org.grassroot.android.activities.CreateGroupActivity;
-import org.grassroot.android.activities.GroupJoinActivity;
+import org.grassroot.android.activities.GroupSearchActivity;
 
 public class NewWelcomeFragment extends android.support.v4.app.Fragment {
 
@@ -100,7 +100,7 @@ public class NewWelcomeFragment extends android.support.v4.app.Fragment {
         return  new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent joingroup= new Intent(getActivity(), GroupJoinActivity.class);
+                Intent joingroup= new Intent(getActivity(), GroupSearchActivity.class);
                 startActivity(joingroup);
             }
         };

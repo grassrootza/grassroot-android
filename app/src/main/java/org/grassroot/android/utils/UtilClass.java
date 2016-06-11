@@ -6,10 +6,13 @@ package org.grassroot.android.utils;
 
 import android.animation.ValueAnimator;
 import android.telephony.PhoneNumberUtils;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.EditText;
 
+import org.grassroot.android.R;
 import org.grassroot.android.models.Member;
 
 import java.text.SimpleDateFormat;
@@ -84,7 +87,7 @@ public class UtilClass {
 
         // todo: might be able to do this much quicker if use Google overall libPhoneNumber, but whole lib for this is heavy
         final String normalized = PhoneNumberUtils.stripSeparators(phoneNumber);
-        Log.d(TAG, "inside contact list, normalized number : " + normalized);
+        Log.d(TAG, "checking number, normalized number : " + normalized);
         if(normalized.length() < 10){
             return false;
         }
@@ -110,6 +113,35 @@ public class UtilClass {
             }
         }
         return uids;
+    }
+
+    //getResources().getString(R.string.Cellphone_number_empty)
+    public boolean validatePhoneNumber(EditText input, String errorMessage) {
+        final String number = input.getText().toString();
+        if (TextUtils.isEmpty(number)) {
+            input.requestFocus();
+            input.setError(errorMessage);
+            return false;
+        } else {
+            if (number.length() != 10 && number.length() < 10) {
+                input.requestFocus();
+                input.setError(errorMessage);
+                return false;
+            } else {
+                if (Integer.parseInt(String.valueOf(number.charAt(0))) != 0) {
+                    input.requestFocus();
+                    input.setError(errorMessage);
+                    return false;
+                } else if (Integer.parseInt(String.valueOf(number.charAt(1))) == 0 ||
+                        Integer.parseInt(String.valueOf(number.charAt(1))) == 9) {
+                    input.requestFocus();
+                    input.setError(errorMessage);
+                    return false;
+                } else {
+                    return true;
+                }
+            }
+        }
     }
 
 }

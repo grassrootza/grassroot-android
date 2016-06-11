@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -12,6 +13,7 @@ import android.widget.Button;
 import android.widget.EditText;
 
 import org.grassroot.android.R;
+import org.grassroot.android.utils.UtilClass;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -23,7 +25,7 @@ import butterknife.OnClick;
 public class LoginScreenFragment extends Fragment {
 
     @BindView(R.id.et_mobile_login)
-    EditText et_mobile_login;
+    EditText etNumberInput;
 
     @BindView(R.id.bt_login)
     Button bt_login;
@@ -59,25 +61,21 @@ public class LoginScreenFragment extends Fragment {
         }
     }
 
-
-    @Override
-    public void onDetach() {
-        super.onDetach();
-    }
-
-
     @OnClick(R.id.bt_login)
-    public void onRegisterButtonClick(){
-        onLoginScreenInteractionListener.login(et_mobile_login);
+    public void onLoginButtonClick() {
+        final String number = etNumberInput.getText().toString();
+        if (TextUtils.isEmpty(number)) {
+            etNumberInput.requestFocus();
+            etNumberInput.setError(getResources().getString(R.string.Cellphone_number_empty));
+        } else if (!UtilClass.checkIfLocalNumber(number)) {
+            etNumberInput.requestFocus();
+            etNumberInput.setError(getResources().getString(R.string.Cellphone_number_invalid));
+        } else {
+            onLoginScreenInteractionListener.login(number);
+        }
     }
 
     public interface OnLoginScreenInteractionListener {
-
-        void login(EditText et_mobile_login);
-
+        void login(String mobileNumber);
     }
 }
-
-
-
-

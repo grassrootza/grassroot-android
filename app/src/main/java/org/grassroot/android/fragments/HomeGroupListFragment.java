@@ -34,7 +34,7 @@ import org.grassroot.android.services.NoConnectivityException;
 import org.grassroot.android.models.Group;
 import org.grassroot.android.models.GroupResponse;
 import org.grassroot.android.activities.CreateGroupActivity;
-import org.grassroot.android.activities.GroupJoinActivity;
+import org.grassroot.android.activities.GroupSearchActivity;
 import org.grassroot.android.ui.views.CustomItemAnimator;
 import org.grassroot.android.utils.Constant;
 import org.grassroot.android.utils.ErrorUtils;
@@ -419,7 +419,7 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment imple
     @OnClick(R.id.ic_fab_join_group)
     public void icFabJoinGroup() {
         menu1.close(true);
-        Intent icFabJoinGroup = new Intent(getActivity(), GroupJoinActivity.class);
+        Intent icFabJoinGroup = new Intent(getActivity(), GroupSearchActivity.class);
         startActivity(icFabJoinGroup);
     }
 

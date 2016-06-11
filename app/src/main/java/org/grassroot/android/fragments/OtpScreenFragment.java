@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -11,7 +12,9 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
+import org.grassroot.android.BuildConfig;
 import org.grassroot.android.R;
+import org.grassroot.android.utils.Constant;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -24,9 +27,8 @@ import butterknife.OnClick;
  */
 public class OtpScreenFragment extends Fragment {
 
-
     @BindView(R.id.et_otp)
-    public EditText et_otp;
+    EditText et_otp;
 
     @BindView(R.id.txt_resend)
     TextView txtResend;
@@ -34,25 +36,33 @@ public class OtpScreenFragment extends Fragment {
     @BindView(R.id.bt_submit_otp)
     Button bt_submit_otp;
 
+    private String purpose; // i.e., for login or for register
+
     private OnOtpScreenFragmentListener onOtpScreenFragmentListener;
 
-
-    public static OtpScreenFragment newInstance(String data){
+    public static OtpScreenFragment newInstance(String otpPassed, String purpose) {
         OtpScreenFragment otpScreenFragment = new OtpScreenFragment();
+        otpScreenFragment.checkBuildFlavorIntegrity(otpPassed);
         Bundle args = new Bundle();
-        args.putString("verification_code", data);
+        args.putString("verification_code", otpPassed);
+        args.putString("purpose", purpose);
         otpScreenFragment.setArguments(args);
-
         return otpScreenFragment;
     }
 
-
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-
+    public void setOtpDisplayed(String otpPassed) {
+        checkBuildFlavorIntegrity(otpPassed);
+        et_otp.setText(otpPassed);
     }
 
+    public void setPurpose(String purpose) {
+        this.purpose = purpose;
+    }
+
+    private void checkBuildFlavorIntegrity(String otpPassed) throws UnsupportedOperationException {
+        if (!TextUtils.isEmpty(otpPassed) && BuildConfig.FLAVOR.equals(Constant.PROD))
+            throw new UnsupportedOperationException("Error! Passing OTP to fragment in production");
+    }
 
     @Override
     public View onCreateView(LayoutInflater inflater,  ViewGroup container,  Bundle savedInstanceState) {
@@ -66,24 +76,26 @@ public class OtpScreenFragment extends Fragment {
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
-        Activity activity =(Activity)context;
-        try{
-            onOtpScreenFragmentListener = (OnOtpScreenFragmentListener)activity;
-
-        }catch (ClassCastException e){
-
+        try {
+            onOtpScreenFragmentListener = (OnOtpScreenFragmentListener) context;
+        } catch (ClassCastException e) {
+            throw new UnsupportedOperationException("Error! Activity must implement otp listener");
         }
     }
 
 
     @OnClick(R.id.bt_submit_otp)
     public void submitButtonClicked(){
-        onOtpScreenFragmentListener.onOtpSubmitButtonClick(et_otp);
+        if (TextUtils.isEmpty(et_otp.getText().toString())) {
+            et_otp.setError(getResources().getString(R.string.OTP_empty));
+        } else {
+            onOtpScreenFragmentListener.onOtpSubmitButtonClick(et_otp.getText().toString(), purpose);
+        }
     }
 
     @OnClick(R.id.txt_resend)
     public void textResendClicked(){
-        onOtpScreenFragmentListener.onTextResendClick();
+        onOtpScreenFragmentListener.onTextResendClick(purpose);
     }
 
     @Override
@@ -92,12 +104,7 @@ public class OtpScreenFragment extends Fragment {
     }
 
     public interface OnOtpScreenFragmentListener {
-
-        void onTextResendClick();
-
-        void onOtpSubmitButtonClick(EditText et_otp);
-
-
-
+        void onTextResendClick(String purpose);
+        void onOtpSubmitButtonClick(String otp, String purpose);
     }
 }

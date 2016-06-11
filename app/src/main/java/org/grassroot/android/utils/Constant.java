@@ -9,6 +9,9 @@ import java.text.SimpleDateFormat;
  */
 public class Constant {
 
+    public static final String STAGING = "staging";
+    public static final String PROD = "production";
+
     public static long shortDelay = 300L;
     public static long mediumDelay = 500L;
     public static long longDelay = 1000L;

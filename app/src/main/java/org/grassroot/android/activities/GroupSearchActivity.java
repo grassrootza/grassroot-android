@@ -50,9 +50,9 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class GroupJoinActivity extends PortraitActivity implements OnClickListener {
+public class GroupSearchActivity extends PortraitActivity implements OnClickListener {
 
-    private static final String TAG = GroupJoinActivity.class.getSimpleName();
+    private static final String TAG = GroupSearchActivity.class.getSimpleName();
 
     @BindView(R.id.toolbar)
     Toolbar toolbar;
@@ -77,7 +77,7 @@ public class GroupJoinActivity extends PortraitActivity implements OnClickListen
     private List<GroupSearchModel> joinrequestList;
 
     private boolean btn_close;
-    private Snackbar snackbar;
+
     private String uid;
 
     private ProgressDialog progressDialog;
@@ -86,14 +86,25 @@ public class GroupJoinActivity extends PortraitActivity implements OnClickListen
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Log.e(TAG, "activity created!");
         setContentView(R.layout.activity_join__request);
+        ButterKnife.bind(this);
+
         progressDialog = new ProgressDialog(this);
         progressDialog.setMessage(prgMessage);
-        ButterKnife.bind(this);
+        joinrequestList = new ArrayList<>();
+
         setUpToolbar();
-        init();
         setUpRecyclerView();
+    }
+
+    private void setUpToolbar() {
+        toolbar.setNavigationIcon(R.drawable.btn_back_wt);
+        toolbar.setNavigationOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                finish();
+            }
+        });
     }
 
     private void setUpRecyclerView() {
@@ -128,11 +139,6 @@ public class GroupJoinActivity extends PortraitActivity implements OnClickListen
         }));
     }
 
-
-    private void init() {
-        joinrequestList = new ArrayList<>();
-    }
-
     @OnTextChanged(R.id.et_searchbox)
     public void setSearchCross(CharSequence s) {
         if (s.length() > 0) {
@@ -148,7 +154,6 @@ public class GroupJoinActivity extends PortraitActivity implements OnClickListen
     public boolean setTextBlank(View v, MotionEvent event) {
         if (event.getAction() == MotionEvent.ACTION_UP) {
             if (event.getRawX() >= (et_searchbox.getRight() - et_searchbox.getTotalPaddingRight())) {
-                // your action here
                 if (btn_close) {
                     //   search();
                     et_searchbox.setText("");
@@ -162,12 +167,12 @@ public class GroupJoinActivity extends PortraitActivity implements OnClickListen
     @OnEditorAction(R.id.et_searchbox)
     public boolean takeAction(TextView v, int actionId, KeyEvent event) {
         if (actionId == EditorInfo.IME_ACTION_SEARCH || event.getKeyCode() == KeyEvent.KEYCODE_ENTER) {
-            Log.e(TAG, "action pressed!");
+
             InputMethodManager imm = (InputMethodManager) getApplicationContext().getSystemService(Context.INPUT_METHOD_SERVICE);
             imm.hideSoftInputFromWindow(getCurrentFocus().getWindowToken(), 0);
 
             if (et_searchbox.getText().toString().trim().isEmpty()) {
-                showSnackBar(getString(R.string.validate_search_box), "", Snackbar.LENGTH_SHORT);
+                ErrorUtils.showSnackBar(rlRoot, R.string.validate_search_box, Snackbar.LENGTH_SHORT);
             } else {
                 search();
             }
@@ -179,7 +184,7 @@ public class GroupJoinActivity extends PortraitActivity implements OnClickListen
 
     private void search() {
 
-        String searchTerm = et_searchbox.getText().toString().trim();
+        final String searchTerm = et_searchbox.getText().toString().trim();
         joinrequestList.clear();
         hideErrorLayout();
 
@@ -195,7 +200,7 @@ public class GroupJoinActivity extends PortraitActivity implements OnClickListen
                             joinrequestAdapter.addResults(joinrequestList);
                         } else {
                             showNoResultsErrorLayout();
-                            ErrorUtils.handleServerError(rlRoot, GroupJoinActivity.this, response);
+                            ErrorUtils.handleServerError(rlRoot, GroupSearchActivity.this, response);
                         }
                     }
 
@@ -203,7 +208,7 @@ public class GroupJoinActivity extends PortraitActivity implements OnClickListen
                     public void onFailure(Call<GroupSearchResponse> call, Throwable t) {
                         progressDialog.dismiss();
                         showNetworkErrorLayout();
-                        ErrorUtils.connectivityError(GroupJoinActivity.this, R.string.error_no_network, new NetworkErrorDialogListener() {
+                        ErrorUtils.connectivityError(GroupSearchActivity.this, R.string.error_no_network, new NetworkErrorDialogListener() {
                             @Override
                             public void retryClicked() {
                                 search();
@@ -236,14 +241,8 @@ public class GroupJoinActivity extends PortraitActivity implements OnClickListen
 
     }
 
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-
-    }
 
     private void sendJoinRequest() {
-        Log.e(TAG, "sendJoinRequest");
         progressDialog.show();
         String phoneNumber = PreferenceUtils.getuser_mobilenumber(this);
         String code = PreferenceUtils.getuser_token(this);
@@ -253,7 +252,7 @@ public class GroupJoinActivity extends PortraitActivity implements OnClickListen
                     public void onResponse(Call<GenericResponse> call, Response<GenericResponse> response) {
                         progressDialog.dismiss();
                         if (response.isSuccessful()) {
-                            AlertDialog.Builder builder = new AlertDialog.Builder(GroupJoinActivity.this);
+                            AlertDialog.Builder builder = new AlertDialog.Builder(GroupSearchActivity.this);
                             builder.setMessage(R.string.Title_Join_Request_Sent)
                                     .setPositiveButton(R.string.pp_OK, new DialogInterface.OnClickListener() {
                                         @Override
@@ -261,16 +260,19 @@ public class GroupJoinActivity extends PortraitActivity implements OnClickListen
                                             finish();
                                         }
                                     }).create().show();
-                            return;
+                        } else {
+                            if (response.body().getMessage().equals("USER_ALREADY_PART")) {
+                                ErrorUtils.showSnackBar(rlRoot, R.string.USER_ALREADY_PART, Snackbar.LENGTH_LONG);
+                            } else {
+                                ErrorUtils.handleServerError(rlRoot, GroupSearchActivity.this, response);
+                            }
                         }
-                        ErrorUtils.handleServerError(rlRoot, GroupJoinActivity.this, response);
-                        showSnackBar(getString(R.string.USER_ALREADY_PART), "", snackbar.LENGTH_LONG);
                     }
 
                     @Override
                     public void onFailure(Call<GenericResponse> call, Throwable t) {
                         progressDialog.dismiss();
-                        ErrorUtils.connectivityError(GroupJoinActivity.this, R.string.error_no_network, new NetworkErrorDialogListener() {
+                        ErrorUtils.connectivityError(GroupSearchActivity.this, R.string.error_no_network, new NetworkErrorDialogListener() {
                             @Override
                             public void retryClicked() {
                                 sendJoinRequest();
@@ -278,32 +280,6 @@ public class GroupJoinActivity extends PortraitActivity implements OnClickListen
                         });
                     }
                 });
-    }
-
-    private void setUpToolbar() {
-        toolbar.setNavigationIcon(R.drawable.btn_back_wt);
-        toolbar.setNavigationOnClickListener(new OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                finish();
-            }
-        });
-    }
-
-
-    private void showSnackBar(String message, String buttontext, int length) {
-        snackbar = Snackbar.make(rlRoot, message, length);
-        snackbar.setActionTextColor(Color.RED);
-
-        if (!buttontext.isEmpty()) {
-            snackbar.setAction(buttontext, new OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    sendJoinRequest();
-                }
-            });
-        }
-        snackbar.show();
     }
 
     @OnClick({R.id.im_no_internet, R.id.im_no_results, R.id.im_server_error})

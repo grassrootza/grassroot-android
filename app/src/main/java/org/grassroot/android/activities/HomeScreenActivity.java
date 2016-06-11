@@ -13,14 +13,10 @@ import org.grassroot.android.fragments.HomeGroupListFragment;
 import org.grassroot.android.fragments.NavigationDrawerFragment;
 import org.grassroot.android.fragments.NewTaskMenuFragment;
 import org.grassroot.android.fragments.WelcomeFragment;
-import org.grassroot.android.interfaces.AlertDialogListener;
-import org.grassroot.android.interfaces.NavigationConstants;
 import org.grassroot.android.models.Group;
-import org.grassroot.android.services.GcmRegistrationService;
 import org.grassroot.android.utils.Constant;
 import org.grassroot.android.utils.MenuUtils;
 import org.grassroot.android.utils.PreferenceUtils;
-import org.grassroot.android.utils.UtilClass;
 import org.greenrobot.eventbus.EventBus;
 
 import butterknife.BindView;

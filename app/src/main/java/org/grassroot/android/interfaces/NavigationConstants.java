@@ -11,6 +11,4 @@ public interface NavigationConstants {
     int HOME_NAV_NOTIFICATIONS = 2;
     int HOME_NAV_LOGOUT = 3;
 
-
-
 }

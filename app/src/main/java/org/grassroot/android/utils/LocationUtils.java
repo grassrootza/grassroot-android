@@ -2,6 +2,7 @@ package org.grassroot.android.utils;
 
 import android.Manifest;
 import android.app.Activity;
+import android.content.Context;
 import android.location.Location;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -32,18 +33,16 @@ public class LocationUtils implements GoogleApiClient.ConnectionCallbacks, Googl
 
     private static final String TAG = LocationUtils.class.getCanonicalName();
 
-    private Activity callingActivity;
+    private Context context;
     private GoogleApiClient googleApiClient;
     private LocationRequest locationRequest;
 
     private Location lastKnownLocation;
 
-
-
-    public LocationUtils(Activity activity) {
-        callingActivity = activity;
+    public LocationUtils(Context context) {
+        this.context = context;
         if (googleApiClient == null) {
-            googleApiClient = new GoogleApiClient.Builder(activity)
+            googleApiClient = new GoogleApiClient.Builder(context)
                     .addConnectionCallbacks(this)
                     .addOnConnectionFailedListener(this)
                     .addApi(LocationServices.API)
@@ -121,12 +120,12 @@ public class LocationUtils implements GoogleApiClient.ConnectionCallbacks, Googl
     }
 
     private boolean havePermission() {
-        return PermissionUtils.genericPermissionCheck(callingActivity, Manifest.permission.ACCESS_COARSE_LOCATION);
+        return PermissionUtils.genericPermissionCheck(context, Manifest.permission.ACCESS_COARSE_LOCATION);
     }
 
     private void storeUserLocation(double latitude, double longitude) {
-        String userNumber = PreferenceUtils.getuser_mobilenumber(callingActivity);
-        String userToken = PreferenceUtils.getuser_token(callingActivity);
+        String userNumber = PreferenceUtils.getuser_mobilenumber(context);
+        String userToken = PreferenceUtils.getuser_token(context);
 
         if (userNumber == null || userToken == null)
             throw new UnsupportedOperationException("Error! Environment not set up to do this");
