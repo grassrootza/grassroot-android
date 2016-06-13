@@ -1,5 +1,6 @@
 package org.grassroot.android.activities;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
@@ -38,15 +39,14 @@ public class ViewTaskActivity extends PortraitActivity {
         setContentView(R.layout.activity_view_task);
         ButterKnife.bind(this);
 
-        final Bundle extras = getIntent().getExtras();
 
-        if (extras == null) {
+        if (getIntent().getExtras() == null) {
             throw new UnsupportedOperationException("Error! View task activity started without arguments");
         }
 
-        taskUid = extras.getString(TaskConstants.TASK_UID_FIELD);
-        taskType = extras.getString(TaskConstants.TASK_TYPE_FIELD);
-        notificationUid = extras.getString(Constant.NOTIFICATION_UID);
+        taskUid = getIntent().getStringExtra(Constant.UID);
+        taskType = getIntent().getStringExtra(Constant.ENTITY_TYPE);
+        notificationUid = getIntent().getStringExtra(Constant.NOTIFICATION_UID);
 
         if (TextUtils.isEmpty(taskUid) || TextUtils.isEmpty(taskType)) {
             throw new UnsupportedOperationException("Error! View task activity started with empty type or UID");
@@ -61,6 +61,12 @@ public class ViewTaskActivity extends PortraitActivity {
         if (!TextUtils.isEmpty(notificationUid)) {
             processNotification();
         }
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        Log.e(TAG, "new intent called");
     }
 
     private void setUpToolbar() {

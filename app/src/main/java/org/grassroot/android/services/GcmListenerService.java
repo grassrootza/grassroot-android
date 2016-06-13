@@ -140,8 +140,10 @@ public class GcmListenerService extends com.google.android.gms.gcm.GcmListenerSe
         Log.d(TAG, "generateResultIntent called, with message bundle: " + msg.toString());
         Intent resultIntent = new Intent(this, ViewTaskActivity.class);
 
-        resultIntent.putExtra(TaskConstants.TASK_TYPE_FIELD, msg.getString(Constant.ENTITY_TYPE));
-        resultIntent.putExtra(TaskConstants.TASK_UID_FIELD, msg.getString(Constant.UID));
+        resultIntent.putExtra(Constant.ENTITY_TYPE, msg.getString(Constant.ENTITY_TYPE));
+        Log.e(TAG," entity_type" + msg.getString(Constant.ENTITY_TYPE));
+        resultIntent.putExtra(Constant.UID, msg.getString(Constant.UID));
+        Log.e(TAG, "uid_field "+msg.getString(Constant.UID));
         resultIntent.putExtra(Constant.NOTIFICATION_UID, msg.getString(Constant.NOTIFICATION_UID));
 
         PendingIntent resultPendingIntent = PendingIntent.getActivity
