@@ -65,7 +65,7 @@ public class GcmListenerService extends com.google.android.gms.gcm.GcmListenerSe
             mBuilder.setSmallIcon((Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP)
                     ? R.drawable.ic_notification_icon : R.drawable.app_icon);
             Notification notification = mBuilder
-                    .setTicker(msg.getString("title"))
+                    .setTicker(msg.getString(Constant.TITLE))
                     .setWhen(when)
                     .setAutoCancel(true)
                     .setContentTitle(msg.getString(Constant.TITLE))
