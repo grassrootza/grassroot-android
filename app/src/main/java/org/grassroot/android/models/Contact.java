@@ -12,7 +12,7 @@ import java.util.List;
 /**
  * Created by admin on 04-Apr-16.
  */
-public class Contact implements Parcelable {
+public class Contact implements Parcelable, Comparable {
 
     public String addedBy;
     public boolean isSelected;
@@ -25,12 +25,14 @@ public class Contact implements Parcelable {
     public Contact() {
     }
 
-    public Contact(String lookupKey,String name) {
+    public Contact(String lookupKey, String name) {
         this.lookupKey = lookupKey;
         this.name = name;
     }
 
-    public void setName(String name) { this.name = name; }
+    public void setName(String name) {
+        this.name = name;
+    }
 
     public String getNormalizedNumber() {
         return selectedNumber == null ? null : UtilClass.formatNumberToE164(selectedNumber);
@@ -121,5 +123,11 @@ public class Contact implements Parcelable {
                 ", numbers=" + numbers +
                 ", lookupKey=" + lookupKey +
                 '}';
+    }
+
+    @Override
+    public int compareTo(Object another) {
+        Contact contact = (Contact) another;
+        return this.name.toLowerCase().compareTo(contact.name.toLowerCase());
     }
 }

@@ -43,9 +43,9 @@ public class ViewTaskActivity extends PortraitActivity {
             throw new UnsupportedOperationException("Error! View task activity started without arguments");
         }
 
-        taskUid = getIntent().getStringExtra(Constant.UID);
-        taskType = getIntent().getStringExtra(Constant.ENTITY_TYPE);
-        notificationUid = getIntent().getStringExtra(Constant.NOTIFICATION_UID);
+        taskUid =  getIntent().getStringExtra(Constant.UID);
+        taskType =getIntent().getStringExtra(Constant.ENTITY_TYPE);
+        notificationUid = getIntent().getStringExtra(Constant.UID);
 
         if (TextUtils.isEmpty(taskUid) || TextUtils.isEmpty(taskType)) {
             throw new UnsupportedOperationException("Error! View task activity started with empty type or UID");
@@ -81,7 +81,9 @@ public class ViewTaskActivity extends PortraitActivity {
         int notificationCount = PreferenceUtils.getNotificationCounter(this);
         Log.e(TAG, "notification count currently: " + notificationCount);
         NotificationUpdateService.updateNotificationStatus(this, notificationUid);
-        PreferenceUtils.setNotificationCounter(this, --notificationCount);
+        if (notificationCount > 0) {
+            PreferenceUtils.setNotificationCounter(this, --notificationCount);
+        }
         EventBus.getDefault().post(new NotificationEvent(--notificationCount));
     }
 

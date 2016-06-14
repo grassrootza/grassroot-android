@@ -25,6 +25,7 @@ import org.grassroot.android.services.GcmListenerService;
 import org.grassroot.android.services.GrassrootRestService;
 import org.grassroot.android.services.NotificationUpdateService;
 import org.grassroot.android.ui.views.RecyclerTouchListener;
+import org.grassroot.android.utils.Constant;
 import org.grassroot.android.utils.ErrorUtils;
 import org.grassroot.android.utils.PreferenceUtils;
 import org.greenrobot.eventbus.EventBus;
@@ -120,8 +121,8 @@ public class NotificationCenter extends PortraitActivity {
                         Log.d(TAG, "clicked on item" + position + ", with message: " + notification.getMessage());
 
                         Intent openactivity = new Intent(NotificationCenter.this, ViewTaskActivity.class);
-                        openactivity.putExtra(TaskConstants.TASK_UID_FIELD, notification.getEntityUid());
-                        openactivity.putExtra(TaskConstants.TASK_TYPE_FIELD, notification.getEntityType());
+                        openactivity.putExtra(Constant.UID, notification.getEntityUid());
+                        openactivity.putExtra(Constant.ENTITY_TYPE, notification.getEntityType());
                         startActivity(openactivity);
                     }
 
@@ -219,6 +220,7 @@ public class NotificationCenter extends PortraitActivity {
             notification.setIsRead();
             notificationAdapter.notifyDataSetChanged();
             int notificationCount = PreferenceUtils.getNotificationCounter(this);
+            Log.e(TAG, "notification count " + notificationCount);
             NotificationUpdateService.updateNotificationStatus(this, uid);
             if(notificationCount >0){
             PreferenceUtils.setNotificationCounter(this, --notificationCount);
