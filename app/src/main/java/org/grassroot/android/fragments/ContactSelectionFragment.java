@@ -32,6 +32,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -164,7 +165,7 @@ public class ContactSelectionFragment extends Fragment implements
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
         assembleContactList(data);
         adapter.setContactsToDisplay(retrievedContacts);
-        progressDialog.hide();
+        progressDialog.dismiss();
     }
 
     @Override
@@ -180,6 +181,7 @@ public class ContactSelectionFragment extends Fragment implements
             throw new UnsupportedOperationException("Error! Null or closed cursor handed to contact list assembler");
         }
 
+        Set<Contact> contacts = new TreeSet<>();
         if (retrievedContacts == null) {
             retrievedContacts = new ArrayList<>();
         } else {
@@ -212,9 +214,10 @@ public class ContactSelectionFragment extends Fragment implements
                         final Contact contactToAdd = constructContact(contactHolder, nameIndex, lookupKey[0], thisPhoneList,
                                 filteringActive);
                         if (contactToAdd != null) {
-                            retrievedContacts.add(contactToAdd);
+                            contacts.add(contactToAdd);
                         }
                     }
+
                     thisPhoneList.close(); // cursor is not managed by a loader, so make sure to close
                 }
             }
@@ -222,6 +225,8 @@ public class ContactSelectionFragment extends Fragment implements
             contactHolder.moveToPosition(-1); // reset, in case cursor is reused via stack management
         }
 
+        //todo not the most effecient and elegant way to do this
+        retrievedContacts.addAll(contacts);
         Log.d(TAG, String.format("Processed %d contacts, resulting in final list of %d entities, in %d msecs",
                 contactHolder.getCount(), retrievedContacts.size(), SystemClock.currentThreadTimeMillis() - startTime));
 

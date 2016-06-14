@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.util.Log;
 
 import org.grassroot.android.models.GenericResponse;
+import org.grassroot.android.utils.Constant;
 import org.grassroot.android.utils.PreferenceUtils;
 
 import retrofit2.Call;
@@ -29,7 +30,7 @@ public class NotificationUpdateService extends IntentService {
     @Override
     protected void onHandleIntent(Intent intent) {
 
-        String uid = intent.getStringExtra("uid");
+        String uid = intent.getStringExtra(Constant.UID);
         update(uid);
     }
 
@@ -45,7 +46,7 @@ public class NotificationUpdateService extends IntentService {
                         if (response.isSuccessful()) {
                             Log.e(TAG, "updated notification with uid " + uid + "to read status");
                         }
-                        Log.e(TAG, response.body().toString());
+
                     }
 
                     @Override
@@ -58,7 +59,7 @@ public class NotificationUpdateService extends IntentService {
     public static void updateNotificationStatus(Context context, String uid){
         Log.e(TAG, "starting notification update service");
         Intent intent = new Intent(context,NotificationUpdateService.class);
-        intent.putExtra("uid", uid);
+        intent.putExtra(Constant.UID, uid);
         context.startService(intent);
 
     }

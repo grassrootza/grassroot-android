@@ -26,6 +26,7 @@ import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import butterknife.OnClick;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -166,6 +167,8 @@ public class MemberListFragment extends Fragment {
         return viewToReturn;
     }
 
+
+
     private void setUpRecyclerView() {
         memberListRecyclerView.setLayoutManager(new LinearLayoutManager(this.getContext()));
         memberListRecyclerView.setAdapter(memberListAdapter);
@@ -237,7 +240,15 @@ public class MemberListFragment extends Fragment {
                     public void onResponse(Call<MemberList> call, Response<MemberList> response) {
                         if (response.isSuccessful()) {
                             final List<Member> membersReturned = response.body().getMembers();
-                            memberListAdapter.addMembers(membersReturned);
+                            if(memberListAdapter.getMembers().isEmpty()) {
+                                memberListAdapter.addMembers(membersReturned);
+                            }
+                            else{
+                                for(Member member:memberListAdapter.getMembers()){
+                                    membersReturned.remove(member);
+                                }
+                                memberListAdapter.addMembers(membersReturned);
+                            }
                             mListener.onMemberListPopulated(membersReturned);
                         } else {
                             // todo: handle error, via a dialog box
