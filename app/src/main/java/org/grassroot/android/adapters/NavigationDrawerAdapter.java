@@ -17,11 +17,8 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import org.grassroot.android.R;
-import org.grassroot.android.events.NotificationEvent;
 import org.grassroot.android.models.NavDrawerItem;
 import org.grassroot.android.utils.PreferenceUtils;
-import org.greenrobot.eventbus.EventBus;
-import org.greenrobot.eventbus.Subscribe;
 
 import java.util.ArrayList;
 
@@ -70,7 +67,7 @@ public class NavigationDrawerAdapter extends RecyclerView.Adapter<NavigationDraw
 
         if (myDrawerModel.getTitle().equalsIgnoreCase(mContext.getString(R.string.Notifications))) {
             holder.txtTitleCounter.setVisibility(View.VISIBLE);
-            int notificationcount = PreferenceUtils.getIsNotificationcounter(mContext);
+            int notificationcount = PreferenceUtils.getNotificationCounter(mContext);
             Log.e(TAG, "notificationcount is " + notificationcount);
             holder.txtTitleCounter.setText("" + notificationcount);
 

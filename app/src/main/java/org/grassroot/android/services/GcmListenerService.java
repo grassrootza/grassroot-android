@@ -18,12 +18,16 @@ import android.util.Log;
 import org.grassroot.android.R;
 import org.grassroot.android.activities.ViewTaskActivity;
 import org.grassroot.android.events.NotificationEvent;
-import org.grassroot.android.interfaces.TaskConstants;
+import org.grassroot.android.models.GenericResponse;
 import org.grassroot.android.utils.Constant;
 import org.grassroot.android.utils.PreferenceUtils;
 import org.greenrobot.eventbus.EventBus;
 
 import java.util.List;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 /**
  * Created by paballo on 2016/05/09.
@@ -37,7 +41,7 @@ public class GcmListenerService extends com.google.android.gms.gcm.GcmListenerSe
     public void onMessageReceived(String from, Bundle data) {
         Log.e(TAG, "message received, from : " + from);
         incrementNotificationCounter();
-        sendNotification(data);
+        relayNotification(data);
     }
 
     @Override
@@ -52,13 +56,13 @@ public class GcmListenerService extends com.google.android.gms.gcm.GcmListenerSe
         Log.d(TAG, error);
     }
 
-    private void sendNotification(Bundle msg) {
+    private void relayNotification(Bundle msg) {
 
         Log.e(TAG, "Received a push notification from server, looks like: + " + msg.toString());
         PendingIntent resultPendingIntent = generateResultIntent(msg);
         long when = System.currentTimeMillis();
-        NotificationManager mNotificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
 
+        NotificationManager mNotificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
         if (Build.VERSION.SDK_INT >= 21) {
             NotificationCompat.InboxStyle inboxStyle = new NotificationCompat.InboxStyle();
             NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(this);
@@ -96,6 +100,24 @@ public class GcmListenerService extends com.google.android.gms.gcm.GcmListenerSe
             mNotifyBuilder.setDefaults(defaults);
             mNotificationManager.notify(msg.getString(Constant.UID),(int)System.currentTimeMillis(), notification);
         }
+
+        GrassrootRestService.getInstance().getApi().updateRead(PreferenceUtils.getUserPhoneNumber(getApplicationContext()),
+                PreferenceUtils.getAuthToken(getApplicationContext()), msg.getString(Constant.UID))
+                .enqueue(new Callback<GenericResponse>() {
+                    @Override
+                    public void onResponse(Call<GenericResponse> call, Response<GenericResponse> response) {
+                        if (response.isSuccessful()) {
+                            Log.d(TAG, "Set message as read!");
+                        } else {
+                            Log.d(TAG, "Failed: " + response.errorBody());
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(Call<GenericResponse> call, Throwable t) {
+                        Log.e(TAG, "Something went wrong updating it:");
+                    }
+                });
     }
 
     public boolean isAppIsInBackground(Context context) {
@@ -125,14 +147,14 @@ public class GcmListenerService extends com.google.android.gms.gcm.GcmListenerSe
 
 
     public void incrementNotificationCounter() {
-        final int  currentCount = PreferenceUtils.getIsNotificationcounter(this);
+        final int  currentCount = PreferenceUtils.getNotificationCounter(this);
         new Handler(getMainLooper()).post(new Runnable() {
             @Override
             public void run() {
                 EventBus.getDefault().post(new NotificationEvent(currentCount +1));
             }
         });
-        PreferenceUtils.setIsNotificationcounter(this, currentCount+1);
+        PreferenceUtils.setNotificationCounter(this, currentCount+1);
     }
 
 

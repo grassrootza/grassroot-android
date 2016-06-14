@@ -133,8 +133,8 @@ public class RemoveMembersActivity extends PortraitActivity implements MemberLis
     }
 
     private void saveRemoval() {
-        final String phoneNumber = PreferenceUtils.getuser_mobilenumber(this);
-        final String code = PreferenceUtils.getuser_token(this);
+        final String phoneNumber = PreferenceUtils.getUserPhoneNumber(this);
+        final String code = PreferenceUtils.getAuthToken(this);
         GrassrootRestService.getInstance().getApi().removeGroupMembers(phoneNumber, code, groupUid, membersToRemove)
                 .enqueue(new Callback<GenericResponse>() {
                     @Override

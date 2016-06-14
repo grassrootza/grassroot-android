@@ -229,8 +229,8 @@ public class CreateGroupActivity extends PortraitActivity implements
     private void createGroup(){
 
         showProgress();
-        String mobileNumber = PreferenceUtils.getuser_mobilenumber(CreateGroupActivity.this);
-        String code = PreferenceUtils.getuser_token(CreateGroupActivity.this);
+        String mobileNumber = PreferenceUtils.getUserPhoneNumber(CreateGroupActivity.this);
+        String code = PreferenceUtils.getAuthToken(CreateGroupActivity.this);
         String groupName = et_groupname.getText().toString().trim().replaceAll(Constant.regexAlphaNumeric, "");
         String groupDescription = et_group_description.getText().toString().trim();
 
@@ -243,7 +243,7 @@ public class CreateGroupActivity extends PortraitActivity implements
                     public void onResponse(Call<GroupResponse> call, Response<GroupResponse> response) {
                         if (response.isSuccessful()) {
                             hideProgress();
-                            PreferenceUtils.setisHasgroup(getApplicationContext(), true);
+                            PreferenceUtils.setUserHasGroups(getApplicationContext(), true);
                             Intent resultIntent = new Intent();
                             Log.e(TAG, "here's the response body: " + response.body().toString());
                             resultIntent.putExtra(GroupConstants.OBJECT_FIELD, response.body().getGroups().get(0));

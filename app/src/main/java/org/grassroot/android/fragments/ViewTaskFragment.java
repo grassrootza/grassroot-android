@@ -141,8 +141,8 @@ public class ViewTaskFragment extends Fragment {
                 throw new UnsupportedOperationException("Error! View task fragment with type or UID missing");
             }
 
-            phoneNumber = PreferenceUtils.getuser_mobilenumber(getContext());
-            code = PreferenceUtils.getuser_token(getContext());
+            phoneNumber = PreferenceUtils.getUserPhoneNumber(getContext());
+            code = PreferenceUtils.getAuthToken(getContext());
             canViewResponses = false;
         } else {
             throw new UnsupportedOperationException("Error! View task fragment initiated without arguments");

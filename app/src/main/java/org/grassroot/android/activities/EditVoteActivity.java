@@ -200,8 +200,8 @@ public class EditVoteActivity extends PortraitActivity {
 
     private void updateVoteDetails() {
 
-        String phoneNumber = PreferenceUtils.getuser_mobilenumber(this);
-        String code = PreferenceUtils.getuser_token(this);
+        String phoneNumber = PreferenceUtils.getUserPhoneNumber(this);
+        String code = PreferenceUtils.getAuthToken(this);
         description = et_description.getText().toString();
 
       //  showProgress();

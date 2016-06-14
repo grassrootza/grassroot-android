@@ -9,7 +9,6 @@ import android.util.Log;
 import org.grassroot.android.R;
 import org.grassroot.android.events.NotificationEvent;
 import org.grassroot.android.fragments.ViewTaskFragment;
-import org.grassroot.android.interfaces.TaskConstants;
 import org.grassroot.android.services.NotificationUpdateService;
 import org.grassroot.android.utils.Constant;
 import org.grassroot.android.utils.PreferenceUtils;
@@ -79,10 +78,10 @@ public class ViewTaskActivity extends PortraitActivity {
     }
 
     private void processNotification() {
-        int notificationCount = PreferenceUtils.getIsNotificationcounter(this);
+        int notificationCount = PreferenceUtils.getNotificationCounter(this);
         Log.e(TAG, "notification count currently: " + notificationCount);
         NotificationUpdateService.updateNotificationStatus(this, notificationUid);
-        PreferenceUtils.setIsNotificationcounter(this, --notificationCount);
+        PreferenceUtils.setNotificationCounter(this, --notificationCount);
         EventBus.getDefault().post(new NotificationEvent(--notificationCount));
     }
 

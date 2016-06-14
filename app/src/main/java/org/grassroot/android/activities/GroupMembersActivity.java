@@ -79,10 +79,17 @@ public class GroupMembersActivity extends PortraitActivity implements MemberList
             throw new UnsupportedOperationException("Group member activity attempted without necessary arguments");
         }
 
+        group = extras.getParcelable(GroupConstants.OBJECT_FIELD);
+        if (group == null) {
+            groupUid = getIntent().getStringExtra(GroupConstants.UID_FIELD);
+            groupName = getIntent().getStringExtra(GroupConstants.NAME_FIELD);
+        } else {
+            groupUid = group.getGroupUid();
+            groupName = group.getGroupName();
+        }
 
-        groupUid = getIntent().getStringExtra(Constant.GROUPUID_FIELD);
         if (groupUid == null) {
-            throw new UnsupportedOperationException("Error! Group member activity called without groupUid");
+            throw new UnsupportedOperationException("Error! Group member activity called without group details");
         }
 
         parentTag = extras.getString(Constant.PARENT_TAG_FIELD);

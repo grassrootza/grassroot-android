@@ -1,7 +1,6 @@
 package org.grassroot.android.utils;
 
 import android.Manifest;
-import android.app.Activity;
 import android.content.Context;
 import android.location.Location;
 import android.os.Bundle;
@@ -124,8 +123,8 @@ public class LocationUtils implements GoogleApiClient.ConnectionCallbacks, Googl
     }
 
     private void storeUserLocation(double latitude, double longitude) {
-        String userNumber = PreferenceUtils.getuser_mobilenumber(context);
-        String userToken = PreferenceUtils.getuser_token(context);
+        String userNumber = PreferenceUtils.getUserPhoneNumber(context);
+        String userToken = PreferenceUtils.getAuthToken(context);
 
         if (userNumber == null || userToken == null)
             throw new UnsupportedOperationException("Error! Environment not set up to do this");

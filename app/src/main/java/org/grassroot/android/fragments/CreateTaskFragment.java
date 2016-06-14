@@ -246,8 +246,8 @@ public class CreateTaskFragment extends Fragment {
     public Call<TaskResponse> setUpApiCall() {
 
 
-        final String phoneNumber = PreferenceUtils.getuser_mobilenumber(getContext());
-        final String code = PreferenceUtils.getuser_token(getContext());
+        final String phoneNumber = PreferenceUtils.getUserPhoneNumber(getContext());
+        final String code = PreferenceUtils.getAuthToken(getContext());
         final String title = etTitleInput.getText().toString();
         final String description = etDescriptionInput.getText().toString();
         final String dateTimeISO = Constant.isoDateTimeSDF.format(selectedDateTime);

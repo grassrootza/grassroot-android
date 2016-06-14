@@ -67,8 +67,8 @@ public class ProfileSettingsActivity extends PortraitActivity implements
 
     private void getProfileSettings() {
 
-        final String phoneNumber = PreferenceUtils.getuser_mobilenumber(this);
-        final String code = PreferenceUtils.getuser_token(this);
+        final String phoneNumber = PreferenceUtils.getUserPhoneNumber(this);
+        final String code = PreferenceUtils.getAuthToken(this);
         GrassrootRestService.getInstance().getApi().getUserProfile(phoneNumber,code).enqueue(new Callback<ProfileResponse>() {
             @Override
             public void onResponse(Call<ProfileResponse> call, Response<ProfileResponse> response) {
@@ -92,8 +92,8 @@ public class ProfileSettingsActivity extends PortraitActivity implements
 
         final ProgressDialog progressDialog = new ProgressDialog(this);
         progressDialog.setMessage(getString(R.string.wait_message));
-        final String phoneNumber = PreferenceUtils.getuser_mobilenumber(this);
-        final String code = PreferenceUtils.getuser_token(this);
+        final String phoneNumber = PreferenceUtils.getUserPhoneNumber(this);
+        final String code = PreferenceUtils.getAuthToken(this);
         progressDialog.show();
 
         GrassrootRestService.getInstance().getApi().updateProfile(phoneNumber, code, username, language, alertPreference).enqueue(new Callback<GenericResponse>() {
@@ -101,7 +101,7 @@ public class ProfileSettingsActivity extends PortraitActivity implements
             public void onResponse(Call<GenericResponse> call, Response<GenericResponse> response) {
                 progressDialog.dismiss();
                 if (response.isSuccessful()) {
-                    PreferenceUtils.setuser_name(ProfileSettingsActivity.this, username);
+                    PreferenceUtils.setUserName(ProfileSettingsActivity.this, username);
                     PreferenceUtils.setPrefLanguage(ProfileSettingsActivity.this, language);
                     PreferenceUtils.setPrefAlert(ProfileSettingsActivity.this, alertPreference);
                     Toast.makeText(ProfileSettingsActivity.this, R.string.profile_updated, Toast.LENGTH_SHORT).show();
@@ -120,7 +120,7 @@ public class ProfileSettingsActivity extends PortraitActivity implements
 
     private void setAllViews() {
         txtPpUsername.setText(username);
-        txtPpNumber.setText(PreferenceUtils.getuser_mobilenumber(ProfileSettingsActivity.this));
+        txtPpNumber.setText(PreferenceUtils.getUserPhoneNumber(ProfileSettingsActivity.this));
         mRecyclerView();
         btnupdate.setVisibility(View.VISIBLE);
     }
@@ -156,7 +156,7 @@ public class ProfileSettingsActivity extends PortraitActivity implements
 
                 switch (position) {
                     case 0://UpdateName
-                        final String currentName = PreferenceUtils.getuser_name(getApplicationContext());
+                        final String currentName = PreferenceUtils.getUserName(getApplicationContext());
                         EditTextDialogFragment.newInstance(R.string.pp_name_dialog, currentName, ProfileSettingsActivity.this)
                                 .show(getSupportFragmentManager(), "displayname");
                         break;

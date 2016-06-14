@@ -225,8 +225,8 @@ public class MemberListFragment extends Fragment {
         if (groupUid == null)
             throw new UnsupportedOperationException("Cannot retrieve group members from null group uid");
 
-        String userPhoneNumber = PreferenceUtils.getuser_mobilenumber(this.getContext());
-        String userSessionCode = PreferenceUtils.getuser_token(this.getContext());
+        String userPhoneNumber = PreferenceUtils.getUserPhoneNumber(this.getContext());
+        String userSessionCode = PreferenceUtils.getAuthToken(this.getContext());
 
         Log.d(TAG, "inside MemberListFragment, retrieving group members for uid = " + groupUid);
 

@@ -3,15 +3,12 @@ package org.grassroot.android.activities;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
-import android.content.Intent;
-import android.graphics.Color;
 import android.os.Bundle;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.View;
@@ -244,8 +241,8 @@ public class GroupSearchActivity extends PortraitActivity implements OnClickList
 
     private void sendJoinRequest() {
         progressDialog.show();
-        String phoneNumber = PreferenceUtils.getuser_mobilenumber(this);
-        String code = PreferenceUtils.getuser_token(this);
+        String phoneNumber = PreferenceUtils.getUserPhoneNumber(this);
+        String code = PreferenceUtils.getAuthToken(this);
         GrassrootRestService.getInstance().getApi().groupJoinRequest(phoneNumber, code, uid)
                 .enqueue(new Callback<GenericResponse>() {
                     @Override

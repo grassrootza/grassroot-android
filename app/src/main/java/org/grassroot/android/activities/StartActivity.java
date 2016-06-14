@@ -8,7 +8,6 @@ import android.os.Handler;
 import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
-import android.text.TextUtils;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.View;
@@ -21,29 +20,20 @@ import android.widget.TextView;
 
 import org.grassroot.android.BuildConfig;
 import org.grassroot.android.R;
-import org.grassroot.android.events.NotificationEvent;
 import org.grassroot.android.fragments.HomeScreenViewFragment;
 import org.grassroot.android.fragments.LoginScreenFragment;
 import org.grassroot.android.fragments.OtpScreenFragment;
 import org.grassroot.android.fragments.RegisterScreenFragment;
-import org.grassroot.android.fragments.ViewTaskFragment;
-import org.grassroot.android.interfaces.NavigationConstants;
 import org.grassroot.android.interfaces.NotificationConstants;
-import org.grassroot.android.interfaces.TaskConstants;
 import org.grassroot.android.models.GenericResponse;
 import org.grassroot.android.models.Token;
 import org.grassroot.android.models.TokenResponse;
 import org.grassroot.android.services.GcmRegistrationService;
 import org.grassroot.android.services.GrassrootRestService;
-import org.grassroot.android.services.NotificationUpdateService;
 import org.grassroot.android.utils.Constant;
 import org.grassroot.android.utils.ErrorUtils;
 import org.grassroot.android.utils.LocationUtils;
-import org.grassroot.android.utils.NetworkUtils;
 import org.grassroot.android.utils.PreferenceUtils;
-import org.greenrobot.eventbus.EventBus;
-
-import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -103,7 +93,7 @@ public class StartActivity extends PortraitActivity implements HomeScreenViewFra
     @Override
     protected void onCreate(Bundle bundle) {
         super.onCreate(bundle);
-        if (PreferenceUtils.getisLoggedIn(this)) {
+        if (PreferenceUtils.getLoggedInStatus(this)) {
             userIsLoggedIn();
         } else {
             userIsNotLoggedIn();
@@ -241,12 +231,11 @@ public class StartActivity extends PortraitActivity implements HomeScreenViewFra
                         if (response.isSuccessful()) {
                             Token token = response.body().getToken();
 
-                            PreferenceUtils.setuser_token(StartActivity.this, token.getCode());
-                            PreferenceUtils.setuser_mobilenumber(StartActivity.this, mobileNumber);
-                            PreferenceUtils.setisLoggedIn(StartActivity.this, true);
-                            PreferenceUtils.setuser_phonetoken(StartActivity.this, mobileNumber + "/" + token.getCode());
+                            PreferenceUtils.setAuthToken(StartActivity.this, token.getCode());
+                            PreferenceUtils.setUserPhoneNumber(StartActivity.this, mobileNumber);
+                            PreferenceUtils.setLoggedInStatus(StartActivity.this, true);
 
-                            Log.d(TAG, "getPREF_Phone_Token is " + PreferenceUtils.getPREF_Phone_Token(StartActivity.this));
+                            Log.d(TAG, "token is " + mobileNumber + "/" + token.getCode());
 
                             registerOrRefreshGCM(mobileNumber);
 
@@ -330,13 +319,12 @@ public class StartActivity extends PortraitActivity implements HomeScreenViewFra
 
                             Token token = response.body().getToken();
 
-                            PreferenceUtils.setuser_token(StartActivity.this, token.getCode());
-                            PreferenceUtils.setuser_mobilenumber(StartActivity.this, mobileNumber);
+                            PreferenceUtils.setAuthToken(StartActivity.this, token.getCode());
+                            PreferenceUtils.setUserPhoneNumber(StartActivity.this, mobileNumber);
 
-                            PreferenceUtils.setisLoggedIn(StartActivity.this, true);
-                            PreferenceUtils.setuser_phonetoken(StartActivity.this, mobileNumber + "/" + token.getCode());
+                            PreferenceUtils.setLoggedInStatus(StartActivity.this, true);
 
-                            Log.i(TAG, "getPREF_Phone_Token is " + PreferenceUtils.getPREF_Phone_Token(StartActivity.this));
+                            Log.i(TAG, "token is " + mobileNumber + "/" + token.getCode());
 
                             Boolean hasGroups = response.body().getHasGroups();
                             String displayname = response.body().getDisplayName();
@@ -344,8 +332,8 @@ public class StartActivity extends PortraitActivity implements HomeScreenViewFra
                             registerOrRefreshGCM(mobileNumber);
 
                             if (hasGroups) {
-                                PreferenceUtils.setisHasgroup(StartActivity.this, true);
-                                PreferenceUtils.setuser_name(StartActivity.this, displayname);
+                                PreferenceUtils.setUserHasGroups(StartActivity.this, true);
+                                PreferenceUtils.setUserName(StartActivity.this, displayname);
                                 Intent intent = new Intent(StartActivity.this, HomeScreenActivity.class);
                                 startActivity(intent);
                                 finish();

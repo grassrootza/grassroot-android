@@ -46,7 +46,7 @@ public class HomeScreenActivity extends PortraitActivity implements NavigationDr
     }
 
     private void setUpHomeFragment() {
-        mainFragment = PreferenceUtils.getisHasgroup(this) ? new HomeGroupListFragment() : new WelcomeFragment();
+        mainFragment = PreferenceUtils.userHasGroups(this) ? new HomeGroupListFragment() : new WelcomeFragment();
         getSupportFragmentManager().beginTransaction()
                 .replace(R.id.fragment_container, mainFragment)
                 .commit();

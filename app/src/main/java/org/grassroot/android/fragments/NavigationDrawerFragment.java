@@ -95,7 +95,7 @@ public class NavigationDrawerFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_navigation_drawer, container, false);
         ButterKnife.bind(this, view);
 
-        displayName.setText(PreferenceUtils.getuser_name(getActivity()));
+        displayName.setText(PreferenceUtils.getUserName(getActivity()));
         txtVersion.setText("v " + BuildConfig.VERSION_NAME);
 
         drawerAdapter = new NavigationDrawerAdapter(getActivity(),getData());
@@ -182,8 +182,8 @@ public class NavigationDrawerFragment extends Fragment {
         final Context context = getActivity().getApplicationContext();
         Intent gcmUnregister = new Intent(getActivity(), GcmRegistrationService.class);
         gcmUnregister.putExtra(NotificationConstants.ACTION, NotificationConstants.GCM_UNREGISTER);
-        gcmUnregister.putExtra(NotificationConstants.PHONE_NUMBER, PreferenceUtils.getuser_mobilenumber(context));
-        gcmUnregister.putExtra(Constant.USER_TOKEN, PreferenceUtils.getuser_token(context));
+        gcmUnregister.putExtra(NotificationConstants.PHONE_NUMBER, PreferenceUtils.getUserPhoneNumber(context));
+        gcmUnregister.putExtra(Constant.USER_TOKEN, PreferenceUtils.getAuthToken(context));
         getActivity().startService(gcmUnregister);
     }
 

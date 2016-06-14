@@ -85,8 +85,8 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
             groupUid = args.getString(GroupConstants.UID_FIELD);
         }
 
-        phoneNumber = PreferenceUtils.getuser_mobilenumber(getActivity());
-        code = PreferenceUtils.getuser_token(getActivity());
+        phoneNumber = PreferenceUtils.getUserPhoneNumber(getActivity());
+        code = PreferenceUtils.getAuthToken(getActivity());
         filterFlags = new HashMap<>();
     }
 

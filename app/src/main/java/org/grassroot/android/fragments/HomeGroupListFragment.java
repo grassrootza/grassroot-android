@@ -151,8 +151,8 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment imple
         ivGhpSort.setEnabled(false);
         ivGhpSearch.setEnabled(false);
 
-        mobileNumber = PreferenceUtils.getuser_mobilenumber(getActivity());
-        userCode = PreferenceUtils.getuser_token(getActivity());
+        mobileNumber = PreferenceUtils.getUserPhoneNumber(getActivity());
+        userCode = PreferenceUtils.getAuthToken(getActivity());
 
         menu1.setOnMenuToggleListener(new FloatingActionMenu.OnMenuToggleListener() {
             @Override
@@ -267,8 +267,8 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment imple
 
         Group groupUpdated = userGroups.get(position);
         if (groupUpdated.getGroupUid().equals(groupUid)) {
-            String mobileNumber = PreferenceUtils.getuser_mobilenumber(getContext());
-            String code = PreferenceUtils.getuser_token(getContext());
+            String mobileNumber = PreferenceUtils.getUserPhoneNumber(getContext());
+            String code = PreferenceUtils.getAuthToken(getContext());
             GrassrootRestService.getInstance().getApi().getSingleGroup(mobileNumber, code, groupUid)
                     .enqueue(new Callback<GroupResponse>() {
                         @Override

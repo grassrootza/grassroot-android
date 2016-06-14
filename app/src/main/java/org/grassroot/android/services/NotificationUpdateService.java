@@ -35,8 +35,8 @@ public class NotificationUpdateService extends IntentService {
 
     private void update(final String uid) {
 
-        String phoneNumber = PreferenceUtils.getuser_mobilenumber(this);
-        String code = PreferenceUtils.getuser_token(this);
+        String phoneNumber = PreferenceUtils.getUserPhoneNumber(this);
+        String code = PreferenceUtils.getAuthToken(this);
 
         GrassrootRestService.getInstance().getApi().updateRead(phoneNumber, code, uid).
                 enqueue(new Callback<GenericResponse>() {

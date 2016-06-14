@@ -164,8 +164,8 @@ public class NotificationCenter extends PortraitActivity {
     }
 
     private void getNotifications(Integer page, Integer size) {
-        String phoneNumber = PreferenceUtils.getuser_mobilenumber(this);
-        String code = PreferenceUtils.getuser_token(this);
+        String phoneNumber = PreferenceUtils.getUserPhoneNumber(this);
+        String code = PreferenceUtils.getAuthToken(this);
         progressDialog = new ProgressDialog(this);
         progressDialog.setMessage(getString(R.string.prg_message));
         progressDialog.show();
@@ -218,10 +218,10 @@ public class NotificationCenter extends PortraitActivity {
             String uid = notification.getUid();
             notification.setIsRead();
             notificationAdapter.notifyDataSetChanged();
-            int notificationCount = PreferenceUtils.getIsNotificationcounter(this);
+            int notificationCount = PreferenceUtils.getNotificationCounter(this);
             NotificationUpdateService.updateNotificationStatus(this, uid);
             if(notificationCount >0){
-            PreferenceUtils.setIsNotificationcounter(this, --notificationCount);
+            PreferenceUtils.setNotificationCounter(this, --notificationCount);
             EventBus.getDefault().post(new NotificationEvent(--notificationCount));
         }}
     }

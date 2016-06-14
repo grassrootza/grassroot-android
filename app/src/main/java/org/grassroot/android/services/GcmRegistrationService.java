@@ -12,7 +12,6 @@ import org.grassroot.android.BuildConfig;
 import org.grassroot.android.R;
 import org.grassroot.android.interfaces.NotificationConstants;
 import org.grassroot.android.models.GenericResponse;
-import org.grassroot.android.models.Notification;
 import org.grassroot.android.utils.Constant;
 import org.grassroot.android.utils.PreferenceUtils;
 
@@ -64,7 +63,7 @@ public class GcmRegistrationService extends IntentService {
                     .getToken(projectId, GoogleCloudMessaging.INSTANCE_ID_SCOPE, null);
 
             final String phoneNumber = intent.getStringExtra(NotificationConstants.PHONE_NUMBER);
-            final String code = PreferenceUtils.getuser_token(this);
+            final String code = PreferenceUtils.getAuthToken(getApplicationContext());
             final String messageId = generateMessageId(phoneNumber);
 
             GrassrootRestService.getInstance().getApi()
@@ -128,5 +127,3 @@ public class GcmRegistrationService extends IntentService {
 
 
 }
-
-

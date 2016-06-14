@@ -278,8 +278,8 @@ public class AddMembersActivity extends AppCompatActivity implements
     }
 
     private void postNewMembersToGroup(final List<Member> membersToAdd) {
-        final String mobileNumber = PreferenceUtils.getuser_mobilenumber(getApplicationContext());
-        final String sessionCode = PreferenceUtils.getuser_token(getApplicationContext());
+        final String mobileNumber = PreferenceUtils.getUserPhoneNumber(getApplicationContext());
+        final String sessionCode = PreferenceUtils.getAuthToken(getApplicationContext());
         GrassrootRestService.getInstance().getApi()
                 .addGroupMembers(groupUid, mobileNumber, sessionCode, membersToAdd)
                 .enqueue(new Callback<GenericResponse>() {
