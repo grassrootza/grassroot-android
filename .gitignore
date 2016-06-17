@@ -24,12 +24,13 @@ out/
 **/.idea_modules/**
 atlassian-ide-plugin.xml
 
-### Gradle files
+### Gradle files, except for the gradle-wrapper
 **/.gradle
 **/build
 **/.DS_Store
 local.properties
 captures
+!**/gradle-wrapper.jar
 
 ### Private keys
 **/private_keys.xml
