@@ -29,6 +29,7 @@
     <string name="error_user_exists">User already exists, please login</string>
     <string name="error_no_results_found">No result found</string>
     <string name="error_retry">RETRY</string>
+    <string name="error_token">Sorry, that pin was invalid. Please try again</string>
 
     <!-- Error : validation messages -->
     <string name="Either_field_empty">Please enter all fields to proceed.</string>
@@ -64,16 +65,15 @@
     <string name="new_startgroup">Create Group</string>
 
     <!-- Possibly for walk-through later, retaining for now -->
-    <string name="o_title">Welcome to Grassroot</string>
-    <string name="t_title">Groups</string>
-    <string name="th_title">Meet</string>
-    <string name="four_title">Vote</string>
-    <string name="five_title">Act</string>
-    <string name="o_content">Meet, vote, act</string>
-    <string name="t_content">Create, join, and connect groups, as many and as large as you’d like</string>
-    <string name="th_content">Call meetings, with notices sent to any kind of phone, responses, and reminders</string>
-    <string name="four_content">Take simple polls, lasting five minutes or five weeks, of five or five thousand members</string>
-    <string name="five_content">Record shared to-dos, automatically reminding the group until they are done</string>
+    <string name="intro_page0_title">Meet, vote, act</string>
+    <string name="intro_page1_title">Meet</string>
+    <string name="intro_page2_title">Vote</string>
+    <string name="intro_page3_title">Act</string>
+
+    <string name="intro_page0_msg">Create, join, and connect groups, as many and as large as you’d like</string>
+    <string name="intro_page1_msg">Call meetings, with notices sent to any kind of phone, responses, and reminders</string>
+    <string name="intro_page2_msg">Take simple polls, lasting five minutes or five weeks, of five or five thousand members</string>
+    <string name="intro_page3_msg">Record shared to-dos, automatically reminding the group until they are done</string>
 
     <!--HomeScreen Activity & Screens-->
     <string name="joingroup">REQUEST TO JOIN A GROUP</string>

@@ -44,7 +44,6 @@ public class NavigationDrawerFragment extends Fragment {
 
     public static final String TAG = NavigationDrawerFragment.class.getCanonicalName();
 
-    private View mFragmentContainerView;
     private NavigationDrawerCallbacks mCallbacks;
 
     ArrayList draweritems;
@@ -69,16 +68,11 @@ public class NavigationDrawerFragment extends Fragment {
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
-        Log.e(TAG, "ZOG: NAV: attaching listener!");
         try {
             mCallbacks = (NavigationDrawerCallbacks) context;
         } catch (ClassCastException e) {
             throw new UnsupportedOperationException("Error! Activity must implement listener");
         }
-    }
-
-    public void setUp(int fragmentId, DrawerLayout drawerLayout) {
-        mFragmentContainerView = getActivity().findViewById(fragmentId);
     }
 
     @Override
@@ -91,7 +85,6 @@ public class NavigationDrawerFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
 
-        Log.e(TAG, "ZOG: NAV: inflating view!");
         View view = inflater.inflate(R.layout.fragment_navigation_drawer, container, false);
         ButterKnife.bind(this, view);
 
@@ -108,18 +101,6 @@ public class NavigationDrawerFragment extends Fragment {
         mDrawerRecyclerView.addOnItemTouchListener(new RecyclerTouchListener(getActivity(), mDrawerRecyclerView, new ClickListener() {
             @Override
             public void onClick(View view, int position) {
-                Log.e("drawer ", "onItemClick");
-
-                for (int i = 0; i < draweritems.size(); i++) {
-                    NavDrawerItem item= (NavDrawerItem) draweritems.get(i);
-                    if (position==i) {
-                        item.setIsChecked(true);
-                    } else {
-                        item.setIsChecked(false);
-                    }
-                }
-
-                drawerAdapter.notifyDataSetChanged();
                 selectItem(position);
             }
 
@@ -141,7 +122,6 @@ public class NavigationDrawerFragment extends Fragment {
     }
 
     private void selectItem(int position) {
-
         // handle common & reusable things here, pass back more complex or context-dependent to activity
         switch (position) {
             case NavigationConstants.HOME_NAV_PROFILE:

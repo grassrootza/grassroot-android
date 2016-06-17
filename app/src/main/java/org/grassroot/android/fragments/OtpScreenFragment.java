@@ -1,6 +1,5 @@
 package org.grassroot.android.fragments;
 
-import android.app.Activity;
 import android.content.Context;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -9,9 +8,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.EditText;
-import android.widget.TextView;
 
 import org.grassroot.android.BuildConfig;
 import org.grassroot.android.R;
@@ -21,8 +18,6 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 
-;
-
 /**
  * Created by paballo on 2016/04/26.
  */
@@ -30,18 +25,16 @@ public class OtpScreenFragment extends Fragment {
 
     private static final String TAG = OtpScreenFragment.class.getSimpleName();
 
+    public interface OtpListener {
+        void onTextResendClick(String purpose);
+        void onOtpSubmitButtonClick(String otp, String purpose);
+    }
+
     @BindView(R.id.et_otp)
     EditText et_otp;
 
-    @BindView(R.id.txt_resend)
-    TextView txtResend;
-
-    @BindView(R.id.bt_submit_otp)
-    Button bt_submit_otp;
-
     private String purpose; // i.e., for login or for register
-
-    private OnOtpScreenFragmentListener onOtpScreenFragmentListener;
+    private OtpListener onOtpScreenFragmentListener;
 
     public static OtpScreenFragment newInstance(String otpPassed, String purpose) {
         OtpScreenFragment otpScreenFragment = new OtpScreenFragment();
@@ -81,7 +74,7 @@ public class OtpScreenFragment extends Fragment {
     public void onAttach(Context context) {
         super.onAttach(context);
         try {
-            onOtpScreenFragmentListener = (OnOtpScreenFragmentListener) context;
+            onOtpScreenFragmentListener = (OtpListener) context;
         } catch (ClassCastException e) {
             throw new UnsupportedOperationException("Error! Activity must implement otp listener");
         }
@@ -93,7 +86,7 @@ public class OtpScreenFragment extends Fragment {
         if (TextUtils.isEmpty(et_otp.getText().toString())) {
             et_otp.setError(getResources().getString(R.string.OTP_empty));
         } else {
-            Log.e(TAG, "OTP submit clicked, for purpose: " + purpose);
+            Log.d(TAG, "OTP submit clicked, for purpose: " + purpose);
             onOtpScreenFragmentListener.onOtpSubmitButtonClick(et_otp.getText().toString(), purpose);
         }
     }
@@ -103,13 +96,4 @@ public class OtpScreenFragment extends Fragment {
         onOtpScreenFragmentListener.onTextResendClick(purpose);
     }
 
-    @Override
-    public void onDetach() {
-        super.onDetach();
-    }
-
-    public interface OnOtpScreenFragmentListener {
-        void onTextResendClick(String purpose);
-        void onOtpSubmitButtonClick(String otp, String purpose);
-    }
 }

@@ -38,6 +38,11 @@ public class LocationUtils implements GoogleApiClient.ConnectionCallbacks, Googl
 
     private Location lastKnownLocation;
 
+    // todo : be careful of leaks from this
+    public static LocationUtils getInstance(Context context) {
+        return new LocationUtils(context);
+    }
+
     public LocationUtils(Context context) {
         this.context = context;
         if (googleApiClient == null) {

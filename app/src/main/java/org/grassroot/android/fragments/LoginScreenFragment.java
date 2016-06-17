@@ -1,16 +1,14 @@
 package org.grassroot.android.fragments;
 
-import android.app.Activity;
 import android.content.Context;
 import android.os.Bundle;
+import android.support.design.widget.TextInputEditText;
 import android.support.v4.app.Fragment;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.AnimationUtils;
-import android.widget.Button;
-import android.widget.EditText;
 
 import org.grassroot.android.R;
 import org.grassroot.android.utils.UtilClass;
@@ -25,12 +23,13 @@ import butterknife.OnClick;
 public class LoginScreenFragment extends Fragment {
 
     @BindView(R.id.et_mobile_login)
-    EditText etNumberInput;
+    TextInputEditText etNumberInput;
 
-    @BindView(R.id.bt_login)
-    Button bt_login;
+    public interface LoginFragmentListener {
+        void requestLogin(String mobileNumber);
+    }
 
-    private OnLoginScreenInteractionListener onLoginScreenInteractionListener;
+    private LoginFragmentListener listener;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -44,20 +43,16 @@ public class LoginScreenFragment extends Fragment {
         ButterKnife.bind(this, view);
         view.startAnimation(AnimationUtils.loadAnimation(getActivity(), R.anim.fade_in));
         view.setLayoutParams(new ViewGroup.LayoutParams(-1, -1));
-
         return view;
     }
 
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
-
-        Activity activity = (Activity) context;
         try {
-            onLoginScreenInteractionListener = (OnLoginScreenInteractionListener) activity;
+            listener = (LoginFragmentListener) context;
         } catch (ClassCastException e) {
-            throw new ClassCastException(activity.toString()
-                    + " must implement OnLoginScreenInteractionListener");
+            throw new ClassCastException(context.toString() + " must implement LoginFragmentListener");
         }
     }
 
@@ -71,11 +66,7 @@ public class LoginScreenFragment extends Fragment {
             etNumberInput.requestFocus();
             etNumberInput.setError(getResources().getString(R.string.Cellphone_number_invalid));
         } else {
-            onLoginScreenInteractionListener.login(number);
+            listener.requestLogin(number);
         }
-    }
-
-    public interface OnLoginScreenInteractionListener {
-        void login(String mobileNumber);
     }
 }

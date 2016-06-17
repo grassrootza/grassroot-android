@@ -106,9 +106,16 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment imple
     private String mobileNumber;
     private String userCode;
 
+    private boolean creating;
+
     public boolean date_click = false, role_click = false, defaults_click = false;
 
     private GroupListFragmentListener mCallbacks;
+
+    public interface GroupListFragmentListener {
+        void menuClick();
+        void groupRowClick(Group group);
+    }
 
     @Override
     public void onAttach(Context context) {
@@ -122,11 +129,6 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment imple
         }
     }
 
-    public interface GroupListFragmentListener {
-        void menuClick();
-        void groupRowClick(Group group);
-    }
-
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.activity_group__homepage, container, false);
@@ -138,11 +140,23 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment imple
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Log.e(TAG, "and ... activity created again");
+        creating = true;
         init();
         setUpRecyclerView();
         setUpSwipeRefresh();
         fetchGroupList();
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        if (!creating && PreferenceUtils.getGroupListMustRefresh(getContext())) {
+            mobileNumber = PreferenceUtils.getUserPhoneNumber(getContext());
+            userCode = PreferenceUtils.getAuthToken(getContext());
+            refreshGroupList();
+            PreferenceUtils.setGroupListMustBeRefreshed(getContext(), false);
+        }
+        creating = false;
     }
 
     private void init() {
@@ -199,23 +213,8 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment imple
 
             @Override
             public void onFailure(Call<GroupResponse> call, Throwable t) {
-
                 hideProgress();
-                if (t instanceof NoConnectivityException) {
-                    errorLayout.setVisibility(View.VISIBLE);
-                    imNoInternet.setVisibility(View.VISIBLE);
-                } else {
-                    Log.e(TAG, t.getMessage());
-                    errorLayout.setVisibility(View.VISIBLE);
-                    imNoInternet.setVisibility(View.VISIBLE);
-                    ErrorUtils.connectivityError(getActivity(), R.string.error_no_network, new NetworkErrorDialogListener() {
-                        @Override
-                        public void retryClicked() {
-                            fetchGroupList();
-                        }
-                    });
-
-                }
+                ErrorUtils.handleNetworkError(getContext(), rlGhpRoot, t);
             }
         });
     }
@@ -305,7 +304,6 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment imple
 
     private void setUpRecyclerView() {
         rcGroupList.setLayoutManager(new LinearLayoutManager(getActivity()));
-        rcGroupList.setItemAnimator(new CustomItemAnimator());
         groupListRowAdapter = new GroupListAdapter(new ArrayList<Group>(), HomeGroupListFragment.this);
         rcGroupList.setAdapter(groupListRowAdapter);
     }

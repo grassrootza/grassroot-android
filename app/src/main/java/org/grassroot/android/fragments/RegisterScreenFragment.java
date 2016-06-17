@@ -4,8 +4,8 @@ import android.app.Activity;
 import android.content.Context;
 import android.os.Bundle;
 import android.support.design.widget.Snackbar;
+import android.support.design.widget.TextInputEditText;
 import android.support.v4.app.Fragment;
-import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -26,23 +26,22 @@ import butterknife.OnClick;
 public class RegisterScreenFragment extends Fragment {
 
     @BindView(R.id.et_userName)
-    EditText etUserName;
+    TextInputEditText etUserName;
 
     @BindView(R.id.et_mobile_register)
-    EditText etMobilePhone;
+    TextInputEditText etMobilePhone;
 
     private ViewGroup container;
 
-    private OnRegisterScreenInteractionListener onRegisterScreenInteractionListener;
+    private RegisterListener listener;
 
-    public static RegisterScreenFragment newInstance(){
-        RegisterScreenFragment registerScreenFragment = new RegisterScreenFragment();
-        return registerScreenFragment;
+    public interface RegisterListener {
+        void requestRegistration(String userName, String mobileNumber);
     }
 
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
+    public static RegisterScreenFragment newInstance() {
+        RegisterScreenFragment registerScreenFragment = new RegisterScreenFragment();
+        return registerScreenFragment;
     }
 
     @Override
@@ -61,10 +60,10 @@ public class RegisterScreenFragment extends Fragment {
         super.onAttach(context);
         Activity activity = (Activity) context;
         try {
-            onRegisterScreenInteractionListener = (OnRegisterScreenInteractionListener) activity;
+            listener = (RegisterListener) activity;
         } catch (ClassCastException e) {
             throw new UnsupportedOperationException(activity.toString()
-                    + " must implement OnRegisterScreenInteractionListener");
+                    + " must implement RegisterListener");
         }
     }
 
@@ -90,11 +89,7 @@ public class RegisterScreenFragment extends Fragment {
             etMobilePhone.requestFocus();
             etMobilePhone.setError(getString(R.string.Cellphone_number_invalid));
         } else {
-            onRegisterScreenInteractionListener.register(etUserName,etMobilePhone);
+            listener.requestRegistration(etUserName.getText().toString(), etMobilePhone.getText().toString());
         }
-    }
-
-    public interface OnRegisterScreenInteractionListener {
-        void register(EditText user_name, EditText mobile_number);
     }
 }

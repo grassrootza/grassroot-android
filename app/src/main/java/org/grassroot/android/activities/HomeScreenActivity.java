@@ -40,7 +40,6 @@ public class HomeScreenActivity extends PortraitActivity implements NavigationDr
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_homescreen);
         drawerFrag = (NavigationDrawerFragment) getSupportFragmentManager().findFragmentById(R.id.navigation_drawer);
-        drawerFrag.setUp(R.id.navigation_drawer, drawer);
         ButterKnife.bind(this);
         setUpHomeFragment();
     }
@@ -62,7 +61,6 @@ public class HomeScreenActivity extends PortraitActivity implements NavigationDr
             hgl.fetchGroupList();
         } else if (resultCode == RESULT_OK && data != null) {
             if (requestCode == Constant.activityAddMembersToGroup || requestCode == Constant.activityRemoveMembers) {
-                Log.d(TAG, "Got a result from add or remove members to group!");
                 int groupPosition = data.getIntExtra(Constant.INDEX_FIELD, -1);
                 String groupUid = data.getStringExtra(Constant.GROUPUID_FIELD);
                 HomeGroupListFragment hgl = (HomeGroupListFragment) mainFragment;
@@ -83,7 +81,6 @@ public class HomeScreenActivity extends PortraitActivity implements NavigationDr
 
     @Override
     protected void onDestroy() {
-        Log.e(TAG, "event destroyed!");
         EventBus.getDefault().unregister(this);
         super.onDestroy();
     }

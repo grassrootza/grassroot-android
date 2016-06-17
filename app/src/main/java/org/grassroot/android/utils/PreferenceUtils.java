@@ -2,6 +2,7 @@ package org.grassroot.android.utils;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.util.Log;
 
 public class PreferenceUtils {
 
@@ -9,20 +10,20 @@ public class PreferenceUtils {
     private static final String PREF_NAME = "org.grassroot.android";
 
     // All Shared Preferences Keys
-    private static final String IS_LOGIN = "IsLoggedIn";
-    private static final String IS_RATEUS = "IsRateus";
-    private static final String IS_HASGROUP = "IsHasgroup";
-    private static final String IS_GCM = "IsGCM";
+    private static final String IS_LOGIN = "is_logged_in";
+    private static final String IS_RATEUS = "has_rated_us";
+    private static final String IS_HASGROUP = "has_groups";
+    private static final String IS_GCM = "has_gcm_registered";
+    private static final String IS_MUST_REFRESH = "must_refresh";
 
-    private static final String PREF_USER_name = "Pref_user_name";
-    private static final String PREF_USER_mobile_number = "Pref_user_mobile_number";
-    private static final String PREF_USER_token = "Pref_user_token";
-
-    private static final String IS_NOTIFICATION_COUNTER = "IsNotificationCounter";
+    private static final String PREF_USER_name = "pref_user_name";
+    private static final String PREF_USER_mobile_number = "pref_user_mobile_number";
+    private static final String PREF_USER_token = "pref_user_token";
 
     private static final String PREF_LANGUAGE = "language_preference";
-
     private static final String PREF_ALERT = "alert_preference";
+
+    private static final String IS_NOTIFICATION_COUNTER = "notification_counter";
 
     public static SharedPreferences getPref(Context context) {
         return context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
@@ -51,8 +52,17 @@ public class PreferenceUtils {
         return getPref(context).getBoolean(IS_HASGROUP,false);
     }
 
-    public  static void setUserHasGroups(Context context, Boolean value) {
+    public  static void setUserHasGroups(Context context, boolean value) {
         getPref(context).edit().putBoolean(IS_HASGROUP, value).apply();
+    }
+
+    // this is to make sure the group list activity resets phone number if user logs out and logs back in
+    public static void setGroupListMustBeRefreshed(Context context, Boolean value) {
+        getPref(context).edit().putBoolean(IS_MUST_REFRESH, value).apply();
+    }
+
+    public static boolean getGroupListMustRefresh(Context context) {
+        return getPref(context).getBoolean(IS_MUST_REFRESH, false);
     }
 
     public static void setUserName(Context context, String value) {

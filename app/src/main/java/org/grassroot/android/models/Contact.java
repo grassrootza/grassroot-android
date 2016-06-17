@@ -18,14 +18,18 @@ public class Contact implements Parcelable, Comparable {
     public boolean isSelected;
     public String name;
     public List<String> numbers;
+    public List<String> msisdns;
     public String lookupKey;
     public String selectedNumber;
     public String contact_ID;
 
     public Contact() {
+        numbers = new ArrayList<>();
+        msisdns = new ArrayList<>();
     }
 
     public Contact(String lookupKey, String name) {
+        this();
         this.lookupKey = lookupKey;
         this.name = name;
     }

@@ -20,6 +20,7 @@ public class CustomItemAnimator extends SimpleItemAnimator {
     @Override
     public void runPendingAnimations() {
         int animationDuration = 300;
+
         if (!mPendingAdd.isEmpty()) {
             for (final RecyclerView.ViewHolder viewHolder : mPendingAdd) {
                 View target = viewHolder.itemView;

@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/intro_rl_root">
+
+        <ImageView
+                android:id="@+id/intro_iv_logo"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerInParent="true"
+                android:src="@drawable/ic_logo_splashscreen" />
+
+        <android.support.v4.view.ViewPager
+            android:id="@+id/intro_view_pager"
+            android:layout_below="@id/intro_iv_logo"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginTop="@dimen/margin_xxlarge"
+            android:visibility="gone" />
+
+        <LinearLayout
+            android:id="@+id/intro_ll_buttons"
+            android:visibility="visible"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:orientation="vertical"
+            android:paddingLeft="16dp"
+            android:paddingRight="16dp"
+            android:background="#00000000">
+
+            <Button
+                android:id="@+id/intro_bt_login"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textAllCaps="false"
+                android:textColor="@drawable/white_txt"
+                android:background="@drawable/login"
+                android:layout_marginBottom="15dp"
+                android:textSize="@dimen/txt_medium"
+                android:text="@string/bt_log" />
+
+            <Button
+                android:id="@+id/intro_bt_register"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textAllCaps="false"
+                android:text="@string/bt_register"
+                android:textSize="@dimen/txt_medium"
+                android:layout_marginBottom="20dp"
+                android:textColor="@drawable/green_txt"
+                android:background="@drawable/register" />
+
+        </LinearLayout>
+
+    </RelativeLayout>
+
+</ScrollView>

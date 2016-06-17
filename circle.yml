@@ -1,0 +1,7 @@
+dependencies:
+  override:
+    - chmod +x gradlew
+test:
+  override:
+    - ./gradlew assembleRelease
+    - cp -r project-name/build/outputs $CIRCLE_ARTIFACTS

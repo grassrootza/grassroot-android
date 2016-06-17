@@ -9,23 +9,28 @@
         <item name="vpiCirclePageIndicatorStyle">@style/CustomCirclePageIndicator</item>
     </style>
 
+    <style name="Theme.IntroScreen" parent="AppTheme">
+        <item name="android:windowActionBar">false</item>
+        <item name="android:windowActionBarOverlay">false</item>
+        <item name="android:windowContentOverlay">@null</item>
+        <item name="android:colorBackground">@android:color/white</item>
+        <item name="android:windowBackground">@android:color/white</item>
+    </style>
+
+    <style name="TextLabel" parent="TextAppearance.AppCompat">
+        <item name="android:textColorHint">@color/white</item>
+        <item name="android:textSize">20sp</item>
+        <item name="colorAccent">@color/yellow</item>
+        <item name="colorControlNormal">@color/white</item>
+        <item name="colorControlActivated">@color/white</item>
+    </style>
+
     <style name="CustomCirclePageIndicator">
         <item name="fillColor">#000</item>
         <item name="strokeColor">@color/primaryColorDark</item>
         <item name="strokeWidth">3dp</item>
         <item name="radius">10dp</item>
         <item name="centered">true</item>
-    </style>
-
-    <style name="TextLabel" parent="TextAppearance.AppCompat">
-        <!-- Hint color and label color in FALSE state -->
-        <item name="android:textColorHint">@color/white</item>
-        <item name="android:textSize">20sp</item>
-
-        <!-- Label color in TRUE state and bar color FALSE and TRUE State -->
-        <item name="colorAccent">@color/yellow</item>
-        <item name="colorControlNormal">@color/white</item>
-        <item name="colorControlActivated">@color/white</item>
     </style>
 
     <style name="MenuButtonsStyle">

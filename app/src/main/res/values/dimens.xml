@@ -6,6 +6,7 @@
     <dimen name="padding">16dp</dimen>
     <dimen name="padding_half">8dp</dimen>
 
+    <dimen name="margin_xxlarge">30dp</dimen>
     <dimen name="margin_xlarge">15dp</dimen>
     <dimen name="margin_large">12dp</dimen>
     <dimen name="margin_medium">6dp</dimen>
@@ -14,6 +15,8 @@
     <dimen name="txt_small">13sp</dimen>
     <dimen name="txt_medium">15sp</dimen>
     <dimen name="txt_large">18sp</dimen>
+    <dimen name="txt_xlarge">24sp</dimen>
+
     <dimen name="button_elevation">2dp</dimen>
     <dimen name="button_press_elevation">4dp</dimen>
     <dimen name="drawer_width">260dp</dimen>
@@ -26,16 +29,6 @@
     <dimen name="dialog_padding_vertical">24dp</dimen>
     <dimen name="dialog_padding_horizontal">24dp</dimen>
 
-    --><!-- Margin around the dialog, excluding the button bar
--->
-    <dimen name="md_dialog_frame_margin">24dp</dimen>
-    <!-- Total title margin bottom is 16, but we split this between content and title
--->
-    <dimen name="md_title_frame_margin_bottom">12dp</dimen>
-    <dimen name="md_title_frame_margin_bottom_less">6dp</dimen>
-    <!-- The desired padding when no title is visible,
-         This plus md_content_padding_top should equals md_dialog_frame_margin
--->
     <dimen name="md_notitle_vertical_padding">16dp</dimen>
     <dimen name="md_content_padding_top">8dp</dimen>
     <dimen name="md_simplelistitem_padding_top">8dp</dimen>

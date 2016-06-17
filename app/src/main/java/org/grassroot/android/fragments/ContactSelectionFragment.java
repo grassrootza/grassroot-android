@@ -12,6 +12,7 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -57,9 +58,16 @@ public class ContactSelectionFragment extends Fragment implements
     private List<Contact> retrievedContacts;
 
     private Map<String, Contact> contactFilterMap;
-
     private Set<Contact> contactsToPreselect;
     private Set<Contact> contactsRemoved;
+
+    private String[] projectionForPhones = {
+            ContactsContract.CommonDataKinds.Phone.CONTACT_ID,
+            ContactsContract.CommonDataKinds.Phone.LOOKUP_KEY,
+            ContactsContract.CommonDataKinds.Phone.NUMBER,
+            ContactsContract.CommonDataKinds.Phone.TYPE,
+            ContactsContract.CommonDataKinds.Phone.LABEL,
+    };
 
     @BindView(R.id.cs_list_view)
     ListView contactListView;
@@ -129,6 +137,7 @@ public class ContactSelectionFragment extends Fragment implements
         listener.onContactSelectionComplete(addedMembers, contactsRemoved);
     }
 
+    // todo : move these into another class, later
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
 
@@ -150,13 +159,16 @@ public class ContactSelectionFragment extends Fragment implements
 
         final String search = ContactsContract.Contacts.DISPLAY_NAME + " COLLATE LOCALIZED ASC";
 
-        CursorLoader cursorLoader = new CursorLoader(
+        /*CursorLoader cursorLoader = new CursorLoader(
                 getContext(),
                 ContactsContract.Contacts.CONTENT_URI,
                 projection,
                 select,
                 null,
-                search);
+                search);*/
+
+        CursorLoader cursorLoader = new CursorLoader(getContext(),
+                ContactsContract.CommonDataKinds.Phone.CONTENT_URI, projectionForPhones, null, null, null);
 
         return cursorLoader;
     }
@@ -175,13 +187,65 @@ public class ContactSelectionFragment extends Fragment implements
         adapter.setContactsToDisplay(retrievedContacts);
     }
 
+    private void newContactList(Cursor contactHolder) {
+        Map<String, Contact> finalMap = new HashMap<>();
+
+        if (contactHolder == null || contactHolder.isClosed()) {
+            throw new UnsupportedOperationException("Error! Null or closed cursor handed to assembler");
+        }
+
+        Map<String, Contact> contactMap = new HashMap<>();
+        List<String> contactsAdded = new ArrayList<>();
+
+        final int keyCol = contactHolder.getColumnIndexOrThrow(ContactsContract.Contacts.LOOKUP_KEY);
+        final int numberCol = contactHolder.getColumnIndexOrThrow(ContactsContract.CommonDataKinds.Phone.NUMBER);
+
+        if (contactHolder.getCount() > 0) {
+            while (contactHolder.moveToNext()) {
+                String number = contactHolder.getString(numberCol);
+
+                if (TextUtils.isEmpty(number) || !UtilClass.checkIfLocalNumber(number)) {
+                    continue;
+                }
+
+                String numberNorm = UtilClass.formatNumberToE164(number);
+                if (TextUtils.isEmpty(numberNorm)) {
+                    continue;
+                }
+
+                if (contactMap.containsKey(numberNorm)) {
+                    continue;
+                }
+
+                String lKey = contactHolder.getString(keyCol);
+                if (!contactsAdded.contains(lKey)) {
+                    contactsAdded.add(lKey);
+                }
+
+                Contact contact = finalMap.get(lKey);
+                if (contact == null) {
+                    Contact c = new Contact(lKey, "");
+                    finalMap.put(lKey, c);
+                }
+
+                contact.numbers.add(number);
+                contact.msisdns.add(numberNorm);
+
+            }
+        }
+
+    }
+
     private void assembleContactList(Cursor contactHolder) {
         Long startTime = SystemClock.currentThreadTimeMillis();
         if (contactHolder == null || contactHolder.isClosed()) {
             throw new UnsupportedOperationException("Error! Null or closed cursor handed to contact list assembler");
         }
 
+        Map<String, Contact> contactMap = new HashMap<>();
+
         Set<Contact> contacts = new TreeSet<>();
+
         if (retrievedContacts == null) {
             retrievedContacts = new ArrayList<>();
         } else {
