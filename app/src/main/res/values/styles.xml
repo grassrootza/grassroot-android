@@ -6,7 +6,6 @@
         <item name="colorControlActivated">@color/buttoncolor</item>
         <item name="colorPrimaryDark">@color/primaryColorDark</item>
         <item name="colorPrimary">@color/primaryColor</item>
-        <item name="vpiCirclePageIndicatorStyle">@style/CustomCirclePageIndicator</item>
     </style>
 
     <style name="Theme.IntroScreen" parent="AppTheme">
@@ -25,13 +24,12 @@
         <item name="colorControlActivated">@color/white</item>
     </style>
 
-    <style name="CustomCirclePageIndicator">
+    <!-- <style name="CustomCirclePageIndicator">
         <item name="fillColor">#000</item>
         <item name="strokeColor">@color/primaryColorDark</item>
         <item name="strokeWidth">3dp</item>
         <item name="radius">10dp</item>
-        <item name="centered">true</item>
-    </style>
+    </style> -->
 
     <style name="MenuButtonsStyle">
         <item name="fab_shadowColor">#444</item>
