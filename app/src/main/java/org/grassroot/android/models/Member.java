@@ -21,8 +21,7 @@ public class Member implements Parcelable {
     private String displayName;
     private String roleName;
 
-    private String contactId; // only set locally, if we retrieve member from contacts
-    private String contactLookupKey;
+    private int contactId; // only set locally, if we retrieve member from contacts
     private boolean selected;
 
     @Override
@@ -48,7 +47,7 @@ public class Member implements Parcelable {
     }
 
     // todo : probably remove, soon-ish
-    public Member(String phoneNumber, String displayName, String roleName, String contactId) {
+    public Member(String phoneNumber, String displayName, String roleName, int contactId) {
         this.phoneNumber = phoneNumber;
         this.displayName = displayName;
         this.roleName = (roleName != null) ? roleName : GroupConstants.ROLE_ORDINARY_MEMBER;
@@ -56,11 +55,11 @@ public class Member implements Parcelable {
         this.selected = true;
     }
 
-    public Member(String phoneNumber, String displayName, String roleName, String contactLookupKey, boolean selected) {
+    public Member(String phoneNumber, String displayName, String roleName, int contactId, boolean selected) {
         this.phoneNumber = phoneNumber;
         this.displayName = displayName;
         this.roleName = (roleName != null) ? roleName : GroupConstants.ROLE_ORDINARY_MEMBER;
-        this.contactLookupKey = contactLookupKey;
+        this.contactId = contactId;
         this.selected = selected;
     }
 
@@ -100,11 +99,9 @@ public class Member implements Parcelable {
         return roleName;
     }
 
-    public String getContactId() { return contactId; }
+    public int getContactId() { return contactId; }
 
-    public void setContactId(String contactId) { this.contactId = contactId; }
-
-    public String getContactLookupKey() { return contactLookupKey; }
+    public void setContactId(int contactId) { this.contactId = contactId; }
 
     public boolean isSelected() { return selected; }
 
@@ -123,13 +120,13 @@ public class Member implements Parcelable {
 
         if (memberUid != null ? !memberUid.equals(member.memberUid) : member.memberUid != null)
             return false;
-        return contactLookupKey != null ? contactLookupKey.equals(member.contactLookupKey) : member.contactLookupKey == null;
+        return contactId != -1 ? contactId == member.contactId : member.contactId == -1;
     }
 
     @Override
     public int hashCode() {
         int result = memberUid != null ? memberUid.hashCode() : 0;
-        result = 31 * result + (contactLookupKey != null ? contactLookupKey.hashCode() : 0);
+        result = 31 * result + (contactId != -1 ? contactId : 0);
         return result;
     }
 
@@ -140,7 +137,6 @@ public class Member implements Parcelable {
                 ", phoneNumber='" + phoneNumber + '\'' +
                 ", displayName='" + displayName + '\'' +
                 ", contactId=" + contactId + '\'' +
-                ", contactKey=" + contactLookupKey + '\'' +
                 ", selected=" + selected + '\'' +
                 '}';
     }

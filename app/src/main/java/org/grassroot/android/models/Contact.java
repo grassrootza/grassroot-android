@@ -2,8 +2,9 @@ package org.grassroot.android.models;
 
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.text.TextUtils;
 
-import org.grassroot.android.utils.UtilClass;
+import org.grassroot.android.utils.Utilities;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -16,22 +17,21 @@ public class Contact implements Parcelable, Comparable {
 
     public String addedBy;
     public boolean isSelected;
+
     public String name;
+    public String firstName;
+    public String lastName;
+
     public List<String> numbers;
     public List<String> msisdns;
-    public String lookupKey;
     public String selectedNumber;
-    public String contact_ID;
+    public String selectedMsisdn;
+
+    public int id;
 
     public Contact() {
         numbers = new ArrayList<>();
         msisdns = new ArrayList<>();
-    }
-
-    public Contact(String lookupKey, String name) {
-        this();
-        this.lookupKey = lookupKey;
-        this.name = name;
     }
 
     public void setName(String name) {
@@ -39,7 +39,17 @@ public class Contact implements Parcelable, Comparable {
     }
 
     public String getNormalizedNumber() {
-        return selectedNumber == null ? null : UtilClass.formatNumberToE164(selectedNumber);
+        return selectedMsisdn == null ? null : Utilities.formatNumberToE164(selectedNumber);
+    }
+
+    public String getDisplayName() {
+        if (!TextUtils.isEmpty(name)) {
+            return name;
+        } else if (!TextUtils.isEmpty(firstName) || !TextUtils.isEmpty(lastName)) {
+            return ((firstName != null) ? firstName + " " : "") + ((lastName != null) ? lastName : "");
+        } else {
+            return "";
+        }
     }
 
     @Override
@@ -54,8 +64,7 @@ public class Contact implements Parcelable, Comparable {
         dest.writeString(this.name);
         dest.writeStringList(this.numbers);
         dest.writeString(this.selectedNumber);
-        dest.writeString(this.contact_ID);
-        dest.writeString(this.lookupKey);
+        dest.writeInt(this.id);
     }
 
     protected Contact(Parcel in) {
@@ -64,8 +73,7 @@ public class Contact implements Parcelable, Comparable {
         this.name = in.readString();
         this.numbers = in.createStringArrayList();
         this.selectedNumber = in.readString();
-        this.contact_ID = in.readString();
-        this.lookupKey = in.readString();
+        this.id = in.readInt();
     }
 
     public static final Parcelable.Creator<Contact> CREATOR = new Parcelable.Creator<Contact>() {
@@ -85,12 +93,13 @@ public class Contact implements Parcelable, Comparable {
         List<Contact> contacts = new ArrayList<>();
         for (final Member m : members) {
             Contact c = new Contact();
+            c.id = -1;
             c.selectedNumber = m.getPhoneNumber();
+            c.selectedMsisdn = m.getPhoneNumber();
             c.numbers = Collections.singletonList(m.getPhoneNumber());
+            c.msisdns = Collections.singletonList(m.getPhoneNumber());
             c.name = m.getDisplayName();
             c.isSelected = m.isSelected();
-            c.contact_ID = m.getContactId();
-            c.lookupKey = m.getContactLookupKey();
             contacts.add(c);
         }
         return contacts;
@@ -103,29 +112,26 @@ public class Contact implements Parcelable, Comparable {
 
         Contact contact = (Contact) o;
 
-        if (lookupKey != null ? !lookupKey.equals(contact.lookupKey) : contact.lookupKey != null)
-            return false;
-        return getNormalizedNumber() != null ? getNormalizedNumber().equals(contact.getNormalizedNumber()) :
-                contact.getNormalizedNumber() == null;
+        return id == contact.id;
 
     }
 
     @Override
     public int hashCode() {
-        if (lookupKey != null) {
-            return lookupKey.hashCode();
-        } else {
-            return getNormalizedNumber() != null ? getNormalizedNumber().hashCode() : 0;
-        }
+        return id;
     }
 
     @Override
     public String toString() {
         return "Contact{" +
-                "name='" + name + '\'' +
-                ", selectedNumber=" + selectedNumber +
-                ", numbers=" + numbers +
-                ", lookupKey=" + lookupKey +
+                //"name='" + name + '\'' +
+                //", firstName='" + firstName + '\'' +
+                //", lastName='" + lastName + '\'' +
+                // ", numbers=" + numbers +
+                //", msisdns=" + msisdns +
+                //", selectedNumber='" + selectedNumber + '\'' +
+                ", selectedMsisdn='" + selectedMsisdn + '\'' +
+                ", id='" + id + '\'' +
                 '}';
     }
 
@@ -134,4 +140,5 @@ public class Contact implements Parcelable, Comparable {
         Contact contact = (Contact) another;
         return this.name.toLowerCase().compareTo(contact.name.toLowerCase());
     }
+
 }

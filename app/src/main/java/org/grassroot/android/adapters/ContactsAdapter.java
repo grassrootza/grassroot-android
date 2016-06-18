@@ -1,7 +1,6 @@
 package org.grassroot.android.adapters;
 
 import android.content.Context;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -12,8 +11,8 @@ import android.widget.TextView;
 
 import org.grassroot.android.R;
 import org.grassroot.android.models.Contact;
+import org.grassroot.android.services.ContactService;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -21,31 +20,16 @@ import java.util.List;
  */
 public class ContactsAdapter extends ArrayAdapter<Contact> implements SectionIndexer{
 
-    private static final String TAG = ContactsAdapter.class.getCanonicalName();
+    private static final String TAG = ContactsAdapter.class.getSimpleName();
 
     private final Context mContext;
 
     private List<Contact> contactsToDisplay;
-    private StringArrayAlphabetIndexer indexer;
+    private StringArrayAlphabetIndexer indexer; // todo : move this to service
 
     public ContactsAdapter(Context context, int resource) {
         super(context, resource);
         mContext = context;
-    }
-
-    public void setContactsToDisplay(List<Contact> contacts) {
-        Log.e(TAG, "setting contacts to display, they look like: " + contacts.toString());
-        contactsToDisplay = contacts;
-        indexer = new StringArrayAlphabetIndexer(extractContactNames(), true);
-        notifyDataSetChanged();
-    }
-
-    private String[] extractContactNames() {
-        final ArrayList<String> contactNames = new ArrayList<>();
-        if(contactsToDisplay != null)
-            for (final Contact contactEntity : contactsToDisplay)
-                contactNames.add(contactEntity.name);
-        return contactNames.toArray(new String[contactNames.size()]);
     }
 
     @Override
@@ -68,47 +52,41 @@ public class ContactsAdapter extends ArrayAdapter<Contact> implements SectionInd
             viewHolder.ivContactSelected = (ImageView) viewToReturn.findViewById(R.id.iv_Selected);
         }
 
-        final Contact contact = contactsToDisplay.get(position);
-        viewHolder.tvContactName.setText(contact.name);
+        final Contact contact = ContactService.getInstance().displayedContacts.get(position);
+        viewHolder.tvContactName.setText(contact.getDisplayName());
         viewHolder.ivContactSelected.setImageResource(contact.isSelected ? R.drawable.btn_checked : R.drawable.btn_unchecked);
-
-        // todo : add item click listener here
 
         return viewToReturn;
     }
 
     public void toggleSelected(int position, View view) {
-        final Contact contact = contactsToDisplay.get(position);
+        final Contact contact = ContactService.getInstance().displayedContacts.get(position);
         contact.isSelected = !contact.isSelected;
         ContactViewHolder holder = (ContactViewHolder) view.getTag();
         holder.ivContactSelected.setImageResource(contact.isSelected ? R.drawable.btn_checked : R.drawable.btn_unchecked);
     }
 
-    public void setSelected(int position, View view, CharSequence selectedNumber) {
-        final Contact contact = contactsToDisplay.get(position);
-        contact.selectedNumber = selectedNumber.toString();
+    public void setSelected(int contactPosition, int selectedNumberIndex,View viewHolder) {
+        final Contact contact = ContactService.getInstance().displayedContacts.get(contactPosition);
+        contact.selectedNumber = contact.numbers.get(selectedNumberIndex);
+        contact.selectedMsisdn = contact.msisdns.get(selectedNumberIndex);
         contact.isSelected = true;
-        ContactViewHolder holder = (ContactViewHolder) view.getTag();
+        ContactViewHolder holder = (ContactViewHolder) viewHolder.getTag(); // just do notify item changed ??
         holder.ivContactSelected.setImageResource(R.drawable.btn_checked);
-    }
-
-    public List<Contact> getSelectedContacts() {
-        List<Contact> toReturn = new ArrayList<>();
-        for (Contact c : contactsToDisplay) { // hmm, once do filters, may need to use whole list
-            if (c.isSelected)
-                toReturn.add(c);
-        }
-        return toReturn;
     }
 
     @Override
     public Contact getItem(int position) {
-        return contactsToDisplay == null ? null : contactsToDisplay.get(position);
+        return ContactService.getInstance().displayedContacts.get(position);
     }
 
     @Override
     public int getCount() {
-        return (contactsToDisplay == null) ? 0 : contactsToDisplay.size();
+        if (ContactService.getInstance().displayedContacts == null) {
+            return 0;
+        } else {
+            return ContactService.getInstance().displayedContacts.size();
+        }
     }
 
     @Override

@@ -56,8 +56,9 @@ public class AddMembersActivity extends AppCompatActivity implements
     private MemberListFragment newMemberListFragment;
 
     private ContactSelectionFragment contactSelectionFragment;
-    private Set<Contact> contactsToFilter;
-    private HashMap<String, Member> membersFromContacts;
+    private HashMap<Integer, Member> membersFromContacts;
+    private List<Member> manuallyAddedMembers;
+
     private boolean onMainScreen;
 
     @BindView(R.id.rl_am_root)
@@ -104,14 +105,14 @@ public class AddMembersActivity extends AppCompatActivity implements
     }
 
     private void init(Bundle extras) {
-        this.groupUid = extras.getString(Constant.GROUPUID_FIELD);
-        this.groupName = extras.getString(Constant.GROUPNAME_FIELD);
-        this.groupPosition = extras.getInt(Constant.INDEX_FIELD);
+        groupUid = extras.getString(Constant.GROUPUID_FIELD);
+        groupName = extras.getString(Constant.GROUPNAME_FIELD);
+        groupPosition = extras.getInt(Constant.INDEX_FIELD);
 
-        this.contactSelectionFragment = new ContactSelectionFragment();
-        this.membersFromContacts = new HashMap<>();
-        this.contactsToFilter = new HashSet<>();
-        this.onMainScreen = true;
+        contactSelectionFragment = new ContactSelectionFragment();
+        membersFromContacts = new HashMap<>();
+        manuallyAddedMembers = new ArrayList<>();
+        onMainScreen = true;
     }
 
     private void setupFloatingActionButtons() {
@@ -130,6 +131,11 @@ public class AddMembersActivity extends AppCompatActivity implements
         getSupportFragmentManager().beginTransaction()
                 .add(R.id.am_existing_member_list_container, existingMemberListFragment)
                 .commit();
+    }
+
+    @Override
+    public void onMemberListPopulated(List<Member> memberList) {
+        contactSelectionFragment = ContactSelectionFragment.newInstance(Contact.convertFromMembers(memberList), false);
     }
 
     private void setupNewMemberRecyclerView() {
@@ -162,21 +168,15 @@ public class AddMembersActivity extends AppCompatActivity implements
     }
 
     private void launchContactSelectionFragment() {
-        Set<Contact> contactsSelected = !newMemberListStarted ? new HashSet<Contact>() :
-                new HashSet<>(Contact.convertFromMembers(newMemberListFragment.getSelectedMembers()));
-
-        contactSelectionFragment.setContactsToPreselect(contactsSelected);
-        Log.e(TAG, "setting contacts to filter ... set of " + contactsToFilter.size() + " elements");
-        contactSelectionFragment.setContactsToFilter(contactsToFilter);
-
-        onMainScreen = false;
-        toolbarTitle.setText(R.string.cs_title);
-
-        getSupportFragmentManager()
-                .beginTransaction()
-                .add(R.id.am_body_container, contactSelectionFragment)
-                .addToBackStack(null)
-                .commit();
+        if (contactSelectionFragment != null) { // just in case we are still waiting for member list to be populated
+            onMainScreen = false;
+            toolbarTitle.setText(R.string.cs_title);
+            getSupportFragmentManager()
+                    .beginTransaction()
+                    .add(R.id.am_body_container, contactSelectionFragment)
+                    .addToBackStack(null)
+                    .commit();
+        }
     }
 
     private void closeContactSelectionFragment() {
@@ -196,29 +196,22 @@ public class AddMembersActivity extends AppCompatActivity implements
     }
 
     @Override
-    public void onContactSelectionComplete(List<Contact> contactsAdded, Set<Contact> contactsRemoved) {
+    public void onContactSelectionComplete(List<Contact> contactsSelected) {
         Long start = SystemClock.currentThreadTimeMillis();
 
-        if (!contactsAdded.isEmpty()) {
-            setNewMembersVisible();
-            List<Member> newMembers = new ArrayList<>();
-            for (Contact contact : contactsAdded) {
-                Member m = new Member(contact.selectedNumber, contact.name,
-                        GroupConstants.ROLE_ORDINARY_MEMBER, contact.contact_ID);
-                membersFromContacts.put(contact.contact_ID, m);
-                newMembers.add(m);
-            }
-            newMemberListFragment.addMembers(newMembers);
-            Log.d(TAG, String.format("added contacts to fragment, in all took %d msecs", SystemClock.currentThreadTimeMillis() - start));
-        }
-
-        if (!contactsRemoved.isEmpty()) {
-            Log.e(TAG, "removing contacts! these ones : " + contactsRemoved.toString());
-            for (Contact contact : contactsRemoved) {
-                newMemberListFragment.removeMember(membersFromContacts.get(contact.contact_ID));
+        List<Member> selectedMembers = new ArrayList<>(manuallyAddedMembers);
+        for (Contact c : contactsSelected) {
+            if (membersFromContacts.containsKey(c.id)) {
+                selectedMembers.add(membersFromContacts.get(c.id));
+            } else {
+                Member m = new Member(c.selectedMsisdn, c.getDisplayName(), GroupConstants.ROLE_ORDINARY_MEMBER, c.id, true);
+                membersFromContacts.put(c.id, m);
+                selectedMembers.add(m);
             }
         }
+        newMemberListFragment.transitionToMemberList(selectedMembers);
 
+        Log.d(TAG, String.format("added contacts to fragment, in all took %d msecs", SystemClock.currentThreadTimeMillis() - start));
         closeContactSelectionFragment();
     }
 
@@ -227,7 +220,8 @@ public class AddMembersActivity extends AppCompatActivity implements
         super.onActivityResult(requestCode, resultCode, data);
         if (resultCode == RESULT_OK && requestCode == Constant.activityManualMemberEntry) {
             Member newMember = new Member(data.getStringExtra("selectedNumber"), data.getStringExtra("name"),
-                    GroupConstants.ROLE_ORDINARY_MEMBER, null);
+                    GroupConstants.ROLE_ORDINARY_MEMBER, -1);
+            manuallyAddedMembers.add(newMember);
             newMemberListFragment.addMembers(Collections.singletonList(newMember));
             setNewMembersVisible();
         }
@@ -307,13 +301,6 @@ public class AddMembersActivity extends AppCompatActivity implements
     @Override
     public void onMemberListInitiated(MemberListFragment fragment) {
 
-    }
-
-    @Override
-    public void onMemberListPopulated(List<Member> memberList) {
-        Log.e(TAG, "returned members: " + memberList);
-        contactsToFilter = new HashSet<>(Contact.convertFromMembers(memberList));
-        Log.e(TAG, "contacts created: " + contactsToFilter);
     }
 
     @Override

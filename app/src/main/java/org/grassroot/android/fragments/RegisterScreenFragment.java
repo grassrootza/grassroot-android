@@ -10,11 +10,10 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.AnimationUtils;
-import android.widget.EditText;
 
 import org.grassroot.android.R;
 import org.grassroot.android.utils.ErrorUtils;
-import org.grassroot.android.utils.UtilClass;
+import org.grassroot.android.utils.Utilities;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -85,7 +84,7 @@ public class RegisterScreenFragment extends Fragment {
             else
                 ErrorUtils.showSnackBar(container, R.string.Either_field_empty, Snackbar.LENGTH_SHORT);
 
-        } else if (!UtilClass.checkIfLocalNumber(phone)) {
+        } else if (!Utilities.checkIfLocalNumber(phone)) {
             etMobilePhone.requestFocus();
             etMobilePhone.setError(getString(R.string.Cellphone_number_invalid));
         } else {

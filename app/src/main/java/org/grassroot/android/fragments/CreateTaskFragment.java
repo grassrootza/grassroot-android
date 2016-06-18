@@ -36,7 +36,7 @@ import org.grassroot.android.utils.Constant;
 import org.grassroot.android.utils.ErrorUtils;
 import org.grassroot.android.utils.MenuUtils;
 import org.grassroot.android.utils.PreferenceUtils;
-import org.grassroot.android.utils.UtilClass;
+import org.grassroot.android.utils.Utilities;
 import org.greenrobot.eventbus.EventBus;
 
 import java.util.ArrayList;
@@ -258,7 +258,7 @@ public class CreateTaskFragment extends Fragment {
         if (includeWholeGroup || assignedMembers == null || assignedMembers.isEmpty()) {
             memberUids = Collections.emptySet();
         } else {
-            memberUids = UtilClass.convertMembersToUids(assignedMembers);
+            memberUids = Utilities.convertMembersToUids(assignedMembers);
         }
 
         switch (taskType) {
@@ -364,8 +364,8 @@ public class CreateTaskFragment extends Fragment {
     private ValueAnimator remindersContractAnimator;
 
     private void setUpReminderAnimators() {
-        remindersExpandAnimator = UtilClass.createSlidingAnimator(rlReminderBody, true);
-        remindersContractAnimator = UtilClass.createSlidingAnimator(rlReminderBody, true);
+        remindersExpandAnimator = Utilities.createSlidingAnimator(rlReminderBody, true);
+        remindersContractAnimator = Utilities.createSlidingAnimator(rlReminderBody, true);
         remindersContractAnimator.addListener(new AnimatorListenerAdapter() {
             @Override
             public void onAnimationEnd(Animator animation) {
@@ -418,8 +418,8 @@ public class CreateTaskFragment extends Fragment {
     ImageView ivDescExpandIcon;
 
     private void setUpDescriptionAnimators() {
-        descriptionExpandAnimator = UtilClass.createSlidingAnimator(descriptionBody, true);
-        descriptionContractAnimator = UtilClass.createSlidingAnimator(descriptionBody, false);
+        descriptionExpandAnimator = Utilities.createSlidingAnimator(descriptionBody, true);
+        descriptionContractAnimator = Utilities.createSlidingAnimator(descriptionBody, false);
 
         descriptionExpandAnimator.addListener(new AnimatorListenerAdapter() {
             @Override

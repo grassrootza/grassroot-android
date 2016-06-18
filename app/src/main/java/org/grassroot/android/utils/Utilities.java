@@ -6,13 +6,10 @@ package org.grassroot.android.utils;
 
 import android.animation.ValueAnimator;
 import android.telephony.PhoneNumberUtils;
-import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.EditText;
 
-import org.grassroot.android.R;
 import org.grassroot.android.models.Member;
 
 import java.text.SimpleDateFormat;
@@ -25,12 +22,12 @@ import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class UtilClass {
+public class Utilities {
 
-    private static final String TAG = UtilClass.class.getCanonicalName();
+    private static final String TAG = Utilities.class.getCanonicalName();
 
     private static final Pattern zaPhoneE164 = Pattern.compile("27[6,7,8]\\d{8}");
-    private static final Pattern zaPhoneE164Plus = Pattern.compile("\\+27[6,7,8]\\d{8}");
+    private static final Pattern zaPhoneE164Plus = Pattern.compile("\\+27[6,7,8]\\d{8}"); // make the "+" more general
     private static final Pattern nationalRegex = Pattern.compile("0[6,7,8]\\d{8}");
 
     public static ValueAnimator createSlidingAnimator(final ViewGroup viewGroup, boolean expand) {

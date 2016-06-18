@@ -23,7 +23,7 @@ import org.grassroot.android.slideDateTimePicker.SlideDateTimeListener;
 import org.grassroot.android.slideDateTimePicker.SlideDateTimePicker;
 import org.grassroot.android.utils.ErrorUtils;
 import org.grassroot.android.utils.PreferenceUtils;
-import org.grassroot.android.utils.UtilClass;
+import org.grassroot.android.utils.Utilities;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -206,7 +206,7 @@ public class EditVoteActivity extends PortraitActivity {
 
       //  showProgress();
         GrassrootRestService.getInstance().getApi().editVote(phoneNumber, code, voteId, title, description,
-                closingTime + UtilClass.timeZone()).enqueue(new Callback<GenericResponse>() {
+                closingTime + Utilities.timeZone()).enqueue(new Callback<GenericResponse>() {
             @Override
             public void onResponse(Call<GenericResponse> call, Response<GenericResponse> response) {
                 Log.e(TAG, "calling service");

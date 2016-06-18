@@ -11,7 +11,7 @@ import android.view.ViewGroup;
 import android.view.animation.AnimationUtils;
 
 import org.grassroot.android.R;
-import org.grassroot.android.utils.UtilClass;
+import org.grassroot.android.utils.Utilities;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -62,7 +62,7 @@ public class LoginScreenFragment extends Fragment {
         if (TextUtils.isEmpty(number)) {
             etNumberInput.requestFocus();
             etNumberInput.setError(getResources().getString(R.string.Cellphone_number_empty));
-        } else if (!UtilClass.checkIfLocalNumber(number)) {
+        } else if (!Utilities.checkIfLocalNumber(number)) {
             etNumberInput.requestFocus();
             etNumberInput.setError(getResources().getString(R.string.Cellphone_number_invalid));
         } else {

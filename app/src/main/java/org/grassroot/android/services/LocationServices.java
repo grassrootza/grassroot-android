@@ -1,4 +1,4 @@
-package org.grassroot.android.utils;
+package org.grassroot.android.services;
 
 import android.Manifest;
 import android.content.Context;
@@ -14,11 +14,13 @@ import com.google.android.gms.common.api.PendingResult;
 import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
-import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.LocationSettingsRequest;
 import com.google.android.gms.location.LocationSettingsResult;
-import org.grassroot.android.services.GrassrootRestService;
+
 import org.grassroot.android.models.GenericResponse;
+import org.grassroot.android.utils.Constant;
+import org.grassroot.android.utils.PermissionUtils;
+import org.grassroot.android.utils.PreferenceUtils;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -27,10 +29,12 @@ import retrofit2.Response;
 /**
  * Created by luke on 2016/05/10.
  */
-public class LocationUtils implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener,
+public class LocationServices implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener,
         LocationListener, ResultCallback<LocationSettingsResult> {
 
-    private static final String TAG = LocationUtils.class.getCanonicalName();
+    private static final String TAG = LocationServices.class.getCanonicalName();
+
+    private static LocationServices instance = null;
 
     private Context context;
     private GoogleApiClient googleApiClient;
@@ -39,17 +43,26 @@ public class LocationUtils implements GoogleApiClient.ConnectionCallbacks, Googl
     private Location lastKnownLocation;
 
     // todo : be careful of leaks from this
-    public static LocationUtils getInstance(Context context) {
-        return new LocationUtils(context);
+    public static LocationServices getInstance() {
+        LocationServices localInstance = instance;
+        if (localInstance == null) {
+            synchronized (LocationServices.class) {
+                localInstance = instance;
+                if (localInstance == null) {
+                    instance = localInstance = new LocationServices(ApplicationLoader.applicationContext);
+                }
+            }
+        }
+        return localInstance;
     }
 
-    public LocationUtils(Context context) {
+    public LocationServices(Context context) {
         this.context = context;
         if (googleApiClient == null) {
             googleApiClient = new GoogleApiClient.Builder(context)
                     .addConnectionCallbacks(this)
                     .addOnConnectionFailedListener(this)
-                    .addApi(LocationServices.API)
+                    .addApi(com.google.android.gms.location.LocationServices.API)
                     .build();
         }
 
@@ -78,7 +91,7 @@ public class LocationUtils implements GoogleApiClient.ConnectionCallbacks, Googl
             Log.e(TAG, "We have permission to access coarse locations!");
             LocationSettingsRequest.Builder builder = new LocationSettingsRequest.Builder()
                     .addLocationRequest(createLocationRequest());
-            PendingResult<LocationSettingsResult> result = LocationServices.SettingsApi
+            PendingResult<LocationSettingsResult> result = com.google.android.gms.location.LocationServices.SettingsApi
                     .checkLocationSettings(googleApiClient, builder.build());
             result.setResultCallback(this);
         }
@@ -115,8 +128,8 @@ public class LocationUtils implements GoogleApiClient.ConnectionCallbacks, Googl
     public void onResult(@NonNull LocationSettingsResult locationSettingsResult) {
         Log.d(TAG, "Got the location settings result back!");
         if (havePermission()) {
-            LocationServices.FusedLocationApi.requestLocationUpdates(googleApiClient, this.locationRequest, this);
-            lastKnownLocation = LocationServices.FusedLocationApi.getLastLocation(googleApiClient);
+            com.google.android.gms.location.LocationServices.FusedLocationApi.requestLocationUpdates(googleApiClient, this.locationRequest, this);
+            lastKnownLocation = com.google.android.gms.location.LocationServices.FusedLocationApi.getLastLocation(googleApiClient);
             if (lastKnownLocation != null) {
                 storeUserLocation(lastKnownLocation.getLatitude(), lastKnownLocation.getLongitude());
             }
@@ -130,9 +143,6 @@ public class LocationUtils implements GoogleApiClient.ConnectionCallbacks, Googl
     private void storeUserLocation(double latitude, double longitude) {
         String userNumber = PreferenceUtils.getUserPhoneNumber(context);
         String userToken = PreferenceUtils.getAuthToken(context);
-
-        if (userNumber == null || userToken == null)
-            throw new UnsupportedOperationException("Error! Environment not set up to do this");
 
         GrassrootRestService.getInstance().getApi()
                 .logLocation(userNumber, userToken, latitude, longitude)

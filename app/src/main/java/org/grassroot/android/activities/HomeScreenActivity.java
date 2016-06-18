@@ -41,6 +41,7 @@ public class HomeScreenActivity extends PortraitActivity implements NavigationDr
         setContentView(R.layout.activity_homescreen);
         drawerFrag = (NavigationDrawerFragment) getSupportFragmentManager().findFragmentById(R.id.navigation_drawer);
         ButterKnife.bind(this);
+        // EventBus.getDefault().register(this);
         setUpHomeFragment();
     }
 
@@ -81,7 +82,7 @@ public class HomeScreenActivity extends PortraitActivity implements NavigationDr
 
     @Override
     protected void onDestroy() {
-        EventBus.getDefault().unregister(this);
+        // EventBus.getDefault().unregister(this);
         super.onDestroy();
     }
 

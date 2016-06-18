@@ -1,19 +1,10 @@
 package org.grassroot.android.fragments;
 
 import android.app.ProgressDialog;
-import android.content.ContentResolver;
 import android.content.Context;
-import android.database.Cursor;
-import android.os.Build;
 import android.os.Bundle;
-import android.os.SystemClock;
-import android.provider.ContactsContract;
 import android.support.v4.app.Fragment;
-import android.support.v4.app.LoaderManager;
-import android.support.v4.content.CursorLoader;
-import android.support.v4.content.Loader;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -21,19 +12,16 @@ import android.widget.ListView;
 
 import org.grassroot.android.R;
 import org.grassroot.android.adapters.ContactsAdapter;
+import org.grassroot.android.events.ContactsLoadedEvent;
 import org.grassroot.android.fragments.dialogs.PickNumberDialogFragment;
 import org.grassroot.android.models.Contact;
-import org.grassroot.android.utils.Constant;
-import org.grassroot.android.utils.UtilClass;
+import org.grassroot.android.services.ContactService;
+import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
-import java.util.TreeSet;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -43,31 +31,16 @@ import butterknife.OnItemClick;
 /**
  * Created by luke on 2016/06/07.
  */
-public class ContactSelectionFragment extends Fragment implements
-        LoaderManager.LoaderCallbacks<Cursor>, PickNumberDialogFragment.PickNumberListener {
+public class ContactSelectionFragment extends Fragment implements PickNumberDialogFragment.PickNumberListener {
+
+    private static final String TAG = ContactSelectionFragment.class.getSimpleName();
 
     public interface ContactSelectionListener {
-        void onContactSelectionComplete(List<Contact> contactsAdded, Set<Contact> contactsRemoved);
+        void onContactSelectionComplete(List<Contact> contactsSelected);
     }
-
-    private static final String TAG = ContactSelectionFragment.class.getCanonicalName();
 
     private ContactsAdapter adapter;
     private ContactSelectionListener listener;
-
-    private List<Contact> retrievedContacts;
-
-    private Map<String, Contact> contactFilterMap;
-    private Set<Contact> contactsToPreselect;
-    private Set<Contact> contactsRemoved;
-
-    private String[] projectionForPhones = {
-            ContactsContract.CommonDataKinds.Phone.CONTACT_ID,
-            ContactsContract.CommonDataKinds.Phone.LOOKUP_KEY,
-            ContactsContract.CommonDataKinds.Phone.NUMBER,
-            ContactsContract.CommonDataKinds.Phone.TYPE,
-            ContactsContract.CommonDataKinds.Phone.LABEL,
-    };
 
     @BindView(R.id.cs_list_view)
     ListView contactListView;
@@ -76,20 +49,10 @@ public class ContactSelectionFragment extends Fragment implements
 
     public ContactSelectionFragment() { }
 
-    public void setContactsToPreselect(Set<Contact> contactsToPreselect) {
-        this.contactsToPreselect = contactsToPreselect;
-    }
-
-    public void setContactsToFilter(Set<Contact> contactsToFilter) {
-        contactFilterMap = new HashMap<>();
-        for (Contact c : contactsToFilter) {
-            final List<String> nums = c.numbers;
-            if (!nums.isEmpty()) {
-                for (String number : nums) {
-                    contactFilterMap.put(UtilClass.formatNumberToE164(number), c);
-                }
-            }
-        }
+    public static ContactSelectionFragment newInstance(List<Contact> filter, boolean filterByID) {
+        ContactSelectionFragment fragment = new ContactSelectionFragment();
+        ContactService.getInstance().syncContactList(filter, filterByID); // so it's ready to go when needed
+        return fragment;
     }
 
     @Override
@@ -97,18 +60,26 @@ public class ContactSelectionFragment extends Fragment implements
         super.onAttach(context);
         try {
             listener = (ContactSelectionListener) context;
+            EventBus.getDefault().register(this); // might not be triggered, but no problem is so
         } catch (ClassCastException e) {
             throw new UnsupportedOperationException("Error! Activity must implement listener");
+        }
+    }
+
+    @Subscribe
+    public void onContactsLoaded(ContactsLoadedEvent event) {
+        // note : contacts might finish loading before fragment is even attached, hence null checks
+        if (progressDialog != null && progressDialog.isShowing()) {
+            progressDialog.dismiss();
+        }
+        if (adapter != null) {
+            adapter.notifyDataSetChanged();
         }
     }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (contactsToPreselect == null)
-            contactsToPreselect = new HashSet<>();
-        if (contactsRemoved == null)
-            contactsRemoved = new HashSet<>();
     }
 
     @Override
@@ -120,222 +91,34 @@ public class ContactSelectionFragment extends Fragment implements
         return viewToReturn;
     }
 
-    // keep an eye out on this only being called when fragment is added to stack, not too early
     @Override
-    public void onActivityCreated(Bundle savedInstanceState) {
-        super.onActivityCreated(savedInstanceState);
-        getLoaderManager().initLoader(Constant.loaderContacts, null, this);
-        progressDialog = new ProgressDialog(getContext());
-        progressDialog.setMessage(getString(R.string.cs_loading_contacts));
-        progressDialog.show();
+    public void onResume() {
+        super.onResume();
+        if (ContactService.getInstance().contactsLoading) {
+            progressDialog = new ProgressDialog(getContext());
+            progressDialog.setMessage(getString(R.string.cs_loading_contacts));
+            progressDialog.show();
+        } else if (ContactService.getInstance().contactsFinishedLoading) {
+            if (adapter != null) {
+                adapter.notifyDataSetChanged();
+            }
+        } else {
+            throw new UnsupportedOperationException("Error! Selection fragment called without contact service started " +
+                    "or finished");
+        }
     }
 
     @OnClick(R.id.cs_bt_save)
     public void saveAndFinish() {
-        List<Contact> addedMembers = new ArrayList<>(adapter.getSelectedContacts());
-        addedMembers.removeAll(contactsToPreselect);
-        listener.onContactSelectionComplete(addedMembers, contactsRemoved);
-    }
-
-    // todo : move these into another class, later
-    @Override
-    public Loader<Cursor> onCreateLoader(int id, Bundle args) {
-
-        final String SORT_ORDER= Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB ?
-                ContactsContract.Contacts.SORT_KEY_PRIMARY: ContactsContract.Contacts.DISPLAY_NAME;
-        final String CONTACT_NAME = Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB ?
-                ContactsContract.Contacts.DISPLAY_NAME_PRIMARY: ContactsContract.Contacts.DISPLAY_NAME;
-
-        final String[] projection = {
-                ContactsContract.Contacts._ID,
-                ContactsContract.Contacts.LOOKUP_KEY,
-                CONTACT_NAME,
-                SORT_ORDER
-        };
-
-        final String select = "((" + ContactsContract.Contacts.DISPLAY_NAME + " NOTNULL) AND ("
-                + ContactsContract.Contacts.HAS_PHONE_NUMBER + "=1) AND ("
-                + ContactsContract.Contacts.DISPLAY_NAME + " != '' ))";
-
-        final String search = ContactsContract.Contacts.DISPLAY_NAME + " COLLATE LOCALIZED ASC";
-
-        /*CursorLoader cursorLoader = new CursorLoader(
-                getContext(),
-                ContactsContract.Contacts.CONTENT_URI,
-                projection,
-                select,
-                null,
-                search);*/
-
-        CursorLoader cursorLoader = new CursorLoader(getContext(),
-                ContactsContract.CommonDataKinds.Phone.CONTENT_URI, projectionForPhones, null, null, null);
-
-        return cursorLoader;
+        List<Contact> addedMembers = ContactService.getInstance().returnSelectedContacts();
+        listener.onContactSelectionComplete(addedMembers);
     }
 
     @Override
-    public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
-        assembleContactList(data);
-        adapter.setContactsToDisplay(retrievedContacts);
-        progressDialog.dismiss();
-    }
-
-    @Override
-    public void onLoaderReset(Loader<Cursor> loader) {
-        // todo : do we need to do anything?
-        retrievedContacts = new ArrayList<>();
-        adapter.setContactsToDisplay(retrievedContacts);
-    }
-
-    private void newContactList(Cursor contactHolder) {
-        Map<String, Contact> finalMap = new HashMap<>();
-
-        if (contactHolder == null || contactHolder.isClosed()) {
-            throw new UnsupportedOperationException("Error! Null or closed cursor handed to assembler");
-        }
-
-        Map<String, Contact> contactMap = new HashMap<>();
-        List<String> contactsAdded = new ArrayList<>();
-
-        final int keyCol = contactHolder.getColumnIndexOrThrow(ContactsContract.Contacts.LOOKUP_KEY);
-        final int numberCol = contactHolder.getColumnIndexOrThrow(ContactsContract.CommonDataKinds.Phone.NUMBER);
-
-        if (contactHolder.getCount() > 0) {
-            while (contactHolder.moveToNext()) {
-                String number = contactHolder.getString(numberCol);
-
-                if (TextUtils.isEmpty(number) || !UtilClass.checkIfLocalNumber(number)) {
-                    continue;
-                }
-
-                String numberNorm = UtilClass.formatNumberToE164(number);
-                if (TextUtils.isEmpty(numberNorm)) {
-                    continue;
-                }
-
-                if (contactMap.containsKey(numberNorm)) {
-                    continue;
-                }
-
-                String lKey = contactHolder.getString(keyCol);
-                if (!contactsAdded.contains(lKey)) {
-                    contactsAdded.add(lKey);
-                }
-
-                Contact contact = finalMap.get(lKey);
-                if (contact == null) {
-                    Contact c = new Contact(lKey, "");
-                    finalMap.put(lKey, c);
-                }
-
-                contact.numbers.add(number);
-                contact.msisdns.add(numberNorm);
-
-            }
-        }
-
-    }
-
-    private void assembleContactList(Cursor contactHolder) {
-        Long startTime = SystemClock.currentThreadTimeMillis();
-        if (contactHolder == null || contactHolder.isClosed()) {
-            throw new UnsupportedOperationException("Error! Null or closed cursor handed to contact list assembler");
-        }
-
-        Map<String, Contact> contactMap = new HashMap<>();
-
-        Set<Contact> contacts = new TreeSet<>();
-
-        if (retrievedContacts == null) {
-            retrievedContacts = new ArrayList<>();
-        } else {
-            retrievedContacts.clear();
-        }
-
-        Log.d(TAG, "inside assembleContacts, just got cursor with : " + contactHolder.getCount() + " elements");
-
-        final boolean filteringActive = contactFilterMap != null && !contactFilterMap.isEmpty();
-
-        if (contactHolder.getCount() > 0) {
-
-            final ContentResolver resolver = getContext().getContentResolver();
-            final int idIndex = contactHolder.getColumnIndexOrThrow(ContactsContract.Contacts.LOOKUP_KEY);
-            final int nameIndex = contactHolder.getColumnIndexOrThrow(ContactsContract.Contacts.DISPLAY_NAME_PRIMARY);
-            final String[] projection = { ContactsContract.CommonDataKinds.Phone.NUMBER };
-
-            while (contactHolder.moveToNext()) {
-
-                final String[] lookupKey = { contactHolder.getString(idIndex) };
-                final Cursor thisPhoneList = resolver.query(
-                        ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
-                        projection,
-                        ContactsContract.CommonDataKinds.Phone.LOOKUP_KEY + " = ?",
-                        lookupKey,
-                        null);
-
-                if (thisPhoneList != null) {
-                    if (thisPhoneList.getCount() > 0) {
-                        final Contact contactToAdd = constructContact(contactHolder, nameIndex, lookupKey[0], thisPhoneList,
-                                filteringActive);
-                        if (contactToAdd != null) {
-                            contacts.add(contactToAdd);
-                        }
-                    }
-
-                    thisPhoneList.close(); // cursor is not managed by a loader, so make sure to close
-                }
-            }
-
-            contactHolder.moveToPosition(-1); // reset, in case cursor is reused via stack management
-        }
-
-        //todo not the most effecient and elegant way to do this
-        retrievedContacts.addAll(contacts);
-        Log.d(TAG, String.format("Processed %d contacts, resulting in final list of %d entities, in %d msecs",
-                contactHolder.getCount(), retrievedContacts.size(), SystemClock.currentThreadTimeMillis() - startTime));
-
-    }
-
-    private Contact constructContact(final Cursor contactHolder, final int nameIndex,
-                                     final String lookupKey, final Cursor phoneList, boolean filteringActive) {
-
-        Contact contact = null;
-        final int phoneIndex = phoneList.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER);
-
-        // todo: shift the local number checking into a regex passed to the cursor
-        if (phoneList.getCount() == 1) {
-            phoneList.moveToFirst();
-            final String phone = phoneList.getString(phoneIndex);
-            if (UtilClass.checkIfLocalNumber(phone) && !isNumberInFilterMap(phone)) {
-                contact = new Contact(lookupKey, contactHolder.getString(nameIndex));
-                contact.selectedNumber = phone;
-                contact.numbers = Collections.singletonList(phone);
-            }
-        } else {
-            while (phoneList.moveToNext()) {
-                final String phone = phoneList.getString(phoneIndex);
-                if (UtilClass.checkIfLocalNumber(phone)) {
-                    if (isNumberInFilterMap(phone)) {
-                        return null;
-                    } else if (contact == null) {
-                        contact = new Contact(lookupKey, contactHolder.getString(nameIndex));
-                        contact.numbers = new ArrayList<>();
-                    }
-                    contact.numbers.add(phone);
-                }
-            }
-        }
-
-        if (contact != null && contactsToPreselect.contains(contact))
-            contact.isSelected = true;
-
-        return contact;
-    }
-
-    private boolean isNumberInFilterMap(String phone) {
-        if (contactFilterMap == null) return false;
-        if (contactFilterMap.get(UtilClass.formatNumberToE164(phone)) == null) return false;
-        return true;
+    public void onDetach() {
+        EventBus.getDefault().unregister(this);
+        ContactService.getInstance().resetSelectedState(false);
+        super.onDetach();
     }
 
     /**
@@ -346,16 +129,23 @@ public class ContactSelectionFragment extends Fragment implements
 
     private View temporaryViewHolder;
 
+    private void pickNumberDialog(Contact contact, int position) {
+        PickNumberDialogFragment dialog = PickNumberDialogFragment.newInstance(contact, position, this);
+        dialog.show(getFragmentManager(), "PickNumberDialog");
+    }
+
     @OnItemClick(R.id.cs_list_view)
     public void selectMember(View view, int position) {
         final Contact contact = adapter.getItem(position);
         if (contact.isSelected) {
             adapter.toggleSelected(position, view);
-            handlePreselected(contact);
         } else {
-            if (contact.numbers.size() <= 1) {
+            if (contact.numbers.size() == 1) {
+                if (TextUtils.isEmpty(contact.selectedNumber)) {
+                    contact.selectedNumber = contact.numbers.get(0);
+                    contact.selectedMsisdn = contact.msisdns.get(0);
+                }
                 adapter.toggleSelected(position, view);
-                handlePreselected(contact);
             } else {
                 temporaryViewHolder = view;
                 pickNumberDialog(contact, position);
@@ -363,28 +153,10 @@ public class ContactSelectionFragment extends Fragment implements
         }
     }
 
-    private void pickNumberDialog(Contact contact, int position) {
-        PickNumberDialogFragment dialog = new PickNumberDialogFragment();
-        dialog.setUp(contact, position, this);
-        dialog.show(getFragmentManager(), "PickNumberDialog");
-    }
-
     @Override
-    public void onNumberPicked(final int contactPosition, final CharSequence number) {
-        adapter.setSelected(contactPosition, temporaryViewHolder, number);
-        handlePreselected(adapter.getItem(contactPosition));
+    public void onNumberPicked(final int contactPosition, final int numberIndex) {
+        adapter.setSelected(contactPosition, numberIndex, temporaryViewHolder);
         temporaryViewHolder = null;
-    }
-
-    // nb : only ever call this _after_ toggling select (it presumes current state of isSelected is 'final')
-    private void handlePreselected(final Contact contact) {
-        if (!contactsToPreselect.isEmpty() && contactsToPreselect.contains(contact)) {
-            if (contact.isSelected) {
-                contactsRemoved.remove(contact);
-            } else {
-                contactsRemoved.add(contact);
-            }
-        }
     }
 
 }

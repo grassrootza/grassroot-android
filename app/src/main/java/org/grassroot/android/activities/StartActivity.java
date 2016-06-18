@@ -2,11 +2,9 @@ package org.grassroot.android.activities;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 
-import org.grassroot.android.utils.Constant;
-import org.grassroot.android.utils.LocationUtils;
+import org.grassroot.android.services.LocationServices;
 import org.grassroot.android.utils.PreferenceUtils;
 
 /**
@@ -30,7 +28,7 @@ public class StartActivity extends AppCompatActivity {
     }
 
     private void userIsLoggedIn() {
-        LocationUtils.getInstance(getApplicationContext()).connect();
+        LocationServices.getInstance().connect();
         Intent i  = new Intent(StartActivity.this, HomeScreenActivity.class);
         startActivity(i);
     }

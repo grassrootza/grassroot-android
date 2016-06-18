@@ -5,6 +5,7 @@ import android.app.ProgressDialog;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.Snackbar;
+import android.support.design.widget.TextInputEditText;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
@@ -18,13 +19,13 @@ import com.github.clans.fab.FloatingActionMenu;
 
 import org.grassroot.android.R;
 import org.grassroot.android.events.GroupCreatedEvent;
-import org.grassroot.android.interfaces.GroupConstants;
-import org.grassroot.android.models.Contact;
-import org.grassroot.android.services.GrassrootRestService;
-import org.grassroot.android.models.GroupResponse;
-import org.grassroot.android.models.Member;
 import org.grassroot.android.fragments.ContactSelectionFragment;
 import org.grassroot.android.fragments.MemberListFragment;
+import org.grassroot.android.interfaces.GroupConstants;
+import org.grassroot.android.models.Contact;
+import org.grassroot.android.models.GroupResponse;
+import org.grassroot.android.models.Member;
+import org.grassroot.android.services.GrassrootRestService;
 import org.grassroot.android.utils.Constant;
 import org.grassroot.android.utils.ErrorUtils;
 import org.grassroot.android.utils.PermissionUtils;
@@ -66,17 +67,13 @@ public class CreateGroupActivity extends PortraitActivity implements
 
     @BindView(R.id.tv_counter)
     TextView tvCounter;
-    @BindView(R.id.et_group_description)
-    EditText et_group_description;
-
-    @BindView(R.id.cg_txt_toolbar)
-    TextView txtToolbar;
     @BindView(R.id.et_groupname)
-    EditText et_groupname;
-    @BindView(R.id.cg_iv_crossimage)
-    ImageView ivCrossimage;
+    TextInputEditText et_groupname;
+    @BindView(R.id.et_group_description)
+    TextInputEditText et_group_description;
 
-    private Map<String, Member> mapMembersContacts;
+    private List<Member> manuallyAddedMembers;
+    private Map<Integer, Member> mapMembersContacts;
     private MemberListFragment memberListFragment;
 
     private ContactSelectionFragment contactSelectionFragment;
@@ -100,8 +97,9 @@ public class CreateGroupActivity extends PortraitActivity implements
 
     private void init() {
         memberListFragment = new MemberListFragment();
-        contactSelectionFragment = new ContactSelectionFragment();
+        contactSelectionFragment = ContactSelectionFragment.newInstance(null, false);
         mapMembersContacts = new HashMap<>();
+        manuallyAddedMembers = new ArrayList<>();
         onMainScreen = true;
     }
 
@@ -130,6 +128,7 @@ public class CreateGroupActivity extends PortraitActivity implements
             getSupportFragmentManager().popBackStack();
             onMainScreen = true;
         } else {
+            progressDialog.dismiss();
             finish();
         }
     }
@@ -160,7 +159,6 @@ public class CreateGroupActivity extends PortraitActivity implements
     private void launchContactSelectionFragment() {
         Set<Contact> preSelectedSet = new HashSet<>(Contact.convertFromMembers(memberListFragment.getSelectedMembers()));
         onMainScreen = false;
-        contactSelectionFragment.setContactsToPreselect(preSelectedSet);
         getSupportFragmentManager()
                 .beginTransaction()
                 .add(R.id.cg_body_root, contactSelectionFragment)
@@ -177,33 +175,21 @@ public class CreateGroupActivity extends PortraitActivity implements
     }
 
     @Override
-    public void onContactSelectionComplete(List<Contact> contactsAdded, Set<Contact> contactsRemoved) {
-
-        Log.e(TAG, "contacts added! these: " + contactsAdded.toString() + ", and removed: " + contactsRemoved.toString());
-
-        List<Member> membersToAdd = new ArrayList<>();
-        List<Member> membersToRemove = new ArrayList<>();
-
-        for (Contact c : contactsAdded) {
-            Member m = new Member(c.selectedNumber, c.name, GroupConstants.ROLE_ORDINARY_MEMBER, c.lookupKey, true);
-            mapMembersContacts.put(c.lookupKey, m);
-            membersToAdd.add(m);
-        }
-
-        for (Contact c : contactsRemoved) {
-            Member m = mapMembersContacts.get(c.lookupKey);
-            if (m != null) {
-                membersToRemove.add(m);
+    public void onContactSelectionComplete(List<Contact> contactsSelected) {
+        progressDialog.show();
+        List<Member> selectedMembers = new ArrayList<>(manuallyAddedMembers);
+        for (Contact c : contactsSelected) {
+            if (mapMembersContacts.containsKey(c.id)) {
+                selectedMembers.add(mapMembersContacts.get(c.id));
+            } else {
+                Member m = new Member(c.selectedMsisdn, c.getDisplayName(), GroupConstants.ROLE_ORDINARY_MEMBER, c.id, true);
+                mapMembersContacts.put(c.id, m);
+                selectedMembers.add(m);
             }
         }
-
-        if (!membersToAdd.isEmpty())
-            memberListFragment.addMembers(membersToAdd);
-        if (!membersToRemove.isEmpty())
-            memberListFragment.removeMembers(membersToRemove);
-
+        memberListFragment.transitionToMemberList(selectedMembers);
         closeContactSelectionFragment();
-
+        progressDialog.hide();
     }
 
     @OnClick(R.id.icon_add_member_manually)
@@ -226,7 +212,7 @@ public class CreateGroupActivity extends PortraitActivity implements
         }
     }
 
-    private void createGroup(){
+    private void createGroup() {
 
         showProgress();
         String mobileNumber = PreferenceUtils.getUserPhoneNumber(CreateGroupActivity.this);
@@ -245,10 +231,9 @@ public class CreateGroupActivity extends PortraitActivity implements
                             hideProgress();
                             PreferenceUtils.setUserHasGroups(getApplicationContext(), true);
                             Intent resultIntent = new Intent();
-                            Log.e(TAG, "here's the response body: " + response.body().toString());
                             resultIntent.putExtra(GroupConstants.OBJECT_FIELD, response.body().getGroups().get(0));
                             setResult(RESULT_OK, resultIntent);
-                            Log.e(TAG, "returning group created! with UID : " + response.body().getGroups().get(0).getGroupUid());
+                            Log.d(TAG, "returning group created! with UID : " + response.body().getGroups().get(0).getGroupUid());
                             EventBus.getDefault().post(new GroupCreatedEvent());
                             finish();
                         } else {
@@ -271,7 +256,8 @@ public class CreateGroupActivity extends PortraitActivity implements
         if (resultCode == Activity.RESULT_OK && data != null) {
             if (requestCode == Constant.activityManualMemberEntry) {
                 Member newMember = new Member(data.getStringExtra("selectedNumber"), data.getStringExtra("name"),
-                        GroupConstants.ROLE_ORDINARY_MEMBER, null);
+                        GroupConstants.ROLE_ORDINARY_MEMBER, -1);
+                manuallyAddedMembers.add(newMember);
                 memberListFragment.addMembers(Collections.singletonList(newMember));
             }
         }

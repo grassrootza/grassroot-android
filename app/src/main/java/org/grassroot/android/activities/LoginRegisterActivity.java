@@ -26,7 +26,7 @@ import org.grassroot.android.services.GrassrootRestService;
 import org.grassroot.android.utils.Constant;
 import org.grassroot.android.utils.ErrorUtils;
 import org.grassroot.android.utils.PreferenceUtils;
-import org.grassroot.android.utils.UtilClass;
+import org.grassroot.android.utils.Utilities;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -82,7 +82,7 @@ public class LoginRegisterActivity extends AppCompatActivity implements LoginScr
     @Override
     public void requestLogin(String mobileNumber) {
         progressDialog.show();
-        msisdn = UtilClass.formatNumberToE164(mobileNumber);
+        msisdn = Utilities.formatNumberToE164(mobileNumber);
         GrassrootRestService.getInstance().getApi()
                 .login(msisdn)
                 .enqueue(new Callback<GenericResponse>() {
@@ -115,7 +115,7 @@ public class LoginRegisterActivity extends AppCompatActivity implements LoginScr
     @Override
     public void requestRegistration(String userName, String phoneNumber) {
         progressDialog.show();
-        msisdn = UtilClass.formatNumberToE164(phoneNumber);
+        msisdn = Utilities.formatNumberToE164(phoneNumber);
         displayName = userName;
 
         GrassrootRestService.getInstance().getApi()

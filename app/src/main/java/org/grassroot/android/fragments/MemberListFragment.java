@@ -82,6 +82,13 @@ public class MemberListFragment extends Fragment {
             memberListAdapter.setShowSelected(showSelected);
     }
 
+    public void transitionToMemberList(List<Member> members) {
+        // todo : optimize this (get difference), maybe
+        if (memberListAdapter != null) {
+            memberListAdapter.resetMembers(members);
+        }
+    }
+
     public void addMembers(List<Member> members) {
         if (memberListAdapter != null) {
             memberListAdapter.addMembers(members);
@@ -91,12 +98,6 @@ public class MemberListFragment extends Fragment {
     public void removeMember(Member member) {
         if (memberListAdapter != null) {
             memberListAdapter.removeMember(member);
-        }
-    }
-
-    public void removeMembers(List<Member> members) {
-        if (memberListAdapter != null) {
-            memberListAdapter.removeMembers(members);
         }
     }
 

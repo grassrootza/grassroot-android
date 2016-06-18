@@ -1,6 +1,5 @@
 package org.grassroot.android.services;
 
-import android.app.Application;
 import android.content.Context;
 import android.support.annotation.Nullable;
 
@@ -36,14 +35,28 @@ import retrofit2.http.Query;
 /**
  * Created by paballo on 2016/05/03.
  */
-public class GrassrootRestService extends Application {
+public class GrassrootRestService {
 
     private static final String GRASSROOT_SERVER_URL = Constant.restUrl;
     private RestApi mRestApi;
-    private static GrassrootRestService instance;
+
+    private static GrassrootRestService instance = null;
 
     //default constructor required instantiation by the loaders
-    public GrassrootRestService(){}
+    public GrassrootRestService(){ }
+
+    public static GrassrootRestService getInstance() {
+        GrassrootRestService methodInstance = instance;
+        if (methodInstance == null) {
+            synchronized (GrassrootRestService.class) {
+                methodInstance = instance;
+                if (methodInstance == null) {
+                    instance = methodInstance = new GrassrootRestService(ApplicationLoader.applicationContext);
+                }
+            }
+        }
+        return methodInstance;
+    }
 
     private GrassrootRestService(Context context) {
         HttpLoggingInterceptor logging = new HttpLoggingInterceptor();
@@ -61,32 +74,6 @@ public class GrassrootRestService extends Application {
                 .client(client).build();
 
         mRestApi = retrofit.create(RestApi.class);
-    }
-
-    public synchronized static GrassrootRestService getInstance(){
-        return instance;
-    }
-
-    @Override
-    public void onCreate() {
-        super.onCreate();
-
-        HttpLoggingInterceptor logging = new HttpLoggingInterceptor();
-        logging.setLevel(HttpLoggingInterceptor.Level.BASIC);
-
-        OkHttpClient client = new OkHttpClient.Builder()
-                .addInterceptor(logging)
-                .addNetworkInterceptor(new ConnectivityInterceptor(GrassrootRestService.this))
-                .addNetworkInterceptor(new HeaderInterceptor())
-                .build();
-
-        Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl(GRASSROOT_SERVER_URL)
-                .addConverterFactory(GsonConverterFactory.create())
-                .client(client).build();
-
-        mRestApi = retrofit.create(RestApi.class);
-        instance = new GrassrootRestService(this);
     }
 
     public RestApi getApi() {
