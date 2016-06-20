@@ -239,6 +239,12 @@ public class GrassrootRestService {
                                                  @Path("code") String code,
                                                  @Path("id") String todoId);
 
+        //get logbook assigned
+        @GET("logbook/assigned/{phoneNumber}/{code}/{uid}")
+        Call<MemberList> getTodoAssigned(@Path("phoneNumber") String phoneNumber,
+                                         @Path("code") String code,
+                                         @Path("uid") String todoId);
+
 
         /*
         SECTION : CREATE TASKS

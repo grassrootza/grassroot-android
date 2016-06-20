@@ -25,9 +25,12 @@ import android.widget.TextView;
 import org.grassroot.android.R;
 import org.grassroot.android.activities.EditVoteActivity;
 import org.grassroot.android.activities.NotBuiltActivity;
+import org.grassroot.android.adapters.MemberListAdapter;
 import org.grassroot.android.adapters.MtgRsvpAdapter;
 import org.grassroot.android.interfaces.NetworkErrorDialogListener;
 import org.grassroot.android.interfaces.TaskConstants;
+import org.grassroot.android.models.Member;
+import org.grassroot.android.models.MemberList;
 import org.grassroot.android.models.ResponseTotalsModel;
 import org.grassroot.android.models.RsvpListModel;
 import org.grassroot.android.models.TaskModel;
@@ -37,6 +40,7 @@ import org.grassroot.android.utils.ErrorUtils;
 import org.grassroot.android.utils.PreferenceUtils;
 
 import java.util.Date;
+import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -56,6 +60,7 @@ public class ViewTaskFragment extends Fragment {
     private String code;
     private boolean canViewResponses;
     private MtgRsvpAdapter mtgRsvpAdapter;
+    private MemberListAdapter memberListAdapter;
 
     private ViewGroup mContainer;
 
@@ -82,6 +87,8 @@ public class ViewTaskFragment extends Fragment {
     ImageView icRespondPositive;
     @BindView(R.id.vt_right_response)
     ImageView icRespondNegative;
+    @BindView(R.id.vt_cv_response_list)
+    CardView cv_responseList;
 
     @BindView(R.id.vt_responses_count)
     TextView tvResponsesCount;
@@ -91,6 +98,10 @@ public class ViewTaskFragment extends Fragment {
     RecyclerView rcResponseList;
     @BindView(R.id.vt_vote_response_details)
     LinearLayout llVoteResponseDetails;
+    @BindView(R.id.td_rl_response_icon)
+    RelativeLayout rlResponse;
+    @BindView(R.id.bt_td_respond)
+    ImageView btTodoRespond;
 
     @BindView(R.id.vt_bt_modify)
     Button btModifyTask;
@@ -103,7 +114,8 @@ public class ViewTaskFragment extends Fragment {
     @BindView(R.id.ll_no_internet)
     LinearLayout imNoInternet;
 
-    public ViewTaskFragment() { }
+    public ViewTaskFragment() {
+    }
 
     // use this if creating or calling the fragment without whole task object (e.g., entering from notification)
     public static ViewTaskFragment newInstance(String taskType, String taskUid) {
@@ -167,22 +179,22 @@ public class ViewTaskFragment extends Fragment {
         progressBar.setVisibility(View.VISIBLE);
         GrassrootRestService.getInstance().getApi().fetchTaskEntity(phoneNumber, code, taskUid, taskType)
                 .enqueue(new Callback<TaskResponse>() {
-            @Override
-            public void onResponse(Call<TaskResponse> call, Response<TaskResponse> response) {
-                progressBar.setVisibility(View.GONE);
-                if (response.isSuccessful()) {
-                    Log.d(TAG, response.body().toString());
-                    task = response.body().getTasks().get(0);
-                    setUpViews();
-                }
-            }
+                    @Override
+                    public void onResponse(Call<TaskResponse> call, Response<TaskResponse> response) {
+                        progressBar.setVisibility(View.GONE);
+                        if (response.isSuccessful()) {
+                            Log.d(TAG, response.body().toString());
+                            task = response.body().getTasks().get(0);
+                            setUpViews();
+                        }
+                    }
 
-            @Override
-            public void onFailure(Call<TaskResponse> call, Throwable t) {
-                progressBar.setVisibility(View.GONE);
-                handleNoNetwork("FETCH");
-            }
-        });
+                    @Override
+                    public void onFailure(Call<TaskResponse> call, Throwable t) {
+                        progressBar.setVisibility(View.GONE);
+                        handleNoNetwork("FETCH");
+                    }
+                });
     }
 
     private void setUpViews() {
@@ -263,6 +275,31 @@ public class ViewTaskFragment extends Fragment {
     }
 
     private void setViewForToDo() {
+        tvTitle.setText(R.string.ctodo_subject);
+        tvHeader.setText(task.getTitle());
+        tvPostedBy.setText(String.format(getString(R.string.vt_vote_posted), task.getName()));
+        tvDateTime.setText(String.format(getString(R.string.vt_todo_datetime),
+                TaskConstants.dateDisplayFormatWithHours.format(task.getDeadlineDate())));
+        rlResponse.setVisibility(View.VISIBLE);
+        llResponseIcons.setVisibility(View.GONE);
+        if (!task.isInFuture() && !task.hasResponded()) {
+            tvResponseHeader.setText(R.string.todo_overdue);
+        } else if (task.hasResponded()) {
+            tvResponseHeader.setText(R.string.todo_completed);
+        } else if (!task.hasResponded() && task.canAction()) {
+            tvResponseHeader.setText(R.string.todo_pending);
+            setUpTodoResponseIconsCanAction();
+        } else {
+            tvResponseHeader.setText(R.string.todo_pending);
+        }
+
+
+        if (task.isCanEdit()) {
+            btModifyTask.setVisibility(View.VISIBLE);
+            btModifyTask.setText(R.string.vt_vote_modify);
+        }
+        setUpAssignedMembersView();
+
 
     }
 
@@ -275,6 +312,12 @@ public class ViewTaskFragment extends Fragment {
         icRespondPositive.setEnabled(!task.respondedYes());
         icRespondNegative.setImageResource(task.respondedNo() ? R.drawable.ic_no_vote_active : R.drawable.ic_no_vote_inactive);
         icRespondNegative.setEnabled(!task.respondedNo());
+    }
+
+
+    private void setUpTodoResponseIconsCanAction() {
+        btTodoRespond.setImageResource(R.drawable.ic_vote_tick_inactive);
+
     }
 
     @OnClick(R.id.vt_left_response)
@@ -319,6 +362,25 @@ public class ViewTaskFragment extends Fragment {
         });
     }
 
+    @OnClick(R.id.bt_td_respond)
+    public void completeTodo() {
+        GrassrootRestService.getInstance().getApi().completeTodo(phoneNumber, code, taskUid).enqueue(new Callback<TaskResponse>() {
+            @Override
+            public void onResponse(Call<TaskResponse> call, Response<TaskResponse> response) {
+                if (response.isSuccessful()) {
+                    handleSuccessfulReply(response, TaskConstants.TODO_DONE);
+                } else {
+                    handleUnknownError(response);
+                }
+            }
+
+            @Override
+            public void onFailure(Call<TaskResponse> call, Throwable t) {
+                handleNoNetwork("COMPLETE_TODO");
+            }
+        });
+    }
+
     private Call<TaskResponse> voteCall(String response) {
         return GrassrootRestService.getInstance().getApi().castVote(taskUid, phoneNumber, code, response);
     }
@@ -327,10 +389,46 @@ public class ViewTaskFragment extends Fragment {
         return GrassrootRestService.getInstance().getApi().rsvp(taskUid, phoneNumber, code, response);
     }
 
+    private void setUpAssignedMembersView() {
+
+        memberListAdapter = new MemberListAdapter(getActivity());
+        rcResponseList.setLayoutManager(new LinearLayoutManager(getContext()));
+        rcResponseList.setAdapter(memberListAdapter);
+
+
+        GrassrootRestService.getInstance().getApi().getTodoAssigned(phoneNumber, code, taskUid).enqueue(new Callback<MemberList>() {
+            @Override
+            public void onResponse(Call<MemberList> call, Response<MemberList> response) {
+                if (response.isSuccessful()) {
+                    List<Member> members = response.body().getMembers();
+                    if (!members.isEmpty()) {
+                        memberListAdapter.addMembers(response.body().getMembers());
+                        canViewResponses = true;
+                        tvResponsesCount.setText(R.string.todo_members_assigned);
+                    } else {
+                        tvResponsesCount.setText(R.string.todo_group_assigned);
+                    }
+                } else {
+                    //todo handle this error
+                }
+            }
+
+            @Override
+            public void onFailure(Call<MemberList> call, Throwable t) {
+                handleNoNetwork("ASSIGNED_MEMBERS");
+
+            }
+        });
+    }
+
     private void handleSuccessfulReply(Response<TaskResponse> response, String reply) {
         task = response.body().getTasks().get(0);
-        ErrorUtils.showSnackBar(mContainer, snackBarMsg(reply), Snackbar.LENGTH_SHORT); // todo: rename error utils
-        setUpResponseIconsCanAction();
+        ErrorUtils.showSnackBar(mContainer, snackBarMsg(reply), Snackbar.LENGTH_SHORT); // todo: rename error utils)
+        if (!reply.equals(TaskConstants.TODO)) {
+            setUpResponseIconsCanAction();
+        } else {
+            btTodoRespond.setImageResource(R.drawable.ic_vote_tick_active);
+        }
         tvResponseHeader.setText(snackBarMsg(reply));
     }
 
@@ -353,6 +451,7 @@ public class ViewTaskFragment extends Fragment {
     /*
     SECTION : HANDLING DETAILS ON RSVP LIST, VOTE TOTALS, ETC.
      */
+
 
     private void setMeetingRsvpView() {
 
@@ -436,6 +535,7 @@ public class ViewTaskFragment extends Fragment {
                     toggleVoteDetails();
                     break;
                 case TaskConstants.TODO:
+                    toggleResponseList();
                     break;
             }
         }
@@ -486,7 +586,11 @@ public class ViewTaskFragment extends Fragment {
                     startActivityForResult(editVote, 1);
                     break;
                 case TaskConstants.TODO:
+                    Intent editTodo = new Intent(getActivity(), NotBuiltActivity.class);
+                    editTodo.putExtra("title", "Modify Todo");
+                    startActivity(editTodo);
                     break;
+
             }
         }
     }
@@ -500,7 +604,7 @@ public class ViewTaskFragment extends Fragment {
                 return response.equals(TaskConstants.RESPONSE_YES) ? R.string.vt_vote_snackbar_yes :
                         R.string.vt_vote_snackbar_no;
             case TaskConstants.TODO:
-                break;
+                return R.string.vt_todo_done;
         }
         return -1;
     }
@@ -527,6 +631,11 @@ public class ViewTaskFragment extends Fragment {
                     case "VOTE_TOTALS":
                         setVoteResponseView();
                         break;
+                    case "COMPLETE_TODO":
+                        completeTodo();
+                        break;
+                    case "ASSIGNED_MEMBERS":
+                        setUpAssignedMembersView();
                     default:
                         retrieveTaskDetails();
                 }

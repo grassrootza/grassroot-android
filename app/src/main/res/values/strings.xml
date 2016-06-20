@@ -36,7 +36,8 @@
     <string name="Cellphone_number_invalid">Please enter a valid cellphone number</string>
     <string name="Cellphone_number_empty">Please enter cellphone number to proceed.</string>
     <string name="User_not_registered">Sorry, that number isn\'t registered yet.</string>
-    <string name="OTP_empty">Please enter verification code to proceed</string>
+    <string name="otp_hint">Enter PIN sent by SMS</string>
+    <string name="OTP_empty">Please enter the code sent by SMS</string>
     <string name="OTP_invalid">Please enter the correct code to proceed.</string>
     <string name="Otp_success">Please Enter Verification code sent by SMS</string>
     <string name="INVALID_TOKEN">You seem to be signed in to another device. Please logout and login again</string>
@@ -253,6 +254,7 @@
     <string name="vt_row_abstain">Abstained</string>
     <string name="vt_row_no_reply">No response</string>
     <string name="vt_vote_modify">Extend vote</string>
+    <string name="vt_todo_done">You have marked todo as completed.</string>
 
     <string name="vv_tv_toolbar">VIEW VOTE</string>
     <string name="vv_bt_editvote">Modify Vote</string>
@@ -264,6 +266,10 @@
     <string name="vv_numberOfUsers">Number of User</string>
     <string name="vv_numberNoRSVP">Number of RSVP</string>
     <string name="vv_voteup">Vote Details Updated Successfully</string>
+
+    <string name="vt_todo_datetime">Due %s</string>
+
+
 
     <!--Profile--><!--pp-->
     <string name="pp_txt_toolbar">Profile Settings</string>
@@ -325,6 +331,9 @@
         <item>nso</item>
     </string-array>
 
+    <!--View Task Activity-->
+    <string name="jcf_join_code">*134*1994* %1$ #</string>
+
     <!--Notifications-->
     <string-array name="Notifications">
         <item>Notify on all events</item>
@@ -382,5 +391,12 @@
     <string name="GROUP_NOT_FOUND">No groups matching your key were found.</string>
     <string name="GCM_UNREGISTER">unregister</string>
     <string name="title_activity_notification">NotificationActivity</string>
+    <string name="todo_overdue">TODO is overdue</string>
+    <string name="todo_completed">TODO was completed</string>
+    <string name="todo_pending">TODO is pending</string>
+    <string name="todo_members_assigned">Members assigned</string>
+    <string name="todo_group_assigned">Whole group assigned</string>
+    <string name="cf_join_code">*134*1994*</string>
+    <string name="none">NONE</string>
 
 </resources>

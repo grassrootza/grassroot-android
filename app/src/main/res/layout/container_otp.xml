@@ -18,7 +18,7 @@
             android:id="@+id/et_otp"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Enter Verification code"
+            android:hint="@string/otp_hint"
             android:padding="10dp"
             android:singleLine="true"
             android:textColorHint="#5d5d5d"

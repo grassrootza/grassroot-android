@@ -266,7 +266,7 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
 
     @Override
     public void onCardClick(int position, String taskUid, String taskType) {
-        if (TaskConstants.MEETING.equals(taskType) || TaskConstants.VOTE.equals(taskType)) {
+      //  if (TaskConstants.MEETING.equals(taskType) || TaskConstants.VOTE.equals(taskType)) {
             // todo: use a callback to tell activity to switch up icon to cross
             ViewTaskFragment taskFragment = ViewTaskFragment.newInstance(taskType, taskUid);
             getFragmentManager().beginTransaction()
@@ -274,7 +274,7 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
                     .add(container.getId(), taskFragment, ViewTaskFragment.class.getCanonicalName())
                     .addToBackStack(null)
                     .commit();
-        }
+      //  }
     }
 
     @OnClick(R.id.im_no_internet)

@@ -98,6 +98,26 @@
                         android:textStyle="bold"
                         tools:text="@string/vv_rl_vote_header" />
 
+                    <RelativeLayout
+                        android:id="@+id/td_rl_response_icon"
+                        android:layout_width="match_parent"
+                        android:layout_below="@+id/vt_response_header"
+                        android:layout_height="wrap_content"
+                        android:visibility="gone">
+
+                        <ImageButton
+                            android:id="@+id/bt_td_respond"
+                            android:layout_width="@dimen/md_icon_max_size"
+                            android:layout_height="@dimen/md_icon_max_size"
+                            android:background="?android:selectableItemBackground"
+                            android:padding="@dimen/padding_half"
+                            android:layout_marginRight="@dimen/margin_small"
+                            android:layout_centerHorizontal="true"
+                            android:scaleType="fitCenter"
+                            />
+
+                    </RelativeLayout>
+
                     <LinearLayout
                         android:id="@+id/vt_ll_response_icons"
                         android:layout_below="@+id/vt_response_header"
