@@ -396,7 +396,13 @@
     <string name="todo_pending">TODO is pending</string>
     <string name="todo_members_assigned">Members assigned</string>
     <string name="todo_group_assigned">Whole group assigned</string>
+
+    <string name="jc_join_title">Join code</string>
     <string name="cf_join_code">*134*1994*</string>
+    <string name="jc_row_one">*134</string>
+    <string name="jc_row_two">*1994</string>
+    <string name="jc_row_three">*%s#</string>
+
     <string name="none">NONE</string>
 
 </resources>

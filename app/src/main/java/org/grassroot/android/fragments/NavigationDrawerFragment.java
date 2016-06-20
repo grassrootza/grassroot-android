@@ -22,6 +22,7 @@ import org.grassroot.android.activities.ProfileSettingsActivity;
 import org.grassroot.android.activities.StartActivity;
 import org.grassroot.android.adapters.NavigationDrawerAdapter;
 import org.grassroot.android.events.NotificationEvent;
+import org.grassroot.android.events.UserLoggedOutEvent;
 import org.grassroot.android.fragments.dialogs.ConfirmCancelDialogFragment;
 import org.grassroot.android.interfaces.ClickListener;
 import org.grassroot.android.interfaces.NavigationConstants;
@@ -148,6 +149,7 @@ public class NavigationDrawerFragment extends Fragment {
                     public void doConfirmClicked() {
                         unregisterGcm();
                         PreferenceUtils.clearAll(getActivity().getApplicationContext());
+                        EventBus.getDefault().post(new UserLoggedOutEvent());
                         Intent open = new Intent(getActivity(), StartActivity.class);
                         startActivity(open);
                     }

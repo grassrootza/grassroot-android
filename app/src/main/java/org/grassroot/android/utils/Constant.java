@@ -52,9 +52,7 @@ public class Constant {
      * RESULT CODES FOR ACTIVITIES
      * todo : make an enum with to/from int, or do bitmasking etc
      */
-    public static final int activityContactSelection = 1;
     public static final int activityManualMemberEntry = 2;
-    public static final int activitySelectNumberFromContact = 3;
     public static final int activityAddMembersToGroup = 4;
     public static final int activityRemoveMembers = 5;
     public static final int activityCreateGroup = 6;

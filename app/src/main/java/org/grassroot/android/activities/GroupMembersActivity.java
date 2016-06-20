@@ -108,8 +108,7 @@ public class GroupMembersActivity extends PortraitActivity implements MemberList
         tvExistingMembers.setVisibility(showGroupHeader ? View.VISIBLE : View.GONE);
         llCheckAllClearAll.setVisibility(showGroupHeader ? View.GONE : View.VISIBLE);
 
-        newTaskMenuFragment = new NewTaskMenuFragment();
-        newTaskMenuFragment.setArguments(MenuUtils.groupArgument(group));
+        newTaskMenuFragment = NewTaskMenuFragment.newInstance(group, false, false);
 
         setUpToolbar();
         setUpFloatingMenu();

@@ -49,6 +49,19 @@ public class NewTaskMenuFragment extends Fragment {
     private String groupUid;
     private String groupName;
 
+    private boolean showAddMembers;
+    private boolean showJoinCode; // putting this here as may need it after user feedback
+
+    public static NewTaskMenuFragment newInstance(Group groupMembership, boolean showAddMembers, boolean showJoinCode) {
+        NewTaskMenuFragment fragment = new NewTaskMenuFragment();
+        fragment.showAddMembers = showAddMembers;
+        fragment.showJoinCode = showJoinCode;
+        Bundle b = new Bundle();
+        b.putParcelable(GroupConstants.OBJECT_FIELD, groupMembership);
+        fragment.setArguments(b);
+        return fragment;
+    }
+
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
@@ -90,7 +103,7 @@ public class NewTaskMenuFragment extends Fragment {
         bt_meeting.setVisibility(groupMembership.canCallMeeting() ? View.VISIBLE : View.GONE);
         bt_vote.setVisibility(groupMembership.canCallVote() ? View.VISIBLE : View.GONE);
         bt_todo.setVisibility(groupMembership.canCreateTodo() ? View.VISIBLE : View.GONE);
-        bt_addmember.setVisibility(groupMembership.canAddMembers() ? View.VISIBLE : View.GONE);
+        bt_addmember.setVisibility(groupMembership.canAddMembers() && showAddMembers ? View.VISIBLE : View.GONE);
     }
 
     @OnClick(R.id.iv_back)

@@ -1,5 +1,6 @@
 package org.grassroot.android.fragments;
 
+import android.content.Context;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
@@ -12,6 +13,7 @@ import org.grassroot.android.interfaces.GroupConstants;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import butterknife.OnClick;
 
 /**
  * Created by paballo on 2016/06/10.
@@ -20,14 +22,19 @@ public class JoinCodeFragment extends Fragment {
 
     public static final String TAG = JoinCodeFragment.class.getCanonicalName();
 
-    @BindView(R.id.txt_cde_prefix)
-    TextView txt_title;
-    @BindView(R.id.txt_code)
-    TextView txt_code;
-    @BindView(R.id.txt_cde_postfix)
-    TextView txt_postfix;
+    @BindView(R.id.jc_text_row1)
+    TextView tvRow1;
+    @BindView(R.id.jc_text_row2)
+    TextView tvRow2;
+    @BindView(R.id.jc_text_row3)
+    TextView tvRow3;
 
     private String joinCode;
+    private JoinCodeListener listener;
+
+    public interface JoinCodeListener {
+        void joinCodeClose();
+    }
 
     public static JoinCodeFragment newInstance(String joinCode){
         JoinCodeFragment fragment = new JoinCodeFragment();
@@ -37,11 +44,19 @@ public class JoinCodeFragment extends Fragment {
         return fragment;
     }
 
+    @Override
+    public void onAttach(Context context) {
+        super.onAttach(context) ;
+        try {
+            listener = (JoinCodeListener) context;
+        } catch (ClassCastException e) {
+            throw new UnsupportedOperationException("Error! Activity holding join code fragment must implement listener");
+        }
+    }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
         Bundle args = getArguments();
         if (args != null) {
             joinCode = args.getString(GroupConstants.JOIN_CODE);
@@ -54,18 +69,24 @@ public class JoinCodeFragment extends Fragment {
         ButterKnife.bind(this, view);
 
         if(!joinCode.equals(getString(R.string.none))){
-            txt_title.setText(getString(R.string.cf_join_code));
-            txt_code.setText(joinCode);
-            txt_postfix.setText("#");
-        }
-        else {
-            txt_title.setText((getString(R.string.none)));
+            tvRow1.setText(R.string.jc_row_one);
+            tvRow2.setText(R.string.jc_row_two);
+            tvRow3.setText(String.format(getString(R.string.jc_row_three), joinCode));
+        } else {
+            tvRow2.setText((getString(R.string.none)));
+            tvRow1.setVisibility(View.GONE);
+            tvRow2.setVisibility(View.GONE);
         }
 
         return view;
     }
 
-  }
+    @OnClick(R.id.jc_iv_back)
+    public void onBackClicked() {
+        listener.joinCodeClose();
+    }
+
+}
 
 
 

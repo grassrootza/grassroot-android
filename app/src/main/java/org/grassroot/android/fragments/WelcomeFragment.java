@@ -16,6 +16,7 @@ import android.widget.Button;
 import org.grassroot.android.R;
 import org.grassroot.android.activities.CreateGroupActivity;
 import org.grassroot.android.activities.GroupSearchActivity;
+import org.grassroot.android.utils.Constant;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -26,24 +27,22 @@ public class WelcomeFragment extends android.support.v4.app.Fragment {
 
     @BindView(R.id.toolbar)
     Toolbar toolbar;
-    //@BindView(R.id.txt_welcometitle)
-    //TextView toolbarText;
     @BindView(R.id.bt_joingroup)
     Button bt_joingroup;
     @BindView(R.id.bt_startgroup)
     Button bt_startgroup;
 
-    private FragmentCallbacks mCallbacks;
+    private WelcomeFragmentListener listener;
 
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
         Activity activity = (Activity) context;
         try {
-            mCallbacks = (FragmentCallbacks) activity;
+            listener = (WelcomeFragmentListener) activity;
             Log.e("onAttach", "Attached");
         } catch (ClassCastException e) {
-            throw new ClassCastException("Activity must implement Fragment One.");
+            throw new ClassCastException("Activity must implement callbacks.");
         }
     }
 
@@ -56,19 +55,18 @@ public class WelcomeFragment extends android.support.v4.app.Fragment {
     }
 
     private void setUpToolbar() {
-        // toolbarText.setText(getResources().getString(R.string.txt_welcome_short));
         toolbar.setNavigationIcon(ContextCompat.getDrawable(getActivity(), R.drawable.btn_navigation));
         toolbar.setNavigationOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mCallbacks.menuClick();
+                listener.menuClick();
             }
         });
     }
 
     @OnClick(R.id.bt_startgroup)
     public void startgroup() {
-        startActivity(new Intent(getActivity(), CreateGroupActivity.class));
+        getActivity().startActivityForResult(new Intent(getActivity(), CreateGroupActivity.class), Constant.activityCreateGroup);
     }
 
     @OnClick(R.id.bt_joingroup)
@@ -76,14 +74,14 @@ public class WelcomeFragment extends android.support.v4.app.Fragment {
         startActivity(new Intent(getActivity(), GroupSearchActivity.class));
     }
 
-    public interface FragmentCallbacks {
+    public interface WelcomeFragmentListener {
         void menuClick();
     }
 
     @Override
     public void onDetach() {
         super.onDetach();
-        mCallbacks = null;
+        listener = null;
         Log.e("onDetach", "Detached");
     }
 }

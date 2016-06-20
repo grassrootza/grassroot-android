@@ -1,6 +1,7 @@
 package org.grassroot.android.activities;
 
 import android.content.Intent;
+import android.graphics.Paint;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.NavUtils;
@@ -27,7 +28,7 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 
-public class GroupTasksActivity extends PortraitActivity implements NewTaskMenuFragment.NewTaskMenuListener {
+public class GroupTasksActivity extends PortraitActivity implements NewTaskMenuFragment.NewTaskMenuListener, JoinCodeFragment.JoinCodeListener {
 
     private static final String TAG = GroupTasksActivity.class.getCanonicalName();
 
@@ -52,8 +53,7 @@ public class GroupTasksActivity extends PortraitActivity implements NewTaskMenuF
         }
 
         groupMembership = extras.getParcelable(GroupConstants.OBJECT_FIELD);
-        newTaskMenuFragment = new NewTaskMenuFragment();
-        newTaskMenuFragment.setArguments(MenuUtils.groupArgument(groupMembership));
+        newTaskMenuFragment = NewTaskMenuFragment.newInstance(groupMembership, true, false);
 
         setUpViews();
         setUpFragment();
@@ -138,23 +138,23 @@ public class GroupTasksActivity extends PortraitActivity implements NewTaskMenuF
     private void handleUpButton() {
         Fragment frag = getSupportFragmentManager().findFragmentByTag(ViewTaskFragment.class.getCanonicalName());
         Log.d(TAG, "found this fragment: " + frag);
-        if (frag != null && frag.isVisible())
+        if (frag != null && frag.isVisible()) {
             getSupportFragmentManager().beginTransaction()
                     .setCustomAnimations(R.anim.push_down_in, R.anim.push_down_out)
                     .remove(frag)
                     .commit();
-        else
+        } else {
             NavUtils.navigateUpFromSameTask(this);
+        }
     }
 
     private void setUpJoinCodeFragment(){
         String joinCode = groupMembership.getJoinCode();
         joinCodeFragment = JoinCodeFragment.newInstance(joinCode);
         getSupportFragmentManager().beginTransaction()
-                .replace(R.id.gta_fragment_holder, joinCodeFragment)
+                .replace(R.id.gta_root_layout, joinCodeFragment, JoinCodeFragment.class.getCanonicalName())
                 .addToBackStack(null)
                 .commit();
-
     }
 
     @Override
@@ -164,4 +164,13 @@ public class GroupTasksActivity extends PortraitActivity implements NewTaskMenuF
                 .remove(newTaskMenuFragment)
                 .commit();
     }
+
+    @Override
+    public void joinCodeClose() {
+        getSupportFragmentManager().beginTransaction()
+                .setCustomAnimations(R.anim.push_down_in, R.anim.push_down_out)
+                .remove(joinCodeFragment)
+                .commit();
+    }
+
 }
