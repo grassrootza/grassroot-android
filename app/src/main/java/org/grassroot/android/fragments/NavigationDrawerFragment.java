@@ -115,9 +115,10 @@ public class NavigationDrawerFragment extends Fragment {
 
     public ArrayList<NavDrawerItem> getData() {
         draweritems = new ArrayList<>();
+        draweritems.add(new NavDrawerItem(getString(R.string.Notifications),R.drawable.ic_notification,R.drawable.ic_notification_green,false));
+        draweritems.add(new NavDrawerItem(getString(R.string.Share), R.drawable.ic_share, R.drawable.ic_share_green, false));
         draweritems.add(new NavDrawerItem(getString(R.string.Profile),R.drawable.ic_profile,R.drawable.ic_profile_green,false));
         draweritems.add(new NavDrawerItem(getString(R.string.FAQs),R.drawable.ic_faq,R.drawable.ic_faq_green,false));
-        draweritems.add(new NavDrawerItem(getString(R.string.Notifications),R.drawable.ic_notification,R.drawable.ic_notification_green,false));
         draweritems.add(new NavDrawerItem(getString(R.string.Logout),R.drawable.ic_logout,R.drawable.ic_logout_green,false));
         return draweritems;
     }
@@ -125,14 +126,17 @@ public class NavigationDrawerFragment extends Fragment {
     private void selectItem(int position) {
         // handle common & reusable things here, pass back more complex or context-dependent to activity
         switch (position) {
+            case NavigationConstants.HOME_NAV_NOTIFICATIONS:
+                startActivity(new Intent(getActivity(), NotificationCenter.class));
+                break;
+            case NavigationConstants.HOME_NAV_SHARE:
+                shareApp();
+                break;
             case NavigationConstants.HOME_NAV_PROFILE:
                 startActivity(new Intent(getActivity(), ProfileSettingsActivity.class));
                 break;
             case NavigationConstants.HOME_NAV_FAQ:
                 startActivity(new Intent(getActivity(), FAQActivity.class));
-                break;
-            case NavigationConstants.HOME_NAV_NOTIFICATIONS:
-                startActivity(new Intent(getActivity(), NotificationCenter.class));
                 break;
             case NavigationConstants.HOME_NAV_LOGOUT:
                 logout();
@@ -141,6 +145,13 @@ public class NavigationDrawerFragment extends Fragment {
                 // todo : put in handling non-standard items
         }
         mCallbacks.onNavigationDrawerItemSelected(position);
+    }
+
+    private void shareApp() {
+        Intent shareIntent = new Intent(Intent.ACTION_SEND);
+        shareIntent.setType("text/plain");
+        shareIntent.putExtra(Intent.EXTRA_TEXT, getString(R.string.share_app_text));
+        startActivity(shareIntent);
     }
 
     private void logout() {
