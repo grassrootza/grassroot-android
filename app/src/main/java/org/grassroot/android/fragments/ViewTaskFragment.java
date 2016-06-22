@@ -23,10 +23,11 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import org.grassroot.android.R;
-import org.grassroot.android.activities.EditVoteActivity;
-import org.grassroot.android.activities.NotBuiltActivity;
+import org.grassroot.android.activities.EditTaskActivity;
 import org.grassroot.android.adapters.MemberListAdapter;
 import org.grassroot.android.adapters.MtgRsvpAdapter;
+import org.grassroot.android.events.TaskCancelledEvent;
+import org.grassroot.android.events.TaskUpdatedEvent;
 import org.grassroot.android.interfaces.NetworkErrorDialogListener;
 import org.grassroot.android.interfaces.TaskConstants;
 import org.grassroot.android.models.Member;
@@ -38,6 +39,8 @@ import org.grassroot.android.models.TaskResponse;
 import org.grassroot.android.services.GrassrootRestService;
 import org.grassroot.android.utils.ErrorUtils;
 import org.grassroot.android.utils.PreferenceUtils;
+import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
 
 import java.util.Date;
 import java.util.List;
@@ -139,6 +142,7 @@ public class ViewTaskFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        EventBus.getDefault().register(this);
         if (getArguments() != null) {
             Bundle args = getArguments();
             task = args.getParcelable(TaskConstants.TASK_ENTITY_FIELD);
@@ -170,7 +174,7 @@ public class ViewTaskFragment extends Fragment {
         if (task == null) {
             retrieveTaskDetails();
         } else {
-            setUpViews();
+            setUpViews(task);
         }
         return viewToReturn;
     }
@@ -185,7 +189,8 @@ public class ViewTaskFragment extends Fragment {
                         if (response.isSuccessful()) {
                             Log.d(TAG, response.body().toString());
                             task = response.body().getTasks().get(0);
-                            setUpViews();
+                            Log.e(TAG, task.toString());
+                            setUpViews(task);
                         }
                     }
 
@@ -197,23 +202,27 @@ public class ViewTaskFragment extends Fragment {
                 });
     }
 
-    private void setUpViews() {
+    private void setUpViews(TaskModel task) {
         tvDescription.setVisibility(TextUtils.isEmpty(task.getDescription()) ? View.GONE : View.VISIBLE);
 
         switch (taskType) {
             case TaskConstants.MEETING:
-                setViewForMeeting();
+                setViewForMeeting(task);
                 break;
             case TaskConstants.VOTE:
-                setViewForVote();
+                setViewForVote(task);
                 break;
             case TaskConstants.TODO:
-                setViewForToDo();
+                setViewForToDo(task);
                 break;
         }
     }
 
-    private void setViewForMeeting() {
+    private void disableViewsOnCancel(){
+
+    }
+
+    private void setViewForMeeting(TaskModel task) {
         tvTitle.setText(R.string.vt_mtg_title);
         tvHeader.setText(task.getTitle());
         tvLocation.setVisibility(View.VISIBLE);
@@ -246,7 +255,7 @@ public class ViewTaskFragment extends Fragment {
         setMeetingRsvpView();
     }
 
-    private void setViewForVote() {
+    private void setViewForVote(TaskModel task) {
         tvTitle.setText(R.string.vt_vote_title);
         tvHeader.setText(task.getTitle());
         tvLocation.setVisibility(View.GONE);
@@ -274,7 +283,7 @@ public class ViewTaskFragment extends Fragment {
         setVoteResponseView();
     }
 
-    private void setViewForToDo() {
+    private void setViewForToDo(TaskModel task) {
         tvTitle.setText(R.string.ctodo_subject);
         tvHeader.setText(task.getTitle());
         tvPostedBy.setText(String.format(getString(R.string.vt_vote_posted), task.getName()));
@@ -288,12 +297,10 @@ public class ViewTaskFragment extends Fragment {
             tvResponseHeader.setText(R.string.todo_completed);
         } else if (!task.hasResponded() && task.canAction()) {
             tvResponseHeader.setText(R.string.todo_pending);
-            setUpTodoResponseIconsCanAction();
         } else {
             tvResponseHeader.setText(R.string.todo_pending);
         }
-
-
+        setUpTodoResponseIconsCanAction();
         if (task.isCanEdit()) {
             btModifyTask.setVisibility(View.VISIBLE);
             btModifyTask.setText(R.string.vt_vote_modify);
@@ -316,8 +323,9 @@ public class ViewTaskFragment extends Fragment {
 
 
     private void setUpTodoResponseIconsCanAction() {
-        btTodoRespond.setImageResource(R.drawable.ic_vote_tick_inactive);
-
+        if(task.canAction()) {
+            btTodoRespond.setImageResource(R.drawable.ic_vote_tick_inactive);
+        }
     }
 
     @OnClick(R.id.vt_left_response)
@@ -424,10 +432,17 @@ public class ViewTaskFragment extends Fragment {
     private void handleSuccessfulReply(Response<TaskResponse> response, String reply) {
         task = response.body().getTasks().get(0);
         ErrorUtils.showSnackBar(mContainer, snackBarMsg(reply), Snackbar.LENGTH_SHORT); // todo: rename error utils)
-        if (!reply.equals(TaskConstants.TODO)) {
-            setUpResponseIconsCanAction();
-        } else {
-            btTodoRespond.setImageResource(R.drawable.ic_vote_tick_active);
+        switch (reply){
+            case TaskConstants.TODO:
+                setUpResponseIconsCanAction();
+                break;
+            case TaskConstants.TODO_DONE:
+                btTodoRespond.setImageResource(R.drawable.ic_vote_tick_active);
+                btTodoRespond.setEnabled(false);
+                break;
+            default:
+                setUpResponseIconsCanAction();
+                break;
         }
         tvResponseHeader.setText(snackBarMsg(reply));
     }
@@ -570,28 +585,10 @@ public class ViewTaskFragment extends Fragment {
     @OnClick(R.id.vt_bt_modify)
     public void modifyTask() {
         if (task.isCanEdit()) {
-            switch (taskType) {
-                case TaskConstants.MEETING:
-                    // todo : make this more efficient
-                    Intent editMtg = new Intent(getActivity(), NotBuiltActivity.class);
-                    editMtg.putExtra("title", "Modify meeting");
-                    startActivity(editMtg);
-                    break;
-                case TaskConstants.VOTE:
-                    Intent editVote = new Intent(getActivity(), EditVoteActivity.class);
-                    editVote.putExtra("description", task.getDescription());
-                    editVote.putExtra("deadline", task.getDeadlineDate());
-                    editVote.putExtra("voteid", task.getTaskUid());
-                    editVote.putExtra("title", task.getTitle());
-                    startActivityForResult(editVote, 1);
-                    break;
-                case TaskConstants.TODO:
-                    Intent editTodo = new Intent(getActivity(), NotBuiltActivity.class);
-                    editTodo.putExtra("title", "Modify Todo");
-                    startActivity(editTodo);
-                    break;
+            Intent editMtg = new Intent(getActivity(), EditTaskActivity.class);
+            editMtg.putExtra(TaskConstants.TASK_ENTITY_FIELD,task);;
+            startActivityForResult(editMtg, 1);
 
-            }
         }
     }
 
@@ -647,4 +644,21 @@ public class ViewTaskFragment extends Fragment {
         ErrorUtils.showSnackBar(mContainer, R.string.error_generic, Snackbar.LENGTH_LONG);
     }
 
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        EventBus.getDefault().unregister(this);
+    }
+
+    @Subscribe
+    public void onTaskUpdated(TaskUpdatedEvent event){
+        TaskModel updatedTask = event.getTask();
+        setUpViews(updatedTask);
+
+    }
+
+    @Subscribe
+    public void onTaskCancelled(TaskCancelledEvent event){
+
+    }
 }

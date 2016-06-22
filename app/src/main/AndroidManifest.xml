@@ -161,7 +161,13 @@
         <activity
             android:name=".activities.CreateMeetingActivity"
             android:label="@string/cmtg_title"
-            android:theme="@style/AppTheme" />
+            android:theme="@style/AppTheme"
+            android:windowSoftInputMode="adjustNothing" />
+
+        <activity
+            android:name=".activities.EditTaskActivity"
+            android:theme="@style/AppTheme"
+            android:windowSoftInputMode="adjustNothing" />
 
         <!-- Vote related activities -->
 
@@ -169,17 +175,18 @@
             android:name=".activities.CreateVoteActivity"
             android:label="@string/title_activity_create_vote"
             android:theme="@style/AppTheme"
-            android:windowSoftInputMode="adjustResize" />
+            android:windowSoftInputMode="adjustNothing" />
 
         <activity
             android:name=".activities.EditVoteActivity"
-            android:windowSoftInputMode="adjustPan" />
+            android:windowSoftInputMode="adjustNothing" />
 
         <!-- Todo related activities -->
         <activity
             android:name=".activities.CreateTodoActivity"
             android:label="@string/ctodo_title"
-            android:theme="@style/AppTheme" />
+            android:theme="@style/AppTheme"
+            android:windowSoftInputMode="adjustNothing" />
 
         <!-- Navigation drawer / system activities -->
         <activity android:name=".activities.NotificationCenter" />

@@ -202,6 +202,16 @@
     <string name="ctsk_todo_assigned_success">Done! Action assigned to %d members</string>
     <string name="ctsk_todo_all_success">Done! Action assigned to whole group</string>
 
+    <string name="etsk_meeting_updated_success">Done! Meeting updated.</string>
+    <string name="etsk_vote_update_success">Done! Vote updated.</string>
+    <string name="etsk_todo_updated_success">Done! Action updated</string>
+
+
+    <string name="etsk_meeting_cancelled">Done! Meeting cancelled.</string>
+    <string name="etsk_vote_cancelled">Done! Vote updated.</string>
+    <string name="etsk_todo_cancelled">Done! Action updated</string>
+
+
     <!--Edit Vote-->
     <string name="ev_tv_toolbar">EDIT VOTE</string>
     <string name="ev_bt_save">Save Changes</string>
@@ -404,5 +414,19 @@
     <string name="jc_row_three">*%s#</string>
 
     <string name="none">NONE</string>
+    <string name="edit_meeting">Edit Meeting</string>
+    <string name="edit_vote">Edit Vote</string>
+    <string name="edit_todo">Edit TODO</string>
+    <string name="task_update">Update</string>
+    <string name="task_cancel">Cancel</string>
+    <string name="uMeeting">Update Meeting</string>
+    <string name="caMeeting">Cancel Meeting</string>
+    <string name="uVote">Update vote</string>
+    <string name="caVote">Cancel vote</string>
+    <string name="uTodo">Update todo</string>
+    <string name="caTodo">Cancel todo</string>
+    <string name="et_cnfrm_mtg">Are you sure you want to cancel the meeting?</string>
+    <string name="et_cnfrm_vt">Are you sure you want to cancel the vote?</string>
+    <string name="et_cnfrm_td">Are you sure you want to cancel the todo?</string>
 
 </resources>

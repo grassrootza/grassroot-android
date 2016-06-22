@@ -146,6 +146,7 @@ public class TaskModel implements Parcelable, Comparable<TaskModel> {
         dest.writeString(this.title);
         dest.writeString(this.description);
         dest.writeString(this.location);
+        dest.writeString(this.parentUid);
         dest.writeString(this.name);
         dest.writeString(this.type);
         dest.writeString(this.deadline);
@@ -153,6 +154,7 @@ public class TaskModel implements Parcelable, Comparable<TaskModel> {
         dest.writeInt(this.hasResponded ? 1 : 0);
         dest.writeInt(this.canAction ? 1 : 0);
         dest.writeInt(this.canEdit ? 1 : 0);
+        dest.writeInt(this.wholeGroupAssigned?1:0);
         dest.writeString(this.reply);
         dest.writeString(this.completedYes);
         dest.writeString(this.completedNo);
@@ -164,6 +166,7 @@ public class TaskModel implements Parcelable, Comparable<TaskModel> {
         this.title = in.readString();
         this.description = in.readString();
         this.location = in.readString();
+        this.parentUid = in.readString();
         this.name = in.readString();
         this.type = in.readString();
         this.deadline = in.readString();
@@ -171,6 +174,7 @@ public class TaskModel implements Parcelable, Comparable<TaskModel> {
         this.hasResponded = in.readInt() != 0;
         this.canAction = in.readInt() != 0;
         this.canEdit = in.readInt() != 0;
+        this.wholeGroupAssigned = in.readInt() != 0;
         this.reply = in.readString();
         this.completedYes = in.readString();
         this.completedNo = in.readString();

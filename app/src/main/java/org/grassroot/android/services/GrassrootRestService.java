@@ -285,11 +285,29 @@ public class GrassrootRestService {
          */
 
         //edit vote
-        @POST("vote/update/{id}/{phoneNumber}/{code}")
-        Call<GenericResponse> editVote(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
-                                       @Path("id") String id,@Query("title") String title, @Query("description") String description,
+        @POST("vote/update/{uid}/{phoneNumber}/{code}")
+        Call<TaskResponse> editVote(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
+                                       @Path("uid") String id,@Query("title") String title, @Query("description") String description,
                                        @Query("closingTime") String closingTime);
 
-    }
+        //edit meeting
+        @POST("meeting/update/{uid}/{phoneNumber}/{code}")
+        Call<TaskResponse> editMeeting(@Path("phoneNumber") String phoneNumber, @Path("code")String code,
+                                          @Path("uid") String uid, @Query("title") String titile, @Query("description") String description,
+                                          @Query("location") String location,
+                                          @Query("startTime") String startTime, @Query("reminderMins") int reminderMinutes );
 
-}
+
+        //cancel meeting
+        @POST("meeting/cancel/{phoneNumber}/{code}")
+        Call<GenericResponse> cancelMeeting(@Path("phoneNumber") String phoneNumber, @Path("code")String code,
+                                       @Query("uid") String uid);
+
+        //cancel vote
+        @POST("vote/cancel/{phoneNumber}/{code}")
+        Call<GenericResponse> cancelVote(@Path("phoneNumber") String phoneNumber, @Path("code")String code,
+                                            @Query("uid") String uid);
+
+
+
+}}

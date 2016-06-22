@@ -205,7 +205,7 @@ public class EditVoteActivity extends PortraitActivity {
         description = et_description.getText().toString();
 
       //  showProgress();
-        GrassrootRestService.getInstance().getApi().editVote(phoneNumber, code, voteId, title, description,
+     /*   GrassrootRestService.getInstance().getApi().editVote(phoneNumber, code, voteId, title, description,
                 closingTime + Utilities.timeZone()).enqueue(new Callback<GenericResponse>() {
             @Override
             public void onResponse(Call<GenericResponse> call, Response<GenericResponse> response) {
@@ -232,7 +232,7 @@ public class EditVoteActivity extends PortraitActivity {
                 Log.e(TAG, t.toString());
                 handleNetworkError(R.string.error_no_network);
             }
-        });
+        });*/
 
     }
 
