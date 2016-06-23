@@ -9,6 +9,9 @@
     tools:context=".fragments.ViewTaskFragment">
 
     <!-- todo : decide if we need a scrollview around this -->
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
     <android.support.v7.widget.CardView
         android:id="@+id/vt_root_card"
         style="@style/RootCardView">
@@ -214,6 +217,7 @@
         </RelativeLayout>
 
     </android.support.v7.widget.CardView>
+    </ScrollView>
 
     <include
         android:id="@+id/error_layout"

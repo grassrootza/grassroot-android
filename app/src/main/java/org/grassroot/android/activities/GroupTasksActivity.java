@@ -1,7 +1,6 @@
 package org.grassroot.android.activities;
 
 import android.content.Intent;
-import android.graphics.Paint;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.NavUtils;
@@ -10,6 +9,8 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+
+import com.github.clans.fab.FloatingActionButton;
 
 import org.grassroot.android.R;
 import org.grassroot.android.fragments.JoinCodeFragment;
@@ -40,6 +41,9 @@ public class GroupTasksActivity extends PortraitActivity implements NewTaskMenuF
     @BindView(R.id.gta_toolbar)
     Toolbar toolbar;
 
+    @BindView(R.id.gta_fab)
+    FloatingActionButton fab;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -53,8 +57,11 @@ public class GroupTasksActivity extends PortraitActivity implements NewTaskMenuF
         }
 
         groupMembership = extras.getParcelable(GroupConstants.OBJECT_FIELD);
-        newTaskMenuFragment = NewTaskMenuFragment.newInstance(groupMembership, true, false);
-
+        if(!groupMembership.hasCreatePermissions()){
+            fab.setVisibility(View.GONE);
+        }else{
+            newTaskMenuFragment = NewTaskMenuFragment.newInstance(groupMembership, true, false);
+        }
         setUpViews();
         setUpFragment();
     }

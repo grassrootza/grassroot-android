@@ -72,9 +72,13 @@ public class Group implements Parcelable, Comparable<Group> {
         return groupMemberCount;
     }
 
-    public String getJoinCode() { return joinCode; }
+    public String getJoinCode() {
+        return joinCode;
+    }
 
-    public boolean isHasTasks() { return hasTasks; }
+    public boolean isHasTasks() {
+        return hasTasks;
+    }
 
     public String getDateTimeStringISO() {
         if (dateTimeStringISO == null || dateTimeStringISO.equals("")) {
@@ -85,7 +89,9 @@ public class Group implements Parcelable, Comparable<Group> {
         }
     }
 
-    public String getLastChangeType() { return lastChangeType; }
+    public String getLastChangeType() {
+        return lastChangeType;
+    }
 
     public Date getDate() {
         if (date == null) {
@@ -132,6 +138,11 @@ public class Group implements Parcelable, Comparable<Group> {
 
     public boolean canAddMembers() {
         return permissions.contains(GroupConstants.PERM_ADD_MEMBER);
+    }
+
+    public boolean hasCreatePermissions() {
+        return permissions.contains(GroupConstants.PERM_CREATE_MTG) || permissions.contains(GroupConstants.PERM_CALL_VOTE)
+                || permissions.contains(GroupConstants.PERM_CREATE_TODO) || permissions.contains(GroupConstants.PERM_ADD_MEMBER);
     }
 
     public boolean canViewMembers() {

@@ -58,12 +58,11 @@ public class EditTaskFragment extends Fragment {
 
     private static final String TAG = EditTaskFragment.class.getCanonicalName();
 
-    private String groupUid;
     private String taskType;
     private TaskModel task;
 
     private Date selectedDateTime;
-    private Set<Member> assignedMembers;
+
 
     private ViewGroup vContainer;
 
@@ -85,12 +84,7 @@ public class EditTaskFragment extends Fragment {
     @BindView(R.id.etsk_sw_one_hour)
     SwitchCompat swOneHourAhead;
 
-    @BindView(R.id.etsk_rl_notify_count)
-    RelativeLayout notifyCountHolder;
-    @BindView(R.id.etsk_tv_member_count)
-    TextView notifyMembersCount;
-    @BindView(R.id.etsk_tv_suffix)
-    TextView notifyCountSuffix;
+
 
     @BindView(R.id.etsk_reminder_body)
     RelativeLayout rlReminderBody;
@@ -120,7 +114,6 @@ public class EditTaskFragment extends Fragment {
         Bundle args = getArguments();
         task = args.getParcelable(TaskConstants.TASK_ENTITY_FIELD);
         taskType = task.getType();
-        groupUid = task.getParentUid();
         selectedDateTime = task.getDeadlineDate();
         datePickerListener = new SlideDateTimeListener() {
             @Override
@@ -173,7 +166,8 @@ public class EditTaskFragment extends Fragment {
     @OnClick(R.id.etsk_btn_cancel_task)
     public void confirmAndCancel(){
         String dialogMessage = generateConfirmationDialogStrings();
-        ConfirmCancelDialogFragment confirmCancelDialogFragment = ConfirmCancelDialogFragment.newInstance(dialogMessage, new ConfirmCancelDialogFragment.ConfirmDialogListener() {
+        ConfirmCancelDialogFragment confirmCancelDialogFragment = ConfirmCancelDialogFragment.newInstance(dialogMessage,
+                new ConfirmCancelDialogFragment.ConfirmDialogListener() {
             @Override
             public void doConfirmClicked() {
                 cancelTask();
@@ -190,6 +184,7 @@ public class EditTaskFragment extends Fragment {
                 etDescriptionInput.setText(task.getDescription());
                 etLocationInput.setText(task.getLocation());
                 dateTimeDisplayed.setText(TaskConstants.dateDisplayFormatWithHours.format(task.getDeadlineDate()));
+
                 break;
             case TaskConstants.VOTE:
                 etTitleInput.setText(task.getTitle());
@@ -221,7 +216,6 @@ public class EditTaskFragment extends Fragment {
 
             @Override
             public void onFailure(Call<TaskResponse> call, Throwable t) {
-                // todo: improve and fix this
                 ErrorUtils.connectivityError(getActivity(), R.string.error_no_network, new NetworkErrorDialogListener() {
                     @Override
                     public void retryClicked() {
@@ -281,9 +275,10 @@ public class EditTaskFragment extends Fragment {
             case TaskConstants.VOTE:
                 return GrassrootRestService.getInstance().getApi().editVote(phoneNumber, code, uid, title,
                         description, dateTimeISO);
-       /*     case TaskConstants.TODO:
-                return GrassrootRestService.getInstance().getApi().createTodo(phoneNumber, code, groupUid, title,
-                        description, dateTimeISO, minutes, memberUids);*/
+            //disable for now
+           /* case TaskConstants.TODO:
+                return GrassrootRestService.getInstance().getApi().editTodo(phoneNumber, code, title,
+                        dateTimeISO, minutes, null);*/
             default:
                 throw new UnsupportedOperationException("Error! Missing task type in call");
         }
@@ -368,8 +363,8 @@ public class EditTaskFragment extends Fragment {
 
         switch (taskType) {
             case TaskConstants.MEETING:
-                btTaskUpdate.setText(R.string.uMeeting);
-                btCancelTask.setText(R.string.caMeeting);
+               // btTaskUpdate.setText(R.string.uMeeting);
+               // btCancelTask.setText(R.string.caMeeting);
                 break;
             case TaskConstants.VOTE:
                 subjectInput.setHint(getContext().getString(R.string.cvote_subject));
@@ -379,15 +374,15 @@ public class EditTaskFragment extends Fragment {
                 ivDescExpandIcon.setImageResource(R.drawable.ic_arrow_up);
                 descriptionInput.setHint(getContext().getString(R.string.cvote_desc_hint));
                 descriptionCard.setCardBackgroundColor(ContextCompat.getColor(getContext(), R.color.white));
-                btTaskUpdate.setText(R.string.uVote);
-                btCancelTask.setText(R.string.caVote);
+                //btTaskUpdate.setText(R.string.uVote);
+              //  btCancelTask.setText(R.string.caVote);
                 break;
             case TaskConstants.TODO:
                 subjectInput.setHint(getContext().getString(R.string.ctodo_subject));
                 deadlineTitle.setText(R.string.ctodo_datetime);
                 descriptionInput.setHint(getContext().getString(R.string.ctodo_desc_hint));
                 btTaskUpdate.setText(R.string.uTodo);
-                btCancelTask.setText(R.string.caTodo);
+                btCancelTask.setVisibility(View.GONE);
                 break;
             default:
                 throw new UnsupportedOperationException("Error! Fragment must have valid task type");
@@ -510,7 +505,7 @@ public class EditTaskFragment extends Fragment {
 
     @OnTextChanged(R.id.etsk_et_title)
     public void changeCharCounter(CharSequence s) {
-        subjectCharCounter.setText(s.length() + " / 35"); // todo : externalize
+        subjectCharCounter.setText(s.length() + " / 35");
     }
 
     @OnTextChanged(R.id.etsk_et_location)
@@ -520,7 +515,7 @@ public class EditTaskFragment extends Fragment {
 
     @OnTextChanged(R.id.etsk_et_description)
     public void changeDescCounter(CharSequence s) {
-        descriptionCharCounter.setText(s.length() + " / 250"); // todo : externalize
+        descriptionCharCounter.setText(s.length() + " / 250");
     }
 
 

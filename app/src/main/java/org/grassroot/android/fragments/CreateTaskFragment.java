@@ -218,10 +218,11 @@ public class CreateTaskFragment extends Fragment {
                 // todo: check for actual success
                 if (response.isSuccessful()) {
                     Intent i = new Intent();
-                    i.putExtra(Constant.SUCCESS_MESSAGE, generateSuccessString());
+                    String successString = generateSuccessString();
+                    i.putExtra(Constant.SUCCESS_MESSAGE, successString);
                     getActivity().setResult(Activity.RESULT_OK, i);
                     Log.e(TAG, "putting task created event on the bus ...");
-                    EventBus.getDefault().post(new TaskAddedEvent(response.body().getTasks().get(0)));
+                    EventBus.getDefault().post(new TaskAddedEvent(response.body().getTasks().get(0),successString));
                     getActivity().finish(); // todo : make sure this is okay
                 } else {
                     ErrorUtils.showSnackBar(vContainer, "Error! Something went wrong", Snackbar.LENGTH_LONG, "", null);
@@ -419,7 +420,7 @@ public class CreateTaskFragment extends Fragment {
 
     private void setUpDescriptionAnimators() {
         descriptionExpandAnimator = Utilities.createSlidingAnimator(descriptionBody, true);
-        descriptionContractAnimator = Utilities.createSlidingAnimator(descriptionBody, false);
+        descriptionContractAnimator = Utilities.createSlidingAnimator(descriptionBody, true);
 
         descriptionExpandAnimator.addListener(new AnimatorListenerAdapter() {
             @Override
@@ -456,7 +457,7 @@ public class CreateTaskFragment extends Fragment {
             setUpDescriptionAnimators();
         }
 
-        if (descriptionBody.getVisibility() == View.GONE) {
+        if (descriptionBody.getVisibility() != View.VISIBLE) {
             descriptionBody.setVisibility(View.VISIBLE);
             ivDescExpandIcon.setImageResource(R.drawable.ic_arrow_up);
             descriptionExpandAnimator.start();

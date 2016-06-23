@@ -1,5 +1,7 @@
 package org.grassroot.android.events;
 
+import android.support.annotation.Nullable;
+
 import org.grassroot.android.models.TaskModel;
 
 /**
@@ -7,7 +9,8 @@ import org.grassroot.android.models.TaskModel;
  */
 public class TaskAddedEvent {
 
-    private final TaskModel taskCreated;
+    private TaskModel taskCreated;
+    private String message;
 
     private TaskAddedEvent() {
         this.taskCreated = null;
@@ -17,6 +20,14 @@ public class TaskAddedEvent {
         this.taskCreated = taskCreated;
     }
 
+    public TaskAddedEvent(TaskModel taskModel,@Nullable String message){
+        this.message = message;
+    }
+
+
     public TaskModel getTaskCreated() { return taskCreated; }
 
+    public String getMessage() {
+        return message;
+    }
 }

@@ -19,16 +19,19 @@ import android.widget.RelativeLayout;
 
 import org.grassroot.android.R;
 import org.grassroot.android.adapters.TasksAdapter;
+import org.grassroot.android.events.TaskAddedEvent;
 import org.grassroot.android.events.TaskChangedEvent;
 import org.grassroot.android.fragments.dialogs.ConfirmCancelDialogFragment;
 import org.grassroot.android.interfaces.GroupConstants;
 import org.grassroot.android.interfaces.NetworkErrorDialogListener;
 import org.grassroot.android.interfaces.TaskConstants;
+import org.grassroot.android.models.TaskModel;
 import org.grassroot.android.models.TaskResponse;
 import org.grassroot.android.services.GrassrootRestService;
 import org.grassroot.android.utils.ErrorUtils;
 import org.grassroot.android.utils.PreferenceUtils;
 import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -94,8 +97,8 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View viewToReturn = inflater.inflate(R.layout.fragment_task_list, container, false);
         ButterKnife.bind(this, viewToReturn);
+        EventBus.getDefault().register(this);
         this.container = container;
-        
         setUpSwipeRefresh();
         rcTaskView.setLayoutManager(new LinearLayoutManager(getActivity()));
         groupTasksAdapter = new TasksAdapter(this, getActivity(), groupUid);
@@ -277,6 +280,15 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
       //  }
     }
 
+
+    //For some reason which i suspect have to do with the ui thread, the handler in the adapter is not updating view
+    @Subscribe
+    public void onTaskCreated(TaskAddedEvent event) {
+            final TaskModel task = event.getTaskCreated();
+            // groupTasksAdapter.onTaskCreated(event);
+    }
+
+
     @OnClick(R.id.im_no_internet)
     public void onNoInternetClick(){
         fetchTaskList();
@@ -307,6 +319,12 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
                 resetFilterFlags();
             }
         });
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        EventBus.getDefault().unregister(this);
     }
 
     private void startFiltering() {

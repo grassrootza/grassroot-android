@@ -8,17 +8,25 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.RelativeLayout;
+import android.widget.TextView;
 
 import org.grassroot.android.R;
 import org.grassroot.android.activities.AddMembersActivity;
 import org.grassroot.android.activities.CreateMeetingActivity;
 import org.grassroot.android.activities.CreateTodoActivity;
 import org.grassroot.android.activities.CreateVoteActivity;
+import org.grassroot.android.events.TaskAddedEvent;
 import org.grassroot.android.interfaces.GroupConstants;
+import org.grassroot.android.interfaces.TaskConstants;
 import org.grassroot.android.models.Group;
+import org.grassroot.android.models.TaskModel;
 import org.grassroot.android.utils.Constant;
 import org.grassroot.android.utils.MenuUtils;
+import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -42,6 +50,10 @@ public class NewTaskMenuFragment extends Fragment {
     Button bt_todo;
     @BindView(R.id.bt_newmember)
     Button bt_addmember;
+    @BindView(R.id.nt_tv)
+    TextView et_message;
+    @BindView(R.id.nt_rl)
+    RelativeLayout buttonHolder;
 
     private NewTaskMenuListener listener;
 
@@ -76,6 +88,7 @@ public class NewTaskMenuFragment extends Fragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         Bundle b = getArguments();
+        EventBus.getDefault().register(this);
 
         if (b == null) {
             throw new UnsupportedOperationException("Error! Null arguments passed to modal");
@@ -129,6 +142,22 @@ public class NewTaskMenuFragment extends Fragment {
         createVote.putExtra("title", "Vote");
         startActivity(createVote);
     }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        EventBus.getDefault().unregister(this);
+    }
+
+    @Subscribe
+    public void onTaskCreatedEvent(TaskAddedEvent taskAddedEvent){
+        et_message.setText(taskAddedEvent.getMessage());
+        et_message.setVisibility(View.VISIBLE);
+        buttonHolder.setVisibility(View.GONE);
+
+    }
+
+
 
     @OnClick(R.id.bt_newmember)
     public void onNewMemberButtonClick() {

@@ -15,7 +15,23 @@
         android:padding="@dimen/padding"
         android:background="@drawable/button_alpha_rlsimple" />
 
+    <TextView
+        android:id="@+id/nt_tv"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:gravity="center_horizontal"
+        android:paddingLeft="@dimen/padding"
+        android:paddingRight="@dimen/padding"
+        android:textColor="@color/white"
+        android:text="TASK"
+        android:textStyle="bold"
+        android:textSize="18sp"
+        android:visibility="gone"
+        />
+
     <RelativeLayout
+        android:id="@+id/nt_rl"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_centerInParent="true"

@@ -1,21 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout
+<LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:card_view="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
 
     android:id="@+id/etsk_rl_root"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:orientation="vertical"
     android:background="@color/off_white_background">
 
     <ScrollView
         android:id="@+id/etsk_scrollview"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_alignParentTop="true"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:fillViewport="true"
         android:clipToPadding="false"
         android:paddingTop="15dp"
+        android:fadeScrollbars="false"
         android:scrollbars="vertical">
 
         <!-- todo : put into styles -->
@@ -281,75 +284,25 @@
 
                 </android.support.v7.widget.CardView>
 
-                <android.support.v7.widget.CardView
-                    style="@style/FormCardView"
-                    android:id="@+id/etsk_notify_switch"
-                    android:layout_below="@id/etsk_cv_description"
-                    card_view:cardBackgroundColor="@color/light_background"
-                    card_view:cardCornerRadius="3dp"
-                    card_view:cardElevation="3dp">
-
-
-                </android.support.v7.widget.CardView>
-
-                <RelativeLayout
-                    android:id="@+id/etsk_rl_notify_count"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_below="@id/etsk_notify_switch"
-                    android:background="@color/light_background"
-                    android:visibility="gone">
-
-                    <LinearLayout
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:layout_centerHorizontal="true"
-                        android:background="@drawable/underline">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="@string/ctsk_assign_members_prefix"
-                            android:textColor="@color/black"
-                            android:padding="10dp" />
-
-                        <TextView
-                            android:id="@+id/etsk_tv_member_count"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            tools:text="5"
-                            android:textColor="@color/black"
-                            android:textStyle="bold" />
-
-                        <TextView
-                            android:id="@+id/etsk_tv_suffix"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            tools:text="members"
-                            android:textColor="@color/black"
-                            android:padding="10dp" />
-
-                    </LinearLayout>
-
-                </RelativeLayout>
-
             </RelativeLayout>
 
         </android.support.v7.widget.CardView>
 
     </ScrollView>
 
+
     <LinearLayout
+        android:id="@+id/etsk_buttons"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:orientation="vertical">
+        android:layout_gravity="center_horizontal"
+        android:paddingTop="10dp"
+        android:gravity="center_horizontal">
 
         <Button
             android:id="@+id/etsk_btn_update_task"
             style="@style/Button_green"
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/task_update"
             android:layout_marginTop="10dp" />
@@ -357,14 +310,15 @@
         <Button
             android:id="@+id/etsk_btn_cancel_task"
             style="@style/Button_green"
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_alignLeft="@+id/etsk_btn_create_task"
             android:text="@string/task_cancel"
+            android:layout_marginTop="10dp"
             />
 
     </LinearLayout>
 
 
 
-</RelativeLayout>
+
+</LinearLayout>
