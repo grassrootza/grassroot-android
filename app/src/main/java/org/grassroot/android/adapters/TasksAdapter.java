@@ -258,7 +258,7 @@ public class TasksAdapter extends RecyclerView.Adapter<TasksAdapter.TaskViewHold
     public void onTaskChanged(TaskChangedEvent event) {
         Log.e(TAG, "task changed! update its icons, if it is in this group");
         if (parentUid == null || parentUid.equals(event.getTaskModel().getParentUid())) {
-            Log.e(TAG,event.getTaskModel().getParentUid());
+            Log.e(TAG, event.getTaskModel().getParentUid());
             final TaskModel updatedTask = event.getTaskModel();
             viewedTasks.set(event.getPosition(), updatedTask);
             notifyItemChanged(event.getPosition());

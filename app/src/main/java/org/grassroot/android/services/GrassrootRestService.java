@@ -297,6 +297,14 @@ public class GrassrootRestService {
                                           @Query("location") String location,
                                           @Query("startTime") String startTime, @Query("reminderMins") int reminderMinutes );
 
+        //edit logbook
+        @POST("logbook/update/{phoneNumber}/{code}/{uid}")
+        Call<TaskResponse> editTodo(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
+                                    @Query("title") String title,
+                                    @Query("dueDate") String dueDate,
+                                    @Query("reminderMinutes") int reminderMinutes,
+                                    @Query("members") Set<String> membersAssigned);
+
 
         //cancel meeting
         @POST("meeting/cancel/{phoneNumber}/{code}")

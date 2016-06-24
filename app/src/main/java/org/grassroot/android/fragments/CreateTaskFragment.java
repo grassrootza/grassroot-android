@@ -215,10 +215,11 @@ public class CreateTaskFragment extends Fragment {
             public void onResponse(Call<TaskResponse> call, Response<TaskResponse> response) {
                 if (response.isSuccessful()) {
                     Intent i = new Intent();
-                    i.putExtra(Constant.SUCCESS_MESSAGE, generateSuccessString());
+                    String successString = generateSuccessString();
+                    i.putExtra(Constant.SUCCESS_MESSAGE, successString);
                     getActivity().setResult(Activity.RESULT_OK, i);
                     Log.e(TAG, "putting task created event on the bus ...");
-                    EventBus.getDefault().post(new TaskAddedEvent(response.body().getTasks().get(0)));
+                    EventBus.getDefault().post(new TaskAddedEvent(response.body().getTasks().get(0), successString));
                     getActivity().finish(); // todo : double check calling finish on activity from within fragment is okay
                 } else {
                     ErrorUtils.showSnackBar(vContainer, "Error! Something went wrong", Snackbar.LENGTH_LONG, "", null);
@@ -397,7 +398,7 @@ public class CreateTaskFragment extends Fragment {
     @OnClick(R.id.ctsk_cv_description)
     public void expandDescription() {
 
-        if (descriptionBody.getVisibility() == View.GONE) {
+        if (descriptionBody.getVisibility() != View.VISIBLE) {
             descriptionBody.setVisibility(View.VISIBLE);
             ivDescExpandIcon.setImageResource(R.drawable.ic_arrow_up);
         } else {

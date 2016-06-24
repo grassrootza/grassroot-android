@@ -26,8 +26,6 @@ import org.grassroot.android.events.TaskUpdatedEvent;
 import org.grassroot.android.fragments.dialogs.ConfirmCancelDialogFragment;
 import org.grassroot.android.interfaces.NetworkErrorDialogListener;
 import org.grassroot.android.interfaces.TaskConstants;
-import org.grassroot.android.models.GenericResponse;
-import org.grassroot.android.models.Member;
 import org.grassroot.android.models.TaskModel;
 import org.grassroot.android.models.TaskResponse;
 import org.grassroot.android.services.GrassrootRestService;
@@ -40,7 +38,6 @@ import org.grassroot.android.utils.Utilities;
 import org.greenrobot.eventbus.EventBus;
 
 import java.util.Date;
-import java.util.Set;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -58,12 +55,11 @@ public class EditTaskFragment extends Fragment {
 
     private static final String TAG = EditTaskFragment.class.getCanonicalName();
 
-    private String groupUid;
     private String taskType;
     private TaskModel task;
 
     private Date selectedDateTime;
-    private Set<Member> assignedMembers;
+
 
     private ViewGroup vContainer;
 
@@ -86,12 +82,7 @@ public class EditTaskFragment extends Fragment {
     @BindView(R.id.etsk_sw_one_hour)
     SwitchCompat swOneHourAhead;
 
-    @BindView(R.id.etsk_rl_notify_count)
-    RelativeLayout notifyCountHolder;
-    @BindView(R.id.etsk_tv_member_count)
-    TextView notifyMembersCount;
-    @BindView(R.id.etsk_tv_suffix)
-    TextView notifyCountSuffix;
+
 
     @BindView(R.id.etsk_reminder_body)
     RelativeLayout rlReminderBody;
@@ -119,7 +110,6 @@ public class EditTaskFragment extends Fragment {
         Bundle args = getArguments();
         task = args.getParcelable(TaskConstants.TASK_ENTITY_FIELD);
         taskType = task.getType();
-        groupUid = task.getParentUid();
         selectedDateTime = task.getDeadlineDate();
         datePickerListener = new SlideDateTimeListener() {
             @Override
@@ -176,6 +166,7 @@ public class EditTaskFragment extends Fragment {
                 etDescriptionInput.setText(task.getDescription());
                 etLocationInput.setText(task.getLocation());
                 dateTimeDisplayed.setText(TaskConstants.dateDisplayFormatWithHours.format(task.getDeadlineDate()));
+
                 break;
             case TaskConstants.VOTE:
                 etTitleInput.setText(task.getTitle());
@@ -207,7 +198,6 @@ public class EditTaskFragment extends Fragment {
 
             @Override
             public void onFailure(Call<TaskResponse> call, Throwable t) {
-                // todo: improve and fix this
                 ErrorUtils.connectivityError(getActivity(), R.string.error_no_network, new NetworkErrorDialogListener() {
                     @Override
                     public void retryClicked() {
@@ -238,9 +228,10 @@ public class EditTaskFragment extends Fragment {
             case TaskConstants.VOTE:
                 return GrassrootRestService.getInstance().getApi().editVote(phoneNumber, code, uid, title,
                         description, dateTimeISO);
-       /*     case TaskConstants.TODO:
-                return GrassrootRestService.getInstance().getApi().createTodo(phoneNumber, code, groupUid, title,
-                        description, dateTimeISO, minutes, memberUids);*/
+            //disable for now
+           /* case TaskConstants.TODO:
+                return GrassrootRestService.getInstance().getApi().editTodo(phoneNumber, code, title,
+                        dateTimeISO, minutes, null);*/
             default:
                 throw new UnsupportedOperationException("Error! Missing task type in call");
         }
@@ -433,7 +424,7 @@ public class EditTaskFragment extends Fragment {
 
     @OnTextChanged(R.id.etsk_et_title)
     public void changeCharCounter(CharSequence s) {
-        subjectCharCounter.setText(s.length() + " / 35"); // todo : externalize
+        subjectCharCounter.setText(s.length() + " / 35");
     }
 
     @OnTextChanged(R.id.etsk_et_location)
@@ -443,7 +434,7 @@ public class EditTaskFragment extends Fragment {
 
     @OnTextChanged(R.id.etsk_et_description)
     public void changeDescCounter(CharSequence s) {
-        descriptionCharCounter.setText(s.length() + " / 250"); // todo : externalize
+        descriptionCharCounter.setText(s.length() + " / 250");
     }
 
 
