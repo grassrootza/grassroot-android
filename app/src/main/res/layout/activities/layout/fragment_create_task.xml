@@ -69,10 +69,15 @@
                         android:id="@+id/ctsk_et_location"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
+                        android:gravity="top"
+                        android:inputType="textAutoComplete"
                         android:maxLength="35"
+                        android:lines="1"
+                        android:maxLines="2"
+                        android:scrollbars="vertical"
                         android:textColor="@color/vv_title"
                         android:textSize="@dimen/txt_medium"
-                        android:imeOptions="actionDone" />
+                        android:imeOptions="actionDone"  />
 
                 </android.support.design.widget.TextInputLayout>
 

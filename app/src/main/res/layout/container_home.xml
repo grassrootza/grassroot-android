@@ -9,7 +9,9 @@
     android:background="#00000000"
     android:layout_centerInParent="true">
 
-    <View android:layout_width="fill_parent" android:layout_height="0.0dip" android:layout_weight="0.25" />
+    <View android:layout_width="fill_parent"
+        android:layout_height="0.0dip"
+        android:layout_weight="0.25" />
 
     <Button
         android:id="@+id/bt_login"
@@ -23,7 +25,6 @@
         android:textSize="@dimen/txt_medium"
         android:text="@string/bt_log" />
 
-
     <Button
         android:id="@+id/amm_bt_add"
         android:layout_width="match_parent"
@@ -34,9 +35,6 @@
         android:layout_marginBottom="20dp"
         android:textColor="@drawable/green_txt"
         android:background="@drawable/register" />
-
-
-
 
 </LinearLayout>
 

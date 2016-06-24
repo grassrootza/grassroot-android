@@ -208,6 +208,7 @@
     <string name="vt_mtg_posted">Called by %s</string>
     <string name="vt_mtg_location">Location: %s</string>
     <string name="vt_mtg_datetime">For %s</string>
+    <string name="vt_mtg_date_past">Took place on %s</string>
     <string name="vt_mtg_responseq">Will you attend?</string>
     <string name="vt_mtg_called_by_user">You called the meeting</string>
     <string name="vt_mtg_response_past">You %s</string>

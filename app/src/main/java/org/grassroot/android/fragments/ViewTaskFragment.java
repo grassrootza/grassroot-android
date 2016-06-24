@@ -8,6 +8,7 @@ import android.graphics.Typeface;
 import android.os.Bundle;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.widget.TextViewCompat;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.LinearLayoutManager;
@@ -245,8 +246,11 @@ public class ViewTaskFragment extends Fragment {
         tvPostedBy.setText(String.format(getString(R.string.vt_mtg_posted), task.getName()));
         TextViewCompat.setTextAppearance(tvPostedBy, R.style.CardViewFinePrint);
 
-        tvDateTime.setText(String.format(getString(R.string.vt_mtg_datetime),
-                TaskConstants.dateDisplayWithDayName.format(task.getDeadlineDate()))); // todo: integrate w/Calendar
+        final boolean inFuture  = task.getDeadlineDate().after(new Date());
+        final int dateColor = inFuture ? ContextCompat.getColor(getActivity(), R.color.dark_grey_text) : ContextCompat.getColor(getActivity(), R.color.red);
+        tvDateTime.setText(inFuture ? String.format(getString(R.string.vt_mtg_datetime), TaskConstants.dateDisplayWithDayName.format(task.getDeadlineDate()))
+                : String.format(getString(R.string.vt_mtg_date_past), TaskConstants.dateDisplayWithoutHours.format(task.getDeadlineDate())));
+        tvDateTime.setTextColor(dateColor);
 
         if (task.isCreatedByUser()) {
             tvResponseHeader.setText(R.string.vt_mtg_called_by_user);
