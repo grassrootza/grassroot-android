@@ -27,5 +27,7 @@ public interface TaskConstants {
 
     SimpleDateFormat dateDisplayFormatWithHours = new SimpleDateFormat("HH:mm dd-MM");
     SimpleDateFormat dateDisplayWithDayName = new SimpleDateFormat("H:mm, EEE, d MMM");
+    SimpleDateFormat dateDisplayWithoutHours = new SimpleDateFormat("EEE, d MMM");
+    SimpleDateFormat timeDisplayWithoutDate = new SimpleDateFormat("HH:mm");
 
 }

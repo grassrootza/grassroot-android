@@ -287,22 +287,25 @@ public class GrassrootRestService {
         //edit vote
         @POST("vote/update/{uid}/{phoneNumber}/{code}")
         Call<TaskResponse> editVote(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
-                                       @Path("uid") String id,@Query("title") String title, @Query("description") String description,
-                                       @Query("closingTime") String closingTime);
+                                    @Path("uid") String id,
+                                    @Query("title") String title,
+                                    @Query("description") String description,
+                                    @Query("closingTime") String closingTime);
 
         //edit meeting
         @POST("meeting/update/{uid}/{phoneNumber}/{code}")
-        Call<TaskResponse> editMeeting(@Path("phoneNumber") String phoneNumber, @Path("code")String code,
-                                          @Path("uid") String uid, @Query("title") String titile, @Query("description") String description,
-                                          @Query("location") String location,
-                                          @Query("startTime") String startTime, @Query("reminderMins") int reminderMinutes );
+        Call<TaskResponse> editMeeting(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
+                                       @Path("uid") String uid,
+                                       @Query("title") String title,
+                                       @Query("description") String description,
+                                       @Query("location") String location,
+                                       @Query("startTime") String startTime);
 
         //edit logbook
         @POST("logbook/update/{phoneNumber}/{code}/{uid}")
         Call<TaskResponse> editTodo(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
                                     @Query("title") String title,
                                     @Query("dueDate") String dueDate,
-                                    @Query("reminderMinutes") int reminderMinutes,
                                     @Query("members") Set<String> membersAssigned);
 
 

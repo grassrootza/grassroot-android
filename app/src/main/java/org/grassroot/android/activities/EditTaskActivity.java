@@ -39,7 +39,6 @@ public class EditTaskActivity extends PortraitActivity {
     }
 
     private void setUpToolbar(TaskModel taskModel) {
-
         setTitle(getTitle(taskModel));
         setSupportActionBar(toolbar);
         toolbar.setNavigationIcon(R.drawable.btn_back_wt);
@@ -61,11 +60,11 @@ public class EditTaskActivity extends PortraitActivity {
     private String getTitle(TaskModel taskModel) {
         switch (taskModel.getType()) {
             case TaskConstants.MEETING:
-                return getString(R.string.edit_meeting);
+                return getString(R.string.etsk_mtg_edit);
             case TaskConstants.VOTE:
-                return getString(R.string.edit_vote);
+                return getString(R.string.etsk_vote_edit);
             case TaskConstants.TODO:
-                return getString(R.string.edit_todo);
+                return getString(R.string.etsk_todo_edit);
             default:
                 return null;
         }

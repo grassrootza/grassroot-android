@@ -202,25 +202,6 @@
     <string name="ctsk_todo_assigned_success">Done! Action assigned to %d members</string>
     <string name="ctsk_todo_all_success">Done! Action assigned to whole group</string>
 
-    <string name="etsk_meeting_updated_success">Done! Meeting updated.</string>
-    <string name="etsk_vote_update_success">Done! Vote updated.</string>
-    <string name="etsk_todo_updated_success">Done! Action updated</string>
-
-
-    <string name="etsk_meeting_cancelled">Done! Meeting cancelled.</string>
-    <string name="etsk_vote_cancelled">Done! Vote updated.</string>
-    <string name="etsk_todo_cancelled">Done! Action updated</string>
-
-
-    <!--Edit Vote-->
-    <string name="ev_tv_toolbar">EDIT VOTE</string>
-    <string name="ev_bt_save">Save Changes</string>
-    <string name="ev_rl_vote_header">Do you agree or disagree</string>
-    <string name="ev_yes">Yes</string>
-    <string name="ev_no">No</string>
-    <string name="ev_description">Description</string>
-    <string name="ev_closing">Closing time</string>
-
     <!-- View task strings -->
     <string name="vt_mtg_toolbar">VIEW MEETING</string>
     <string name="vt_mtg_title">Meeting subject:</string>
@@ -272,6 +253,33 @@
     <string name="vt_todo_datetime">Due %s</string>
     <string name="vt_todo_modify">Edit todo</string>
     <string name="vt_todo_cancel">Cancel todo</string>
+
+    <!-- Section : edit task strings -->
+
+    <string name="etsk_mtg_edit">Change meeting</string>
+    <string name="etsk_vote_edit">Extend vote</string>
+    <string name="etsk_todo_edit">Edit todo</string>
+
+    <string name="etsk_mtg_date">Meeting date: %s</string>
+    <string name="etsk_mtg_time">Meeting time: %s</string>
+    <string name="etsk_vote_date">Closing day: %s</string>
+    <string name="etsk_vote_time">Closing time: %s</string>
+    <string name="etsk_todo_date">Due date: %s</string>
+    <string name="etsk_desc_header">Modify notes</string>
+    <string name="etsk_mtg_invite">Whole group is invited</string>
+    <string name="etsk_mtg_invite_x">%d members invited</string>
+
+    <string name="etsk_meeting_updated_success">Done! Meeting updated</string>
+    <string name="etsk_vote_update_success">Done! Vote updated</string>
+    <string name="etsk_todo_updated_success">Done! Action updated</string>
+
+    <string name="etsk_bt_mtg_save">Update Meeting</string>
+    <string name="etsk_bt_vote_save">Update vote</string>
+    <string name="etsk_bt_todo_save">Update todo</string>
+
+    <string name="et_cnfrm_mtg">Are you sure you want to cancel the meeting?</string>
+    <string name="et_cnfrm_vt">Are you sure you want to cancel the vote?</string>
+    <string name="et_cnfrm_td">Are you sure you want to cancel the todo?</string>
 
     <!--Profile--><!--pp-->
     <string name="pp_txt_toolbar">Profile Settings</string>
@@ -404,19 +412,5 @@
     <string name="jc_row_three">*%s#</string>
 
     <string name="none">NONE</string>
-    <string name="edit_meeting">Edit Meeting</string>
-    <string name="edit_vote">Edit Vote</string>
-    <string name="edit_todo">Edit TODO</string>
-    <string name="task_update">Update</string>
-    <string name="task_cancel">Cancel</string>
-    <string name="uMeeting">Update Meeting</string>
-    <string name="caMeeting">Cancel Meeting</string>
-    <string name="uVote">Update vote</string>
-    <string name="caVote">Cancel vote</string>
-    <string name="uTodo">Update todo</string>
-    <string name="caTodo">Cancel todo</string>
-    <string name="et_cnfrm_mtg">Are you sure you want to cancel the meeting?</string>
-    <string name="et_cnfrm_vt">Are you sure you want to cancel the vote?</string>
-    <string name="et_cnfrm_td">Are you sure you want to cancel the todo?</string>
 
 </resources>

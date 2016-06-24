@@ -16,14 +16,10 @@ public class TaskAddedEvent {
         this.taskCreated = null;
     } // making private to ensure it's never called empty
 
-    public TaskAddedEvent(TaskModel taskCreated) {
-        this.taskCreated = taskCreated;
-    }
-
-    public TaskAddedEvent(TaskModel taskModel,@Nullable String message){
+    public TaskAddedEvent(TaskModel taskModel, @Nullable String message){
+        this.taskCreated = taskModel;
         this.message = message;
     }
-
 
     public TaskModel getTaskCreated() { return taskCreated; }
 

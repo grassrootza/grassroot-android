@@ -1,9 +1,8 @@
 package org.grassroot.android.fragments;
 
-import android.animation.Animator;
-import android.animation.AnimatorListenerAdapter;
-import android.animation.ValueAnimator;
 import android.app.Activity;
+import android.app.DatePickerDialog;
+import android.app.TimePickerDialog;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.Snackbar;
@@ -12,36 +11,35 @@ import android.support.design.widget.TextInputLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.CardView;
-import android.support.v7.widget.SwitchCompat;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.DatePicker;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.widget.TimePicker;
 
 import org.grassroot.android.R;
 import org.grassroot.android.events.TaskUpdatedEvent;
-import org.grassroot.android.fragments.dialogs.ConfirmCancelDialogFragment;
 import org.grassroot.android.interfaces.NetworkErrorDialogListener;
 import org.grassroot.android.interfaces.TaskConstants;
 import org.grassroot.android.models.TaskModel;
 import org.grassroot.android.models.TaskResponse;
 import org.grassroot.android.services.GrassrootRestService;
-import org.grassroot.android.slideDateTimePicker.SlideDateTimeListener;
-import org.grassroot.android.slideDateTimePicker.SlideDateTimePicker;
 import org.grassroot.android.utils.Constant;
 import org.grassroot.android.utils.ErrorUtils;
+import org.grassroot.android.utils.MenuUtils;
 import org.grassroot.android.utils.PreferenceUtils;
-import org.grassroot.android.utils.Utilities;
 import org.greenrobot.eventbus.EventBus;
 
+import java.util.Calendar;
 import java.util.Date;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
-import butterknife.OnCheckedChanged;
 import butterknife.OnClick;
 import butterknife.OnTextChanged;
 import retrofit2.Call;
@@ -51,18 +49,22 @@ import retrofit2.Response;
 /**
  * Created by paballo on 2016/06/21.
  */
-public class EditTaskFragment extends Fragment {
+public class EditTaskFragment extends Fragment implements DatePickerDialog.OnDateSetListener, TimePickerDialog.OnTimeSetListener {
 
     private static final String TAG = EditTaskFragment.class.getCanonicalName();
 
-    private String taskType;
     private TaskModel task;
+    private String taskType;
 
-    private Date selectedDateTime;
-
+    private Date updatedDate;
+    private Date updatedTime;
 
     private ViewGroup vContainer;
 
+    @BindView(R.id.etsk_title_ipl)
+    TextInputLayout subjectInput;
+    @BindView(R.id.etsk_til_location)
+    TextInputLayout locationInput;
     @BindView(R.id.etsk_et_title)
     TextInputEditText etTitleInput;
     @BindView(R.id.etsk_et_location)
@@ -70,22 +72,24 @@ public class EditTaskFragment extends Fragment {
     @BindView(R.id.etsk_et_description)
     TextInputEditText etDescriptionInput;
 
-    private SlideDateTimeListener datePickerListener;
+    @BindView(R.id.etsk_deadline_date)
+    TextView dateDisplayed;
+    @BindView(R.id.etsk_cv_time)
+    CardView timeCard;
+    @BindView(R.id.etsk_deadline_time)
+    TextView timeDisplayed;
 
-    @BindView(R.id.etsk_txt_deadline)
-    TextView dateTimeDisplayed;
+    @BindView(R.id.etsk_cv_description)
+    CardView descriptionCard;
+    @BindView(R.id.etsk_rl_desc_body)
+    RelativeLayout descriptionBody;
+    @BindView(R.id.etsk_til_desc)
+    TextInputLayout descriptionInput;
+    @BindView(R.id.etsk_desc_expand)
+    ImageView ivDescExpandIcon;
 
-    @BindView(R.id.etsk_sw_one_day)
-    SwitchCompat swOneDayAhead;
-    @BindView(R.id.etsk_sw_half_day)
-    SwitchCompat swHalfDayAhead;
-    @BindView(R.id.etsk_sw_one_hour)
-    SwitchCompat swOneHourAhead;
-
-
-
-    @BindView(R.id.etsk_reminder_body)
-    RelativeLayout rlReminderBody;
+    @BindView(R.id.etsk_tv_assign_label)
+    TextView tvInviteeLabel;
 
     @BindView(R.id.etsk_btn_update_task)
     Button btTaskUpdate;
@@ -110,14 +114,6 @@ public class EditTaskFragment extends Fragment {
         Bundle args = getArguments();
         task = args.getParcelable(TaskConstants.TASK_ENTITY_FIELD);
         taskType = task.getType();
-        selectedDateTime = task.getDeadlineDate();
-        datePickerListener = new SlideDateTimeListener() {
-            @Override
-            public void onDateTimeSet(Date date) {
-                selectedDateTime = date;
-                dateTimeDisplayed.setText(TaskConstants.dateDisplayFormatWithHours.format(date));
-            }
-        };
     }
 
     @Override
@@ -125,25 +121,102 @@ public class EditTaskFragment extends Fragment {
         View viewToReturn = inflater.inflate(R.layout.fragment_edit_task, container, false);
         ButterKnife.bind(this, viewToReturn);
         this.vContainer = container;
-        setUpStrings();
         populateFields();
         return viewToReturn;
     }
 
-    @OnClick(R.id.etsk_cv_datepicker)
-    public void launchDateTimePicker() {
-        new SlideDateTimePicker.Builder(getFragmentManager())
-                .setInitialDate(new Date())
-                .setMinDate(new Date())
-                .setIndicatorColor(R.color.primaryColor)
-                .setListener(datePickerListener)
-                .build()
-                .show();
+    private void populateFields() {
+
+        etTitleInput.setEnabled(false);
+        etLocationInput.setEnabled(false);
+        etDescriptionInput.setEnabled(false);
+
+        locationInput.setVisibility(TaskConstants.MEETING.equals(taskType) ? View.VISIBLE : View.GONE);
+        locationCharCounter.setVisibility(TaskConstants.MEETING.equals(taskType) ? View.VISIBLE : View.GONE);
+
+        switch (task.getType()) {
+            case TaskConstants.MEETING:
+                etTitleInput.setText(task.getTitle());
+                etTitleInput.setHint(R.string.cmtg_title_hint);
+                etLocationInput.setText(task.getLocation());
+                etLocationInput.setHint(R.string.cmtg_location_hint);
+                etDescriptionInput.setText(task.getDescription());
+
+                dateDisplayed.setText(String.format(getString(R.string.etsk_mtg_date), TaskConstants.dateDisplayWithoutHours.format(task.getDeadlineDate())));
+                timeDisplayed.setText(String.format(getString(R.string.etsk_mtg_time), TaskConstants.timeDisplayWithoutDate.format(task.getDeadlineDate())));
+
+                tvInviteeLabel.setText(task.getWholeGroupAssigned() ? R.string.etsk_mtg_invite : R.string.etsk_mtg_invite_x);
+
+                btTaskUpdate.setText(R.string.etsk_bt_mtg_save);
+                break;
+            case TaskConstants.VOTE:
+                etTitleInput.setText(task.getTitle());
+                etDescriptionInput.setText(task.getDescription());
+                dateDisplayed.setText(String.format(getString(R.string.etsk_vote_date), TaskConstants.dateDisplayWithoutHours.format(task.getDeadlineDate())));
+                timeDisplayed.setText(String.format(getString(R.string.etsk_vote_time), TaskConstants.timeDisplayWithoutDate.format(task.getDeadlineDate())));
+                descriptionBody.setVisibility(View.VISIBLE);
+                ivDescExpandIcon.setImageResource(R.drawable.ic_arrow_up);
+                etDescriptionInput.setText(task.getDescription());
+                btTaskUpdate.setText(R.string.etsk_bt_vote_save);
+                break;
+            case TaskConstants.TODO:
+                etTitleInput.setText(task.getTitle());
+                etDescriptionInput.setText(task.getDescription());
+                dateDisplayed.setText(String.format(getString(R.string.etsk_todo_date), TaskConstants.dateDisplayWithoutHours.format(task.getDeadlineDate())));
+                timeCard.setVisibility(View.GONE);
+                btTaskUpdate.setText(R.string.etsk_bt_todo_save);
+                break;
+            default:
+                throw new UnsupportedOperationException("Error! Fragment must have valid task type");
+        }
+    }
+
+    // todo : figure out why this is unpredictable and often not catching
+    @OnClick(R.id.etsk_title_ipl)
+    public void setTitleEnable() {
+        Log.e(TAG, "title clicked, enabling");
+        etTitleInput.setEnabled(true);
+        etTitleInput.requestFocus();
+    }
+
+    @OnClick(R.id.etsk_et_location)
+    public void enableLocationInput() {
+        Log.e(TAG, "location clicked");
+        etLocationInput.setEnabled(true);
+        etLocationInput.requestFocus();
+    }
+
+    @OnClick(R.id.etsk_cv_date)
+    public void launchDatePicker() {
+        final Calendar c = Calendar.getInstance();
+        c.setTime(task.getDeadlineDate());
+        DatePickerDialog dialog = new DatePickerDialog(getActivity(), R.style.AppTheme, this, c.get(Calendar.YEAR), c.get(Calendar.MONTH), c.get(Calendar.DAY_OF_MONTH));
+        dialog.show();
     }
 
     @Override
-    public void onResume() {
-        super.onResume();
+    public void onDateSet(DatePicker view, int year, int monthOfYear, int dayOfMonth) {
+        final Calendar c = Calendar.getInstance();
+        c.set(year, monthOfYear, dayOfMonth);
+        updatedDate = c.getTime();
+        Log.e(TAG, "date set: " + TaskConstants.dateDisplayWithoutHours.format(updatedDate));
+    }
+
+    @OnClick(R.id.etsk_cv_time)
+    public void launchTimePicker() {
+        final Calendar c = Calendar.getInstance();
+        c.setTime(task.getDeadlineDate());
+        TimePickerDialog dialog = new TimePickerDialog(getActivity(), R.style.AppTheme, this, c.get(Calendar.HOUR_OF_DAY), c.get(Calendar.MINUTE), true);
+        dialog.show();
+    }
+
+    @Override
+    public void onTimeSet(TimePicker view, int hourOfDay, int minute) {
+        final Calendar c = Calendar.getInstance();
+        c.set(Calendar.HOUR_OF_DAY, hourOfDay);
+        c.set(Calendar.MINUTE, minute);
+        updatedTime = c.getTime();
+        Log.e(TAG, "time set: " + TaskConstants.dateDisplayFormatWithHours.format(updatedTime));
     }
 
     @OnClick(R.id.etsk_btn_update_task)
@@ -152,33 +225,26 @@ public class EditTaskFragment extends Fragment {
             ErrorUtils.showSnackBar(vContainer, "Please enter a subject", Snackbar.LENGTH_LONG, "", null);
         } else if (TaskConstants.MEETING.equals(taskType) && etLocationInput.getText().toString().trim().equals("")) {
             ErrorUtils.showSnackBar(vContainer, "Please enter a location", Snackbar.LENGTH_LONG, "", null);
-        } else if (selectedDateTime == null) {
-            ErrorUtils.showSnackBar(vContainer, "Please enter a date and time for the meeting", Snackbar.LENGTH_LONG, "", null);
         } else {
             updateTask();
         }
     }
 
-    private void populateFields() {
-        switch (task.getType()) {
-            case TaskConstants.MEETING:
-                etTitleInput.setText(task.getTitle());
-                etDescriptionInput.setText(task.getDescription());
-                etLocationInput.setText(task.getLocation());
-                dateTimeDisplayed.setText(TaskConstants.dateDisplayFormatWithHours.format(task.getDeadlineDate()));
-
-                break;
-            case TaskConstants.VOTE:
-                etTitleInput.setText(task.getTitle());
-                etTitleInput.setEnabled(false);
-                etDescriptionInput.setText(task.getDescription());
-                ;
-                dateTimeDisplayed.setText(TaskConstants.dateDisplayFormatWithHours.format(task.getDeadlineDate()));
-                break;
-            case TaskConstants.TODO:
-                etTitleInput.setText(task.getTitle());
-
+    @OnClick(R.id.etsk_cv_description)
+    public void expandDescription() {
+        if (descriptionBody.getVisibility() == View.GONE) {
+            ivDescExpandIcon.setImageResource(R.drawable.ic_arrow_up);
+            descriptionBody.setVisibility(View.VISIBLE);
+        } else {
+            ivDescExpandIcon.setImageResource(R.drawable.ic_arrow_down);
+            descriptionBody.setVisibility(View.GONE);
         }
+    }
+
+    @OnClick(R.id.etsk_cv_notify)
+    public void changeMemberSelection() {
+        Intent pickMember = MenuUtils.memberSelectionIntent(getActivity(), task.getParentUid(), TAG, null);
+        startActivityForResult(pickMember, Constant.activitySelectGroupMembers);
     }
 
     public void updateTask() {
@@ -205,7 +271,6 @@ public class EditTaskFragment extends Fragment {
                     }
 
                 });
-
             }
         });
     }
@@ -217,41 +282,21 @@ public class EditTaskFragment extends Fragment {
         final String code = PreferenceUtils.getAuthToken(getContext());
         final String title = etTitleInput.getText().toString();
         final String description = etDescriptionInput.getText().toString();
-        final String dateTimeISO = Constant.isoDateTimeSDF.format(selectedDateTime);
-        final int minutes = obtainReminderMinutes();
+        final String dateTimeISO = Constant.isoDateTimeSDF.format(dateDisplayed);
 
         switch (taskType) {
             case TaskConstants.MEETING:
                 final String location = etLocationInput.getText().toString();
                 return GrassrootRestService.getInstance().getApi().editMeeting(phoneNumber, code, uid,
-                        title, description, location, dateTimeISO, minutes);
+                        title, description, location, dateTimeISO);
             case TaskConstants.VOTE:
                 return GrassrootRestService.getInstance().getApi().editVote(phoneNumber, code, uid, title,
                         description, dateTimeISO);
-            //disable for now
-           /* case TaskConstants.TODO:
+            case TaskConstants.TODO:
                 return GrassrootRestService.getInstance().getApi().editTodo(phoneNumber, code, title,
-                        dateTimeISO, minutes, null);*/
+                        dateTimeISO, null);
             default:
                 throw new UnsupportedOperationException("Error! Missing task type in call");
-        }
-    }
-
-
-
-    private int obtainReminderMinutes() {
-        if (TaskConstants.MEETING.equals(taskType)) {
-            if (swOneDayAhead.isChecked()) {
-                return 60 * 24;
-            } else if (swHalfDayAhead.isChecked()) {
-                return 60 * 6;
-            } else if (swOneHourAhead.isChecked()) {
-                return 60;
-            } else {
-                return -1;
-            }
-        } else {
-            return -1;
         }
     }
 
@@ -265,153 +310,6 @@ public class EditTaskFragment extends Fragment {
                 return getActivity().getString(R.string.etsk_todo_updated_success);
             default:
                 throw new UnsupportedOperationException("Error! Missing task type");
-        }
-    }
-
-    @BindView(R.id.etsk_txt_ipl)
-    TextInputLayout subjectInput;
-    @BindView(R.id.etsk_til_location)
-    TextInputLayout locationInput;
-    @BindView(R.id.txt_deadline_title)
-    TextView deadlineTitle;
-    @BindView(R.id.etsk_cv_reminder)
-    CardView reminderCard;
-
-
-    private void setUpStrings() {
-
-        locationInput.setVisibility(TaskConstants.MEETING.equals(taskType) ? View.VISIBLE : View.GONE);
-        locationCharCounter.setVisibility(TaskConstants.MEETING.equals(taskType) ? View.VISIBLE : View.GONE);
-
-        switch (taskType) {
-            case TaskConstants.MEETING:
-                btTaskUpdate.setText(R.string.uMeeting);
-                break;
-            case TaskConstants.VOTE:
-                subjectInput.setHint(getContext().getString(R.string.cvote_subject));
-                deadlineTitle.setText(R.string.cvote_datetime);
-                reminderCard.setVisibility(View.GONE);
-                descriptionBody.setVisibility(View.VISIBLE);
-                ivDescExpandIcon.setImageResource(R.drawable.ic_arrow_up);
-                descriptionInput.setHint(getContext().getString(R.string.cvote_desc_hint));
-                descriptionCard.setCardBackgroundColor(ContextCompat.getColor(getContext(), R.color.white));
-                btTaskUpdate.setText(R.string.uVote);
-                break;
-            case TaskConstants.TODO:
-                subjectInput.setHint(getContext().getString(R.string.ctodo_subject));
-                deadlineTitle.setText(R.string.ctodo_datetime);
-                descriptionInput.setHint(getContext().getString(R.string.ctodo_desc_hint));
-                btTaskUpdate.setText(R.string.uTodo);
-                break;
-            default:
-                throw new UnsupportedOperationException("Error! Fragment must have valid task type");
-        }
-    }
-
-    @BindView(R.id.etsk_iv_expand_alert)
-    ImageView ivExpandReminders;
-    private ValueAnimator remindersExpandAnimator;
-    private ValueAnimator remindersContractAnimator;
-
-    private void setUpReminderAnimators() {
-        remindersExpandAnimator = Utilities.createSlidingAnimator(rlReminderBody, true);
-        remindersContractAnimator = Utilities.createSlidingAnimator(rlReminderBody, true);
-        remindersContractAnimator.addListener(new AnimatorListenerAdapter() {
-            @Override
-            public void onAnimationEnd(Animator animation) {
-                super.onAnimationEnd(animation);
-                rlReminderBody.setVisibility(View.GONE);
-            }
-        });
-    }
-
-    @OnClick(R.id.etsk_reminder_header)
-    public void expandableReminderHeader() {
-
-        if (remindersExpandAnimator == null) {
-            setUpReminderAnimators();
-        }
-
-        if (rlReminderBody.getVisibility() != View.VISIBLE) {
-            ivExpandReminders.setImageResource(R.drawable.ic_arrow_up);
-            rlReminderBody.setVisibility(View.VISIBLE);
-            remindersExpandAnimator.start();
-        } else {
-            ivExpandReminders.setImageResource(R.drawable.ic_arrow_down);
-            remindersContractAnimator.start();
-        }
-    }
-
-    @OnCheckedChanged({R.id.etsk_sw_one_hour, R.id.etsk_sw_half_day, R.id.etsk_sw_one_day})
-    public void toggleReminders(SwitchCompat swToggled, boolean checked) {
-        if (checked) {
-            toggleSwitches(swToggled);
-        }
-    }
-
-    private void toggleSwitches(SwitchCompat swChecked) {
-        swOneHourAhead.setChecked(swChecked.equals(swOneHourAhead));
-        swHalfDayAhead.setChecked(swChecked.equals(swHalfDayAhead));
-        swOneDayAhead.setChecked(swChecked.equals(swOneDayAhead));
-    }
-
-    private ValueAnimator descriptionExpandAnimator;
-    private ValueAnimator descriptionContractAnimator;
-
-    @BindView(R.id.etsk_cv_description)
-    CardView descriptionCard;
-    @BindView(R.id.etsk_rl_desc_body)
-    RelativeLayout descriptionBody;
-    @BindView(R.id.etsk_til_desc)
-    TextInputLayout descriptionInput;
-    @BindView(R.id.etsk_desc_expand)
-    ImageView ivDescExpandIcon;
-
-    private void setUpDescriptionAnimators() {
-        descriptionExpandAnimator = Utilities.createSlidingAnimator(descriptionBody, true);
-        descriptionContractAnimator = Utilities.createSlidingAnimator(descriptionBody, false);
-
-        descriptionExpandAnimator.addListener(new AnimatorListenerAdapter() {
-            @Override
-            public void onAnimationStart(Animator animation) {
-                super.onAnimationStart(animation);
-                etDescriptionInput.setVisibility(View.GONE);
-            }
-
-            @Override
-            public void onAnimationEnd(Animator animation) {
-                super.onAnimationEnd(animation);
-                etDescriptionInput.setVisibility(View.VISIBLE);
-            }
-        });
-
-        descriptionContractAnimator.addListener(new AnimatorListenerAdapter() {
-            @Override
-            public void onAnimationStart(Animator animation) {
-                super.onAnimationStart(animation);
-                etDescriptionInput.setVisibility(View.INVISIBLE);
-            }
-
-            @Override
-            public void onAnimationEnd(Animator animation) {
-                super.onAnimationEnd(animation);
-                etDescriptionInput.setVisibility(View.GONE);
-            }
-        });
-    }
-
-    @OnClick(R.id.etsk_cv_description)
-    public void expandDescription() {
-        if (descriptionExpandAnimator == null) {
-            setUpDescriptionAnimators();
-        }
-        if (descriptionBody.getVisibility() == View.GONE) {
-            descriptionBody.setVisibility(View.VISIBLE);
-            ivDescExpandIcon.setImageResource(R.drawable.ic_arrow_up);
-            descriptionExpandAnimator.start();
-        } else {
-            ivDescExpandIcon.setImageResource(R.drawable.ic_arrow_down);
-            descriptionContractAnimator.start();
         }
     }
 
@@ -436,6 +334,5 @@ public class EditTaskFragment extends Fragment {
     public void changeDescCounter(CharSequence s) {
         descriptionCharCounter.setText(s.length() + " / 250");
     }
-
 
 }

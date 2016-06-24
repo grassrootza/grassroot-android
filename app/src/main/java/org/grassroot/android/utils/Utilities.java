@@ -30,27 +30,6 @@ public class Utilities {
     private static final Pattern zaPhoneE164Plus = Pattern.compile("\\+27[6,7,8]\\d{8}"); // make the "+" more general
     private static final Pattern nationalRegex = Pattern.compile("0[6,7,8]\\d{8}");
 
-    public static ValueAnimator createSlidingAnimator(final ViewGroup viewGroup, boolean expand) {
-        final int widthSpec = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED);
-        final int heightSpec = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED);
-
-        viewGroup.measure(widthSpec, heightSpec);
-        int height = viewGroup.getMeasuredHeight();
-
-        ValueAnimator animator = expand ? ValueAnimator.ofInt(0, height) : ValueAnimator.ofInt(height, 0);
-
-        animator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
-            @Override
-            public void onAnimationUpdate(ValueAnimator valueAnimator) {
-                ViewGroup.LayoutParams params = viewGroup.getLayoutParams();
-                params.height = (Integer) valueAnimator.getAnimatedValue();
-                viewGroup.setLayoutParams(params);
-            }
-        });
-
-        return animator;
-    }
-
     public static String timeZone() {
         Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("GMT"), Locale.getDefault());
         String   timeZone = new SimpleDateFormat("Z").format(calendar.getTime());

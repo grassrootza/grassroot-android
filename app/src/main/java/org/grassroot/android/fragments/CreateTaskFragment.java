@@ -17,6 +17,7 @@ import android.view.ViewGroup;
 import android.view.inputmethod.EditorInfo;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
@@ -90,7 +91,7 @@ public class CreateTaskFragment extends Fragment {
     @BindView(R.id.sw_notifyall)
     SwitchCompat swNotifyAll;
     @BindView(R.id.ctsk_rl_notify_count)
-    RelativeLayout notifyCountHolder;
+    LinearLayout notifyCountHolder;
     @BindView(R.id.ctsk_tv_member_count)
     TextView notifyMembersCount;
     @BindView(R.id.ctsk_tv_suffix)

@@ -135,10 +135,6 @@
             android:name=".activities.AddContactManually"
             android:label="@string/title_activity_add_contact_manually"
             android:theme="@style/AppTheme" />
-        <activity
-            android:name=".activities.NotBuiltActivity"
-            android:label="@string/title_activity_blank"
-            android:theme="@style/AppTheme" />
 
         <!-- General task activities -->
         <activity
@@ -175,10 +171,6 @@
             android:name=".activities.CreateVoteActivity"
             android:label="@string/title_activity_create_vote"
             android:theme="@style/AppTheme"
-            android:windowSoftInputMode="adjustNothing" />
-
-        <activity
-            android:name=".activities.EditVoteActivity"
             android:windowSoftInputMode="adjustNothing" />
 
         <!-- Todo related activities -->

@@ -234,11 +234,6 @@
         <item name="android:paddingTop">@dimen/dialog_padding_vertical</item>
     </style>
 
-    <style name="animation_slide_from_right">
-        <item name="android:windowEnterAnimation">@anim/flyin_fast</item>
-        <item name="android:windowExitAnimation">@anim/flyout_fast</item>
-    </style>
-
     <!-- SECTION ENDS -->
 
     <!-- CALL MEETING / VOTES / ETC STYLES -->
