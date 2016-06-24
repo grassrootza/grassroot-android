@@ -1,4 +1,4 @@
-package org.grassroot.android.ui.views;
+package org.grassroot.android.adapters;
 
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;

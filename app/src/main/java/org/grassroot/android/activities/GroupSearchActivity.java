@@ -29,8 +29,7 @@ import org.grassroot.android.models.GenericResponse;
 import org.grassroot.android.models.GroupSearchModel;
 import org.grassroot.android.models.GroupSearchResponse;
 import org.grassroot.android.services.GrassrootRestService;
-import org.grassroot.android.ui.views.CustomItemAnimator;
-import org.grassroot.android.ui.views.RecyclerTouchListener;
+import org.grassroot.android.adapters.RecyclerTouchListener;
 import org.grassroot.android.utils.ErrorUtils;
 import org.grassroot.android.utils.PreferenceUtils;
 
@@ -105,12 +104,8 @@ public class GroupSearchActivity extends PortraitActivity implements OnClickList
     }
 
     private void setUpRecyclerView() {
-        // use this setting to improve performance if you know that changes
-        // in content do not change the layout size of the RecyclerView
         jrRecyclerView.setHasFixedSize(true);
-
         jrRecyclerView.setLayoutManager(new LinearLayoutManager(this));
-        jrRecyclerView.setItemAnimator(new CustomItemAnimator());
 
         // specify an adapter
         joinrequestAdapter = new JoinRequestAdapter(getApplicationContext(), new ArrayList<GroupSearchModel>());

@@ -35,6 +35,8 @@ public class TaskModel implements Parcelable, Comparable<TaskModel> {
     private Boolean hasResponded;
     private Boolean canAction;
     private boolean canEdit;
+    private boolean createdByUser;
+
     private String reply;
 
     private Boolean wholeGroupAssigned;
@@ -135,6 +137,8 @@ public class TaskModel implements Parcelable, Comparable<TaskModel> {
         return hasResponded && TaskConstants.RESPONSE_NO.equals(reply);
     }
 
+    public boolean isCreatedByUser() { return createdByUser; }
+
     @Override
     public int describeContents() {
         return 0;
@@ -154,7 +158,8 @@ public class TaskModel implements Parcelable, Comparable<TaskModel> {
         dest.writeInt(this.hasResponded ? 1 : 0);
         dest.writeInt(this.canAction ? 1 : 0);
         dest.writeInt(this.canEdit ? 1 : 0);
-        dest.writeInt(this.wholeGroupAssigned?1:0);
+        dest.writeInt(this.wholeGroupAssigned ? 1:0);
+        dest.writeInt(this.canEdit ? 1 : 0);
         dest.writeString(this.reply);
         dest.writeString(this.completedYes);
         dest.writeString(this.completedNo);
@@ -175,6 +180,7 @@ public class TaskModel implements Parcelable, Comparable<TaskModel> {
         this.canAction = in.readInt() != 0;
         this.canEdit = in.readInt() != 0;
         this.wholeGroupAssigned = in.readInt() != 0;
+        this.canEdit = in.readInt() != 0;
         this.reply = in.readString();
         this.completedYes = in.readString();
         this.completedNo = in.readString();

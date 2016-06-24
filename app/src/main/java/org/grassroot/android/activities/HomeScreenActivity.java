@@ -10,6 +10,7 @@ import android.view.Gravity;
 
 import org.grassroot.android.R;
 import org.grassroot.android.events.GroupCreatedEvent;
+import org.grassroot.android.events.TaskAddedEvent;
 import org.grassroot.android.events.UserLoggedOutEvent;
 import org.grassroot.android.fragments.HomeGroupListFragment;
 import org.grassroot.android.fragments.NavigationDrawerFragment;
@@ -87,20 +88,6 @@ public class HomeScreenActivity extends PortraitActivity implements NavigationDr
     }
 
     @Override
-    public void groupRowClick(Group group) {
-        if (group.isHasTasks()) {
-            startActivity(MenuUtils.constructIntent(this, GroupTasksActivity.class, group));
-        } else {
-            newTaskMenuFragment = NewTaskMenuFragment.newInstance(group, true, true);
-            getSupportFragmentManager().beginTransaction()
-                    .setCustomAnimations(R.anim.up_from_bottom, R.anim.down_from_top)
-                    .add(R.id.drawer_layout, newTaskMenuFragment, NewTaskMenuFragment.class.getCanonicalName())
-                    .addToBackStack(null)
-                    .commit();
-        }
-    }
-
-    @Override
     public void menuClick() { // Getting data from fragment
         if (drawer != null) drawer.openDrawer(GravityCompat.START);
     }
@@ -133,4 +120,14 @@ public class HomeScreenActivity extends PortraitActivity implements NavigationDr
         // to make sure fragments, mobile number etc are destroyed and hence refreshed on subsequent login
         finish();
     }
+
+    @Subscribe
+    public void onTaskAddedEvent(TaskAddedEvent e) {
+        Fragment frag = getSupportFragmentManager().findFragmentByTag(NewTaskMenuFragment.class.getCanonicalName());
+        if (frag != null) {
+            getSupportFragmentManager().beginTransaction()
+                    .remove(frag).commit();
+        }
+    }
+
 }

@@ -20,7 +20,7 @@ import org.grassroot.android.interfaces.ClickListener;
 import org.grassroot.android.models.GenericResponse;
 import org.grassroot.android.models.ProfileResponse;
 import org.grassroot.android.services.GrassrootRestService;
-import org.grassroot.android.ui.views.RecyclerTouchListener;
+import org.grassroot.android.adapters.RecyclerTouchListener;
 import org.grassroot.android.utils.PreferenceUtils;
 
 import butterknife.BindView;

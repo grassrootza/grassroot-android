@@ -42,6 +42,7 @@ public class LoginRegisterActivity extends AppCompatActivity implements LoginScr
     private static final String LOGIN = "login";
     private static final String REGISTER = "register";
 
+    private boolean onRegisterOrLogin;
     private ViewGroup rootView;
     private ProgressDialog progressDialog;
 
@@ -53,7 +54,7 @@ public class LoginRegisterActivity extends AppCompatActivity implements LoginScr
         super.onCreate(savedInstanceState);
         setTheme(R.style.Theme_IntroScreen);
         requestWindowFeature(Window.FEATURE_NO_TITLE);
-        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT); // todo : handle tables, maybe
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
         setContentView(R.layout.activity_login_register);
 
         progressDialog = new ProgressDialog(this);
@@ -63,13 +64,13 @@ public class LoginRegisterActivity extends AppCompatActivity implements LoginScr
         rootView = (ViewGroup) findViewById(R.id.rl_activity_root);
 
         defaultToLogin = getIntent().getBooleanExtra("default_to_login", false);
+        onRegisterOrLogin = true;
         switchFragments(defaultToLogin ? new LoginScreenFragment() : RegisterScreenFragment.newInstance(), false);
     }
 
     private void switchFragments(Fragment fragment, boolean addToBackStack) {
         FragmentTransaction transaction =  getSupportFragmentManager().beginTransaction()
-                .setCustomAnimations(R.anim.a_slide_in_right, R.anim.a_slide_out_left,
-                        R.anim.a_slide_in_left, R.anim.a_slide_out_right)
+                .setCustomAnimations(R.anim.a_slide_in_right, R.anim.a_slide_out_left, R.anim.a_slide_in_left, R.anim.a_slide_out_right)
                 .replace(R.id.lr_frag_content, fragment, fragment.getClass().getSimpleName());
 
         if (addToBackStack) {
@@ -94,7 +95,7 @@ public class LoginRegisterActivity extends AppCompatActivity implements LoginScr
                             switchToOtp(otpToPass, LOGIN);
                         } else {
                             ErrorUtils.showSnackBar(rootView, getResources().getString(R.string.User_not_registered),
-                                    Snackbar.LENGTH_INDEFINITE, "Register", new View.OnClickListener() {
+                                    Snackbar.LENGTH_LONG, "Register", new View.OnClickListener() {
                                         @Override
                                         public void onClick(View view) {
                                             switchFragments(RegisterScreenFragment.newInstance(), true);
@@ -131,7 +132,7 @@ public class LoginRegisterActivity extends AppCompatActivity implements LoginScr
                         } else {
                             final String errorMsg = getResources().getString(R.string.error_user_exists);
                             final String actionBtn = getResources().getString(R.string.bt_log);
-                            ErrorUtils.showSnackBar(rootView, errorMsg, Snackbar.LENGTH_SHORT, actionBtn, new View.OnClickListener() {
+                            ErrorUtils.showSnackBar(rootView, errorMsg, Snackbar.LENGTH_LONG, actionBtn, new View.OnClickListener() {
                                 @Override
                                 public void onClick(View view) {
                                     requestLogin(msisdn);
@@ -149,6 +150,7 @@ public class LoginRegisterActivity extends AppCompatActivity implements LoginScr
     }
 
     private void switchToOtp(String otpToPass, String purpose) {
+        onRegisterOrLogin = false;
         OtpScreenFragment otpFragment = (OtpScreenFragment) getSupportFragmentManager()
                 .findFragmentByTag(OtpScreenFragment.class.getSimpleName());
         if (otpFragment != null && otpFragment.isVisible()) {
@@ -256,6 +258,19 @@ public class LoginRegisterActivity extends AppCompatActivity implements LoginScr
         gcmRegistrationIntent.putExtra(NotificationConstants.ACTION, NotificationConstants.GCM_REGISTER);
         gcmRegistrationIntent.putExtra(NotificationConstants.PHONE_NUMBER, phoneNumber);
         startService(gcmRegistrationIntent);
+    }
+
+    @Override
+    public void onBackPressed() {
+        if (onRegisterOrLogin) {
+            // doing it his way so can preserve keeping IntroActivity off history
+            Intent backToIntro = new Intent(this, IntroActivity.class);
+            startActivity(backToIntro);
+            finish();
+        } else {
+            onRegisterOrLogin = true;
+            super.onBackPressed();
+        }
     }
 
 }

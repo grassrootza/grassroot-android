@@ -1,4 +1,4 @@
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     xmlns:card_view="http://schemas.android.com/apk/res-auto"
     android:id="@+id/vt_root_layout"
@@ -8,7 +8,6 @@
     android:clickable="true"
     tools:context=".fragments.ViewTaskFragment">
 
-    <!-- todo : decide if we need a scrollview around this -->
     <android.support.v7.widget.CardView
         android:id="@+id/vt_root_card"
         style="@style/RootCardView">
@@ -85,18 +84,17 @@
                     android:id="@+id/vt_rl_task_status"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="5dp"
-                    android:paddingBottom="5dp"
+                    android:layout_marginTop="@dimen/margin_xlarge"
+                    android:layout_marginBottom="@dimen/margin_xlarge"
+                    android:paddingBottom="@dimen/margin_xlarge"
                     android:paddingTop="5dp">
 
                     <TextView
                         android:id="@+id/vt_response_header"
                         style="@style/CardViewSubHeader"
                         android:layout_centerHorizontal="true"
-                        android:layout_marginTop="@dimen/margin_large"
-                        android:layout_marginBottom="@dimen/margin_xlarge"
                         android:textStyle="bold"
-                        tools:text="@string/vv_rl_vote_header" />
+                        tools:text="@string/vt_mtg_responseq" />
 
                     <RelativeLayout
                         android:id="@+id/td_rl_response_icon"
@@ -125,7 +123,7 @@
                         android:layout_height="wrap_content"
                         android:orientation="horizontal"
                         android:gravity="center_horizontal"
-                        android:layout_marginBottom="@dimen/margin_xlarge">
+                        android:visibility="visible">
 
                         <ImageButton
                             android:id="@+id/vt_left_response"
@@ -204,31 +202,26 @@
             <Button
                 android:id="@+id/vt_bt_modify"
                 style="@style/Button_white"
+                android:background="@drawable/button_white_bg_border_green"
                 android:layout_width="match_parent"
                 android:layout_below="@+id/vt_cv_response_list"
                 android:layout_marginTop="@dimen/margin_xlarge"
+                android:layout_marginBottom="@dimen/margin_large"
+                android:visibility="gone"
+                tools:text="@string/vt_mtg_modify"/>
+
+            <Button
+                android:id="@+id/vt_bt_cancel"
+                style="@style/Button_white"
+                android:background="@drawable/button_white_bg_border_green"
+                android:layout_width="match_parent"
+                android:layout_below="@+id/vt_bt_modify"
                 android:layout_marginBottom="@dimen/margin_small"
                 android:visibility="gone"
-                tools:text="@string/vv_bt_editvote"/>
+                tools:text="@string/vt_mtg_cancel"/>
 
         </RelativeLayout>
 
     </android.support.v7.widget.CardView>
 
-    <include
-        android:id="@+id/error_layout"
-        layout="@layout/qube_error_layout"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_centerInParent="true"
-        android:visibility="gone" />
-
-    <ProgressBar
-        android:id="@+id/vt_progress_bar"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_centerInParent="true"
-        android:indeterminateDrawable="@drawable/custom_progress_background"
-        android:visibility="gone" />
-
-</RelativeLayout>
+</ScrollView>

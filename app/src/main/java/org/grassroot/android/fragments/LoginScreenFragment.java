@@ -9,6 +9,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.AnimationUtils;
+import android.view.inputmethod.InputMethodManager;
 
 import org.grassroot.android.R;
 import org.grassroot.android.utils.Utilities;
@@ -37,16 +38,6 @@ public class LoginScreenFragment extends Fragment {
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.container_login, container, false);
-        ButterKnife.bind(this, view);
-        view.startAnimation(AnimationUtils.loadAnimation(getActivity(), R.anim.fade_in));
-        view.setLayoutParams(new ViewGroup.LayoutParams(-1, -1));
-        return view;
-    }
-
-    @Override
     public void onAttach(Context context) {
         super.onAttach(context);
         try {
@@ -54,6 +45,21 @@ public class LoginScreenFragment extends Fragment {
         } catch (ClassCastException e) {
             throw new ClassCastException(context.toString() + " must implement LoginFragmentListener");
         }
+    }
+
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                             Bundle savedInstanceState) {
+        View view = inflater.inflate(R.layout.container_login, container, false);
+        ButterKnife.bind(this, view);
+        view.startAnimation(AnimationUtils.loadAnimation(getActivity(), R.anim.fade_in));
+        view.setLayoutParams(new ViewGroup.LayoutParams(-1, -1));
+
+        if (etNumberInput.requestFocus()) {
+            InputMethodManager imm = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
+            imm.showSoftInput(etNumberInput, InputMethodManager.SHOW_IMPLICIT);
+        }
+        return view;
     }
 
     @OnClick(R.id.bt_login)

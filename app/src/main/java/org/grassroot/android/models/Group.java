@@ -76,6 +76,8 @@ public class Group implements Parcelable, Comparable<Group> {
 
     public boolean isHasTasks() { return hasTasks; }
 
+    public void setHasTasks(boolean hasTasks) { this.hasTasks = hasTasks; }
+
     public String getDateTimeStringISO() {
         if (dateTimeStringISO == null || dateTimeStringISO.equals("")) {
             dateTimeStringISO = Constant.isoDateTimeSDF.format(getDate());

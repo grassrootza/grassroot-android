@@ -1,4 +1,4 @@
-package org.grassroot.android.ui.views;
+package org.grassroot.android.adapters;
 
 import android.content.Context;
 import android.support.v7.widget.RecyclerView;

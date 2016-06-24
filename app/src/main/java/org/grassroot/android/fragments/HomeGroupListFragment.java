@@ -22,22 +22,25 @@ import android.widget.RelativeLayout;
 
 import com.github.clans.fab.FloatingActionButton;
 import com.github.clans.fab.FloatingActionMenu;
+
 import org.grassroot.android.R;
-import org.grassroot.android.adapters.GroupListAdapter;
-import org.grassroot.android.events.NetworkActivityResultsEvent;
-import org.grassroot.android.interfaces.NetworkErrorDialogListener;
-import org.grassroot.android.interfaces.GroupConstants;
-import org.grassroot.android.interfaces.SortInterface;
-import org.grassroot.android.interfaces.TaskConstants;
-import org.grassroot.android.services.GrassrootRestService;
-import org.grassroot.android.services.NoConnectivityException;
-import org.grassroot.android.models.Group;
-import org.grassroot.android.models.GroupResponse;
 import org.grassroot.android.activities.CreateGroupActivity;
 import org.grassroot.android.activities.GroupSearchActivity;
-import org.grassroot.android.ui.views.CustomItemAnimator;
+import org.grassroot.android.activities.GroupTasksActivity;
+import org.grassroot.android.adapters.GroupListAdapter;
+import org.grassroot.android.events.NetworkActivityResultsEvent;
+import org.grassroot.android.events.TaskAddedEvent;
+import org.grassroot.android.interfaces.GroupConstants;
+import org.grassroot.android.interfaces.NetworkErrorDialogListener;
+import org.grassroot.android.interfaces.SortInterface;
+import org.grassroot.android.interfaces.TaskConstants;
+import org.grassroot.android.models.Group;
+import org.grassroot.android.models.GroupResponse;
+import org.grassroot.android.models.TaskModel;
+import org.grassroot.android.services.GrassrootRestService;
 import org.grassroot.android.utils.Constant;
 import org.grassroot.android.utils.ErrorUtils;
+import org.grassroot.android.utils.MenuUtils;
 import org.grassroot.android.utils.PreferenceUtils;
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
@@ -114,7 +117,6 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment imple
 
     public interface GroupListFragmentListener {
         void menuClick();
-        void groupRowClick(Group group);
     }
 
     @Override
@@ -446,19 +448,28 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment imple
     @Override
     public void onGroupRowShortClick(Group group) {
         menu1.close(true);
-        mCallbacks.groupRowClick(group);
+        if (group.isHasTasks()) {
+            startActivity(MenuUtils.constructIntent(getActivity(), GroupTasksActivity.class, group));
+        } else {
+            showQuickOptionsDialog(group, true);
+        }
     }
 
     @Override
     public void onGroupRowLongClick(Group group) {
+        showQuickOptionsDialog(group, false);
+    }
+
+    private void showQuickOptionsDialog(Group group, boolean addMembersOption) {
         GroupQuickTaskModalFragment dialog = new GroupQuickTaskModalFragment();
         dialog.setGroupParameters(group.getGroupUid(), group.getGroupName());
         Bundle args = new Bundle();
         args.putBoolean(TaskConstants.MEETING, group.getPermissions().contains(GroupConstants.PERM_CREATE_MTG));
         args.putBoolean(TaskConstants.VOTE, group.getPermissions().contains(GroupConstants.PERM_CALL_VOTE));
         args.putBoolean(TaskConstants.TODO, group.getPermissions().contains(GroupConstants.PERM_CREATE_TODO));
+        args.putBoolean(GroupConstants.PERM_ADD_MEMBER, addMembersOption && group.canAddMembers());
         dialog.setArguments(args);
-        dialog.show(getFragmentManager(), "GroupQuickTaskModalFragment");
+        dialog.show(getFragmentManager(), GroupQuickTaskModalFragment.class.getSimpleName());
     }
 
     @Override
@@ -482,6 +493,20 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment imple
     public void onEvent(NetworkActivityResultsEvent networkActivityResultsEvent){
         Log.e(TAG, "onEvent");
         fetchGroupList();
+    }
+
+    @Subscribe
+    public void onTaskCreatedEvent(TaskAddedEvent e) {
+        Log.e(TAG, "group list fragment triggered by task addition ...");
+        final TaskModel t = e.getTaskCreated();
+        final String groupUid = t.getParentUid();
+        // todo : may want to keep a hashmap of groups ... likely will be finding & updating groups quite a bit
+        for (Group g : userGroups) {
+            if (groupUid.equals(g.getGroupUid())) {
+                g.setHasTasks(true);
+                startActivity(MenuUtils.constructIntent(getActivity(), GroupTasksActivity.class, g));
+            }
+        }
 
     }
 

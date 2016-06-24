@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<selector
-  xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:drawable="@drawable/bg_grey_box_w_thin_bottom_border" android:state_pressed="true"  />
-   <item android:drawable="@color/text_beige" android:state_activated="true"/>
-  <item android:drawable="@drawable/bg_white_box_w_bottom_border" />
-</selector>

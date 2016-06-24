@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:fab="http://schemas.android.com/apk/res-auto"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/gta_root_layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -31,10 +30,9 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_below="@+id/gta_appbar">
-
     </FrameLayout>
 
-    <com.github.clans.fab.FloatingActionButton
+    <android.support.design.widget.FloatingActionButton
         android:id="@+id/gta_fab"
         android:layout_gravity="bottom|end"
         android:layout_margin="@dimen/fab_margin"
@@ -48,9 +46,12 @@
         android:paddingLeft="10dp"
 
         android:src="@drawable/fab_add"
-        fab:fab_shadowColor="#444"
-        fab:fab_colorNormal="#FFB805"
+        app:backgroundTint="#FFB805"
+        app:rippleColor="#D99200"
+        app:elevation="6dp" />
+
+        <!-- fab:fab_shadowColor="#444"
         fab:fab_colorPressed="#F2AB00"
-        fab:fab_colorRipple="#D99200" />
+        fab:fab_colorRipple="#D99200"/> -->
 
 </RelativeLayout>

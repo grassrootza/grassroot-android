@@ -1,7 +1,10 @@
 package org.grassroot.android.fragments;
 
 
+import android.app.Activity;
+import android.app.ProgressDialog;
 import android.content.Intent;
+import android.graphics.Typeface;
 import android.os.Bundle;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
@@ -28,8 +31,10 @@ import org.grassroot.android.adapters.MemberListAdapter;
 import org.grassroot.android.adapters.MtgRsvpAdapter;
 import org.grassroot.android.events.TaskCancelledEvent;
 import org.grassroot.android.events.TaskUpdatedEvent;
+import org.grassroot.android.fragments.dialogs.ConfirmCancelDialogFragment;
 import org.grassroot.android.interfaces.NetworkErrorDialogListener;
 import org.grassroot.android.interfaces.TaskConstants;
+import org.grassroot.android.models.GenericResponse;
 import org.grassroot.android.models.Member;
 import org.grassroot.android.models.MemberList;
 import org.grassroot.android.models.ResponseTotalsModel;
@@ -37,6 +42,7 @@ import org.grassroot.android.models.RsvpListModel;
 import org.grassroot.android.models.TaskModel;
 import org.grassroot.android.models.TaskResponse;
 import org.grassroot.android.services.GrassrootRestService;
+import org.grassroot.android.utils.Constant;
 import org.grassroot.android.utils.ErrorUtils;
 import org.grassroot.android.utils.PreferenceUtils;
 import org.greenrobot.eventbus.EventBus;
@@ -56,6 +62,11 @@ public class ViewTaskFragment extends Fragment {
 
     private static final String TAG = ViewTaskFragment.class.getCanonicalName();
 
+    public interface ViewTaskListener {
+        void onTaskLoaded(TaskModel task);
+        void onTaskCancelled(TaskModel task);
+    }
+
     private TaskModel task;
     private String taskType;
     private String taskUid;
@@ -65,6 +76,7 @@ public class ViewTaskFragment extends Fragment {
     private MtgRsvpAdapter mtgRsvpAdapter;
     private MemberListAdapter memberListAdapter;
 
+    private ViewTaskListener listener;
     private ViewGroup mContainer;
 
     @BindView(R.id.vt_title)
@@ -108,21 +120,18 @@ public class ViewTaskFragment extends Fragment {
 
     @BindView(R.id.vt_bt_modify)
     Button btModifyTask;
+    @BindView(R.id.vt_bt_cancel)
+    Button btCancelTask;
 
-    // todo : may be able to simplify, a lot, this seems a lot of stuff
-    @BindView(R.id.vt_progress_bar)
-    ProgressBar progressBar;
-    @BindView(R.id.error_layout)
-    RelativeLayout errorLayout;
-    @BindView(R.id.ll_no_internet)
-    LinearLayout imNoInternet;
+    ProgressDialog progressDialog;
 
     public ViewTaskFragment() {
     }
 
     // use this if creating or calling the fragment without whole task object (e.g., entering from notification)
-    public static ViewTaskFragment newInstance(String taskType, String taskUid) {
+    public static ViewTaskFragment newInstance(String taskType, String taskUid, ViewTaskListener listener) {
         ViewTaskFragment fragment = new ViewTaskFragment();
+        fragment.listener = listener;
         Bundle args = new Bundle();
         args.putString(TaskConstants.TASK_TYPE_FIELD, taskType);
         args.putString(TaskConstants.TASK_UID_FIELD, taskUid);
@@ -131,8 +140,9 @@ public class ViewTaskFragment extends Fragment {
     }
 
     // use this if creating or calling the fragment with whole task object
-    public static ViewTaskFragment newInstance(TaskModel task) {
+    public static ViewTaskFragment newInstance(TaskModel task, ViewTaskListener listener) {
         ViewTaskFragment fragment = new ViewTaskFragment();
+        fragment.listener = listener;
         Bundle args = new Bundle();
         args.putParcelable(TaskConstants.TASK_ENTITY_FIELD, task);
         fragment.setArguments(args);
@@ -171,32 +181,40 @@ public class ViewTaskFragment extends Fragment {
         View viewToReturn = inflater.inflate(R.layout.fragment_view_task, container, false);
         ButterKnife.bind(this, viewToReturn);
         mContainer = container;
+
+        progressDialog = new ProgressDialog(getActivity());
+        progressDialog.setIndeterminate(true);
+
         if (task == null) {
             retrieveTaskDetails();
         } else {
             setUpViews(task);
+            if (listener != null)
+                listener.onTaskLoaded(task);
         }
         return viewToReturn;
     }
 
     private void retrieveTaskDetails() {
-        progressBar.setVisibility(View.VISIBLE);
+        progressDialog.show();
         GrassrootRestService.getInstance().getApi().fetchTaskEntity(phoneNumber, code, taskUid, taskType)
                 .enqueue(new Callback<TaskResponse>() {
                     @Override
                     public void onResponse(Call<TaskResponse> call, Response<TaskResponse> response) {
-                        progressBar.setVisibility(View.GONE);
+                        progressDialog.dismiss();
                         if (response.isSuccessful()) {
                             Log.d(TAG, response.body().toString());
                             task = response.body().getTasks().get(0);
                             Log.e(TAG, task.toString());
                             setUpViews(task);
+                            if (listener != null)
+                                listener.onTaskLoaded(task);
                         }
                     }
 
                     @Override
                     public void onFailure(Call<TaskResponse> call, Throwable t) {
-                        progressBar.setVisibility(View.GONE);
+                        progressDialog.dismiss();
                         handleNoNetwork("FETCH");
                     }
                 });
@@ -218,10 +236,6 @@ public class ViewTaskFragment extends Fragment {
         }
     }
 
-    private void disableViewsOnCancel(){
-
-    }
-
     private void setViewForMeeting(TaskModel task) {
         tvTitle.setText(R.string.vt_mtg_title);
         tvHeader.setText(task.getTitle());
@@ -234,7 +248,12 @@ public class ViewTaskFragment extends Fragment {
         tvDateTime.setText(String.format(getString(R.string.vt_mtg_datetime),
                 TaskConstants.dateDisplayWithDayName.format(task.getDeadlineDate()))); // todo: integrate w/Calendar
 
-        if (task.canAction()) {
+        if (task.isCreatedByUser()) {
+            tvResponseHeader.setText(R.string.vt_mtg_called_by_user);
+            llResponseIcons.setVisibility(View.GONE);
+            tvResponseHeader.setTypeface(null, Typeface.NORMAL);
+            tvResponsesCount.setTypeface(null, Typeface.BOLD);
+        } else if (task.canAction()) {
             tvResponseHeader.setText(!task.hasResponded() ? getString(R.string.vt_mtg_responseq) :
                     textHasRespondedCanChange());
             llResponseIcons.setVisibility(View.VISIBLE);
@@ -250,6 +269,8 @@ public class ViewTaskFragment extends Fragment {
         if (task.isCanEdit()) {
             btModifyTask.setVisibility(View.VISIBLE);
             btModifyTask.setText(R.string.vt_mtg_modify);
+            btCancelTask.setVisibility(View.VISIBLE);
+            btCancelTask.setText(R.string.vt_mtg_cancel);
         }
 
         setMeetingRsvpView();
@@ -278,6 +299,7 @@ public class ViewTaskFragment extends Fragment {
         if (task.isCanEdit()) {
             btModifyTask.setVisibility(View.VISIBLE);
             btModifyTask.setText(R.string.vt_vote_modify);
+            btCancelTask.setVisibility(View.GONE);
         }
 
         setVoteResponseView();
@@ -303,10 +325,10 @@ public class ViewTaskFragment extends Fragment {
         setUpTodoResponseIconsCanAction();
         if (task.isCanEdit()) {
             btModifyTask.setVisibility(View.VISIBLE);
-            btModifyTask.setText(R.string.vt_vote_modify);
+            btModifyTask.setText(R.string.vt_todo_modify);
+            btCancelTask.setVisibility(View.GONE);
         }
         setUpAssignedMembersView();
-
 
     }
 
@@ -579,7 +601,7 @@ public class ViewTaskFragment extends Fragment {
     }
 
     /*
-    SECTION : MISCELLANEOUS HELPER METHODS AND INTENT TRIGGERS
+    SECTION : METHODS FOR TRIGGERING MODIFY/CANCEL
      */
 
     @OnClick(R.id.vt_bt_modify)
@@ -588,7 +610,77 @@ public class ViewTaskFragment extends Fragment {
             Intent editMtg = new Intent(getActivity(), EditTaskActivity.class);
             editMtg.putExtra(TaskConstants.TASK_ENTITY_FIELD,task);;
             startActivityForResult(editMtg, 1);
+        }
+    }
 
+    @OnClick(R.id.vt_bt_cancel)
+    public void promptCancel() {
+        if (task.isCanEdit()) {
+            String dialogMessage = generateConfirmationDialogStrings();
+            ConfirmCancelDialogFragment confirmCancelDialogFragment = ConfirmCancelDialogFragment.newInstance(dialogMessage, new ConfirmCancelDialogFragment.ConfirmDialogListener() {
+                @Override
+                public void doConfirmClicked() {
+                    cancelTask();
+                }
+            });
+            confirmCancelDialogFragment.show(getFragmentManager(), TAG);
+        }
+    }
+
+    private void cancelTask() {
+        progressDialog.show();
+        setUpCancelApiCall().enqueue(new Callback<GenericResponse>() {
+            @Override
+            public void onResponse(Call<GenericResponse> call, Response<GenericResponse> response) {
+                if (response.isSuccessful()) {
+                    // todo : pass back via listener & finish
+                    EventBus.getDefault().post(new TaskCancelledEvent(task));
+                    if (listener != null) {
+                        listener.onTaskCancelled(task);
+                    }
+                    progressDialog.dismiss();
+                } else {
+                    ErrorUtils.showSnackBar(getView(), "Error! Something went wrong", Snackbar.LENGTH_LONG, "", null);
+                }
+            }
+
+            @Override
+            public void onFailure(Call<GenericResponse> call, Throwable t) {
+                ErrorUtils.connectivityError(getActivity(), R.string.error_no_network, new NetworkErrorDialogListener() {
+                    @Override
+                    public void retryClicked() {
+                        cancelTask();
+                    }
+                });
+            }
+        });
+    }
+
+    private String generateConfirmationDialogStrings() {
+        switch (taskType) {
+            case TaskConstants.MEETING:
+                return getActivity().getString(R.string.et_cnfrm_mtg);
+            case TaskConstants.VOTE:
+                return getActivity().getString(R.string.et_cnfrm_vt);
+            case TaskConstants.TODO:
+                return getActivity().getString(R.string.et_cnfrm_td);
+            default:
+                throw new UnsupportedOperationException("Error! Missing task type");
+        }
+    }
+
+    private  Call<GenericResponse> setUpCancelApiCall() {
+        final String uid = task.getTaskUid();
+        final String phoneNumber = PreferenceUtils.getUserPhoneNumber(getContext());
+        final String code = PreferenceUtils.getAuthToken(getContext());
+        switch (taskType) {
+            case TaskConstants.MEETING:
+                return GrassrootRestService.getInstance().getApi().cancelMeeting(phoneNumber, code, uid);
+            case TaskConstants.VOTE:
+                return GrassrootRestService.getInstance().getApi().cancelVote(phoneNumber, code, uid);
+            case TaskConstants.TODO: // todo : set this up
+            default:
+                throw new UnsupportedOperationException("Error! Missing task type in call");
         }
     }
 
@@ -607,8 +699,6 @@ public class ViewTaskFragment extends Fragment {
     }
 
     private void handleNoNetwork(final String retryTag) {
-        errorLayout.setVisibility(View.VISIBLE);
-        imNoInternet.setVisibility(View.VISIBLE);
         ErrorUtils.connectivityError(getActivity(), R.string.error_no_network, new NetworkErrorDialogListener() {
             @Override
             public void retryClicked() {
@@ -654,11 +744,6 @@ public class ViewTaskFragment extends Fragment {
     public void onTaskUpdated(TaskUpdatedEvent event){
         TaskModel updatedTask = event.getTask();
         setUpViews(updatedTask);
-
-    }
-
-    @Subscribe
-    public void onTaskCancelled(TaskCancelledEvent event){
 
     }
 }

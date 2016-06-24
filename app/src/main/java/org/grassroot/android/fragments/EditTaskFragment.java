@@ -75,6 +75,7 @@ public class EditTaskFragment extends Fragment {
     TextInputEditText etDescriptionInput;
 
     private SlideDateTimeListener datePickerListener;
+
     @BindView(R.id.etsk_txt_deadline)
     TextView dateTimeDisplayed;
 
@@ -97,9 +98,6 @@ public class EditTaskFragment extends Fragment {
 
     @BindView(R.id.etsk_btn_update_task)
     Button btTaskUpdate;
-    @BindView(R.id.etsk_btn_cancel_task)
-    Button btCancelTask;
-
 
     public static EditTaskFragment newInstance(TaskModel task) {
         EditTaskFragment fragment = new EditTaskFragment();
@@ -117,6 +115,7 @@ public class EditTaskFragment extends Fragment {
         if (b == null) {
             throw new UnsupportedOperationException("Error! Fragment needs to be created with arguments");
         }
+
         Bundle args = getArguments();
         task = args.getParcelable(TaskConstants.TASK_ENTITY_FIELD);
         taskType = task.getType();
@@ -170,19 +169,6 @@ public class EditTaskFragment extends Fragment {
         }
     }
 
-    @OnClick(R.id.etsk_btn_cancel_task)
-    public void confirmAndCancel(){
-        String dialogMessage = generateConfirmationDialogStrings();
-        ConfirmCancelDialogFragment confirmCancelDialogFragment = ConfirmCancelDialogFragment.newInstance(dialogMessage, new ConfirmCancelDialogFragment.ConfirmDialogListener() {
-            @Override
-            public void doConfirmClicked() {
-                cancelTask();
-
-            }
-        });
-        confirmCancelDialogFragment.show(getFragmentManager(), TAG);
-    }
-
     private void populateFields() {
         switch (task.getType()) {
             case TaskConstants.MEETING:
@@ -234,35 +220,6 @@ public class EditTaskFragment extends Fragment {
         });
     }
 
-    public void cancelTask() {
-        setUpCancelApiCall().enqueue(new Callback<GenericResponse>() {
-            @Override
-            public void onResponse(Call<GenericResponse> call, Response<GenericResponse> response) {
-                if (response.isSuccessful()) {
-                    Intent i = new Intent();
-                    i.putExtra(Constant.SUCCESS_MESSAGE, generateSuccessString());
-                    getActivity().setResult(Activity.RESULT_OK, i);
-                    getActivity().finish();
-                } else {
-                    ErrorUtils.showSnackBar(vContainer, "Error! Something went wrong", Snackbar.LENGTH_LONG, "", null);
-                }
-            }
-
-            @Override
-            public void onFailure(Call<GenericResponse> call, Throwable t) {
-                ErrorUtils.connectivityError(getActivity(), R.string.error_no_network, new NetworkErrorDialogListener() {
-                    @Override
-                    public void retryClicked() {
-                        cancelTask();
-                    }
-
-                });
-
-            }
-        });
-
-    }
-
     public Call<TaskResponse> setUpUpdateApiCall() {
 
         final String uid = task.getTaskUid();
@@ -289,23 +246,7 @@ public class EditTaskFragment extends Fragment {
         }
     }
 
-    public Call<GenericResponse> setUpCancelApiCall() {
 
-        final String uid = task.getTaskUid();
-        final String phoneNumber = PreferenceUtils.getUserPhoneNumber(getContext());
-        final String code = PreferenceUtils.getAuthToken(getContext());
-        switch (taskType) {
-            case TaskConstants.MEETING:
-                return GrassrootRestService.getInstance().getApi().cancelMeeting(phoneNumber, code, uid);
-            case TaskConstants.VOTE:
-                return GrassrootRestService.getInstance().getApi().cancelVote(phoneNumber, code, uid);
-       /*     case TaskConstants.TODO:
-                return GrassrootRestService.getInstance().getApi().createTodo(phoneNumber, code, groupUid, title,
-                        description, dateTimeISO, minutes, memberUids);*/
-            default:
-                throw new UnsupportedOperationException("Error! Missing task type in call");
-        }
-    }
 
     private int obtainReminderMinutes() {
         if (TaskConstants.MEETING.equals(taskType)) {
@@ -336,21 +277,6 @@ public class EditTaskFragment extends Fragment {
         }
     }
 
-    private String generateConfirmationDialogStrings(){
-        switch (taskType) {
-            case TaskConstants.MEETING:
-                return getActivity().getString(R.string.et_cnfrm_mtg);
-            case TaskConstants.VOTE:
-                return getActivity().getString(R.string.et_cnfrm_vt);
-            case TaskConstants.TODO:
-                return getActivity().getString(R.string.et_cnfrm_td);
-            default:
-                throw new UnsupportedOperationException("Error! Missing task type");
-        }
-
-    }
-
-
     @BindView(R.id.etsk_txt_ipl)
     TextInputLayout subjectInput;
     @BindView(R.id.etsk_til_location)
@@ -369,7 +295,6 @@ public class EditTaskFragment extends Fragment {
         switch (taskType) {
             case TaskConstants.MEETING:
                 btTaskUpdate.setText(R.string.uMeeting);
-                btCancelTask.setText(R.string.caMeeting);
                 break;
             case TaskConstants.VOTE:
                 subjectInput.setHint(getContext().getString(R.string.cvote_subject));
@@ -380,14 +305,12 @@ public class EditTaskFragment extends Fragment {
                 descriptionInput.setHint(getContext().getString(R.string.cvote_desc_hint));
                 descriptionCard.setCardBackgroundColor(ContextCompat.getColor(getContext(), R.color.white));
                 btTaskUpdate.setText(R.string.uVote);
-                btCancelTask.setText(R.string.caVote);
                 break;
             case TaskConstants.TODO:
                 subjectInput.setHint(getContext().getString(R.string.ctodo_subject));
                 deadlineTitle.setText(R.string.ctodo_datetime);
                 descriptionInput.setHint(getContext().getString(R.string.ctodo_desc_hint));
                 btTaskUpdate.setText(R.string.uTodo);
-                btCancelTask.setText(R.string.caTodo);
                 break;
             default:
                 throw new UnsupportedOperationException("Error! Fragment must have valid task type");

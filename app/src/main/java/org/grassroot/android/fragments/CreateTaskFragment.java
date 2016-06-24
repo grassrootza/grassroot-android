@@ -1,8 +1,5 @@
 package org.grassroot.android.fragments;
 
-import android.animation.Animator;
-import android.animation.AnimatorListenerAdapter;
-import android.animation.ValueAnimator;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
@@ -17,6 +14,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.EditorInfo;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
@@ -27,9 +25,9 @@ import org.grassroot.android.events.TaskAddedEvent;
 import org.grassroot.android.interfaces.GroupConstants;
 import org.grassroot.android.interfaces.NetworkErrorDialogListener;
 import org.grassroot.android.interfaces.TaskConstants;
-import org.grassroot.android.services.GrassrootRestService;
 import org.grassroot.android.models.Member;
 import org.grassroot.android.models.TaskResponse;
+import org.grassroot.android.services.GrassrootRestService;
 import org.grassroot.android.slideDateTimePicker.SlideDateTimeListener;
 import org.grassroot.android.slideDateTimePicker.SlideDateTimePicker;
 import org.grassroot.android.utils.Constant;
@@ -215,14 +213,13 @@ public class CreateTaskFragment extends Fragment {
         setUpApiCall().enqueue(new Callback<TaskResponse>() {
             @Override
             public void onResponse(Call<TaskResponse> call, Response<TaskResponse> response) {
-                // todo: check for actual success
                 if (response.isSuccessful()) {
                     Intent i = new Intent();
                     i.putExtra(Constant.SUCCESS_MESSAGE, generateSuccessString());
                     getActivity().setResult(Activity.RESULT_OK, i);
                     Log.e(TAG, "putting task created event on the bus ...");
                     EventBus.getDefault().post(new TaskAddedEvent(response.body().getTasks().get(0)));
-                    getActivity().finish(); // todo : make sure this is okay
+                    getActivity().finish(); // todo : double check calling finish on activity from within fragment is okay
                 } else {
                     ErrorUtils.showSnackBar(vContainer, "Error! Something went wrong", Snackbar.LENGTH_LONG, "", null);
                 }
@@ -244,7 +241,6 @@ public class CreateTaskFragment extends Fragment {
     }
 
     public Call<TaskResponse> setUpApiCall() {
-
 
         final String phoneNumber = PreferenceUtils.getUserPhoneNumber(getContext());
         final String code = PreferenceUtils.getAuthToken(getContext());
@@ -327,6 +323,9 @@ public class CreateTaskFragment extends Fragment {
 
     private void setUpStrings() {
 
+        final boolean meeting = TaskConstants.MEETING.equals(taskType);
+
+        etTitleInput.setImeOptions(meeting ? EditorInfo.IME_ACTION_NEXT : EditorInfo.IME_ACTION_DONE);
         locationInput.setVisibility(TaskConstants.MEETING.equals(taskType) ? View.VISIBLE : View.GONE);
         locationCharCounter.setVisibility(TaskConstants.MEETING.equals(taskType) ? View.VISIBLE : View.GONE);
 
@@ -360,35 +359,16 @@ public class CreateTaskFragment extends Fragment {
 
     @BindView(R.id.ctsk_iv_expand_alert)
     ImageView ivExpandReminders;
-    private ValueAnimator remindersExpandAnimator;
-    private ValueAnimator remindersContractAnimator;
-
-    private void setUpReminderAnimators() {
-        remindersExpandAnimator = Utilities.createSlidingAnimator(rlReminderBody, true);
-        remindersContractAnimator = Utilities.createSlidingAnimator(rlReminderBody, true);
-        remindersContractAnimator.addListener(new AnimatorListenerAdapter() {
-            @Override
-            public void onAnimationEnd(Animator animation) {
-                super.onAnimationEnd(animation);
-                rlReminderBody.setVisibility(View.GONE);
-            }
-        });
-    }
 
     @OnClick(R.id.ctsk_reminder_header)
     public void expandableReminderHeader() {
 
-        if (remindersExpandAnimator == null) {
-            setUpReminderAnimators();
-        }
-
         if (rlReminderBody.getVisibility() != View.VISIBLE) {
             ivExpandReminders.setImageResource(R.drawable.ic_arrow_up);
             rlReminderBody.setVisibility(View.VISIBLE);
-            remindersExpandAnimator.start();
         } else {
             ivExpandReminders.setImageResource(R.drawable.ic_arrow_down);
-            remindersContractAnimator.start();
+            rlReminderBody.setVisibility(View.GONE);
         }
     }
 
@@ -405,9 +385,6 @@ public class CreateTaskFragment extends Fragment {
         swOneDayAhead.setChecked(swChecked.equals(swOneDayAhead));
     }
 
-    private ValueAnimator descriptionExpandAnimator;
-    private ValueAnimator descriptionContractAnimator;
-
     @BindView(R.id.ctsk_cv_description)
     CardView descriptionCard;
     @BindView(R.id.ctsk_rl_desc_body)
@@ -417,52 +394,15 @@ public class CreateTaskFragment extends Fragment {
     @BindView(R.id.ctsk_desc_expand)
     ImageView ivDescExpandIcon;
 
-    private void setUpDescriptionAnimators() {
-        descriptionExpandAnimator = Utilities.createSlidingAnimator(descriptionBody, true);
-        descriptionContractAnimator = Utilities.createSlidingAnimator(descriptionBody, false);
-
-        descriptionExpandAnimator.addListener(new AnimatorListenerAdapter() {
-            @Override
-            public void onAnimationStart(Animator animation) {
-                super.onAnimationStart(animation);
-                etDescriptionInput.setVisibility(View.GONE);
-            }
-
-            @Override
-            public void onAnimationEnd(Animator animation) {
-                super.onAnimationEnd(animation);
-                etDescriptionInput.setVisibility(View.VISIBLE);
-            }
-        });
-
-        descriptionContractAnimator.addListener(new AnimatorListenerAdapter() {
-            @Override
-            public void onAnimationStart(Animator animation) {
-                super.onAnimationStart(animation);
-                etDescriptionInput.setVisibility(View.INVISIBLE);
-            }
-
-            @Override
-            public void onAnimationEnd(Animator animation) {
-                super.onAnimationEnd(animation);
-                etDescriptionInput.setVisibility(View.GONE);
-            }
-        });
-    }
-
     @OnClick(R.id.ctsk_cv_description)
     public void expandDescription() {
-        if (descriptionExpandAnimator == null) {
-            setUpDescriptionAnimators();
-        }
 
         if (descriptionBody.getVisibility() == View.GONE) {
             descriptionBody.setVisibility(View.VISIBLE);
             ivDescExpandIcon.setImageResource(R.drawable.ic_arrow_up);
-            descriptionExpandAnimator.start();
         } else {
+            descriptionBody.setVisibility(View.GONE);
             ivDescExpandIcon.setImageResource(R.drawable.ic_arrow_down);
-            descriptionContractAnimator.start();
         }
     }
 

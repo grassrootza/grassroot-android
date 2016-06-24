@@ -113,19 +113,16 @@
                                 android:layout_height="wrap_content"
                                 android:hint="@string/cg_group_description"
                                 android:padding="10dp"
-                                android:singleLine="true"
-                                android:imeOptions="actionDone"
                                 android:textSize="@dimen/txt_medium"
                                 android:textColor="@color/white"
                                 android:textStyle="bold"
                                 android:lines="3"
                                 android:minLines="3"
-                                android:maxLines="10"
-                                android:inputType="textMultiLine|textNoSuggestions"
                                 android:gravity="top"
                                 android:maxLength="160"
                                 android:scrollbars="vertical"
-                                android:textCursorDrawable="@drawable/color_cursor"/>
+                                android:inputType="textNoSuggestions|textAutoCorrect|textCapSentences"
+                                android:imeOptions="actionDone" />
 
                         </android.support.design.widget.TextInputLayout>
 

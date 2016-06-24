@@ -17,7 +17,7 @@ import org.grassroot.android.interfaces.ClickListener;
 import org.grassroot.android.services.GrassrootRestService;
 import org.grassroot.android.models.Member;
 import org.grassroot.android.models.MemberList;
-import org.grassroot.android.ui.views.RecyclerTouchListener;
+import org.grassroot.android.adapters.RecyclerTouchListener;
 import org.grassroot.android.utils.ErrorUtils;
 import org.grassroot.android.utils.PreferenceUtils;
 
@@ -26,7 +26,6 @@ import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
-import butterknife.OnClick;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;

@@ -27,7 +27,7 @@
             android:drawableRight="@drawable/ic_key"
             android:drawablePadding="5dp"
             android:imeOptions="actionDone"
-            >
+            android:inputType="number">
 
         </android.support.design.widget.TextInputEditText>
 

@@ -69,11 +69,10 @@
                         android:id="@+id/ctsk_et_location"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:gravity="top"
                         android:maxLength="35"
-                        android:lines="1"
                         android:textColor="@color/vv_title"
-                        android:textSize="@dimen/txt_medium"/>
+                        android:textSize="@dimen/txt_medium"
+                        android:imeOptions="actionDone" />
 
                 </android.support.design.widget.TextInputLayout>
 
@@ -122,7 +121,6 @@
                 </android.support.v7.widget.CardView>
 
                 <!-- todo : turn this into a fragment and include it, plus flatten it -->
-                <!--alert header-->
                 <android.support.v7.widget.CardView
                     android:id="@+id/ctsk_cv_reminder"
                     android:layout_below="@id/ctsk_cv_datepicker"
@@ -143,6 +141,7 @@
                             android:padding="10dp">
 
                             <TextView
+                                android:id="@+id/ctsk_reminder_text"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 style="@style/text_medium"
@@ -155,6 +154,8 @@
                                 android:layout_height="wrap_content"
                                 android:layout_alignParentRight="true"
                                 android:layout_centerVertical="true"
+                                android:layout_alignTop="@id/ctsk_reminder_text"
+                                android:layout_alignBottom="@id/ctsk_reminder_text"
                                 android:src="@drawable/ic_arrow_down"/>
 
                         </RelativeLayout>
@@ -178,9 +179,10 @@
                             <android.support.v7.widget.SwitchCompat
                                 android:id="@+id/ctsk_sw_one_day"
                                 android:layout_width="match_parent"
+                                android:layout_alignTop="@id/tv_one_day"
+                                android:layout_alignBottom="@id/tv_one_day"
                                 style="@style/ReminderSwitch"/>
 
-                            <!-- todo : probably should default to this -->
                             <TextView
                                 android:id="@+id/tv_half_day"
                                 android:layout_below="@id/ctsk_sw_one_day"
@@ -189,7 +191,8 @@
 
                             <android.support.v7.widget.SwitchCompat
                                 android:id="@+id/ctsk_sw_half_day"
-                                android:layout_below="@id/ctsk_sw_one_day"
+                                android:layout_alignTop="@id/tv_half_day"
+                                android:layout_alignBottom="@id/tv_half_day"
                                 style="@style/ReminderSwitch"/>
 
                             <TextView
@@ -200,13 +203,12 @@
 
                             <android.support.v7.widget.SwitchCompat
                                 android:id="@+id/ctsk_sw_one_hour"
-                                android:layout_below="@id/ctsk_sw_half_day"
+                                android:layout_alignTop="@id/tv_one_hour"
+                                android:layout_alignBottom="@id/tv_one_hour"
                                 style="@style/ReminderSwitch"/>
 
                         </RelativeLayout>
-
                     </LinearLayout>
-
                 </android.support.v7.widget.CardView>
 
                 <android.support.v7.widget.CardView
@@ -217,14 +219,14 @@
 
                     <RelativeLayout
                         android:layout_width="match_parent"
-                        android:layout_height="wrap_content">
+                        android:layout_height="wrap_content"
+                        android:padding="10dp">
 
                         <TextView
                             style="@style/text_medium"
                             android:id="@+id/ctsk_desc_header"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:padding="10dp"
                             android:text="@string/ctsk_desc_header"
                             android:textColor="@color/dark_grey_text"/>
 
@@ -233,9 +235,9 @@
                             android:id="@+id/ctsk_desc_expand"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
+                            android:layout_alignTop="@id/ctsk_desc_header"
+                            android:layout_alignBottom="@id/ctsk_desc_header"
                             android:layout_alignParentRight="true"
-                            android:layout_alignParentTop="true"
-                            android:padding="15dp"
                             android:src="@drawable/ic_arrow_down"/>
 
                         <RelativeLayout
@@ -254,12 +256,12 @@
 
                                 <android.support.design.widget.TextInputEditText
                                     android:id="@+id/ctsk_et_description"
+                                    android:hint="@string/cmtg_desc_hint"
                                     android:layout_width="match_parent"
                                     android:layout_height="wrap_content"
+                                    android:inputType="textAutoCorrect|textCapSentences"
                                     android:gravity="top"
-                                    android:hint="@string/cmtg_desc_hint"
                                     android:imeOptions="actionDone"
-                                    android:inputType="textMultiLine"
                                     android:lines="2"
                                     android:minLines="2"
                                     android:maxLength="250"

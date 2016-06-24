@@ -1,5 +1,6 @@
 package org.grassroot.android.fragments;
 
+import android.content.Context;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
@@ -52,6 +53,7 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
     private String phoneNumber;
     private String code;
 
+    private ViewTaskFragment.ViewTaskListener taskViewListener;
     private ViewGroup container;
 
     @BindView(R.id.tl_swipe_refresh)
@@ -75,6 +77,16 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
     /*
     SECTION : SET UP VIEWS AND POPULATE THE LIST
      */
+
+    @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        // optional for activity to implement listener
+        if (context instanceof ViewTaskFragment.ViewTaskListener)
+            this.taskViewListener = (ViewTaskFragment.ViewTaskListener) context;
+        else
+            this.taskViewListener = null;
+    }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -266,15 +278,12 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
 
     @Override
     public void onCardClick(int position, String taskUid, String taskType) {
-      //  if (TaskConstants.MEETING.equals(taskType) || TaskConstants.VOTE.equals(taskType)) {
-            // todo: use a callback to tell activity to switch up icon to cross
-            ViewTaskFragment taskFragment = ViewTaskFragment.newInstance(taskType, taskUid);
-            getFragmentManager().beginTransaction()
-                    .setCustomAnimations(R.anim.up_from_bottom, R.anim.down_from_top)
-                    .add(container.getId(), taskFragment, ViewTaskFragment.class.getCanonicalName())
-                    .addToBackStack(null)
-                    .commit();
-      //  }
+        ViewTaskFragment taskFragment = ViewTaskFragment.newInstance(taskType, taskUid, (ViewTaskFragment.ViewTaskListener) getActivity());
+        getFragmentManager().beginTransaction()
+                .setCustomAnimations(R.anim.up_from_bottom, R.anim.down_from_top)
+                .add(container.getId(), taskFragment, ViewTaskFragment.class.getCanonicalName())
+                .addToBackStack(null)
+                .commit();
     }
 
     @OnClick(R.id.im_no_internet)

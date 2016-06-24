@@ -14,6 +14,7 @@ import android.widget.TextView;
 
 import org.grassroot.android.R;
 import org.grassroot.android.events.TaskAddedEvent;
+import org.grassroot.android.events.TaskCancelledEvent;
 import org.grassroot.android.events.TaskChangedEvent;
 import org.grassroot.android.interfaces.TaskConstants;
 import org.grassroot.android.models.TaskModel;
@@ -261,6 +262,15 @@ public class TasksAdapter extends RecyclerView.Adapter<TasksAdapter.TaskViewHold
             final TaskModel updatedTask = event.getTaskModel();
             viewedTasks.set(event.getPosition(), updatedTask);
             notifyItemChanged(event.getPosition());
+        }
+    }
+
+    @Subscribe
+    public void onTaskDeleted(TaskCancelledEvent event) {
+        if (parentUid == null || parentUid.equals(event.getTask().getParentUid())) {
+            final TaskModel task = event.getTask();
+            viewedTasks.remove(task);
+            notifyDataSetChanged();
         }
     }
 

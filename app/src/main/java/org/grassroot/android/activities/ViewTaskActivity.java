@@ -38,7 +38,6 @@ public class ViewTaskActivity extends PortraitActivity {
         setContentView(R.layout.activity_view_task);
         ButterKnife.bind(this);
 
-
         if (getIntent().getExtras() == null) {
             throw new UnsupportedOperationException("Error! View task activity started without arguments");
         }
@@ -52,7 +51,7 @@ public class ViewTaskActivity extends PortraitActivity {
         }
 
         setUpToolbar();
-        fragment = ViewTaskFragment.newInstance(taskType, taskUid);
+        fragment = ViewTaskFragment.newInstance(taskType, taskUid, null);
         getSupportFragmentManager().beginTransaction()
                 .add(R.id.vta_fragment_holder, fragment)
                 .commit();
