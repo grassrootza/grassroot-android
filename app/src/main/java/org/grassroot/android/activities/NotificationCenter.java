@@ -166,15 +166,16 @@ public class NotificationCenter extends PortraitActivity {
     private void getNotifications(Integer page, Integer size) {
         String phoneNumber = PreferenceUtils.getUserPhoneNumber(this);
         String code = PreferenceUtils.getAuthToken(this);
+
         progressDialog = new ProgressDialog(this);
         progressDialog.setMessage(getString(R.string.prg_message));
         progressDialog.show();
+
         GrassrootRestService.getInstance().getApi().getUserNotifications(phoneNumber, code, page, size).enqueue(new Callback<NotificationList>() {
             @Override
             public void onResponse(Call<NotificationList> call, Response<NotificationList> response) {
                 if (response.isSuccessful()) {
-
-                    hideProgess();
+                    progressDialog.dismiss();
                     notifications = response.body().getNotificationWrapper().getNotifications();
                     pageNumber = response.body().getNotificationWrapper().getPageNumber();
                     totalPages = response.body().getNotificationWrapper().getTotalPages();
@@ -193,16 +194,11 @@ public class NotificationCenter extends PortraitActivity {
             }
             @Override
             public void onFailure(Call<NotificationList> call, Throwable t) {
-                hideProgess();
+                progressDialog.dismiss();
                 ErrorUtils.handleNetworkError(NotificationCenter.this, errorLayout, t);
             }
         });
 
-    }
-
-    private void hideProgess(){
-        progressDialog.hide();
-        prgNcPaging.setVisibility(View.GONE);
     }
 
 

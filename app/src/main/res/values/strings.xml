@@ -262,13 +262,20 @@
     <string name="etsk_todo_edit">Edit todo</string>
 
     <string name="etsk_mtg_date">Meeting date: %s</string>
+    <string name="etsk_mtg_date_changed">New date: %s</string>
     <string name="etsk_mtg_time">Meeting time: %s</string>
+    <string name="etsk_mtg_time_changed">New time: %s</string>
     <string name="etsk_vote_date">Closing day: %s</string>
     <string name="etsk_vote_time">Closing time: %s</string>
     <string name="etsk_todo_date">Due date: %s</string>
     <string name="etsk_desc_header">Modify notes</string>
-    <string name="etsk_mtg_invite">Whole group is invited</string>
+
+    <string name="etsk_mtg_invite">The whole group is invited</string>
     <string name="etsk_mtg_invite_x">%d members invited</string>
+    <string name="etsk_vote_invite">The whole group is voting</string>
+    <string name="etsk_vote_invite_x">%d members voting</string>
+    <string name="etsk_todo_invite">The whole group is assigned</string>
+    <string name="etsk_todo_invite_x">%d people assigned</string>
 
     <string name="etsk_meeting_updated_success">Done! Meeting updated</string>
     <string name="etsk_vote_update_success">Done! Vote updated</string>

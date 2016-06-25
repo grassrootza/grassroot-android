@@ -2,9 +2,12 @@ package org.grassroot.android.fragments;
 
 import android.app.Activity;
 import android.app.DatePickerDialog;
+import android.app.ProgressDialog;
 import android.app.TimePickerDialog;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.security.keystore.UserNotAuthenticatedException;
 import android.support.design.widget.Snackbar;
 import android.support.design.widget.TextInputEditText;
 import android.support.design.widget.TextInputLayout;
@@ -12,9 +15,13 @@ import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.CardView;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.EditorInfo;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.DatePicker;
 import android.widget.ImageView;
@@ -26,8 +33,11 @@ import org.grassroot.android.R;
 import org.grassroot.android.events.TaskUpdatedEvent;
 import org.grassroot.android.interfaces.NetworkErrorDialogListener;
 import org.grassroot.android.interfaces.TaskConstants;
+import org.grassroot.android.models.Member;
+import org.grassroot.android.models.MemberList;
 import org.grassroot.android.models.TaskModel;
 import org.grassroot.android.models.TaskResponse;
+import org.grassroot.android.services.ApplicationLoader;
 import org.grassroot.android.services.GrassrootRestService;
 import org.grassroot.android.utils.Constant;
 import org.grassroot.android.utils.ErrorUtils;
@@ -35,13 +45,18 @@ import org.grassroot.android.utils.MenuUtils;
 import org.grassroot.android.utils.PreferenceUtils;
 import org.greenrobot.eventbus.EventBus;
 
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
+import butterknife.OnEditorAction;
 import butterknife.OnTextChanged;
+import butterknife.OnTouch;
+import butterknife.Unbinder;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -52,14 +67,18 @@ import retrofit2.Response;
 public class EditTaskFragment extends Fragment implements DatePickerDialog.OnDateSetListener, TimePickerDialog.OnTimeSetListener {
 
     private static final String TAG = EditTaskFragment.class.getCanonicalName();
+    private static final int changeColor = ContextCompat.getColor(ApplicationLoader.applicationContext, R.color.red);
 
     private TaskModel task;
     private String taskType;
 
-    private Date updatedDate;
-    private Date updatedTime;
+    private final Calendar calendar = Calendar.getInstance();
 
     private ViewGroup vContainer;
+    private List<Member> selectedMembers;
+
+    private ProgressDialog progressDialog;
+    private Unbinder unbinder;
 
     @BindView(R.id.etsk_title_ipl)
     TextInputLayout subjectInput;
@@ -81,6 +100,8 @@ public class EditTaskFragment extends Fragment implements DatePickerDialog.OnDat
 
     @BindView(R.id.etsk_cv_description)
     CardView descriptionCard;
+    @BindView(R.id.etsk_desc_header)
+    TextView descriptionHeader;
     @BindView(R.id.etsk_rl_desc_body)
     RelativeLayout descriptionBody;
     @BindView(R.id.etsk_til_desc)
@@ -105,65 +126,72 @@ public class EditTaskFragment extends Fragment implements DatePickerDialog.OnDat
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
         Bundle b = getArguments();
         if (b == null) {
             throw new UnsupportedOperationException("Error! Fragment needs to be created with arguments");
         }
 
-        Bundle args = getArguments();
-        task = args.getParcelable(TaskConstants.TASK_ENTITY_FIELD);
+        task = b.getParcelable(TaskConstants.TASK_ENTITY_FIELD);
+        if (task == null) {
+            throw new UnsupportedOperationException("Error! Fragment called without valid task");
+        }
+
         taskType = task.getType();
+        calendar.setTime(task.getDeadlineDate());
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View viewToReturn = inflater.inflate(R.layout.fragment_edit_task, container, false);
-        ButterKnife.bind(this, viewToReturn);
-        this.vContainer = container;
+        unbinder = ButterKnife.bind(this, viewToReturn);
+        vContainer = container;
+        progressDialog = new ProgressDialog(getContext());
         populateFields();
+        fetchAssignedMembers();
         return viewToReturn;
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        progressDialog.dismiss();
+        unbinder.unbind();
     }
 
     private void populateFields() {
 
-        etTitleInput.setEnabled(false);
-        etLocationInput.setEnabled(false);
-        etDescriptionInput.setEnabled(false);
-
         locationInput.setVisibility(TaskConstants.MEETING.equals(taskType) ? View.VISIBLE : View.GONE);
         locationCharCounter.setVisibility(TaskConstants.MEETING.equals(taskType) ? View.VISIBLE : View.GONE);
 
+        etTitleInput.setText(task.getTitle());
+        etDescriptionInput.setText(task.getDescription());
+        dateDisplayed.setText(String.format(getString(R.string.etsk_vote_date), TaskConstants.dateDisplayWithoutHours.format(task.getDeadlineDate())));
+        timeDisplayed.setText(String.format(getString(R.string.etsk_mtg_time), TaskConstants.timeDisplayWithoutDate.format(task.getDeadlineDate())));
+
         switch (task.getType()) {
             case TaskConstants.MEETING:
-                etTitleInput.setText(task.getTitle());
                 etTitleInput.setHint(R.string.cmtg_title_hint);
                 etLocationInput.setText(task.getLocation());
                 etLocationInput.setHint(R.string.cmtg_location_hint);
-                etDescriptionInput.setText(task.getDescription());
-
-                dateDisplayed.setText(String.format(getString(R.string.etsk_mtg_date), TaskConstants.dateDisplayWithoutHours.format(task.getDeadlineDate())));
-                timeDisplayed.setText(String.format(getString(R.string.etsk_mtg_time), TaskConstants.timeDisplayWithoutDate.format(task.getDeadlineDate())));
-
-                tvInviteeLabel.setText(task.getWholeGroupAssigned() ? R.string.etsk_mtg_invite : R.string.etsk_mtg_invite_x);
-
+                tvInviteeLabel.setText(task.getWholeGroupAssigned() ? getString(R.string.etsk_mtg_invite) :
+                        String.format(getString(R.string.etsk_mtg_invite_x), task.getAssignedMemberCount()));
                 btTaskUpdate.setText(R.string.etsk_bt_mtg_save);
                 break;
             case TaskConstants.VOTE:
-                etTitleInput.setText(task.getTitle());
-                etDescriptionInput.setText(task.getDescription());
-                dateDisplayed.setText(String.format(getString(R.string.etsk_vote_date), TaskConstants.dateDisplayWithoutHours.format(task.getDeadlineDate())));
-                timeDisplayed.setText(String.format(getString(R.string.etsk_vote_time), TaskConstants.timeDisplayWithoutDate.format(task.getDeadlineDate())));
+                etTitleInput.setHint(R.string.cvote_subject);
                 descriptionBody.setVisibility(View.VISIBLE);
                 ivDescExpandIcon.setImageResource(R.drawable.ic_arrow_up);
-                etDescriptionInput.setText(task.getDescription());
+                tvInviteeLabel.setText(task.getWholeGroupAssigned() ? getString(R.string.etsk_vote_invite) :
+                        String.format(getString(R.string.etsk_vote_invite_x), task.getAssignedMemberCount()));
                 btTaskUpdate.setText(R.string.etsk_bt_vote_save);
                 break;
             case TaskConstants.TODO:
-                etTitleInput.setText(task.getTitle());
-                etDescriptionInput.setText(task.getDescription());
-                dateDisplayed.setText(String.format(getString(R.string.etsk_todo_date), TaskConstants.dateDisplayWithoutHours.format(task.getDeadlineDate())));
+                etTitleInput.setHint(R.string.ctodo_subject);
                 timeCard.setVisibility(View.GONE);
+                descriptionBody.setVisibility(View.VISIBLE);
+                ivDescExpandIcon.setImageResource(R.drawable.ic_arrow_up);
+                tvInviteeLabel.setText(task.getWholeGroupAssigned() ? getString(R.string.etsk_todo_invite) :
+                        String.format(getString(R.string.etsk_todo_invite_x), task.getAssignedMemberCount()));
                 btTaskUpdate.setText(R.string.etsk_bt_todo_save);
                 break;
             default:
@@ -171,63 +199,94 @@ public class EditTaskFragment extends Fragment implements DatePickerDialog.OnDat
         }
     }
 
-    // todo : figure out why this is unpredictable and often not catching
-    @OnClick(R.id.etsk_title_ipl)
-    public void setTitleEnable() {
-        Log.e(TAG, "title clicked, enabling");
-        etTitleInput.setEnabled(true);
-        etTitleInput.requestFocus();
+    private void fetchAssignedMembers() {
+        if (task.getWholeGroupAssigned()) {
+            selectedMembers = new ArrayList<>();
+        } else {
+            GrassrootRestService.getInstance().getApi().fetchAssignedMembers(
+                    PreferenceUtils.getPhoneNumber(), PreferenceUtils.getAuthToken(),
+                    task.getTaskUid(), taskType).enqueue(new Callback<List<Member>>() {
+                @Override
+                public void onResponse(Call<List<Member>> call, Response<List<Member>> response) {
+                    if (response.isSuccessful()) {
+                        selectedMembers = response.body();
+                    } else {
+                        selectedMembers = new ArrayList<>();
+                    }
+                }
+
+                @Override
+                public void onFailure(Call<List<Member>> call, Throwable t) {
+                    selectedMembers = new ArrayList<>();
+                }
+            });
+        }
     }
 
-    @OnClick(R.id.etsk_et_location)
-    public void enableLocationInput() {
-        Log.e(TAG, "location clicked");
-        etLocationInput.setEnabled(true);
-        etLocationInput.requestFocus();
+    @OnEditorAction(R.id.etsk_et_title)
+    public boolean onTitleNextOrDone(TextInputEditText view, int actionId, KeyEvent event) {
+        if (!etTitleInput.getText().toString().trim().equals(task.getTitle())) {
+            etTitleInput.setTextColor(changeColor);
+        }
+
+        if (!taskType.equals(TaskConstants.MEETING)) {
+            if (actionId == EditorInfo.IME_ACTION_DONE || actionId == EditorInfo.IME_ACTION_NEXT) {
+                hideKeyboard(view);
+                etTitleInput.clearFocus();
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    @OnEditorAction(R.id.etsk_et_location)
+    public boolean onLocationNextOrDone(TextInputEditText view, int actionId, KeyEvent event) {
+        if (taskType.equals(TaskConstants.MEETING)) {
+            if (!etLocationInput.getText().toString().trim().equals(task.getLocation())) {
+                etLocationInput.setTextColor(changeColor);
+            }
+
+            if (actionId == EditorInfo.IME_ACTION_DONE || actionId == EditorInfo.IME_ACTION_NEXT) {
+                hideKeyboard(view);
+                etLocationInput.clearFocus();
+                return true;
+            }
+        }
+        return false;
+    }
+
+    // note: this assumes the view being passed has focus ...
+    private void hideKeyboard(View view) {
+        InputMethodManager imm = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
+        imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
     }
 
     @OnClick(R.id.etsk_cv_date)
     public void launchDatePicker() {
-        final Calendar c = Calendar.getInstance();
-        c.setTime(task.getDeadlineDate());
-        DatePickerDialog dialog = new DatePickerDialog(getActivity(), R.style.AppTheme, this, c.get(Calendar.YEAR), c.get(Calendar.MONTH), c.get(Calendar.DAY_OF_MONTH));
+        DatePickerDialog dialog = new DatePickerDialog(getActivity(), R.style.AppTheme, this, calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH));
         dialog.show();
     }
 
     @Override
     public void onDateSet(DatePicker view, int year, int monthOfYear, int dayOfMonth) {
-        final Calendar c = Calendar.getInstance();
-        c.set(year, monthOfYear, dayOfMonth);
-        updatedDate = c.getTime();
-        Log.e(TAG, "date set: " + TaskConstants.dateDisplayWithoutHours.format(updatedDate));
+        calendar.set(year, monthOfYear, dayOfMonth);
+        dateDisplayed.setText(String.format(getString(R.string.etsk_mtg_date_changed), TaskConstants.dateDisplayWithoutHours.format(calendar.getTime())));
+        dateDisplayed.setTextColor(changeColor);
     }
 
     @OnClick(R.id.etsk_cv_time)
     public void launchTimePicker() {
-        final Calendar c = Calendar.getInstance();
-        c.setTime(task.getDeadlineDate());
-        TimePickerDialog dialog = new TimePickerDialog(getActivity(), R.style.AppTheme, this, c.get(Calendar.HOUR_OF_DAY), c.get(Calendar.MINUTE), true);
+        TimePickerDialog dialog = new TimePickerDialog(getActivity(), R.style.AppTheme, this, calendar.get(Calendar.HOUR_OF_DAY), calendar.get(Calendar.MINUTE), true);
         dialog.show();
     }
 
     @Override
     public void onTimeSet(TimePicker view, int hourOfDay, int minute) {
-        final Calendar c = Calendar.getInstance();
-        c.set(Calendar.HOUR_OF_DAY, hourOfDay);
-        c.set(Calendar.MINUTE, minute);
-        updatedTime = c.getTime();
-        Log.e(TAG, "time set: " + TaskConstants.dateDisplayFormatWithHours.format(updatedTime));
-    }
-
-    @OnClick(R.id.etsk_btn_update_task)
-    public void validateAndUpdate() {
-        if (etTitleInput.getText().toString().trim().equals("")) {
-            ErrorUtils.showSnackBar(vContainer, "Please enter a subject", Snackbar.LENGTH_LONG, "", null);
-        } else if (TaskConstants.MEETING.equals(taskType) && etLocationInput.getText().toString().trim().equals("")) {
-            ErrorUtils.showSnackBar(vContainer, "Please enter a location", Snackbar.LENGTH_LONG, "", null);
-        } else {
-            updateTask();
-        }
+        calendar.set(Calendar.HOUR_OF_DAY, hourOfDay);
+        calendar.set(Calendar.MINUTE, minute);
+        timeDisplayed.setText(String.format(getString(R.string.etsk_mtg_time_changed), TaskConstants.timeDisplayWithoutDate.format(calendar.getTime())));
+        timeDisplayed.setTextColor(changeColor);
     }
 
     @OnClick(R.id.etsk_cv_description)
@@ -241,10 +300,58 @@ public class EditTaskFragment extends Fragment implements DatePickerDialog.OnDat
         }
     }
 
+    @OnEditorAction(R.id.etsk_et_description)
+    public boolean onDescriptionDone(TextInputEditText view, int actionId, KeyEvent event) {
+        if (event != null) {
+            if (!event.isShiftPressed() || !event.isAltPressed()) {
+                if ((actionId == EditorInfo.IME_ACTION_DONE || actionId == EditorInfo.IME_ACTION_NEXT || actionId == EditorInfo.IME_NULL)
+                        && event.getAction() == KeyEvent.ACTION_DOWN) {
+                    hideKeyboard(view);
+                    view.clearFocus();
+                    if (!etDescriptionInput.getText().toString().trim().equals(task.getDescription())) {
+                        descriptionHeader.setTextColor(changeColor);
+                    }
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
     @OnClick(R.id.etsk_cv_notify)
     public void changeMemberSelection() {
-        Intent pickMember = MenuUtils.memberSelectionIntent(getActivity(), task.getParentUid(), TAG, null);
-        startActivityForResult(pickMember, Constant.activitySelectGroupMembers);
+        Intent i = MenuUtils.memberSelectionIntent(getActivity(), task.getParentUid(), EditTaskFragment.class.getCanonicalName(),
+                new ArrayList<>(selectedMembers));
+        startActivityForResult(i, Constant.activitySelectGroupMembers);
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (resultCode == Activity.RESULT_OK && requestCode == Constant.activitySelectGroupMembers) {
+            if (data == null) {
+                throw new UnsupportedOperationException("Error! Null data from select members activity");
+            }
+
+            List<Member> newlySelectedMembers = data.getParcelableArrayListExtra(Constant.SELECTED_MEMBERS_FIELD);
+            if (!selectedMembers.equals(newlySelectedMembers)) {
+                Log.e(TAG, "changed selected members ..." + newlySelectedMembers);
+                selectedMembers = newlySelectedMembers;
+                tvInviteeLabel.setText(String.format(getString(R.string.etsk_mtg_invite_x), selectedMembers.size()));
+                tvInviteeLabel.setTextColor(changeColor);
+            }
+        }
+    }
+
+    @OnClick(R.id.etsk_btn_update_task)
+    public void confirmAndUpdate() {
+        if (etTitleInput.getText().toString().trim().equals("")) {
+            ErrorUtils.showSnackBar(vContainer, "Please enter a subject", Snackbar.LENGTH_LONG, "", null);
+        } else if (TaskConstants.MEETING.equals(taskType) && etLocationInput.getText().toString().trim().equals("")) {
+            ErrorUtils.showSnackBar(vContainer, "Please enter a location", Snackbar.LENGTH_LONG, "", null);
+        } else {
+            updateTask();
+        }
     }
 
     public void updateTask() {
@@ -276,19 +383,24 @@ public class EditTaskFragment extends Fragment implements DatePickerDialog.OnDat
     }
 
     public Call<TaskResponse> setUpUpdateApiCall() {
-
         final String uid = task.getTaskUid();
-        final String phoneNumber = PreferenceUtils.getUserPhoneNumber(getContext());
-        final String code = PreferenceUtils.getAuthToken(getContext());
+        final String phoneNumber = PreferenceUtils.getUserPhoneNumber(ApplicationLoader.applicationContext);
+        final String code = PreferenceUtils.getAuthToken(ApplicationLoader.applicationContext);
         final String title = etTitleInput.getText().toString();
         final String description = etDescriptionInput.getText().toString();
-        final String dateTimeISO = Constant.isoDateTimeSDF.format(dateDisplayed);
+
+        Date updatedDate = calendar.getTime();
+        final String dateTimeISO = Constant.isoDateTimeSDF.format(updatedDate);
+
+        if (selectedMembers == null) {
+            selectedMembers = new ArrayList<>();
+        }
 
         switch (taskType) {
             case TaskConstants.MEETING:
                 final String location = etLocationInput.getText().toString();
                 return GrassrootRestService.getInstance().getApi().editMeeting(phoneNumber, code, uid,
-                        title, description, location, dateTimeISO);
+                        title, description, location, dateTimeISO, selectedMembers);
             case TaskConstants.VOTE:
                 return GrassrootRestService.getInstance().getApi().editVote(phoneNumber, code, uid, title,
                         description, dateTimeISO);

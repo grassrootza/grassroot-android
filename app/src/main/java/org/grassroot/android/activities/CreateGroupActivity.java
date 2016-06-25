@@ -94,7 +94,7 @@ public class CreateGroupActivity extends PortraitActivity implements
     }
 
     private void init() {
-        memberListFragment = new MemberListFragment();
+        memberListFragment = MemberListFragment.newInstance(null, false, false, this, this, null);
         contactSelectionFragment = ContactSelectionFragment.newInstance(null, false);
         mapMembersContacts = new HashMap<>();
         manuallyAddedMembers = new ArrayList<>();
@@ -272,12 +272,17 @@ public class CreateGroupActivity extends PortraitActivity implements
     @Override
     public void onMemberListInitiated(MemberListFragment fragment) {
         // todo: use this to handle fragment setting up & observation, instead of create at start...
-        memberListFragment.setShowSelected(true);
-        memberListFragment.setCanDismissItems(true);
+        // memberListFragment.setShowSelected(true);
+        // memberListFragment.setCanDismissItems(true);
     }
 
     @Override
     public void onMemberListPopulated(List<Member> memberList) {
+
+    }
+
+    @Override
+    public void onMemberListDone() {
 
     }
 

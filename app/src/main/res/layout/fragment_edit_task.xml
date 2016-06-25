@@ -3,13 +3,13 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:card_view="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/etsk_rl_root"
+    android:id="@+id/etsk_sv_root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/off_white_background">
 
     <LinearLayout
-        android:id="@+id/etsk_scrollview"
+        android:id="@+id/etsk_ll_container"
         android:orientation="vertical"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -21,6 +21,8 @@
             android:id="@+id/card_view"
             android:layout_weight="1"
             android:layout_height="0dp"
+            android:descendantFocusability="beforeDescendants"
+            android:focusableInTouchMode="true"
             style="@style/RootCardView">
 
             <RelativeLayout
@@ -41,7 +43,7 @@
                         android:textColor="@color/vv_title"
                         android:textSize="@dimen/txt_medium"
                         android:imeOptions="actionNext"
-                        android:drawableRight="@drawable/ic_faq_green"/>
+                        android:drawableRight="@drawable/ic_mode_edit_black_24dp"/>
 
                 </android.support.design.widget.TextInputLayout>
 
@@ -61,13 +63,12 @@
                         android:id="@+id/etsk_et_location"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:gravity="top"
+                        android:inputType="textAutoComplete"
                         android:maxLength="35"
-                        android:lines="1"
                         android:textColor="@color/vv_title"
                         android:textSize="@dimen/txt_medium"
                         android:imeOptions="actionDone"
-                        android:drawableRight="@drawable/ic_faq_green"/>
+                        android:drawableRight="@drawable/ic_mode_edit_black_24dp"/>
 
                 </android.support.design.widget.TextInputLayout>
 
@@ -88,7 +89,7 @@
 
                         <TextView
                             style="@style/text_medium"
-                            android:id="@+id/etsk_reminder_text"
+                            android:id="@+id/etsk_desc_header"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="@string/etsk_desc_header"
@@ -100,14 +101,14 @@
                             android:layout_height="wrap_content"
                             android:layout_alignParentRight="true"
                             android:layout_centerVertical="true"
-                            android:layout_alignTop="@id/etsk_reminder_text"
-                            android:layout_alignBottom="@id/etsk_reminder_text"
+                            android:layout_alignTop="@id/etsk_desc_header"
+                            android:layout_alignBottom="@id/etsk_desc_header"
                             android:src="@drawable/ic_arrow_down"/>
 
                         <RelativeLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_below="@id/etsk_reminder_text"
+                            android:layout_below="@id/etsk_desc_header"
                             android:id="@+id/etsk_rl_desc_body"
                             android:visibility="gone">
 
@@ -231,7 +232,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_alignParentRight="true"
-                            android:src="@drawable/ic_faq_green"
+                            android:src="@drawable/ic_mode_edit_black_24dp"
                             android:layout_alignTop="@id/etsk_tv_assign_label"
                             android:layout_alignBottom="@id/etsk_tv_assign_label"/>
 

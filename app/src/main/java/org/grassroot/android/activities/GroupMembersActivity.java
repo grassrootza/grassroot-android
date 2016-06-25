@@ -133,11 +133,7 @@ public class GroupMembersActivity extends PortraitActivity implements MemberList
     }
 
     private void setUpMemberListFragment() {
-        memberListFragment = new MemberListFragment();
-        memberListFragment.setGroupUid(groupUid);
-        memberListFragment.setShowSelected(selectMembers);
-        memberListFragment.setCanDismissItems(false);
-
+        memberListFragment = MemberListFragment.newInstance(groupUid, selectMembers, false, this, this, membersSelected);
         getSupportFragmentManager().beginTransaction()
                 .add(R.id.lm_member_list_container, memberListFragment)
                 .commit();
@@ -145,10 +141,6 @@ public class GroupMembersActivity extends PortraitActivity implements MemberList
 
     @Override
     public void onMemberListInitiated(MemberListFragment fragment) {
-        Log.d(TAG, "Member list fragment succesfully initiated");
-        if (selectMembers && membersSelected != null) {
-            memberListFragment.addMembers(membersSelected);
-        }
     }
 
     @Override
@@ -158,6 +150,11 @@ public class GroupMembersActivity extends PortraitActivity implements MemberList
 
     @Override
     public void onMemberDismissed(int position, String memberUid) {
+
+    }
+
+    @Override
+    public void onMemberListDone() {
 
     }
 
@@ -178,8 +175,6 @@ public class GroupMembersActivity extends PortraitActivity implements MemberList
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        // todo: check permissions & decide which to include
-        // todo: do not include if this is in "selection" mode
         getMenuInflater().inflate(R.menu.menu_group_members, menu);
         return true;
     }

@@ -126,8 +126,7 @@ public class AddMembersActivity extends AppCompatActivity implements
     }
 
     private void setupExistingMemberRecyclerView() {
-        existingMemberListFragment = new MemberListFragment();
-        existingMemberListFragment.setGroupUid(groupUid);
+        existingMemberListFragment = MemberListFragment.newInstance(groupUid, false, false, this, this, null);
         getSupportFragmentManager().beginTransaction()
                 .add(R.id.am_existing_member_list_container, existingMemberListFragment)
                 .commit();
@@ -138,12 +137,13 @@ public class AddMembersActivity extends AppCompatActivity implements
         contactSelectionFragment = ContactSelectionFragment.newInstance(Contact.convertFromMembers(memberList), false);
     }
 
-    private void setupNewMemberRecyclerView() {
-        newMemberListFragment = new MemberListFragment();
-        newMemberListFragment.setGroupUid(null);
-        newMemberListFragment.setCanDismissItems(true);
-        newMemberListFragment.setShowSelected(true);
+    @Override
+    public void onMemberListDone() {
 
+    }
+
+    private void setupNewMemberRecyclerView() {
+        newMemberListFragment = MemberListFragment.newInstance(null, true, true, this, this, null);
         getSupportFragmentManager().beginTransaction()
                 .add(R.id.am_new_member_list_container, newMemberListFragment)
                 .commit();

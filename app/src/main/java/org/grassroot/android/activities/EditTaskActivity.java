@@ -45,7 +45,11 @@ public class EditTaskActivity extends PortraitActivity {
         toolbar.setNavigationOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                finish();
+                if (editTaskFragment != null && editTaskFragment.isVisible()) {
+                    finish();
+                } else {
+                    getSupportFragmentManager().popBackStack();
+                }
             }
         });
     }

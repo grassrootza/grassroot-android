@@ -238,6 +238,7 @@ public class ViewTaskFragment extends Fragment {
     }
 
     private void setViewForMeeting(TaskModel task) {
+
         tvTitle.setText(R.string.vt_mtg_title);
         tvHeader.setText(task.getTitle());
         tvLocation.setVisibility(View.VISIBLE);

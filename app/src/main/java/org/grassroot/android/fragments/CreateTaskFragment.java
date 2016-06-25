@@ -152,7 +152,7 @@ public class CreateTaskFragment extends Fragment {
         } else {
             ArrayList<Member> preSelectedMembers = (assignedMembers == null) ? new ArrayList<Member>() :
                     new ArrayList<>(assignedMembers);
-            Intent pickMember = MenuUtils.memberSelectionIntent(getActivity(), groupUid, TAG, preSelectedMembers);
+            Intent pickMember = MenuUtils.memberSelectionIntent(getActivity(), groupUid, CreateTaskFragment.class.getCanonicalName(), preSelectedMembers);
             startActivityForResult(pickMember, Constant.activitySelectGroupMembers);
         }
     }

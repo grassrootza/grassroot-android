@@ -293,13 +293,14 @@ public class GrassrootRestService {
                                     @Query("closingTime") String closingTime);
 
         //edit meeting
-        @POST("meeting/update/{uid}/{phoneNumber}/{code}")
+        @POST("meeting/update/{phoneNumber}/{code}/{meetingUid}")
         Call<TaskResponse> editMeeting(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
-                                       @Path("uid") String uid,
+                                       @Path("meetingUid") String uid,
                                        @Query("title") String title,
                                        @Query("description") String description,
                                        @Query("location") String location,
-                                       @Query("startTime") String startTime);
+                                       @Query("startTime") String startTime,
+                                       @Body List<Member> assignedMembers);
 
         //edit logbook
         @POST("logbook/update/{phoneNumber}/{code}/{uid}")
@@ -307,6 +308,10 @@ public class GrassrootRestService {
                                     @Query("title") String title,
                                     @Query("dueDate") String dueDate,
                                     @Query("members") Set<String> membersAssigned);
+
+        @GET("task/assigned/{phoneNumber}/{code}/{taskUid}/{taskType}")
+        Call<List<Member>> fetchAssignedMembers(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
+                                                @Path("taskUid") String taskUid, @Path("taskType") String taskType);
 
 
         //cancel meeting

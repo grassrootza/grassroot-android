@@ -4,6 +4,8 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.util.Log;
 
+import org.grassroot.android.services.ApplicationLoader;
+
 public class PreferenceUtils {
 
     // Shared pref file name
@@ -77,12 +79,20 @@ public class PreferenceUtils {
         getPref(context).edit().putString(PREF_USER_mobile_number, value).apply();
     }
 
+    public static String getPhoneNumber() {
+        return getPref(ApplicationLoader.applicationContext).getString(PREF_USER_mobile_number, "");
+    }
+
     public static String getUserPhoneNumber(Context context) {
         return getPref(context).getString(PREF_USER_mobile_number, "");
     }
 
     public static void setAuthToken(Context context, String value) {
         getPref(context).edit().putString(PREF_USER_token, value).apply();
+    }
+
+    public static String getAuthToken() {
+        return getPref(ApplicationLoader.applicationContext).getString(PREF_USER_token, "");
     }
 
     public static String getAuthToken(Context context) {

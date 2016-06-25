@@ -73,21 +73,6 @@ public class MemberListAdapter extends RecyclerView.Adapter<MemberListAdapter.Vi
             notifyItemRemoved(positions[i]);
             Log.e(TAG, "removed member! at position : " + positions[i] + ", remaining members : " + members.toString());
         }
-        // notifyDataSetChanged();
-    }
-
-    public void removeMembers(List<Member> membersToRemove) {
-        members.removeAll(membersToRemove);
-        this.notifyDataSetChanged();
-    }
-
-    public void removeMember(Member member) {
-        // this relies on hash code and equals implementation that relies on (nullable) contactId and memberUid ... keep eye out
-        int position = members.indexOf(member);
-        Log.e(TAG, "found the member! at this position: " + position);
-        members.remove(member);
-        if (position != -1)
-            this.notifyItemRemoved(position);
     }
 
     public void resetMembers(List<Member> memberList) {
@@ -125,7 +110,6 @@ public class MemberListAdapter extends RecyclerView.Adapter<MemberListAdapter.Vi
         Member thisMember = members.get(position);
         viewHolder.tvMemberName.setText(thisMember.getDisplayName());
         if (showSelected) {
-            Log.d(TAG, "binding member! member = " + thisMember.toString());
             viewHolder.ivSelectedIcon.setImageResource(thisMember.isSelected() ?
                     R.drawable.btn_checked : R.drawable.btn_unchecked);
         }

@@ -22,11 +22,10 @@ public class TaskModel implements Parcelable, Comparable<TaskModel> {
     private String title;
     private String location;
     private String description;
-    private String name;
+    private String createdByUserName;
     private String type;
 
     private String parentUid;
-    private String parentName;
 
     private String deadline;
     private String deadlineISO;
@@ -40,11 +39,10 @@ public class TaskModel implements Parcelable, Comparable<TaskModel> {
     private String reply;
 
     private Boolean wholeGroupAssigned;
-    private Integer memberCount;
+    private int assignedMemberCount;
 
     private String completedYes;
     private String completedNo;
-
     private boolean canRespondYes;
     private boolean canRespondNo;
     private boolean canMarkCompleted;
@@ -73,7 +71,7 @@ public class TaskModel implements Parcelable, Comparable<TaskModel> {
     public String getLocation() { return location; }
 
     public String getName() {
-        return name;
+        return createdByUserName;
     }
 
     public String getParentUid() { return parentUid; }
@@ -108,25 +106,12 @@ public class TaskModel implements Parcelable, Comparable<TaskModel> {
         return wholeGroupAssigned;
     }
 
-    public void setWholeGroupAssigned(Boolean wholeGroupAssigned) {
-        this.wholeGroupAssigned = wholeGroupAssigned;
-    }
+    public int getAssignedMemberCount() { return assignedMemberCount; }
 
-    public Integer getMemberCount() {
-        return memberCount;
-    }
-
-    public void setMemberCount(Integer memberCount) {
-        this.memberCount = memberCount;
-    }
-
-    public void setCanRespondYes(boolean b) { this.canRespondYes = b; }
     public boolean isCanRespondYes() { return canRespondYes; }
 
-    public void setCanRespondNo(boolean b) { this.canRespondNo = b; }
     public boolean isCanRespondNo() { return canRespondNo; }
 
-    public void setCanMarkCompleted(boolean b) { this.canMarkCompleted = b; }
     public boolean isCanMarkCompleted() { return canMarkCompleted; }
 
     public boolean respondedYes() {
@@ -151,7 +136,7 @@ public class TaskModel implements Parcelable, Comparable<TaskModel> {
         dest.writeString(this.description);
         dest.writeString(this.location);
         dest.writeString(this.parentUid);
-        dest.writeString(this.name);
+        dest.writeString(this.createdByUserName);
         dest.writeString(this.type);
         dest.writeString(this.deadline);
         dest.writeString(this.deadlineISO);
@@ -159,6 +144,7 @@ public class TaskModel implements Parcelable, Comparable<TaskModel> {
         dest.writeInt(this.canAction ? 1 : 0);
         dest.writeInt(this.canEdit ? 1 : 0);
         dest.writeInt(this.wholeGroupAssigned ? 1:0);
+        dest.writeInt(this.assignedMemberCount);
         dest.writeInt(this.canEdit ? 1 : 0);
         dest.writeString(this.reply);
         dest.writeString(this.completedYes);
@@ -166,13 +152,12 @@ public class TaskModel implements Parcelable, Comparable<TaskModel> {
     }
 
     protected TaskModel(Parcel in) {
-        Log.e(TAG, "Assembling from parcel!");
         this.taskUid = in.readString();
         this.title = in.readString();
         this.description = in.readString();
         this.location = in.readString();
         this.parentUid = in.readString();
-        this.name = in.readString();
+        this.createdByUserName = in.readString();
         this.type = in.readString();
         this.deadline = in.readString();
         this.deadlineISO = in.readString();
@@ -180,6 +165,7 @@ public class TaskModel implements Parcelable, Comparable<TaskModel> {
         this.canAction = in.readInt() != 0;
         this.canEdit = in.readInt() != 0;
         this.wholeGroupAssigned = in.readInt() != 0;
+        this.assignedMemberCount = in.readInt();
         this.canEdit = in.readInt() != 0;
         this.reply = in.readString();
         this.completedYes = in.readString();
