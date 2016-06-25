@@ -13,6 +13,7 @@ import org.grassroot.android.models.NotificationList;
 import org.grassroot.android.models.ProfileResponse;
 import org.grassroot.android.models.ResponseTotalsModel;
 import org.grassroot.android.models.RsvpListModel;
+import org.grassroot.android.models.TaskModel;
 import org.grassroot.android.models.TaskResponse;
 import org.grassroot.android.models.TokenResponse;
 import org.grassroot.android.utils.Constant;
@@ -286,28 +287,28 @@ public class GrassrootRestService {
 
         //edit vote
         @POST("vote/update/{uid}/{phoneNumber}/{code}")
-        Call<TaskResponse> editVote(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
-                                    @Path("uid") String id,
-                                    @Query("title") String title,
-                                    @Query("description") String description,
-                                    @Query("closingTime") String closingTime);
+        Call<TaskModel> editVote(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
+                                 @Path("uid") String id,
+                                 @Query("title") String title,
+                                 @Query("description") String description,
+                                 @Query("closingTime") String closingTime);
 
         //edit meeting
         @POST("meeting/update/{phoneNumber}/{code}/{meetingUid}")
-        Call<TaskResponse> editMeeting(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
+        Call<TaskModel> editMeeting(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
                                        @Path("meetingUid") String uid,
                                        @Query("title") String title,
                                        @Query("description") String description,
                                        @Query("location") String location,
                                        @Query("startTime") String startTime,
-                                       @Body List<Member> assignedMembers);
+                                       @Query("members") Set<String> assignedMemberUids);
 
         //edit logbook
         @POST("logbook/update/{phoneNumber}/{code}/{uid}")
-        Call<TaskResponse> editTodo(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
-                                    @Query("title") String title,
-                                    @Query("dueDate") String dueDate,
-                                    @Query("members") Set<String> membersAssigned);
+        Call<TaskModel> editTodo(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
+                                 @Query("title") String title,
+                                 @Query("dueDate") String dueDate,
+                                 @Query("members") Set<String> membersAssigned);
 
         @GET("task/assigned/{phoneNumber}/{code}/{taskUid}/{taskType}")
         Call<List<Member>> fetchAssignedMembers(@Path("phoneNumber") String phoneNumber, @Path("code") String code,

@@ -15,6 +15,7 @@ import com.github.clans.fab.FloatingActionButton;
 import com.github.clans.fab.FloatingActionMenu;
 
 import org.grassroot.android.R;
+import org.grassroot.android.fragments.EditTaskFragment;
 import org.grassroot.android.fragments.MemberListFragment;
 import org.grassroot.android.fragments.NewTaskMenuFragment;
 import org.grassroot.android.interfaces.GroupConstants;
@@ -245,6 +246,8 @@ public class GroupMembersActivity extends PortraitActivity implements MemberList
         } else if (parentTag.equals(CreateMeetingActivity.class.getCanonicalName())) {
             i = MenuUtils.constructIntent(this, CreateMeetingActivity.class, groupUid, groupName);
             i.setFlags(flags);
+        } else if (parentTag.equals(EditTaskFragment.class.getCanonicalName())) {
+            // aaah ... need to maybe rethink how handling all of this .. need to go back, without recreating ...
         }
         return i;
     }

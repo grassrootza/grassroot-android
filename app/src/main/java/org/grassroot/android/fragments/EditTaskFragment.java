@@ -31,6 +31,7 @@ import android.widget.TimePicker;
 
 import org.grassroot.android.R;
 import org.grassroot.android.events.TaskUpdatedEvent;
+import org.grassroot.android.fragments.dialogs.ConfirmCancelDialogFragment;
 import org.grassroot.android.interfaces.NetworkErrorDialogListener;
 import org.grassroot.android.interfaces.TaskConstants;
 import org.grassroot.android.models.Member;
@@ -43,12 +44,16 @@ import org.grassroot.android.utils.Constant;
 import org.grassroot.android.utils.ErrorUtils;
 import org.grassroot.android.utils.MenuUtils;
 import org.grassroot.android.utils.PreferenceUtils;
+import org.grassroot.android.utils.Utilities;
 import org.greenrobot.eventbus.EventBus;
 
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -335,7 +340,7 @@ public class EditTaskFragment extends Fragment implements DatePickerDialog.OnDat
 
             List<Member> newlySelectedMembers = data.getParcelableArrayListExtra(Constant.SELECTED_MEMBERS_FIELD);
             if (!selectedMembers.equals(newlySelectedMembers)) {
-                Log.e(TAG, "changed selected members ..." + newlySelectedMembers);
+                Log.d(TAG, "changed selected members ..." + newlySelectedMembers);
                 selectedMembers = newlySelectedMembers;
                 tvInviteeLabel.setText(String.format(getString(R.string.etsk_mtg_invite_x), selectedMembers.size()));
                 tvInviteeLabel.setTextColor(changeColor);
@@ -345,24 +350,27 @@ public class EditTaskFragment extends Fragment implements DatePickerDialog.OnDat
 
     @OnClick(R.id.etsk_btn_update_task)
     public void confirmAndUpdate() {
-        if (etTitleInput.getText().toString().trim().equals("")) {
-            ErrorUtils.showSnackBar(vContainer, "Please enter a subject", Snackbar.LENGTH_LONG, "", null);
-        } else if (TaskConstants.MEETING.equals(taskType) && etLocationInput.getText().toString().trim().equals("")) {
-            ErrorUtils.showSnackBar(vContainer, "Please enter a location", Snackbar.LENGTH_LONG, "", null);
-        } else {
-            updateTask();
-        }
+        int memberCount = (selectedMembers != null && !selectedMembers.isEmpty()) ? selectedMembers.size() : task.getAssignedMemberCount();
+        final String message = String.format(getString(R.string.etsk_change_confirm), memberCount);
+        ConfirmCancelDialogFragment dialogFragment = ConfirmCancelDialogFragment
+                .newInstance(message, new ConfirmCancelDialogFragment.ConfirmDialogListener() {
+                    @Override
+                    public void doConfirmClicked() {
+                        updateTask();
+                    }
+                });
+        dialogFragment.show(getFragmentManager(), "confirm");
     }
 
     public void updateTask() {
-        setUpUpdateApiCall().enqueue(new Callback<TaskResponse>() {
+        setUpUpdateApiCall().enqueue(new Callback<TaskModel>() {
             @Override
-            public void onResponse(Call<TaskResponse> call, Response<TaskResponse> response) {
+            public void onResponse(Call<TaskModel> call, Response<TaskModel> response) {
                 if (response.isSuccessful()) {
                     Intent i = new Intent();
                     i.putExtra(Constant.SUCCESS_MESSAGE, generateSuccessString());
                     getActivity().setResult(Activity.RESULT_OK, i);
-                    EventBus.getDefault().post(new TaskUpdatedEvent(response.body().getTasks().get(0)));
+                    EventBus.getDefault().post(new TaskUpdatedEvent(response.body()));
                     getActivity().finish();
                 } else {
                     ErrorUtils.showSnackBar(vContainer, "Error! Something went wrong", Snackbar.LENGTH_LONG, "", null);
@@ -370,7 +378,7 @@ public class EditTaskFragment extends Fragment implements DatePickerDialog.OnDat
             }
 
             @Override
-            public void onFailure(Call<TaskResponse> call, Throwable t) {
+            public void onFailure(Call<TaskModel> call, Throwable t) {
                 ErrorUtils.connectivityError(getActivity(), R.string.error_no_network, new NetworkErrorDialogListener() {
                     @Override
                     public void retryClicked() {
@@ -382,7 +390,7 @@ public class EditTaskFragment extends Fragment implements DatePickerDialog.OnDat
         });
     }
 
-    public Call<TaskResponse> setUpUpdateApiCall() {
+    public Call<TaskModel> setUpUpdateApiCall() {
         final String uid = task.getTaskUid();
         final String phoneNumber = PreferenceUtils.getUserPhoneNumber(ApplicationLoader.applicationContext);
         final String code = PreferenceUtils.getAuthToken(ApplicationLoader.applicationContext);
@@ -391,16 +399,13 @@ public class EditTaskFragment extends Fragment implements DatePickerDialog.OnDat
 
         Date updatedDate = calendar.getTime();
         final String dateTimeISO = Constant.isoDateTimeSDF.format(updatedDate);
-
-        if (selectedMembers == null) {
-            selectedMembers = new ArrayList<>();
-        }
+        Set<String> memberUids = (selectedMembers == null) ? Collections.EMPTY_SET : Utilities.convertMemberListToUids(selectedMembers);
 
         switch (taskType) {
             case TaskConstants.MEETING:
                 final String location = etLocationInput.getText().toString();
                 return GrassrootRestService.getInstance().getApi().editMeeting(phoneNumber, code, uid,
-                        title, description, location, dateTimeISO, selectedMembers);
+                        title, description, location, dateTimeISO, memberUids);
             case TaskConstants.VOTE:
                 return GrassrootRestService.getInstance().getApi().editVote(phoneNumber, code, uid, title,
                         description, dateTimeISO);

@@ -285,6 +285,8 @@
     <string name="etsk_bt_vote_save">Update vote</string>
     <string name="etsk_bt_todo_save">Update todo</string>
 
+    <string name="etsk_change_confirm">Confirm changes? %d members will be notified</string>
+
     <string name="et_cnfrm_mtg">Are you sure you want to cancel the meeting?</string>
     <string name="et_cnfrm_vt">Are you sure you want to cancel the vote?</string>
     <string name="et_cnfrm_td">Are you sure you want to cancel the todo?</string>
