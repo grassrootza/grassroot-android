@@ -61,6 +61,7 @@
     <string name="txt_welcome">Welcome to <b>Grassroot</b></string>
     <string name="txt_welcome_short">Get started</string>
     <string name="txt_welcome_para">To get started, create your own group, or ask to join one. You can then call meetings, take votes, record decisions, and more...</string>
+    <string name="txt_no_task">This group has no events or tasks yet. To get started, call a meeting, a vote, record an action, or add members ... Just hit the + button below</string>
 
     <string name="txt_getstart">To get started</string>
     <string name="new_joingroup">Join Group</string>
@@ -254,6 +255,11 @@
     <string name="vt_todo_datetime">Due %s</string>
     <string name="vt_todo_modify">Edit todo</string>
     <string name="vt_todo_cancel">Cancel todo</string>
+    <string name="vt_todo_overdue">The action is overdue</string>
+    <string name="vt_todo_completed">The action was completed</string>
+    <string name="vt_todo_pending">The todo is pending</string>
+    <string name="vt_todo_members_assigned">Members assigned</string>
+    <string name="vt_todo_group_assigned">Whole group assigned</string>
 
     <!-- Section : edit task strings -->
 
@@ -409,11 +415,6 @@
     <string name="GROUP_NOT_FOUND">No groups matching your key were found.</string>
     <string name="GCM_UNREGISTER">unregister</string>
     <string name="title_activity_notification">NotificationActivity</string>
-    <string name="todo_overdue">TODO is overdue</string>
-    <string name="todo_completed">TODO was completed</string>
-    <string name="todo_pending">TODO is pending</string>
-    <string name="todo_members_assigned">Members assigned</string>
-    <string name="todo_group_assigned">Whole group assigned</string>
 
     <string name="jc_join_title">Join code</string>
     <string name="cf_join_code">*134*1994*</string>

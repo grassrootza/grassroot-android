@@ -448,11 +448,7 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment imple
     @Override
     public void onGroupRowShortClick(Group group) {
         menu1.close(true);
-        if (group.isHasTasks()) {
-            startActivity(MenuUtils.constructIntent(getActivity(), GroupTasksActivity.class, group));
-        } else {
-            showQuickOptionsDialog(group, true);
-        }
+        startActivity(MenuUtils.constructIntent(getActivity(), GroupTasksActivity.class, group));
     }
 
     @Override

@@ -1,5 +1,6 @@
 package org.grassroot.android.fragments;
 
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -40,6 +41,7 @@ import java.util.Map;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
+import butterknife.Unbinder;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -56,26 +58,21 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
     private String phoneNumber;
     private String code;
 
-    private ViewTaskFragment.ViewTaskListener taskViewListener;
     private ViewGroup container;
+    private Unbinder unbinder;
 
     @BindView(R.id.tl_swipe_refresh)
     SwipeRefreshLayout swipeRefreshLayout;
     @BindView(R.id.tl_recycler_view)
     RecyclerView rcTaskView;
 
-    @BindView(R.id.tl_error_layout)
-    RelativeLayout errorLayout;
-    @Nullable
-    @BindView(R.id.im_no_internet)
-    ImageView imNoInternet;
-
-    @Nullable
-    @BindView(R.id.progressBar)
-    ProgressBar progressBar;
+    @BindView(R.id.tl_no_task_message)
+    RelativeLayout noTaskMessageLayout;
 
     private boolean filteringActive;
     private Map<String, Boolean> filterFlags;
+
+    ProgressDialog progressDialog;
 
     /*
     SECTION : SET UP VIEWS AND POPULATE THE LIST
@@ -85,10 +82,6 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
     public void onAttach(Context context) {
         super.onAttach(context);
         // optional for activity to implement listener
-        if (context instanceof ViewTaskFragment.ViewTaskListener)
-            this.taskViewListener = (ViewTaskFragment.ViewTaskListener) context;
-        else
-            this.taskViewListener = null;
     }
 
     @Override
@@ -108,16 +101,19 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View viewToReturn = inflater.inflate(R.layout.fragment_task_list, container, false);
-        ButterKnife.bind(this, viewToReturn);
+        unbinder = ButterKnife.bind(this, viewToReturn);
         EventBus.getDefault().register(this);
         this.container = container;
+
         setUpSwipeRefresh();
         rcTaskView.setLayoutManager(new LinearLayoutManager(getActivity()));
         groupTasksAdapter = new TasksAdapter(this, getActivity(), groupUid);
         rcTaskView.setAdapter(groupTasksAdapter);
 
-        fetchTaskList();
+        progressDialog = new ProgressDialog(getContext());
+        progressDialog.setIndeterminate(true);
 
+        fetchTaskList();
         return viewToReturn;
     }
 
@@ -137,11 +133,17 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
         super.onPause();
     }
 
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        progressDialog.dismiss();
+        unbinder.unbind();
+    }
+
     private void fetchTaskList() {
 
         swipeRefreshLayout.setRefreshing(true);
-        hideErrorLayout();
-        showProgress();
+        progressDialog.show();
 
         Call<TaskResponse> call = (groupUid != null) ?
                 GrassrootRestService.getInstance().getApi().getGroupTasks(phoneNumber, code, groupUid) :
@@ -150,17 +152,18 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
         call.enqueue(new Callback<TaskResponse>() {
             @Override
             public void onResponse(Call<TaskResponse> call, Response<TaskResponse> response) {
-                hideProgress();
+                progressDialog.hide();
                 if (response.isSuccessful()) {
                     swipeRefreshLayout.setRefreshing(false);
-                    TaskResponse taskResponse = response.body();
-                    if (TaskConstants.NO_TASKS_FOUND.equals(taskResponse.getMessage())) {
-                        // todo : show a message
+                    final TaskResponse taskResponse = response.body();
+                    if (TaskConstants.NO_TASKS_FOUND.equals(taskResponse.getMessage()) || (taskResponse.getTasks() == null || taskResponse.getTasks().isEmpty())) {
+                        Log.e(TAG, "no tasks ... show the textview");
+                        swipeRefreshLayout.setVisibility(View.GONE);
+                        noTaskMessageLayout.setVisibility(View.VISIBLE);
                     } else {
-                        groupTasksAdapter.changeToTaskList(response.body().getTasks());
+                        groupTasksAdapter.changeToTaskList(taskResponse.getTasks());
                     }
                     return;
-
                 }
                 ErrorUtils.handleServerError(rcTaskView, getActivity(),response);
             }
@@ -168,8 +171,7 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
             @Override
             public void onFailure(Call<TaskResponse> call, Throwable t) {
                 swipeRefreshLayout.setRefreshing(false);
-                showErrorLayout();
-                hideProgress();
+                progressDialog.hide();
                 ErrorUtils.connectivityError(getActivity(), R.string.error_no_network, new NetworkErrorDialogListener() {
                     @Override
                     public void retryClicked() {
@@ -178,26 +180,6 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
                 });
             }
         });
-    }
-
-    private void showProgress(){
-        progressBar.setVisibility(View.VISIBLE);
-    }
-
-    private void hideProgress(){
-        progressBar.setVisibility(View.INVISIBLE);
-    }
-
-    private void showErrorLayout(){
-        errorLayout.setVisibility(View.VISIBLE);
-        imNoInternet.setVisibility(View.VISIBLE);
-    }
-
-    private void hideErrorLayout(){
-
-        errorLayout.setVisibility(View.GONE);
-        imNoInternet.setVisibility(View.VISIBLE);
-
     }
 
     /*

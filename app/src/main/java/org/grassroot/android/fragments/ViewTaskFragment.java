@@ -1,7 +1,6 @@
 package org.grassroot.android.fragments;
 
 
-import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Intent;
 import android.graphics.Typeface;
@@ -22,7 +21,6 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
@@ -43,7 +41,6 @@ import org.grassroot.android.models.RsvpListModel;
 import org.grassroot.android.models.TaskModel;
 import org.grassroot.android.models.TaskResponse;
 import org.grassroot.android.services.GrassrootRestService;
-import org.grassroot.android.utils.Constant;
 import org.grassroot.android.utils.ErrorUtils;
 import org.grassroot.android.utils.PreferenceUtils;
 import org.greenrobot.eventbus.EventBus;
@@ -55,6 +52,7 @@ import java.util.List;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
+import butterknife.Unbinder;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -79,6 +77,7 @@ public class ViewTaskFragment extends Fragment {
 
     private ViewTaskListener listener;
     private ViewGroup mContainer;
+    private Unbinder unbinder;
 
     @BindView(R.id.vt_title)
     TextView tvTitle;
@@ -103,9 +102,9 @@ public class ViewTaskFragment extends Fragment {
     ImageView icRespondPositive;
     @BindView(R.id.vt_right_response)
     ImageView icRespondNegative;
-    @BindView(R.id.vt_cv_response_list)
-    CardView cv_responseList;
 
+    @BindView(R.id.vt_cv_response_list)
+    CardView cvResponseList;
     @BindView(R.id.vt_responses_count)
     TextView tvResponsesCount;
     @BindView(R.id.vt_ic_responses_expand)
@@ -180,7 +179,7 @@ public class ViewTaskFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View viewToReturn = inflater.inflate(R.layout.fragment_view_task, container, false);
-        ButterKnife.bind(this, viewToReturn);
+        unbinder = ButterKnife.bind(this, viewToReturn);
         mContainer = container;
 
         progressDialog = new ProgressDialog(getActivity());
@@ -194,6 +193,12 @@ public class ViewTaskFragment extends Fragment {
                 listener.onTaskLoaded(task);
         }
         return viewToReturn;
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        unbinder.unbind();
     }
 
     private void retrieveTaskDetails() {
@@ -316,17 +321,19 @@ public class ViewTaskFragment extends Fragment {
         tvPostedBy.setText(String.format(getString(R.string.vt_vote_posted), task.getName()));
         tvDateTime.setText(String.format(getString(R.string.vt_todo_datetime),
                 TaskConstants.dateDisplayFormatWithHours.format(task.getDeadlineDate())));
-        rlResponse.setVisibility(View.VISIBLE);
+        rlResponse.setVisibility(task.hasResponded() ? View.GONE : View.VISIBLE);
         llResponseIcons.setVisibility(View.GONE);
+
         if (!task.isInFuture() && !task.hasResponded()) {
-            tvResponseHeader.setText(R.string.todo_overdue);
+            tvResponseHeader.setText(R.string.vt_todo_overdue);
         } else if (task.hasResponded()) {
-            tvResponseHeader.setText(R.string.todo_completed);
+            tvResponseHeader.setText(R.string.vt_todo_completed);
         } else if (!task.hasResponded() && task.canAction()) {
-            tvResponseHeader.setText(R.string.todo_pending);
+            tvResponseHeader.setText(R.string.vt_todo_pending);
         } else {
-            tvResponseHeader.setText(R.string.todo_pending);
+            tvResponseHeader.setText(R.string.vt_todo_pending);
         }
+
         setUpTodoResponseIconsCanAction();
         if (task.isCanEdit()) {
             btModifyTask.setVisibility(View.VISIBLE);
@@ -430,7 +437,6 @@ public class ViewTaskFragment extends Fragment {
         rcResponseList.setLayoutManager(new LinearLayoutManager(getContext()));
         rcResponseList.setAdapter(memberListAdapter);
 
-
         GrassrootRestService.getInstance().getApi().getTodoAssigned(phoneNumber, code, taskUid).enqueue(new Callback<MemberList>() {
             @Override
             public void onResponse(Call<MemberList> call, Response<MemberList> response) {
@@ -439,9 +445,11 @@ public class ViewTaskFragment extends Fragment {
                     if (!members.isEmpty()) {
                         memberListAdapter.addMembers(response.body().getMembers());
                         canViewResponses = true;
-                        tvResponsesCount.setText(R.string.todo_members_assigned);
+                        tvResponsesCount.setText(R.string.vt_todo_members_assigned);
                     } else {
-                        tvResponsesCount.setText(R.string.todo_group_assigned);
+                        tvResponsesCount.setText(R.string.vt_todo_group_assigned);
+                        icResponsesExpand.setVisibility(View.GONE);
+                        cvResponseList.setClickable(false);
                     }
                 } else {
                     //todo handle this error

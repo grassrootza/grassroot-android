@@ -155,13 +155,12 @@ public class CreateGroupActivity extends PortraitActivity implements
     }
 
     private void launchContactSelectionFragment() {
-        Set<Contact> preSelectedSet = new HashSet<>(Contact.convertFromMembers(memberListFragment.getSelectedMembers()));
         onMainScreen = false;
         getSupportFragmentManager()
                 .beginTransaction()
                 .add(R.id.cg_body_root, contactSelectionFragment)
                 .addToBackStack(null)
-                .commit();
+                .commitAllowingStateLoss(); // todo : clean this up in a less hacky way (known issue w/ support lib and Android 6+, need to do an onResume check or similar)
     }
 
     private void closeContactSelectionFragment() {

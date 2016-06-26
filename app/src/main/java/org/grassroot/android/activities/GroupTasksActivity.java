@@ -40,6 +40,7 @@ public class GroupTasksActivity extends PortraitActivity implements NewTaskMenuF
     private JoinCodeFragment joinCodeFragment;
 
     private Menu thisMenu;
+
     @BindView(R.id.gta_toolbar)
     Toolbar toolbar;
     @BindView(R.id.gta_fab)
