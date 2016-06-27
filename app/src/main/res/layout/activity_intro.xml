@@ -44,7 +44,7 @@
                 android:background="@drawable/login"
                 android:layout_marginBottom="15dp"
                 android:textSize="@dimen/txt_medium"
-                android:text="@string/bt_log" />
+                android:text="@string/bt_login" />
 
             <Button
                 android:id="@+id/intro_bt_register"

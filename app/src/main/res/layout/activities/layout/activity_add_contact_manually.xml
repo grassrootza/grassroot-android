@@ -70,7 +70,7 @@
             android:textColor="#fff"
             android:background="@drawable/buttonrounded_corner"
             android:layout_marginTop="20dp"
-            android:text="@string/Add"
+            android:text="@string/bt_add_manual"
             android:textSize="@dimen/txt_medium"
             android:layout_below="@+id/mobile"
             />

@@ -33,10 +33,8 @@ import org.greenrobot.eventbus.EventBus;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -205,7 +203,7 @@ public class CreateGroupActivity extends PortraitActivity implements
         if (!(TextUtils.isEmpty(et_groupname.getText().toString().trim().replaceAll(Constant.regexAlphaNumeric, "")))) {
             createGroup();
         } else {
-            ErrorUtils.showSnackBar(rlCgRoot, R.string.et_groupname, Snackbar.LENGTH_SHORT);
+            ErrorUtils.showSnackBar(rlCgRoot, R.string.error_group_name_blank, Snackbar.LENGTH_SHORT);
         }
     }
 

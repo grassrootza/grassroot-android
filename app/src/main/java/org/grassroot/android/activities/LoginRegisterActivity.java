@@ -131,7 +131,7 @@ public class LoginRegisterActivity extends AppCompatActivity implements LoginScr
                             switchToOtp(otpToPass, REGISTER);
                         } else {
                             final String errorMsg = getResources().getString(R.string.error_user_exists);
-                            final String actionBtn = getResources().getString(R.string.bt_log);
+                            final String actionBtn = getResources().getString(R.string.bt_login);
                             ErrorUtils.showSnackBar(rootView, errorMsg, Snackbar.LENGTH_LONG, actionBtn, new View.OnClickListener() {
                                 @Override
                                 public void onClick(View view) {

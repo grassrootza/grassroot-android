@@ -12,34 +12,49 @@
     <string name="title_activity_remove_members">Remove members</string>
     <string name="title_activity_group_tasks">GroupTasksActivity</string>
     <string name="title_activity_view_task">ViewTaskActivity</string>
+    <string name="title_activity_create_vote">CreateVote</string>
+    <string name="title_activity_notification">NotificationActivity</string>
 
     <!-- Welcome, register, OTP screens -->
     <string name="txt_pls_wait">Please wait...</string>
-    <string name="bt_log">LOGIN</string>
+    <string name="wait_message">Please wait...</string> <!-- todo : clean redundancy -->
+    <string name="bt_login">LOGIN</string>
     <string name="bt_register">REGISTER</string>
     <string name="bt_submit_otp">SUBMIT</string>
-    <string name="txtresend">Verification code not received?\n Resend</string>
+    <string name="error_retry">RETRY</string>
+
+    <string name="txtresend">SMS with code not received?\n Resend</string>
     <string name="et_userName">Name</string>
     <string name="et_mobile_register">Cellphone number</string>
 
-    <!-- Error messages todo : add feedback buttons? -->
+    <!-- todo : fix redundancy in next three sections ... -->
+    <!-- Error messages -->
     <string name="error_generic">Sorry! Something went wrong in the request.</string>
     <string name="error_no_network">You don\'t seem to have a working data connection.</string>
     <string name="error_no_user">User not registered. Please register to proceed.</string>
     <string name="error_user_exists">User already exists, please login</string>
     <string name="error_no_results_found">No result found</string>
-    <string name="error_retry">RETRY</string>
     <string name="error_token">Sorry, that pin was invalid. Please try again</string>
 
+    <!--Error dialogs --><!--bs-->
+    <string name="alert_confirm">Confirm</string>
+    <string name="alert_cancel">Cancel</string>
+    <string name="Network_Settings">Check Network Settings</string>
+    <string name="Alert_Retry">Retry</string>
+    <string name="Alert_Already_Responded">You have already responded to the event.</string>
+    <string name="LOG_OUT">Logout</string>
+    <string name="GROUP_NOT_FOUND">No groups matching your key were found</string>
+    <string name="GCM_UNREGISTER">unregister</string>
+
     <!-- Error : validation messages -->
-    <string name="Either_field_empty">Please enter all fields to proceed.</string>
+    <string name="Either_field_empty">Please enter all fields to proceed</string>
     <string name="Cellphone_number_invalid">Please enter a valid cellphone number</string>
-    <string name="Cellphone_number_empty">Please enter cellphone number to proceed.</string>
+    <string name="Cellphone_number_empty">Please enter cellphone number to proceed</string>
     <string name="User_not_registered">Sorry, that number isn\'t registered yet.</string>
-    <string name="otp_hint">Enter PIN sent by SMS</string>
+    <string name="otp_hint">Enter code sent by SMS</string>
     <string name="OTP_empty">Please enter the code sent by SMS</string>
     <string name="OTP_invalid">Please enter the correct code to proceed.</string>
-    <string name="Otp_success">Please Enter Verification code sent by SMS</string>
+    <string name="Otp_success">Please enter code sent by SMS</string>
     <string name="INVALID_TOKEN">You seem to be signed in to another device. Please logout and login again</string>
 
     <!-- Navigation drawer items -->
@@ -48,20 +63,16 @@
     <string name="Support">Support</string>
     <string name="Logout">Logout</string>
     <string name="Share">Share App</string>
-    <string name="Rate_App">Rate App</string>
     <string name="Notifications">Notifications</string>
 
     <string name="logout_message">Are you sure you want to logout?</string>
-    <string name="RateUs">RateUs</string>
-    <string name="rate_us_text">If you enjoy using Grassroot, would you mind taking a moment to rate it? Thank You for your support.</string>
-
     <string name="share_app_text">Meet, Vote and Act with Grassroot. Download it at: https://play.google.com/store/apps/details?id=za.org.grassroot.android</string>
 
     <!--welcome content-->
     <string name="txt_welcome">Welcome to <b>Grassroot</b></string>
     <string name="txt_welcome_short">Get started</string>
-    <string name="txt_welcome_para">To get started, create your own group, or ask to join one. You can then call meetings, take votes, record decisions, and more...</string>
-    <string name="txt_no_task">This group has no events or tasks yet. To get started, call a meeting, a vote, record an action, or add members ... Just hit the + button below</string>
+    <string name="txt_welcome_para">To get started, create your own group, or ask to join one. You can then call meetings, take votes, record decisions, and more&#8230;</string>
+    <string name="txt_no_task">This group has no events or tasks yet. To get started, call a meeting, a vote, record an action, or add members &#8230; Just hit the + button below</string>
 
     <string name="txt_getstart">To get started</string>
     <string name="new_joingroup">Join Group</string>
@@ -81,13 +92,12 @@
     <!--HomeScreen Activity & Screens-->
     <string name="joingroup">REQUEST TO JOIN A GROUP</string>
     <string name="startgroup">START A GROUP</string>
-    <string name="bt_save">Save</string> <!-- probably duplicated, todo : clean up -->
-    <string name="bt_cancel">Cancel</string>
-
     <string name="ghp_toolbar_title">Your groups</string>
     <string name="ghp_search_group_name">Group name</string>
     <string name="tv_dialog_bottom_title">Quick add</string>
-    <string name="title_activity_blank">Blank</string>
+
+    <string name="bt_save">Save</string> <!-- probably duplicated, todo : clean up -->
+    <string name="bt_cancel">Cancel</string>
 
     <string name="sort_title">Sort groups by:</string>
     <string name="date">Date of last action</string>
@@ -115,6 +125,11 @@
     <string name="search_box">Enter group name</string>
     <string name="validate_search_box">Please search for a group</string>
     <string name="alertbox">Are you sure you want to send a group join request ?</string>
+    <string name="USER_ALREADY_PART">User already part of group</string>
+
+    <string name="Title_Dialog_GroupJoin">Group join request</string>
+    <string name="Title_Join_Request_Sent">Join request sent!</string>
+    <string name="none">NONE</string>
 
     <!-- Member list fragment -->
     <string name="member_list_default_header">Current members</string>
@@ -124,48 +139,57 @@
     <string name="clear_all">Clear all</string>
 
     <!-- Create Group--><!--cg-->
-    <string name="Add">Add</string>
     <string name="cg_title">Create new group</string>
     <string name="cg_group_name">Group name</string>
     <string name="cg_group_description">Group description</string>
     <string name="cg_title_contact">Current group members</string>
     <string name="cg_member_list_header">Group members</string>
+    <string name="bt_add_manual">Add</string>
 
-    <!-- Add new members -->
+    <!-- Add & remove members -->
     <string name="am_title">Add members to group</string>
     <string name="am_title_contact">Current group members</string>
     <string name="gm_add_members_lc">Add members</string>
     <string name="gm_new_task_lc">Call new event</string>
+    <string name="error_group_name_blank">Please enter Group name</string>
+    <string name="group_created_success">Group created successfully</string>
+    <string name="rm_confirm_number">You are about to remove %d members. Are you sure?</string>
 
     <!-- Phone book and other strings -->
     <string name="cs_title">Select contacts</string>
-    <string name="action_search">Search...</string>
+    <string name="action_search">Search&#8230;</string>
     <string name="cs_loading_contacts">Loading your contacts....</string>
     <string name="cg_dialog_title">Select any one number</string>
     <string name="title_activity_alert_dialog">AlertDialogActivity</string>
     <string name="title_activity_add_contact_manually">AddContactManually</string>
     <string name="contact_manually">The number selected is not a valid South African phone number. Please select a different number</string>
-    <string name="prg_message">Please wait...</string>
+    <string name="prg_message">Please wait&#8230;</string>
 
-    <string name="et_groupname">Please enter Group name</string>
-    <string name="GROUP_CREATED">Group created successfully</string>
-    <string name="title_activity_group__homepage">Group_Homepage</string>
+    <!--GroupTasksActivity :: mostly response strings -->
+    <string name="RESPOND_YES">You have clicked on \'Yes\'. Do you want to proceed with the vote?</string>
+    <string name="RESPOND_NO">You have clicked on \'No\'. Do you want to proceed with the vote?</string>
+    <string name="RSVP_YES">You have marked yourself as attending the meeting. Proceed?</string>
+    <string name="RSVP_NO">You have marked yourself as not attending the meeting. Proceed?</string>
+    <string name="TODO_COMPLETED">Are you sure you want to mark the action complete?</string>
 
-    <!--GroupTasksActivity -->
-    <string name="ga_tv_toolbar">Name of group</string>
     <string name="ga_Votesend">Vote sent successfully</string>
-    <string name="ga_Meetingsend">RSVP sent</string>
-    <string name="ga_VoteFailure">User has already  Voted</string>
-    <string name="ga_no_activities">No Group Activities</string>
-    <string name="ga_ToDocompleted">ToDo Completed</string>
-    <string name="ga_ToDoFailure">ToDo already Completed</string>
-    <string name="ga_noVote">No Vote Activities</string>
-    <string name="ga_noMeeting">No meeting Activities</string>
-    <string name="ga_noToDo">No ToDo Activities</string>
+    <string name="ga_Meetingsend">Reply sent</string>
+    <string name="ga_VoteFailure">Sorry, you\'ve already voted</string>
+    <string name="ga_ToDocompleted">Action marked done</string>
+    <string name="ga_ToDoFailure">Sorry, action already completed</string>
+
     <string name="ga_newVote">NEW VOTE</string>
     <string name="ga_newMeeting">NEW MEETING</string>
-    <string name="ga_newToDo">NEW TODO</string>
+    <string name="ga_newToDo">NEW ACTION</string>
     <string name="ga_addMembers">ADD MEMBERS</string>
+
+    <!--Group join code -->
+    <string name="jcf_join_code">*134*1994* %1$ #</string>
+    <string name="jc_join_title">Join code</string>
+    <string name="cf_join_code">*134*1994*</string>
+    <string name="jc_row_one">*134</string>
+    <string name="jc_row_two">*1994</string>
+    <string name="jc_row_three">*%s#</string>
 
     <!-- Create tasks strings -->
     <string name="ctsk_desc_header">Add notes</string>
@@ -174,7 +198,7 @@
     <string name="ctsk_assign_members_suffix">members</string>
 
     <string name="cmtg_title">Call a meeting</string>
-    <string name="cmtg_button">Call</string>
+    <string name="cmtg_button">Send</string>
     <string name="cmtg_title_hint">Meeting subject</string>
     <string name="cmtg_datetime">Meeting date and time</string>
     <string name="cmtg_desc_hint">Longer description or notes on the meeting</string>
@@ -187,14 +211,14 @@
     <string name="cvote_datetime">Closing time</string>
     <string name="cvote_desc_hint">Add extra notes on the vote subject</string>
     <string name="cvote_invite_all">Vote includes all members</string>
-    <string name="cvote_button">Call</string>
+    <string name="cvote_button">Send</string>
 
-    <string name="ctodo_title">Record a todo</string>
+    <string name="ctodo_title">Record an action</string>
     <string name="ctodo_subject">The action to complete</string>
     <string name="ctodo_datetime">Due date</string>
     <string name="ctodo_desc_hint">Add extra notes on the action</string>
     <string name="ctodo_invite_all">Assigned to whole group</string>
-    <string name="ctodo_button">Record</string>
+    <string name="ctodo_button">Send</string>
 
     <string name="ctsk_meeting_assigned_success">Done! Meeting called of %d members</string>
     <string name="ctsk_meeting_all_success">Done! Meeting called of whole group</string>
@@ -202,6 +226,12 @@
     <string name="ctsk_vote_all_success">Done! Vote called of whole group</string>
     <string name="ctsk_todo_assigned_success">Done! Action assigned to %d members</string>
     <string name="ctsk_todo_all_success">Done! Action assigned to whole group</string>
+
+    <!--Select members button & reminder options -->
+    <string name="nm_bt_done">Done</string>
+    <string name="one_day"><b>1 day</b> ahead</string>
+    <string name="half_day"><b>Half a day</b> ahead</string>
+    <string name="one_hour"><b>1 hour</b> ahead</string>
 
     <!-- View task strings -->
     <string name="vt_mtg_toolbar">VIEW MEETING</string>
@@ -251,13 +281,14 @@
     <string name="vt_row_no_reply">No response</string>
     <string name="vt_vote_modify">Extend vote</string>
 
-    <string name="vt_todo_done">You have marked todo as completed.</string>
+    <string name="vt_todo_toolbar">VIEW ACTION</string>
+    <string name="vt_todo_done">You have marked the action as done</string>
     <string name="vt_todo_datetime">Due %s</string>
-    <string name="vt_todo_modify">Edit todo</string>
-    <string name="vt_todo_cancel">Cancel todo</string>
+    <string name="vt_todo_modify">Edit action</string>
+    <string name="vt_todo_cancel">Cancel action</string>
     <string name="vt_todo_overdue">The action is overdue</string>
     <string name="vt_todo_completed">The action was completed</string>
-    <string name="vt_todo_pending">The todo is pending</string>
+    <string name="vt_todo_pending">The action is pending</string>
     <string name="vt_todo_members_assigned">Members assigned</string>
     <string name="vt_todo_group_assigned">Whole group assigned</string>
 
@@ -265,7 +296,7 @@
 
     <string name="etsk_mtg_edit">Change meeting</string>
     <string name="etsk_vote_edit">Extend vote</string>
-    <string name="etsk_todo_edit">Edit todo</string>
+    <string name="etsk_todo_edit">Edit action</string>
 
     <string name="etsk_mtg_date">Meeting date: %s</string>
     <string name="etsk_mtg_date_changed">New date: %s</string>
@@ -287,31 +318,35 @@
     <string name="etsk_vote_update_success">Done! Vote updated</string>
     <string name="etsk_todo_updated_success">Done! Action updated</string>
 
-    <string name="etsk_bt_mtg_save">Update Meeting</string>
-    <string name="etsk_bt_vote_save">Update vote</string>
-    <string name="etsk_bt_todo_save">Update todo</string>
+    <string name="etsk_bt_mtg_save">Send</string>
+    <string name="etsk_bt_vote_save">Send</string>
+    <string name="etsk_bt_todo_save">Send</string>
 
     <string name="etsk_change_confirm">Confirm changes? %d members will be notified</string>
 
     <string name="et_cnfrm_mtg">Are you sure you want to cancel the meeting?</string>
     <string name="et_cnfrm_vt">Are you sure you want to cancel the vote?</string>
-    <string name="et_cnfrm_td">Are you sure you want to cancel the todo?</string>
+    <string name="et_cnfrm_td">Are you sure you want to cancel the action?</string>
 
-    <!--Profile--><!--pp-->
+    <!--Profile-->
     <string name="pp_txt_toolbar">Profile Settings</string>
     <string name="pp_bt_update">Update</string>
     <string name="pp_txt_Updatename">Update name</string>
     <string name="pp_txt_language">Change language</string>
-    <string name="pp_txt_notifications">Configure Notifications</string>
+    <string name="pp_txt_notifications">Configure notifications</string>
     <string name="pp_txt_settings">Security settings</string>
-    <string name="pp_et_title">Username</string>
-    <string name="pp_name_dialog">Update Username</string>
+    <string name="pp_et_title">Name</string>
+    <string name="pp_name_dialog">Update name</string>
+    <string name="pp_err_no_edit">Nothing to modify</string>
+    <string name="pp_language_dialog_title">Choose language</string>
+    <string name="pp_notifications_dialog_title">Configure notifications</string>
+    <string name="pp_update_msg">Profile updated successfully</string> <!-- todo: clean redundancy -->
+    <string name="profile_updated">Profile Updated</string>
     <string name="pp_Cancel">CANCEL</string>
     <string name="pp_OK">OK</string>
-    <string name="pp_err_no_edit">Nothing to modify</string>
-    <string name="pp_language_dialog_title">Choose Language</string>
-    <string name="pp_notifications_dialog_title">Configure notifications</string>
-    <string name="pp_update_msg">Profile Updated Successfully</string>
+
+    <!--Notification Center-->
+    <string name="nc_txt_tlb">Notification</string>
 
     <!--FAQ-->
     <string name="fq_txt_toolbar">FAQs</string>
@@ -356,9 +391,6 @@
         <item>nso</item>
     </string-array>
 
-    <!--View Task Activity-->
-    <string name="jcf_join_code">*134*1994* %1$ #</string>
-
     <!--Notifications-->
     <string-array name="Notifications">
         <item>Notify on all events</item>
@@ -371,57 +403,5 @@
         <item>NOTIFY_NEW_EVENTS</item>
         <item>NOTIFY_NEW_EVENTS_AND_GROUP_CHANGES</item>
     </string-array>
-    <string name="title_activity_create_vote">CreateVote</string>
-
-    <!--Notify members-->
-    <string name="nm_txt_tlb">Notify Members</string>
-    <string name="nm_bt_done">Done</string>
-    <string name="nm_cratevote_msg">Vote created successfully</string>
-    <string name="nm_title_error_msg">Please enter title</string>
-    <string name="nm_description_error_msg">Please enter Description</string>
-    <string name="nm_closingtime_msg">Please enter Closing Time</string>
-
-    <!--reminder options-->
-    <string name="one_day"><b>1 day</b> ahead</string>
-    <string name="half_day"><b>Half a day</b> ahead</string>
-    <string name="one_hour"><b>1 hour</b> ahead</string>
-
-    <!--Notification Center--> <!--nc-->
-    <string name="nc_txt_tlb">Notification</string>
-    <string name="nc_txt_">v</string>
-    <string name="USER_ALREADY_PART">User already part of group</string>
-
-    <!--Blank screen--><!--bs-->
-    <string name="wait_message">Please wait...</string>
-    <string name="profile_updated">Profile Updated</string>
-    <string name="RESPOND_YES">You have clicked on \'Yes\'. Do you want to proceed with the vote?</string>
-    <string name="RESPOND_NO">You have clicked on \'No\'. Do you want to proceed with the vote?</string>
-    <string name="RSVP_YES">You have marked yourself as attending the meeting. Proceed?</string>
-    <string name="RSVP_NO">You have marked yourself as not attending the meeting. Proceed?</string>
-    <string name="TODO_COMPLETED">Are you you want to mark the TODO as completed?</string>
-    <string name="Title_Dialog_GroupJoin">Group Join Request</string>
-    <string name="Title_Join_Request_Sent">Join Request Sent!</string>
-    <string name="Confirm_Action">Complete Action?</string>
-    <string name="Confirm_Removal">Remove Members?</string>
-    <string name="rm_confirm_number">You are about to remove %d members. Are you sure?</string>
-
-    <string name="alert_confirm">Confirm</string>
-    <string name="alert_cancel">Cancel</string>
-
-    <string name="Network_Settings">Check Network Settings</string>
-    <string name="Alert_Retry">Retry</string>
-    <string name="Alert_Already_Responded">You have already responded to the event.</string>
-    <string name="LOG_OUT">Log Out</string>
-    <string name="GROUP_NOT_FOUND">No groups matching your key were found.</string>
-    <string name="GCM_UNREGISTER">unregister</string>
-    <string name="title_activity_notification">NotificationActivity</string>
-
-    <string name="jc_join_title">Join code</string>
-    <string name="cf_join_code">*134*1994*</string>
-    <string name="jc_row_one">*134</string>
-    <string name="jc_row_two">*1994</string>
-    <string name="jc_row_three">*%s#</string>
-
-    <string name="none">NONE</string>
 
 </resources>

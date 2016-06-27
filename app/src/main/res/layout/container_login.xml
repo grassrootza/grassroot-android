@@ -38,7 +38,7 @@
         android:background="@drawable/buttonrounded_corner"
         android:textAllCaps="false"
         android:textColor="#fff"
-        android:text="@string/bt_log"
+        android:text="@string/bt_login"
         android:textSize="@dimen/txt_medium"
         android:layout_alignParentBottom="true"
         android:layout_marginBottom="20dp" />
