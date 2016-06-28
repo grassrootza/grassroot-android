@@ -37,7 +37,7 @@ import retrofit2.http.Query;
  */
 public class GrassrootRestService {
 
-    private static final String GRASSROOT_SERVER_URL = Constant.restUrl;
+    private static final String GRASSROOT_SERVER_URL = "http://staging.grassroot.org.za/api/";
     private RestApi mRestApi;
 
     private static GrassrootRestService instance = null;
