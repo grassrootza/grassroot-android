@@ -61,23 +61,27 @@ public class GcmListenerService extends com.google.android.gms.gcm.GcmListenerSe
     if (Build.VERSION.SDK_INT >= 21) {
       NotificationCompat.InboxStyle inboxStyle = new NotificationCompat.InboxStyle();
       NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(this);
-      mBuilder.setSmallIcon(
-          (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) ? R.drawable.ic_notification_icon
-              : R.drawable.app_icon);
       Notification notification = mBuilder.setTicker(msg.getString(Constant.TITLE))
           .setWhen(when)
           .setAutoCancel(true)
           .setContentTitle(msg.getString(Constant.TITLE))
           .setStyle(inboxStyle)
-          .setContentIntent(resultPendingIntent)
-          .setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION))
+          .setContentIntent(resultPendingIntent).setSmallIcon((Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) ? R.drawable.ic_notification_icon
+          : R.drawable.app_icon)
+          .setDefaults(Notification.DEFAULT_ALL)
+          .setSound(RingtoneManager.getActualDefaultRingtoneUri(getApplicationContext(),
+              RingtoneManager.TYPE_NOTIFICATION))
           .setLargeIcon(BitmapFactory.decodeResource(getResources(), R.drawable.app_icon))
           .setContentText(msg.getString(Constant.BODY))
-          .setGroup(STACK_KEY).setGroupSummary(true)
+          .setGroup(STACK_KEY)
+          .setGroupSummary(true)
           .build();
-      startForeground(msg.getString(Constant.UID).hashCode(),notification);
-     // mNotificationManager.notify(msg.getString(Constant.UID), (int) System.currentTimeMillis(),
-         // notification);
+      if (isAppIsInBackground(this)) {
+        startForeground(msg.getString(Constant.UID).hashCode(), notification);
+      } else {
+        mNotificationManager.notify(msg.getString(Constant.UID), (int) System.currentTimeMillis(),
+            notification);
+      }
     } else {
       Log.e(TAG, "notification received, following KitKat branch");
       NotificationCompat.Builder mNotifyBuilder = new NotificationCompat.Builder(this);
@@ -91,9 +95,12 @@ public class GcmListenerService extends com.google.android.gms.gcm.GcmListenerSe
           .setSound(RingtoneManager.getActualDefaultRingtoneUri(getApplicationContext(),
               RingtoneManager.TYPE_NOTIFICATION))
           .build();
-      startForeground(msg.getString(Constant.UID).hashCode(),notification);
-      //mNotificationManager.notify(msg.getString(Constant.UID), (int) System.currentTimeMillis(),
-      //    notification);
+      if (isAppIsInBackground(this)) {
+        startForeground(msg.getString(Constant.UID).hashCode(), notification);
+      } else {
+        mNotificationManager.notify(msg.getString(Constant.UID), (int) System.currentTimeMillis(),
+            notification);
+      }
     }
 
     GrassrootRestService.getInstance()

@@ -3,6 +3,7 @@ package org.grassroot.android.services;
 import android.content.Context;
 import android.support.annotation.Nullable;
 
+import org.grassroot.android.BuildConfig;
 import org.grassroot.android.models.EventResponse;
 import org.grassroot.android.models.GenericResponse;
 import org.grassroot.android.models.GroupResponse;
@@ -37,7 +38,7 @@ import retrofit2.http.Query;
  */
 public class GrassrootRestService {
 
-    private static final String GRASSROOT_SERVER_URL = "http://staging.grassroot.org.za/api/";
+      private static final String GRASSROOT_SERVER_URL = Constant.restUrl;
     private RestApi mRestApi;
 
     private static GrassrootRestService instance = null;
