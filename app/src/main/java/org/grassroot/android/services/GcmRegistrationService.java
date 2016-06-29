@@ -120,8 +120,8 @@ public class GcmRegistrationService extends IntentService {
                         }
                     });
         } catch (IOException e) {
-            Log.e(TAG, "Push unregistration failed, for project ID: " + getString(R.string.staging_project_id) +
-                    ", and scope: " + GoogleCloudMessaging.INSTANCE_ID_SCOPE);
+            //Log.e(TAG, "Push unregistration failed, for project ID: " + getString(R.string.staging_project_id) +
+            //        ", and scope: " + GoogleCloudMessaging.INSTANCE_ID_SCOPE);
         }
     }
 
