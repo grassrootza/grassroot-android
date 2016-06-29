@@ -3,7 +3,6 @@ package org.grassroot.android.activities;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -109,7 +108,7 @@ public class GroupMembersActivity extends PortraitActivity implements MemberList
         tvExistingMembers.setVisibility(showGroupHeader ? View.VISIBLE : View.GONE);
         llCheckAllClearAll.setVisibility(showGroupHeader ? View.GONE : View.VISIBLE);
 
-        newTaskMenuFragment = NewTaskMenuFragment.newInstance(group, false, false);
+        newTaskMenuFragment = NewTaskMenuFragment.newInstance(group, false);
 
         setUpToolbar();
         setUpFloatingMenu();

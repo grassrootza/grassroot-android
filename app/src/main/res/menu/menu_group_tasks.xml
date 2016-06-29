@@ -8,24 +8,30 @@
         android:icon="@drawable/btn_filter"
         app:showAsAction="ifRoom" />
 
+    <item
+        android:id="@+id/mi_new_task"
+        android:title="@string/gta_menu_add_task"
+        app:showAsAction="never" />
+
+
     <item android:id="@+id/mi_view_join_code"
-        android:title="View join code"
+        android:title="@string/gta_view_code"
         app:showAsAction="never" />
 
     <item android:id="@+id/mi_view_members"
-        android:title="View members"
+        android:title="@string/gta_view_members"
         app:showAsAction="never" />
 
     <item android:id="@+id/mi_add_members"
-        android:title="Add members"
+        android:title="@string/gta_add_members"
         app:showAsAction="never" />
 
     <item android:id="@+id/mi_remove_members"
-        android:title="Remove members"
+        android:title="@string/gta_del_members"
         app:showAsAction="never" />
 
-    <item android:id="@+id/mi_group_settings"
+    <!-- <item android:id="@+id/mi_group_settings"
         android:title="Group settings"
-        app:showAsAction="never" />
+        app:showAsAction="never" /> -->
 
 </menu>

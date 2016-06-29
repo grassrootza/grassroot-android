@@ -22,9 +22,6 @@ import org.grassroot.android.models.TaskModel;
 import org.grassroot.android.utils.Constant;
 import org.grassroot.android.utils.MenuUtils;
 
-import java.util.HashSet;
-import java.util.Set;
-
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
@@ -59,7 +56,7 @@ public class GroupTasksActivity extends PortraitActivity implements NewTaskMenuF
         }
 
         groupMembership = extras.getParcelable(GroupConstants.OBJECT_FIELD);
-        newTaskMenuFragment = NewTaskMenuFragment.newInstance(groupMembership, true, false);
+        newTaskMenuFragment = NewTaskMenuFragment.newInstance(groupMembership, true);
         canCreateTask = groupMembership.canCallMeeting() || groupMembership.canCallVote() || groupMembership.canCreateTodo();
 
         setUpViews();
@@ -68,12 +65,12 @@ public class GroupTasksActivity extends PortraitActivity implements NewTaskMenuF
 
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
-        final Set<String> perms = new HashSet<>(groupMembership.getPermissions());
         menu.findItem(R.id.mi_view_join_code).setVisible(true);
-        menu.findItem(R.id.mi_add_members).setVisible(perms.contains(GroupConstants.PERM_ADD_MEMBER));
-        menu.findItem(R.id.mi_remove_members).setVisible(perms.contains(GroupConstants.PERM_DEL_MEMBER));
-        menu.findItem(R.id.mi_view_members).setVisible(perms.contains(GroupConstants.PERM_VIEW_MEMBERS));
-        menu.findItem(R.id.mi_group_settings).setVisible(perms.contains(GroupConstants.PERM_GROUP_SETTNGS));
+        menu.findItem(R.id.mi_new_task).setVisible(groupMembership.hasCreatePermissions());
+        menu.findItem(R.id.mi_add_members).setVisible(groupMembership.canAddMembers());
+        menu.findItem(R.id.mi_remove_members).setVisible(groupMembership.canDeleteMembers());
+        menu.findItem(R.id.mi_view_members).setVisible(groupMembership.canViewMembers());
+//        menu.findItem(R.id.mi_group_settings).setVisible(perms.contains(GroupConstants.PERM_GROUP_SETTNGS));
         this.thisMenu = menu;
         return true;
     }
@@ -105,6 +102,11 @@ public class GroupTasksActivity extends PortraitActivity implements NewTaskMenuF
 
     @OnClick(R.id.gta_fab)
     public void openNewTaskMenu() {
+        openNewTaskMenu(true);
+    }
+
+    private void openNewTaskMenu(boolean showAddMembers) {
+        newTaskMenuFragment.setShowAddMembers(showAddMembers);
         getSupportFragmentManager().beginTransaction()
                 .setCustomAnimations(R.anim.up_from_bottom, R.anim.down_from_top)
                 .replace(R.id.gta_root_layout, newTaskMenuFragment)
@@ -122,6 +124,9 @@ public class GroupTasksActivity extends PortraitActivity implements NewTaskMenuF
                 return true;
             case R.id.mi_icon_filter:
                 taskListFragment.filter();
+                return true;
+            case R.id.mi_new_task:
+                openNewTaskMenu(false);
                 return true;
             case R.id.mi_view_join_code:
                 setUpJoinCodeFragment();

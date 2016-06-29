@@ -23,8 +23,6 @@ public class ContactsAdapter extends ArrayAdapter<Contact> implements SectionInd
     private static final String TAG = ContactsAdapter.class.getSimpleName();
 
     private final Context mContext;
-
-    private List<Contact> contactsToDisplay;
     private StringArrayAlphabetIndexer indexer; // todo : move this to service
 
     public ContactsAdapter(Context context, int resource) {
@@ -46,7 +44,7 @@ public class ContactsAdapter extends ArrayAdapter<Contact> implements SectionInd
                 throw new UnsupportedOperationException("Error! Contact list adapter passed wrong kind of view");
             }
         } else {
-            viewToReturn = LayoutInflater.from(mContext).inflate(R.layout.listview_item, parent, false);
+            viewToReturn = LayoutInflater.from(mContext).inflate(R.layout.row_contact_list, parent, false);
             viewHolder = new ContactViewHolder(viewToReturn);
             viewHolder.tvContactName = (TextView) viewToReturn.findViewById(R.id.tv_person_name);
             viewHolder.ivContactSelected = (ImageView) viewToReturn.findViewById(R.id.iv_Selected);

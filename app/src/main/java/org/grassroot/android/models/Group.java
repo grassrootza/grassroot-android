@@ -1,8 +1,10 @@
 package org.grassroot.android.models;
 
+import android.content.Context;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import org.grassroot.android.R;
 import org.grassroot.android.interfaces.GroupConstants;
 import org.grassroot.android.utils.Constant;
 
@@ -171,6 +173,25 @@ public class Group implements Parcelable, Comparable<Group> {
         calendar.set(Calendar.MINUTE, dateTime.getMinute());
         calendar.set(Calendar.SECOND, dateTime.getSecond());
         this.date = calendar.getTime();
+    }
+
+    public String constructChangeType(Context context) {
+        switch (lastChangeType) {
+            case GroupConstants.MEETING_CALLED:
+                return (getDate().after(new Date()) ? context.getString(R.string.future_meeting_prefix)
+                        : context.getString(R.string.past_meeting_prefix));
+            case GroupConstants.VOTE_CALLED:
+                return (getDate().after(new Date())) ? context.getString(R.string.future_vote_prefix)
+                        : context.getString(R.string.past_vote_prefix);
+            case GroupConstants.GROUP_CREATED:
+                return context.getString(R.string.group_created_prefix);
+            case GroupConstants.MEMBER_ADDED:
+                return context.getString(R.string.member_added_prefix);
+            case GroupConstants.GROUP_MOD_OTHER:
+                return context.getString(R.string.group_other_prefix);
+            default:
+                throw new UnsupportedOperationException("Error! Should only be one of standard change types");
+        }
     }
 
     @Override

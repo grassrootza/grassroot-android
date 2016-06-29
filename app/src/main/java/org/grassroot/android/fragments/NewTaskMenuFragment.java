@@ -52,16 +52,18 @@ public class NewTaskMenuFragment extends Fragment {
     private String groupName;
 
     private boolean showAddMembers;
-    private boolean showJoinCode; // putting this here as may need it after user feedback
 
-    public static NewTaskMenuFragment newInstance(Group groupMembership, boolean showAddMembers, boolean showJoinCode) {
+    public static NewTaskMenuFragment newInstance(Group groupMembership, boolean showAddMembers) {
         NewTaskMenuFragment fragment = new NewTaskMenuFragment();
         fragment.showAddMembers = showAddMembers;
-        fragment.showJoinCode = showJoinCode;
         Bundle b = new Bundle();
         b.putParcelable(GroupConstants.OBJECT_FIELD, groupMembership);
         fragment.setArguments(b);
         return fragment;
+    }
+
+    public void setShowAddMembers(boolean showAddMembers) {
+        this.showAddMembers = showAddMembers;
     }
 
     @Override
@@ -98,6 +100,12 @@ public class NewTaskMenuFragment extends Fragment {
         ButterKnife.bind(this, viewToReturn);
         setVisibility(groupMembership);
         return viewToReturn;
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        bt_addmember.setVisibility(showAddMembers ? View.VISIBLE : View.GONE);
     }
 
     private void setVisibility(Group groupMembership) {

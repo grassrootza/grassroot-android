@@ -3,6 +3,7 @@ package org.grassroot.android.adapters;
 import android.content.Context;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -76,13 +77,13 @@ public class GroupListAdapter extends RecyclerView.Adapter<GroupListAdapter.GHP_
         holder.itemView.setLongClickable(true);
         final Group group = displayedGroups.get(position);
 
-        final String groupOrganizerDescription = "Organizer: " + group.getGroupCreator();
+        final String groupOrganizerDescription = String.format(context.getString(R.string.group_organizer_prefix), group.getGroupCreator());
         holder.txtGroupname.setText(group.getGroupName());
         holder.txtGroupownername.setText(groupOrganizerDescription);
 
         if (GroupConstants.NO_JOIN_CODE.equals(group.getJoinCode())) {
             final String groupDescription = group.getDescription();
-            final int visibility = (groupDescription == null || groupDescription.trim().equals("")) ? View.GONE : View.VISIBLE;
+            final int visibility = (TextUtils.isEmpty(groupDescription)) ? View.GONE : View.VISIBLE;
             holder.txtGroupdesc.setText(String.format(context.getString(R.string.desc_body_pattern),
                     getChangePrefix(group), groupDescription));
             holder.txtGroupdesc.setVisibility(visibility);

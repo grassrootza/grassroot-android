@@ -24,7 +24,8 @@
         android:layout_marginRight="10dp"
         android:layout_centerVertical="true"
         android:layout_alignParentRight="true"
-       android:src="@drawable/ic_arrow_up"/>
+        android:src="@drawable/ic_arrow_up"/>
+
     <TextView
         android:id="@+id/txt_list_header"
         android:layout_width="match_parent"

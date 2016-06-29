@@ -1,11 +1,13 @@
 package org.grassroot.android.fragments;
 
 import android.app.Activity;
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.SystemClock;
 import android.support.design.widget.Snackbar;
+import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.LinearLayoutManager;
@@ -25,6 +27,7 @@ import com.github.clans.fab.FloatingActionMenu;
 
 import org.grassroot.android.R;
 import org.grassroot.android.activities.CreateGroupActivity;
+import org.grassroot.android.activities.CreateMeetingActivity;
 import org.grassroot.android.activities.GroupSearchActivity;
 import org.grassroot.android.activities.GroupTasksActivity;
 import org.grassroot.android.adapters.GroupListAdapter;
@@ -57,7 +60,7 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class HomeGroupListFragment extends android.support.v4.app.Fragment implements GroupListAdapter.GroupRowListener {
+public class HomeGroupListFragment extends android.support.v4.app.Fragment implements GroupListAdapter.GroupRowListener, GroupPickFragment.GroupPickListener {
 
     private String TAG = HomeGroupListFragment.class.getSimpleName();
 
@@ -75,17 +78,10 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment imple
     @BindView(R.id.recycler_view)
     RecyclerView rcGroupList;
 
-    @BindView(R.id.error_layout)
-    View errorLayout;
-    @BindView(R.id.im_no_results)
-    ImageView imNoResults;
-    @BindView(R.id.im_server_error)
-    ImageView imServerError;
-    @BindView(R.id.im_no_internet)
-    ImageView imNoInternet;
-
     @BindView(R.id.menu1)
     FloatingActionMenu menu1;
+    @BindView(R.id.ic_fab_new_mtg)
+    FloatingActionButton icFabNewMtg;
     @BindView(R.id.ic_fab_join_group)
     FloatingActionButton icFabJoinGroup;
     @BindView(R.id.ic_fab_start_group)
@@ -100,8 +96,7 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment imple
     @BindView(R.id.rl_simple)
     RelativeLayout rlSimple;
 
-    @BindView(R.id.progressBar)
-    ProgressBar mProgressBar;
+    ProgressDialog progressDialog;
 
     private GroupListAdapter groupListRowAdapter;
     private List<Group> userGroups;
@@ -167,12 +162,13 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment imple
         ivGhpSort.setEnabled(false);
         ivGhpSearch.setEnabled(false);
 
-        mobileNumber = PreferenceUtils.getUserPhoneNumber(getActivity());
-        userCode = PreferenceUtils.getAuthToken(getActivity());
+        mobileNumber = PreferenceUtils.getPhoneNumber();
+        userCode = PreferenceUtils.getAuthToken();
 
         menu1.setOnMenuToggleListener(new FloatingActionMenu.OnMenuToggleListener() {
             @Override
             public void onMenuToggle(boolean opened) {
+                icFabNewMtg.setVisibility(opened ? View.VISIBLE : View.GONE);
                 icFabJoinGroup.setVisibility(opened ? View.VISIBLE : View.GONE);
                 icFabStartGroup.setVisibility(opened ? View.VISIBLE : View.GONE);
             }
@@ -223,13 +219,16 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment imple
 
 
     private void showProgress(){
-        mProgressBar.setVisibility(View.VISIBLE);
-        errorLayout.setVisibility(View.INVISIBLE);
-        imNoInternet.setVisibility(View.INVISIBLE);
+        if (progressDialog == null) {
+            progressDialog = new ProgressDialog(getContext());
+            progressDialog.setIndeterminate(true);
+            progressDialog.setMessage(getString(R.string.txt_pls_wait));
+        }
+        progressDialog.show();
     }
 
     private void hideProgress(){
-        mProgressBar.setVisibility(View.INVISIBLE);
+        progressDialog.dismiss();
     }
 
     /*
@@ -416,6 +415,17 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment imple
         }
     }
 
+    @OnClick(R.id.ic_fab_new_mtg)
+    public void icFabCallMeeting() {
+        menu1.close(true);
+        Fragment groupPicker = GroupPickFragment.newInstance(userGroups, GroupConstants.PERM_CREATE_MTG,
+                this, TaskConstants.MEETING);
+        getFragmentManager().beginTransaction()
+                .add(R.id.fl_main_body, groupPicker, GroupPickFragment.class.getCanonicalName())
+                .addToBackStack(GroupPickFragment.class.getCanonicalName())
+                .commit();
+    }
+
     @OnClick(R.id.ic_fab_join_group)
     public void icFabJoinGroup() {
         menu1.close(true);
@@ -438,11 +448,6 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment imple
             Log.d(TAG, "createdGroup returned! with UID: " + createdGroup);
             insertGroup(0, createdGroup);
         }
-    }
-
-    @OnClick({R.id.im_no_results, R.id.im_no_internet, R.id.im_server_error})
-    public void onClick() {
-        fetchGroupList();
     }
 
     @Override
@@ -476,6 +481,21 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment imple
         args.putInt(Constant.INDEX_FIELD, position);
         dialog.setArguments(args);
         dialog.show(getFragmentManager(), "GroupQuickMemberModalFragment");
+    }
+
+    @Override
+    public void onGroupPicked(Group group, String returnTag) {
+        switch (returnTag) {
+            case TaskConstants.MEETING:
+                Bundle b = new Bundle();
+                b.putString(Constant.GROUPUID_FIELD, group.getGroupUid());
+                Intent i = new Intent(getActivity(), CreateMeetingActivity.class);
+                startActivity(i, b);
+                break;
+            default:
+                getFragmentManager().popBackStack();
+                break;
+        }
     }
 
     @Override

@@ -101,7 +101,7 @@ public class FAQAdapter extends BaseExpandableListAdapter {
 
         if (convertView == null) {
             viewHolder = new ViewHolder();
-            convertView = inflater.inflate(R.layout.list_group, null);
+            convertView = inflater.inflate(R.layout.row_faq_item, null);
             viewHolder.txt_lblListHeader = (TextView) convertView.findViewById(R.id.txt_list_header);
             viewHolder.img_group_icon = (ImageView) convertView.findViewById(R.id.explist_indicator);
             viewHolder.view_line = (View) convertView.findViewById(R.id.view);
