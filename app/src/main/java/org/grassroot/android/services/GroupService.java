@@ -5,6 +5,8 @@ import android.content.Context;
 import android.util.Log;
 import android.view.View;
 
+import io.realm.Realm;
+import io.realm.RealmList;
 import org.grassroot.android.R;
 import org.grassroot.android.interfaces.NetworkErrorDialogListener;
 import org.grassroot.android.models.Group;
@@ -77,6 +79,7 @@ public class GroupService {
                             userGroups = new ArrayList<>(response.body().getGroups());
                             listener.groupListLoaded();
                             createUidMap();
+                            saveGroupsInDB(response.body().getGroups());
                         } else {
                             Log.e(TAG, response.message());
                             ErrorUtils.handleServerError(errorViewHolder, activity, response);
@@ -135,6 +138,16 @@ public class GroupService {
         final int size = userGroups.size();
         for (int i = 0; i < size; i++) {
             groupUidMap.put(userGroups.get(i).getGroupUid(), i);
+        }
+    }
+
+    private void saveGroupsInDB(RealmList<Group> groups) {
+        Realm realm = Realm.getDefaultInstance();
+        if (groups != null && realm != null && !realm.isClosed()) {
+            realm.beginTransaction();
+            realm.copyToRealmOrUpdate(groups);
+            realm.commitTransaction();
+            realm.close();
         }
     }
 

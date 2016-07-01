@@ -211,14 +211,6 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
     rcGroupList.setVisibility(View.VISIBLE);
   }
 
-  private void saveGroupsInDB(RealmList<Group> groups) {
-    if (groups != null && realm != null && !realm.isClosed()) {
-      realm.beginTransaction();
-      realm.copyToRealmOrUpdate(groups);
-      realm.commitTransaction();
-    }
-  }
-
   private RealmList<Group> loadGroupsFromDB() {
     RealmList<Group> groups = new RealmList<>();
     if (realm != null && !realm.isClosed()) {
