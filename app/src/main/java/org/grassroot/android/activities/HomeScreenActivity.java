@@ -12,16 +12,21 @@ import org.grassroot.android.R;
 import org.grassroot.android.events.GroupCreatedEvent;
 import org.grassroot.android.events.TaskAddedEvent;
 import org.grassroot.android.events.UserLoggedOutEvent;
+import org.grassroot.android.fragments.GroupPickFragment;
 import org.grassroot.android.fragments.HomeGroupListFragment;
 import org.grassroot.android.fragments.NavigationDrawerFragment;
 import org.grassroot.android.fragments.NewTaskMenuFragment;
 import org.grassroot.android.fragments.WelcomeFragment;
+import org.grassroot.android.interfaces.GroupConstants;
+import org.grassroot.android.interfaces.TaskConstants;
 import org.grassroot.android.models.Group;
 import org.grassroot.android.utils.Constant;
 import org.grassroot.android.utils.MenuUtils;
 import org.grassroot.android.utils.PreferenceUtils;
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
+
+import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -100,6 +105,18 @@ public class HomeScreenActivity extends PortraitActivity implements NavigationDr
                 .setCustomAnimations(R.anim.push_down_in, R.anim.push_down_out)
                 .remove(newTaskMenuFragment)
                 .commit();
+    }
+
+    // todo : more and more clear that the list of user's groups should sit in a singletone somewhere, like ConstantsService
+    @Override
+    public void groupPickerTriggered(String taskType, List<Group> userGroups) {
+        // todo : restructure / rethink this ...
+        Fragment groupPicker = GroupPickFragment.newInstance(userGroups, GroupConstants.PERM_CREATE_MTG,
+                null, TaskConstants.MEETING);
+        /*getFragmentManager().beginTransaction()
+                .add(R.id.fl_main_body, groupPicker, GroupPickFragment.class.getCanonicalName())
+                .addToBackStack(GroupPickFragment.class.getCanonicalName())
+                .commit();*/
     }
 
     @Subscribe

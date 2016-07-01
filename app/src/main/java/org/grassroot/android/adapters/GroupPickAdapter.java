@@ -4,6 +4,7 @@ import android.content.Context;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -21,6 +22,8 @@ import java.util.List;
  * Created by luke on 2016/06/29.
  */
 public class GroupPickAdapter extends RecyclerView.Adapter<GroupPickAdapter.GroupPickViewHolder> {
+
+    private static final String TAG = GroupPickAdapter.class.getSimpleName();
 
     private ArrayList<Group> groupsToDisplay;
     private Context containingContext;
@@ -66,6 +69,7 @@ public class GroupPickAdapter extends RecyclerView.Adapter<GroupPickAdapter.Grou
         holder.rootView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                Log.e(TAG, "group pick item picked!");
                 listener.onGroupPicked(group);
             }
         });

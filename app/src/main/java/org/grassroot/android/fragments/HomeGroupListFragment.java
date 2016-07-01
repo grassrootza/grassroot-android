@@ -41,6 +41,7 @@ import org.grassroot.android.models.Group;
 import org.grassroot.android.models.GroupResponse;
 import org.grassroot.android.models.TaskModel;
 import org.grassroot.android.services.GrassrootRestService;
+import org.grassroot.android.services.GroupService;
 import org.grassroot.android.utils.Constant;
 import org.grassroot.android.utils.ErrorUtils;
 import org.grassroot.android.utils.MenuUtils;
@@ -112,6 +113,7 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment imple
 
     public interface GroupListFragmentListener {
         void menuClick();
+        void groupPickerTriggered(String taskType, List<Group> userGroups);
     }
 
     @Override
@@ -187,32 +189,21 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment imple
      * of a connection very well, at all. Will probably need to rethink.
      */
     public void fetchGroupList() {
-
-        Call<GroupResponse> call = GrassrootRestService.getInstance().getApi().getUserGroups(mobileNumber, userCode);
         showProgress();
-        call.enqueue(new Callback<GroupResponse>() {
+        GroupService.getInstance().fetchGroupList(getActivity(), rlGhpRoot, new GroupService.GroupServiceListener() {
             @Override
-            public void onResponse(Call<GroupResponse> call, Response<GroupResponse> response) {
-
+            public void groupListLoaded() {
                 hideProgress();
-                if (response.isSuccessful()) {
-                    GroupResponse groups = response.body();
-                    userGroups.addAll(groups.getGroups());
-                    rcGroupList.setVisibility(View.VISIBLE);
-                    groupListRowAdapter.addData(userGroups);
-                    ivGhpSearch.setEnabled(true);
-                    ivGhpSort.setEnabled(true);
-                    rcGroupList.setVisibility(View.VISIBLE);
-                } else {
-                    Log.e(TAG, response.message());
-                    ErrorUtils.handleServerError(rlGhpRoot,getActivity(),response);
-                }
+                rcGroupList.setVisibility(View.VISIBLE);
+                groupListRowAdapter.addData(GroupService.getInstance().userGroups);
+                ivGhpSearch.setEnabled(true);
+                ivGhpSort.setEnabled(true);
+                rcGroupList.setVisibility(View.VISIBLE);
             }
 
             @Override
-            public void onFailure(Call<GroupResponse> call, Throwable t) {
+            public void groupListLoadingError() {
                 hideProgress();
-                ErrorUtils.handleNetworkError(getContext(), rlGhpRoot, t);
             }
         });
     }
@@ -417,13 +408,8 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment imple
 
     @OnClick(R.id.ic_fab_new_mtg)
     public void icFabCallMeeting() {
+
         menu1.close(true);
-        Fragment groupPicker = GroupPickFragment.newInstance(userGroups, GroupConstants.PERM_CREATE_MTG,
-                this, TaskConstants.MEETING);
-        getFragmentManager().beginTransaction()
-                .add(R.id.fl_main_body, groupPicker, GroupPickFragment.class.getCanonicalName())
-                .addToBackStack(GroupPickFragment.class.getCanonicalName())
-                .commit();
     }
 
     @OnClick(R.id.ic_fab_join_group)
