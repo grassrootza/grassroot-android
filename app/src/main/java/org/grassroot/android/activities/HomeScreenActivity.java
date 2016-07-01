@@ -21,12 +21,9 @@ import org.grassroot.android.interfaces.GroupConstants;
 import org.grassroot.android.interfaces.TaskConstants;
 import org.grassroot.android.models.Group;
 import org.grassroot.android.utils.Constant;
-import org.grassroot.android.utils.MenuUtils;
 import org.grassroot.android.utils.PreferenceUtils;
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
-
-import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -107,16 +104,28 @@ public class HomeScreenActivity extends PortraitActivity implements NavigationDr
                 .commit();
     }
 
-    // todo : more and more clear that the list of user's groups should sit in a singletone somewhere, like ConstantsService
     @Override
-    public void groupPickerTriggered(String taskType, List<Group> userGroups) {
-        // todo : restructure / rethink this ...
-        Fragment groupPicker = GroupPickFragment.newInstance(userGroups, GroupConstants.PERM_CREATE_MTG,
-                null, TaskConstants.MEETING);
-        /*getFragmentManager().beginTransaction()
+    public void groupPickerTriggered(String taskType) {
+        Fragment groupPicker = GroupPickFragment.newInstance(GroupConstants.PERM_CREATE_MTG, TaskConstants.MEETING, new GroupPickFragment.GroupPickListener() {
+            @Override
+            public void onGroupPicked(Group group, String returnTag) {
+                Log.e(TAG, "group picker returned!");
+                switch (returnTag) {
+                    case TaskConstants.MEETING:
+                        Intent i = new Intent(HomeScreenActivity.this, CreateMeetingActivity.class);
+                        i.putExtra(GroupConstants.UID_FIELD, group.getGroupUid());
+                        startActivity(i);
+                        break;
+                    default:
+                        Log.e(TAG, "listener called!");
+                        getSupportFragmentManager().popBackStack();
+                }
+            }
+        });
+        getSupportFragmentManager().beginTransaction()
                 .add(R.id.fl_main_body, groupPicker, GroupPickFragment.class.getCanonicalName())
-                .addToBackStack(GroupPickFragment.class.getCanonicalName())
-                .commit();*/
+                .addToBackStack(null)
+                .commit();
     }
 
     @Subscribe

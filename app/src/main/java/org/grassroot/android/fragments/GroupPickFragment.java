@@ -14,6 +14,7 @@ import org.grassroot.android.adapters.GroupPickAdapter;
 import org.grassroot.android.fragments.dialogs.ConfirmCancelDialogFragment;
 import org.grassroot.android.interfaces.TaskConstants;
 import org.grassroot.android.models.Group;
+import org.grassroot.android.services.GroupService;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -44,15 +45,14 @@ public class GroupPickFragment extends Fragment implements GroupPickAdapter.Grou
     }
 
 
-    public static GroupPickFragment newInstance(final List<Group> memberGroups, final String permissionToFilter,
-                                                GroupPickListener listener, final String returnTag) {
-        if (memberGroups == null || permissionToFilter == null || listener == null || TextUtils.isEmpty(returnTag)) {
+    public static GroupPickFragment newInstance(final String permissionToFilter, final String returnTag, GroupPickListener listener) {
+        if (permissionToFilter == null || listener == null || TextUtils.isEmpty(returnTag)) {
             throw new UnsupportedOperationException("Error! Group picker called without groups, task type or listener");
         }
 
         GroupPickFragment fragment = new GroupPickFragment();
         List<Group> groups = new ArrayList<>();
-        for (Group g : memberGroups) {
+        for (Group g : GroupService.getInstance().userGroups) {
             if (g.getPermissions().contains(permissionToFilter)) {
                 groups.add(g);
             }
@@ -90,14 +90,14 @@ public class GroupPickFragment extends Fragment implements GroupPickAdapter.Grou
     public void onGroupPicked(final Group group) {
         // todo : have a "don't show this again" option
         final String message = String.format(getString(R.string.group_picker_confirm_string),
-                constructVerb(), group.getGroupName());
+                getString(constructVerb()), group.getGroupName());
         ConfirmCancelDialogFragment.newInstance(message, new ConfirmCancelDialogFragment.ConfirmDialogListener() {
             @Override
             public void doConfirmClicked() {
                 // todo : probably want to collapse the listener change
                 listener.onGroupPicked(group, returnTag);
             }
-        });
+        }).show(getFragmentManager(), "confirm");
     }
 
     private int constructVerb() {

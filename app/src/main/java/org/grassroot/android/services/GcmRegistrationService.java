@@ -101,7 +101,7 @@ public class GcmRegistrationService extends IntentService {
     // have to pass these as arguments, since pref utils may be cleared by time get here
     private void unRegister(final String phoneNumber, final String code) {
         try {
-            InstanceID.getInstance(this).deleteInstanceID();
+            InstanceID.getInstance(ApplicationLoader.applicationContext).deleteInstanceID();
             Log.e(TAG, "unregistering user ... with phone number ... " + phoneNumber);
             GrassrootRestService.getInstance().getApi()
                     .pushUnregister(phoneNumber, code)

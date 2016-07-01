@@ -5,6 +5,8 @@ import android.content.Context;
 import android.util.Log;
 import android.view.View;
 
+import org.grassroot.android.R;
+import org.grassroot.android.interfaces.NetworkErrorDialogListener;
 import org.grassroot.android.models.Group;
 import org.grassroot.android.models.GroupResponse;
 import org.grassroot.android.utils.ErrorUtils;
@@ -74,6 +76,7 @@ public class GroupService {
                             groupsFinishedLoading = true;
                             userGroups = new ArrayList<>(response.body().getGroups());
                             listener.groupListLoaded();
+                            createUidMap();
                         } else {
                             Log.e(TAG, response.message());
                             ErrorUtils.handleServerError(errorViewHolder, activity, response);
@@ -89,7 +92,37 @@ public class GroupService {
                 });
     }
 
+    /*
+   Called from "swipe refresh" on group recycler, so am just formally separating from the initiating call (which is triggered on app load)
+    */
+    public void refreshGroupList(final Activity activity, final GroupServiceListener listener) {
+        final String mobileNumber = PreferenceUtils.getPhoneNumber();
+        final String userCode = PreferenceUtils.getAuthToken();
+        GrassrootRestService.getInstance().getApi().getUserGroups(mobileNumber, userCode).enqueue(new Callback<GroupResponse>() {
+            @Override
+            public void onResponse(Call<GroupResponse> call, Response<GroupResponse> response) {
+                if (response.isSuccessful()) {
+                    listener.groupListLoaded();
+                } else {
+                    listener.groupListLoadingError();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<GroupResponse> call, Throwable t) {
+                ErrorUtils.connectivityError(activity, R.string.error_no_network, new NetworkErrorDialogListener() {
+                    @Override
+                    public void retryClicked() {
+                        refreshGroupList(activity, listener);
+                    }
+                });
+
+            }
+        });
+    }
+
     private void createUidMap() {
+
         if (userGroups == null) {
             throw new UnsupportedOperationException("Error! Group map creation called without groups");
         }
@@ -104,6 +137,5 @@ public class GroupService {
             groupUidMap.put(userGroups.get(i).getGroupUid(), i);
         }
     }
-
 
 }

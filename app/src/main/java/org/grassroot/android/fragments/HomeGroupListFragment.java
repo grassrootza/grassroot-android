@@ -7,7 +7,6 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.os.SystemClock;
 import android.support.design.widget.Snackbar;
-import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.LinearLayoutManager;
@@ -19,7 +18,6 @@ import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.ImageView;
-import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 
 import com.github.clans.fab.FloatingActionButton;
@@ -61,7 +59,7 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class HomeGroupListFragment extends android.support.v4.app.Fragment implements GroupListAdapter.GroupRowListener, GroupPickFragment.GroupPickListener {
+public class HomeGroupListFragment extends android.support.v4.app.Fragment implements GroupListAdapter.GroupRowListener {
 
     private String TAG = HomeGroupListFragment.class.getSimpleName();
 
@@ -102,9 +100,6 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment imple
     private GroupListAdapter groupListRowAdapter;
     private List<Group> userGroups;
 
-    private String mobileNumber;
-    private String userCode;
-
     private boolean creating;
 
     public boolean date_click = false, role_click = false, defaults_click = false;
@@ -113,7 +108,7 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment imple
 
     public interface GroupListFragmentListener {
         void menuClick();
-        void groupPickerTriggered(String taskType, List<Group> userGroups);
+        void groupPickerTriggered(String taskType);
     }
 
     @Override
@@ -150,8 +145,6 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment imple
     public void onResume() {
         super.onResume();
         if (!creating && PreferenceUtils.getGroupListMustRefresh(getContext())) {
-            mobileNumber = PreferenceUtils.getUserPhoneNumber(getContext());
-            userCode = PreferenceUtils.getAuthToken(getContext());
             refreshGroupList();
             PreferenceUtils.setGroupListMustBeRefreshed(getContext(), false);
         }
@@ -163,9 +156,6 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment imple
         userGroups = new ArrayList<>();
         ivGhpSort.setEnabled(false);
         ivGhpSearch.setEnabled(false);
-
-        mobileNumber = PreferenceUtils.getPhoneNumber();
-        userCode = PreferenceUtils.getAuthToken();
 
         menu1.setOnMenuToggleListener(new FloatingActionMenu.OnMenuToggleListener() {
             @Override
@@ -208,7 +198,6 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment imple
         });
     }
 
-
     private void showProgress(){
         if (progressDialog == null) {
             progressDialog = new ProgressDialog(getContext());
@@ -227,27 +216,17 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment imple
     in time, rather than doing a full refresh, and don't need to worry about progress bar, etc
      */
     public void refreshGroupList() {
-        GrassrootRestService.getInstance().getApi().getUserGroups(mobileNumber, userCode).enqueue(new Callback<GroupResponse>() {
+
+        GroupService.getInstance().refreshGroupList(getActivity(), new GroupService.GroupServiceListener() {
             @Override
-            public void onResponse(Call<GroupResponse> call, Response<GroupResponse> response) {
-                if (response.isSuccessful()) {
-                    Log.i(TAG, "Refreshing Group List ... call successful");
-                    groupListRowAdapter.setGroupList(response.body().getGroups());
-                } else {
-                    Log.e(TAG, "Refreshing group list ... error! Here is the code: " + response.errorBody());
-                }
+            public void groupListLoaded() {
+                groupListRowAdapter.setGroupList(GroupService.getInstance().userGroups);
                 glSwipeRefresh.setRefreshing(false);
             }
 
             @Override
-            public void onFailure(Call<GroupResponse> call, Throwable t) {
-                ErrorUtils.connectivityError(getActivity(), R.string.error_no_network, new NetworkErrorDialogListener() {
-                    @Override
-                    public void retryClicked() {
-                        refreshGroupList();
-                    }
-                });
-
+            public void groupListLoadingError() {
+                glSwipeRefresh.setRefreshing(false);
             }
         });
     }
@@ -287,7 +266,6 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment imple
         }
     }
 
-    // called after creating a group
     public void insertGroup(final int position, final Group group) {
         // todo : actually add it, for now, just do a refresh
         Log.e(TAG, "adding a group! at position " + position + ", the group looks like : " + group);
@@ -408,7 +386,7 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment imple
 
     @OnClick(R.id.ic_fab_new_mtg)
     public void icFabCallMeeting() {
-
+        mCallbacks.groupPickerTriggered(TaskConstants.MEETING);
         menu1.close(true);
     }
 
@@ -467,21 +445,6 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment imple
         args.putInt(Constant.INDEX_FIELD, position);
         dialog.setArguments(args);
         dialog.show(getFragmentManager(), "GroupQuickMemberModalFragment");
-    }
-
-    @Override
-    public void onGroupPicked(Group group, String returnTag) {
-        switch (returnTag) {
-            case TaskConstants.MEETING:
-                Bundle b = new Bundle();
-                b.putString(Constant.GROUPUID_FIELD, group.getGroupUid());
-                Intent i = new Intent(getActivity(), CreateMeetingActivity.class);
-                startActivity(i, b);
-                break;
-            default:
-                getFragmentManager().popBackStack();
-                break;
-        }
     }
 
     @Override
