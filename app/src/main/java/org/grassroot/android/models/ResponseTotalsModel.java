@@ -1,9 +1,11 @@
 package org.grassroot.android.models;
 
+import io.realm.RealmObject;
+
 /**
  * Created by paballo on 2016/05/18.
  */
-public class ResponseTotalsModel {
+public class ResponseTotalsModel extends RealmObject {
 
     private int yes;
     private int no;

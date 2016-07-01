@@ -4,13 +4,14 @@ import android.os.Parcel;
 import android.os.Parcelable;
 import android.util.Log;
 
+import io.realm.RealmObject;
 import org.grassroot.android.interfaces.GroupConstants;
 
 /**
  * Created by luke on 2016/05/05.
  * todo: probably need to have roles, and various other things, in here too
  */
-public class Member implements Parcelable {
+public class Member extends RealmObject implements Parcelable {
 
     private static final String TAG = Member.class.getCanonicalName();
 
@@ -23,6 +24,8 @@ public class Member implements Parcelable {
 
     private int contactId; // only set locally, if we retrieve member from contacts
     private boolean selected;
+
+    public Member(){}
 
     @Override
     public int describeContents() { return 0; }

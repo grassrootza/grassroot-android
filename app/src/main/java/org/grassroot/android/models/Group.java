@@ -7,19 +7,24 @@ import android.os.Parcelable;
 import org.grassroot.android.R;
 import org.grassroot.android.interfaces.GroupConstants;
 import org.grassroot.android.utils.Constant;
+import org.grassroot.android.utils.RealmUtils;
 
 import java.text.ParseException;
-import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Comparator;
 import java.util.Date;
-import java.util.List;
+
+import io.realm.RealmList;
+import io.realm.RealmObject;
+import io.realm.annotations.Ignore;
+import io.realm.annotations.PrimaryKey;
 
 /**
  * Created by paballo on 2016/05/04.
  */
-public class Group implements Parcelable, Comparable<Group> {
+public class Group extends RealmObject implements Parcelable, Comparable<Group> {
 
+    @PrimaryKey
     private String groupUid;
     private String groupName;
     private String groupCreator;
@@ -30,13 +35,19 @@ public class Group implements Parcelable, Comparable<Group> {
     private String lastChangeType;
     private String description;
 
+    @Ignore
     private Date date;
     private DateTime dateTime; // used in JSON conversion
+    @Ignore
     private String dateTimeStringISO;
 
     private boolean hasTasks;
 
-    private List<String> permissions = new ArrayList<>(); // todo: convert this to a set so can do fast hashing
+    public Group() {
+    }
+
+
+    private RealmList<RealmString> permissions = new RealmList<>(); // todo: convert this to a set so can do fast hashing
 
     public String getGroupUid() {
         return groupUid;
@@ -82,7 +93,9 @@ public class Group implements Parcelable, Comparable<Group> {
         return hasTasks;
     }
 
-    public void setHasTasks(boolean hasTasks) { this.hasTasks = hasTasks; }
+    public void setHasTasks(boolean hasTasks) {
+        this.hasTasks = hasTasks;
+    }
 
     public String getDateTimeStringISO() {
         if (dateTimeStringISO == null || dateTimeStringISO.equals("")) {
@@ -118,11 +131,11 @@ public class Group implements Parcelable, Comparable<Group> {
         }
     }
 
-    public List<String> getPermissions() {
+    public RealmList<RealmString> getPermissions() {
         return permissions;
     }
 
-    public void setPermissions(List<String> permissions) {
+    public void setPermissions(RealmList<RealmString> permissions) {
         this.permissions = permissions;
     }
 
@@ -146,7 +159,7 @@ public class Group implements Parcelable, Comparable<Group> {
 
     public boolean hasCreatePermissions() {
         return permissions.contains(GroupConstants.PERM_CREATE_MTG) || permissions.contains(GroupConstants.PERM_CALL_VOTE)
-                || permissions.contains(GroupConstants.PERM_CREATE_TODO) || permissions.contains(GroupConstants.PERM_ADD_MEMBER);
+            || permissions.contains(GroupConstants.PERM_CREATE_TODO) || permissions.contains(GroupConstants.PERM_ADD_MEMBER);
     }
 
     public boolean canViewMembers() {
@@ -211,7 +224,7 @@ public class Group implements Parcelable, Comparable<Group> {
         dest.writeString(this.lastChangeType);
         dest.writeString(this.joinCode);
         dest.writeInt(hasTasks ? 1 : 0);
-        dest.writeStringList(this.permissions);
+        dest.writeStringList(RealmUtils.convertListOfRealmStringInListOfString(this.permissions));
     }
 
     protected Group(Parcel in) {
@@ -225,7 +238,7 @@ public class Group implements Parcelable, Comparable<Group> {
         lastChangeType = in.readString();
         joinCode = in.readString();
         hasTasks = in.readInt() != 0;
-        permissions = in.createStringArrayList();
+        permissions = RealmUtils.convertListOfStringInRealmListOfString(in.createStringArrayList());
     }
 
     public static final Creator<Group> CREATOR = new Creator<Group>() {
@@ -261,7 +274,7 @@ public class Group implements Parcelable, Comparable<Group> {
             } else if (roleFirst.equals(GroupConstants.ROLE_ORDINARY_MEMBER)) {
                 return -1;
             } else if (roleFirst.equals(GroupConstants.ROLE_COMMITTEE_MEMBER) &&
-                    roleSecond.equals(GroupConstants.ROLE_GROUP_ORGANIZER)) {
+                roleSecond.equals(GroupConstants.ROLE_GROUP_ORGANIZER)) {
                 return -1;
             } else {
                 return 1;
@@ -272,9 +285,9 @@ public class Group implements Parcelable, Comparable<Group> {
     @Override
     public String toString() {
         return "Group{" +
-                "groupUid='" + groupUid + '\'' +
-                ", lastChangeType='" + lastChangeType + '\'' +
-                ", groupName='" + groupName + '\'' +
-                '}';
+            "groupUid='" + groupUid + '\'' +
+            ", lastChangeType='" + lastChangeType + '\'' +
+            ", groupName='" + groupName + '\'' +
+            '}';
     }
 }

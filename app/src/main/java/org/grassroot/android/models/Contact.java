@@ -4,6 +4,10 @@ import android.os.Parcel;
 import android.os.Parcelable;
 import android.text.TextUtils;
 
+import io.realm.Realm;
+import io.realm.RealmList;
+import io.realm.RealmObject;
+import org.grassroot.android.utils.RealmUtils;
 import org.grassroot.android.utils.Utilities;
 
 import java.util.ArrayList;
@@ -13,7 +17,7 @@ import java.util.List;
 /**
  * Created by admin on 04-Apr-16.
  */
-public class Contact implements Parcelable, Comparable {
+public class Contact extends RealmObject implements Parcelable, Comparable {
 
     public String addedBy;
     public boolean isSelected;
@@ -22,16 +26,16 @@ public class Contact implements Parcelable, Comparable {
     public String firstName;
     public String lastName;
 
-    public List<String> numbers;
-    public List<String> msisdns;
+    public RealmList<RealmString> numbers;
+    public RealmList<RealmString> msisdns;
     public String selectedNumber;
     public String selectedMsisdn;
 
     public int id;
 
     public Contact() {
-        numbers = new ArrayList<>();
-        msisdns = new ArrayList<>();
+        numbers = new RealmList<>();
+        msisdns = new RealmList<>();
     }
 
     public void setName(String name) {
@@ -62,7 +66,7 @@ public class Contact implements Parcelable, Comparable {
         dest.writeString(this.addedBy);
         dest.writeByte(isSelected ? (byte) 1 : (byte) 0);
         dest.writeString(this.name);
-        dest.writeStringList(this.numbers);
+        dest.writeStringList(RealmUtils.convertListOfRealmStringInListOfString(this.numbers));
         dest.writeString(this.selectedNumber);
         dest.writeInt(this.id);
     }
@@ -71,7 +75,7 @@ public class Contact implements Parcelable, Comparable {
         this.addedBy = in.readString();
         this.isSelected = in.readByte() != 0;
         this.name = in.readString();
-        this.numbers = in.createStringArrayList();
+        this.numbers = RealmUtils.convertListOfStringInRealmListOfString(in.createStringArrayList());
         this.selectedNumber = in.readString();
         this.id = in.readInt();
     }
@@ -96,8 +100,8 @@ public class Contact implements Parcelable, Comparable {
             c.id = -1;
             c.selectedNumber = m.getPhoneNumber();
             c.selectedMsisdn = m.getPhoneNumber();
-            c.numbers = Collections.singletonList(m.getPhoneNumber());
-            c.msisdns = Collections.singletonList(m.getPhoneNumber());
+            c.numbers = RealmUtils.convertListOfStringInRealmListOfString(Collections.singletonList(m.getPhoneNumber()));
+            c.msisdns = RealmUtils.convertListOfStringInRealmListOfString(Collections.singletonList(m.getPhoneNumber()));
             c.name = m.getDisplayName();
             c.isSelected = m.isSelected();
             contacts.add(c);

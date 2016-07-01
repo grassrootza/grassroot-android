@@ -2,20 +2,22 @@ package org.grassroot.android.models;
 
 import com.google.gson.annotations.SerializedName;
 
+import io.realm.RealmList;
+import io.realm.RealmObject;
 import java.util.ArrayList;
 import java.util.List;
 
 /**
  * Created by paballo on 2016/05/05.
  */
-public class GroupSearchResponse {
+public class GroupSearchResponse extends RealmObject {
 
 
 private String status;
 private Integer code;
 private String message;
 @SerializedName("data")
-private List<GroupSearchModel> data = new ArrayList<>();
+private RealmList<GroupSearchModel> data = new RealmList<>();
 
 /**
  *
@@ -85,7 +87,7 @@ public List<GroupSearchModel> getGroups() {
  * @param data
  * The data
  */
-public void setData(List<GroupSearchModel> data) {
+public void setData(RealmList<GroupSearchModel> data) {
         this.data = data;
         }
 

@@ -3,7 +3,15 @@ package org.grassroot.android.services;
 import android.content.Context;
 import android.support.annotation.Nullable;
 
-import org.grassroot.android.BuildConfig;
+import com.google.gson.ExclusionStrategy;
+import com.google.gson.FieldAttributes;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.TypeAdapter;
+import com.google.gson.reflect.TypeToken;
+import com.google.gson.stream.JsonReader;
+import com.google.gson.stream.JsonWriter;
+
 import org.grassroot.android.models.EventResponse;
 import org.grassroot.android.models.GenericResponse;
 import org.grassroot.android.models.GroupResponse;
@@ -12,6 +20,7 @@ import org.grassroot.android.models.Member;
 import org.grassroot.android.models.MemberList;
 import org.grassroot.android.models.NotificationList;
 import org.grassroot.android.models.ProfileResponse;
+import org.grassroot.android.models.RealmString;
 import org.grassroot.android.models.ResponseTotalsModel;
 import org.grassroot.android.models.RsvpListModel;
 import org.grassroot.android.models.TaskModel;
@@ -19,9 +28,13 @@ import org.grassroot.android.models.TaskResponse;
 import org.grassroot.android.models.TokenResponse;
 import org.grassroot.android.utils.Constant;
 
+import java.io.IOException;
+import java.lang.reflect.Type;
 import java.util.List;
 import java.util.Set;
 
+import io.realm.RealmList;
+import io.realm.RealmObject;
 import okhttp3.OkHttpClient;
 import okhttp3.logging.HttpLoggingInterceptor;
 import retrofit2.Call;
@@ -39,213 +52,247 @@ import retrofit2.http.Query;
  */
 public class GrassrootRestService {
 
-      private static final String GRASSROOT_SERVER_URL = Constant.restUrl;
-    private RestApi mRestApi;
+  private static final String GRASSROOT_SERVER_URL = Constant.restUrl;
+  private RestApi mRestApi;
 
-    private static GrassrootRestService instance = null;
+  private static GrassrootRestService instance = null;
 
-    //default constructor required instantiation by the loaders
-    public GrassrootRestService(){ }
+  //default constructor required instantiation by the loaders
+  public GrassrootRestService() {
+  }
 
-    public static GrassrootRestService getInstance() {
-        GrassrootRestService methodInstance = instance;
+  public static GrassrootRestService getInstance() {
+    GrassrootRestService methodInstance = instance;
+    if (methodInstance == null) {
+      synchronized (GrassrootRestService.class) {
+        methodInstance = instance;
         if (methodInstance == null) {
-            synchronized (GrassrootRestService.class) {
-                methodInstance = instance;
-                if (methodInstance == null) {
-                    instance = methodInstance = new GrassrootRestService(ApplicationLoader.applicationContext);
-                }
-            }
+          instance = methodInstance = new GrassrootRestService(ApplicationLoader.applicationContext);
         }
-        return methodInstance;
+      }
     }
+    return methodInstance;
+  }
 
-    private GrassrootRestService(Context context) {
-        HttpLoggingInterceptor logging = new HttpLoggingInterceptor();
-        logging.setLevel(HttpLoggingInterceptor.Level.BASIC);
+  private GrassrootRestService(Context context) {
+    HttpLoggingInterceptor logging = new HttpLoggingInterceptor();
+    logging.setLevel(HttpLoggingInterceptor.Level.BASIC);
 
-        OkHttpClient client = new OkHttpClient.Builder()
-                .addInterceptor(logging)
-                .addNetworkInterceptor(new ConnectivityInterceptor(context))
-                .addNetworkInterceptor(new HeaderInterceptor())
-                .build();
+    OkHttpClient client = new OkHttpClient.Builder()
+        .addInterceptor(logging)
+        .addNetworkInterceptor(new ConnectivityInterceptor(context))
+        .addNetworkInterceptor(new HeaderInterceptor())
+        .build();
+    Type token = new TypeToken<RealmList<RealmString>>() {
+    }.getType();
 
-        Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl(GRASSROOT_SERVER_URL)
-                .addConverterFactory(GsonConverterFactory.create())
-                .client(client).build();
+    Gson gson = new GsonBuilder()
+        .setExclusionStrategies(new ExclusionStrategy() {
+          @Override
+          public boolean shouldSkipField(FieldAttributes f) {
+            return f.getDeclaringClass().equals(RealmObject.class);
+          }
 
-        mRestApi = retrofit.create(RestApi.class);
-    }
+          @Override
+          public boolean shouldSkipClass(Class<?> clazz) {
+            return false;
+          }
+        }).registerTypeAdapter(token, new TypeAdapter<RealmList<RealmString>>() {
 
-    public RestApi getApi() {
-        return mRestApi;
-    }
+          @Override
+          public void write(JsonWriter out, RealmList<RealmString> value) throws IOException {
+            // Ignore
+          }
 
-    public interface RestApi {
+          @Override
+          public RealmList<RealmString> read(JsonReader in) throws IOException {
+            RealmList<RealmString> list = new RealmList<RealmString>();
+            in.beginArray();
+            while (in.hasNext()) {
+              list.add(new RealmString(in.nextString()));
+            }
+            in.endArray();
+            return list;
+          }
+        })
+        .create();
 
-        /*
-        SECTION : User login, authentication, etc calls
-         */
-        @GET("user/add/{phoneNumber}/{displayName}")
-        Call<GenericResponse> addUser(@Path("phoneNumber") String phoneNumber,
-                                      @Path("displayName") String displayName);
+    Retrofit retrofit = new Retrofit.Builder()
+        .baseUrl(GRASSROOT_SERVER_URL)
+        .addConverterFactory(GsonConverterFactory.create(gson))
+        .client(client).build();
 
-        @GET("user/login/{phoneNumber}")
-        Call<GenericResponse> login(@Path("phoneNumber") String phoneNumber);
+    mRestApi = retrofit.create(RestApi.class);
+  }
 
-       //authenticate existing user
-        @GET("user/login/authenticate/{phoneNumber}/{code}")
-        Call<TokenResponse> authenticate(@Path("phoneNumber") String phoneNumber,
-                                         @Path("code") String code);
+  public RestApi getApi() {
+    return mRestApi;
+  }
 
-        //verify new user login credential
-        @GET("user/verify/{phoneNumber}/{code}")
-        Call<TokenResponse> verify(@Path("phoneNumber") String phoneNumber,
-                                   @Path("code") String code);
+  public interface RestApi {
 
-        //store user location
-        @GET("user/location/{phoneNumber}/{code}/{latitude}/{longitude}")
-        Call<GenericResponse> logLocation(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
-                                          @Path("latitude") double latitude, @Path("longitude") double longitude);
+    /*
+    SECTION : User login, authentication, etc calls
+     */
+    @GET("user/add/{phoneNumber}/{displayName}")
+    Call<GenericResponse> addUser(@Path("phoneNumber") String phoneNumber,
+        @Path("displayName") String displayName);
 
-        @POST("gcm/register/{phoneNumber}/{code}")
-        Call<GenericResponse> pushRegistration(@Path("phoneNumber") String phoneNumber,
-                                               @Path("code") String code,
-                                               @Query("registration_id") String regId);
+    @GET("user/login/{phoneNumber}")
+    Call<GenericResponse> login(@Path("phoneNumber") String phoneNumber);
 
-        //retrieve notifications
-        @GET("notification/list/{phoneNumber}/{code}")
-        Call<NotificationList> getUserNotifications(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
-                                                    @Nullable @Query("page") Integer page,
-                                                    @Nullable @Query("size") Integer size);
+    //authenticate existing user
+    @GET("user/login/authenticate/{phoneNumber}/{code}")
+    Call<TokenResponse> authenticate(@Path("phoneNumber") String phoneNumber,
+        @Path("code") String code);
 
-        //Profile settings
-        @GET("user/profile/settings/{phoneNumber}/{code}")
-        Call<ProfileResponse> getUserProfile(@Path("phoneNumber") String phoneNumber,
-                                             @Path("code") String code);
+    //verify new user login credential
+    @GET("user/verify/{phoneNumber}/{code}")
+    Call<TokenResponse> verify(@Path("phoneNumber") String phoneNumber,
+        @Path("code") String code);
 
-        //Update profile settings
-        @POST("user/profile/settings/update/{phoneNumber}/{code}")
-        Call<GenericResponse> updateProfile(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
-                                            @Query("displayName") String displayName, @Query("language") String language,
-                                            @Query("alertPreference") String preference);
+    //store user location
+    @GET("user/location/{phoneNumber}/{code}/{latitude}/{longitude}")
+    Call<GenericResponse> logLocation(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
+        @Path("latitude") double latitude, @Path("longitude") double longitude);
 
-        @GET("gcm/deregister/{phoneNumber}/{code}")
-        Call<GenericResponse> pushUnregister(@Path("phoneNumber") String phoneNumber,
-                                             @Path("code") String code);
+    @POST("gcm/register/{phoneNumber}/{code}")
+    Call<GenericResponse> pushRegistration(@Path("phoneNumber") String phoneNumber,
+        @Path("code") String code,
+        @Query("registration_id") String regId);
 
+    //retrieve notifications
+    @GET("notification/list/{phoneNumber}/{code}")
+    Call<NotificationList> getUserNotifications(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
+        @Nullable @Query("page") Integer page,
+        @Nullable @Query("size") Integer size);
 
-        //update notification read status
-        @POST("notification/update/read/{phoneNumber}/{code}")
-        Call<GenericResponse> updateRead(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
-                                         @Query("uid") String uid);
+    //Profile settings
+    @GET("user/profile/settings/{phoneNumber}/{code}")
+    Call<ProfileResponse> getUserProfile(@Path("phoneNumber") String phoneNumber,
+        @Path("code") String code);
 
-        /*
-        SECTION : Group related calls
-         */
-        @POST("group/create/{phoneNumber}/{code}/{groupName}/{description}")
-        Call<GroupResponse> createGroup(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
-                                        @Path("groupName") String groupName, @Path("description") String groupDescription,
-                                        @Body List<Member> membersToAdd);
+    //Update profile settings
+    @POST("user/profile/settings/update/{phoneNumber}/{code}")
+    Call<GenericResponse> updateProfile(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
+        @Query("displayName") String displayName, @Query("language") String language,
+        @Query("alertPreference") String preference);
 
-        //user groups
-        @GET("group/list/{phoneNumber}/{code}")
-        Call<GroupResponse> getUserGroups(@Path("phoneNumber") String phoneNumber,
-                                          @Path("code") String code);
-
-        @GET("group/get/{phoneNumber}/{code}/{groupUid}")
-        Call<GroupResponse> getSingleGroup(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
-                                           @Path("groupUid") String groupUid);
-
-        //group join request
-        @POST("group/join/request/{phoneNumber}/{code}")
-        Call<GenericResponse> groupJoinRequest(@Path("phoneNumber") String phoneNumber,
-                                                     @Path("code") String code,
-                                                     @Query("uid" )String uid);
+    @GET("gcm/deregister/{phoneNumber}/{code}")
+    Call<GenericResponse> pushUnregister(@Path("phoneNumber") String phoneNumber,
+        @Path("code") String code);
 
 
-        //search for public groups
-        @GET("group/search")
-        Call<GroupSearchResponse> search(@Query("searchTerm") String searchTerm);
+    //update notification read status
+    @POST("notification/update/read/{phoneNumber}/{code}")
+    Call<GenericResponse> updateRead(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
+        @Query("uid") String uid);
 
-        // retrieve group members
-        @GET("group/members/list/{phoneNumber}/{code}/{groupUid}/{selected}")
-        Call<MemberList> getGroupMembers(@Path("groupUid") String groupUid, @Path("phoneNumber") String phoneNumber,
-                                         @Path("code") String code, @Path("selected") boolean selected);
+    /*
+    SECTION : Group related calls
+     */
+    @POST("group/create/{phoneNumber}/{code}/{groupName}/{description}")
+    Call<GroupResponse> createGroup(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
+        @Path("groupName") String groupName, @Path("description") String groupDescription,
+        @Body List<Member> membersToAdd);
 
-        // add members to a group
-        @Headers("Content-Type: application/json")
-        @POST("group/members/add/{phoneNumber}/{code}/{uid}")
-        Call<GenericResponse> addGroupMembers(@Path("uid") String groupUid, @Path("phoneNumber") String phoneNumber,
-                                              @Path("code") String code, @Body List<Member> membersToAdd);
+    //user groups
+    @GET("group/list/{phoneNumber}/{code}")
+    Call<GroupResponse> getUserGroups(@Path("phoneNumber") String phoneNumber,
+        @Path("code") String code);
 
-        // remove members from a group
-        @POST("group/members/remove/{phoneNumber}/{code}/{groupUid}")
-        Call<GenericResponse> removeGroupMembers(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
-                                                 @Path("groupUid") String groupUid, @Query("memberUids") Set<String> memberUids);
+    @GET("group/get/{phoneNumber}/{code}/{groupUid}")
+    Call<GroupResponse> getSingleGroup(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
+        @Path("groupUid") String groupUid);
+
+    //group join request
+    @POST("group/join/request/{phoneNumber}/{code}")
+    Call<GenericResponse> groupJoinRequest(@Path("phoneNumber") String phoneNumber,
+        @Path("code") String code,
+        @Query("uid") String uid);
+
+
+    //search for public groups
+    @GET("group/search")
+    Call<GroupSearchResponse> search(@Query("searchTerm") String searchTerm);
+
+    // retrieve group members
+    @GET("group/members/list/{phoneNumber}/{code}/{groupUid}/{selected}")
+    Call<MemberList> getGroupMembers(@Path("groupUid") String groupUid, @Path("phoneNumber") String phoneNumber,
+        @Path("code") String code, @Path("selected") boolean selected);
+
+    // add members to a group
+    @Headers("Content-Type: application/json")
+    @POST("group/members/add/{phoneNumber}/{code}/{uid}")
+    Call<GenericResponse> addGroupMembers(@Path("uid") String groupUid, @Path("phoneNumber") String phoneNumber,
+        @Path("code") String code, @Body List<Member> membersToAdd);
+
+    // remove members from a group
+    @POST("group/members/remove/{phoneNumber}/{code}/{groupUid}")
+    Call<GenericResponse> removeGroupMembers(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
+        @Path("groupUid") String groupUid, @Query("memberUids") Set<String> memberUids);
 
         /*
         SECTION: Fetch tasks, and task details
          */
 
-        // get all the tasks for a user
-        @GET("task/list/{phoneNumber}/{code}")
-        Call<TaskResponse> getUserTasks(@Path("phoneNumber") String phoneNumber, @Path("code") String code);
+    // get all the tasks for a user
+    @GET("task/list/{phoneNumber}/{code}")
+    Call<TaskResponse> getUserTasks(@Path("phoneNumber") String phoneNumber, @Path("code") String code);
 
-        // get all the tasks for a group
-        @GET("task/list/{phoneNumber}/{code}/{parentUid}")
-        Call<TaskResponse> getGroupTasks(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
-                                         @Path("parentUid") String groupUid);
+    // get all the tasks for a group
+    @GET("task/list/{phoneNumber}/{code}/{parentUid}")
+    Call<TaskResponse> getGroupTasks(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
+        @Path("parentUid") String groupUid);
 
-        // fetch a task (of any type)
-        @GET("task/fetch/{phoneNumber}/{code}/{taskUid}/{taskType}")
-        Call<TaskResponse> fetchTaskEntity(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
-                                           @Path("taskUid") String taskUid, @Path("taskType") String taskType);
+    // fetch a task (of any type)
+    @GET("task/fetch/{phoneNumber}/{code}/{taskUid}/{taskType}")
+    Call<TaskResponse> fetchTaskEntity(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
+        @Path("taskUid") String taskUid, @Path("taskType") String taskType);
 
-        //view vote
-        @GET("vote/view/{id}/{phoneNumber}/{code}")
-        Call<EventResponse> viewVote(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
-                                     @Path("id") String id);
+    //view vote
+    @GET("vote/view/{id}/{phoneNumber}/{code}")
+    Call<EventResponse> viewVote(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
+        @Path("id") String id);
 
-        // get meeting RSVP list
-        @GET("meeting/rsvps/{phoneNumber}/{code}/{meetingUid}")
-        Call<RsvpListModel> fetchMeetingRsvps(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
-                                              @Path("meetingUid") String meetingUid);
+    // get meeting RSVP list
+    @GET("meeting/rsvps/{phoneNumber}/{code}/{meetingUid}")
+    Call<RsvpListModel> fetchMeetingRsvps(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
+        @Path("meetingUid") String meetingUid);
 
-        @GET("vote/totals/{phoneNumber}/{code}/{voteUid}")
-        Call<ResponseTotalsModel> fetchVoteTotals(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
-                                                  @Path("voteUid") String voteUid);
+    @GET("vote/totals/{phoneNumber}/{code}/{voteUid}")
+    Call<ResponseTotalsModel> fetchVoteTotals(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
+        @Path("voteUid") String voteUid);
 
         /*
         SECTION: RESPOND TO TASKS
          */
 
-        //cast vote
-        @GET("vote/do/{id}/{phoneNumber}/{code}")
-        Call<TaskResponse> castVote(@Path("id") String voteId,
-                                             @Path("phoneNumber") String phoneNumber,
-                                             @Path("code") String code,
-                                             @Query("response") String response);
+    //cast vote
+    @GET("vote/do/{id}/{phoneNumber}/{code}")
+    Call<TaskResponse> castVote(@Path("id") String voteId,
+        @Path("phoneNumber") String phoneNumber,
+        @Path("code") String code,
+        @Query("response") String response);
 
-        //rsvp for a meeting
-        @GET("meeting/rsvp/{id}/{phoneNumber}/{code}")
-        Call<TaskResponse> rsvp(@Path("id") String voteId,
-                                   @Path("phoneNumber") String phoneNumber,
-                                   @Path("code") String code,
-                                   @Query("response") String response);
+    //rsvp for a meeting
+    @GET("meeting/rsvp/{id}/{phoneNumber}/{code}")
+    Call<TaskResponse> rsvp(@Path("id") String voteId,
+        @Path("phoneNumber") String phoneNumber,
+        @Path("code") String code,
+        @Query("response") String response);
 
-        //complete logbook
-        @GET("logbook/complete/{phoneNumber}/{code}/{id}")
-        Call<TaskResponse> completeTodo(@Path("phoneNumber") String phoneNumber,
-                                                 @Path("code") String code,
-                                                 @Path("id") String todoId);
+    //complete logbook
+    @GET("logbook/complete/{phoneNumber}/{code}/{id}")
+    Call<TaskResponse> completeTodo(@Path("phoneNumber") String phoneNumber,
+        @Path("code") String code,
+        @Path("id") String todoId);
 
-        //get logbook assigned
-        @GET("logbook/assigned/{phoneNumber}/{code}/{uid}")
-        Call<MemberList> getTodoAssigned(@Path("phoneNumber") String phoneNumber,
-                                         @Path("code") String code,
-                                         @Path("uid") String todoId);
+    //get logbook assigned
+    @GET("logbook/assigned/{phoneNumber}/{code}/{uid}")
+    Call<MemberList> getTodoAssigned(@Path("phoneNumber") String phoneNumber,
+        @Path("code") String code,
+        @Path("uid") String todoId);
 
 
         /*
@@ -253,79 +300,79 @@ public class GrassrootRestService {
          */
 
 
-        //create vote
-        @POST("vote/create/{id}/{phoneNumber}/{code}")
-        Call<TaskResponse> createVote(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
-                                         @Path("id") String groupId, @Query("title") String title,
-                                         @Query("description") String description,
-                                         @Query("closingTime") String closingTime,
-                                         @Query("reminderMins") int minutes,
-                                         @Query("members") Set<String> members, @Query("notifyGroup") boolean relayable);
+    //create vote
+    @POST("vote/create/{id}/{phoneNumber}/{code}")
+    Call<TaskResponse> createVote(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
+        @Path("id") String groupId, @Query("title") String title,
+        @Query("description") String description,
+        @Query("closingTime") String closingTime,
+        @Query("reminderMins") int minutes,
+        @Query("members") Set<String> members, @Query("notifyGroup") boolean relayable);
 
-        // create meeting
-        @POST("meeting/create/{phoneNumber}/{code}/{parentUid}")
-        Call<TaskResponse> createMeeting(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
-                                            @Path("parentUid") String parentUid, @Query("title") String title,
-                                            @Query("description") String description,
-                                            @Query("eventStartDateTime") String dateTimeISO,
-                                            @Query("reminderMinutes") int reminderMinutes,
-                                            @Query("location") String location,
-                                            @Query("members") Set<String> memberUids);
+    // create meeting
+    @POST("meeting/create/{phoneNumber}/{code}/{parentUid}")
+    Call<TaskResponse> createMeeting(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
+        @Path("parentUid") String parentUid, @Query("title") String title,
+        @Query("description") String description,
+        @Query("eventStartDateTime") String dateTimeISO,
+        @Query("reminderMinutes") int reminderMinutes,
+        @Query("location") String location,
+        @Query("members") Set<String> memberUids);
 
 
-        // create to-do
-        @POST("logbook/create/{phoneNumber}/{code}/{parentUid}")
-        Call<TaskResponse> createTodo(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
-                                         @Path("parentUid") String parentUid, @Query("title") String title,
-                                         @Query("description") String description,
-                                         @Query("dueDate") String dueDate,
-                                         @Query("reminderMinutes") int reminderMinutes,
-                                         @Query("members") Set<String> membersAssigned);
+    // create to-do
+    @POST("logbook/create/{phoneNumber}/{code}/{parentUid}")
+    Call<TaskResponse> createTodo(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
+        @Path("parentUid") String parentUid, @Query("title") String title,
+        @Query("description") String description,
+        @Query("dueDate") String dueDate,
+        @Query("reminderMinutes") int reminderMinutes,
+        @Query("members") Set<String> membersAssigned);
 
         /*
         SECTION : EDIT TASKS
          */
 
-        //edit vote
-        @POST("vote/update/{uid}/{phoneNumber}/{code}")
-        Call<TaskModel> editVote(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
-                                 @Path("uid") String id,
-                                 @Query("title") String title,
-                                 @Query("description") String description,
-                                 @Query("closingTime") String closingTime);
+    //edit vote
+    @POST("vote/update/{uid}/{phoneNumber}/{code}")
+    Call<TaskModel> editVote(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
+        @Path("uid") String id,
+        @Query("title") String title,
+        @Query("description") String description,
+        @Query("closingTime") String closingTime);
 
-        //edit meeting
-        @POST("meeting/update/{phoneNumber}/{code}/{meetingUid}")
-        Call<TaskModel> editMeeting(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
-                                       @Path("meetingUid") String uid,
-                                       @Query("title") String title,
-                                       @Query("description") String description,
-                                       @Query("location") String location,
-                                       @Query("startTime") String startTime,
-                                       @Query("members") Set<String> assignedMemberUids);
+    //edit meeting
+    @POST("meeting/update/{phoneNumber}/{code}/{meetingUid}")
+    Call<TaskModel> editMeeting(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
+        @Path("meetingUid") String uid,
+        @Query("title") String title,
+        @Query("description") String description,
+        @Query("location") String location,
+        @Query("startTime") String startTime,
+        @Query("members") Set<String> assignedMemberUids);
 
-        //edit logbook
-        @POST("logbook/update/{phoneNumber}/{code}/{uid}")
-        Call<TaskModel> editTodo(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
-                                 @Query("title") String title,
-                                 @Query("dueDate") String dueDate,
-                                 @Query("members") Set<String> membersAssigned);
+    //edit logbook
+    @POST("logbook/update/{phoneNumber}/{code}/{uid}")
+    Call<TaskModel> editTodo(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
+        @Query("title") String title,
+        @Query("dueDate") String dueDate,
+        @Query("members") Set<String> membersAssigned);
 
-        @GET("task/assigned/{phoneNumber}/{code}/{taskUid}/{taskType}")
-        Call<List<Member>> fetchAssignedMembers(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
-                                                @Path("taskUid") String taskUid, @Path("taskType") String taskType);
-
-
-        //cancel meeting
-        @POST("meeting/cancel/{phoneNumber}/{code}")
-        Call<GenericResponse> cancelMeeting(@Path("phoneNumber") String phoneNumber, @Path("code")String code,
-                                       @Query("uid") String uid);
-
-        //cancel vote
-        @POST("vote/cancel/{phoneNumber}/{code}")
-        Call<GenericResponse> cancelVote(@Path("phoneNumber") String phoneNumber, @Path("code")String code,
-                                            @Query("uid") String uid);
+    @GET("task/assigned/{phoneNumber}/{code}/{taskUid}/{taskType}")
+    Call<List<Member>> fetchAssignedMembers(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
+        @Path("taskUid") String taskUid, @Path("taskType") String taskType);
 
 
+    //cancel meeting
+    @POST("meeting/cancel/{phoneNumber}/{code}")
+    Call<GenericResponse> cancelMeeting(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
+        @Query("uid") String uid);
 
-}}
+    //cancel vote
+    @POST("vote/cancel/{phoneNumber}/{code}")
+    Call<GenericResponse> cancelVote(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
+        @Query("uid") String uid);
+
+
+  }
+}

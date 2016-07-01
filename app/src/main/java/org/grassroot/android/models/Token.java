@@ -1,7 +1,8 @@
 package org.grassroot.android.models;
 
+import io.realm.RealmObject;
 
-public class Token {
+public class Token extends RealmObject {
 
     private String code;
     private Long createdDateTime;
