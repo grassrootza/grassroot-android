@@ -8,6 +8,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
@@ -66,10 +67,9 @@ public class GroupPickAdapter extends RecyclerView.Adapter<GroupPickAdapter.Grou
         holder.groupEvent.setText(String.format(containingContext.getString(R.string.desc_body_pattern),
                 group.constructChangeType(containingContext), group.getDescription()));
 
-        holder.rootView.setOnClickListener(new View.OnClickListener() {
+        holder.pickButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Log.e(TAG, "group pick item picked!");
                 listener.onGroupPicked(group);
             }
         });
@@ -82,18 +82,18 @@ public class GroupPickAdapter extends RecyclerView.Adapter<GroupPickAdapter.Grou
 
     public static class GroupPickViewHolder extends RecyclerView.ViewHolder {
 
-        RelativeLayout rootView;
         TextView groupName;
         TextView groupDescription;
         TextView groupEvent;
+        Button pickButton;
 
         public GroupPickViewHolder(View view) {
             super(view);
 
-            rootView = (RelativeLayout) view.findViewById(R.id.gpick_item_root);
             groupName = (TextView) view.findViewById(R.id.gpick_group_name);
             groupDescription = (TextView) view.findViewById(R.id.gpick_group_description);
             groupEvent = (TextView) view.findViewById(R.id.gpick_item_last_event);
+            pickButton = (Button) view.findViewById(R.id.gpick_btn_click);
         }
     }
 

@@ -21,6 +21,7 @@ import org.grassroot.android.interfaces.GroupConstants;
 import org.grassroot.android.interfaces.TaskConstants;
 import org.grassroot.android.models.Group;
 import org.grassroot.android.utils.Constant;
+import org.grassroot.android.utils.PermissionUtils;
 import org.grassroot.android.utils.PreferenceUtils;
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
@@ -37,7 +38,6 @@ public class HomeScreenActivity extends PortraitActivity implements NavigationDr
     DrawerLayout drawer;
 
     private Fragment mainFragment;
-    private NewTaskMenuFragment newTaskMenuFragment;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -96,30 +96,25 @@ public class HomeScreenActivity extends PortraitActivity implements NavigationDr
 
     @Override
     public void menuCloseClicked() {
-        newTaskMenuFragment = (NewTaskMenuFragment) getSupportFragmentManager()
-                .findFragmentByTag(NewTaskMenuFragment.class.getCanonicalName());
+        GroupPickFragment fragment = (GroupPickFragment) getSupportFragmentManager()
+                .findFragmentByTag(GroupPickFragment.class.getCanonicalName());
         getSupportFragmentManager().beginTransaction()
-                .setCustomAnimations(R.anim.push_down_in, R.anim.push_down_out)
-                .remove(newTaskMenuFragment)
+                .remove(fragment)
                 .commit();
     }
 
     @Override
-    public void groupPickerTriggered(String taskType) {
-        Fragment groupPicker = GroupPickFragment.newInstance(GroupConstants.PERM_CREATE_MTG, TaskConstants.MEETING, new GroupPickFragment.GroupPickListener() {
+    public void groupPickerTriggered(final String taskType) {
+        setTitle(R.string.home_group_pick);
+        final String permission = PermissionUtils.permissionForTaskType(taskType);
+        final Class activityToLaunch = TaskConstants.MEETING.equals(taskType) ? CreateMeetingActivity.class :
+                TaskConstants.VOTE.equals(taskType) ? CreateVoteActivity.class : CreateTodoActivity.class;
+        Fragment groupPicker = GroupPickFragment.newInstance(permission, taskType, new GroupPickFragment.GroupPickListener() {
             @Override
             public void onGroupPicked(Group group, String returnTag) {
-                Log.e(TAG, "group picker returned!");
-                switch (returnTag) {
-                    case TaskConstants.MEETING:
-                        Intent i = new Intent(HomeScreenActivity.this, CreateMeetingActivity.class);
-                        i.putExtra(GroupConstants.UID_FIELD, group.getGroupUid());
-                        startActivity(i);
-                        break;
-                    default:
-                        Log.e(TAG, "listener called!");
-                        getSupportFragmentManager().popBackStack();
-                }
+                Intent i = new Intent(HomeScreenActivity.this, activityToLaunch);
+                i.putExtra(GroupConstants.UID_FIELD, group.getGroupUid());
+                startActivity(i);
             }
         });
         getSupportFragmentManager().beginTransaction()

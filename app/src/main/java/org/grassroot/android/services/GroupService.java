@@ -121,6 +121,42 @@ public class GroupService {
         });
     }
 
+    /*
+    Called when, e.g., some change group event is triggered on event bus or elsewhere
+     */
+    public void refreshSingleGroup(final int position, final String groupUid,
+                                   final Activity activity, final GroupServiceListener listener) {
+        Group groupUpdated = userGroups.get(position);
+        if (groupUpdated.getGroupUid().equals(groupUid)) {
+            String mobileNumber = PreferenceUtils.getPhoneNumber();
+            String code = PreferenceUtils.getAuthToken();
+            GrassrootRestService.getInstance().getApi().getSingleGroup(mobileNumber, code, groupUid)
+                    .enqueue(new Callback<GroupResponse>() {
+                        @Override
+                        public void onResponse(Call<GroupResponse> call, Response<GroupResponse> response) {
+                            // todo : check corner cases of filtered list (current list setup likely fragile)
+                            // todo : consider shuffling this group to the top of the list
+                            Group group = response.body().getGroups().get(0);
+                            Log.e(TAG, "Group updated, has " + group.getGroupMemberCount() + " members");
+                            userGroups.set(position, group);
+                            listener.groupListLoaded();
+                        }
+
+                        @Override
+                        public void onFailure(Call<GroupResponse> call, Throwable t) {
+                            ErrorUtils.connectivityError(activity, R.string.error_no_network, new NetworkErrorDialogListener() {
+                                @Override
+                                public void retryClicked() {
+                                    refreshSingleGroup(position,groupUid, activity, listener);
+                                }
+                            });
+                        }
+                    });
+        } else {
+            listener.groupListLoadingError();
+        }
+    }
+
     private void createUidMap() {
 
         if (userGroups == null) {

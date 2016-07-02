@@ -19,6 +19,7 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
+import android.widget.TextView;
 
 import com.github.clans.fab.FloatingActionButton;
 import com.github.clans.fab.FloatingActionMenu;
@@ -26,19 +27,18 @@ import com.github.clans.fab.FloatingActionMenu;
 import org.grassroot.android.R;
 import org.grassroot.android.activities.CreateGroupActivity;
 import org.grassroot.android.activities.CreateMeetingActivity;
+import org.grassroot.android.activities.CreateTodoActivity;
+import org.grassroot.android.activities.CreateVoteActivity;
 import org.grassroot.android.activities.GroupSearchActivity;
 import org.grassroot.android.activities.GroupTasksActivity;
 import org.grassroot.android.adapters.GroupListAdapter;
 import org.grassroot.android.events.NetworkActivityResultsEvent;
 import org.grassroot.android.events.TaskAddedEvent;
 import org.grassroot.android.interfaces.GroupConstants;
-import org.grassroot.android.interfaces.NetworkErrorDialogListener;
 import org.grassroot.android.interfaces.SortInterface;
 import org.grassroot.android.interfaces.TaskConstants;
 import org.grassroot.android.models.Group;
-import org.grassroot.android.models.GroupResponse;
 import org.grassroot.android.models.TaskModel;
-import org.grassroot.android.services.GrassrootRestService;
 import org.grassroot.android.services.GroupService;
 import org.grassroot.android.utils.Constant;
 import org.grassroot.android.utils.ErrorUtils;
@@ -55,18 +55,21 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 import butterknife.OnTextChanged;
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
+import butterknife.Unbinder;
 
 public class HomeGroupListFragment extends android.support.v4.app.Fragment implements GroupListAdapter.GroupRowListener {
 
     private String TAG = HomeGroupListFragment.class.getSimpleName();
 
+    private Unbinder unbinder;
+
     @BindView(R.id.rl_ghp_root)
     RelativeLayout rlGhpRoot;
     @BindView(R.id.iv_ghp_drawer)
     ImageView ivGhpDrawer;
+    @BindView(R.id.ghp_title)
+    TextView tvTitle;
+
     @BindView(R.id.iv_ghp_search)
     ImageView ivGhpSearch;
     @BindView(R.id.iv_ghp_sort)
@@ -79,7 +82,7 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment imple
 
     @BindView(R.id.menu1)
     FloatingActionMenu menu1;
-    @BindView(R.id.ic_fab_new_mtg)
+    @BindView(R.id.ic_fab_new_task)
     FloatingActionButton icFabNewMtg;
     @BindView(R.id.ic_fab_join_group)
     FloatingActionButton icFabJoinGroup;
@@ -117,17 +120,17 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment imple
         Activity activity = (Activity) context;
         try {
             mCallbacks = (GroupListFragmentListener) activity;
-            Log.e("onAttach", "Attached");
         } catch (ClassCastException e) {
-            throw new ClassCastException("Activity must implement Fragment One.");
+            throw new ClassCastException("Activity must implement home group list callbacks.");
         }
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.activity_group__homepage, container, false);
-        ButterKnife.bind(this, view);
+        unbinder = ButterKnife.bind(this, view);
         EventBus.getDefault().register(this);
+        toggleClickableTitle(true);
         return view;
     }
 
@@ -137,7 +140,6 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment imple
         creating = true;
         init();
         setUpRecyclerView();
-        setUpSwipeRefresh();
         fetchGroupList();
     }
 
@@ -149,6 +151,12 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment imple
             PreferenceUtils.setGroupListMustBeRefreshed(getContext(), false);
         }
         creating = false;
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        unbinder.unbind();
     }
 
     private void init() {
@@ -168,8 +176,6 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment imple
     }
 
     public void showSuccessMessage(Intent data) {
-        // todo : update the group's card
-        Log.e(TAG, "and ... it's done");
         String message = data.getStringExtra(Constant.SUCCESS_MESSAGE);
         ErrorUtils.showSnackBar(rlGhpRoot, message, Snackbar.LENGTH_LONG, "", null);
     }
@@ -198,25 +204,11 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment imple
         });
     }
 
-    private void showProgress(){
-        if (progressDialog == null) {
-            progressDialog = new ProgressDialog(getContext());
-            progressDialog.setIndeterminate(true);
-            progressDialog.setMessage(getString(R.string.txt_pls_wait));
-        }
-        progressDialog.show();
-    }
-
-    private void hideProgress(){
-        progressDialog.dismiss();
-    }
-
     /*
     Separating this method from the above, because we will probably want it to call some kind of diff
     in time, rather than doing a full refresh, and don't need to worry about progress bar, etc
      */
     public void refreshGroupList() {
-
         GroupService.getInstance().refreshGroupList(getActivity(), new GroupService.GroupServiceListener() {
             @Override
             public void groupListLoaded() {
@@ -235,35 +227,18 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment imple
         if (position == -1)
             throw new UnsupportedOperationException("ERROR! This should not be called without a valid position");
 
-        Group groupUpdated = userGroups.get(position);
-        if (groupUpdated.getGroupUid().equals(groupUid)) {
-            String mobileNumber = PreferenceUtils.getUserPhoneNumber(getContext());
-            String code = PreferenceUtils.getAuthToken(getContext());
-            GrassrootRestService.getInstance().getApi().getSingleGroup(mobileNumber, code, groupUid)
-                    .enqueue(new Callback<GroupResponse>() {
-                        @Override
-                        public void onResponse(Call<GroupResponse> call, Response<GroupResponse> response) {
-                            // todo : check corner cases of filtered list (current list setup likely fragile)
-                            // todo : consider shuffling this group to the top of the list
-                            Group group = response.body().getGroups().get(0);
-                            Log.e(TAG, "Group updated, has " + group.getGroupMemberCount() + " members");
-                            userGroups.set(position, group);
-                            groupListRowAdapter.updateGroup(position, group);
-                        }
+        GroupService.getInstance().refreshSingleGroup(position, groupUid, getActivity(), new GroupService.GroupServiceListener() {
+            @Override
+            public void groupListLoaded() {
+                groupListRowAdapter.updateGroup(position, GroupService.getInstance().userGroups.get(position));
+            }
 
-                        @Override
-                        public void onFailure(Call<GroupResponse> call, Throwable t) {
-                            ErrorUtils.connectivityError(getActivity(), R.string.error_no_network, new NetworkErrorDialogListener() {
-                                @Override
-                                public void retryClicked() {
-                                    updateSingleGroup(position,groupUid);
-                                }
-                            });
-                        }
-                    });
-        } else {
-            Log.e(TAG, "ERROR! Group position and ID do not match, not updating");
-        }
+            @Override
+            public void groupListLoadingError() {
+                // todo : handle this better
+                Log.e(TAG, "ERROR! Group position and ID do not match, not updating");
+            }
+        });
     }
 
     public void insertGroup(final int position, final Group group) {
@@ -276,9 +251,6 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment imple
         rcGroupList.setLayoutManager(new LinearLayoutManager(getActivity()));
         groupListRowAdapter = new GroupListAdapter(new ArrayList<Group>(), HomeGroupListFragment.this);
         rcGroupList.setAdapter(groupListRowAdapter);
-    }
-
-    private void setUpSwipeRefresh() {
         glSwipeRefresh.setColorSchemeColors(ContextCompat.getColor(getActivity(), R.color.primaryColor));
         glSwipeRefresh.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
@@ -288,6 +260,161 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment imple
         });
     }
 
+    @OnClick(R.id.ic_fab_new_task)
+    public void icFabNewTask() {
+        menu1.close(true);
+        QuickTaskModalFragment modal = QuickTaskModalFragment.newInstance(false, null, new QuickTaskModalFragment.TaskModalListener() {
+            @Override
+            public void onTaskClicked(String taskType) {
+                switchActionBarToPicker();
+                mCallbacks.groupPickerTriggered(taskType);
+            }
+        });
+        modal.show(getFragmentManager(), QuickTaskModalFragment.class.getSimpleName());
+    }
+
+    public void switchActionBarToPicker() {
+        menu1.setVisibility(View.GONE);
+        tvTitle.setText(R.string.home_group_pick);
+        ivGhpDrawer.setImageResource(R.drawable.btn_close_white);
+        ivGhpDrawer.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                setActionBarToDefault();
+                getFragmentManager().popBackStack();
+            }
+        });
+        toggleClickableTitle(false);
+    }
+
+    public void setActionBarToDefault() {
+        menu1.setVisibility(View.VISIBLE);
+        tvTitle.setText(R.string.ghp_toolbar_title);
+        ivGhpDrawer.setImageResource(R.drawable.btn_navigation);
+        ivGhpDrawer.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mCallbacks.menuClick();
+            }
+        });
+        toggleClickableTitle(true);
+    }
+
+    public void toggleClickableTitle(boolean clickable) {
+        if (clickable) {
+            tvTitle.setClickable(true);
+            tvTitle.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    icFabNewTask();
+                }
+            });
+        } else {
+            tvTitle.setClickable(false);
+        }
+    }
+
+    @OnClick(R.id.ic_fab_join_group)
+    public void icFabJoinGroup() {
+        menu1.close(true);
+        Intent icFabJoinGroup = new Intent(getActivity(), GroupSearchActivity.class);
+        startActivity(icFabJoinGroup);
+    }
+
+    @OnClick(R.id.ic_fab_start_group)
+    public void icFabStartGroup() {
+        menu1.close(true);
+        Intent icFabStartGroup=new Intent(getActivity(), CreateGroupActivity.class);
+        startActivityForResult(icFabStartGroup, Constant.activityCreateGroup);
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (resultCode == Activity.RESULT_OK && requestCode == Constant.activityCreateGroup) {
+            Group createdGroup = data.getParcelableExtra(GroupConstants.OBJECT_FIELD);
+            Log.d(TAG, "createdGroup returned! with UID: " + createdGroup);
+            insertGroup(0, createdGroup);
+        }
+    }
+
+    @Override
+    public void onGroupRowShortClick(Group group) {
+        menu1.close(true);
+        startActivity(MenuUtils.constructIntent(getActivity(), GroupTasksActivity.class, group));
+    }
+
+    @Override
+    public void onGroupRowLongClick(Group group) {
+        showQuickOptionsDialog(group, false);
+    }
+
+    private void showQuickOptionsDialog(final Group group, boolean addMembersOption) {
+        QuickTaskModalFragment dialog = QuickTaskModalFragment.newInstance(true, group, new QuickTaskModalFragment.TaskModalListener() {
+            @Override
+            public void onTaskClicked(String taskType) {
+                Intent i;
+                switch (taskType) {
+                    case TaskConstants.MEETING:
+                        i = MenuUtils.constructIntent(getActivity(), CreateMeetingActivity.class, group.getGroupUid(), group.getGroupName());
+                        break;
+                    case TaskConstants.VOTE:
+                        i = MenuUtils.constructIntent(getActivity(), CreateVoteActivity.class, group.getGroupUid(), group.getGroupName());
+                        break;
+                    case TaskConstants.TODO:
+                        i = MenuUtils.constructIntent(getActivity(), CreateTodoActivity.class, group.getGroupUid(), group.getGroupName());
+                        break;
+                    default:
+                        throw new UnsupportedOperationException("Error! Unknown task type");
+                }
+                startActivityForResult(i, Constant.activityCreateTask);
+
+            }
+        });
+        dialog.show(getFragmentManager(), QuickTaskModalFragment.class.getSimpleName());
+    }
+
+    @Override
+    public void onGroupRowMemberClick(Group group, int position) {
+        GroupQuickMemberModalFragment dialog = new GroupQuickMemberModalFragment();
+        Bundle args = new Bundle();
+        args.putParcelable(GroupConstants.OBJECT_FIELD, group);
+        args.putInt(Constant.INDEX_FIELD, position);
+        dialog.setArguments(args);
+        dialog.show(getFragmentManager(), "GroupQuickMemberModalFragment");
+    }
+
+    @Override
+    public void onDetach() {
+        super.onDetach();
+        mCallbacks = null;
+        Log.e("onDetach", "Detached");
+    }
+
+    @Subscribe
+    public void onEvent(NetworkActivityResultsEvent networkActivityResultsEvent){
+        Log.e(TAG, "onEvent");
+        fetchGroupList();
+    }
+
+    @Subscribe
+    public void onTaskCreatedEvent(TaskAddedEvent e) {
+        Log.e(TAG, "group list fragment triggered by task addition ...");
+        final TaskModel t = e.getTaskCreated();
+        final String groupUid = t.getParentUid();
+        // todo : may want to keep a hashmap of groups ... likely will be finding & updating groups quite a bit
+        for (Group g : userGroups) {
+            if (groupUid.equals(g.getGroupUid())) {
+                g.setHasTasks(true);
+                startActivity(MenuUtils.constructIntent(getActivity(), GroupTasksActivity.class, g));
+            }
+        }
+
+    }
+
+    /*
+    SECTION : search methods
+     */
     @OnTextChanged(value = R.id.et_search, callback = OnTextChanged.Callback.AFTER_TEXT_CHANGED)
     public void searchStringChanged(CharSequence s) {
         String str = s.length() > 0 ? et_search.getText().toString() : "";
@@ -316,11 +443,6 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment imple
 
             groupListRowAdapter.setGroupList(filteredGroups);
         }
-    }
-
-    @OnClick(R.id.iv_ghp_drawer)
-    public void ivGhpDrawer() {
-        mCallbacks.menuClick();
     }
 
     @OnClick(R.id.iv_ghp_search)
@@ -384,95 +506,17 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment imple
         }
     }
 
-    @OnClick(R.id.ic_fab_new_mtg)
-    public void icFabCallMeeting() {
-        mCallbacks.groupPickerTriggered(TaskConstants.MEETING);
-        menu1.close(true);
-    }
-
-    @OnClick(R.id.ic_fab_join_group)
-    public void icFabJoinGroup() {
-        menu1.close(true);
-        Intent icFabJoinGroup = new Intent(getActivity(), GroupSearchActivity.class);
-        startActivity(icFabJoinGroup);
-    }
-
-    @OnClick(R.id.ic_fab_start_group)
-    public void icFabStartGroup() {
-        menu1.close(true);
-        Intent icFabStartGroup=new Intent(getActivity(), CreateGroupActivity.class);
-        startActivityForResult(icFabStartGroup, Constant.activityCreateGroup);
-    }
-
-    @Override
-    public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (resultCode == Activity.RESULT_OK && requestCode == Constant.activityCreateGroup) {
-            Group createdGroup = data.getParcelableExtra(GroupConstants.OBJECT_FIELD);
-            Log.d(TAG, "createdGroup returned! with UID: " + createdGroup);
-            insertGroup(0, createdGroup);
+    private void showProgress(){
+        if (progressDialog == null) {
+            progressDialog = new ProgressDialog(getContext());
+            progressDialog.setIndeterminate(true);
+            progressDialog.setMessage(getString(R.string.txt_pls_wait));
         }
+        progressDialog.show();
     }
 
-    @Override
-    public void onGroupRowShortClick(Group group) {
-        menu1.close(true);
-        startActivity(MenuUtils.constructIntent(getActivity(), GroupTasksActivity.class, group));
-    }
-
-    @Override
-    public void onGroupRowLongClick(Group group) {
-        showQuickOptionsDialog(group, false);
-    }
-
-    private void showQuickOptionsDialog(Group group, boolean addMembersOption) {
-        GroupQuickTaskModalFragment dialog = new GroupQuickTaskModalFragment();
-        dialog.setGroupParameters(group.getGroupUid(), group.getGroupName());
-        Bundle args = new Bundle();
-        args.putBoolean(TaskConstants.MEETING, group.getPermissions().contains(GroupConstants.PERM_CREATE_MTG));
-        args.putBoolean(TaskConstants.VOTE, group.getPermissions().contains(GroupConstants.PERM_CALL_VOTE));
-        args.putBoolean(TaskConstants.TODO, group.getPermissions().contains(GroupConstants.PERM_CREATE_TODO));
-        args.putBoolean(GroupConstants.PERM_ADD_MEMBER, addMembersOption && group.canAddMembers());
-        dialog.setArguments(args);
-        dialog.show(getFragmentManager(), GroupQuickTaskModalFragment.class.getSimpleName());
-    }
-
-    @Override
-    public void onGroupRowMemberClick(Group group, int position) {
-        GroupQuickMemberModalFragment dialog = new GroupQuickMemberModalFragment();
-        Bundle args = new Bundle();
-        args.putParcelable(GroupConstants.OBJECT_FIELD, group);
-        args.putInt(Constant.INDEX_FIELD, position);
-        dialog.setArguments(args);
-        dialog.show(getFragmentManager(), "GroupQuickMemberModalFragment");
-    }
-
-    @Override
-    public void onDetach() {
-        super.onDetach();
-        mCallbacks = null;
-        Log.e("onDetach", "Detached");
-    }
-
-    @Subscribe
-    public void onEvent(NetworkActivityResultsEvent networkActivityResultsEvent){
-        Log.e(TAG, "onEvent");
-        fetchGroupList();
-    }
-
-    @Subscribe
-    public void onTaskCreatedEvent(TaskAddedEvent e) {
-        Log.e(TAG, "group list fragment triggered by task addition ...");
-        final TaskModel t = e.getTaskCreated();
-        final String groupUid = t.getParentUid();
-        // todo : may want to keep a hashmap of groups ... likely will be finding & updating groups quite a bit
-        for (Group g : userGroups) {
-            if (groupUid.equals(g.getGroupUid())) {
-                g.setHasTasks(true);
-                startActivity(MenuUtils.constructIntent(getActivity(), GroupTasksActivity.class, g));
-            }
-        }
-
+    private void hideProgress(){
+        progressDialog.dismiss();
     }
 
 }

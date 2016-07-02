@@ -44,7 +44,6 @@ public class GroupPickFragment extends Fragment implements GroupPickAdapter.Grou
         void onGroupPicked(Group group, String returnTag);
     }
 
-
     public static GroupPickFragment newInstance(final String permissionToFilter, final String returnTag, GroupPickListener listener) {
         if (permissionToFilter == null || listener == null || TextUtils.isEmpty(returnTag)) {
             throw new UnsupportedOperationException("Error! Group picker called without groups, task type or listener");
@@ -94,7 +93,7 @@ public class GroupPickFragment extends Fragment implements GroupPickAdapter.Grou
         ConfirmCancelDialogFragment.newInstance(message, new ConfirmCancelDialogFragment.ConfirmDialogListener() {
             @Override
             public void doConfirmClicked() {
-                // todo : probably want to collapse the listener change
+                // todo : probably want to collapse the listener chain
                 listener.onGroupPicked(group, returnTag);
             }
         }).show(getFragmentManager(), "confirm");
