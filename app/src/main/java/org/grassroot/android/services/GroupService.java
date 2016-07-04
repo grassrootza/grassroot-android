@@ -17,6 +17,7 @@ import org.grassroot.android.utils.PreferenceUtils;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import io.realm.RealmResults;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -27,6 +28,8 @@ import retrofit2.Response;
 public class GroupService {
 
     public static final String TAG = GroupService.class.getSimpleName();
+
+    private Realm realm;
 
     public ArrayList<Group> userGroups;
     public HashMap<String, Integer> groupUidMap;
@@ -44,6 +47,7 @@ public class GroupService {
     protected GroupService() {
         userGroups = new ArrayList<>();
         groupUidMap = new HashMap<>();
+        realm = Realm.getDefaultInstance();
     }
 
     public static GroupService getInstance() {
@@ -89,10 +93,22 @@ public class GroupService {
 
                     @Override
                     public void onFailure(Call<GroupResponse> call, Throwable t) {
+                        // default back to loading from DB
                         ErrorUtils.handleNetworkError(activity, errorViewHolder, t);
+                        loadGroupsFromDB();
                         listener.groupListLoadingError();
                     }
                 });
+    }
+
+    private void loadGroupsFromDB() {
+        Log.e(TAG, "could not connect to network, loading groups from DB ...");
+        RealmList<Group> groups = new RealmList<>();
+        if (realm != null && !realm.isClosed()) {
+            RealmResults<Group> results = realm.where(Group.class).findAll();
+            groups.addAll(results.subList(0, results.size()));
+        }
+        userGroups = new ArrayList<>(groups);
     }
 
     /*
@@ -118,8 +134,12 @@ public class GroupService {
                     public void retryClicked() {
                         refreshGroupList(activity, listener);
                     }
-                });
 
+                    @Override
+                    public void offlineClicked() {
+                        listener.groupListLoadingError();
+                    }
+                });
             }
         });
     }
@@ -151,6 +171,11 @@ public class GroupService {
                                 @Override
                                 public void retryClicked() {
                                     refreshSingleGroup(position,groupUid, activity, listener);
+                                }
+
+                                @Override
+                                public void offlineClicked() {
+                                    listener.groupListLoadingError(); // todo : instead propogate "gone offline"
                                 }
                             });
                         }

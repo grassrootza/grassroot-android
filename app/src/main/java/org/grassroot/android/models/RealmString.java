@@ -26,4 +26,21 @@ public class RealmString extends RealmObject {
   public String toString() {
     return string;
   }
+
+  @Override
+  public boolean equals(Object o) {
+    // note : this is returning false when using RealmList because of RealmProxy generated classes, need way around
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+
+    RealmString that = (RealmString) o;
+
+    return string.equals(that.string);
+
+  }
+
+  @Override
+  public int hashCode() {
+    return string.hashCode();
+  }
 }

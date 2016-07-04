@@ -35,8 +35,8 @@ public class GroupPickAdapter extends RecyclerView.Adapter<GroupPickAdapter.Grou
     }
 
     public static GroupPickAdapter newInstance(List<Group> groupsToDisplay, Context context, GroupPickAdapterListener listener) {
-        if (groupsToDisplay == null || groupsToDisplay.isEmpty()) {
-            throw new UnsupportedOperationException("Error! Trying to call group picker without list of groups");
+        if (groupsToDisplay == null) {
+            throw new UnsupportedOperationException("Error! Trying to call group picker with null list of groups");
         }
         GroupPickAdapter adapter = new GroupPickAdapter();
         adapter.groupsToDisplay = new ArrayList<>(groupsToDisplay);

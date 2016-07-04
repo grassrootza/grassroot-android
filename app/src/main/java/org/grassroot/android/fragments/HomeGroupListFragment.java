@@ -66,40 +66,25 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment imple
 
     private Unbinder unbinder;
 
-    @BindView(R.id.rl_ghp_root)
-    RelativeLayout rlGhpRoot;
-    @BindView(R.id.iv_ghp_drawer)
-    ImageView ivGhpDrawer;
-    @BindView(R.id.ghp_title)
-    TextView tvTitle;
+    @BindView(R.id.rl_ghp_root) RelativeLayout rlGhpRoot;
+    @BindView(R.id.iv_ghp_drawer) ImageView ivGhpDrawer;
+    @BindView(R.id.ghp_title) TextView tvTitle;
 
-    @BindView(R.id.iv_ghp_search)
-    ImageView ivGhpSearch;
-    @BindView(R.id.iv_ghp_sort)
-    ImageView ivGhpSort;
+    @BindView(R.id.iv_ghp_search) ImageView ivGhpSearch;
+    @BindView(R.id.iv_ghp_sort) ImageView ivGhpSort;
 
-    @BindView(R.id.gl_swipe_refresh)
-    SwipeRefreshLayout glSwipeRefresh;
-    @BindView(R.id.recycler_view)
-    RecyclerView rcGroupList;
+    @BindView(R.id.gl_swipe_refresh) SwipeRefreshLayout glSwipeRefresh;
+    @BindView(R.id.recycler_view) RecyclerView rcGroupList;
 
-    @BindView(R.id.menu1)
-    FloatingActionMenu menu1;
-    @BindView(R.id.ic_fab_new_task)
-    FloatingActionButton icFabNewMtg;
-    @BindView(R.id.ic_fab_join_group)
-    FloatingActionButton icFabJoinGroup;
-    @BindView(R.id.ic_fab_start_group)
-    FloatingActionButton icFabStartGroup;
+    @BindView(R.id.menu1) FloatingActionMenu menu1;
+    @BindView(R.id.ic_fab_new_task) FloatingActionButton icFabNewMtg;
+    @BindView(R.id.ic_fab_join_group) FloatingActionButton icFabJoinGroup;
+    @BindView(R.id.ic_fab_start_group) FloatingActionButton icFabStartGroup;
 
-    @BindView(R.id.iv_cross)
-    ImageView ivCross;
-    @BindView(R.id.et_search)
-    EditText et_search;
-    @BindView(R.id.rl_search)
-    RelativeLayout rlSearch;
-    @BindView(R.id.rl_simple)
-    RelativeLayout rlSimple;
+    @BindView(R.id.iv_cross) ImageView ivCross;
+    @BindView(R.id.et_search) EditText et_search;
+    @BindView(R.id.rl_search) RelativeLayout rlSearch;
+    @BindView(R.id.rl_simple) RelativeLayout rlSimple;
 
     ProgressDialog progressDialog;
 
@@ -231,7 +216,7 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment imple
             public void groupListLoaded() {
                 hideProgress();
                 rcGroupList.setVisibility(View.VISIBLE);
-                groupListRowAdapter.addData(GroupService.getInstance().userGroups);
+                groupListRowAdapter.addData(GroupService.getInstance().userGroups); // todo : instead draw straight from Realm
                 ivGhpSearch.setEnabled(true);
                 ivGhpSort.setEnabled(true);
                 rcGroupList.setVisibility(View.VISIBLE);
@@ -427,12 +412,10 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment imple
     public void onDetach() {
         super.onDetach();
         mCallbacks = null;
-        Log.e("onDetach", "Detached");
     }
 
     @Subscribe
     public void onEvent(NetworkActivityResultsEvent networkActivityResultsEvent){
-        Log.e(TAG, "onEvent");
         fetchGroupList();
     }
 
@@ -499,7 +482,7 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment imple
         b.putBoolean("Default", defaults_click);
         sortFragment.setArguments(b);
         sortFragment.show(getFragmentManager(), "SortFragment");
-        /*sortFragment.setListener(new SortInterface() {
+        sortFragment.setListener(new SortInterface() {
 
             @Override
             public void tvDateClick(boolean date, boolean role, boolean defaults) {
@@ -517,8 +500,14 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment imple
                 Long start = SystemClock.currentThreadTimeMillis();
                 groupListRowAdapter.sortByRole();
                 Log.d(TAG, String.format("sorting group list took %d msecs", SystemClock.currentThreadTimeMillis() - start));
-           et_search.setText("");
-        }*/
+                et_search.setText("");
+            }
+
+            @Override
+            public void defaultsClick(boolean date, boolean role, boolean defaults) {
+                // todo : restore whatever was here
+            }
+        });
     }
 
 }
