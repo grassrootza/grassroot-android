@@ -24,6 +24,8 @@ import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
+import com.google.android.gms.gcm.Task;
+import io.realm.Realm;
 import org.grassroot.android.R;
 import org.grassroot.android.activities.EditTaskActivity;
 import org.grassroot.android.adapters.MemberListAdapter;
@@ -203,6 +205,8 @@ public class ViewTaskFragment extends Fragment {
 
     private void retrieveTaskDetails() {
         progressDialog.show();
+        task = Realm.getDefaultInstance().where(TaskModel.class).equalTo("taskUid",taskUid).findFirst();
+        setUpViews(task);
         GrassrootRestService.getInstance().getApi().fetchTaskEntity(phoneNumber, code, taskUid, taskType)
                 .enqueue(new Callback<TaskResponse>() {
                     @Override

@@ -4,6 +4,7 @@ import android.content.Context;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import io.realm.Realm;
 import org.grassroot.android.R;
 import org.grassroot.android.interfaces.GroupConstants;
 import org.grassroot.android.utils.Constant;
@@ -34,14 +35,30 @@ public class Group extends RealmObject implements Parcelable, Comparable<Group> 
     private String joinCode;
     private String lastChangeType;
     private String description;
+    private boolean isLocal;
+
+    public boolean getIsLocal() {
+        return isLocal;
+    }
+
+    public void setIsLocal(boolean isLocal) {
+        this.isLocal = isLocal;
+    }
+
+    public void setDate(Date date) {
+        this.date = date;
+    }
 
     @Ignore
     private Date date;
     private DateTime dateTime; // used in JSON conversion
-    @Ignore
     private String dateTimeStringISO;
 
     private boolean hasTasks;
+
+    public void setLastChangeType(String lastChangeType) {
+        this.lastChangeType = lastChangeType;
+    }
 
     public Group() {
     }
@@ -214,6 +231,8 @@ public class Group extends RealmObject implements Parcelable, Comparable<Group> 
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
+        Realm realm = Realm.getDefaultInstance();
+        realm.beginTransaction();
         dest.writeString(this.groupUid);
         dest.writeString(this.groupName);
         dest.writeString(this.description);
@@ -225,6 +244,8 @@ public class Group extends RealmObject implements Parcelable, Comparable<Group> 
         dest.writeString(this.joinCode);
         dest.writeInt(hasTasks ? 1 : 0);
         dest.writeStringList(RealmUtils.convertListOfRealmStringInListOfString(this.permissions));
+        realm.commitTransaction();
+        realm.close();
     }
 
     protected Group(Parcel in) {
@@ -289,5 +310,17 @@ public class Group extends RealmObject implements Parcelable, Comparable<Group> 
             ", lastChangeType='" + lastChangeType + '\'' +
             ", groupName='" + groupName + '\'' +
             '}';
+    }
+
+    public void setDateTimeStringISO(String dateTimeStringISO) {
+        this.dateTimeStringISO = dateTimeStringISO;
+    }
+
+    public void setGroupCreator(String groupCreator) {
+        this.groupCreator = groupCreator;
+    }
+
+    public void setGroupMemberCount(Integer groupMemberCount) {
+        this.groupMemberCount = groupMemberCount;
     }
 }
