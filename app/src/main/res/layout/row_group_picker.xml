@@ -35,14 +35,15 @@
 
     </LinearLayout>
 
-    <ImageView
-        android:id="@+id/iv_Selected"
-        android:layout_width="wrap_content"
-        android:layout_height="match_parent"
+    <Button
+        android:id="@+id/gpick_btn_click"
+        style="@style/ButtonFlat"
+        android:text="@string/btn_group_select"
+        android:textColor="@color/primaryColor"
         android:layout_alignParentRight="true"
+        android:layout_marginRight="20dp"
         android:layout_alignTop="@id/gpick_ll_text_holder"
         android:layout_alignBottom="@id/gpick_ll_text_holder"
-        android:src="@drawable/btn_unchecked"
-        android:layout_marginRight="20dp" />
+        />
 
 </RelativeLayout>

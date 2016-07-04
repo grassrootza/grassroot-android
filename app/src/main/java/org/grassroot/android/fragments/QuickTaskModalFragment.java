@@ -6,6 +6,7 @@ import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
@@ -16,20 +17,29 @@ import org.grassroot.android.activities.CreateMeetingActivity;
 import org.grassroot.android.activities.CreateTodoActivity;
 import org.grassroot.android.activities.CreateVoteActivity;
 import org.grassroot.android.interfaces.TaskConstants;
+import org.grassroot.android.models.Group;
 import org.grassroot.android.utils.Constant;
 import org.grassroot.android.utils.MenuUtils;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
+import butterknife.Unbinder;
 
 
-public class GroupQuickTaskModalFragment extends android.support.v4.app.DialogFragment {
+public class QuickTaskModalFragment extends android.support.v4.app.DialogFragment {
 
-    private static final String TAG = GroupQuickTaskModalFragment.class.getSimpleName();
+    private static final String TAG = QuickTaskModalFragment.class.getSimpleName();
 
-    private String groupUid;
-    private String groupName;
+    public interface TaskModalListener {
+        void onTaskClicked(String taskType);
+    }
+
+    private TaskModalListener listener;
+    private Unbinder unbinder;
+
+    private boolean groupSelected;
+    private Group group;
 
     @BindView(R.id.ic_home_vote_active)
     ImageView icHomeVoteActive;
@@ -40,13 +50,17 @@ public class GroupQuickTaskModalFragment extends android.support.v4.app.DialogFr
 
     public boolean votePermitted = false, meetingPermitted = false, todoPermitted = false;
 
-    // would rather use good practice and not have empty constructor, but Android is Android
-    public GroupQuickTaskModalFragment() {
-    }
+    public QuickTaskModalFragment() {}
 
-    public void setGroupParameters(String groupUid, String groupName) {
-        this.groupUid = groupUid;
-        this.groupName = groupName;
+    public static QuickTaskModalFragment newInstance(boolean groupSelected, final Group group, TaskModalListener listener) {
+        QuickTaskModalFragment fragment = new QuickTaskModalFragment();
+        fragment.groupSelected = groupSelected;
+        fragment.listener = listener;
+        if (groupSelected && group == null) {
+            throw new UnsupportedOperationException("Error! Task modal instantiated with group selected true but null group");
+        }
+        fragment.group = groupSelected ? group : null;
+        return fragment;
     }
 
     @Override
@@ -58,7 +72,7 @@ public class GroupQuickTaskModalFragment extends android.support.v4.app.DialogFr
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.modal_group_tasks_quick, container, false);
-        ButterKnife.bind(this, view);
+        unbinder = ButterKnife.bind(this, view);
         getDialog().getWindow().requestFeature(Window.FEATURE_NO_TITLE);
         getDialog().getWindow().setBackgroundDrawable(new ColorDrawable(0));
         return view;
@@ -69,15 +83,9 @@ public class GroupQuickTaskModalFragment extends android.support.v4.app.DialogFr
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
 
-        Bundle b = getArguments();
-        if (b == null) {
-            throw new UnsupportedOperationException("Error! Null arguments passed to modal");
-        }
-
-        Log.d(TAG, "inside quickTaskModal, passed bundle = " + b.toString());
-        meetingPermitted = b.getBoolean(TaskConstants.MEETING);
-        votePermitted = b.getBoolean(TaskConstants.VOTE);
-        todoPermitted = b.getBoolean(TaskConstants.TODO);
+        meetingPermitted = !groupSelected || group.canCallMeeting();
+        votePermitted = !groupSelected || group.canCallVote();
+        todoPermitted = !groupSelected || group.canCreateTodo();
 
         int mtgIcon = meetingPermitted ? R.drawable.ic_home_call_meeting_active : R.drawable.ic_home_call_meeting_inactive;
         int voteIcon = votePermitted ? R.drawable.ic_home_vote_active : R.drawable.ic_home_vote_inactive;
@@ -88,42 +96,33 @@ public class GroupQuickTaskModalFragment extends android.support.v4.app.DialogFr
         icHomeToDoActive.setImageResource(todoIcon);
     }
 
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        unbinder.unbind();
+    }
+
     @OnClick(R.id.ic_home_to_do_active)
     public void icHomeToDoActive() {
+        getDialog().dismiss();
         if (todoPermitted) {
-            Intent todo = MenuUtils.constructIntent(getContext(), CreateTodoActivity.class, groupUid, groupName);
-            getActivity().startActivityForResult(todo, Constant.activityCreateTask);
-            getDialog().dismiss();
-        } else {
-            getDialog().dismiss();
+            listener.onTaskClicked(TaskConstants.TODO);
         }
-
     }
 
     @OnClick(R.id.ic_home_vote_active)
     public void icHomeVoteActive() {
+        getDialog().dismiss();
         if (votePermitted) {
-            Intent Vote = MenuUtils.constructIntent(getContext(), CreateVoteActivity.class, groupUid, groupName);
-            getActivity().startActivityForResult(Vote, Constant.activityCreateTask);
-            getDialog().dismiss();
-        } else {
-            getDialog().dismiss();
+            listener.onTaskClicked(TaskConstants.VOTE);
         }
-
     }
 
     @OnClick(R.id.ic_home_call_meeting_active)
     public void icHomeCallMeetingActive() {
+        getDialog().dismiss();
         if (meetingPermitted) {
-            Log.d(TAG, "about to start meeting for result!");
-            Intent Meeting = MenuUtils.constructIntent(getContext(), CreateMeetingActivity.class, groupUid, groupName);
-            getActivity().startActivityForResult(Meeting, Constant.activityCreateTask);
-            getDialog().dismiss();
-        } else {
-            getDialog().dismiss();
+            listener.onTaskClicked(TaskConstants.MEETING);
         }
-
     }
-
-
 }

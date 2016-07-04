@@ -40,6 +40,7 @@
                     android:background="@drawable/button_alpha_rlsimple" />
 
                 <TextView
+                    android:id="@+id/ghp_title"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/ghp_toolbar_title"
@@ -166,11 +167,11 @@
 
         <!-- todo : fix this -->
         <com.github.clans.fab.FloatingActionButton
-            android:id="@+id/ic_fab_new_mtg"
+            android:id="@+id/ic_fab_new_task"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:src="@drawable/ic_fab_call"
-            fab:fab_label="Call meeting"
+            android:src="@drawable/ic_add"
+            fab:fab_label="@string/ghp_fab_new_task"
             style="@style/MenuButtonsStyle"
             android:visibility="gone"/>
 
@@ -180,7 +181,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:src="@drawable/ic_fab_join_group"
-            fab:fab_label="Join a group"
+            fab:fab_label="@string/ghp_fab_join_group"
             style="@style/MenuButtonsStyle"
             android:visibility="gone" />
 
@@ -189,7 +190,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:src="@drawable/ic_fab_start_group"
-            fab:fab_label="Start a group"
+            fab:fab_label="@string/ghp_fab_create_group"
             style="@style/MenuButtonsStyle"
             android:visibility="gone" />
 

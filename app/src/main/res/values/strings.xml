@@ -92,9 +92,14 @@
     <!--HomeScreen Activity & Screens-->
     <string name="joingroup">REQUEST TO JOIN A GROUP</string>
     <string name="startgroup">START A GROUP</string>
+
     <string name="ghp_toolbar_title">Your groups</string>
     <string name="ghp_search_group_name">Group name</string>
     <string name="tv_dialog_bottom_title">Quick add</string>
+
+    <string name="ghp_fab_new_task">New event or action</string>
+    <string name="ghp_fab_create_group">Create group</string>
+    <string name="ghp_fab_join_group">Find other groups</string>
 
     <string name="gta_menu_add_task">Create new task</string>
     <string name="gta_view_code">View join code</string>
@@ -102,6 +107,9 @@
     <string name="gta_add_members">Add members</string>
     <string name="gta_del_members">Remove members</string>
     <string name="gta_group_settings">Group settings</string>
+
+    <string name="home_group_pick">Select group</string>
+    <string name="btn_group_select">Pick</string>
 
     <string name="bt_save">Save</string> <!-- probably duplicated, todo : clean up -->
     <string name="bt_cancel">Cancel</string>
@@ -123,7 +131,7 @@
     <string name="member_added_prefix">Member added</string>
     <string name="group_other_prefix">Last change</string>
 
-    <string name="group_picker_confirm_string">%1$s group %2$s, continue?</string>
+    <string name="group_picker_confirm_string">%1$s %2$s, continue?</string>
     <string name="picker_call_mtg">Call a meeting of</string>
     <string name="picker_call_vote">Call a vote of</string>
     <string name="picker_rec_action">Record action for </string>

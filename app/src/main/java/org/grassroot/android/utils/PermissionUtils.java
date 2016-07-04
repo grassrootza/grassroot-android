@@ -7,8 +7,12 @@ import android.content.pm.PackageManager;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 
+import org.grassroot.android.interfaces.GroupConstants;
+import org.grassroot.android.interfaces.TaskConstants;
+
 /**
  * Created by luke on 2016/05/05.
+ * Currently mixes up system permissions & app permissions, probably not the best idea, to fix in future
  */
 public class PermissionUtils {
 
@@ -30,6 +34,19 @@ public class PermissionUtils {
         return (requestCode == Constant.alertAskForContactPermission) &&
                 (grantResults.length > 0) &&
                 (grantResults[0] == PackageManager.PERMISSION_GRANTED);
+    }
+
+    public static String permissionForTaskType(String taskType) {
+        switch (taskType) {
+            case TaskConstants.MEETING:
+                return GroupConstants.PERM_CREATE_MTG;
+            case TaskConstants.VOTE:
+                return GroupConstants.PERM_CALL_VOTE;
+            case TaskConstants.TODO:
+                return GroupConstants.PERM_CREATE_TODO;
+            default:
+                throw new UnsupportedOperationException("Error! Unknown task type");
+        }
     }
 
 }
