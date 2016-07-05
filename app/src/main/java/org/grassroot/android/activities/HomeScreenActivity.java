@@ -76,10 +76,14 @@ public class HomeScreenActivity extends PortraitActivity implements NavigationDr
         }
     }
 
+    // todo : ah, fix the nav drawer. all of the nav drawer
     @Override
-    public void onNavigationDrawerItemSelected(int position) {
-        if (drawer != null) {
-            drawer.closeDrawer(Gravity.LEFT);
+    public void onResume() {
+        super.onResume();
+        Log.e(TAG, "resuming home activity");
+        Fragment fragment = getSupportFragmentManager().findFragmentByTag("navigation_drawer");
+        if (fragment != null) {
+            Log.e(TAG, "found the drawer fragment!");
         }
     }
 
@@ -87,6 +91,13 @@ public class HomeScreenActivity extends PortraitActivity implements NavigationDr
     protected void onDestroy() {
         EventBus.getDefault().unregister(this);
         super.onDestroy();
+    }
+
+    @Override
+    public void onNavigationDrawerItemSelected(int position) {
+        if (drawer != null) {
+            drawer.closeDrawer(Gravity.LEFT);
+        }
     }
 
     @Override

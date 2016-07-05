@@ -7,6 +7,7 @@ package org.grassroot.android.adapters;
 import android.animation.AnimatorInflater;
 import android.animation.AnimatorSet;
 import android.content.Context;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -18,26 +19,37 @@ import android.widget.TextView;
 
 import org.grassroot.android.R;
 import org.grassroot.android.models.NavDrawerItem;
+import org.grassroot.android.services.ApplicationLoader;
 import org.grassroot.android.utils.PreferenceUtils;
 
 import java.util.ArrayList;
+import java.util.List;
 
 
 public class NavigationDrawerAdapter extends RecyclerView.Adapter<NavigationDrawerAdapter.MyViewHolder> {
 
     private static final String TAG = NavigationDrawerAdapter.class.getCanonicalName();
 
-    ArrayList<NavDrawerItem> data;
+    List<NavDrawerItem> data;
     private Context mContext;
     private LayoutInflater inflater;
     private AnimatorSet set;
     private MyViewHolder holder;
 
-    public NavigationDrawerAdapter(Context context, ArrayList<NavDrawerItem> data) {
+    final int textSelectedColor;
+    final int rowSelectedBgColor;
+    final int textNormalColor;
+    final int rowNormalColor;
+
+    public NavigationDrawerAdapter(Context context, List<NavDrawerItem> data) {
         this.data = data;
         this.mContext = context;
         this.inflater = LayoutInflater.from(context);
 
+        textSelectedColor = ContextCompat.getColor(context, R.color.primaryColor);
+        rowSelectedBgColor = ContextCompat.getColor(context, R.color.text_beige);
+        textNormalColor = ContextCompat.getColor(context, R.color.black);
+        rowNormalColor = ContextCompat.getColor(context, R.color.white);
     }
 
     @Override
@@ -55,14 +67,13 @@ public class NavigationDrawerAdapter extends RecyclerView.Adapter<NavigationDraw
         holder.title.setText(myDrawerModel.getTitle());
         holder.titleicon.setBackgroundResource(myDrawerModel.getIcon());
 
-
         if (myDrawerModel.isChecked()) {
-            holder.rlDrawerRow.setBackgroundResource(R.color.text_beige);
-            holder.title.setTextColor(mContext.getResources().getColor(R.color.primaryColor));
+            holder.rlDrawerRow.setBackgroundColor(rowSelectedBgColor);
+            holder.title.setTextColor(textSelectedColor);
             holder.titleicon.setBackgroundResource(myDrawerModel.getChangeicon());
         } else {
-            holder.rlDrawerRow.setBackgroundResource(R.color.white);
-            holder.title.setTextColor(mContext.getResources().getColor(R.color.black));
+            holder.rlDrawerRow.setBackgroundColor(rowNormalColor);
+            holder.title.setTextColor(textNormalColor);
         }
 
         if (myDrawerModel.getTitle().equalsIgnoreCase(mContext.getString(R.string.Notifications))) {
@@ -70,14 +81,6 @@ public class NavigationDrawerAdapter extends RecyclerView.Adapter<NavigationDraw
             int notificationcount = PreferenceUtils.getNotificationCounter(mContext);
             Log.e(TAG, "notificationcount is " + notificationcount);
             holder.txtTitleCounter.setText("" + notificationcount);
-
-            if (notificationcount > 0) {
-                set = (AnimatorSet) AnimatorInflater.loadAnimator(mContext, R.animator.flip);
-                set.setTarget(holder.txtTitleCounter);
-                set.start();
-            }
-
-
         } else {
             holder.txtTitleCounter.setVisibility(View.INVISIBLE);
         }
@@ -88,7 +91,6 @@ public class NavigationDrawerAdapter extends RecyclerView.Adapter<NavigationDraw
     public int getItemCount() {
         return data.size();
     }
-
 
     public static class MyViewHolder extends RecyclerView.ViewHolder {
         private final RelativeLayout rlDrawerRow;
