@@ -2,13 +2,14 @@ package org.grassroot.android.models;
 
 import com.google.gson.annotations.SerializedName;
 
+import io.realm.RealmObject;
 import java.util.Date;
 
 /**
  * Created by paballo on 2016/05/18.
  */
 
-public class EventModel {
+public class EventModel extends RealmObject {
 
     private String id;
     private String title;

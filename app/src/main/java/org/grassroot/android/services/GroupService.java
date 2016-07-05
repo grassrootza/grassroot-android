@@ -5,6 +5,8 @@ import android.content.Context;
 import android.util.Log;
 import android.view.View;
 
+import io.realm.Realm;
+import io.realm.RealmList;
 import org.grassroot.android.R;
 import org.grassroot.android.interfaces.NetworkErrorDialogListener;
 import org.grassroot.android.models.Group;
@@ -15,6 +17,7 @@ import org.grassroot.android.utils.PreferenceUtils;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import io.realm.RealmResults;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -25,6 +28,8 @@ import retrofit2.Response;
 public class GroupService {
 
     public static final String TAG = GroupService.class.getSimpleName();
+
+    private Realm realm;
 
     public ArrayList<Group> userGroups;
     public HashMap<String, Integer> groupUidMap;
@@ -42,6 +47,7 @@ public class GroupService {
     protected GroupService() {
         userGroups = new ArrayList<>();
         groupUidMap = new HashMap<>();
+        realm = Realm.getDefaultInstance();
     }
 
     public static GroupService getInstance() {
@@ -77,6 +83,7 @@ public class GroupService {
                             userGroups = new ArrayList<>(response.body().getGroups());
                             listener.groupListLoaded();
                             createUidMap();
+                            saveGroupsInDB(response.body().getGroups());
                         } else {
                             Log.e(TAG, response.message());
                             ErrorUtils.handleServerError(errorViewHolder, activity, response);
@@ -86,10 +93,22 @@ public class GroupService {
 
                     @Override
                     public void onFailure(Call<GroupResponse> call, Throwable t) {
+                        // default back to loading from DB
                         ErrorUtils.handleNetworkError(activity, errorViewHolder, t);
+                        loadGroupsFromDB();
                         listener.groupListLoadingError();
                     }
                 });
+    }
+
+    private void loadGroupsFromDB() {
+        Log.e(TAG, "could not connect to network, loading groups from DB ...");
+        RealmList<Group> groups = new RealmList<>();
+        if (realm != null && !realm.isClosed()) {
+            RealmResults<Group> results = realm.where(Group.class).findAll();
+            groups.addAll(results.subList(0, results.size()));
+        }
+        userGroups = new ArrayList<>(groups);
     }
 
     /*
@@ -115,8 +134,12 @@ public class GroupService {
                     public void retryClicked() {
                         refreshGroupList(activity, listener);
                     }
-                });
 
+                    @Override
+                    public void offlineClicked() {
+                        listener.groupListLoadingError();
+                    }
+                });
             }
         });
     }
@@ -149,6 +172,11 @@ public class GroupService {
                                 public void retryClicked() {
                                     refreshSingleGroup(position,groupUid, activity, listener);
                                 }
+
+                                @Override
+                                public void offlineClicked() {
+                                    listener.groupListLoadingError(); // todo : instead propogate "gone offline"
+                                }
                             });
                         }
                     });
@@ -171,6 +199,16 @@ public class GroupService {
         final int size = userGroups.size();
         for (int i = 0; i < size; i++) {
             groupUidMap.put(userGroups.get(i).getGroupUid(), i);
+        }
+    }
+
+    private void saveGroupsInDB(RealmList<Group> groups) {
+        Realm realm = Realm.getDefaultInstance();
+        if (groups != null && realm != null && !realm.isClosed()) {
+            realm.beginTransaction();
+            realm.copyToRealmOrUpdate(groups);
+            realm.commitTransaction();
+            realm.close();
         }
     }
 

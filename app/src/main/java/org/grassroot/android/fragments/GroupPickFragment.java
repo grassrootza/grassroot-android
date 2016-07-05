@@ -5,6 +5,7 @@ import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -14,7 +15,9 @@ import org.grassroot.android.adapters.GroupPickAdapter;
 import org.grassroot.android.fragments.dialogs.ConfirmCancelDialogFragment;
 import org.grassroot.android.interfaces.TaskConstants;
 import org.grassroot.android.models.Group;
+import org.grassroot.android.models.RealmString;
 import org.grassroot.android.services.GroupService;
+import org.grassroot.android.utils.RealmUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -34,8 +37,7 @@ public class GroupPickFragment extends Fragment implements GroupPickAdapter.Grou
     private GroupPickListener listener;
     private String returnTag;
 
-    @BindView(R.id.gpick_recycler_view)
-    RecyclerView recyclerView;
+    @BindView(R.id.gpick_recycler_view) RecyclerView recyclerView;
 
     private GroupPickAdapter groupPickAdapter;
     private Unbinder unbinder;
@@ -51,8 +53,11 @@ public class GroupPickFragment extends Fragment implements GroupPickAdapter.Grou
 
         GroupPickFragment fragment = new GroupPickFragment();
         List<Group> groups = new ArrayList<>();
+
         for (Group g : GroupService.getInstance().userGroups) {
-            if (g.getPermissions().contains(permissionToFilter)) {
+            // note : RealmProxyString is interfering with hash code / equals on list contains, hence doing conversion to string ... may be a more efficient way?
+            List<String> permissions = RealmUtils.convertListOfRealmStringInListOfString(g.getPermissions());
+            if (permissions.contains(permissionToFilter)) {
                 groups.add(g);
             }
         }
@@ -66,6 +71,7 @@ public class GroupPickFragment extends Fragment implements GroupPickAdapter.Grou
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        // todo : show a friendlier error dialog if filtered groups list is empty
         groupPickAdapter = GroupPickAdapter.newInstance(filteredGroups, getContext(), this);
     }
 

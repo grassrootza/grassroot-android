@@ -1,4 +1,5 @@
 apply plugin: 'com.android.application'
+apply plugin: 'realm-android'
 
 /*buildscript {
     repositories {
@@ -19,8 +20,8 @@ apply plugin: 'com.neenbedankt.android-apt'
 }*/
 
 android {
-    compileSdkVersion 23
-    buildToolsVersion "23.0.3"
+  compileSdkVersion 23
+  buildToolsVersion "23.0.3"
 
     defaultConfig {
         applicationId "org.grassroot.android"
@@ -30,61 +31,67 @@ android {
         versionName "0.1.4"
     }
 
-    buildTypes {
-        release {
-            minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
-        }
+  buildTypes {
+    release {
+      minifyEnabled false
+      proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
     }
+  }
 
-    productFlavors {
-        staging {
-            applicationId "org.grassroot.android"
-            versionName "0.1-staging"
-        }
-        production {
-            applicationId 'za.org.grassroot.android'
-            versionName "0.1-production"
-        }
+  productFlavors {
+    staging {
+      applicationId "org.grassroot.android"
+      versionName "0.1-staging"
     }
+    production {
+      applicationId 'za.org.grassroot.android'
+      versionName "0.1-production"
+    }
+  }
+  splits {
+    abi {
+      enable true
+      reset()
+      include 'x86', 'armeabi', 'armeabi-v7a', 'mips'
+      universalApk false
+    }
+  }
 
-    packagingOptions {
-        exclude 'META-INF/services/javax.annotation.processing.Processor'
-    }
+  packagingOptions {
+    exclude 'META-INF/services/javax.annotation.processing.Processor'
+  }
 
-    sourceSets {
-        main {
-            res.srcDirs = [
-                    'src/main/res',
-                    'src/main/res/layout/activities',
-                    'src/main/res/layout/fragments',
-                    'src/main/res/layout/dialogs',
-                    'src/main/res/layout/listviews'
-            ]
-        }
+  sourceSets {
+    main {
+      res.srcDirs = ['src/main/res',
+                     'src/main/res/layout/activities',
+                     'src/main/res/layout/fragments',
+                     'src/main/res/layout/dialogs',
+                     'src/main/res/layout/listviews']
     }
+  }
 }
 
 dependencies {
-    compile fileTree(dir: 'libs', include: ['*.jar'])
-    testCompile 'junit:junit:4.12'
-    testCompile 'org.robolectric:robolectric:3.0'
-    testCompile 'org.robolectric:shadows-support-v4:3.0'
-    testCompile 'org.robolectric:shadows-play-services:3.0-rc2'
-    testCompile 'org.mockito:mockito-core:1.10.19'
+  compile fileTree(dir: 'libs', include: ['*.jar'])
+  testCompile 'junit:junit:4.12'
+  testCompile 'org.robolectric:robolectric:3.0'
+  testCompile 'org.robolectric:shadows-support-v4:3.0'
+  testCompile 'org.robolectric:shadows-play-services:3.0-rc2'
+  testCompile 'org.mockito:mockito-core:1.10.19'
 
-    compile 'com.android.support:appcompat-v7:23.4.0'
-    compile 'com.android.support:design:23.4.0'
-    compile 'com.android.support:recyclerview-v7:23.4.0'
-    compile 'com.android.support:cardview-v7:23.4.0'
-    compile 'com.github.clans:fab:1.6.3'
-    compile 'com.jakewharton:butterknife:8.0.0'
-    apt 'com.jakewharton:butterknife-compiler:8.0.0'
-    compile 'com.squareup.retrofit2:retrofit:2.1.0'
-    compile 'com.squareup.retrofit2:converter-gson:2.0.0'
-    compile 'com.squareup.okhttp3:logging-interceptor:3.3.1'
-    compile 'com.google.android.gms:play-services-gcm:8.4.0'
-    compile 'com.google.android.gms:play-services-location:8.4.0'
-    compile 'org.greenrobot:eventbus:3.0.0'
-    // apply plugin: 'com.google.gms.google-services'
+  compile 'com.android.support:appcompat-v7:23.4.0'
+  compile 'com.android.support:design:23.4.0'
+  compile 'com.android.support:recyclerview-v7:23.4.0'
+  compile 'com.android.support:cardview-v7:23.4.0'
+  compile 'com.github.clans:fab:1.6.3'
+  compile 'com.jakewharton:butterknife:8.0.0'
+  apt 'com.jakewharton:butterknife-compiler:8.0.0'
+  compile 'com.squareup.retrofit2:retrofit:2.1.0'
+  compile 'com.squareup.retrofit2:converter-gson:2.0.0'
+  compile 'com.squareup.okhttp3:logging-interceptor:3.3.1'
+  compile 'com.google.android.gms:play-services-gcm:8.4.0'
+  compile 'com.google.android.gms:play-services-location:8.4.0'
+  compile 'org.greenrobot:eventbus:3.0.0'
+  // apply plugin: 'com.google.gms.google-services'
 }

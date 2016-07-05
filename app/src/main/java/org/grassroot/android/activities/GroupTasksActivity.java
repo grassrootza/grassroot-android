@@ -11,6 +11,8 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 
+import java.util.HashSet;
+import java.util.Set;
 import org.grassroot.android.R;
 import org.grassroot.android.fragments.JoinCodeFragment;
 import org.grassroot.android.fragments.NewTaskMenuFragment;
@@ -25,6 +27,7 @@ import org.grassroot.android.utils.MenuUtils;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
+import org.grassroot.android.utils.RealmUtils;
 
 public class GroupTasksActivity extends PortraitActivity implements NewTaskMenuFragment.NewTaskMenuListener, JoinCodeFragment.JoinCodeListener, ViewTaskFragment.ViewTaskListener {
 
@@ -65,6 +68,7 @@ public class GroupTasksActivity extends PortraitActivity implements NewTaskMenuF
 
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
+        final Set<String> perms = new HashSet<>(RealmUtils.convertListOfRealmStringInListOfString(groupMembership.getPermissions()));
         menu.findItem(R.id.mi_view_join_code).setVisible(true);
         menu.findItem(R.id.mi_new_task).setVisible(groupMembership.hasCreatePermissions());
         menu.findItem(R.id.mi_add_members).setVisible(groupMembership.canAddMembers());

@@ -41,6 +41,7 @@
     <string name="alert_cancel">Cancel</string>
     <string name="Network_Settings">Check Network Settings</string>
     <string name="Alert_Retry">Retry</string>
+    <string name="work_offline">Offline mode</string>
     <string name="Alert_Already_Responded">You have already responded to the event.</string>
     <string name="LOG_OUT">Logout</string>
     <string name="GROUP_NOT_FOUND">No groups matching your key were found</string>

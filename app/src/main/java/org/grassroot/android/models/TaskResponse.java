@@ -2,19 +2,21 @@ package org.grassroot.android.models;
 
 import com.google.gson.annotations.SerializedName;
 
+import io.realm.RealmList;
+import io.realm.RealmObject;
 import java.util.ArrayList;
 import java.util.List;
 
 /**
  * Created by paballo on 2016/05/05.
  */
-public class TaskResponse {
+public class TaskResponse extends RealmObject {
 
     private String status;
     private Integer code;
     private String message;
     @SerializedName("data")
-    private List<TaskModel> tasks = new ArrayList<>();
+    private RealmList<TaskModel> tasks = new RealmList<>();
 
     /**
      *
@@ -84,7 +86,7 @@ public class TaskResponse {
      * @param tasks
      * The data
      */
-    public void setTasks(List<TaskModel> tasks) {
+    public void setTasks(RealmList<TaskModel> tasks) {
         this.tasks = tasks;
     }
 

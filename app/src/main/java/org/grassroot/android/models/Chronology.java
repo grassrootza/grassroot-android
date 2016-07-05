@@ -1,9 +1,11 @@
 package org.grassroot.android.models;
 
+import io.realm.RealmObject;
+
 /**
  * Created by paballo on 2016/05/04.
  */
-public class Chronology {
+public class Chronology extends RealmObject{
 
     private String calendarType;
     private String id;

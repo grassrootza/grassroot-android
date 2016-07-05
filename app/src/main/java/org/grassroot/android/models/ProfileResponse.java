@@ -1,11 +1,12 @@
 package org.grassroot.android.models;
 
 import com.google.gson.annotations.SerializedName;
+import io.realm.RealmObject;
 
 /**
  * Created by paballo on 2016/05/19.
  */
-public class ProfileResponse {
+public class ProfileResponse extends RealmObject {
 
 
     private String status;

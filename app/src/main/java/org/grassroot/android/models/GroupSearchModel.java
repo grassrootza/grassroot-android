@@ -1,9 +1,11 @@
 package org.grassroot.android.models;
 
+import io.realm.RealmObject;
+
 /**
  * Created by paballo on 2016/05/05.
  */
-public class GroupSearchModel{
+public class GroupSearchModel extends RealmObject{
 
         private String id;
         private String groupName;

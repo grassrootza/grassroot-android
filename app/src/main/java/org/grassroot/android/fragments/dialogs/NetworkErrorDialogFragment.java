@@ -14,19 +14,16 @@ import org.grassroot.android.interfaces.NetworkErrorDialogListener;
  */
 public class NetworkErrorDialogFragment extends DialogFragment {
 
-    NetworkErrorDialogListener mListener;
     private static final  String TAG = NetworkErrorDialogFragment.class.getCanonicalName();
 
-    public void setListener(NetworkErrorDialogListener listener) {
-        this.mListener = listener;
-    }
+    NetworkErrorDialogListener mListener;
 
     public static NetworkErrorDialogFragment newInstance(int message, NetworkErrorDialogListener listener) {
         NetworkErrorDialogFragment frag = new NetworkErrorDialogFragment();
         Bundle args = new Bundle();
         args.putInt("message", message);
         frag.setArguments(args);
-        frag.setListener(listener);
+        frag.mListener = listener;
         return frag;
     }
 
@@ -48,9 +45,10 @@ public class NetworkErrorDialogFragment extends DialogFragment {
                         mListener.retryClicked();
                     }
                 })
-                .setNegativeButton(R.string.alert_cancel, new DialogInterface.OnClickListener() {
+                .setNegativeButton(R.string.work_offline, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialogInterface, int i) {
+                        mListener.offlineClicked();
                         NetworkErrorDialogFragment.this.dismiss();
 
                     }
@@ -62,7 +60,6 @@ public class NetworkErrorDialogFragment extends DialogFragment {
                     }
                 })
                 .create();
-
-}
+    }
 
 }

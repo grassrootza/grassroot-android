@@ -6,24 +6,9 @@ import android.net.NetworkInfo;
 
 public class NetworkUtils {
 
-	
-	 public static boolean isNetworkAvailable(Context context) {
-	     ConnectivityManager connectivity = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
-	     if (connectivity != null) {
-	        NetworkInfo[] info = connectivity.getAllNetworkInfo();
-	        if (info != null) {
-	           for (int i = 0; i < info.length; i++) {
-	              if (info[i].getState() == NetworkInfo.State.CONNECTED) {
-	                 return true;
-	              }
-	              else if(info[i].getState() == NetworkInfo.State.CONNECTING){
-	            	  return true;
-	              }
-	           }
-	        }
-	     }
-	     return false;
-	  }
-	 
-
+	public static boolean isNetworkAvailable(Context context) {
+		ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+		NetworkInfo ni = cm.getActiveNetworkInfo();
+		return (ni != null && ni.isAvailable() && ni.isConnected());
+	}
 }

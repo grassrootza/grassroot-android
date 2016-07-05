@@ -56,6 +56,9 @@ import butterknife.ButterKnife;
 import butterknife.OnClick;
 import butterknife.OnTextChanged;
 import butterknife.Unbinder;
+import io.realm.Realm;
+import io.realm.RealmList;
+import io.realm.RealmResults;
 
 public class HomeGroupListFragment extends android.support.v4.app.Fragment implements GroupListAdapter.GroupRowListener {
 
@@ -63,67 +66,130 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment imple
 
     private Unbinder unbinder;
 
-    @BindView(R.id.rl_ghp_root)
-    RelativeLayout rlGhpRoot;
-    @BindView(R.id.iv_ghp_drawer)
-    ImageView ivGhpDrawer;
-    @BindView(R.id.ghp_title)
-    TextView tvTitle;
+    @BindView(R.id.rl_ghp_root) RelativeLayout rlGhpRoot;
+    @BindView(R.id.iv_ghp_drawer) ImageView ivGhpDrawer;
+    @BindView(R.id.ghp_title) TextView tvTitle;
 
-    @BindView(R.id.iv_ghp_search)
-    ImageView ivGhpSearch;
-    @BindView(R.id.iv_ghp_sort)
-    ImageView ivGhpSort;
+    @BindView(R.id.iv_ghp_search) ImageView ivGhpSearch;
+    @BindView(R.id.iv_ghp_sort) ImageView ivGhpSort;
 
-    @BindView(R.id.gl_swipe_refresh)
-    SwipeRefreshLayout glSwipeRefresh;
-    @BindView(R.id.recycler_view)
-    RecyclerView rcGroupList;
+    @BindView(R.id.gl_swipe_refresh) SwipeRefreshLayout glSwipeRefresh;
+    @BindView(R.id.recycler_view) RecyclerView rcGroupList;
 
-    @BindView(R.id.menu1)
-    FloatingActionMenu menu1;
-    @BindView(R.id.ic_fab_new_task)
-    FloatingActionButton icFabNewMtg;
-    @BindView(R.id.ic_fab_join_group)
-    FloatingActionButton icFabJoinGroup;
-    @BindView(R.id.ic_fab_start_group)
-    FloatingActionButton icFabStartGroup;
+    @BindView(R.id.menu1) FloatingActionMenu menu1;
+    @BindView(R.id.ic_fab_new_task) FloatingActionButton icFabNewMtg;
+    @BindView(R.id.ic_fab_join_group) FloatingActionButton icFabJoinGroup;
+    @BindView(R.id.ic_fab_start_group) FloatingActionButton icFabStartGroup;
 
-    @BindView(R.id.iv_cross)
-    ImageView ivCross;
-    @BindView(R.id.et_search)
-    EditText et_search;
-    @BindView(R.id.rl_search)
-    RelativeLayout rlSearch;
-    @BindView(R.id.rl_simple)
-    RelativeLayout rlSimple;
+    @BindView(R.id.iv_cross) ImageView ivCross;
+    @BindView(R.id.et_search) EditText et_search;
+    @BindView(R.id.rl_search) RelativeLayout rlSearch;
+    @BindView(R.id.rl_simple) RelativeLayout rlSimple;
 
     ProgressDialog progressDialog;
 
-    private GroupListAdapter groupListRowAdapter;
-    private List<Group> userGroups;
+  Realm realm;
 
-    private boolean creating;
+  private GroupListAdapter groupListRowAdapter;
+  private List<Group> userGroups;
 
-    public boolean date_click = false, role_click = false, defaults_click = false;
+  private boolean creating;
 
-    private GroupListFragmentListener mCallbacks;
+  public boolean date_click = false, role_click = false, defaults_click = false;
 
-    public interface GroupListFragmentListener {
-        void menuClick();
-        void groupPickerTriggered(String taskType);
+  private GroupListFragmentListener mCallbacks;
+
+  public interface GroupListFragmentListener {
+    void menuClick();
+    void groupPickerTriggered(String taskType);
+  }
+
+  @Override public void onAttach(Context context) {
+    super.onAttach(context);
+    Activity activity = (Activity) context;
+    try {
+      mCallbacks = (GroupListFragmentListener) activity;
+      Log.e("onAttach", "Attached");
+    } catch (ClassCastException e) {
+      throw new ClassCastException("Activity must implement Fragment One.");
     }
+  }
 
-    @Override
-    public void onAttach(Context context) {
-        super.onAttach(context);
-        Activity activity = (Activity) context;
-        try {
-            mCallbacks = (GroupListFragmentListener) activity;
-        } catch (ClassCastException e) {
-            throw new ClassCastException("Activity must implement home group list callbacks.");
-        }
+  @Override public void onActivityCreated(Bundle savedInstanceState) {
+    super.onCreate(savedInstanceState);
+    creating = true;
+    init();
+    fetchGroupList();
+  }
+
+  @Override public void onResume() {
+    super.onResume();
+    if (!creating && PreferenceUtils.getGroupListMustRefresh(getContext())) {
+      refreshGroupList();
+      PreferenceUtils.setGroupListMustBeRefreshed(getContext(), false);
     }
+    creating = false;
+  }
+
+  private void init() {
+
+    userGroups = new ArrayList<>();
+    ivGhpSort.setEnabled(false);
+    ivGhpSearch.setEnabled(false);
+
+    menu1.setOnMenuToggleListener(new FloatingActionMenu.OnMenuToggleListener() {
+      @Override public void onMenuToggle(boolean opened) {
+        icFabNewMtg.setVisibility(opened ? View.VISIBLE : View.GONE);
+        icFabJoinGroup.setVisibility(opened ? View.VISIBLE : View.GONE);
+        icFabStartGroup.setVisibility(opened ? View.VISIBLE : View.GONE);
+      }
+    });
+
+    // Get a Realm instance for this thread
+    realm = Realm.getDefaultInstance();
+
+    setUpRecyclerView();
+
+    //first load from db
+    showGroups(loadGroupsFromDB());
+  }
+
+  /**
+   * Method executed to retrieve and populate list of groups. Note: this does not handle the
+   * absence
+   * of a connection very well, at all. Will probably need to rethink.
+   */
+
+  private void showProgress() {
+    if (progressDialog == null) {
+      progressDialog = new ProgressDialog(getContext());
+      progressDialog.setIndeterminate(true);
+      progressDialog.setMessage(getString(R.string.txt_pls_wait));
+    }
+    progressDialog.show();
+  }
+
+  private void hideProgress() {
+    progressDialog.dismiss();
+  }
+
+  private void showGroups(RealmList<Group> groups) {
+    userGroups = new ArrayList<>(groups);
+    rcGroupList.setVisibility(View.VISIBLE);
+    groupListRowAdapter.setGroupList(userGroups);
+    ivGhpSearch.setEnabled(true);
+    ivGhpSort.setEnabled(true);
+    rcGroupList.setVisibility(View.VISIBLE);
+  }
+
+  private RealmList<Group> loadGroupsFromDB() {
+    RealmList<Group> groups = new RealmList<>();
+    if (realm != null && !realm.isClosed()) {
+      RealmResults<Group> results = realm.where(Group.class).findAll();
+      groups.addAll(results.subList(0, results.size()));
+    }
+    return groups;
+  }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -132,47 +198,6 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment imple
         EventBus.getDefault().register(this);
         toggleClickableTitle(true);
         return view;
-    }
-
-    @Override
-    public void onActivityCreated(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        creating = true;
-        init();
-        setUpRecyclerView();
-        fetchGroupList();
-    }
-
-    @Override
-    public void onResume() {
-        super.onResume();
-        if (!creating && PreferenceUtils.getGroupListMustRefresh(getContext())) {
-            refreshGroupList();
-            PreferenceUtils.setGroupListMustBeRefreshed(getContext(), false);
-        }
-        creating = false;
-    }
-
-    @Override
-    public void onDestroyView() {
-        super.onDestroyView();
-        unbinder.unbind();
-    }
-
-    private void init() {
-
-        userGroups = new ArrayList<>();
-        ivGhpSort.setEnabled(false);
-        ivGhpSearch.setEnabled(false);
-
-        menu1.setOnMenuToggleListener(new FloatingActionMenu.OnMenuToggleListener() {
-            @Override
-            public void onMenuToggle(boolean opened) {
-                icFabNewMtg.setVisibility(opened ? View.VISIBLE : View.GONE);
-                icFabJoinGroup.setVisibility(opened ? View.VISIBLE : View.GONE);
-                icFabStartGroup.setVisibility(opened ? View.VISIBLE : View.GONE);
-            }
-        });
     }
 
     public void showSuccessMessage(Intent data) {
@@ -191,7 +216,7 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment imple
             public void groupListLoaded() {
                 hideProgress();
                 rcGroupList.setVisibility(View.VISIBLE);
-                groupListRowAdapter.addData(GroupService.getInstance().userGroups);
+                groupListRowAdapter.addData(GroupService.getInstance().userGroups); // todo : instead draw straight from Realm
                 ivGhpSearch.setEnabled(true);
                 ivGhpSort.setEnabled(true);
                 rcGroupList.setVisibility(View.VISIBLE);
@@ -214,10 +239,9 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment imple
             public void groupListLoaded() {
                 groupListRowAdapter.setGroupList(GroupService.getInstance().userGroups);
                 glSwipeRefresh.setRefreshing(false);
-            }
+              }
 
-            @Override
-            public void groupListLoadingError() {
+              @Override public void groupListLoadingError() {
                 glSwipeRefresh.setRefreshing(false);
             }
         });
@@ -388,12 +412,10 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment imple
     public void onDetach() {
         super.onDetach();
         mCallbacks = null;
-        Log.e("onDetach", "Detached");
     }
 
     @Subscribe
     public void onEvent(NetworkActivityResultsEvent networkActivityResultsEvent){
-        Log.e(TAG, "onEvent");
         fetchGroupList();
     }
 
@@ -478,45 +500,14 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment imple
                 Long start = SystemClock.currentThreadTimeMillis();
                 groupListRowAdapter.sortByRole();
                 Log.d(TAG, String.format("sorting group list took %d msecs", SystemClock.currentThreadTimeMillis() - start));
+                et_search.setText("");
             }
 
             @Override
             public void defaultsClick(boolean date, boolean role, boolean defaults) {
-                date_click = false;
-                role_click = false;
-                groupListRowAdapter.sortByDate();
+                // todo : restore whatever was here
             }
         });
-    }
-
-
-    @OnClick(R.id.iv_cross)
-    public void ivCross() {
-        if (et_search.getText().toString().isEmpty()) {
-            rlSearch.setVisibility(View.GONE);
-            rlSimple.setVisibility(View.VISIBLE);
-            try {
-                InputMethodManager imm = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
-                imm.hideSoftInputFromWindow(getActivity().getCurrentFocus().getWindowToken(), 0);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        } else {
-            et_search.setText("");
-        }
-    }
-
-    private void showProgress(){
-        if (progressDialog == null) {
-            progressDialog = new ProgressDialog(getContext());
-            progressDialog.setIndeterminate(true);
-            progressDialog.setMessage(getString(R.string.txt_pls_wait));
-        }
-        progressDialog.show();
-    }
-
-    private void hideProgress(){
-        progressDialog.dismiss();
     }
 
 }

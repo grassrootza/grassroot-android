@@ -1,11 +1,12 @@
 package org.grassroot.android.models;
 
 import com.google.gson.annotations.SerializedName;
+import io.realm.RealmObject;
 
 /**
  * Created by paballo on 2016/05/20.
  */
-public class EventResponse {
+public class EventResponse extends RealmObject {
     private String status;
     private Integer code;
     private String message;
