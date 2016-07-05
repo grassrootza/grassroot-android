@@ -19,10 +19,10 @@ public class Constant {
     public static final String regexAlphaNumeric = "[^a-zA-Z0-9 ]";
 
     public static final String productionUrl = "https://app.grassroot.org.za/api/";
-    public static final String stagingUrl = "http://staging.grassroot.org.za/api/";
+    public static final String stagingUrl = "https://staging.grassroot.org.za/api/";
     public static final String localUrl = "http://10.0.2.2:8080/api/";
 
-    public static final String restUrl = BuildConfig.BUILD_TYPE.equals("debug") ? localUrl
+    public static final String restUrl = BuildConfig.BUILD_TYPE.equals("debug") ? stagingUrl
             : BuildConfig.FLAVOR.equals(PROD) ? productionUrl : stagingUrl;
 
     public static final String USER_TOKEN = "user_token";

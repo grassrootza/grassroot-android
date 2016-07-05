@@ -128,6 +128,7 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment imple
       refreshGroupList();
       PreferenceUtils.setGroupListMustBeRefreshed(getContext(), false);
     }
+      setActionBarToDefault();
     creating = false;
   }
 
@@ -412,6 +413,7 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment imple
     public void onDetach() {
         super.onDetach();
         mCallbacks = null;
+        unbinder.unbind();
     }
 
     @Subscribe
