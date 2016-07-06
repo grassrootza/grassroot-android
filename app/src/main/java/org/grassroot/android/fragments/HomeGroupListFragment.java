@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.SystemClock;
+
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v4.content.ContextCompat;
@@ -21,17 +22,6 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
-import butterknife.BindView;
-import butterknife.ButterKnife;
-import butterknife.OnClick;
-import butterknife.OnTextChanged;
-import butterknife.Unbinder;
-import io.realm.Realm;
-import io.realm.RealmList;
-import io.realm.RealmResults;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
 
 import org.grassroot.android.R;
 import org.grassroot.android.activities.CreateGroupActivity;
@@ -55,6 +45,19 @@ import org.grassroot.android.utils.MenuUtils;
 import org.grassroot.android.utils.PreferenceUtils;
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
+
+import butterknife.BindView;
+import butterknife.ButterKnife;
+import butterknife.OnClick;
+import butterknife.OnTextChanged;
+import butterknife.Unbinder;
+import io.realm.Realm;
+import io.realm.RealmList;
+import io.realm.RealmResults;
 
 public class HomeGroupListFragment extends android.support.v4.app.Fragment
     implements GroupListAdapter.GroupRowListener {
@@ -180,6 +183,7 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
     @Override
     public void onDestroyView() {
         super.onDestroyView();
+        EventBus.getDefault().unregister(this);
         unbinder.unbind();
     }
 
@@ -200,8 +204,7 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
           @Override public void groupListLoaded() {
             hideProgress();
             rcGroupList.setVisibility(View.VISIBLE);
-            groupListRowAdapter.setGroupList(
-                loadGroupsFromDB()); // todo : instead draw straight from Realm
+            groupListRowAdapter.setGroupList(loadGroupsFromDB());
             ivGhpSearch.setEnabled(true);
             ivGhpSort.setEnabled(true);
             rcGroupList.setVisibility(View.VISIBLE);

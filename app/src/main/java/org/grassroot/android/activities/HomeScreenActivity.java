@@ -16,8 +16,10 @@ import org.grassroot.android.fragments.GroupPickFragment;
 import org.grassroot.android.fragments.HomeGroupListFragment;
 import org.grassroot.android.fragments.NavigationDrawerFragment;
 import org.grassroot.android.fragments.NewTaskMenuFragment;
+import org.grassroot.android.fragments.TaskListFragment;
 import org.grassroot.android.fragments.WelcomeFragment;
 import org.grassroot.android.interfaces.GroupConstants;
+import org.grassroot.android.interfaces.NavigationConstants;
 import org.grassroot.android.interfaces.TaskConstants;
 import org.grassroot.android.models.Group;
 import org.grassroot.android.utils.Constant;
@@ -97,6 +99,16 @@ public class HomeScreenActivity extends PortraitActivity implements NavigationDr
     public void onNavigationDrawerItemSelected(int position) {
         if (drawer != null) {
             drawer.closeDrawer(Gravity.LEFT);
+        }
+
+        // todo : probably use a view pager for this
+        if (position == NavigationConstants.HOME_NAV_TASKS) {
+            Log.e(TAG, "triggering task list fragment ...");
+            Fragment tasksFragment = TaskListFragment.newInstance(null);
+            getSupportFragmentManager().beginTransaction()
+                    .replace(R.id.fragment_container, tasksFragment, TaskListFragment.class.getCanonicalName())
+                    .addToBackStack(null)
+                    .commit();
         }
     }
 

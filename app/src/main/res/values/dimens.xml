@@ -18,6 +18,9 @@
     <dimen name="txt_large">18sp</dimen>
     <dimen name="txt_xlarge">24sp</dimen>
 
+    <dimen name="nav_bar_top_height">100dp</dimen>
+    <dimen name="nav_bar_item_height">48dp</dimen>
+
     <dimen name="button_elevation">2dp</dimen>
     <dimen name="button_press_elevation">4dp</dimen>
     <dimen name="drawer_width">260dp</dimen>

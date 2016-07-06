@@ -30,7 +30,7 @@
 
         <TextView
             android:gravity="left"
-            android:id="@+id/wl_tv_subtext"
+            android:id="@+id/tl_no_task_text"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:singleLine="false"
@@ -41,7 +41,7 @@
 
             android:textColor="@color/primaryColor"
             android:textSize="@dimen/txt_large"
-            android:text="@string/txt_no_task" />
+            android:text="@string/txt_no_task_group" />
 
 
     </RelativeLayout>

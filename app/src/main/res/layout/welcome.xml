@@ -50,7 +50,7 @@
 
             <TextView
                 android:gravity="left"
-                android:id="@+id/wl_tv_subtext"
+                android:id="@+id/tl_no_task_text"
                 android:layout_below="@id/wl_tv_header"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"

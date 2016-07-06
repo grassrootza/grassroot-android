@@ -1,67 +1,55 @@
-<RelativeLayout
+<android.support.v4.widget.DrawerLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     xmlns:tools="http://schemas.android.com/tools"
     android:background="@color/white">
-
-    <RelativeLayout
-        android:id="@+id/nav_header_container"
+    
+    <FrameLayout
         android:layout_width="match_parent"
-        android:layout_height="100dp"
-        android:layout_alignParentTop="true"
-        android:background="@color/primaryColor">
+        android:layout_height="match_parent">
 
-        <TextView
-            android:id="@+id/displayName"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textColor="@color/white"
-            android:textSize="@dimen/txt_large"
-            android:textStyle="bold"
-            android:layout_alignParentBottom="true"
-            android:padding="@dimen/padding" />
+        <RelativeLayout
+            android:id="@+id/nav_header_container"
+            android:layout_width="240dp"
+            android:layout_height="match_parent"
+            android:background="@color/white">
+    
+            <TextView
+                android:id="@+id/displayName"
+                android:layout_width="match_parent"
+                android:layout_height="100dp"
+                android:paddingLeft="@dimen/padding"
+                android:paddingBottom="@dimen/padding_half"
+                android:layout_alignParentTop="true"
+                android:gravity="bottom"
+                android:background="@color/primaryColor"
+                android:textColor="@color/white"
+                android:textSize="@dimen/txt_medium"
+                android:textStyle="bold"
+                tools:text="Username"/>
+    
+            <android.support.v7.widget.RecyclerView
+                android:id="@+id/rv_nav_items"
+                android:layout_above="@+id/nav_tv_footer"
+                android:layout_below="@+id/displayName"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                tools:context=".NavigationDrawerFragment" />
+    
+            <TextView
+                android:id="@+id/nav_tv_footer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingLeft="@dimen/padding"
+                android:layout_alignParentBottom="true"
+                android:textColor="@color/textSecondaryColorDark"
+                android:textSize="@dimen/txt_small"
+                android:text="@string/nav_bar_footer" />
 
-    </RelativeLayout>
+        </RelativeLayout>
 
-    <!-- just used to stretch above to center -->
-    <View
-        android:id="@+id/divider"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_centerInParent="true"
-        android:layout_below="@id/nav_header_container" />
+    </FrameLayout>
 
-    <LinearLayout
-        android:layout_below="@id/divider"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical"
-        android:paddingLeft="10dp">
-
-        <android.support.v7.widget.RecyclerView
-            android:id="@+id/rv_nav_items"
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:divider="@null"
-            android:dividerHeight="0dp"
-            tools:context=".NavigationDrawerFragment"
-            android:layout_weight="1" />
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Grassroot"
-            android:layout_marginLeft="12.0dip" />
-
-        <TextView
-            android:id="@+id/txt_version"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="10dp"
-            android:layout_marginLeft="12.0dip" />
-
-    </LinearLayout>
-
-</RelativeLayout>
+</android.support.v4.widget.DrawerLayout>
 

@@ -4,16 +4,22 @@ package org.grassroot.android.models;
  * Created by Ravi on 29/07/15.
  */
 public class NavDrawerItem {
+
     public int icon;
     public String title;
     public int changeicon;
     private boolean isChecked;
+    private String tag;
+    private boolean showItemCount;
+    private int itemCount;
 
-    public  NavDrawerItem(String title,int icon,int changeicon,boolean isChecked) {
+    public  NavDrawerItem(String title, int icon, int changeicon, boolean isChecked, boolean showItemCount) {
         this.icon = icon;
         this.title = title;
         this.changeicon = changeicon;
         this.isChecked = isChecked;
+        this.showItemCount = showItemCount;
+        this.itemCount = 0;
     }
 
     public NavDrawerItem() {
@@ -40,10 +46,6 @@ public class NavDrawerItem {
         return changeicon;
     }
 
-    public void setChangeicon(int changeicon) {
-        this.changeicon = changeicon;
-    }
-
     public boolean isChecked() {
         return isChecked;
     }
@@ -51,4 +53,12 @@ public class NavDrawerItem {
     public void setIsChecked(boolean isChecked) {
         this.isChecked = isChecked;
     }
+
+    public String getTag() { return this.tag; }
+
+    public boolean isShowItemCount() { return this.showItemCount; }
+
+    public void setItemCount(int itemCount) { this.itemCount = itemCount; }
+
+    public int getItemCount() { return itemCount; }
 }

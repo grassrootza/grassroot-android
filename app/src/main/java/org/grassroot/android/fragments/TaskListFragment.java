@@ -15,6 +15,8 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.RelativeLayout;
+import android.widget.TextView;
+
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
@@ -33,6 +35,7 @@ import org.grassroot.android.interfaces.TaskConstants;
 import org.grassroot.android.models.TaskModel;
 import org.grassroot.android.models.TaskResponse;
 import org.grassroot.android.services.GrassrootRestService;
+import org.grassroot.android.services.TaskService;
 import org.grassroot.android.utils.ErrorUtils;
 import org.grassroot.android.utils.PreferenceUtils;
 import org.greenrobot.eventbus.EventBus;
@@ -60,6 +63,7 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
   @BindView(R.id.tl_recycler_view) RecyclerView rcTaskView;
 
   @BindView(R.id.tl_no_task_message) RelativeLayout noTaskMessageLayout;
+  @BindView(R.id.tl_no_task_text) TextView noTaskMessageText;
 
   private boolean filteringActive;
   private Map<String, Boolean> filterFlags;
@@ -70,6 +74,13 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
     /*
     SECTION : SET UP VIEWS AND POPULATE THE LIST
      */
+
+  // pass null if this is a group-neutral task fragment
+  public static TaskListFragment newInstance(String parentUid) {
+    TaskListFragment fragment = new TaskListFragment();
+    fragment.groupUid = parentUid;
+    return fragment;
+  }
 
   @Override public void onAttach(Context context) {
     super.onAttach(context);
@@ -129,30 +140,46 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
   }
 
   private void fetchTaskList() {
+    if (groupUid != null) {
+      fetchGroupTasks();
+    } else {
+      fetchAllUpcomingTasks();
+    }
+  }
+
+  private void fetchAllUpcomingTasks() {
+    if (TaskService.getInstance().hasLoadedTasks) {
+      if (TaskService.getInstance().hasUpcomingTasks()) {
+        groupTasksAdapter.changeToTaskList(TaskService.getInstance().upcomingTasks);
+      } else {
+        handleNoTasksFound();
+      }
+    } else {
+      // todo : make this process cleaner
+    }
+  }
+
+  private void fetchGroupTasks() {
     realm = Realm.getDefaultInstance();
     realm.beginTransaction();
-    groupTasksAdapter.changeToTaskList(
-        realm.where(TaskModel.class).equalTo("parentUid", groupUid).findAll());
+    groupTasksAdapter.changeToTaskList(realm.where(TaskModel.class).equalTo("parentUid", groupUid).findAll());
     realm.commitTransaction();
     swipeRefreshLayout.setRefreshing(true);
     progressDialog.show();
 
-    Call<TaskResponse> call = (groupUid != null) ? GrassrootRestService.getInstance()
-        .getApi()
-        .getGroupTasks(phoneNumber, code, groupUid)
-        : GrassrootRestService.getInstance().getApi().getUserTasks(phoneNumber, code);
+    Call<TaskResponse> call = GrassrootRestService.getInstance()
+            .getApi()
+            .getGroupTasks(phoneNumber, code, groupUid);
 
     call.enqueue(new Callback<TaskResponse>() {
-      @Override public void onResponse(Call<TaskResponse> call, Response<TaskResponse> response) {
+      @Override
+      public void onResponse(Call<TaskResponse> call, Response<TaskResponse> response) {
         progressDialog.hide();
         if (response.isSuccessful()) {
           swipeRefreshLayout.setRefreshing(false);
           final TaskResponse taskResponse = response.body();
-          if (TaskConstants.NO_TASKS_FOUND.equals(taskResponse.getMessage())
-              || (taskResponse.getTasks() == null || taskResponse.getTasks().isEmpty())) {
-            Log.e(TAG, "no tasks ... show the textview");
-            swipeRefreshLayout.setVisibility(View.GONE);
-            noTaskMessageLayout.setVisibility(View.VISIBLE);
+          if (taskResponse.getTasks() == null || taskResponse.getTasks().isEmpty()) {
+            handleNoTasksFound();
           } else {
             groupTasksAdapter.changeToTaskList(taskResponse.getTasks());
             realm.beginTransaction();
@@ -164,17 +191,28 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
         ErrorUtils.handleServerError(rcTaskView, getActivity(), response);
       }
 
-      @Override public void onFailure(Call<TaskResponse> call, Throwable t) {
+      @Override
+      public void onFailure(Call<TaskResponse> call, Throwable t) {
         swipeRefreshLayout.setRefreshing(false);
         progressDialog.hide();
         ErrorUtils.connectivityError(getActivity(), R.string.error_no_network,
-            new NetworkErrorDialogListener() {
-              @Override public void retryClicked() {
-                fetchTaskList();
-              }
-            });
+                new NetworkErrorDialogListener() {
+                  @Override
+                  public void retryClicked() {
+                    fetchTaskList();
+                  }
+                });
       }
     });
+  }
+
+  private void handleNoTasksFound() {
+    swipeRefreshLayout.setVisibility(View.GONE);
+    if (groupUid == null) {
+      noTaskMessageText.setText(R.string.txt_no_task_upcoming);
+      // todo : show a FAB
+    }
+    noTaskMessageLayout.setVisibility(View.VISIBLE);
   }
 
     /*

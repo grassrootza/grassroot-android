@@ -31,8 +31,10 @@ import org.grassroot.android.models.NavDrawerItem;
 import org.grassroot.android.services.ApplicationLoader;
 import org.grassroot.android.services.GcmRegistrationService;
 import org.grassroot.android.adapters.RecyclerTouchListener;
+import org.grassroot.android.services.TaskService;
 import org.grassroot.android.utils.Constant;
 import org.grassroot.android.utils.PreferenceUtils;
+import org.grassroot.android.utils.RealmUtils;
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 
@@ -41,9 +43,10 @@ import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import okhttp3.ResponseBody;
 
 
-public class NavigationDrawerFragment extends Fragment {
+public class NavigationDrawerFragment extends Fragment implements TaskService.TaskServiceListener {
 
     public static final String TAG = NavigationDrawerFragment.class.getCanonicalName();
 
@@ -53,9 +56,12 @@ public class NavigationDrawerFragment extends Fragment {
     private NavigationDrawerAdapter drawerAdapter;
     private int currentlySelectedItem = NavigationConstants.HOME_NAV_GROUPS;
 
-    @BindView(R.id.rv_nav_items) RecyclerView mDrawerRecyclerView;
-    @BindView(R.id.txt_version) TextView txtVersion;
+    NavDrawerItem tasks;
+    NavDrawerItem notifications;
+
     @BindView(R.id.displayName) TextView displayName;
+    @BindView(R.id.rv_nav_items) RecyclerView mDrawerRecyclerView;
+    @BindView(R.id.nav_tv_footer) TextView txtVersion;
 
     public interface NavigationDrawerCallbacks {
         void onNavigationDrawerItemSelected(int position);
@@ -63,6 +69,12 @@ public class NavigationDrawerFragment extends Fragment {
 
     public NavigationDrawerFragment() {
         // Required empty public constructor
+    }
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        EventBus.getDefault().register(this);
     }
 
     @Override
@@ -76,12 +88,6 @@ public class NavigationDrawerFragment extends Fragment {
     }
 
     @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        EventBus.getDefault().register(this);
-    }
-
-    @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
 
@@ -89,7 +95,7 @@ public class NavigationDrawerFragment extends Fragment {
         ButterKnife.bind(this, view);
 
         displayName.setText(PreferenceUtils.getUserName(ApplicationLoader.applicationContext));
-        txtVersion.setText("v " + BuildConfig.VERSION_NAME);
+        txtVersion.setText(String.format(getString(R.string.nav_bar_footer), BuildConfig.VERSION_NAME));
 
         drawerAdapter = new NavigationDrawerAdapter(getActivity(), getData());
 
@@ -118,13 +124,21 @@ public class NavigationDrawerFragment extends Fragment {
 
     public List<NavDrawerItem> getData() {
         draweritems = new ArrayList<>();
-        draweritems.add(new NavDrawerItem(getString(R.string.drawer_group_list), R.drawable.ic_home, R.drawable.ic_home_green, true));
-        draweritems.add(new NavDrawerItem(getString(R.string.drawer_open_tasks), R.drawable.ic_star_gray, R.drawable.ic_star_green, false)); // todo: fix icon
-        draweritems.add(new NavDrawerItem(getString(R.string.Notifications),R.drawable.ic_notification,R.drawable.ic_notification_green,false));
-        draweritems.add(new NavDrawerItem(getString(R.string.Share), R.drawable.ic_share, R.drawable.ic_share_green, false));
-        draweritems.add(new NavDrawerItem(getString(R.string.Profile),R.drawable.ic_profile,R.drawable.ic_profile_green,false));
-        draweritems.add(new NavDrawerItem(getString(R.string.FAQs),R.drawable.ic_faq,R.drawable.ic_faq_green,false));
-        draweritems.add(new NavDrawerItem(getString(R.string.Logout),R.drawable.ic_logout,R.drawable.ic_logout_green,false));
+        draweritems.add(new NavDrawerItem(getString(R.string.drawer_group_list), R.drawable.ic_home, R.drawable.ic_home_green, true, false));
+
+        tasks = new NavDrawerItem(getString(R.string.drawer_open_tasks), R.drawable.ic_star_gray, R.drawable.ic_star_green, false, true); // todo: fix icon
+        tasks.setItemCount(TaskService.getInstance().upcomingTasks.size());
+        TaskService.getInstance().fetchUpcomingTasks(this);
+        draweritems.add(tasks);
+
+        notifications = new NavDrawerItem(getString(R.string.Notifications),R.drawable.ic_notification,R.drawable.ic_notification_green, false, true);
+        notifications.setItemCount(PreferenceUtils.getNotificationCounter(getContext()));
+        draweritems.add(notifications);
+
+        draweritems.add(new NavDrawerItem(getString(R.string.Share), R.drawable.ic_share, R.drawable.ic_share_green, false, false));
+        draweritems.add(new NavDrawerItem(getString(R.string.Profile),R.drawable.ic_profile,R.drawable.ic_profile_green,false, false));
+        draweritems.add(new NavDrawerItem(getString(R.string.FAQs),R.drawable.ic_faq,R.drawable.ic_faq_green,false, false));
+        draweritems.add(new NavDrawerItem(getString(R.string.Logout),R.drawable.ic_logout,R.drawable.ic_logout_green,false, false));
         return draweritems;
     }
 
@@ -176,6 +190,28 @@ public class NavigationDrawerFragment extends Fragment {
         drawerAdapter.notifyDataSetChanged();
     }
 
+    @Override
+    public void tasksLoadedFromServer() {
+        updateTaskCount();
+    }
+
+    @Override
+    public void taskLoadingFromServerFailed(ResponseBody errorBody) {
+        // todo : do something with this, maybe
+    }
+
+    @Override
+    public void tasksLoadedFromDB() {
+        updateTaskCount();
+    }
+
+    private void updateTaskCount() {
+        tasks.setItemCount(TaskService.getInstance().upcomingTasks.size());
+        if (drawerAdapter != null) {
+            drawerAdapter.notifyItemChanged(NavigationConstants.HOME_NAV_TASKS);
+        }
+    }
+
     private void shareApp() {
         Intent shareIntent = new Intent(Intent.ACTION_SEND);
         shareIntent.setType("text/plain");
@@ -190,6 +226,7 @@ public class NavigationDrawerFragment extends Fragment {
                         unregisterGcm();
                         PreferenceUtils.clearAll(getActivity().getApplicationContext());
                         EventBus.getDefault().post(new UserLoggedOutEvent());
+                        RealmUtils.deleteAllObjects();
                         Intent open = new Intent(getActivity(), StartActivity.class);
                         startActivity(open);
                     }

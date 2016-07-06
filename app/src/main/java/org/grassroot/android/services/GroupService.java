@@ -8,6 +8,8 @@ import io.realm.RealmList;
 import io.realm.RealmResults;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
+
 import org.grassroot.android.R;
 import org.grassroot.android.interfaces.NetworkErrorDialogListener;
 import org.grassroot.android.models.Group;
@@ -27,6 +29,7 @@ public class GroupService {
 
   private Realm realm;
 
+  // todo : remove these?
   public ArrayList<Group> userGroups;
   public HashMap<String, Integer> groupUidMap;
 
@@ -60,6 +63,15 @@ public class GroupService {
     return methodInstance;
   }
 
+  public List<Group> getGroups() {
+    if (userGroups == null || userGroups.isEmpty()) {
+      return userGroups;
+    } else {
+      loadGroupsFromDB();
+      return userGroups;
+    }
+  }
+
   public void fetchGroupList(final Activity activity, final View errorViewHolder,
       final GroupServiceListener listener) {
 
@@ -80,9 +92,9 @@ public class GroupService {
             if (response.isSuccessful()) {
               groupsLoading = false;
               groupsFinishedLoading = true;
-              listener.groupListLoaded();
               createUidMap();
               saveGroupsInDB(response.body().getGroups());
+              listener.groupListLoaded();
             } else {
               Log.e(TAG, response.message());
               ErrorUtils.handleServerError(errorViewHolder, activity, response);

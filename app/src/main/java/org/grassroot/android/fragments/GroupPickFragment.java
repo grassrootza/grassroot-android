@@ -53,10 +53,11 @@ public class GroupPickFragment extends Fragment implements GroupPickAdapter.Grou
 
         GroupPickFragment fragment = new GroupPickFragment();
         List<Group> groups = new ArrayList<>();
+        List<Group> allGroups = GroupService.getInstance().getGroups();
 
-        for (Group g : GroupService.getInstance().userGroups) {
-            // note : RealmProxyString is interfering with hash code / equals on list contains, hence doing conversion to string ... may be a more efficient way?
-            List<String> permissions = RealmUtils.convertListOfRealmStringInListOfString(g.getPermissions());
+        Log.e(TAG, "allGroups ... " + allGroups.size());
+        for (Group g : allGroups) {
+            List<String> permissions = g.getPermissionsList();
             if (permissions.contains(permissionToFilter)) {
                 groups.add(g);
             }

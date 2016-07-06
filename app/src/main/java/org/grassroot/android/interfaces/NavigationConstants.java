@@ -14,4 +14,7 @@ public interface NavigationConstants {
     int HOME_NAV_FAQ = 5;
     int HOME_NAV_LOGOUT = 6;
 
+    String TASKS_TAG = "TASKS";
+    String NOTIFICATIONS_TAG = "NOTIFICATIONS";
+
 }

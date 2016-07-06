@@ -7,6 +7,7 @@ package org.grassroot.android.adapters;
 import android.animation.AnimatorInflater;
 import android.animation.AnimatorSet;
 import android.content.Context;
+import android.graphics.Typeface;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -18,6 +19,7 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import org.grassroot.android.R;
+import org.grassroot.android.interfaces.NavigationConstants;
 import org.grassroot.android.models.NavDrawerItem;
 import org.grassroot.android.services.ApplicationLoader;
 import org.grassroot.android.utils.PreferenceUtils;
@@ -62,29 +64,25 @@ public class NavigationDrawerAdapter extends RecyclerView.Adapter<NavigationDraw
     @Override
     public void onBindViewHolder(MyViewHolder holder, int position) {
 
-        NavDrawerItem myDrawerModel = data.get(position);
+        NavDrawerItem drawerItem = data.get(position);
 
-        holder.title.setText(myDrawerModel.getTitle());
-        holder.titleicon.setBackgroundResource(myDrawerModel.getIcon());
+        holder.title.setText(drawerItem.getTitle());
+        holder.titleicon.setBackgroundResource(drawerItem.getIcon());
 
-        if (myDrawerModel.isChecked()) {
+        if (drawerItem.isChecked()) {
             holder.rlDrawerRow.setBackgroundColor(rowSelectedBgColor);
             holder.title.setTextColor(textSelectedColor);
-            holder.titleicon.setBackgroundResource(myDrawerModel.getChangeicon());
+            holder.title.setTypeface(Typeface.DEFAULT_BOLD);
+            holder.titleicon.setBackgroundResource(drawerItem.getChangeicon());
         } else {
             holder.rlDrawerRow.setBackgroundColor(rowNormalColor);
             holder.title.setTextColor(textNormalColor);
         }
 
-        if (myDrawerModel.getTitle().equalsIgnoreCase(mContext.getString(R.string.Notifications))) {
+        if (drawerItem.isShowItemCount()) {
             holder.txtTitleCounter.setVisibility(View.VISIBLE);
-            int notificationcount = PreferenceUtils.getNotificationCounter(mContext);
-            Log.e(TAG, "notificationcount is " + notificationcount);
-            holder.txtTitleCounter.setText("" + notificationcount);
-        } else {
-            holder.txtTitleCounter.setVisibility(View.INVISIBLE);
+            holder.txtTitleCounter.setText(String.valueOf(drawerItem.getItemCount()));
         }
-
     }
 
     @Override

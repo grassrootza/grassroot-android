@@ -22,7 +22,7 @@ public class Constant {
     public static final String stagingUrl = "https://staging.grassroot.org.za/api/";
     public static final String localUrl = "http://10.0.2.2:8080/api/";
 
-    public static final String restUrl = BuildConfig.BUILD_TYPE.equals("debug") ? stagingUrl
+    public static final String restUrl = BuildConfig.BUILD_TYPE.equals("debug") ? localUrl
             : BuildConfig.FLAVOR.equals(PROD) ? productionUrl : stagingUrl;
 
     public static final String USER_TOKEN = "user_token";
@@ -37,7 +37,6 @@ public class Constant {
     public static final String SHOW_ACTION_BUTTON_FLAG = "show_action_button";
     public static final String SUCCESS_MESSAGE = "success_message";
 
-    public static final String NO_GROUP_TASKS = "NO_GROUP_ACTIVITIES";
     public static final String UID = "id";
     public static final String TITLE = "title";
     public static final String ENTITY_TYPE = "entity_type";
