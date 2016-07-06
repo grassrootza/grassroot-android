@@ -25,7 +25,7 @@ android {
 
     defaultConfig {
         applicationId "org.grassroot.android"
-        minSdkVersion 14
+        minSdkVersion 9
         targetSdkVersion 23
         versionCode 4
         versionName "0.1.4"
@@ -84,7 +84,6 @@ dependencies {
   compile 'com.android.support:design:23.4.0'
   compile 'com.android.support:recyclerview-v7:23.4.0'
   compile 'com.android.support:cardview-v7:23.4.0'
-  compile 'com.github.clans:fab:1.6.3'
   compile 'com.jakewharton:butterknife:8.0.0'
   apt 'com.jakewharton:butterknife-compiler:8.0.0'
   compile 'com.squareup.retrofit2:retrofit:2.1.0'

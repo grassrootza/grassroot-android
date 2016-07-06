@@ -2,6 +2,7 @@ package org.grassroot.android.activities;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -9,9 +10,6 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-
-import com.github.clans.fab.FloatingActionButton;
-import com.github.clans.fab.FloatingActionMenu;
 
 import org.grassroot.android.R;
 import org.grassroot.android.fragments.EditTaskFragment;
@@ -49,24 +47,17 @@ public class GroupMembersActivity extends PortraitActivity implements MemberList
     private MemberListFragment memberListFragment;
     private NewTaskMenuFragment newTaskMenuFragment;
 
-    @BindView(R.id.lm_toolbar)
-    Toolbar lmToolbar;
-    @BindView(R.id.lm_tv_groupname)
-    TextView tvGroupName;
-    @BindView(R.id.lm_tv_existing_members_title)
-    TextView tvExistingMembers;
+    @BindView(R.id.lm_toolbar) Toolbar lmToolbar;
+    @BindView(R.id.lm_tv_groupname) TextView tvGroupName;
+    @BindView(R.id.lm_tv_existing_members_title) TextView tvExistingMembers;
 
-    @BindView(R.id.lm_ic_floating_menu)
-    FloatingActionMenu floatingMenu;
-    @BindView(R.id.lm_fab_add_members)
-    FloatingActionButton fabAddMembers;
-    @BindView(R.id.lm_fab_new_task)
-    FloatingActionButton fabNewTask;
+    private boolean menuOpen;
+    @BindView(R.id.lm_ic_floating_menu) FloatingActionButton floatingMenu;
+    @BindView(R.id.lm_fab_add_members) LinearLayout fabAddMembers;
+    @BindView(R.id.lm_fab_new_task) LinearLayout fabNewTask;
 
-    @BindView(R.id.lm_ll_check_clear_all)
-    LinearLayout llCheckAllClearAll;
-    @BindView(R.id.lm_btn_done)
-    Button btnDone;
+    @BindView(R.id.lm_ll_check_clear_all) LinearLayout llCheckAllClearAll;
+    @BindView(R.id.lm_btn_done) Button btnDone;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -111,7 +102,6 @@ public class GroupMembersActivity extends PortraitActivity implements MemberList
         newTaskMenuFragment = NewTaskMenuFragment.newInstance(group, false);
 
         setUpToolbar();
-        setUpFloatingMenu();
         setUpMemberListFragment();
     }
 
@@ -122,14 +112,11 @@ public class GroupMembersActivity extends PortraitActivity implements MemberList
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
     }
 
-    private void setUpFloatingMenu() {
-        floatingMenu.setOnMenuToggleListener(new FloatingActionMenu.OnMenuToggleListener() {
-            @Override
-            public void onMenuToggle(boolean opened) {
-                fabAddMembers.setVisibility(opened ? View.VISIBLE : View.GONE);
-                fabNewTask.setVisibility(opened ? View.VISIBLE : View.GONE);
-            }
-        });
+    @OnClick(R.id.lm_ic_floating_menu)
+    public void toggleActionMenu() {
+        fabAddMembers.setVisibility(menuOpen ? View.GONE : View.VISIBLE);
+        fabNewTask.setVisibility(menuOpen ? View.GONE : View.VISIBLE);
+        menuOpen = !menuOpen;
     }
 
     private void setUpMemberListFragment() {
@@ -193,7 +180,7 @@ public class GroupMembersActivity extends PortraitActivity implements MemberList
 
     @OnClick(R.id.lm_fab_add_members)
     public void launchAddMembers() {
-        floatingMenu.close(true);
+        toggleActionMenu();
         Intent i = MenuUtils.constructIntent(this, AddMembersActivity.class, groupUid, groupName);
         startActivity(i);
     }
@@ -201,7 +188,7 @@ public class GroupMembersActivity extends PortraitActivity implements MemberList
     @OnClick(R.id.lm_fab_new_task)
     public void launchNewTask() {
         // todo: tell new task menu to not include "add members" & only allow it if at least one permission
-        floatingMenu.close(true);
+        toggleActionMenu();
         getSupportFragmentManager().beginTransaction()
                 .setCustomAnimations(R.anim.up_from_bottom, R.anim.down_from_top)
                 .add(R.id.rl_lm_root, newTaskMenuFragment)

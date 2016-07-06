@@ -3,6 +3,7 @@ package org.grassroot.android.models;
 import android.content.Context;
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.util.Log;
 
 import io.realm.Realm;
 import org.grassroot.android.R;
@@ -11,9 +12,11 @@ import org.grassroot.android.utils.Constant;
 import org.grassroot.android.utils.RealmUtils;
 
 import java.text.ParseException;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.List;
 
 import io.realm.RealmList;
 import io.realm.RealmObject;
@@ -24,6 +27,8 @@ import io.realm.annotations.PrimaryKey;
  * Created by paballo on 2016/05/04.
  */
 public class Group extends RealmObject implements Parcelable, Comparable<Group> {
+
+    private static final String TAG = Group.class.getSimpleName();
 
     @PrimaryKey
     private String groupUid;
@@ -56,6 +61,10 @@ public class Group extends RealmObject implements Parcelable, Comparable<Group> 
 
     private boolean hasTasks;
 
+    private RealmList<RealmString> permissions = new RealmList<>(); // todo: convert this to a set so can do fast hashing
+    @Ignore
+    private List<String> stringPermissions = new ArrayList<>(); // bit of a hack to work around .contains issue
+
     public void setLastChangeType(String lastChangeType) {
         this.lastChangeType = lastChangeType;
     }
@@ -63,8 +72,6 @@ public class Group extends RealmObject implements Parcelable, Comparable<Group> 
     public Group() {
     }
 
-
-    private RealmList<RealmString> permissions = new RealmList<>(); // todo: convert this to a set so can do fast hashing
 
     public String getGroupUid() {
         return groupUid;
@@ -152,6 +159,13 @@ public class Group extends RealmObject implements Parcelable, Comparable<Group> 
         return permissions;
     }
 
+    public List<String> getStringPermissions() {
+        if (stringPermissions == null || stringPermissions.size() != permissions.size()) {
+            stringPermissions = RealmUtils.convertListOfRealmStringInListOfString(permissions);
+        }
+        return stringPermissions;
+    }
+
     public void setPermissions(RealmList<RealmString> permissions) {
         this.permissions = permissions;
     }
@@ -159,36 +173,38 @@ public class Group extends RealmObject implements Parcelable, Comparable<Group> 
     /* Helper methods to centralize checking permissions */
 
     public boolean canCallMeeting() {
-        return permissions.contains(GroupConstants.PERM_CREATE_MTG);
+        return getStringPermissions().contains(GroupConstants.PERM_CREATE_MTG);
     }
 
     public boolean canCallVote() {
-        return permissions.contains(GroupConstants.PERM_CALL_VOTE);
+        return getStringPermissions().contains(GroupConstants.PERM_CALL_VOTE);
     }
 
     public boolean canCreateTodo() {
-        return permissions.contains(GroupConstants.PERM_CREATE_TODO);
+        return getStringPermissions().contains(GroupConstants.PERM_CREATE_TODO);
     }
 
     public boolean canAddMembers() {
-        return permissions.contains(GroupConstants.PERM_ADD_MEMBER);
+        return getStringPermissions().contains(GroupConstants.PERM_ADD_MEMBER);
     }
 
     public boolean hasCreatePermissions() {
-        return permissions.contains(GroupConstants.PERM_CREATE_MTG) || permissions.contains(GroupConstants.PERM_CALL_VOTE)
-            || permissions.contains(GroupConstants.PERM_CREATE_TODO) || permissions.contains(GroupConstants.PERM_ADD_MEMBER);
+        return getStringPermissions().contains(GroupConstants.PERM_CREATE_MTG) ||
+                getStringPermissions().contains(GroupConstants.PERM_CALL_VOTE) ||
+                getStringPermissions().contains(GroupConstants.PERM_CREATE_TODO) ||
+                getStringPermissions().contains(GroupConstants.PERM_ADD_MEMBER);
     }
 
     public boolean canViewMembers() {
-        return permissions.contains(GroupConstants.PERM_VIEW_MEMBERS);
+        return getStringPermissions().contains(GroupConstants.PERM_VIEW_MEMBERS);
     }
 
     public boolean canDeleteMembers() {
-        return permissions.contains(GroupConstants.PERM_DEL_MEMBER);
+        return getStringPermissions().contains(GroupConstants.PERM_DEL_MEMBER);
     }
 
     public boolean canEditGroup() {
-        return permissions.contains(GroupConstants.PERM_GROUP_SETTNGS);
+        return getStringPermissions().contains(GroupConstants.PERM_GROUP_SETTNGS);
     }
 
     private void constructDate() {

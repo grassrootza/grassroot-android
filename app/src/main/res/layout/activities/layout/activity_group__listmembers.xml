@@ -104,46 +104,75 @@
     </android.support.design.widget.CoordinatorLayout>
 
     <!-- must of this should be put in style, but don't work in style (Android, robust, etc), hence copy & pasted -->
-    <com.github.clans.fab.FloatingActionMenu
-        android:id="@+id/lm_ic_floating_menu"
+    <LinearLayout
+        android:id="@+id/menu2"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-
-        fab:menu_openDirection="up"
-        fab:menu_labels_ellipsize="end"
-        fab:menu_labels_singleLine="true"
-        fab:menu_backgroundColor="@android:color/transparent"
-
-        fab:menu_shadowColor="#444"
-        fab:menu_colorNormal="#FFB805"
-        fab:menu_colorPressed="#F2AB00"
-        fab:menu_colorRipple="#D99200"
-
         android:layout_alignParentBottom="true"
         android:layout_alignParentRight="true"
+        android:gravity="bottom|right"
+        android:orientation="vertical"
+
         android:paddingRight="10dp"
         android:paddingBottom="10dp"
         android:paddingLeft="10dp">
 
-        <com.github.clans.fab.FloatingActionButton
-            style="@style/MenuButtonsStyle"
-            fab:fab_label="@string/gm_add_members_lc"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+        <LinearLayout
             android:id="@+id/lm_fab_add_members"
-            android:src="@drawable/ic_fab_add_contact"
-            android:visibility="gone" />
-
-        <com.github.clans.fab.FloatingActionButton
-            style="@style/MenuButtonsStyle"
-            fab:fab_label="@string/gm_new_task_lc"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:id="@+id/lm_fab_new_task"
-            android:src="@drawable/ic_fab_call"
-            android:visibility="gone" />
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:visibility="gone">
 
-    </com.github.clans.fab.FloatingActionMenu>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/gm_add_members_lc"
+                android:textColor="@color/black"
+                android:textSize="@dimen/txt_large"/>
+
+            <android.support.design.widget.FloatingActionButton
+                android:src="@drawable/ic_fab_add_contact"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:elevation="6dp"
+                app:backgroundTint="#FFB805"
+                app:rippleColor="#D99200"/>
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/lm_fab_new_task"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:visibility="gone">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/gm_new_task_lc"
+                android:textColor="@color/black"
+                android:textSize="@dimen/txt_large"/>
+
+            <android.support.design.widget.FloatingActionButton
+                android:src="@drawable/ic_fab_call"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:elevation="6dp"
+                app:backgroundTint="#FFB805"
+                app:rippleColor="#D99200"/>
+
+        </LinearLayout>
+
+        <android.support.design.widget.FloatingActionButton
+            android:id="@+id/lm_ic_floating_menu"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+    </LinearLayout>
 
     <Button
         android:id="@+id/lm_btn_done"

@@ -168,7 +168,10 @@
     <string name="cg_group_description">Group description</string>
     <string name="cg_title_contact">Current group members</string>
     <string name="cg_member_list_header">Group members</string>
+
     <string name="bt_add_manual">Add</string>
+    <string name="bt_add_contacts">Add from contacts</string>
+    <string name="bt_add_manually">Add manually</string>
 
     <!-- Add & remove members -->
     <string name="am_title">Add members to group</string>
