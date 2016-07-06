@@ -2,11 +2,13 @@ package org.grassroot.android.models;
 
 import android.os.Parcel;
 import android.os.Parcelable;
+import io.realm.Realm;
 import io.realm.RealmObject;
 import io.realm.annotations.PrimaryKey;
 import java.text.ParseException;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.Set;
 import org.grassroot.android.interfaces.TaskConstants;
 import org.grassroot.android.utils.Constant;
 
@@ -29,14 +31,14 @@ public class TaskModel extends RealmObject implements Parcelable, Comparable<Tas
   private String deadlineISO;
   private Date deadlineDate;
 
-  private Boolean hasResponded;
-  private Boolean canAction;
+  private boolean hasResponded;
+  private boolean canAction;
   private boolean canEdit;
   private boolean createdByUser;
 
   private String reply;
 
-  private Boolean wholeGroupAssigned;
+  private boolean wholeGroupAssigned;
   private int assignedMemberCount;
 
   private String completedYes;
@@ -44,6 +46,33 @@ public class TaskModel extends RealmObject implements Parcelable, Comparable<Tas
   private boolean canRespondYes;
   private boolean canRespondNo;
   private boolean canMarkCompleted;
+  private int minutes;
+  private boolean isLocal = false;
+
+  public boolean isLocal() {
+    return isLocal;
+  }
+
+  public void setLocal(boolean local) {
+    isLocal = local;
+  }
+  //private Rea<String> members;
+  //
+  //public Set<String> getMembers() {
+  //  return members;
+  //}
+  //
+  //public void setMembers(Set<String> members) {
+  //  this.members = members;
+  //}
+
+  public int getMinutes() {
+    return minutes;
+  }
+
+  public void setMinutes(int minutes) {
+    this.minutes = minutes;
+  }
 
   public TaskModel() {
   }
@@ -92,11 +121,11 @@ public class TaskModel extends RealmObject implements Parcelable, Comparable<Tas
     return getDeadlineDate().after(new Date());
   }
 
-  public Boolean hasResponded() {
+  public boolean hasResponded() {
     return hasResponded;
   }
 
-  public Boolean canAction() {
+  public boolean canAction() {
     return canAction;
   }
 
@@ -108,7 +137,7 @@ public class TaskModel extends RealmObject implements Parcelable, Comparable<Tas
     return reply;
   }
 
-  public Boolean getWholeGroupAssigned() {
+  public boolean getWholeGroupAssigned() {
     return wholeGroupAssigned;
   }
 
@@ -244,5 +273,41 @@ public class TaskModel extends RealmObject implements Parcelable, Comparable<Tas
         "type='" + type + '\'' +
         ", canEdit=" + canEdit +
         '}';
+  }
+
+  public void setDeadlineISO(String deadlineISO) {
+    this.deadlineISO = deadlineISO;
+  }
+
+  public void setTaskUid(String taskUid) {
+    this.taskUid = taskUid;
+  }
+
+  public void setLocation(String location) {
+    this.location = location;
+  }
+
+  public void setCreatedByUserName(String createdByUserName) {
+    this.createdByUserName = createdByUserName;
+  }
+
+  public void setType(String type) {
+    this.type = type;
+  }
+
+  public void setParentUid(String parentUid) {
+    this.parentUid = parentUid;
+  }
+
+  public void setDeadline(String deadline) {
+    this.deadline = deadline;
+  }
+
+  public String getDeadlineISO() {
+    return deadlineISO;
+  }
+
+  public void setReply(String reply) {
+    this.reply = reply;
   }
 }

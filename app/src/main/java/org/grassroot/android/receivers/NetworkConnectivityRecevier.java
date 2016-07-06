@@ -6,10 +6,14 @@ import android.content.Intent;
 import android.util.Log;
 import io.realm.Realm;
 import io.realm.RealmResults;
+import java.util.HashSet;
 import org.grassroot.android.events.GroupCreatedEvent;
+import org.grassroot.android.interfaces.TaskConstants;
 import org.grassroot.android.models.Group;
 import org.grassroot.android.models.GroupResponse;
 import org.grassroot.android.models.Member;
+import org.grassroot.android.models.TaskModel;
+import org.grassroot.android.models.TaskResponse;
 import org.grassroot.android.services.GrassrootRestService;
 import org.grassroot.android.utils.NetworkUtils;
 import org.grassroot.android.utils.PreferenceUtils;
@@ -46,7 +50,6 @@ public class NetworkConnectivityRecevier extends BroadcastReceiver {
                   g.deleteFromRealm();
                   members.deleteAllFromRealm();
                   realm.commitTransaction();
-                  realm.close();
                   Log.d("tag", "returning group created! with UID : " + response.body()
                       .getGroups()
                       .get(0)
@@ -61,6 +64,48 @@ public class NetworkConnectivityRecevier extends BroadcastReceiver {
               }
             });
       }
+      final RealmResults<TaskModel> tasks = realm.where(TaskModel.class).equalTo("isLocal", true).findAll();
+      for(final TaskModel model : tasks){
+      setUpApiCall(model,context).enqueue(new Callback<TaskResponse>() {
+        @Override public void onResponse(Call<TaskResponse> call, Response<TaskResponse> response) {
+          realm.beginTransaction();
+          realm.copyToRealmOrUpdate(response.body().getTasks().get(0));
+          model.deleteFromRealm();
+          realm.commitTransaction();
+          System.out.println("TASK CREATED" + response.body().getTasks().get(0).toString());
+        }
+
+        @Override public void onFailure(Call<TaskResponse> call, Throwable t) {
+
+        }
+      });
+      }
+
+    }
+  }
+
+  public Call<TaskResponse> setUpApiCall(TaskModel model,Context context) {
+    final String phoneNumber = PreferenceUtils.getUserPhoneNumber(context);
+    final String code = PreferenceUtils.getAuthToken(context);
+
+    switch (model.getType()) {
+      case TaskConstants.MEETING:
+        return GrassrootRestService.getInstance()
+            .getApi()
+            .createMeeting(phoneNumber, code, model.getParentUid(), model.getTitle(), model.getDescription(),
+                model.getDeadlineISO(), model.getMinutes(), model.getLocation(), new HashSet<String>());
+      case TaskConstants.VOTE:
+        return GrassrootRestService.getInstance()
+            .getApi()
+            .createVote(phoneNumber, code, model.getParentUid(), model.getTitle(), model.getDescription(),
+                model.getDeadlineISO(), model.getMinutes(), new HashSet<String>(), false);
+      case TaskConstants.TODO:
+        return GrassrootRestService.getInstance()
+            .getApi()
+            .createTodo(phoneNumber, code, model.getParentUid(), model.getTitle(), model.getDescription(),
+                model.getDeadlineISO(), model.getMinutes(), new HashSet<String>());
+      default:
+        throw new UnsupportedOperationException("Error! Missing task type in call");
     }
   }
 }
