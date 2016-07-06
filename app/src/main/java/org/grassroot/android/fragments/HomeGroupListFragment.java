@@ -216,7 +216,7 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment imple
             public void groupListLoaded() {
                 hideProgress();
                 rcGroupList.setVisibility(View.VISIBLE);
-                groupListRowAdapter.addData(GroupService.getInstance().userGroups); // todo : instead draw straight from Realm
+                groupListRowAdapter.setGroupList(loadGroupsFromDB()); // todo : instead draw straight from Realm
                 ivGhpSearch.setEnabled(true);
                 ivGhpSort.setEnabled(true);
                 rcGroupList.setVisibility(View.VISIBLE);
@@ -237,7 +237,7 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment imple
         GroupService.getInstance().refreshGroupList(getActivity(), new GroupService.GroupServiceListener() {
             @Override
             public void groupListLoaded() {
-                groupListRowAdapter.setGroupList(GroupService.getInstance().userGroups);
+                groupListRowAdapter.setGroupList(loadGroupsFromDB());
                 glSwipeRefresh.setRefreshing(false);
               }
 

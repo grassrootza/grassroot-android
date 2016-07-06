@@ -218,6 +218,11 @@ public class CreateGroupActivity extends PortraitActivity
       realm.beginTransaction();
       realm.copyToRealmOrUpdate(group);
       realm.commitTransaction();
+      realm.beginTransaction();
+      for (Member m : groupMembers) {
+        m.setGroupUid(group.getGroupUid());
+      }
+      realm.commitTransaction();
       realm.close();
       setResultIntent(group);
       finish();

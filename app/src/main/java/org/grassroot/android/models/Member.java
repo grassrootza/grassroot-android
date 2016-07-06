@@ -143,4 +143,8 @@ public class Member extends RealmObject implements Parcelable {
                 ", selected=" + selected + '\'' +
                 '}';
     }
+
+    public void setGroupUid(String groupUid) {
+        this.groupUid = groupUid;
+    }
 }
