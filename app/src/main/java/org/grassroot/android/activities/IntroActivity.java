@@ -7,6 +7,7 @@ import android.animation.ObjectAnimator;
 import android.animation.PropertyValuesHolder;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
@@ -18,6 +19,7 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import org.grassroot.android.BuildConfig;
 import org.grassroot.android.R;
 import org.grassroot.android.utils.Constant;
 
@@ -114,34 +116,44 @@ public class IntroActivity extends AppCompatActivity {
     }
 
     private void animateInto() {
-        final int heightShift = - (getApplicationContext().getResources().getDisplayMetrics().heightPixels) / 3;
 
-        PropertyValuesHolder scaleX = PropertyValuesHolder.ofFloat(View.SCALE_X, 0.7f);
-        PropertyValuesHolder scaleY = PropertyValuesHolder.ofFloat(View.SCALE_Y, 0.7f);
-        PropertyValuesHolder pushUp = PropertyValuesHolder.ofFloat(View.TRANSLATION_Y, heightShift);
+        if (Build.VERSION.SDK_INT >= 14) {
 
-        // create an animator even though not visible, so it moves with the logo (else lots of layout fiddly errors)
-        // i do not have the faintest clue what's happening with the heights in here, so ...
+            final int heightShift = -(getApplicationContext().getResources().getDisplayMetrics().heightPixels) / 3;
 
-        ObjectAnimator pagerAnim = ObjectAnimator.ofFloat(viewPager, "y", heightShift);
-        ObjectAnimator logoAnim = ObjectAnimator.ofPropertyValuesHolder(logoImage, scaleX, scaleY, pushUp);
+            PropertyValuesHolder scaleX = PropertyValuesHolder.ofFloat(View.SCALE_X, 0.7f);
+            PropertyValuesHolder scaleY = PropertyValuesHolder.ofFloat(View.SCALE_Y, 0.7f);
+            PropertyValuesHolder pushUp = PropertyValuesHolder.ofFloat(View.TRANSLATION_Y, heightShift);
 
-        logoAnim.setDuration(Constant.longDelay);
-        logoAnim.addListener(new AnimatorListenerAdapter() {
-                    @Override
-                    public void onAnimationEnd(Animator animation) {
-                        super.onAnimationEnd(animation);
-                        buttonLayout.setVisibility(View.VISIBLE);
+            // create an animator even though not visible, so it moves with the logo (else lots of layout fiddly errors)
+            // i do not have the faintest clue what's happening with the heights in here, so ...
 
-                        viewPager.setVisibility(View.VISIBLE);
-                        viewPager.setCurrentItem(0);
-                    }
-                });
+            ObjectAnimator pagerAnim = ObjectAnimator.ofFloat(viewPager, "y", heightShift);
+            ObjectAnimator logoAnim = ObjectAnimator.ofPropertyValuesHolder(logoImage, scaleX, scaleY, pushUp);
 
-        AnimatorSet animatorSet = new AnimatorSet();
-        animatorSet.setDuration(Constant.longDelay);
-        animatorSet.playTogether(logoAnim, pagerAnim);
-        animatorSet.start();
+            logoAnim.setDuration(Constant.longDelay);
+            logoAnim.addListener(new AnimatorListenerAdapter() {
+                @Override
+                public void onAnimationEnd(Animator animation) {
+                    super.onAnimationEnd(animation);
+                    buttonLayout.setVisibility(View.VISIBLE);
+
+                    viewPager.setVisibility(View.VISIBLE);
+                    viewPager.setCurrentItem(0);
+                }
+            });
+
+            AnimatorSet animatorSet = new AnimatorSet();
+            animatorSet.setDuration(Constant.longDelay);
+            animatorSet.playTogether(logoAnim, pagerAnim);
+            animatorSet.start();
+
+        } else {
+            // todo : move the logo
+            buttonLayout.setVisibility(View.VISIBLE);
+            viewPager.setVisibility(View.VISIBLE);
+            viewPager.setCurrentItem(0);
+        }
     }
 
     public class IntroAdapter extends PagerAdapter {

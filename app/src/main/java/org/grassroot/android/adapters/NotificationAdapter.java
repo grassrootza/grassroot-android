@@ -52,9 +52,9 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
         //had to set this so that cards that should not be colored are not
         holder.setIsRecyclable(false);
         if(notification.isRead()){
-            Log.e(TAG, "notification was read, default color");
+            Log.d(TAG, "notification was read, default color");
         }else{
-            Log.e(TAG, "notification not read, change color");
+            Log.d(TAG, "notification not read, change color");
             holder.mainView.setCardBackgroundColor(Color.LTGRAY);
         }
 

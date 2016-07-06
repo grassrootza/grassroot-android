@@ -9,15 +9,11 @@ public class NavDrawerItem {
     public int changeicon;
     private boolean isChecked;
 
-
-
-    public  NavDrawerItem(String title,int icon,int changeicon,boolean isChecked)
-    {
+    public  NavDrawerItem(String title,int icon,int changeicon,boolean isChecked) {
         this.icon = icon;
         this.title = title;
         this.changeicon = changeicon;
         this.isChecked = isChecked;
-
     }
 
     public NavDrawerItem() {

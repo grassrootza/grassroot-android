@@ -3,23 +3,23 @@ package org.grassroot.android.activities;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.SystemClock;
+import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
+import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
-import com.github.clans.fab.FloatingActionButton;
-import com.github.clans.fab.FloatingActionMenu;
 import org.grassroot.android.R;
-import org.grassroot.android.interfaces.GroupConstants;
-import org.grassroot.android.models.Contact;
-import org.grassroot.android.services.GrassrootRestService;
-import org.grassroot.android.models.GenericResponse;
-import org.grassroot.android.models.Member;
 import org.grassroot.android.fragments.ContactSelectionFragment;
 import org.grassroot.android.fragments.MemberListFragment;
+import org.grassroot.android.interfaces.GroupConstants;
+import org.grassroot.android.models.Contact;
+import org.grassroot.android.models.GenericResponse;
+import org.grassroot.android.models.Member;
+import org.grassroot.android.services.GrassrootRestService;
 import org.grassroot.android.utils.Constant;
 import org.grassroot.android.utils.ErrorUtils;
 import org.grassroot.android.utils.PermissionUtils;
@@ -28,9 +28,7 @@ import org.grassroot.android.utils.PreferenceUtils;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -60,29 +58,20 @@ public class AddMembersActivity extends AppCompatActivity implements
     private List<Member> manuallyAddedMembers;
 
     private boolean onMainScreen;
+    private boolean menuOpen;
 
-    @BindView(R.id.rl_am_root)
-    RelativeLayout amRlRoot;
-    @BindView(R.id.am_txt_toolbar)
-    TextView toolbarTitle;
+    @BindView(R.id.rl_am_root) RelativeLayout amRlRoot;
+    @BindView(R.id.am_txt_toolbar) TextView toolbarTitle;
 
-    @BindView(R.id.am_add_member_options)
-    FloatingActionMenu addMemberOptions;
-    @BindView(R.id.icon_add_from_contacts)
-    FloatingActionButton addMemberFromContacts;
-    @BindView(R.id.icon_add_member_manually)
-    FloatingActionButton addMemberManually;
+    @BindView(R.id.am_add_member_options) FloatingActionButton fabAddMemberOptions;
+    @BindView(R.id.ll_add_member_contacts) LinearLayout addMemberFromContacts;
+    @BindView(R.id.ll_add_member_manually) LinearLayout addMemberManually;
 
-    @BindView(R.id.am_tv_groupname)
-    TextView groupNameView;
+    @BindView(R.id.am_tv_groupname) TextView groupNameView;
+    @BindView(R.id.tv_am_new_members_title) TextView newMembersTitle;
 
-    @BindView(R.id.am_new_member_list_container)
-    RelativeLayout newMemberContainer;
-    @BindView(R.id.tv_am_new_members_title)
-    TextView newMembersTitle;
-
-    @BindView(R.id.am_existing_member_list_container)
-    RelativeLayout existingMemberContainer;
+    @BindView(R.id.am_new_member_list_container) RelativeLayout newMemberContainer;
+    @BindView(R.id.am_existing_member_list_container) RelativeLayout existingMemberContainer;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -98,7 +87,6 @@ public class AddMembersActivity extends AppCompatActivity implements
             Log.d(TAG, "inside addMembersActivity ... passed extras bundle = " + extras.toString());
             init(extras);
             groupNameView.setText(groupName); // todo: handle long group names
-            setupFloatingActionButtons();
             setupExistingMemberRecyclerView();
             setupNewMemberRecyclerView();
         }
@@ -115,14 +103,12 @@ public class AddMembersActivity extends AppCompatActivity implements
         onMainScreen = true;
     }
 
-    private void setupFloatingActionButtons() {
-        addMemberOptions.setOnMenuToggleListener(new FloatingActionMenu.OnMenuToggleListener() {
-            @Override
-            public void onMenuToggle(boolean opened) {
-                addMemberFromContacts.setVisibility(opened ? View.VISIBLE : View.GONE);
-                addMemberManually.setVisibility(opened ? View.VISIBLE : View.GONE);
-            }
-        });
+    @OnClick(R.id.am_add_member_options)
+    public void toggleAddMenu() {
+        fabAddMemberOptions.setImageResource(menuOpen ? R.drawable.ic_add : R.drawable.ic_add_45d);
+        addMemberFromContacts.setVisibility(menuOpen ? View.GONE : View.VISIBLE);
+        addMemberManually.setVisibility(menuOpen ? View.GONE : View.VISIBLE);
+        menuOpen = !menuOpen;
     }
 
     private void setupExistingMemberRecyclerView() {
@@ -149,9 +135,9 @@ public class AddMembersActivity extends AppCompatActivity implements
                 .commit();
     }
 
-    @OnClick(R.id.icon_add_from_contacts)
+    @OnClick(R.id.ll_add_member_contacts)
     public void addFromContacts() {
-        addMemberOptions.close(true);
+        toggleAddMenu();
         if (!PermissionUtils.contactReadPermissionGranted(getApplicationContext())) {
             PermissionUtils.requestReadContactsPermission(this);
         } else {
@@ -188,9 +174,9 @@ public class AddMembersActivity extends AppCompatActivity implements
                 .commit();
     }
 
-    @OnClick(R.id.icon_add_member_manually)
+    @OnClick(R.id.ll_add_member_manually)
     public void addMemberManually() {
-        addMemberOptions.close(true);
+        toggleAddMenu();
         Intent intent = new Intent(this, AddContactManually.class);
         startActivityForResult(intent, Constant.activityManualMemberEntry); // todo: filter so can't add existing member
     }

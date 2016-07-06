@@ -59,6 +59,8 @@
     <string name="INVALID_TOKEN">You seem to be signed in to another device. Please logout and login again</string>
 
     <!-- Navigation drawer items -->
+    <string name="drawer_group_list">Your groups</string>
+    <string name="drawer_open_tasks">Upcoming events</string>
     <string name="Profile">Profile Settings</string>
     <string name="FAQs">FAQs</string>
     <string name="Support">Support</string>
@@ -166,7 +168,10 @@
     <string name="cg_group_description">Group description</string>
     <string name="cg_title_contact">Current group members</string>
     <string name="cg_member_list_header">Group members</string>
+
     <string name="bt_add_manual">Add</string>
+    <string name="bt_add_contacts">Add from contacts</string>
+    <string name="bt_add_manually">Add manually</string>
 
     <!-- Add & remove members -->
     <string name="am_title">Add members to group</string>

@@ -4,19 +4,19 @@ import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.design.widget.TextInputEditText;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
+import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 import butterknife.OnTextChanged;
-import com.github.clans.fab.FloatingActionButton;
-import com.github.clans.fab.FloatingActionMenu;
 import io.realm.Realm;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -55,9 +55,9 @@ public class CreateGroupActivity extends PortraitActivity
 
   @BindView(R.id.rl_cg_root) RelativeLayout rlCgRoot;
 
-  @BindView(R.id.cg_add_member_options) FloatingActionMenu addMemberOptions;
-  @BindView(R.id.icon_add_member_manually) FloatingActionButton addMemberManually;
-  @BindView(R.id.icon_add_from_contacts) FloatingActionButton addMemberFromContacts;
+  @BindView(R.id.cg_add_member_options) FloatingActionButton addMemberOptions;
+  @BindView(R.id.ll_add_member_manually) LinearLayout addMemberManually;
+  @BindView(R.id.ll_add_member_contacts) LinearLayout addMemberFromContacts;
 
   @BindView(R.id.tv_counter) TextView tvCounter;
   @BindView(R.id.et_groupname) TextInputEditText et_groupname;
@@ -69,6 +69,7 @@ public class CreateGroupActivity extends PortraitActivity
 
   private ContactSelectionFragment contactSelectionFragment;
   private boolean onMainScreen;
+  private boolean menuOpen;
 
   private ProgressDialog progressDialog;
 
@@ -78,10 +79,10 @@ public class CreateGroupActivity extends PortraitActivity
     ButterKnife.bind(this);
 
     progressDialog = new ProgressDialog(this);
-    progressDialog.setMessage("Please wait...");
+    progressDialog.setMessage(getString(R.string.txt_pls_wait));
+    progressDialog.setIndeterminate(true);
 
     init();
-    setUpViews();
     setUpMemberList();
   }
 
@@ -93,14 +94,12 @@ public class CreateGroupActivity extends PortraitActivity
     onMainScreen = true;
   }
 
-  private void setUpViews() {
-    addMemberOptions.setOnMenuToggleListener(new FloatingActionMenu.OnMenuToggleListener() {
-      @Override public void onMenuToggle(boolean opened) {
-        addMemberFromContacts.setVisibility(opened ? View.VISIBLE : View.GONE);
-        addMemberManually.setVisibility(opened ? View.VISIBLE : View.GONE);
-      }
-    });
-    addMemberOptions.setVisibility(View.VISIBLE);
+  @OnClick(R.id.cg_add_member_options)
+  public void toggleAddMenu() {
+    addMemberOptions.setImageResource(menuOpen ? R.drawable.ic_add : R.drawable.ic_add_45d);
+    addMemberFromContacts.setVisibility(menuOpen ? View.GONE : View.VISIBLE);
+    addMemberManually.setVisibility(menuOpen ? View.GONE : View.VISIBLE);
+    menuOpen = !menuOpen;
   }
 
   private void setUpMemberList() {
@@ -125,8 +124,8 @@ public class CreateGroupActivity extends PortraitActivity
     tvCounter.setText("" + s.length() + "/" + "160");
   }
 
-  @OnClick(R.id.icon_add_from_contacts) public void icon_add_from_contacts() {
-    addMemberOptions.close(true);
+  @OnClick(R.id.ll_add_member_contacts) public void icon_add_from_contacts() {
+    toggleAddMenu();
     if (!PermissionUtils.contactReadPermissionGranted(this)) {
       PermissionUtils.requestReadContactsPermission(this);
     } else {
@@ -174,14 +173,16 @@ public class CreateGroupActivity extends PortraitActivity
     progressDialog.hide();
   }
 
-  @OnClick(R.id.icon_add_member_manually) public void ic_edit_call() {
-    addMemberOptions.close(true);
+  @OnClick(R.id.ll_add_member_manually) public void ic_edit_call() {
+    toggleAddMenu();
     startActivityForResult(new Intent(CreateGroupActivity.this, AddContactManually.class),
         Constant.activityManualMemberEntry);
   }
 
   @OnClick(R.id.cg_bt_save) public void save() {
-    addMemberOptions.close(true);
+    if (menuOpen) {
+      toggleAddMenu();
+    }
     validate_allFields();
   }
 

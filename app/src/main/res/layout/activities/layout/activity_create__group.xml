@@ -165,45 +165,74 @@
 
             </LinearLayout>
 
-            <com.github.clans.fab.FloatingActionMenu
-                android:id="@+id/cg_add_member_options"
+            <LinearLayout
+                android:orientation="vertical"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_alignParentRight="true"
-                android:layout_margin="16dp"
-
-                fab:menu_shadowColor="#444"
-                fab:menu_colorNormal="#FFB805"
-                fab:menu_colorPressed="#F2AB00"
-                fab:menu_colorRipple="#D99200"
-
-                fab:menu_openDirection="down"
+                android:layout_margin="@dimen/margin_large"
+                android:gravity="top|end"
 
                 app:layout_anchor="@id/cg_app_bar"
                 app:layout_anchorGravity="bottom|right|end"
-
                 app:layout_collapseMode="parallax"
                 app:layout_scrollFlags="scroll|enterAlways">
 
-                <com.github.clans.fab.FloatingActionButton
-                    android:id="@+id/icon_add_member_manually"
+                <android.support.design.widget.FloatingActionButton
+                    android:id="@+id/cg_add_member_options"
+                    android:src="@drawable/ic_add"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:src="@drawable/ic_fab_edit"
-                    fab:fab_label="Add Manually"
-                    style="@style/MenuButtonsStyle"
-                    android:visibility="gone" />
+                    app:backgroundTint="@color/fab_background"
+                    app:rippleColor="@color/fab_ripple_color"
+                    app:elevation="@dimen/fab_elevation"/>
 
-                <com.github.clans.fab.FloatingActionButton
-                    android:id="@+id/icon_add_from_contacts"
+                <LinearLayout
+                    android:id="@+id/ll_add_member_contacts"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:src="@drawable/ic_fab_call"
-                    fab:fab_label="Add via Contacts"
-                    style="@style/MenuButtonsStyle"
-                    android:visibility="gone" />
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:layout_marginTop="@dimen/fab_margin"
+                    android:visibility="gone">
 
-            </com.github.clans.fab.FloatingActionMenu>
+                    <TextView
+                        style="@style/FloatingActionButtonLabel"
+                        android:text="@string/bt_add_contacts"/>
+
+                    <android.support.design.widget.FloatingActionButton
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:src="@drawable/ic_fab_call"
+                        app:elevation="@dimen/fab_elevation"
+                        app:backgroundTint="@color/fab_background"
+                        app:rippleColor="@color/fab_ripple_color"/>
+
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/ll_add_member_manually"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_horizontal"
+                    android:layout_marginTop="@dimen/fab_margin"
+                    android:visibility="gone">
+
+                    <TextView
+                        style="@style/FloatingActionButtonLabel"
+                        android:text="@string/bt_add_manually"/>
+
+                    <android.support.design.widget.FloatingActionButton
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:src="@drawable/ic_fab_edit"
+                        app:elevation="@dimen/fab_elevation"
+                        app:backgroundTint="@color/fab_background"
+                        app:rippleColor="@color/fab_ripple_color"/>
+
+                </LinearLayout>
+
+            </LinearLayout>
 
         </android.support.design.widget.CoordinatorLayout>
 

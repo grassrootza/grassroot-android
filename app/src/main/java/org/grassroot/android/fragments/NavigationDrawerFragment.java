@@ -16,6 +16,7 @@ import android.widget.TextView;
 import org.grassroot.android.BuildConfig;
 import org.grassroot.android.R;
 import org.grassroot.android.activities.FAQActivity;
+import org.grassroot.android.activities.HomeScreenActivity;
 import org.grassroot.android.activities.NotificationCenter;
 import org.grassroot.android.activities.ProfileSettingsActivity;
 import org.grassroot.android.activities.StartActivity;
@@ -27,6 +28,7 @@ import org.grassroot.android.interfaces.ClickListener;
 import org.grassroot.android.interfaces.NavigationConstants;
 import org.grassroot.android.interfaces.NotificationConstants;
 import org.grassroot.android.models.NavDrawerItem;
+import org.grassroot.android.services.ApplicationLoader;
 import org.grassroot.android.services.GcmRegistrationService;
 import org.grassroot.android.adapters.RecyclerTouchListener;
 import org.grassroot.android.utils.Constant;
@@ -35,6 +37,7 @@ import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -46,16 +49,13 @@ public class NavigationDrawerFragment extends Fragment {
 
     private NavigationDrawerCallbacks mCallbacks;
 
-    ArrayList draweritems;
-
+    List<NavDrawerItem> draweritems;
     private NavigationDrawerAdapter drawerAdapter;
+    private int currentlySelectedItem = NavigationConstants.HOME_NAV_GROUPS;
 
-    @BindView(R.id.rv_nav_items)
-    RecyclerView mDrawerRecyclerView;
-    @BindView(R.id.txt_version)
-    TextView txtVersion;
-    @BindView(R.id.displayName)
-    TextView displayName;
+    @BindView(R.id.rv_nav_items) RecyclerView mDrawerRecyclerView;
+    @BindView(R.id.txt_version) TextView txtVersion;
+    @BindView(R.id.displayName) TextView displayName;
 
     public interface NavigationDrawerCallbacks {
         void onNavigationDrawerItemSelected(int position);
@@ -88,10 +88,10 @@ public class NavigationDrawerFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_navigation_drawer, container, false);
         ButterKnife.bind(this, view);
 
-        displayName.setText(PreferenceUtils.getUserName(getActivity()));
+        displayName.setText(PreferenceUtils.getUserName(ApplicationLoader.applicationContext));
         txtVersion.setText("v " + BuildConfig.VERSION_NAME);
 
-        drawerAdapter = new NavigationDrawerAdapter(getActivity(),getData());
+        drawerAdapter = new NavigationDrawerAdapter(getActivity(), getData());
 
         mDrawerRecyclerView.setHasFixedSize(true);
         mDrawerRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
@@ -112,8 +112,14 @@ public class NavigationDrawerFragment extends Fragment {
         return view ;
     }
 
-    public ArrayList<NavDrawerItem> getData() {
+    public void resetToDefault() {
+        switchSelectedState(NavigationConstants.HOME_NAV_GROUPS);
+    }
+
+    public List<NavDrawerItem> getData() {
         draweritems = new ArrayList<>();
+        draweritems.add(new NavDrawerItem(getString(R.string.drawer_group_list), R.drawable.ic_home, R.drawable.ic_home_green, true));
+        draweritems.add(new NavDrawerItem(getString(R.string.drawer_open_tasks), R.drawable.ic_star_gray, R.drawable.ic_star_green, false)); // todo: fix icon
         draweritems.add(new NavDrawerItem(getString(R.string.Notifications),R.drawable.ic_notification,R.drawable.ic_notification_green,false));
         draweritems.add(new NavDrawerItem(getString(R.string.Share), R.drawable.ic_share, R.drawable.ic_share_green, false));
         draweritems.add(new NavDrawerItem(getString(R.string.Profile),R.drawable.ic_profile,R.drawable.ic_profile_green,false));
@@ -124,26 +130,50 @@ public class NavigationDrawerFragment extends Fragment {
 
     private void selectItem(int position) {
         // handle common & reusable things here, pass back more complex or context-dependent to activity
+        int itemToSetSelected = position;
+        boolean changeItemSelected = true;
         switch (position) {
+            case NavigationConstants.HOME_NAV_GROUPS:
+                startActivity(new Intent(getActivity(), HomeScreenActivity.class));
+                break;
+            case NavigationConstants.HOME_NAV_TASKS:
+                Log.e(TAG, "upcoming tasks clicked");
+                // startActivity(new Intent(getActivity(), N));
+                break;
             case NavigationConstants.HOME_NAV_NOTIFICATIONS:
                 startActivity(new Intent(getActivity(), NotificationCenter.class));
                 break;
             case NavigationConstants.HOME_NAV_SHARE:
+                changeItemSelected = false;
                 shareApp();
                 break;
             case NavigationConstants.HOME_NAV_PROFILE:
+                changeItemSelected = false; // until switch that to fragmet w/nav bar instead of back
                 startActivity(new Intent(getActivity(), ProfileSettingsActivity.class));
                 break;
             case NavigationConstants.HOME_NAV_FAQ:
+                changeItemSelected = false; // as above
                 startActivity(new Intent(getActivity(), FAQActivity.class));
                 break;
             case NavigationConstants.HOME_NAV_LOGOUT:
+                itemToSetSelected = NavigationConstants.HOME_NAV_GROUPS; // in case activity restored, on homegrouplist
                 logout();
                 break;
             default:
                 // todo : put in handling non-standard items
         }
+
+        if (changeItemSelected) {
+            switchSelectedState(itemToSetSelected);
+        }
         mCallbacks.onNavigationDrawerItemSelected(position);
+    }
+
+    private void switchSelectedState(final int selectedItem) {
+        draweritems.get(currentlySelectedItem).setIsChecked(false);
+        draweritems.get(selectedItem).setIsChecked(true);
+        currentlySelectedItem = selectedItem;
+        drawerAdapter.notifyDataSetChanged();
     }
 
     private void shareApp() {

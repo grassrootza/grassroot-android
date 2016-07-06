@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.SystemClock;
+import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.widget.SwipeRefreshLayout;
@@ -17,6 +18,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import butterknife.BindView;
@@ -24,14 +26,13 @@ import butterknife.ButterKnife;
 import butterknife.OnClick;
 import butterknife.OnTextChanged;
 import butterknife.Unbinder;
-import com.github.clans.fab.FloatingActionButton;
-import com.github.clans.fab.FloatingActionMenu;
 import io.realm.Realm;
 import io.realm.RealmList;
 import io.realm.RealmResults;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+
 import org.grassroot.android.R;
 import org.grassroot.android.activities.CreateGroupActivity;
 import org.grassroot.android.activities.CreateMeetingActivity;
@@ -72,10 +73,11 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
   @BindView(R.id.gl_swipe_refresh) SwipeRefreshLayout glSwipeRefresh;
   @BindView(R.id.recycler_view) RecyclerView rcGroupList;
 
-  @BindView(R.id.menu1) FloatingActionMenu menu1;
-  @BindView(R.id.ic_fab_new_task) FloatingActionButton icFabNewMtg;
-  @BindView(R.id.ic_fab_join_group) FloatingActionButton icFabJoinGroup;
-  @BindView(R.id.ic_fab_start_group) FloatingActionButton icFabStartGroup;
+    private boolean floatingMenuOpen = false;
+    @BindView(R.id.fab_menu_open) FloatingActionButton fabOpenMenu;
+    @BindView(R.id.ll_fab_new_task) LinearLayout fabNewTask;
+    @BindView(R.id.ll_fab_join_group) LinearLayout fabFindGroup;
+    @BindView(R.id.ll_fab_start_group) LinearLayout fabStartGroup;
 
   @BindView(R.id.iv_cross) ImageView ivCross;
   @BindView(R.id.et_search) EditText et_search;
@@ -84,33 +86,31 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
 
   ProgressDialog progressDialog;
 
-  Realm realm;
+    Realm realm;
 
-  private GroupListAdapter groupListRowAdapter;
-  private List<Group> userGroups;
+    private GroupListAdapter groupListRowAdapter;
+    private List<Group> userGroups;
 
-  private boolean creating;
+    private boolean creating;
+    public boolean date_click = false, role_click = false, defaults_click = false;
 
-  public boolean date_click = false, role_click = false, defaults_click = false;
+    private GroupListFragmentListener mCallbacks;
 
-  private GroupListFragmentListener mCallbacks;
-
-  public interface GroupListFragmentListener {
-    void menuClick();
-
-    void groupPickerTriggered(String taskType);
-  }
-
-  @Override public void onAttach(Context context) {
-    super.onAttach(context);
-    Activity activity = (Activity) context;
-    try {
-      mCallbacks = (GroupListFragmentListener) activity;
-      Log.e("onAttach", "Attached");
-    } catch (ClassCastException e) {
-      throw new ClassCastException("Activity must implement Fragment One.");
+    public interface GroupListFragmentListener {
+        void menuClick();
+        void groupPickerTriggered(String taskType);
     }
-  }
+
+    @Override public void onAttach(Context context) {
+        super.onAttach(context);
+        Activity activity = (Activity) context;
+        try {
+            mCallbacks = (GroupListFragmentListener) activity;
+            Log.e("onAttach", "Attached");
+        } catch (ClassCastException e) {
+            throw new ClassCastException("Activity must implement Fragment One.");
+        }
+    }
 
   @Override public void onActivityCreated(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
@@ -125,6 +125,7 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
       refreshGroupList();
       PreferenceUtils.setGroupListMustBeRefreshed(getContext(), false);
     }
+      setActionBarToDefault();
     creating = false;
   }
 
@@ -133,14 +134,6 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
     userGroups = new ArrayList<>();
     ivGhpSort.setEnabled(false);
     ivGhpSearch.setEnabled(false);
-
-    menu1.setOnMenuToggleListener(new FloatingActionMenu.OnMenuToggleListener() {
-      @Override public void onMenuToggle(boolean opened) {
-        icFabNewMtg.setVisibility(opened ? View.VISIBLE : View.GONE);
-        icFabJoinGroup.setVisibility(opened ? View.VISIBLE : View.GONE);
-        icFabStartGroup.setVisibility(opened ? View.VISIBLE : View.GONE);
-      }
-    });
 
     // Get a Realm instance for this thread
     realm = Realm.getDefaultInstance();
@@ -156,19 +149,6 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
    * absence
    * of a connection very well, at all. Will probably need to rethink.
    */
-
-  private void showProgress() {
-    if (progressDialog == null) {
-      progressDialog = new ProgressDialog(getContext());
-      progressDialog.setIndeterminate(true);
-      progressDialog.setMessage(getString(R.string.txt_pls_wait));
-    }
-    progressDialog.show();
-  }
-
-  private void hideProgress() {
-    progressDialog.dismiss();
-  }
 
   private void showGroups(RealmList<Group> groups) {
     userGroups = new ArrayList<>(groups);
@@ -197,10 +177,16 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
     return view;
   }
 
-  public void showSuccessMessage(Intent data) {
-    String message = data.getStringExtra(Constant.SUCCESS_MESSAGE);
-    ErrorUtils.showSnackBar(rlGhpRoot, message, Snackbar.LENGTH_LONG, "", null);
-  }
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        unbinder.unbind();
+    }
+
+    public void showSuccessMessage(Intent data) {
+        String message = data.getStringExtra(Constant.SUCCESS_MESSAGE);
+        ErrorUtils.showSnackBar(rlGhpRoot, message, Snackbar.LENGTH_LONG, "", null);
+    }
 
   /**
    * Method executed to retrieve and populate list of groups. Note: this does not handle the
@@ -285,42 +271,70 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
     });
   }
 
-  @OnClick(R.id.ic_fab_new_task) public void icFabNewTask() {
-    menu1.close(true);
-    QuickTaskModalFragment modal = QuickTaskModalFragment.newInstance(false, null,
-        new QuickTaskModalFragment.TaskModalListener() {
-          @Override public void onTaskClicked(String taskType) {
-            switchActionBarToPicker();
-            mCallbacks.groupPickerTriggered(taskType);
-          }
+    @OnClick(R.id.fab_menu_open)
+    public void toggleFloatingMenu() {
+        if (!floatingMenuOpen) {
+            openFloatingMenu();
+        } else {
+            closeFloatingMenu();
+        }
+    }
+
+    private void openFloatingMenu() {
+        floatingMenuOpen = true;
+        fabOpenMenu.setImageResource(R.drawable.ic_add_45d);
+        fabNewTask.setVisibility(View.VISIBLE);
+        fabFindGroup.setVisibility(View.VISIBLE);
+        fabStartGroup.setVisibility(View.VISIBLE);
+    }
+
+    private void closeFloatingMenu() {
+        floatingMenuOpen = false;
+        fabOpenMenu.setImageResource(R.drawable.ic_add);
+        fabNewTask.setVisibility(View.GONE);
+        fabFindGroup.setVisibility(View.GONE);
+        fabStartGroup.setVisibility(View.GONE);
+    }
+
+    @OnClick(R.id.ic_fab_new_task)
+    public void icFabNewTask() {
+        closeFloatingMenu();
+        QuickTaskModalFragment modal = QuickTaskModalFragment.newInstance(false, null, new QuickTaskModalFragment.TaskModalListener() {
+            @Override
+            public void onTaskClicked(String taskType) {
+                switchActionBarToPicker();
+                mCallbacks.groupPickerTriggered(taskType);
+            }
         });
-    modal.show(getFragmentManager(), QuickTaskModalFragment.class.getSimpleName());
-  }
+        modal.show(getFragmentManager(), QuickTaskModalFragment.class.getSimpleName());
+    }
 
-  public void switchActionBarToPicker() {
-    menu1.setVisibility(View.GONE);
-    tvTitle.setText(R.string.home_group_pick);
-    ivGhpDrawer.setImageResource(R.drawable.btn_close_white);
-    ivGhpDrawer.setOnClickListener(new View.OnClickListener() {
-      @Override public void onClick(View v) {
-        setActionBarToDefault();
-        getFragmentManager().popBackStack();
-      }
-    });
-    toggleClickableTitle(false);
-  }
+    public void switchActionBarToPicker() {
+        fabOpenMenu.setVisibility(View.GONE);
+        tvTitle.setText(R.string.home_group_pick);
+        ivGhpDrawer.setImageResource(R.drawable.btn_close_white);
+        ivGhpDrawer.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                setActionBarToDefault();
+                getFragmentManager().popBackStack();
+            }
+        });
+        toggleClickableTitle(false);
+    }
 
-  public void setActionBarToDefault() {
-    menu1.setVisibility(View.VISIBLE);
-    tvTitle.setText(R.string.ghp_toolbar_title);
-    ivGhpDrawer.setImageResource(R.drawable.btn_navigation);
-    ivGhpDrawer.setOnClickListener(new View.OnClickListener() {
-      @Override public void onClick(View v) {
-        mCallbacks.menuClick();
-      }
-    });
-    toggleClickableTitle(true);
-  }
+    public void setActionBarToDefault() {
+        fabOpenMenu.setVisibility(View.VISIBLE);
+        tvTitle.setText(R.string.ghp_toolbar_title);
+        ivGhpDrawer.setImageResource(R.drawable.btn_navigation);
+        ivGhpDrawer.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mCallbacks.menuClick();
+            }
+        });
+        toggleClickableTitle(true);
+    }
 
   public void toggleClickableTitle(boolean clickable) {
     if (clickable) {
@@ -335,31 +349,25 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
     }
   }
 
-  @OnClick(R.id.ic_fab_join_group) public void icFabJoinGroup() {
-    menu1.close(true);
-    Intent icFabJoinGroup = new Intent(getActivity(), GroupSearchActivity.class);
-    startActivity(icFabJoinGroup);
-  }
-
-  @OnClick(R.id.ic_fab_start_group) public void icFabStartGroup() {
-    menu1.close(true);
-    Intent icFabStartGroup = new Intent(getActivity(), CreateGroupActivity.class);
-    startActivityForResult(icFabStartGroup, Constant.activityCreateGroup);
-  }
-
-  @Override public void onActivityResult(int requestCode, int resultCode, Intent data) {
-    super.onActivityResult(requestCode, resultCode, data);
-    if (resultCode == Activity.RESULT_OK && requestCode == Constant.activityCreateGroup) {
-      Group createdGroup = data.getParcelableExtra(GroupConstants.OBJECT_FIELD);
-      Log.d(TAG, "createdGroup returned! with UID: " + createdGroup);
-      insertGroup(0, createdGroup);
+    @OnClick(R.id.ic_fab_join_group)
+    public void icFabJoinGroup() {
+        closeFloatingMenu();
+        Intent icFabJoinGroup = new Intent(getActivity(), GroupSearchActivity.class);
+        startActivity(icFabJoinGroup);
     }
-  }
 
-  @Override public void onGroupRowShortClick(Group group) {
-    menu1.close(true);
-    startActivity(MenuUtils.constructIntent(getActivity(), GroupTasksActivity.class, group));
-  }
+    @OnClick(R.id.ic_fab_start_group)
+    public void icFabStartGroup() {
+        closeFloatingMenu();
+        Intent icFabStartGroup=new Intent(getActivity(), CreateGroupActivity.class);
+        startActivityForResult(icFabStartGroup, Constant.activityCreateGroup);
+    }
+
+    @Override
+    public void onGroupRowShortClick(Group group) {
+        if (floatingMenuOpen) closeFloatingMenu();
+        startActivity(MenuUtils.constructIntent(getActivity(), GroupTasksActivity.class, group));
+    }
 
   @Override public void onGroupRowLongClick(Group group) {
     showQuickOptionsDialog(group, false);
@@ -409,6 +417,19 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
   @Subscribe public void onEvent(NetworkActivityResultsEvent networkActivityResultsEvent) {
     fetchGroupList();
   }
+
+    private void showProgress() {
+        if (progressDialog == null) {
+            progressDialog = new ProgressDialog(getContext());
+            progressDialog.setIndeterminate(true);
+            progressDialog.setMessage(getString(R.string.txt_pls_wait));
+        }
+        progressDialog.show();
+    }
+
+    private void hideProgress() {
+        progressDialog.dismiss();
+    }
 
   @Subscribe public void onTaskCreatedEvent(TaskAddedEvent e) {
     Log.e(TAG, "group list fragment triggered by task addition ...");

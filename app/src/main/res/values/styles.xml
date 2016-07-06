@@ -24,20 +24,6 @@
         <item name="colorControlActivated">@color/white</item>
     </style>
 
-    <!-- <style name="CustomCirclePageIndicator">
-        <item name="fillColor">#000</item>
-        <item name="strokeColor">@color/primaryColorDark</item>
-        <item name="strokeWidth">3dp</item>
-        <item name="radius">10dp</item>
-    </style> -->
-
-    <style name="MenuButtonsStyle">
-        <item name="fab_shadowColor">#444</item>
-        <item name="fab_colorNormal">#FFB805</item>
-        <item name="fab_colorPressed">#F2AB00</item>
-        <item name="fab_colorRipple">#D99200</item>
-    </style>
-
     <style name="Widget.CardContent" parent="android:Widget">
         <item name="android:paddingLeft">16dp</item>
         <item name="android:paddingRight">16dp</item>
@@ -48,6 +34,26 @@
 
     <style name="AppTheme.FloatingAccentButtonOverlay">
         <item name="colorAccent">#FFB805</item>
+    </style>
+
+    <style name="FloatingActionButtonGroup">
+        <item name="android:orientation">horizontal</item>
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginBottom">@dimen/margin_medium</item>
+        <item name="android:gravity">center_vertical</item>
+    </style>
+
+    <style name="FloatingActionButtonLabel">
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:padding">@dimen/padding_half</item>
+        <item name="android:layout_marginRight">@dimen/margin_medium</item>
+        <item name="android:layout_marginEnd">@dimen/margin_medium</item>
+        <item name="android:background">@drawable/fab_label_background</item>
+        <item name="android:elevation">@dimen/fab_elevation</item>
+        <item name="android:textColor">@color/white</item>
+        <item name="android:textSize">@dimen/txt_medium</item>
     </style>
 
     <style name="PinnedHeader">
