@@ -90,9 +90,10 @@ public class TasksAdapter extends RecyclerView.Adapter<TasksAdapter.TaskViewHold
     final TaskModel taskModel = viewedTasks.get(position);
     realm.beginTransaction();
     taskModel.resetResponseFlags(); // since we can't trust Android's construction mechanism (todo : revisit)
+    realm.commitTransaction();
     setCardListener(holder.cardView, taskModel, position);
     setUpCardImagesAndView(taskModel, holder, position);
-    realm.commitTransaction();
+    //realm.close();
   }
 
   private void setCardListener(CardView view, final TaskModel task, final int position) {
@@ -115,7 +116,7 @@ public class TasksAdapter extends RecyclerView.Adapter<TasksAdapter.TaskViewHold
 
   private void setUpCardImagesAndView(final TaskModel task, TaskViewHolder holder,
       final int position) {
-
+    realm.beginTransaction();
     holder.txtTitle.setText(task.getTitle());
     holder.txtTaskCallerName.setText("Posted by " + task.getName());
 
@@ -127,7 +128,7 @@ public class TasksAdapter extends RecyclerView.Adapter<TasksAdapter.TaskViewHold
 
     holder.datetime.setText(TaskConstants.dateDisplayWithDayName.format(task.getDeadlineDate()));
     setUpCardStyle(holder, task.isInFuture());
-
+    realm.commitTransaction();
     switch (task.getType()) {
       case TaskConstants.MEETING:
         holder.iv_type.setImageResource(R.drawable.ic_home_call_meeting_active);
