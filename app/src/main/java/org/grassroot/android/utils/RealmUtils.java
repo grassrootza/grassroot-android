@@ -1,5 +1,6 @@
 package org.grassroot.android.utils;
 
+import io.realm.Realm;
 import io.realm.RealmList;
 import java.util.ArrayList;
 import java.util.List;
@@ -17,6 +18,14 @@ public class RealmUtils {
       return list;
     }
     return null;
+  }
+
+  public static void deleteAllObjects(){
+    Realm realm = Realm.getDefaultInstance();
+    realm.beginTransaction();
+    realm.deleteAll();
+    realm.commitTransaction();
+    realm.close();
   }
 
   public static RealmList<RealmString> convertListOfStringInRealmListOfString(List<String> list) {

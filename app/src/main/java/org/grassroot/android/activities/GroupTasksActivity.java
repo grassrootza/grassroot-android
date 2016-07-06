@@ -68,7 +68,6 @@ public class GroupTasksActivity extends PortraitActivity implements NewTaskMenuF
 
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
-        final Set<String> perms = new HashSet<>(RealmUtils.convertListOfRealmStringInListOfString(groupMembership.getPermissions()));
         menu.findItem(R.id.mi_view_join_code).setVisible(true);
         menu.findItem(R.id.mi_new_task).setVisible(groupMembership.hasCreatePermissions());
         menu.findItem(R.id.mi_add_members).setVisible(groupMembership.canAddMembers());
