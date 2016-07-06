@@ -279,6 +279,7 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment imple
 
     private void openFloatingMenu() {
         floatingMenuOpen = true;
+        fabOpenMenu.setImageResource(R.drawable.ic_add_45d);
         fabNewTask.setVisibility(View.VISIBLE);
         fabFindGroup.setVisibility(View.VISIBLE);
         fabStartGroup.setVisibility(View.VISIBLE);
@@ -286,6 +287,7 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment imple
 
     private void closeFloatingMenu() {
         floatingMenuOpen = false;
+        fabOpenMenu.setImageResource(R.drawable.ic_add);
         fabNewTask.setVisibility(View.GONE);
         fabFindGroup.setVisibility(View.GONE);
         fabStartGroup.setVisibility(View.GONE);

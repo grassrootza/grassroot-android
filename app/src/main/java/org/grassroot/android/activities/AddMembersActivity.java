@@ -63,6 +63,7 @@ public class AddMembersActivity extends AppCompatActivity implements
     @BindView(R.id.rl_am_root) RelativeLayout amRlRoot;
     @BindView(R.id.am_txt_toolbar) TextView toolbarTitle;
 
+    @BindView(R.id.am_add_member_options) FloatingActionButton fabAddMemberOptions;
     @BindView(R.id.ll_add_member_contacts) LinearLayout addMemberFromContacts;
     @BindView(R.id.ll_add_member_manually) LinearLayout addMemberManually;
 
@@ -104,6 +105,7 @@ public class AddMembersActivity extends AppCompatActivity implements
 
     @OnClick(R.id.am_add_member_options)
     public void toggleAddMenu() {
+        fabAddMemberOptions.setImageResource(menuOpen ? R.drawable.ic_add : R.drawable.ic_add_45d);
         addMemberFromContacts.setVisibility(menuOpen ? View.GONE : View.VISIBLE);
         addMemberManually.setVisibility(menuOpen ? View.GONE : View.VISIBLE);
         menuOpen = !menuOpen;

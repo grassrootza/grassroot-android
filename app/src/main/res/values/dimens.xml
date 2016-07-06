@@ -5,6 +5,7 @@
 
     <dimen name="padding">16dp</dimen>
     <dimen name="padding_half">8dp</dimen>
+    <dimen name="padding_small">4dp</dimen>
 
     <dimen name="margin_xxlarge">30dp</dimen>
     <dimen name="margin_xlarge">15dp</dimen>
@@ -24,8 +25,10 @@
     <dimen name="detail_backdrop_height">256dp</dimen>
 
     <dimen name="list_item__contact_imageview_size">55dp</dimen>
+
     <dimen name="fab_margin">16dp</dimen>
     <dimen name="fab_elevation">6dp</dimen>
+    <dimen name="fab_label_corner">5dp</dimen>
 
     <dimen name="dialog_padding_vertical">24dp</dimen>
     <dimen name="dialog_padding_horizontal">24dp</dimen>

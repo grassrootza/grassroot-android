@@ -114,6 +114,7 @@ public class GroupMembersActivity extends PortraitActivity implements MemberList
 
     @OnClick(R.id.lm_ic_floating_menu)
     public void toggleActionMenu() {
+        floatingMenu.setImageResource(menuOpen ? R.drawable.ic_add : R.drawable.ic_add_45d);
         fabAddMembers.setVisibility(menuOpen ? View.GONE : View.VISIBLE);
         fabNewTask.setVisibility(menuOpen ? View.GONE : View.VISIBLE);
         menuOpen = !menuOpen;

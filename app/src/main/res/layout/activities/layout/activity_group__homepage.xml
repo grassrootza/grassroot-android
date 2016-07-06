@@ -163,18 +163,12 @@
 
         <LinearLayout
             android:id="@+id/ll_fab_new_task"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
+            style="@style/FloatingActionButtonGroup"
             android:visibility="gone">
 
             <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/ghp_fab_new_task"
-                android:textColor="@color/black"
-                android:textSize="@dimen/txt_large"/>
+                style="@style/FloatingActionButtonLabel"
+                android:text="@string/ghp_fab_new_task" />
 
             <android.support.design.widget.FloatingActionButton
                 android:id="@+id/ic_fab_new_task"
@@ -189,51 +183,39 @@
 
         <LinearLayout
             android:id="@+id/ll_fab_join_group"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
+            style="@style/FloatingActionButtonGroup"
             android:visibility="gone">
 
             <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/ghp_fab_join_group"
-                android:textColor="@color/black"
-                android:textSize="@dimen/txt_large"/>
+                style="@style/FloatingActionButtonLabel"
+                android:text="@string/ghp_fab_join_group" />
 
             <android.support.design.widget.FloatingActionButton
                 android:id="@+id/ic_fab_join_group"
                 android:src="@drawable/ic_fab_join_group"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                app:elevation="6dp"
-                app:backgroundTint="#FFB805"
-                app:rippleColor="#D99200"/>
+                app:elevation="@dimen/fab_elevation"
+                app:backgroundTint="@color/fab_background"
+                app:rippleColor="@color/fab_ripple_color"/>
 
         </LinearLayout>
 
         <LinearLayout
             android:id="@+id/ll_fab_start_group"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
+            style="@style/FloatingActionButtonGroup"
             android:visibility="gone">
 
             <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/ghp_fab_create_group"
-                android:textColor="@color/black"
-                android:textSize="@dimen/txt_large"/>
+                style="@style/FloatingActionButtonLabel"
+                android:text="@string/ghp_fab_create_group" />
 
             <android.support.design.widget.FloatingActionButton
                 android:id="@+id/ic_fab_start_group"
                 android:src="@drawable/ic_fab_start_group"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                app:elevation="6dp"
+                app:elevation="@dimen/fab_elevation"
                 app:backgroundTint="#FFB805"
                 app:rippleColor="#D99200"/>
 
@@ -242,7 +224,10 @@
         <android.support.design.widget.FloatingActionButton
             android:id="@+id/fab_menu_open"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
+            android:layout_height="wrap_content"
+            android:src="@drawable/ic_add"
+            app:backgroundTint="@color/fab_background"
+            app:rippleColor="@color/fab_ripple_color"/>
 
     </LinearLayout>
 

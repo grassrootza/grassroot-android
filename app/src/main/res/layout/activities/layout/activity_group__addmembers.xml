@@ -127,7 +127,9 @@
                     android:src="@drawable/ic_add"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    app:elevation="@dimen/fab_elevation"/>
+                    app:elevation="@dimen/fab_elevation"
+                    app:backgroundTint="@color/fab_background"
+                    app:rippleColor="@color/fab_ripple_color"/>
 
                 <LinearLayout
                     android:id="@+id/ll_add_member_contacts"
@@ -139,15 +141,16 @@
                     android:visibility="gone">
 
                     <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
+                        style="@style/FloatingActionButtonLabel"
                         android:text="@string/bt_add_contacts"/>
 
                     <android.support.design.widget.FloatingActionButton
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:src="@drawable/ic_fab_call"
-                        app:elevation="@dimen/fab_elevation"/>
+                        app:elevation="@dimen/fab_elevation"
+                        app:backgroundTint="@color/fab_background"
+                        app:rippleColor="@color/fab_ripple_color"/>
 
                 </LinearLayout>
 
@@ -161,15 +164,16 @@
                     android:visibility="gone">
 
                     <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
+                        style="@style/FloatingActionButtonLabel"
                         android:text="@string/bt_add_manually"/>
 
                     <android.support.design.widget.FloatingActionButton
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:src="@drawable/ic_fab_edit"
-                        app:elevation="@dimen/fab_elevation" />
+                        app:elevation="@dimen/fab_elevation"
+                        app:backgroundTint="@color/fab_background"
+                        app:rippleColor="@color/fab_ripple_color" />
 
                 </LinearLayout>
 

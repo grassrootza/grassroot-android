@@ -96,6 +96,7 @@ public class CreateGroupActivity extends PortraitActivity
 
   @OnClick(R.id.cg_add_member_options)
   public void toggleAddMenu() {
+    addMemberOptions.setImageResource(menuOpen ? R.drawable.ic_add : R.drawable.ic_add_45d);
     addMemberFromContacts.setVisibility(menuOpen ? View.GONE : View.VISIBLE);
     addMemberManually.setVisibility(menuOpen ? View.GONE : View.VISIBLE);
     menuOpen = !menuOpen;

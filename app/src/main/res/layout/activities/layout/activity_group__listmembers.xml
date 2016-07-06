@@ -119,18 +119,12 @@
 
         <LinearLayout
             android:id="@+id/lm_fab_add_members"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
+            style="@style/FloatingActionButtonGroup"
             android:visibility="gone">
 
             <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/gm_add_members_lc"
-                android:textColor="@color/black"
-                android:textSize="@dimen/txt_large"/>
+                style="@style/FloatingActionButtonLabel"
+                android:text="@string/gm_add_members_lc" />
 
             <android.support.design.widget.FloatingActionButton
                 android:src="@drawable/ic_fab_add_contact"
@@ -144,18 +138,12 @@
 
         <LinearLayout
             android:id="@+id/lm_fab_new_task"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
+            style="@style/FloatingActionButtonGroup"
             android:visibility="gone">
 
             <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/gm_new_task_lc"
-                android:textColor="@color/black"
-                android:textSize="@dimen/txt_large"/>
+                style="@style/FloatingActionButtonLabel"
+                android:text="@string/gm_new_task_lc"/>
 
             <android.support.design.widget.FloatingActionButton
                 android:src="@drawable/ic_fab_call"
@@ -170,7 +158,10 @@
         <android.support.design.widget.FloatingActionButton
             android:id="@+id/lm_ic_floating_menu"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
+            android:layout_height="wrap_content"
+            android:src="@drawable/ic_add"
+            app:backgroundTint="@color/fab_background"
+            app:rippleColor="@color/fab_ripple_color"/>
 
     </LinearLayout>
 

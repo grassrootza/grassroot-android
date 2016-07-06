@@ -280,9 +280,6 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
     // groupTasksAdapter.onTaskCreated(event);
   }
 
-  @OnClick(R.id.im_no_internet) public void onNoInternetClick() {
-    fetchTaskList();
-  }
     /*
     HANDLE FILTERING
      */

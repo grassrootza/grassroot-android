@@ -46,20 +46,4 @@
 
     </RelativeLayout>
 
-    <ProgressBar
-        android:id="@+id/progressBar"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_centerInParent="true"
-        android:indeterminateDrawable="@drawable/custom_progress_background"
-        android:visibility="gone" />
-
-    <include
-        android:id="@+id/tl_error_layout"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        layout="@layout/error_layout"
-        android:layout_centerInParent="true"
-        android:visibility="gone" />
-
 </RelativeLayout>
