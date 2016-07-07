@@ -48,8 +48,7 @@ public class TasksAdapter extends RecyclerView.Adapter<TasksAdapter.TaskViewHold
 
   public interface TaskListListener {
     void respondToTask(String taskUid, String taskType, String response, int position);
-
-    void onCardClick(int position, String taskUid, String taskType);
+    void onCardClick(int position, String taskUid, String taskType, String taskTitle);
   }
 
   // note : pass in parentUid as null if the task list is for all of a user's groups / entities
@@ -63,20 +62,17 @@ public class TasksAdapter extends RecyclerView.Adapter<TasksAdapter.TaskViewHold
   }
 
   public void registerForEvents() {
-    Log.d(TAG, "registering for events");
     EventBus.getDefault().register(this);
   }
 
   public void deRegisterEvents() {
-    Log.d(TAG, "deregistering for events");
     EventBus.getDefault().unregister(this);
   }
 
   @Override public void onDetachedFromRecyclerView(RecyclerView recyclerView) {
     // note :this is not called often ... may be more efficient to unregister in a custom method?
     super.onDetachedFromRecyclerView(recyclerView);
-    Log.e(TAG, "cleaning up task adapter!");
-    EventBus.getDefault().unregister(this);
+    deRegisterEvents();
   }
 
   @Override public TaskViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
@@ -99,7 +95,7 @@ public class TasksAdapter extends RecyclerView.Adapter<TasksAdapter.TaskViewHold
   private void setCardListener(CardView view, final TaskModel task, final int position) {
     view.setOnClickListener(new View.OnClickListener() {
       @Override public void onClick(View view) {
-        listener.onCardClick(position, task.getTaskUid(), task.getType());
+        listener.onCardClick(position, task.getTaskUid(), task.getType(), task.getTitle());
       }
     });
   }

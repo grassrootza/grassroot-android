@@ -31,7 +31,6 @@ public class GroupService {
 
   // todo : remove these?
   public ArrayList<Group> userGroups;
-  public HashMap<String, Integer> groupUidMap;
 
   public boolean groupsLoading = false;
   public boolean groupsFinishedLoading = false;
@@ -46,7 +45,6 @@ public class GroupService {
 
   protected GroupService() {
     userGroups = new ArrayList<>();
-    groupUidMap = new HashMap<>();
   }
 
   public static GroupService getInstance() {
@@ -91,7 +89,6 @@ public class GroupService {
             if (response.isSuccessful()) {
               groupsLoading = false;
               groupsFinishedLoading = true;
-              createUidMap();
               saveGroupsInDB(response.body().getGroups());
               listener.groupListLoaded();
             } else {
@@ -110,19 +107,20 @@ public class GroupService {
         });
   }
 
-  private void loadGroupsFromDB() {
-    Log.e(TAG, "could not connect to network, loading groups from DB ...");
-    RealmList<Group> groups = new RealmList<>();
-    Realm realm = Realm.getDefaultInstance();
-    if (realm != null && !realm.isClosed()) {
-      RealmResults<Group> results = realm.where(Group.class).findAll();
-      groups.addAll(results.subList(0, results.size()));
+    public RealmList<Group> loadGroupsFromDB() {
+        Realm realm = Realm.getDefaultInstance();
+        RealmList<Group> groups = new RealmList<>();
+        if (realm != null && !realm.isClosed()) {
+            RealmResults<Group> results = realm.where(Group.class).findAll();
+            groups.addAll(realm.copyFromRealm(results));
+        }
+        userGroups = new ArrayList<>(groups);
+        realm.close();
+        return groups;
     }
-    realm.close();
-    userGroups = new ArrayList<>(groups);
-  }
 
   /*
+
  Called from "swipe refresh" on group recycler, so am just formally separating from the initiating call (which is triggered on app load)
   */
   public void refreshGroupList(final Activity activity, final GroupServiceListener listener) {
@@ -196,24 +194,6 @@ public class GroupService {
       listener.groupListLoadingError();
     }
   }
-
-  private void createUidMap() {
-
-    if (userGroups == null) {
-      throw new UnsupportedOperationException("Error! Group map creation called without groups");
-    }
-
-    if (groupUidMap == null) {
-      groupUidMap = new HashMap<>();
-    }
-
-    // note : watch out for / think about what to do if we create a group locally and don't have its UID yet
-    final int size = userGroups.size();
-    for (int i = 0; i < size; i++) {
-      groupUidMap.put(userGroups.get(i).getGroupUid(), i);
-    }
-  }
-
 
   private void saveGroupsInDB(RealmList<Group> groups) {
     Realm realm = Realm.getDefaultInstance();

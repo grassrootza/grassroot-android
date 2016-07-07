@@ -103,6 +103,13 @@
         android:configChanges="keyboard|keyboardHidden|orientation|screenSize"/>
 
     <activity
+        android:name=".activities.NoGroupWelcomeActivity"
+        android:configChanges="keyboardHidden|orientation"
+        android:launchMode="singleTask"
+        android:screenOrientation="portrait"
+        android:label="@string/title_activity_nogroup_welcome"/>
+
+    <activity
         android:name=".activities.HomeScreenActivity"
         android:configChanges="keyboardHidden|orientation"
         android:label="@string/app_name"
@@ -188,7 +195,6 @@
         android:windowSoftInputMode="adjustNothing"/>
 
     <!-- Navigation drawer / system activities -->
-    <activity android:name=".activities.NotificationCenter"/>
     <activity android:name=".activities.FAQActivity"/>
     <activity android:name=".activities.ProfileSettingsActivity"/>
 

@@ -5,6 +5,7 @@
     <string name="action_settings">Settings</string>
     <string name="title_activity_homescreen">Home screen</string>
     <string name="title_activity_mainactivity">Main activity</string>
+    <string name="title_activity_nogroup_welcome">Welcome</string>
     <string name="title_activity_join__request">Join request</string>
     <string name="title_activity_create__group">Create a group</string>
     <string name="title_activity_add_members">Add group members</string>
@@ -72,6 +73,9 @@
     <string name="logout_message">Are you sure you want to logout?</string>
     <string name="share_app_text">Meet, Vote and Act with Grassroot. Download it at: https://play.google.com/store/apps/details?id=za.org.grassroot.android</string>
 
+    <string name="nav_open">Open navigation</string>
+    <string name="nav_close">Close navigation</string>
+
     <!--welcome content-->
     <string name="txt_welcome">Welcome to <b>Grassroot</b></string>
     <string name="txt_welcome_short">Get started</string>
@@ -102,6 +106,8 @@
     <string name="ghp_search_group_name">Group name</string>
     <string name="tv_dialog_bottom_title">Quick add</string>
 
+    <string name="tasks_toolbar_title">Upcoming events</string>
+
     <string name="ghp_fab_new_task">New event or action</string>
     <string name="ghp_fab_create_group">Create group</string>
     <string name="ghp_fab_join_group">Find other groups</string>
@@ -119,6 +125,7 @@
     <string name="bt_save">Save</string> <!-- probably duplicated, todo : clean up -->
     <string name="bt_cancel">Cancel</string>
 
+    <string name="sort">Sort</string>
     <string name="sort_title">Sort groups by:</string>
     <string name="date">Date of last action</string>
     <string name="role">Your role</string>
@@ -147,7 +154,7 @@
     <string name="gm_remove_members">REMOVE MEMBERS</string>
 
     <!--Group search and join -->
-    <string name="search">search</string>
+    <string name="search">Search</string>
     <string name="search_box">Enter group name</string>
     <string name="validate_search_box">Please search for a group</string>
     <string name="alertbox">Are you sure you want to send a group join request ?</string>

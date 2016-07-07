@@ -17,11 +17,12 @@ import org.grassroot.android.BuildConfig;
 import org.grassroot.android.R;
 import org.grassroot.android.activities.FAQActivity;
 import org.grassroot.android.activities.HomeScreenActivity;
-import org.grassroot.android.activities.NotificationCenter;
 import org.grassroot.android.activities.ProfileSettingsActivity;
 import org.grassroot.android.activities.StartActivity;
 import org.grassroot.android.adapters.NavigationDrawerAdapter;
 import org.grassroot.android.events.NotificationEvent;
+import org.grassroot.android.events.TaskAddedEvent;
+import org.grassroot.android.events.TaskCancelledEvent;
 import org.grassroot.android.events.UserLoggedOutEvent;
 import org.grassroot.android.fragments.dialogs.ConfirmCancelDialogFragment;
 import org.grassroot.android.interfaces.ClickListener;
@@ -147,15 +148,10 @@ public class NavigationDrawerFragment extends Fragment implements TaskService.Ta
         int itemToSetSelected = position;
         boolean changeItemSelected = true;
         switch (position) {
+            // note: first three are handed back to home screen activity to handle fragment switching
             case NavigationConstants.HOME_NAV_GROUPS:
-                startActivity(new Intent(getActivity(), HomeScreenActivity.class));
-                break;
             case NavigationConstants.HOME_NAV_TASKS:
-                Log.e(TAG, "upcoming tasks clicked");
-                // startActivity(new Intent(getActivity(), N));
-                break;
             case NavigationConstants.HOME_NAV_NOTIFICATIONS:
-                startActivity(new Intent(getActivity(), NotificationCenter.class));
                 break;
             case NavigationConstants.HOME_NAV_SHARE:
                 changeItemSelected = false;
@@ -254,10 +250,21 @@ public class NavigationDrawerFragment extends Fragment implements TaskService.Ta
 
     @Subscribe
     public void onNewNotificationEvent(NotificationEvent event) {
-        Log.e(TAG, "redraw navigation drawer");
         int notificationCount = event.getNotificationCount();
         Log.e(TAG, "notification count" + notificationCount);
         drawerAdapter.notifyDataSetChanged();
+    }
+
+    @Subscribe
+    public void onTaskCreatedEvent(TaskAddedEvent e) {
+        tasks.incrementItemCount();
+        drawerAdapter.notifyItemChanged(NavigationConstants.HOME_NAV_TASKS);
+    }
+
+    @Subscribe
+    public void onTaskCancelledEvent(TaskCancelledEvent e) {
+        tasks.decrementItemCount();
+        drawerAdapter.notifyItemChanged(NavigationConstants.HOME_NAV_TASKS);
     }
 
 }

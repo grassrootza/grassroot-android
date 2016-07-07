@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/rl_task_list_root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -43,7 +44,24 @@
             android:textSize="@dimen/txt_large"
             android:text="@string/txt_no_task_group" />
 
-
     </RelativeLayout>
+
+    <android.support.design.widget.FloatingActionButton
+        android:id="@+id/tl_fab"
+        android:layout_gravity="bottom|end"
+        android:layout_margin="@dimen/fab_margin"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentRight="true"
+
+        android:paddingRight="10dp"
+        android:paddingBottom="10dp"
+        android:paddingLeft="10dp"
+
+        android:src="@drawable/fab_add"
+        app:backgroundTint="#FFB805"
+        app:rippleColor="#D99200"
+        app:elevation="6dp" />
 
 </RelativeLayout>

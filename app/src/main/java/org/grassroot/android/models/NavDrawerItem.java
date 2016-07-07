@@ -61,4 +61,8 @@ public class NavDrawerItem {
     public void setItemCount(int itemCount) { this.itemCount = itemCount; }
 
     public int getItemCount() { return itemCount; }
+
+    public void incrementItemCount() { itemCount++; }
+
+    public void decrementItemCount() { itemCount--; }
 }

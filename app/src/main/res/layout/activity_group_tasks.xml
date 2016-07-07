@@ -50,8 +50,4 @@
         app:rippleColor="#D99200"
         app:elevation="6dp" />
 
-        <!-- fab:fab_shadowColor="#444"
-        fab:fab_colorPressed="#F2AB00"
-        fab:fab_colorRipple="#D99200"/> -->
-
 </RelativeLayout>

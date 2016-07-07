@@ -58,12 +58,6 @@ public class ViewTaskFragment extends Fragment {
 
   private static final String TAG = ViewTaskFragment.class.getCanonicalName();
 
-  public interface ViewTaskListener {
-    void onTaskLoaded(TaskModel task);
-
-    void onTaskCancelled(TaskModel task);
-  }
-
   private TaskModel task;
   private String taskType;
   private String taskUid;
@@ -73,7 +67,6 @@ public class ViewTaskFragment extends Fragment {
   private MtgRsvpAdapter mtgRsvpAdapter;
   private MemberListAdapter memberListAdapter;
 
-  private ViewTaskListener listener;
   private ViewGroup mContainer;
   private Unbinder unbinder;
 
@@ -107,10 +100,8 @@ public class ViewTaskFragment extends Fragment {
   }
 
   // use this if creating or calling the fragment without whole task object (e.g., entering from notification)
-  public static ViewTaskFragment newInstance(String taskType, String taskUid,
-      ViewTaskListener listener) {
+  public static ViewTaskFragment newInstance(String taskType, String taskUid) {
     ViewTaskFragment fragment = new ViewTaskFragment();
-    fragment.listener = listener;
     Bundle args = new Bundle();
     args.putString(TaskConstants.TASK_TYPE_FIELD, taskType);
     args.putString(TaskConstants.TASK_UID_FIELD, taskUid);
@@ -119,9 +110,8 @@ public class ViewTaskFragment extends Fragment {
   }
 
   // use this if creating or calling the fragment with whole task object
-  public static ViewTaskFragment newInstance(TaskModel task, ViewTaskListener listener) {
+  public static ViewTaskFragment newInstance(TaskModel task) {
     ViewTaskFragment fragment = new ViewTaskFragment();
-    fragment.listener = listener;
     Bundle args = new Bundle();
     args.putParcelable(TaskConstants.TASK_ENTITY_FIELD, task);
     fragment.setArguments(args);
@@ -172,7 +162,6 @@ public class ViewTaskFragment extends Fragment {
       setUpViews(task);
       realm.commitTransaction();
       realm.close();
-      if (listener != null) listener.onTaskLoaded(task);
     }
     return viewToReturn;
   }
@@ -202,7 +191,6 @@ public class ViewTaskFragment extends Fragment {
               task = response.body().getTasks().get(0);
               Log.e(TAG, task.toString());
               setUpViews(task);
-              if (listener != null) listener.onTaskLoaded(task);
             }
           }
 
@@ -644,13 +632,9 @@ public class ViewTaskFragment extends Fragment {
     setUpCancelApiCall().enqueue(new Callback<GenericResponse>() {
       @Override
       public void onResponse(Call<GenericResponse> call, Response<GenericResponse> response) {
+        progressDialog.dismiss();
         if (response.isSuccessful()) {
-          // todo : pass back via listener & finish
           EventBus.getDefault().post(new TaskCancelledEvent(task));
-          if (listener != null) {
-            listener.onTaskCancelled(task);
-          }
-          progressDialog.dismiss();
         } else {
           ErrorUtils.showSnackBar(getView(), "Error! Something went wrong", Snackbar.LENGTH_LONG,
               "", null);
