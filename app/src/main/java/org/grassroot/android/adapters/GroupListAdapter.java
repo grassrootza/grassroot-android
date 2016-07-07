@@ -12,6 +12,11 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+
+import com.squareup.picasso.Callback;
+import com.squareup.picasso.NetworkPolicy;
+import com.squareup.picasso.Picasso;
+
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import java.text.SimpleDateFormat;
@@ -22,6 +27,8 @@ import org.grassroot.android.R;
 import org.grassroot.android.fragments.HomeGroupListFragment;
 import org.grassroot.android.interfaces.GroupConstants;
 import org.grassroot.android.models.Group;
+import org.grassroot.android.services.GrassrootRestService;
+import org.grassroot.android.utils.Constant;
 
 /**
  * P
@@ -72,7 +79,7 @@ public class GroupListAdapter extends RecyclerView.Adapter<GroupListAdapter.GHP_
     return holder;
   }
 
-  @Override public void onBindViewHolder(GHP_ViewHolder holder, final int position) {
+  @Override public void onBindViewHolder(final GHP_ViewHolder holder, final int position) {
 
     // todo : this is a bit of a mess, see if possible to simplify
 
@@ -137,6 +144,30 @@ public class GroupListAdapter extends RecyclerView.Adapter<GroupListAdapter.GHP_
         listener.onGroupRowMemberClick(group, position);
       }
     });
+
+    if(group.getImageUrl() != null){
+
+
+      Picasso.with(context).load("http://10.0.2.2:8080/image/get?imageId=011c497f-e10f-48e9-bdda-072e13fedc68.jpg")
+              .networkPolicy(NetworkPolicy.OFFLINE)
+              .into(holder.avatar, new Callback() {
+        @Override
+        public void onSuccess() {
+
+          Log.e(TAG,"success");
+        }
+
+        @Override
+        public void onError() {
+          Log.e(TAG, "failed");
+          Picasso.with(context).load("http://10.0.2.2:8080/image/get?imageId=011c497f-e10f-48e9-bdda-072e13fedc68.jpg")
+                  .into(holder.avatar);
+
+
+        }
+      });
+
+    }
   }
 
   private String getChangePrefix(Group group) {
@@ -198,6 +229,7 @@ public class GroupListAdapter extends RecyclerView.Adapter<GroupListAdapter.GHP_
     @BindView(R.id.profile_v2) TextView profileV2;
     @BindView(R.id.datetime) TextView datetime;
     @BindView(R.id.member_icons) RelativeLayout memberIcons;
+    @BindView(R.id.iv_avatar) ImageView avatar;
 
     public GHP_ViewHolder(View view) {
       super(view);
