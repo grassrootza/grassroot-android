@@ -14,6 +14,7 @@ import org.grassroot.android.R;
 import org.grassroot.android.interfaces.NetworkErrorDialogListener;
 import org.grassroot.android.models.Group;
 import org.grassroot.android.models.GroupResponse;
+import org.grassroot.android.models.TaskModel;
 import org.grassroot.android.utils.ErrorUtils;
 import org.grassroot.android.utils.PreferenceUtils;
 import retrofit2.Call;
@@ -27,7 +28,6 @@ public class GroupService {
 
   public static final String TAG = GroupService.class.getSimpleName();
 
-  private Realm realm;
 
   // todo : remove these?
   public ArrayList<Group> userGroups;
@@ -47,7 +47,6 @@ public class GroupService {
   protected GroupService() {
     userGroups = new ArrayList<>();
     groupUidMap = new HashMap<>();
-    realm = Realm.getDefaultInstance();
   }
 
   public static GroupService getInstance() {
@@ -114,10 +113,12 @@ public class GroupService {
   private void loadGroupsFromDB() {
     Log.e(TAG, "could not connect to network, loading groups from DB ...");
     RealmList<Group> groups = new RealmList<>();
+    Realm realm = Realm.getDefaultInstance();
     if (realm != null && !realm.isClosed()) {
       RealmResults<Group> results = realm.where(Group.class).findAll();
       groups.addAll(results.subList(0, results.size()));
     }
+    realm.close();
     userGroups = new ArrayList<>(groups);
   }
 

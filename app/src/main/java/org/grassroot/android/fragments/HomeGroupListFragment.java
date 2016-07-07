@@ -89,7 +89,7 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
 
   ProgressDialog progressDialog;
 
-    Realm realm;
+
 
     private GroupListAdapter groupListRowAdapter;
     private List<Group> userGroups;
@@ -138,9 +138,6 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
     ivGhpSort.setEnabled(false);
     ivGhpSearch.setEnabled(false);
 
-    // Get a Realm instance for this thread
-    realm = Realm.getDefaultInstance();
-
     setUpRecyclerView();
 
     //first load from db
@@ -163,11 +160,13 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
   }
 
   private RealmList<Group> loadGroupsFromDB() {
+    Realm realm = Realm.getDefaultInstance();
     RealmList<Group> groups = new RealmList<>();
     if (realm != null && !realm.isClosed()) {
       RealmResults<Group> results = realm.where(Group.class).findAll();
       groups.addAll(results.subList(0, results.size()));
     }
+    realm.close();
     return groups;
   }
 
