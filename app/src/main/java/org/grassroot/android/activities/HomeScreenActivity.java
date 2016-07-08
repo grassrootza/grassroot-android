@@ -4,8 +4,10 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
+import android.support.v4.view.MenuItemCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
+import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Gravity;
@@ -37,11 +39,13 @@ import org.grassroot.android.utils.PermissionUtils;
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 
+import java.util.Locale;
+
 import butterknife.BindView;
 import butterknife.ButterKnife;
 
 public class HomeScreenActivity extends PortraitActivity implements NavigationDrawerFragment.NavigationDrawerCallbacks,
-        GroupPickCallbacks, NewTaskMenuFragment.NewTaskMenuListener, TaskListFragment.TaskListListener {
+        GroupPickCallbacks, NewTaskMenuFragment.NewTaskMenuListener, TaskListFragment.TaskListListener, SearchView.OnQueryTextListener {
 
     private static final String TAG = HomeScreenActivity.class.getSimpleName();
 
@@ -54,8 +58,10 @@ public class HomeScreenActivity extends PortraitActivity implements NavigationDr
     private NotificationCenterFragment notificationCenterFragment;
 
     private boolean isFirstFragmentSwap = true;
+    private boolean showMenuOptions = true;
 
     private ActionBarDrawerToggle drawerToggle;
+    private int currentMainFragment;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -99,7 +105,28 @@ public class HomeScreenActivity extends PortraitActivity implements NavigationDr
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.menu_home_screen, menu);
+        final MenuItem searchItem = menu.findItem(R.id.action_search);
+        final SearchView searchView = (SearchView) MenuItemCompat.getActionView(searchItem);
+        if (searchView != null) {
+            searchView.setOnQueryTextListener(this);
+        }
         return true;
+    }
+
+    @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+        if (!showMenuOptions) {
+            return false;
+        } else {
+            if (currentMainFragment != NavigationConstants.HOME_NAV_GROUPS) {
+                final MenuItem sort = menu.findItem(R.id.mi_icon_sort);
+                if (sort != null) {
+                    sort.setVisible(false);
+                    sort.setEnabled(false);
+                }
+            }
+            return true;
+        }
     }
 
     @Override
@@ -147,14 +174,19 @@ public class HomeScreenActivity extends PortraitActivity implements NavigationDr
             groupListFragment = new HomeGroupListFragment();
         }
         showOrReplaceFragment(groupListFragment);
+        currentMainFragment = NavigationConstants.HOME_NAV_GROUPS;
+        invalidateOptionsMenu();
     }
 
     private void switchToTasksFragment() {
         setTitle(R.string.tasks_toolbar_title);
+
         if (taskListFragment == null) {
             taskListFragment = TaskListFragment.newInstance(null, this, this, true);
         }
         showOrReplaceFragment(taskListFragment);
+        currentMainFragment = NavigationConstants.HOME_NAV_TASKS;
+        invalidateOptionsMenu();
     }
 
     private void switchToNotificationFragment() {
@@ -163,6 +195,8 @@ public class HomeScreenActivity extends PortraitActivity implements NavigationDr
             notificationCenterFragment = new NotificationCenterFragment();
         }
         showOrReplaceFragment(notificationCenterFragment);
+        currentMainFragment = NavigationConstants.HOME_NAV_NOTIFICATIONS;
+        invalidateOptionsMenu();
     }
 
     private void showOrReplaceFragment(Fragment fragment) {
@@ -187,6 +221,32 @@ public class HomeScreenActivity extends PortraitActivity implements NavigationDr
     }
 
     @Override
+    public boolean onQueryTextChange(String query) {
+        directSearchInput(query);
+        return false;
+    }
+
+    @Override
+    public boolean onQueryTextSubmit(String query) {
+        return false;
+    }
+
+    private void directSearchInput(String query) {
+        final String queryString = query.toLowerCase(Locale.getDefault());
+        switch (currentMainFragment) {
+            case NavigationConstants.HOME_NAV_GROUPS:
+                groupListFragment.searchStringChanged(queryString);
+                break;
+            case NavigationConstants.HOME_NAV_TASKS:
+                taskListFragment.searchStringChanged(queryString);
+                break;
+            case NavigationConstants.HOME_NAV_NOTIFICATIONS:
+                notificationCenterFragment.filterNotifications(query);
+                break;
+        }
+    }
+
+    @Override
     public void menuCloseClicked() {
         GroupPickFragment fragment = (GroupPickFragment) getSupportFragmentManager()
                 .findFragmentByTag(GroupPickFragment.class.getCanonicalName());
@@ -197,7 +257,7 @@ public class HomeScreenActivity extends PortraitActivity implements NavigationDr
 
     @Override
     public void groupPickerTriggered(final String taskType) {
-        setTitle(R.string.home_group_pick);
+        switchActionBarToPicker();
         final String permission = PermissionUtils.permissionForTaskType(taskType);
         final Class activityToLaunch = TaskConstants.MEETING.equals(taskType) ? CreateMeetingActivity.class :
                 TaskConstants.VOTE.equals(taskType) ? CreateVoteActivity.class : CreateTodoActivity.class;
@@ -208,6 +268,7 @@ public class HomeScreenActivity extends PortraitActivity implements NavigationDr
                 if (picker != null && picker.isVisible()) {
                     getSupportFragmentManager().beginTransaction().remove(picker).commit();
                 }
+                switchActionBarOffPicker();
                 Intent i = new Intent(HomeScreenActivity.this, activityToLaunch);
                 i.putExtra(GroupConstants.UID_FIELD, group.getGroupUid());
                 startActivity(i);
@@ -262,14 +323,28 @@ public class HomeScreenActivity extends PortraitActivity implements NavigationDr
     }
 
     private void switchActionBarToPicker() {
-        // tvTitle.setText(R.string.home_group_pick);
-        // ivGhpDrawer.setImageResource(R.drawable.btn_close_white);
+        setTitle(R.string.home_group_pick);
         toggleClickableTitle(false);
+        switchOffMenu();
+
+        drawerToggle.setDrawerIndicatorEnabled(false);
+        drawerToggle.setHomeAsUpIndicator(R.drawable.btn_close_white);
+        drawerToggle.setToolbarNavigationClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                getSupportFragmentManager().popBackStack();
+                switchActionBarOffPicker();
+            }
+        });
     }
 
-    private void setActionBarToDefault() {
-        setUpToolbar();
+    private void switchActionBarOffPicker() {
+        drawerToggle.setDrawerIndicatorEnabled(true);
+        final int title = (currentMainFragment == NavigationConstants.HOME_NAV_NOTIFICATIONS) ? R.string.Notifications
+                : (currentMainFragment == NavigationConstants.HOME_NAV_TASKS) ? R.string.tasks_toolbar_title : R.string.ghp_toolbar_title;
+        setTitle(title);
         toggleClickableTitle(true);
+        switchOnMenu();
     }
 
 
@@ -290,12 +365,35 @@ public class HomeScreenActivity extends PortraitActivity implements NavigationDr
 
     @Override
     public void onTaskLoaded(String taskName) {
-        // todo : plus a bunch more
-        getSupportActionBar().setHomeAsUpIndicator(R.drawable.btn_close_white);
+        setTitle(taskName);
+        toggleClickableTitle(false);
+        switchOffMenu();
+        drawerToggle.setDrawerIndicatorEnabled(false);
+        drawerToggle.setHomeAsUpIndicator(R.drawable.btn_close_white);
+        drawerToggle.setToolbarNavigationClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                getSupportFragmentManager().popBackStack();
+                drawerToggle.setDrawerIndicatorEnabled(true);
+                toggleClickableTitle(true);
+                setTitle(R.string.tasks_toolbar_title);
+                switchOnMenu();
+            }
+        });
     }
 
     @Subscribe
     public void onTaskCancelled(TaskCancelledEvent e) {
         getSupportActionBar().setHomeAsUpIndicator(R.drawable.btn_navigation);
+    }
+
+    private void switchOffMenu() {
+        showMenuOptions = false;
+        invalidateOptionsMenu();
+    }
+
+    private void switchOnMenu() {
+        showMenuOptions = true;
+        invalidateOptionsMenu();
     }
 }

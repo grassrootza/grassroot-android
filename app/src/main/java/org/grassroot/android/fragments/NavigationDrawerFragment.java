@@ -20,6 +20,8 @@ import org.grassroot.android.activities.HomeScreenActivity;
 import org.grassroot.android.activities.ProfileSettingsActivity;
 import org.grassroot.android.activities.StartActivity;
 import org.grassroot.android.adapters.NavigationDrawerAdapter;
+import org.grassroot.android.events.GroupCreatedEvent;
+import org.grassroot.android.events.GroupsRefreshedEvent;
 import org.grassroot.android.events.NotificationEvent;
 import org.grassroot.android.events.TaskAddedEvent;
 import org.grassroot.android.events.TaskCancelledEvent;
@@ -32,6 +34,7 @@ import org.grassroot.android.models.NavDrawerItem;
 import org.grassroot.android.services.ApplicationLoader;
 import org.grassroot.android.services.GcmRegistrationService;
 import org.grassroot.android.adapters.RecyclerTouchListener;
+import org.grassroot.android.services.GroupService;
 import org.grassroot.android.services.TaskService;
 import org.grassroot.android.utils.Constant;
 import org.grassroot.android.utils.PreferenceUtils;
@@ -57,6 +60,7 @@ public class NavigationDrawerFragment extends Fragment implements TaskService.Ta
     private NavigationDrawerAdapter drawerAdapter;
     private int currentlySelectedItem = NavigationConstants.HOME_NAV_GROUPS;
 
+    NavDrawerItem groups;
     NavDrawerItem tasks;
     NavDrawerItem notifications;
 
@@ -125,7 +129,11 @@ public class NavigationDrawerFragment extends Fragment implements TaskService.Ta
 
     public List<NavDrawerItem> getData() {
         draweritems = new ArrayList<>();
-        draweritems.add(new NavDrawerItem(getString(R.string.drawer_group_list), R.drawable.ic_home, R.drawable.ic_home_green, true, false));
+
+        groups = new NavDrawerItem(getString(R.string.drawer_group_list), R.drawable.ic_home, R.drawable.ic_home_green, true, true);
+        groups.setItemCount(GroupService.getInstance().loadGroupsFromDB().size());
+        Log.e(TAG, "size of groups loaded: " + groups.getItemCount());
+        draweritems.add(groups);
 
         tasks = new NavDrawerItem(getString(R.string.drawer_open_tasks), R.drawable.ic_star_gray, R.drawable.ic_star_green, false, true); // todo: fix icon
         tasks.setItemCount(TaskService.getInstance().upcomingTasks.size());
@@ -208,6 +216,11 @@ public class NavigationDrawerFragment extends Fragment implements TaskService.Ta
         }
     }
 
+    public void updateGroupCount(int groupCount) {
+        groups.setItemCount(groupCount);
+        drawerAdapter.notifyItemChanged(NavigationConstants.HOME_NAV_GROUPS);
+    }
+
     private void shareApp() {
         Intent shareIntent = new Intent(Intent.ACTION_SEND);
         shareIntent.setType("text/plain");
@@ -249,6 +262,13 @@ public class NavigationDrawerFragment extends Fragment implements TaskService.Ta
     }
 
     @Subscribe
+    public void onGroupsRefreshedEvent(GroupsRefreshedEvent e) {
+        int groupCount = GroupService.getInstance().getGroups().size();
+        groups.setItemCount(groupCount);
+        drawerAdapter.notifyItemChanged(NavigationConstants.HOME_NAV_GROUPS);
+    }
+
+    @Subscribe
     public void onNewNotificationEvent(NotificationEvent event) {
         int notificationCount = event.getNotificationCount();
         Log.e(TAG, "notification count" + notificationCount);
@@ -265,6 +285,12 @@ public class NavigationDrawerFragment extends Fragment implements TaskService.Ta
     public void onTaskCancelledEvent(TaskCancelledEvent e) {
         tasks.decrementItemCount();
         drawerAdapter.notifyItemChanged(NavigationConstants.HOME_NAV_TASKS);
+    }
+
+    @Subscribe
+    public void onGroupAdded(GroupCreatedEvent e) {
+        groups.incrementItemCount();
+        drawerAdapter.notifyItemChanged(NavigationConstants.HOME_NAV_GROUPS);
     }
 
 }

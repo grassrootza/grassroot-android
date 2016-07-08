@@ -11,12 +11,15 @@ import java.util.HashMap;
 import java.util.List;
 
 import org.grassroot.android.R;
+import org.grassroot.android.events.GroupsRefreshedEvent;
 import org.grassroot.android.interfaces.NetworkErrorDialogListener;
 import org.grassroot.android.models.Group;
 import org.grassroot.android.models.GroupResponse;
 import org.grassroot.android.models.TaskModel;
 import org.grassroot.android.utils.ErrorUtils;
 import org.grassroot.android.utils.PreferenceUtils;
+import org.greenrobot.eventbus.EventBus;
+
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -64,8 +67,7 @@ public class GroupService {
     if (userGroups == null || userGroups.isEmpty()) {
       return userGroups;
     } else {
-      loadGroupsFromDB();
-      return userGroups;
+      return loadGroupsFromDB();
     }
   }
 
@@ -89,7 +91,9 @@ public class GroupService {
             if (response.isSuccessful()) {
               groupsLoading = false;
               groupsFinishedLoading = true;
+              userGroups = new ArrayList<>(response.body().getGroups());
               saveGroupsInDB(response.body().getGroups());
+              EventBus.getDefault().post(new GroupsRefreshedEvent());
               listener.groupListLoaded();
             } else {
               Log.e(TAG, response.message());

@@ -21,6 +21,7 @@ import org.grassroot.android.interfaces.NotificationConstants;
 import org.grassroot.android.models.GenericResponse;
 import org.grassroot.android.models.Token;
 import org.grassroot.android.models.TokenResponse;
+import org.grassroot.android.services.ApplicationLoader;
 import org.grassroot.android.services.GcmRegistrationService;
 import org.grassroot.android.services.GrassrootRestService;
 import org.grassroot.android.utils.Constant;
@@ -234,7 +235,7 @@ public class LoginRegisterActivity extends AppCompatActivity implements LoginScr
 
                             registerOrRefreshGCM(msisdn);
 
-                            PreferenceUtils.setGroupListMustBeRefreshed(LoginRegisterActivity.this, true);
+                            PreferenceUtils.setUserHasGroups(ApplicationLoader.applicationContext, false);
                             launchHomeScreen(false); // by definition, registering means no group
                             finish();
 
@@ -264,6 +265,7 @@ public class LoginRegisterActivity extends AppCompatActivity implements LoginScr
             startActivity(homeScreenIntent);
         } else {
             Intent welcomeScreenIntent = new Intent(LoginRegisterActivity.this, NoGroupWelcomeActivity.class);
+            startActivity(welcomeScreenIntent);
         }
     }
 

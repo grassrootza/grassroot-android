@@ -11,6 +11,7 @@ import android.support.v4.content.ContextCompat;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -27,6 +28,7 @@ import org.grassroot.android.fragments.dialogs.ConfirmCancelDialogFragment;
 import org.grassroot.android.interfaces.GroupPickCallbacks;
 import org.grassroot.android.interfaces.NetworkErrorDialogListener;
 import org.grassroot.android.interfaces.TaskConstants;
+import org.grassroot.android.models.Group;
 import org.grassroot.android.models.TaskModel;
 import org.grassroot.android.models.TaskResponse;
 import org.grassroot.android.services.GrassrootRestService;
@@ -36,7 +38,10 @@ import org.grassroot.android.utils.PreferenceUtils;
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import butterknife.BindView;
@@ -367,6 +372,19 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
               .setCustomAnimations(R.anim.push_down_in, R.anim.push_down_out)
               .remove(frag)
               .commit();
+    }
+  }
+
+  /*
+  HANDLE SEARCHING
+  todo : make this much more efficient
+   */
+
+  public void searchStringChanged(String query) {
+    if (TextUtils.isEmpty(query)) {
+      groupTasksAdapter.stopFiltering();
+    } else {
+      groupTasksAdapter.filterByName(query);
     }
   }
 

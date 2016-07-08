@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import org.grassroot.android.R;
 import org.grassroot.android.events.TaskAddedEvent;
@@ -305,6 +306,20 @@ public class TasksAdapter extends RecyclerView.Adapter<TasksAdapter.TaskViewHold
         "decomposed task list, sizes: %d total, %d votes, %d mtgs, %d todos, took %d msecs",
         fullTaskList.size(), voteList.size(), meetingList.size(), toDoList.size(),
         SystemClock.currentThreadTimeMillis() - startTime));
+  }
+
+  // todo : optimize / make much more efficient
+  public void filterByName(String query) {
+    if (fullTaskList == null || fullTaskList.isEmpty()) {
+      fullTaskList = new ArrayList<>(viewedTasks);
+    }
+    viewedTasks.clear();
+    for (TaskModel t : fullTaskList) {
+      if (t.getTitle().trim().toLowerCase(Locale.getDefault()).contains(query)) {
+        viewedTasks.add(t);
+      }
+    }
+    notifyDataSetChanged();
   }
 
   public void startFiltering() {

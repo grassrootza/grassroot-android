@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 
+import org.grassroot.android.services.ApplicationLoader;
 import org.grassroot.android.services.LocationServices;
 import org.grassroot.android.utils.PreferenceUtils;
 
@@ -29,7 +30,9 @@ public class StartActivity extends AppCompatActivity {
 
     private void userIsLoggedIn() {
         LocationServices.getInstance().connect();
-        Intent i  = new Intent(StartActivity.this, HomeScreenActivity.class);
+        Intent i  = PreferenceUtils.userHasGroups(ApplicationLoader.applicationContext) ?
+                new Intent(StartActivity.this, HomeScreenActivity.class) :
+                new Intent(StartActivity.this, NoGroupWelcomeActivity.class);
         startActivity(i);
     }
 

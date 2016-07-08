@@ -13,6 +13,7 @@ import android.support.v4.content.ContextCompat;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -165,8 +166,7 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
           @Override public void groupListLoaded() {
             hideProgress();
             rcGroupList.setVisibility(View.VISIBLE);
-            groupListRowAdapter.setGroupList(GroupService.getInstance().getGroups());
-            rcGroupList.setVisibility(View.VISIBLE);
+            groupListRowAdapter.setGroupList(GroupService.getInstance().userGroups);
           }
 
           @Override public void groupListLoadingError() {
@@ -404,44 +404,17 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
     });
   }
 
-    /*
-  SECTION : search methods
-   */
-    /*
-  @OnTextChanged(value = R.id.et_search, callback = OnTextChanged.Callback.AFTER_TEXT_CHANGED)
-  public void searchStringChanged(CharSequence s) {
-    String str = s.length() > 0 ? et_search.getText().toString() : "";
-    String searchwords = str.toLowerCase(Locale.getDefault());
-    filter(searchwords);
-  }
-
-  @OnClick(R.id.iv_ghp_search) public void ivGhpSearch() {
-    rlSimple.setVisibility(View.GONE);
-    rlSearch.setVisibility(View.VISIBLE);
-  }
-
-  private void filter(String searchwords) {
-    //first clear the current data
-    Log.e(TAG, "filter search_string is " + searchwords);
-
-    if (searchwords.equals("")) {
-      groupListRowAdapter.setGroupList(userGroups);
-    } else {
-      final List<Group> filteredGroups = new ArrayList<>();
-
-      for (Group group : userGroups) {
-        if (group.getGroupName().trim().toLowerCase(Locale.getDefault()).contains(searchwords)) {
-          Log.e(TAG, "model.groupName.trim() " + group.getGroupName()
-              .trim()
-              .toLowerCase(Locale.getDefault()));
-          Log.e(TAG, "searchwords is " + searchwords);
-          filteredGroups.add(group);
+    public void searchStringChanged(String query) {
+        if (TextUtils.isEmpty(query)) {
+            groupListRowAdapter.setGroupList(userGroups);
         } else {
-          //Log.e(TAG,"not found");
+            final List<Group> filteredGroups = new ArrayList<>();
+            for (Group group : userGroups) {
+                if (group.getGroupName().trim().toLowerCase(Locale.getDefault()).contains(query)) {
+                    filteredGroups.add(group);
+                }
+            }
+            groupListRowAdapter.setGroupList(filteredGroups);
         }
-      }
-
-      groupListRowAdapter.setGroupList(filteredGroups);
     }
-  }*/
 }

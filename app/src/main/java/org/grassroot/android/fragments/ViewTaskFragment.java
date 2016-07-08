@@ -136,8 +136,8 @@ public class ViewTaskFragment extends Fragment {
             "Error! View task fragment with type or UID missing");
       }
 
-      phoneNumber = PreferenceUtils.getUserPhoneNumber(getContext());
-      code = PreferenceUtils.getAuthToken(getContext());
+      phoneNumber = PreferenceUtils.getPhoneNumber();
+      code = PreferenceUtils.getAuthToken();
       canViewResponses = false;
     } else {
       throw new UnsupportedOperationException(
@@ -223,8 +223,7 @@ public class ViewTaskFragment extends Fragment {
     tvTitle.setText(R.string.vt_mtg_title);
     tvHeader.setText(task.getTitle());
     tvLocation.setVisibility(View.VISIBLE);
-    tvLocation.setText(String.format(getString(R.string.vt_mtg_location),
-        task.getLocation())); // todo: integrate w/Maps
+    tvLocation.setText(String.format(getString(R.string.vt_mtg_location), task.getLocation())); // todo: integrate w/Maps
 
     tvPostedBy.setText(String.format(getString(R.string.vt_mtg_posted), task.getName()));
     TextViewCompat.setTextAppearance(tvPostedBy, R.style.CardViewFinePrint);

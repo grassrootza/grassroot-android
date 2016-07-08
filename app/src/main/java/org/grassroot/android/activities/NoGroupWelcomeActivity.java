@@ -8,6 +8,7 @@ import android.support.v4.widget.DrawerLayout;
 import org.grassroot.android.R;
 import org.grassroot.android.events.GroupCreatedEvent;
 import org.grassroot.android.events.UserLoggedOutEvent;
+import org.grassroot.android.fragments.NavigationDrawerFragment;
 import org.grassroot.android.fragments.WelcomeFragment;
 import org.grassroot.android.services.ApplicationLoader;
 import org.grassroot.android.utils.PreferenceUtils;
@@ -20,7 +21,8 @@ import butterknife.ButterKnife;
 /**
  * Created by luke on 2016/07/07.
  */
-public class NoGroupWelcomeActivity extends PortraitActivity implements WelcomeFragment.WelcomeFragmentListener {
+public class NoGroupWelcomeActivity extends PortraitActivity implements WelcomeFragment.WelcomeFragmentListener,
+        NavigationDrawerFragment.NavigationDrawerCallbacks {
 
     private static final String TAG = NoGroupWelcomeActivity.class.getSimpleName();
 
@@ -67,5 +69,10 @@ public class NoGroupWelcomeActivity extends PortraitActivity implements WelcomeF
     @Override
     public void menuClick() { // Getting data from fragment
         if (drawer != null) drawer.openDrawer(GravityCompat.START);
+    }
+
+    @Override
+    public void onNavigationDrawerItemSelected(int position) {
+        // todo : not really anything we can do, no?
     }
 }

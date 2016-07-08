@@ -7,6 +7,7 @@ import android.support.v4.app.Fragment;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -181,5 +182,13 @@ public class NotificationCenterFragment extends Fragment {
             PreferenceUtils.setNotificationCounter(getContext(), --notificationCount);
             EventBus.getDefault().post(new NotificationEvent(--notificationCount));
         }}
+    }
+
+    public void filterNotifications(String filterText) {
+        if (TextUtils.isEmpty(filterText)) {
+            notificationAdapter.resetToStored();
+        } else {
+            notificationAdapter.filter(filterText);
+        }
     }
 }
