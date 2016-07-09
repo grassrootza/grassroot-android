@@ -32,6 +32,7 @@ import org.grassroot.android.activities.CreateVoteActivity;
 import org.grassroot.android.activities.GroupSearchActivity;
 import org.grassroot.android.activities.GroupTasksActivity;
 import org.grassroot.android.adapters.GroupListAdapter;
+import org.grassroot.android.events.JoinRequestsReceived;
 import org.grassroot.android.events.NetworkActivityResultsEvent;
 import org.grassroot.android.events.TaskAddedEvent;
 import org.grassroot.android.interfaces.GroupConstants;
@@ -105,6 +106,7 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
     Log.e(TAG, "onActivityCreated Called ... initiating");
     init();
     fetchGroupList();
+      checkForJoinRequests();
   }
 
   @Override public void onResume() {
@@ -174,6 +176,18 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
           }
         });
   }
+
+    /*
+    Possibly move this to its own fragment
+     */
+    public void checkForJoinRequests() {
+        GroupService.getInstance().fetchGroupJoinRequests();
+    }
+
+    @Subscribe
+    public void onGroupJoinRequestsLoaded(JoinRequestsReceived e) {
+        Log.e(TAG, "group join requests received! this many: " + GroupService.getInstance().openJoinRequests.size());
+    }
 
   /*
   Separating this method from the above, because we will probably want it to call some kind of diff

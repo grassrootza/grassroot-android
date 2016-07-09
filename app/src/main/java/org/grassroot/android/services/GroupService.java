@@ -12,8 +12,10 @@ import java.util.List;
 
 import org.grassroot.android.R;
 import org.grassroot.android.events.GroupsRefreshedEvent;
+import org.grassroot.android.events.JoinRequestsReceived;
 import org.grassroot.android.interfaces.NetworkErrorDialogListener;
 import org.grassroot.android.models.Group;
+import org.grassroot.android.models.GroupJoinRequest;
 import org.grassroot.android.models.GroupResponse;
 import org.grassroot.android.models.TaskModel;
 import org.grassroot.android.utils.ErrorUtils;
@@ -31,9 +33,9 @@ public class GroupService {
 
   public static final String TAG = GroupService.class.getSimpleName();
 
-
   // todo : remove these?
   public ArrayList<Group> userGroups;
+    public ArrayList<GroupJoinRequest> openJoinRequests;
 
   public boolean groupsLoading = false;
   public boolean groupsFinishedLoading = false;
@@ -42,12 +44,12 @@ public class GroupService {
 
   public interface GroupServiceListener {
     void groupListLoaded();
-
     void groupListLoadingError();
   }
 
   protected GroupService() {
-    userGroups = new ArrayList<>();
+      userGroups = new ArrayList<>();
+      openJoinRequests = new ArrayList<>();
   }
 
   public static GroupService getInstance() {
@@ -208,4 +210,57 @@ public class GroupService {
       realm.close();
     }
   }
+
+
+    /* METHODS FOR RETRIEVING AND APPROVING GROUP JOIN REQUESTS */
+
+    public void fetchGroupJoinRequests() {
+        final String mobileNumber = PreferenceUtils.getPhoneNumber();
+        final String userToken = PreferenceUtils.getAuthToken();
+        GrassrootRestService.getInstance().getApi().getOpenJoinRequests(mobileNumber, userToken)
+                .enqueue(new Callback<RealmList<GroupJoinRequest>>() {
+                    @Override
+                    public void onResponse(Call<RealmList<GroupJoinRequest>> call, Response<RealmList<GroupJoinRequest>> response) {
+                        if (response.isSuccessful()) {
+                            saveJoinRequestsInDB(response.body());
+                            Log.d(TAG, "join requests received: " + response.body());
+                            if (!response.body().isEmpty()) {
+                                EventBus.getDefault().post(new JoinRequestsReceived());
+                            }
+                        } else {
+                            loadGroupsFromDB();
+                            Log.e(TAG, "Error retrieving join requests!");
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(Call<RealmList<GroupJoinRequest>> call, Throwable t) {
+                        loadGroupsFromDB();
+                        Log.e(TAG, "Error in network!"); // todo : anything?
+                    }
+                });
+    }
+
+    private void saveJoinRequestsInDB(RealmList<GroupJoinRequest> requests) {
+        Realm realm = Realm.getDefaultInstance();
+        if (requests != null && realm != null && !realm.isClosed()) {
+            realm.beginTransaction();
+            realm.copyToRealmOrUpdate(requests);
+            realm.commitTransaction();
+            realm.close();
+        }
+    }
+
+    public RealmList<GroupJoinRequest> loadRequestsFromDB() {
+        Realm realm = Realm.getDefaultInstance();
+        RealmList<GroupJoinRequest> requests = new RealmList<>();
+        if (realm != null && !realm.isClosed()) {
+            // todo : probably want to filter by open, etc etc
+            RealmResults<GroupJoinRequest> results = realm.where(GroupJoinRequest.class).findAll();
+            requests.addAll(realm.copyFromRealm(results));
+        }
+        openJoinRequests = new ArrayList<>(requests);
+        realm.close();
+        return requests;
+    }
 }
