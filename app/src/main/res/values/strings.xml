@@ -381,11 +381,20 @@
     <string name="pp_Cancel">CANCEL</string>
     <string name="pp_OK">OK</string>
 
+    <!--Group picture -->
+    <string name="gp_bt_txt_set">Set group picture</string>
+    <string name="gp_bt_txt_update">Update Group Picture</string>
+    <string name="gp_txt_title">Group Picture</string>
+    <string name="gp_update_success">Group photo updated</string>
+    <string name="gp_update_failure">Group photo not uploaded. Please try again later.</string>
+
     <!--Notification Center-->
     <string name="nc_txt_tlb">Notification</string>
 
     <!--FAQ-->
     <string name="fq_txt_toolbar">FAQs</string>
+
+
     <string-array name="fq_Header">
         <item>How do I get started?</item>
         <item>Okay, I\'ve part of some groups. What next?</item>

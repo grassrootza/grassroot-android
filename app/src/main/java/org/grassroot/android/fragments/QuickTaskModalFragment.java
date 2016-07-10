@@ -48,6 +48,7 @@ public class QuickTaskModalFragment extends android.support.v4.app.DialogFragmen
     @BindView(R.id.ic_home_to_do_active)
     ImageView icHomeToDoActive;
 
+
     public boolean votePermitted = false, meetingPermitted = false, todoPermitted = false;
 
     public QuickTaskModalFragment() {}

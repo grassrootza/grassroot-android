@@ -29,6 +29,7 @@ import org.grassroot.android.activities.CreateGroupActivity;
 import org.grassroot.android.activities.CreateMeetingActivity;
 import org.grassroot.android.activities.CreateTodoActivity;
 import org.grassroot.android.activities.CreateVoteActivity;
+import org.grassroot.android.activities.GroupAvatarActivity;
 import org.grassroot.android.activities.GroupSearchActivity;
 import org.grassroot.android.activities.GroupTasksActivity;
 import org.grassroot.android.adapters.GroupListAdapter;
@@ -345,7 +346,15 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
     dialog.show(getFragmentManager(), "GroupQuickMemberModalFragment");
   }
 
-  @Override public void onDetach() {
+    @Override
+    public void onGroupRowAvatarClick(Group group) {
+        Intent intent = MenuUtils.constructIntent(getActivity(), GroupAvatarActivity.class,
+                group);
+        startActivity(intent);
+
+    }
+
+    @Override public void onDetach() {
     super.onDetach();
     mCallbacks = null;
   }

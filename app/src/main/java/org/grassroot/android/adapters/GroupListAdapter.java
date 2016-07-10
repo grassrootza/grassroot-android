@@ -27,8 +27,6 @@ import org.grassroot.android.R;
 import org.grassroot.android.fragments.HomeGroupListFragment;
 import org.grassroot.android.interfaces.GroupConstants;
 import org.grassroot.android.models.Group;
-import org.grassroot.android.services.GrassrootRestService;
-import org.grassroot.android.utils.Constant;
 
 /**
  * P
@@ -50,6 +48,8 @@ public class GroupListAdapter extends RecyclerView.Adapter<GroupListAdapter.GHP_
     void onGroupRowLongClick(Group group);
 
     void onGroupRowMemberClick(Group group, int position);
+
+    void onGroupRowAvatarClick(Group group);
   }
 
   public GroupListAdapter(List<Group> groups, HomeGroupListFragment fragment) {
@@ -144,25 +144,31 @@ public class GroupListAdapter extends RecyclerView.Adapter<GroupListAdapter.GHP_
         listener.onGroupRowMemberClick(group, position);
       }
     });
+    holder.avatar.setOnClickListener(new View.OnClickListener() {
+      @Override
+      public void onClick(View v) {
+        listener.onGroupRowAvatarClick(group);
+      }
+    });
 
-    if(group.getImageUrl() != null){
+    String imageUrl = group.getImageUrl();
 
+    if(imageUrl != null){
 
-      Picasso.with(context).load("http://10.0.2.2:8080/image/get?imageId=011c497f-e10f-48e9-bdda-072e13fedc68.jpg")
+      Log.e(TAG,imageUrl);
+      final  String  img = imageUrl;
+
+      Picasso.with(context).load(imageUrl)
+              .error(R.drawable.ic_profile_image)
               .networkPolicy(NetworkPolicy.OFFLINE)
               .into(holder.avatar, new Callback() {
         @Override
         public void onSuccess() {
-
-          Log.e(TAG,"success");
         }
-
-        @Override
+                @Override
         public void onError() {
-          Log.e(TAG, "failed");
-          Picasso.with(context).load("http://10.0.2.2:8080/image/get?imageId=011c497f-e10f-48e9-bdda-072e13fedc68.jpg")
+          Picasso.with(context).load(img).error(R.drawable.ic_profile_image)
                   .into(holder.avatar);
-
 
         }
       });
@@ -229,7 +235,7 @@ public class GroupListAdapter extends RecyclerView.Adapter<GroupListAdapter.GHP_
     @BindView(R.id.profile_v2) TextView profileV2;
     @BindView(R.id.datetime) TextView datetime;
     @BindView(R.id.member_icons) RelativeLayout memberIcons;
-    @BindView(R.id.iv_avatar) ImageView avatar;
+    @BindView(R.id.iv_gp_avatar) ImageView avatar;
 
     public GHP_ViewHolder(View view) {
       super(view);
