@@ -7,18 +7,26 @@ import io.realm.Realm;
 import io.realm.RealmList;
 import io.realm.RealmResults;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.UUID;
 
 import org.grassroot.android.R;
 import org.grassroot.android.events.GroupsRefreshedEvent;
 import org.grassroot.android.events.JoinRequestsReceived;
+import org.grassroot.android.interfaces.GroupConstants;
 import org.grassroot.android.interfaces.NetworkErrorDialogListener;
+import org.grassroot.android.interfaces.TaskConstants;
 import org.grassroot.android.models.Group;
 import org.grassroot.android.models.GroupJoinRequest;
 import org.grassroot.android.models.GroupResponse;
+import org.grassroot.android.models.Member;
+import org.grassroot.android.models.RealmString;
 import org.grassroot.android.models.TaskModel;
 import org.grassroot.android.utils.ErrorUtils;
+import org.grassroot.android.utils.NetworkUtils;
+import org.grassroot.android.utils.PermissionUtils;
 import org.grassroot.android.utils.PreferenceUtils;
 import org.greenrobot.eventbus.EventBus;
 
@@ -46,6 +54,12 @@ public class GroupService {
     void groupListLoaded();
     void groupListLoadingError();
   }
+
+    public interface GroupCreationListener {
+        void groupCreatedLocally(Group group);
+        void groupCreatedOnServer(Group group);
+        void groupCreationError(Response<GroupResponse> response);
+    }
 
   protected GroupService() {
       userGroups = new ArrayList<>();
@@ -210,6 +224,76 @@ public class GroupService {
       realm.close();
     }
   }
+
+    /*
+    METHODS FOR CREATING AND MODIFYING / EDITING GROUPS
+     */
+
+    public void createGroup(final String groupName, final String groupDescription,
+                            final List<Member> groupMembers, final GroupCreationListener listener) {
+        final String mobileNumber = PreferenceUtils.getPhoneNumber();
+        final String code = PreferenceUtils.getAuthToken();
+
+        if (!NetworkUtils.isNetworkAvailable(ApplicationLoader.applicationContext)) {
+            Group group = createGroupLocally(groupName, groupDescription, groupMembers);
+            listener.groupCreatedLocally(group);
+        } else {
+            GrassrootRestService.getInstance()
+                    .getApi()
+                    .createGroup(mobileNumber, code, groupName, groupDescription, groupMembers)
+                    .enqueue(new Callback<GroupResponse>() {
+                        @Override
+                        public void onResponse(Call<GroupResponse> call, Response<GroupResponse> response) {
+                            if (response.isSuccessful()) {
+                                Log.d(TAG, "returning group created! with UID : " + response.body()
+                                        .getGroups()
+                                        .get(0)
+                                        .getGroupUid());
+                                listener.groupCreatedOnServer(response.body().getGroups().first());
+                            } else {
+                                listener.groupCreationError(response);
+                            }
+                        }
+
+                        @Override public void onFailure(Call<GroupResponse> call, Throwable t) {
+                            Log.e(TAG, "Error! This should not occur");
+                            Group group = createGroupLocally(groupName, groupDescription, groupMembers);
+                            listener.groupCreatedLocally(group);
+                        }
+                    });
+        }
+    }
+
+    private Group createGroupLocally(final String groupName, final String groupDescription,
+                                     final List<Member> groupMembers) {
+        Realm realm = Realm.getDefaultInstance();
+        Group group = new Group();
+        group.setGroupName(groupName);
+        group.setDescription(groupDescription);
+        group.setIsLocal(true);
+        group.setGroupCreator(PreferenceUtils.getUserName(ApplicationLoader.applicationContext));
+        group.setGroupUid(UUID.randomUUID().toString());
+        group.setLastChangeType(GroupConstants.GROUP_CREATED);
+        group.setGroupMemberCount(1);
+        group.setDate(new Date());
+        group.setDateTimeStringISO(group.getDateTimeStringISO());
+        RealmList<RealmString> permissions = new RealmList<>();
+        //TODO investigate permission per user
+        permissions.add(new RealmString(PermissionUtils.permissionForTaskType(TaskConstants.MEETING)));
+        permissions.add(new RealmString(PermissionUtils.permissionForTaskType(TaskConstants.VOTE)));
+        permissions.add(new RealmString(PermissionUtils.permissionForTaskType(TaskConstants.TODO)));
+        group.setPermissions(permissions);
+        realm.beginTransaction();
+        realm.copyToRealmOrUpdate(group);
+        realm.commitTransaction();
+        realm.beginTransaction();
+        for (Member m : groupMembers) {
+            m.setGroupUid(group.getGroupUid());
+        }
+        realm.commitTransaction();
+        realm.close();
+        return group;
+    }
 
 
     /* METHODS FOR RETRIEVING AND APPROVING GROUP JOIN REQUESTS */

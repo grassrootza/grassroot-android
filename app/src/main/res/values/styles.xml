@@ -32,10 +32,6 @@
         <item name="android:orientation">vertical</item>
     </style>
 
-    <style name="AppTheme.FloatingAccentButtonOverlay">
-        <item name="colorAccent">#FFB805</item>
-    </style>
-
     <style name="FloatingActionButtonGroup">
         <item name="android:orientation">horizontal</item>
         <item name="android:layout_width">wrap_content</item>
@@ -76,14 +72,21 @@
         <item name="android:textStyle">bold</item>
     </style>
 
-    <!-- Starting GR team defined styles here -->
     <style name="GiantHeader">
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">wrap_content</item>
         <item name="android:singleLine">true</item>
         <item name="android:maxEms">10</item>
-        <item name="android:textSize">34sp</item> <!-- todo: move to dimens -->
+        <item name="android:textSize">@dimen/txt_giant</item> <!-- todo: move to dimens -->
         <item name="android:textColor">@color/white</item>
+    </style>
+
+    <style name="BoldWhiteText">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textSize">@dimen/txt_large</item>
+        <item name="android:textColor">@color/white</item>
+        <item name="android:textStyle">bold</item>
     </style>
 
     <style name="CardViewHeader">

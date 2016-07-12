@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/primaryColor">
+
+    <TextView
+        android:id="@+id/ac_header"
+        style="@style/GiantHeader"
+        android:layout_width="wrap_content"
+        android:layout_gravity="center"
+        android:layout_marginBottom="20dp"
+        android:layout_centerHorizontal="true"
+        android:layout_above="@+id/ac_body"
+        tools:text="Action done" />
+
+    <TextView
+        android:id="@+id/ac_body"
+        android:layout_above="@+id/ac_btn_tasks"
+        android:layout_centerInParent="true"
+        android:layout_marginBottom="@dimen/margin_xxlarge"
+        style="@style/BoldWhiteText"
+        android:padding="@dimen/padding"
+        android:text="@string/txt_getstart"
+        android:textColor="@color/white"
+        android:textSize="@dimen/txt_large" />
+
+    <Button
+        android:id="@+id/ac_bt_done"
+        style="@style/NewTaskButton"
+        android:layout_alignParentBottom="true"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="@dimen/margin_xlarge"
+        android:layout_marginRight="@dimen/margin_xlarge"
+        android:layout_marginBottom="@dimen/margin_xxlarge"
+        android:visibility="visible"
+        android:text="@string/ac_btn_done"/>
+
+    <RelativeLayout
+        android:id="@+id/ac_btn_tasks"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:paddingLeft="@dimen/padding"
+        android:paddingRight="@dimen/padding"
+        android:visibility="gone"
+        android:layout_marginBottom="@dimen/margin_xxlarge">
+
+        <Button
+            style="@style/NewTaskButton"
+            android:id="@+id/bt_vote"
+            android:text="@string/ac_btn_vote" />
+
+        <Button
+            style="@style/NewTaskButton"
+            android:id="@+id/bt_meeting"
+            android:text="@string/ac_btn_mtg"
+            android:layout_below="@+id/bt_vote" />
+
+        <Button
+            style="@style/NewTaskButton"
+            android:id="@+id/bt_todo"
+            android:text="@string/ac_btn_todo"
+            android:layout_below="@+id/bt_meeting" />
+
+        <Button
+            style="@style/NewTaskButton"
+            android:id="@+id/bt_home"
+            android:text="@string/ac_btn_home"
+            android:layout_below="@+id/bt_todo" />
+
+    </RelativeLayout>
+
+</RelativeLayout>

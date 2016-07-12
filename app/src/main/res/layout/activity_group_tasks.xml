@@ -46,8 +46,8 @@
         android:paddingLeft="10dp"
 
         android:src="@drawable/fab_add"
-        app:backgroundTint="#FFB805"
-        app:rippleColor="#D99200"
+        app:backgroundTint="@color/fab_tasks"
+        app:rippleColor="@color/fab_tasks_ripple"
         app:elevation="6dp" />
 
 </RelativeLayout>

@@ -209,8 +209,16 @@
         android:theme="@style/AppTheme"
         android:windowSoftInputMode="adjustNothing"/>
 
+    <!-- Confirmation / done screen -->
+    <activity
+        android:name=".activities.ActionCompleteActivity"
+        android:label="@string/title_activity_action_completed"
+        android:theme="@style/AppTheme"
+        android:configChanges="orientation|keyboardHidden"/>
+
     <!-- Navigation drawer / system activities -->
     <activity android:name=".activities.FAQActivity"/>
+
     <activity android:name=".activities.ProfileSettingsActivity"/>
 
     <receiver android:name=".receivers.NetworkConnectivityRecevier">
