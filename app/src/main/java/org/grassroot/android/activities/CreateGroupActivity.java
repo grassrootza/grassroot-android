@@ -43,6 +43,7 @@ import org.grassroot.android.utils.ErrorUtils;
 import org.grassroot.android.utils.NetworkUtils;
 import org.grassroot.android.utils.PermissionUtils;
 import org.grassroot.android.utils.PreferenceUtils;
+import org.grassroot.android.utils.RealmUtils;
 import org.greenrobot.eventbus.EventBus;
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -208,7 +209,6 @@ public class CreateGroupActivity extends PortraitActivity
     List<Member> groupMembers = memberListFragment.getSelectedMembers();
 
     if (!NetworkUtils.isNetworkAvailable(getApplicationContext())) {
-      Realm realm = Realm.getDefaultInstance();
       Group group = new Group();
       group.setGroupName(groupName);
       group.setDescription(groupDescription);
@@ -224,16 +224,17 @@ public class CreateGroupActivity extends PortraitActivity
       permissions.add(new RealmString(PermissionUtils.permissionForTaskType(TaskConstants.MEETING)));
       permissions.add(new RealmString(PermissionUtils.permissionForTaskType(TaskConstants.VOTE)));
       permissions.add(new RealmString(PermissionUtils.permissionForTaskType(TaskConstants.TODO)));
+      //permissions.add(new RealmString(PermissionUtils.permissionForTaskType(GroupConstants.PERM_ADD_MEMBER)));
+      //permissions.add(new RealmString(PermissionUtils.permissionForTaskType(GroupConstants.PERM_DEL_MEMBER)));
+      //permissions.add(new RealmString(PermissionUtils.permissionForTaskType(GroupConstants.PERM_VIEW_MEMBERS)));
+      //permissions.add(new RealmString(PermissionUtils.permissionForTaskType(GroupConstants.PERM_GROUP_SETTNGS)));
       group.setPermissions(permissions);
-      realm.beginTransaction();
-      realm.copyToRealmOrUpdate(group);
-      realm.commitTransaction();
-      realm.beginTransaction();
+      RealmUtils.saveDataToRealm(group);
       for (Member m : groupMembers) {
         m.setGroupUid(group.getGroupUid());
+        m.setMemberGroupUid();
       }
-      realm.commitTransaction();
-      realm.close();
+      RealmUtils.saveDataToRealm(groupMembers);
       setResultIntent(group);
       finish();
     } else {

@@ -54,7 +54,7 @@ public class ViewTaskActivity extends PortraitActivity {
         fragment = ViewTaskFragment.newInstance(taskType, taskUid);
         getSupportFragmentManager().beginTransaction()
                 .add(R.id.vta_fragment_holder, fragment)
-                .commit();
+                .commitAllowingStateLoss();
 
         if (!TextUtils.isEmpty(notificationUid)) {
             processNotification();

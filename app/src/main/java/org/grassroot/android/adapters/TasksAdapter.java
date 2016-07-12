@@ -85,12 +85,9 @@ public class TasksAdapter extends RecyclerView.Adapter<TasksAdapter.TaskViewHold
 
   @Override public void onBindViewHolder(TaskViewHolder holder, final int position) {
     final TaskModel taskModel = viewedTasks.get(position);
-    realm.beginTransaction();
     taskModel.resetResponseFlags(); // since we can't trust Android's construction mechanism (todo : revisit)
-    realm.commitTransaction();
     setCardListener(holder.cardView, taskModel, position);
     setUpCardImagesAndView(taskModel, holder, position);
-    //realm.close();
   }
 
   private void setCardListener(CardView view, final TaskModel task, final int position) {

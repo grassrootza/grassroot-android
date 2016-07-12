@@ -16,6 +16,7 @@ import butterknife.ButterKnife;
 public class CreateTodoActivity extends PortraitActivity {
 
     private String groupUid;
+    private boolean isGroupLocal;
     private CreateTaskFragment createTaskFragment;
 
     @BindView(R.id.ctodo_tlb)
@@ -33,6 +34,7 @@ public class CreateTodoActivity extends PortraitActivity {
         }
 
         groupUid = b.getString(Constant.GROUPUID_FIELD);
+        isGroupLocal = b.getBoolean(Constant.GROUP_LOCAL);
         setUpToolbar();
         launchFragment();
     }
@@ -54,6 +56,7 @@ public class CreateTodoActivity extends PortraitActivity {
         Bundle args = new Bundle();
         args.putString(TaskConstants.TASK_TYPE_FIELD, TaskConstants.TODO);
         args.putString(GroupConstants.UID_FIELD, groupUid);
+        args.putBoolean(Constant.GROUP_LOCAL,isGroupLocal);
         createTaskFragment.setArguments(args);
 
         getSupportFragmentManager().beginTransaction()

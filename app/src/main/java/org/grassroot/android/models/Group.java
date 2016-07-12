@@ -28,6 +28,15 @@ public class Group extends RealmObject implements Parcelable, Comparable<Group> 
   private String groupCreator;
   private String role;
   private Integer groupMemberCount;
+  private RealmList<Member> members=new RealmList<>();
+
+  public RealmList<Member> getMembers() {
+    return members;
+  }
+
+  public void setMembers(RealmList<Member> members) {
+    this.members = members;
+  }
 
   private String joinCode;
   private String lastChangeType;
@@ -54,8 +63,6 @@ public class Group extends RealmObject implements Parcelable, Comparable<Group> 
 
   private RealmList<RealmString> permissions = new RealmList<>();
   @Ignore private List<String> permissionsList;
-
-  private RealmList<Member> members = new RealmList<>();
 
   public Group() {
   }
@@ -162,10 +169,6 @@ public class Group extends RealmObject implements Parcelable, Comparable<Group> 
     this.permissions = permissions;
   }
 
-  public RealmList<Member> getMembers() { return members; }
-
-  public void setMembers(RealmList<Member> members) { this.members = members; }
-
   /* Helper methods to centralize checking permissions */
 
   public boolean canCallMeeting() {
@@ -255,6 +258,8 @@ public class Group extends RealmObject implements Parcelable, Comparable<Group> 
     dest.writeString(this.joinCode);
     dest.writeInt(hasTasks ? 1 : 0);
     dest.writeStringList(RealmUtils.convertListOfRealmStringInListOfString(this.permissions));
+    dest.writeInt(isLocal? 1 : 0);
+    dest.writeList(members);
     realm.commitTransaction();
     realm.close();
   }
@@ -271,6 +276,8 @@ public class Group extends RealmObject implements Parcelable, Comparable<Group> 
     joinCode = in.readString();
     hasTasks = in.readInt() != 0;
     permissions = RealmUtils.convertListOfStringInRealmListOfString(in.createStringArrayList());
+    isLocal = in.readInt() != 0;
+    in.readList(members,Member.class.getClassLoader());
   }
 
   public static final Creator<Group> CREATOR = new Creator<Group>() {

@@ -3,6 +3,7 @@ package org.grassroot.android.models;
 import android.os.Parcel;
 import android.os.Parcelable;
 import io.realm.Realm;
+import io.realm.RealmList;
 import io.realm.RealmObject;
 import io.realm.annotations.PrimaryKey;
 import java.text.ParseException;
@@ -24,8 +25,26 @@ public class TaskModel extends RealmObject implements Parcelable, Comparable<Tas
   private String description;
   private String createdByUserName;
   private String type;
+  private boolean isParentLocal;
+
+  public boolean isParentLocal() {
+    return isParentLocal;
+  }
+
+  public void setParentLocal(boolean parentLocal) {
+    isParentLocal = parentLocal;
+  }
 
   private String parentUid;
+  private long updateTime;
+
+  public long getUpdateTime() {
+    return updateTime;
+  }
+
+  public void setUpdateTime(long updateTime) {
+    this.updateTime = updateTime;
+  }
 
   private String deadline;
   private String deadlineISO;
@@ -47,7 +66,26 @@ public class TaskModel extends RealmObject implements Parcelable, Comparable<Tas
   private boolean canRespondNo;
   private boolean canMarkCompleted;
   private int minutes;
-  private boolean isLocal = false;
+  private boolean isLocal;
+  private RealmList<RealmString> memberUIDS;
+
+  public RealmList<RealmString> getMemberUIDS() {
+    return memberUIDS;
+  }
+
+  public void setMemberUIDS(RealmList<RealmString> memberUIDS) {
+    this.memberUIDS = memberUIDS;
+  }
+
+  public boolean isEdited() {
+    return isEdited;
+  }
+
+  public void setEdited(boolean edited) {
+    isEdited = edited;
+  }
+
+  private boolean isEdited;
 
   public boolean isLocal() {
     return isLocal;
@@ -192,6 +230,9 @@ public class TaskModel extends RealmObject implements Parcelable, Comparable<Tas
     dest.writeString(this.reply);
     dest.writeString(this.completedYes);
     dest.writeString(this.completedNo);
+    dest.writeInt(this.isLocal ? 1 : 0);
+    dest.writeInt(this.isEdited ? 1 : 0);
+    dest.writeInt(this.isParentLocal ? 1 : 0);
   }
 
   protected TaskModel(Parcel in) {
@@ -213,6 +254,9 @@ public class TaskModel extends RealmObject implements Parcelable, Comparable<Tas
     this.reply = in.readString();
     this.completedYes = in.readString();
     this.completedNo = in.readString();
+    this.isLocal = in.readInt() != 0;
+    this.isEdited = in.readInt() != 0;
+    this.isParentLocal = in.readInt() != 0;
     resetResponseFlags();
   }
 
@@ -309,5 +353,73 @@ public class TaskModel extends RealmObject implements Parcelable, Comparable<Tas
 
   public void setReply(String reply) {
     this.reply = reply;
+  }
+
+  public String getCreatedByUserName() {
+    return createdByUserName;
+  }
+
+  public boolean isHasResponded() {
+    return hasResponded;
+  }
+
+  public void setHasResponded(boolean hasResponded) {
+    this.hasResponded = hasResponded;
+  }
+
+  public boolean isCanAction() {
+    return canAction;
+  }
+
+  public void setCanAction(boolean canAction) {
+    this.canAction = canAction;
+  }
+
+  public void setCanEdit(boolean canEdit) {
+    this.canEdit = canEdit;
+  }
+
+  public void setCreatedByUser(boolean createdByUser) {
+    this.createdByUser = createdByUser;
+  }
+
+  public boolean isWholeGroupAssigned() {
+    return wholeGroupAssigned;
+  }
+
+  public void setWholeGroupAssigned(boolean wholeGroupAssigned) {
+    this.wholeGroupAssigned = wholeGroupAssigned;
+  }
+
+  public void setAssignedMemberCount(int assignedMemberCount) {
+    this.assignedMemberCount = assignedMemberCount;
+  }
+
+  public String getCompletedYes() {
+    return completedYes;
+  }
+
+  public void setCompletedYes(String completedYes) {
+    this.completedYes = completedYes;
+  }
+
+  public String getCompletedNo() {
+    return completedNo;
+  }
+
+  public void setCompletedNo(String completedNo) {
+    this.completedNo = completedNo;
+  }
+
+  public void setCanRespondYes(boolean canRespondYes) {
+    this.canRespondYes = canRespondYes;
+  }
+
+  public void setCanRespondNo(boolean canRespondNo) {
+    this.canRespondNo = canRespondNo;
+  }
+
+  public void setCanMarkCompleted(boolean canMarkCompleted) {
+    this.canMarkCompleted = canMarkCompleted;
   }
 }
