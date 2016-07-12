@@ -35,6 +35,7 @@
     <string name="error_user_exists">User already exists, please login</string>
     <string name="error_no_results_found">No result found</string>
     <string name="error_token">Sorry, that pin was invalid. Please try again</string>
+    <string name="error_wrong_number">Sorry! Error creating group, please check numbers</string>
 
     <!--Error dialogs --><!--bs-->
     <string name="alert_confirm">Confirm</string>

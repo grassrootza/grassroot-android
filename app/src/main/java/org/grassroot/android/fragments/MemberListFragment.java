@@ -11,6 +11,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import io.realm.RealmList;
 import org.grassroot.android.R;
 import org.grassroot.android.adapters.MemberListAdapter;
 import org.grassroot.android.interfaces.ClickListener;
@@ -28,6 +29,7 @@ import java.util.Map;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import org.grassroot.android.utils.RealmUtils;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -217,33 +219,35 @@ public class MemberListFragment extends Fragment {
     private void fetchGroupMembers() {
         if (groupUid == null)
             throw new UnsupportedOperationException("Cannot retrieve group members from null group uid");
-
+        RealmList<Member> members = RealmUtils.loadListFromDB(Member.class,"groupUid",groupUid);
+        handleReturnedMembers(members);
+        mListener.onMemberListPopulated(members);
         String userPhoneNumber = PreferenceUtils.getPhoneNumber();
         String userSessionCode = PreferenceUtils.getAuthToken();
 
         Log.d(TAG, "inside MemberListFragment, retrieving group members for uid = " + groupUid);
 
-        GrassrootRestService.getInstance().getApi()
-                .getGroupMembers(groupUid, userPhoneNumber, userSessionCode, selectedByDefault)
-                .enqueue(new Callback<MemberList>() {
-                    @Override
-                    public void onResponse(Call<MemberList> call, Response<MemberList> response) {
-                        if (response.isSuccessful()) {
-                            final List<Member> membersReturned = response.body().getMembers();
-                            handleReturnedMembers(membersReturned);
-                            if (mListener != null) {
-                                mListener.onMemberListPopulated(membersReturned);
-                            }
-                        } else {
-                            ErrorUtils.handleServerError(vgContainer, getActivity(), response);
-                        }
-                    }
-
-                    @Override
-                    public void onFailure(Call<MemberList> call, Throwable t) {
-                        ErrorUtils.handleNetworkError(getContext(), vgContainer, t);
-                    }
-                });
+        //GrassrootRestService.getInstance().getApi()
+        //        .getGroupMembers(groupUid, userPhoneNumber, userSessionCode, selectedByDefault)
+        //        .enqueue(new Callback<MemberList>() {
+        //            @Override
+        //            public void onResponse(Call<MemberList> call, Response<MemberList> response) {
+        //                if (response.isSuccessful()) {
+        //                    final List<Member> membersReturned = response.body().getMembers();
+        //                    handleReturnedMembers(membersReturned);
+        //                    if (mListener != null) {
+        //                        mListener.onMemberListPopulated(membersReturned);
+        //                    }
+        //                } else {
+        //                    ErrorUtils.handleServerError(vgContainer, getActivity(), response);
+        //                }
+        //            }
+        //
+        //            @Override
+        //            public void onFailure(Call<MemberList> call, Throwable t) {
+        //                ErrorUtils.handleNetworkError(getContext(), vgContainer, t);
+        //            }
+        //        });
     }
 
     private void handleReturnedMembers(List<Member> membersReturned) {

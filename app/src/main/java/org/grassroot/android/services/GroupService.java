@@ -14,9 +14,10 @@ import org.grassroot.android.R;
 import org.grassroot.android.interfaces.NetworkErrorDialogListener;
 import org.grassroot.android.models.Group;
 import org.grassroot.android.models.GroupResponse;
-import org.grassroot.android.models.TaskModel;
+import org.grassroot.android.models.Member;
 import org.grassroot.android.utils.ErrorUtils;
 import org.grassroot.android.utils.PreferenceUtils;
+import org.grassroot.android.utils.RealmUtils;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -66,7 +67,7 @@ public class GroupService {
     if (userGroups == null || userGroups.isEmpty()) {
       return userGroups;
     } else {
-      loadGroupsFromDB();
+      userGroups = new ArrayList<>(RealmUtils.loadListFromDB(Group.class));
       return userGroups;
     }
   }
@@ -92,8 +93,14 @@ public class GroupService {
               groupsLoading = false;
               groupsFinishedLoading = true;
               createUidMap();
-              saveGroupsInDB(response.body().getGroups());
+              RealmUtils.saveDataToRealm(response.body().getGroups());
               listener.groupListLoaded();
+              for(Group g : response.body().getGroups()){
+                for(Member m : g.getMembers()){
+                  m.setMemberGroupUid();
+                  RealmUtils.saveDataToRealm(m);
+                }
+              }
             } else {
               Log.e(TAG, response.message());
               ErrorUtils.handleServerError(errorViewHolder, activity, response);
@@ -104,24 +111,11 @@ public class GroupService {
           @Override public void onFailure(Call<GroupResponse> call, Throwable t) {
             // default back to loading from DB
             ErrorUtils.handleNetworkError(activity, errorViewHolder, t);
-            loadGroupsFromDB();
+            userGroups = new ArrayList<>(RealmUtils.loadListFromDB(Group.class));
             listener.groupListLoadingError();
           }
         });
   }
-
-  private void loadGroupsFromDB() {
-    Log.e(TAG, "could not connect to network, loading groups from DB ...");
-    RealmList<Group> groups = new RealmList<>();
-    Realm realm = Realm.getDefaultInstance();
-    if (realm != null && !realm.isClosed()) {
-      RealmResults<Group> results = realm.where(Group.class).findAll();
-      groups.addAll(results.subList(0, results.size()));
-    }
-    realm.close();
-    userGroups = new ArrayList<>(groups);
-  }
-
   /*
  Called from "swipe refresh" on group recycler, so am just formally separating from the initiating call (which is triggered on app load)
   */
@@ -211,17 +205,6 @@ public class GroupService {
     final int size = userGroups.size();
     for (int i = 0; i < size; i++) {
       groupUidMap.put(userGroups.get(i).getGroupUid(), i);
-    }
-  }
-
-
-  private void saveGroupsInDB(RealmList<Group> groups) {
-    Realm realm = Realm.getDefaultInstance();
-    if (groups != null && realm != null && !realm.isClosed()) {
-      realm.beginTransaction();
-      realm.copyToRealmOrUpdate(groups);
-      realm.commitTransaction();
-      realm.close();
     }
   }
 }

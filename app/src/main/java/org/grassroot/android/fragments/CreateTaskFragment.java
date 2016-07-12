@@ -49,6 +49,7 @@ import org.grassroot.android.utils.ErrorUtils;
 import org.grassroot.android.utils.MenuUtils;
 import org.grassroot.android.utils.NetworkUtils;
 import org.grassroot.android.utils.PreferenceUtils;
+import org.grassroot.android.utils.RealmUtils;
 import org.grassroot.android.utils.Utilities;
 import org.greenrobot.eventbus.EventBus;
 import retrofit2.Call;
@@ -64,6 +65,7 @@ public class CreateTaskFragment extends Fragment {
 
   private String groupUid;
   private String taskType;
+  private boolean groupLocal;
 
   private Date selectedDateTime;
   private boolean includeWholeGroup;
@@ -100,6 +102,7 @@ public class CreateTaskFragment extends Fragment {
     }
     groupUid = b.getString(GroupConstants.UID_FIELD);
     taskType = b.getString(TaskConstants.TASK_TYPE_FIELD);
+    groupLocal = b.getBoolean(Constant.GROUP_LOCAL);
     includeWholeGroup = true;
 
     datePickerListener = new SlideDateTimeListener() {
@@ -230,11 +233,7 @@ public class CreateTaskFragment extends Fragment {
         }
       });
     } else {
-      Realm realm = Realm.getDefaultInstance();
-      realm.beginTransaction();
-      realm.copyToRealmOrUpdate(model);
-      realm.commitTransaction();
-      realm.close();
+      RealmUtils.saveDataToRealm(model);
       generateSuccessTask(model);
     }
   }
@@ -262,9 +261,13 @@ public class CreateTaskFragment extends Fragment {
     model.setParentUid(groupUid);
     model.setTaskUid(UUID.randomUUID().toString());
     model.setType(taskType);
+    model.setParentLocal(groupLocal);
     model.setLocal(!NetworkUtils.isNetworkAvailable(getContext()));
     model.setMinutes(minutes);
+    model.setCanEdit(true);
     model.setReply(TaskConstants.TODO_PENDING);
+    model.setMemberUIDS(RealmUtils.convertListOfStringInRealmListOfString(new ArrayList<>(memberUids)));
+    RealmUtils.saveDataToRealm(RealmUtils.convertListOfStringInRealmListOfString(new ArrayList<>(memberUids)));
     return model;
   }
 
@@ -278,17 +281,17 @@ public class CreateTaskFragment extends Fragment {
         return GrassrootRestService.getInstance()
             .getApi()
             .createMeeting(phoneNumber, code, groupUid, model.getTitle(), model.getDescription(),
-                model.getDeadlineISO(), model.getMinutes(), location, new HashSet<String>());
+                model.getDeadlineISO(), model.getMinutes(), location, new HashSet<>(RealmUtils.convertListOfRealmStringInListOfString(model.getMemberUIDS())));
       case TaskConstants.VOTE:
         return GrassrootRestService.getInstance()
             .getApi()
             .createVote(phoneNumber, code, groupUid, model.getTitle(), model.getDescription(),
-                model.getDeadlineISO(), model.getMinutes(), new HashSet<String>(), false);
+                model.getDeadlineISO(), model.getMinutes(), new HashSet<>(RealmUtils.convertListOfRealmStringInListOfString(model.getMemberUIDS())), false);
       case TaskConstants.TODO:
         return GrassrootRestService.getInstance()
             .getApi()
             .createTodo(phoneNumber, code, groupUid, model.getTitle(), model.getDescription(),
-                model.getDeadlineISO(), model.getMinutes(), new HashSet<String>());
+                model.getDeadlineISO(), model.getMinutes(), new HashSet<>(RealmUtils.convertListOfRealmStringInListOfString(model.getMemberUIDS())));
       default:
         throw new UnsupportedOperationException("Error! Missing task type in call");
     }

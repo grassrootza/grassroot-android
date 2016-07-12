@@ -38,6 +38,7 @@ import org.grassroot.android.services.GrassrootRestService;
 import org.grassroot.android.services.TaskService;
 import org.grassroot.android.utils.ErrorUtils;
 import org.grassroot.android.utils.PreferenceUtils;
+import org.grassroot.android.utils.RealmUtils;
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import retrofit2.Call;
@@ -69,7 +70,6 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
   private Map<String, Boolean> filterFlags;
 
   ProgressDialog progressDialog;
-  Realm realm;
 
     /*
     SECTION : SET UP VIEWS AND POPULATE THE LIST
@@ -160,10 +160,7 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
   }
 
   private void fetchGroupTasks() {
-    realm = Realm.getDefaultInstance();
-    realm.beginTransaction();
-    groupTasksAdapter.changeToTaskList(realm.where(TaskModel.class).equalTo("parentUid", groupUid).findAll());
-    realm.commitTransaction();
+    groupTasksAdapter.changeToTaskList(RealmUtils.loadListFromDB(TaskModel.class,"parentUid",groupUid));
     swipeRefreshLayout.setRefreshing(true);
     progressDialog.show();
 
@@ -182,9 +179,7 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
             handleNoTasksFound();
           } else {
             groupTasksAdapter.changeToTaskList(taskResponse.getTasks());
-            realm.beginTransaction();
-            realm.copyToRealmOrUpdate(taskResponse.getTasks());
-            realm.commitTransaction();
+            RealmUtils.saveDataToRealm(taskResponse.getTasks());
           }
           return;
         }
