@@ -16,6 +16,14 @@ import java.util.ArrayList;
  */
 public final class MenuUtils {
 
+    public static Intent constructIntent(Context callingContext, Class toActivityClass, String groupUid, String groupName,boolean isLocal) {
+        Intent i = new Intent(callingContext, toActivityClass);
+        i.putExtra(Constant.GROUPUID_FIELD, groupUid);
+        i.putExtra(Constant.GROUPNAME_FIELD, groupName);
+        i.putExtra(Constant.GROUP_LOCAL,isLocal);
+        return i;
+    }
+
     public static Intent constructIntent(Context callingContext, Class toActivityClass, String groupUid, String groupName) {
         Intent i = new Intent(callingContext, toActivityClass);
         i.putExtra(Constant.GROUPUID_FIELD, groupUid);
@@ -37,7 +45,7 @@ public final class MenuUtils {
 
     public static Intent memberSelectionIntent(Context callingContext, String groupUid, String TAG,
                                                ArrayList<Member> preSelectedMembers) {
-        Intent pickMember = constructIntent(callingContext, GroupMembersActivity.class, groupUid, "");
+        Intent pickMember = constructIntent(callingContext, GroupMembersActivity.class, groupUid, "",false);
         pickMember.putExtra(Constant.PARENT_TAG_FIELD, TAG);
         pickMember.putExtra(Constant.SELECT_FIELD, true);
         pickMember.putExtra(Constant.SHOW_ACTION_BUTTON_FLAG, false);

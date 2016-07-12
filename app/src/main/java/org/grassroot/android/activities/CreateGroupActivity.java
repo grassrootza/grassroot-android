@@ -8,44 +8,37 @@ import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.design.widget.TextInputEditText;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
-import butterknife.BindView;
-import butterknife.ButterKnife;
-import butterknife.OnClick;
-import butterknife.OnTextChanged;
-import io.realm.Realm;
-import io.realm.RealmList;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+
 import org.grassroot.android.R;
 import org.grassroot.android.events.GroupCreatedEvent;
 import org.grassroot.android.fragments.ContactSelectionFragment;
 import org.grassroot.android.fragments.MemberListFragment;
 import org.grassroot.android.interfaces.GroupConstants;
-import org.grassroot.android.interfaces.TaskConstants;
 import org.grassroot.android.models.Contact;
 import org.grassroot.android.models.Group;
 import org.grassroot.android.models.GroupResponse;
 import org.grassroot.android.models.Member;
-import org.grassroot.android.models.RealmString;
-import org.grassroot.android.services.GrassrootRestService;
+import org.grassroot.android.services.GroupService;
 import org.grassroot.android.utils.Constant;
 import org.grassroot.android.utils.ErrorUtils;
-import org.grassroot.android.utils.NetworkUtils;
 import org.grassroot.android.utils.PermissionUtils;
 import org.grassroot.android.utils.PreferenceUtils;
 import org.greenrobot.eventbus.EventBus;
-import retrofit2.Call;
-import retrofit2.Callback;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import butterknife.BindView;
+import butterknife.ButterKnife;
+import butterknife.OnClick;
+import butterknife.OnTextChanged;
 import retrofit2.Response;
 
 import static butterknife.OnTextChanged.Callback.AFTER_TEXT_CHANGED;
@@ -199,94 +192,64 @@ public class CreateGroupActivity extends PortraitActivity
   }
 
   private void createGroup() {
-    String mobileNumber = PreferenceUtils.getUserPhoneNumber(CreateGroupActivity.this);
-    String code = PreferenceUtils.getAuthToken(CreateGroupActivity.this);
     String groupName =
         et_groupname.getText().toString().trim().replaceAll(Constant.regexAlphaNumeric, "");
     String groupDescription = et_group_description.getText().toString().trim();
-
     List<Member> groupMembers = memberListFragment.getSelectedMembers();
 
-    if (!NetworkUtils.isNetworkAvailable(getApplicationContext())) {
-      Realm realm = Realm.getDefaultInstance();
-      Group group = new Group();
-      group.setGroupName(groupName);
-      group.setDescription(groupDescription);
-      group.setIsLocal(true);
-      group.setGroupCreator(PreferenceUtils.getUserName(getApplicationContext()));
-      group.setGroupUid(UUID.randomUUID().toString());
-      group.setLastChangeType(GroupConstants.GROUP_CREATED);
-      group.setGroupMemberCount(1);
-      group.setDate(new Date());
-      group.setDateTimeStringISO(group.getDateTimeStringISO());
-      RealmList<RealmString> permissions = new RealmList<>();
-      //TODO investigate permission per user
-      permissions.add(new RealmString(PermissionUtils.permissionForTaskType(TaskConstants.MEETING)));
-      permissions.add(new RealmString(PermissionUtils.permissionForTaskType(TaskConstants.VOTE)));
-      permissions.add(new RealmString(PermissionUtils.permissionForTaskType(TaskConstants.TODO)));
-      group.setPermissions(permissions);
-      realm.beginTransaction();
-      realm.copyToRealmOrUpdate(group);
-      realm.commitTransaction();
-      realm.beginTransaction();
-      for (Member m : groupMembers) {
-        m.setGroupUid(group.getGroupUid());
+    progressDialog.show();
+    GroupService.getInstance().createGroup(groupName, groupDescription, groupMembers, new GroupService.GroupCreationListener() {
+      @Override
+      public void groupCreatedLocally(Group group) {
+        progressDialog.dismiss();
+        handleSuccessfulGroupCreation(group);
       }
-      realm.commitTransaction();
-      realm.close();
-      setResultIntent(group);
-      finish();
-    } else {
-      showProgress();
-      GrassrootRestService.getInstance()
-          .getApi()
-          .createGroup(mobileNumber, code, groupName, groupDescription, groupMembers)
-          .enqueue(new Callback<GroupResponse>() {
-            @Override
-            public void onResponse(Call<GroupResponse> call, Response<GroupResponse> response) {
-              if (response.isSuccessful()) {
-                hideProgress();
-                PreferenceUtils.setUserHasGroups(getApplicationContext(), true);
-                setResultIntent(response.body().getGroups().first());
-                Log.d(TAG, "returning group created! with UID : " + response.body()
-                    .getGroups()
-                    .get(0)
-                    .getGroupUid());
-                EventBus.getDefault().post(new GroupCreatedEvent());
-                finish();
-              } else {
-                hideProgress();
-                ErrorUtils.showSnackBar(rlCgRoot, R.string.error_generic, Snackbar.LENGTH_SHORT);
-              }
-            }
 
-            @Override public void onFailure(Call<GroupResponse> call, Throwable t) {
-              hideProgress();
-              ErrorUtils.handleNetworkError(CreateGroupActivity.this, rlCgRoot, t);
-            }
-          });
+      @Override
+      public void groupCreatedOnServer(Group group) {
+        progressDialog.dismiss();
+        handleSuccessfulGroupCreation(group);
+      }
+
+      @Override
+      public void groupCreationError(Response<GroupResponse> response) {
+        progressDialog.dismiss();
+        ErrorUtils.showSnackBar(rlCgRoot, R.string.error_generic, Snackbar.LENGTH_SHORT);
+      }
+    });
+  }
+
+  private void handleSuccessfulGroupCreation(Group group) {
+    PreferenceUtils.setUserHasGroups(getApplicationContext(), true);
+    EventBus.getDefault().post(new GroupCreatedEvent());
+    Intent i = new Intent(CreateGroupActivity.this, ActionCompleteActivity.class);
+    String completionMessage;
+    if (!group.getIsLocal()) {
+      completionMessage = String.format(getString(R.string.ac_body_group_create_server), group.getGroupName(),
+              group.getGroupMemberCount());
+    } else {
+      completionMessage = String.format(getString(R.string.ac_body_group_create_local), group.getGroupName());
     }
+    i.putExtra(ActionCompleteActivity.HEADER_FIELD, R.string.ac_header_group_create);
+    i.putExtra(ActionCompleteActivity.BODY_FIELD, completionMessage);
+    i.putExtra(ActionCompleteActivity.TASK_BUTTONS, true);
+    i.putExtra(ActionCompleteActivity.ACTION_INTENT, ActionCompleteActivity.HOME_SCREEN);
+    i.putExtra(GroupConstants.OBJECT_FIELD, group);
+    i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+    startActivity(i);
+    finish();
   }
 
   @Override protected void onActivityResult(int requestCode, int resultCode, Intent data) {
     super.onActivityResult(requestCode, resultCode, data);
     if (resultCode == Activity.RESULT_OK && data != null) {
       if (requestCode == Constant.activityManualMemberEntry) {
-        Member newMember =
-            new Member(data.getStringExtra("selectedNumber"), data.getStringExtra("name"),
+        Member newMember = new Member(data.getStringExtra("selectedNumber"), data.getStringExtra("name"),
                 GroupConstants.ROLE_ORDINARY_MEMBER, -1);
         manuallyAddedMembers.add(newMember);
         memberListFragment.addMembers(Collections.singletonList(newMember));
       }
     }
-  }
-
-  private void showProgress() {
-    progressDialog.show();
-  }
-
-  private void hideProgress() {
-    progressDialog.dismiss();
   }
 
   @Override public void onMemberListInitiated(MemberListFragment fragment) {

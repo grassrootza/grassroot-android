@@ -30,6 +30,7 @@ import org.grassroot.android.fragments.dialogs.ConfirmCancelDialogFragment;
 import org.grassroot.android.interfaces.ClickListener;
 import org.grassroot.android.interfaces.NavigationConstants;
 import org.grassroot.android.interfaces.NotificationConstants;
+import org.grassroot.android.models.Group;
 import org.grassroot.android.models.NavDrawerItem;
 import org.grassroot.android.services.ApplicationLoader;
 import org.grassroot.android.services.GcmRegistrationService;
@@ -131,7 +132,7 @@ public class NavigationDrawerFragment extends Fragment implements TaskService.Ta
         draweritems = new ArrayList<>();
 
         groups = new NavDrawerItem(getString(R.string.drawer_group_list), R.drawable.ic_home, R.drawable.ic_home_green, true, true);
-        groups.setItemCount(GroupService.getInstance().loadGroupsFromDB().size());
+        groups.setItemCount(RealmUtils.loadListFromDB(Group.class).size());
         Log.e(TAG, "size of groups loaded: " + groups.getItemCount());
         draweritems.add(groups);
 

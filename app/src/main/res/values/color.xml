@@ -17,6 +17,8 @@
 
     <color name="fab_background">#FFB805</color>
     <color name="fab_ripple_color">#D99200</color>
+    <color name="fab_tasks">#F44336</color>
+    <color name="fab_tasks_ripple">#D32F2F</color>
 
     <color name="buttoncolor">#207A33</color>
     <color name="off_white_background">#ECEFF1</color>

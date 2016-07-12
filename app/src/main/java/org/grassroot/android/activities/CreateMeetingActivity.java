@@ -20,6 +20,7 @@ public class CreateMeetingActivity extends PortraitActivity {
 
     private static final String TAG = CreateMeetingActivity.class.getCanonicalName();
 
+    private boolean isGroupLocal;
     private String groupUid;
 
     @BindView(R.id.cmtg_tlb)
@@ -39,6 +40,7 @@ public class CreateMeetingActivity extends PortraitActivity {
         }
 
         groupUid = b.getString(Constant.GROUPUID_FIELD);
+        isGroupLocal = b.getBoolean(Constant.GROUP_LOCAL);
         setUpToolbar();
         launchFragment();
     }
@@ -59,6 +61,7 @@ public class CreateMeetingActivity extends PortraitActivity {
         Bundle args = new Bundle();
         args.putString(TaskConstants.TASK_TYPE_FIELD, TaskConstants.MEETING);
         args.putString(GroupConstants.UID_FIELD, groupUid);
+        args.putBoolean(Constant.GROUP_LOCAL,isGroupLocal);
         ctskFragment.setArguments(args);
 
         getSupportFragmentManager().beginTransaction()

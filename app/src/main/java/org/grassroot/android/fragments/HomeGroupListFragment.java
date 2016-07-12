@@ -6,7 +6,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.SystemClock;
-
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v4.content.ContextCompat;
@@ -44,6 +43,7 @@ import org.grassroot.android.services.GroupService;
 import org.grassroot.android.utils.Constant;
 import org.grassroot.android.utils.ErrorUtils;
 import org.grassroot.android.utils.MenuUtils;
+import org.grassroot.android.utils.RealmUtils;
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 
@@ -104,52 +104,49 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
         }
     }
 
-    @Override
-    public void onActivityCreated(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        creating = true;
-        Log.e(TAG, "onActivityCreated Called ... initiating");
-        init();
-        fetchGroupList();
-        checkForJoinRequests();
-    }
+  @Override public void onActivityCreated(Bundle savedInstanceState) {
+    super.onCreate(savedInstanceState);
+    creating = true;
+    Log.e(TAG, "onActivityCreated Called ... initiating");
+    init();
+    fetchGroupList();
+      checkForJoinRequests();
+  }
 
-    @Override
-    public void onResume() {
-        super.onResume();
-        fabOpenMenu.setVisibility(View.VISIBLE);
-        creating = false;
-    }
+  @Override public void onResume() {
+      super.onResume();
+      fabOpenMenu.setVisibility(View.VISIBLE);
+      creating = false;
+  }
 
-    private void init() {
-        userGroups = new ArrayList<>();
-        setUpRecyclerView();
+  private void init() {
+    userGroups = new ArrayList<>();
+    setUpRecyclerView();
 
-        //first load from db
-        showGroups(GroupService.getInstance().loadGroupsFromDB());
-    }
+    //first load from db
+    showGroups(RealmUtils.loadListFromDB(Group.class));
+  }
 
-    /**
-     * Method executed to retrieve and populate list of groups. Note: this does not handle the
-     * absence
-     * of a connection very well, at all. Will probably need to rethink.
-     */
+  /**
+   * Method executed to retrieve and populate list of groups. Note: this does not handle the
+   * absence
+   * of a connection very well, at all. Will probably need to rethink.
+   */
 
-    private void showGroups(RealmList<Group> groups) {
-        userGroups = new ArrayList<>(groups);
-        rcGroupList.setVisibility(View.VISIBLE);
-        groupListRowAdapter.setGroupList(userGroups);
-        rcGroupList.setVisibility(View.VISIBLE);
-    }
+  private void showGroups(RealmList<Group> groups) {
+    userGroups = new ArrayList<>(groups);
+    rcGroupList.setVisibility(View.VISIBLE);
+    groupListRowAdapter.setGroupList(userGroups);
+    rcGroupList.setVisibility(View.VISIBLE);
+  }
 
-    @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.activity_group__homepage, container, false);
-        unbinder = ButterKnife.bind(this, view);
-        EventBus.getDefault().register(this);
-        return view;
-    }
+  @Override public View onCreateView(LayoutInflater inflater, ViewGroup container,
+      Bundle savedInstanceState) {
+    View view = inflater.inflate(R.layout.activity_group__homepage, container, false);
+    unbinder = ButterKnife.bind(this, view);
+    EventBus.getDefault().register(this);
+    return view;
+  }
 
     @Override
     public void onDestroyView() {
@@ -163,28 +160,27 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
         ErrorUtils.showSnackBar(rlGhpRoot, message, Snackbar.LENGTH_LONG, "", null);
     }
 
-    /**
-     * Method executed to retrieve and populate list of groups. Note: this does not handle the
-     * absence
-     * of a connection very well, at all. Will probably need to rethink.
-     */
-    public void fetchGroupList() {
-        showProgress();
-        GroupService.getInstance()
-                .fetchGroupList(getActivity(), rlGhpRoot, new GroupService.GroupServiceListener() {
-                    @Override
-                    public void groupListLoaded() {
-                        hideProgress();
-                        rcGroupList.setVisibility(View.VISIBLE);
-                        groupListRowAdapter.setGroupList(GroupService.getInstance().userGroups);
-                    }
+  /**
+   * Method executed to retrieve and populate list of groups. Note: this does not handle the
+   * absence
+   * of a connection very well, at all. Will probably need to rethink.
+   */
+  public void fetchGroupList() {
+    showProgress();
+    GroupService.getInstance()
+        .fetchGroupList(getActivity(), rlGhpRoot, new GroupService.GroupServiceListener() {
+          @Override public void groupListLoaded() {
+            hideProgress();
+            rcGroupList.setVisibility(View.VISIBLE);
+            groupListRowAdapter.setGroupList(RealmUtils.loadListFromDB(Group.class));
+            rcGroupList.setVisibility(View.VISIBLE);
+          }
 
-                    @Override
-                    public void groupListLoadingError() {
-                        hideProgress();
-                    }
-                });
-    }
+          @Override public void groupListLoadingError() {
+            hideProgress();
+          }
+        });
+  }
 
     /*
     Possibly move this to its own fragment
@@ -201,18 +197,16 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
     /*
     Separating this method from the above, because we will probably want it to call some kind of diff
     in time, rather than doing a full refresh, and don't need to worry about progress bar, etc
-     */
+   */
     public void refreshGroupList() {
         GroupService.getInstance()
                 .refreshGroupList(getActivity(), new GroupService.GroupServiceListener() {
-                    @Override
-                    public void groupListLoaded() {
-                        groupListRowAdapter.setGroupList(GroupService.getInstance().getGroups());
+                    @Override public void groupListLoaded() {
+                        groupListRowAdapter.setGroupList(RealmUtils.loadListFromDB(Group.class));
                         glSwipeRefresh.setRefreshing(false);
                     }
 
-                    @Override
-                    public void groupListLoadingError() {
+                    @Override public void groupListLoadingError() {
                         glSwipeRefresh.setRefreshing(false);
                     }
                 });

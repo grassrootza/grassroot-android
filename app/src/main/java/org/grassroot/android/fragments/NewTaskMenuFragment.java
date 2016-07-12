@@ -50,6 +50,7 @@ public class NewTaskMenuFragment extends Fragment {
     private Group groupMembership;
     private String groupUid;
     private String groupName;
+    private boolean isGroupLocal;
 
     private boolean showAddMembers;
 
@@ -92,6 +93,7 @@ public class NewTaskMenuFragment extends Fragment {
 
         groupUid = groupMembership.getGroupUid();
         groupName = groupMembership.getGroupName();
+        isGroupLocal = groupMembership.getIsLocal();
     }
 
     @Override
@@ -123,19 +125,19 @@ public class NewTaskMenuFragment extends Fragment {
 
     @OnClick(R.id.bt_todo)
     public void onTodoButtonClick() {
-        Intent todo = MenuUtils.constructIntent(getActivity(), CreateTodoActivity.class, groupUid, groupName);
+        Intent todo = MenuUtils.constructIntent(getActivity(), CreateTodoActivity.class, groupUid, groupName,isGroupLocal);
         startActivity(todo);
     }
 
     @OnClick(R.id.bt_meeting)
     public void onMeetingButtonClick() {
-        Intent createMeeting = MenuUtils.constructIntent(getActivity(), CreateMeetingActivity.class, groupUid, groupName);
+        Intent createMeeting = MenuUtils.constructIntent(getActivity(), CreateMeetingActivity.class, groupUid, groupName,isGroupLocal);
         startActivity(createMeeting);
     }
 
     @OnClick(R.id.bt_vote)
     public void onVoteButtonClick() {
-        Intent createVote = MenuUtils.constructIntent(getActivity(), CreateVoteActivity.class, groupUid, groupName);
+        Intent createVote = MenuUtils.constructIntent(getActivity(), CreateVoteActivity.class, groupUid, groupName,isGroupLocal);
         createVote.putExtra("title", "Vote");
         startActivity(createVote);
     }

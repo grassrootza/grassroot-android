@@ -12,6 +12,10 @@ import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
+import io.realm.RealmList;
+import java.util.Map;
+import java.util.Objects;
+import java.util.UUID;
 import org.grassroot.android.R;
 import org.grassroot.android.fragments.ContactSelectionFragment;
 import org.grassroot.android.fragments.MemberListFragment;
@@ -22,6 +26,7 @@ import org.grassroot.android.models.Member;
 import org.grassroot.android.services.GrassrootRestService;
 import org.grassroot.android.utils.Constant;
 import org.grassroot.android.utils.ErrorUtils;
+import org.grassroot.android.utils.NetworkUtils;
 import org.grassroot.android.utils.PermissionUtils;
 import org.grassroot.android.utils.PreferenceUtils;
 
@@ -33,6 +38,7 @@ import java.util.List;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
+import org.grassroot.android.utils.RealmUtils;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -207,6 +213,10 @@ public class AddMembersActivity extends AppCompatActivity implements
         if (resultCode == RESULT_OK && requestCode == Constant.activityManualMemberEntry) {
             Member newMember = new Member(data.getStringExtra("selectedNumber"), data.getStringExtra("name"),
                     GroupConstants.ROLE_ORDINARY_MEMBER, -1);
+            newMember.setGroupUid(groupUid);
+            newMember.setMemberUid(UUID.randomUUID().toString());
+            newMember.setMemberGroupUid();
+            newMember.setLocal(!NetworkUtils.isNetworkAvailable(getApplicationContext()));
             manuallyAddedMembers.add(newMember);
             newMemberListFragment.addMembers(Collections.singletonList(newMember));
             setNewMembersVisible();
@@ -246,7 +256,16 @@ public class AddMembersActivity extends AppCompatActivity implements
         if (newMemberListFragment != null) {
             final List<Member> membersToAdd = newMemberListFragment.getSelectedMembers();
             if (membersToAdd != null && membersToAdd.size() > 0) {
-                postNewMembersToGroup(membersToAdd);
+               if(NetworkUtils.isNetworkAvailable(getApplicationContext())) {
+                   postNewMembersToGroup(membersToAdd);
+               }else{
+                   RealmUtils.saveDataToRealm(membersToAdd);
+                   Intent i = new Intent();
+                   i.putExtra(Constant.GROUPUID_FIELD, groupUid);
+                   i.putExtra(Constant.INDEX_FIELD, groupPosition);
+                   setResult(RESULT_OK, i);
+                   finish();
+               }
             } else {
                 // todo :show a snack bar or something
                 finish();
@@ -267,13 +286,19 @@ public class AddMembersActivity extends AppCompatActivity implements
                     public void onResponse(Call<GenericResponse> call, Response<GenericResponse> response) {
                         if (response.isSuccessful()) {
                             // todo : maybe, maybe a progress dialog
+                            Map<String,Object> map = new HashMap<String, Object>();
+                            map.put("groupUid",groupUid);
+                            map.put("isLocal",true);
+                            //todo return members here from API
+                            RealmUtils.removeObjectsFromDatabase(Member.class,map);
+                            RealmUtils.saveDataToRealm(membersToAdd);
                             Intent i = new Intent();
                             i.putExtra(Constant.GROUPUID_FIELD, groupUid);
                             i.putExtra(Constant.INDEX_FIELD, groupPosition);
                             setResult(RESULT_OK, i);
                             finish();
                         } else {
-                            ErrorUtils.showSnackBar(amRlRoot, R.string.error_generic, Snackbar.LENGTH_SHORT);
+                            ErrorUtils.showSnackBar(amRlRoot, R.string.error_wrong_number, Snackbar.LENGTH_SHORT);
                         }
                     }
 

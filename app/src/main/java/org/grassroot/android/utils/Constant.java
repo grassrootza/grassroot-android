@@ -22,13 +22,14 @@ public class Constant {
     public static final String stagingUrl = "https://staging.grassroot.org.za/api/";
     public static final String localUrl = "http://10.0.2.2:8080/api/";
 
-    public static final String restUrl = BuildConfig.BUILD_TYPE.equals("debug") ? localUrl
+    public static final String restUrl = BuildConfig.BUILD_TYPE.equals("debug") ? stagingUrl
             : BuildConfig.FLAVOR.equals(PROD) ? productionUrl : stagingUrl;
 
     public static final String USER_TOKEN = "user_token";
 
     public static final String GROUPUID_FIELD = "groupUid";
     public static final String GROUPNAME_FIELD = "groupName";
+    public static final String GROUP_LOCAL = "group_local";
     public static final String INDEX_FIELD = "index";
     public static final String PARENT_TAG_FIELD = "parentTag";
     public static final String SELECTED_MEMBERS_FIELD = "selectedMembers";

@@ -2,8 +2,11 @@ package org.grassroot.android.utils;
 
 import io.realm.Realm;
 import io.realm.RealmList;
+import io.realm.RealmObject;
+import io.realm.RealmQuery;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import org.grassroot.android.models.RealmString;
 
 public class RealmUtils {
@@ -20,12 +23,106 @@ public class RealmUtils {
     return null;
   }
 
-  public static void deleteAllObjects(){
+  public static void deleteAllObjects() {
     Realm realm = Realm.getDefaultInstance();
     realm.beginTransaction();
     realm.deleteAll();
     realm.commitTransaction();
     realm.close();
+  }
+
+  public static void saveDataToRealm(List<? extends RealmObject> list) {
+    Realm realm = Realm.getDefaultInstance();
+    realm.beginTransaction();
+    realm.copyToRealmOrUpdate(list);
+    realm.commitTransaction();
+    realm.close();
+  }
+
+  public static void saveDataToRealm(RealmObject object) {
+    Realm realm = Realm.getDefaultInstance();
+    realm.beginTransaction();
+    realm.copyToRealmOrUpdate(object);
+    realm.commitTransaction();
+    realm.close();
+  }
+
+  public static <T extends RealmList> T loadListFromDB(Class<? extends RealmObject> model,
+      String pName, String pValue) {
+    RealmList<RealmObject> groups = new RealmList<>();
+    Realm realm = Realm.getDefaultInstance();
+    groups.addAll(realm.copyFromRealm(realm.where(model).equalTo(pName, pValue).findAll()));
+    realm.close();
+    return (T) groups;
+  }
+
+  public static <T extends RealmList> T loadListFromDB(Class<? extends RealmObject> model,
+      String pName, boolean pValue) {
+    RealmList<RealmObject> groups = new RealmList<>();
+    Realm realm = Realm.getDefaultInstance();
+    groups.addAll(realm.copyFromRealm(realm.where(model).equalTo(pName, pValue).findAll()));
+    realm.close();
+    return (T) groups;
+  }
+
+  public static <T extends RealmList> T loadListFromDB(Class<? extends RealmObject> model,
+      Map<String, Object> map) {
+    RealmList<RealmObject> groups = new RealmList<>();
+    Realm realm = Realm.getDefaultInstance();
+    RealmQuery<? extends RealmObject> query = realm.where(model);
+    for (Map.Entry<String, Object> entry : map.entrySet()) {
+      if (entry.getValue() instanceof String) {
+        query.equalTo(entry.getKey(), entry.getValue().toString());
+      } else {
+        query.equalTo(entry.getKey(), Boolean.valueOf(entry.getValue().toString()));
+      }
+    }
+    groups.addAll(realm.copyFromRealm(query.findAll()));
+    realm.close();
+    return (T) groups;
+  }
+
+  public static void removeObjectFromDatabase(Class<? extends RealmObject> clazz, String pName,
+      String pValue) {
+    Realm realm = Realm.getDefaultInstance();
+    realm.beginTransaction();
+    realm.where(clazz).equalTo(pName, pValue).findFirst().deleteFromRealm();
+    realm.commitTransaction();
+    realm.close();
+  }
+
+  public static void removeObjectsFromDatabase(Class<? extends RealmObject> clazz,
+      Map<String, Object> map) {
+    Realm realm = Realm.getDefaultInstance();
+    RealmQuery<? extends RealmObject> query = realm.where(clazz);
+    for (Map.Entry<String, Object> entry : map.entrySet()) {
+      if (entry.getValue() instanceof String) {
+        query.equalTo(entry.getKey(), entry.getValue().toString());
+      } else {
+        query.equalTo(entry.getKey(), Boolean.valueOf(entry.getValue().toString()));
+      }
+    }
+    realm.beginTransaction();
+    query.findAll().deleteAllFromRealm();
+    realm.commitTransaction();
+    realm.close();
+  }
+
+  public static <T extends RealmList> T loadListFromDB(Class<? extends RealmObject> model) {
+    RealmList<RealmObject> groups = new RealmList<>();
+    Realm realm = Realm.getDefaultInstance();
+    groups.addAll(realm.copyFromRealm(realm.where(model).findAll()));
+    realm.close();
+    return (T) groups;
+  }
+
+  public static <T extends RealmObject> T loadObjectFromDB(Class<? extends RealmObject> model,
+      String pName, String pValue) {
+    RealmList<RealmObject> groups = new RealmList<>();
+    Realm realm = Realm.getDefaultInstance();
+    groups.addAll(realm.copyFromRealm(realm.where(model).equalTo(pName, pValue).findAll()));
+    realm.close();
+    return (T) groups.get(0);
   }
 
   public static RealmList<RealmString> convertListOfStringInRealmListOfString(List<String> list) {
