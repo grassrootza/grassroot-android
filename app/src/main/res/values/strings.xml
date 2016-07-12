@@ -383,16 +383,21 @@
 
     <!--Group picture -->
     <string name="gp_bt_txt_set">Set group picture</string>
-    <string name="gp_bt_txt_update">Update Group Picture</string>
+    <string name="gp_bt_txt_update">Update group picture</string>
+    <string name="gp_bt_txt_remove">Remove group picture</string>
     <string name="gp_txt_title">Group Picture</string>
     <string name="gp_update_success">Group photo updated</string>
     <string name="gp_update_failure">Group photo not uploaded. Please try again later.</string>
+    <string name="gp_remove_success">Group picture successfully removed</string>
+    <string name="gp_remove_failure">Group picture could not be removed. Try again later..</string>
+
 
     <!--Notification Center-->
     <string name="nc_txt_tlb">Notification</string>
 
     <!--FAQ-->
     <string name="fq_txt_toolbar">FAQs</string>
+    <string name="gp_dlg_cnfrm">Are you sure you want to remove group picture?</string>
 
 
     <string-array name="fq_Header">

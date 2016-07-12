@@ -43,17 +43,34 @@
 
     <Button
         android:layout_height="wrap_content"
-        android:layout_width="wrap_content"
+        android:layout_width="300dp"
         android:visibility="gone"
-        android:id="@+id/bt_gp"
+        android:id="@+id/bt_gp_set"
         android:layout_marginTop="120dp"
         android:textAllCaps="false"
         android:textSize="@dimen/txt_medium"
+        android:textAlignment="center"
         android:layout_marginBottom="20dp"
         android:textColor="@drawable/green_txt"
         android:background="@drawable/register"
         android:layout_gravity="center"
         android:layout_below="@+id/iv_gp_avatar"
+        android:layout_centerHorizontal="true" />
+
+    <Button
+        android:layout_height="wrap_content"
+        android:layout_width="300dp"
+        android:visibility="gone"
+        android:id="@+id/bt_gp_remove"
+        android:textAllCaps="false"
+        android:text="@string/gp_bt_txt_remove"
+        android:textSize="@dimen/txt_medium"
+        android:textAlignment="center"
+        android:layout_marginBottom="10dp"
+        android:textColor="@drawable/green_txt"
+        android:background="@drawable/register"
+        android:layout_gravity="center"
+        android:layout_below="@+id/bt_gp_set"
         android:layout_centerHorizontal="true" />
 
 

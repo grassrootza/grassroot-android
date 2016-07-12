@@ -11,10 +11,8 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
 import android.support.design.widget.Snackbar;
-import android.support.v4.app.NavUtils;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
-import android.view.MenuItem;
 import android.view.View;
 import android.webkit.MimeTypeMap;
 import android.widget.Button;
@@ -27,11 +25,13 @@ import com.squareup.picasso.NetworkPolicy;
 import com.squareup.picasso.Picasso;
 
 import org.grassroot.android.R;
-import org.grassroot.android.events.GroupPictureUploadedEvent;
+import org.grassroot.android.events.GroupPictureChangedEvent;
+import org.grassroot.android.fragments.dialogs.ConfirmCancelDialogFragment;
 import org.grassroot.android.interfaces.GroupConstants;
 import org.grassroot.android.models.GenericResponse;
 import org.grassroot.android.models.Group;
 import org.grassroot.android.services.GrassrootRestService;
+import org.grassroot.android.utils.CircularImageTransformer;
 import org.grassroot.android.utils.PreferenceUtils;
 import org.grassroot.android.utils.ScalingUtilities;
 import org.greenrobot.eventbus.EventBus;
@@ -63,16 +63,18 @@ public class GroupAvatarActivity extends PortraitActivity {
 
     @BindView(R.id.gp_avt_main_rl)
     RelativeLayout g_avt_relative;
-    
+
     @BindView(R.id.iv_gp_avatar)
     ImageView ivAvatar;
 
-    @BindView(R.id.bt_gp)
+    @BindView(R.id.bt_gp_set)
     Button btAvatar;
+
+    @BindView(R.id.bt_gp_remove)
+    Button btAvatarRemove;
 
     @BindView(R.id.progressBar)
     ProgressBar progressBar;
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -101,8 +103,12 @@ public class GroupAvatarActivity extends PortraitActivity {
                 uploadFile(localImagePath, mimeType);
                 cursor.close();
                 String compressedFilePath = decodeFile(localImagePath);
-                ivAvatar.setImageBitmap(BitmapFactory
-                        .decodeFile(compressedFilePath));
+                Bitmap bitmap = BitmapFactory.decodeFile(compressedFilePath);
+                ivAvatar.setImageBitmap(ScalingUtilities.getRoundedShape(bitmap));
+                if (btAvatarRemove.getVisibility() == View.INVISIBLE ||
+                        btAvatarRemove.getVisibility() == View.GONE)
+                    btAvatarRemove.setVisibility(View.VISIBLE);
+
             } else {
 
             }
@@ -119,18 +125,19 @@ public class GroupAvatarActivity extends PortraitActivity {
         toolbar.setNavigationOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-               finish();
+                finish();
             }
         });
         String imageUrl = group.getImageUrl();
-        if(group.canEditGroup()) {
+        if (group.canEditGroup()) {
             btAvatar.setVisibility(View.VISIBLE);
             String buttonText = imageUrl == null ? getString(R.string.gp_bt_txt_set) : getString(R.string.gp_bt_txt_update);
             btAvatar.setText(buttonText);
+            if (imageUrl != null)
+                btAvatarRemove.setVisibility(View.VISIBLE);
         }
         if (imageUrl != null) {
             getAvatar(imageUrl);
-
         }
 
     }
@@ -138,39 +145,70 @@ public class GroupAvatarActivity extends PortraitActivity {
     private void getAvatar(final String imageUrl) {
         Picasso.with(this).load(imageUrl)
                 .error(R.drawable.ic_profile_image)
+                .transform(new CircularImageTransformer())
                 .networkPolicy(NetworkPolicy.OFFLINE)
                 .into(ivAvatar, new Callback() {
                     @Override
                     public void onSuccess() {
                     }
+
                     @Override
                     public void onError() {
                         Picasso.with(GroupAvatarActivity.this).
-                                load(imageUrl).error(R.drawable.ic_profile_image)
+                                load(imageUrl)
+                                .transform(new CircularImageTransformer())
+                                .error(R.drawable.ic_profile_image)
                                 .into(ivAvatar);
                     }
                 });
     }
 
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case android.R.id.home:
-             NavUtils.navigateUpFromSameTask(this);
-                return true;
-           default:
-             return true;
-        }
 
-    }
-
-    @OnClick(R.id.bt_gp)
+    @OnClick(R.id.bt_gp_set)
     public void selectImageForUpload() {
         Intent galleryIntent = new Intent(Intent.ACTION_PICK,
                 android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
         startActivityForResult(galleryIntent, IMAGE_RESULT_INT);
 
     }
+
+    @OnClick(R.id.bt_gp_remove)
+    public void removePicture() {
+
+        final String phoneNumber = PreferenceUtils.getPhoneNumber();
+        final String code = PreferenceUtils.getAuthToken();
+        final String groupUid = group.getGroupUid();
+        ConfirmCancelDialogFragment dialogFragment = ConfirmCancelDialogFragment.newInstance(getString(R.string.gp_dlg_cnfrm), new ConfirmCancelDialogFragment.ConfirmDialogListener() {
+            @Override
+            public void doConfirmClicked() {
+                GrassrootRestService.getInstance().getApi().removeImage(phoneNumber, code, groupUid).enqueue(new retrofit2.Callback<GenericResponse>() {
+                    @Override
+                    public void onResponse(Call<GenericResponse> call, Response<GenericResponse> response) {
+                        if (response.isSuccessful()) {
+                            ivAvatar.setImageResource(R.drawable.ic_profile_image);
+                            btAvatarRemove.setVisibility(View.GONE);
+                            btAvatar.setText(R.string.gp_bt_txt_set);
+                            Snackbar.make(g_avt_relative, R.string.gp_remove_success, Snackbar.LENGTH_LONG).show();
+                            EventBus.getDefault().post(new GroupPictureChangedEvent());
+                        } else {
+                            Snackbar.make(g_avt_relative, R.string.gp_remove_failure, Snackbar.LENGTH_LONG).show();
+
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(Call<GenericResponse> call, Throwable t) {
+                        Snackbar.make(g_avt_relative, R.string.gp_remove_failure, Snackbar.LENGTH_LONG).show();
+                    }
+                });
+
+            }
+        });
+        dialogFragment.show(getSupportFragmentManager(), "");
+
+
+    }
+
 
     private void uploadFile(final String path, final String mimeType) {
 
@@ -188,8 +226,9 @@ public class GroupAvatarActivity extends PortraitActivity {
             public void onResponse(Call<GenericResponse> call, Response<GenericResponse> response) {
                 progressBar.setVisibility(View.GONE);
                 Snackbar.make(g_avt_relative, R.string.gp_update_success, Snackbar.LENGTH_LONG).show();
-                EventBus.getDefault().post(new GroupPictureUploadedEvent());
+                EventBus.getDefault().post(new GroupPictureChangedEvent());
             }
+
             @Override
             public void onFailure(Call<GenericResponse> call, Throwable t) {
                 progressBar.setVisibility(View.GONE);
@@ -227,9 +266,10 @@ public class GroupAvatarActivity extends PortraitActivity {
         Bitmap scaledBitmap;
 
         try {
-            Bitmap unscaledBitmap = ScalingUtilities.decodeFile(path, 192, 192,ScalingUtilities.ScalingLogic.FIT);
+            Bitmap unscaledBitmap = ScalingUtilities.decodeFile(path, 192, 192, ScalingUtilities.ScalingLogic.FIT);
             if (!(unscaledBitmap.getWidth() <= 640 && unscaledBitmap.getHeight() <= 640)) {
                 scaledBitmap = ScalingUtilities.createScaledBitmap(unscaledBitmap, 192, 192, ScalingUtilities.ScalingLogic.FIT);
+
             } else {
                 unscaledBitmap.recycle();
                 return path;
@@ -264,4 +304,5 @@ public class GroupAvatarActivity extends PortraitActivity {
         return strMyImagePath;
 
     }
+
 }

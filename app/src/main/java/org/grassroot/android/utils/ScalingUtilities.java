@@ -3,8 +3,10 @@ package org.grassroot.android.utils;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.BitmapShader;
 import android.graphics.Canvas;
 import android.graphics.Paint;
+import android.graphics.Path;
 import android.graphics.Rect;
 
 
@@ -43,7 +45,6 @@ public class ScalingUtilities {
         options.inSampleSize = calculateSampleSize(options.outWidth, options.outHeight, dstWidth,
                 dstHeight, scalingLogic);
         Bitmap unscaledBitmap = BitmapFactory.decodeFile(path, options);
-
         return unscaledBitmap;
     }
 
@@ -65,6 +66,16 @@ public class ScalingUtilities {
         Bitmap scaledBitmap = Bitmap.createBitmap(dstRect.width(), dstRect.height(),
                 Bitmap.Config.ARGB_8888);
         Canvas canvas = new Canvas(scaledBitmap);
+
+        //create rounded circle
+        Path path = new Path();
+        path.addCircle(((float) dstWidth - 1) / 2,
+                ((float) dstHeight - 1) / 2,
+                (Math.min(((float) dstHeight),
+                        ((float) dstHeight)) / 2),
+                Path.Direction.CCW);
+
+        canvas.clipPath(path);
         canvas.drawBitmap(unscaledBitmap, srcRect, dstRect, new Paint(Paint.FILTER_BITMAP_FLAG));
 
         return scaledBitmap;
@@ -177,4 +188,28 @@ public class ScalingUtilities {
         }
     }
 
-}
+    public static Bitmap getRoundedShape(Bitmap source) {
+        int size = Math.min(source.getWidth(), source.getHeight());
+        int x = (source.getWidth() - size) / 2;
+        int y = (source.getHeight() - size) / 2;
+        Bitmap squaredBitmap = Bitmap.createBitmap(source, x, y, size, size);
+        if (squaredBitmap != source) {
+            source.recycle();
+        }
+        Bitmap bitmap = Bitmap.createBitmap(size, size, source.getConfig());
+        Canvas canvas = new Canvas(bitmap);
+        Paint paint = new Paint();
+        BitmapShader shader = new BitmapShader(squaredBitmap,
+                BitmapShader.TileMode.CLAMP, BitmapShader.TileMode.CLAMP);
+        paint.setShader(shader);
+        paint.setAntiAlias(true);
+
+        float r = size / 2f;
+        canvas.drawCircle(r, r, r, paint);
+
+        squaredBitmap.recycle();
+        return bitmap;
+    }
+
+  }
+

@@ -205,6 +205,9 @@ public class GrassrootRestService {
     Call<GenericResponse> uploadImage(@Path("phoneNumber") String phoneNumber, @Path("code") String code, @Path("groupUid") String groupUid,
                                       @Part  MultipartBody.Part image);
 
+    @GET("group/image/remove/{phoneNumber}/{code}/{groupUid}")
+    Call<GenericResponse> removeImage(@Path("phoneNumber") String phoneNumber, @Path("code") String code, @Path("groupUid") String groupUid);
+
 
 
     //user groups
