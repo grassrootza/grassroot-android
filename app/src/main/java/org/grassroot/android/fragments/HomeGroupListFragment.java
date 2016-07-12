@@ -6,7 +6,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.SystemClock;
-
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v4.content.ContextCompat;
@@ -18,20 +17,19 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.EditText;
-import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
-import android.widget.TextView;
 
 import org.grassroot.android.R;
 import org.grassroot.android.activities.CreateGroupActivity;
 import org.grassroot.android.activities.CreateMeetingActivity;
 import org.grassroot.android.activities.CreateTodoActivity;
 import org.grassroot.android.activities.CreateVoteActivity;
+import org.grassroot.android.activities.GroupAvatarActivity;
 import org.grassroot.android.activities.GroupSearchActivity;
 import org.grassroot.android.activities.GroupTasksActivity;
 import org.grassroot.android.adapters.GroupListAdapter;
+import org.grassroot.android.events.GroupPictureChangedEvent;
 import org.grassroot.android.events.JoinRequestsReceived;
 import org.grassroot.android.events.NetworkActivityResultsEvent;
 import org.grassroot.android.events.TaskAddedEvent;
@@ -45,7 +43,6 @@ import org.grassroot.android.services.GroupService;
 import org.grassroot.android.utils.Constant;
 import org.grassroot.android.utils.ErrorUtils;
 import org.grassroot.android.utils.MenuUtils;
-import org.grassroot.android.utils.PreferenceUtils;
 import org.grassroot.android.utils.RealmUtils;
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
@@ -57,30 +54,36 @@ import java.util.Locale;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
-import butterknife.OnTextChanged;
 import butterknife.Unbinder;
 import io.realm.Realm;
 import io.realm.RealmList;
 
 public class HomeGroupListFragment extends android.support.v4.app.Fragment
-    implements GroupListAdapter.GroupRowListener {
+        implements GroupListAdapter.GroupRowListener {
 
-  private String TAG = HomeGroupListFragment.class.getSimpleName();
+    private String TAG = HomeGroupListFragment.class.getSimpleName();
 
-  private Unbinder unbinder;
+    private Unbinder unbinder;
 
-  @BindView(R.id.rl_ghp_root) RelativeLayout rlGhpRoot;
+    @BindView(R.id.rl_ghp_root)
+    RelativeLayout rlGhpRoot;
 
-  @BindView(R.id.gl_swipe_refresh) SwipeRefreshLayout glSwipeRefresh;
-  @BindView(R.id.recycler_view) RecyclerView rcGroupList;
+    @BindView(R.id.gl_swipe_refresh)
+    SwipeRefreshLayout glSwipeRefresh;
+    @BindView(R.id.recycler_view)
+    RecyclerView rcGroupList;
 
-  private boolean floatingMenuOpen = false;
-  @BindView(R.id.fab_menu_open) FloatingActionButton fabOpenMenu;
-  @BindView(R.id.ll_fab_new_task) LinearLayout fabNewTask;
-  @BindView(R.id.ll_fab_join_group) LinearLayout fabFindGroup;
-  @BindView(R.id.ll_fab_start_group) LinearLayout fabStartGroup;
+    private boolean floatingMenuOpen = false;
+    @BindView(R.id.fab_menu_open)
+    FloatingActionButton fabOpenMenu;
+    @BindView(R.id.ll_fab_new_task)
+    LinearLayout fabNewTask;
+    @BindView(R.id.ll_fab_join_group)
+    LinearLayout fabFindGroup;
+    @BindView(R.id.ll_fab_start_group)
+    LinearLayout fabStartGroup;
 
-  ProgressDialog progressDialog;
+    ProgressDialog progressDialog;
 
     private GroupListAdapter groupListRowAdapter;
     private List<Group> userGroups;
@@ -90,7 +93,8 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
 
     private GroupPickCallbacks mCallbacks;
 
-    @Override public void onAttach(Context context) {
+    @Override
+    public void onAttach(Context context) {
         super.onAttach(context);
         Activity activity = (Activity) context;
         try {
@@ -190,63 +194,66 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
         Log.e(TAG, "group join requests received! this many: " + GroupService.getInstance().openJoinRequests.size());
     }
 
-  /*
-  Separating this method from the above, because we will probably want it to call some kind of diff
-  in time, rather than doing a full refresh, and don't need to worry about progress bar, etc
+    /*
+    Separating this method from the above, because we will probably want it to call some kind of diff
+    in time, rather than doing a full refresh, and don't need to worry about progress bar, etc
    */
-  public void refreshGroupList() {
-    GroupService.getInstance()
-        .refreshGroupList(getActivity(), new GroupService.GroupServiceListener() {
-          @Override public void groupListLoaded() {
-            groupListRowAdapter.setGroupList(RealmUtils.loadListFromDB(Group.class));
-            glSwipeRefresh.setRefreshing(false);
-          }
+    public void refreshGroupList() {
+        GroupService.getInstance()
+                .refreshGroupList(getActivity(), new GroupService.GroupServiceListener() {
+                    @Override public void groupListLoaded() {
+                        groupListRowAdapter.setGroupList(RealmUtils.loadListFromDB(Group.class));
+                        glSwipeRefresh.setRefreshing(false);
+                    }
 
-          @Override public void groupListLoadingError() {
-            glSwipeRefresh.setRefreshing(false);
-          }
-        });
-  }
-
-  public void updateSingleGroup(final int position, final String groupUid) {
-    if (position == -1) {
-      throw new UnsupportedOperationException(
-          "ERROR! This should not be called without a valid position");
+                    @Override public void groupListLoadingError() {
+                        glSwipeRefresh.setRefreshing(false);
+                    }
+                });
     }
 
-    GroupService.getInstance()
-        .refreshSingleGroup(position, groupUid, getActivity(),
-            new GroupService.GroupServiceListener() {
-              @Override public void groupListLoaded() {
-                groupListRowAdapter.updateGroup(position,
-                    GroupService.getInstance().userGroups.get(position));
-              }
+    public void updateSingleGroup(final int position, final String groupUid) {
+        if (position == -1) {
+            throw new UnsupportedOperationException(
+                    "ERROR! This should not be called without a valid position");
+        }
 
-              @Override public void groupListLoadingError() {
-                // todo : handle this better
-                Log.e(TAG, "ERROR! Group position and ID do not match, not updating");
-              }
-            });
-  }
+        GroupService.getInstance()
+                .refreshSingleGroup(position, groupUid, getActivity(),
+                        new GroupService.GroupServiceListener() {
+                            @Override
+                            public void groupListLoaded() {
+                                groupListRowAdapter.updateGroup(position,
+                                        GroupService.getInstance().userGroups.get(position));
+                            }
 
-  public void insertGroup(final int position, final Group group) {
-    // todo : actually add it, for now, just do a refresh
-    Log.e(TAG, "adding a group! at position " + position + ", the group looks like : " + group);
-    groupListRowAdapter.addGroup(0, group);
-  }
+                            @Override
+                            public void groupListLoadingError() {
+                                // todo : handle this better
+                                Log.e(TAG, "ERROR! Group position and ID do not match, not updating");
+                            }
+                        });
+    }
 
-  private void setUpRecyclerView() {
-    rcGroupList.setLayoutManager(new LinearLayoutManager(getActivity()));
-    groupListRowAdapter = new GroupListAdapter(new ArrayList<Group>(), HomeGroupListFragment.this);
-    rcGroupList.setAdapter(groupListRowAdapter);
-    glSwipeRefresh.setColorSchemeColors(
-        ContextCompat.getColor(getActivity(), R.color.primaryColor));
-    glSwipeRefresh.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
-      @Override public void onRefresh() {
-        refreshGroupList();
-      }
-    });
-  }
+    public void insertGroup(final int position, final Group group) {
+        // todo : actually add it, for now, just do a refresh
+        Log.e(TAG, "adding a group! at position " + position + ", the group looks like : " + group);
+        groupListRowAdapter.addGroup(0, group);
+    }
+
+    private void setUpRecyclerView() {
+        rcGroupList.setLayoutManager(new LinearLayoutManager(getActivity()));
+        groupListRowAdapter = new GroupListAdapter(new ArrayList<Group>(), HomeGroupListFragment.this);
+        rcGroupList.setAdapter(groupListRowAdapter);
+        glSwipeRefresh.setColorSchemeColors(
+                ContextCompat.getColor(getActivity(), R.color.primaryColor));
+        glSwipeRefresh.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                refreshGroupList();
+            }
+        });
+    }
 
     @OnClick(R.id.fab_menu_open)
     public void toggleFloatingMenu() {
@@ -296,7 +303,7 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
     @OnClick(R.id.ic_fab_start_group)
     public void icFabStartGroup() {
         closeFloatingMenu();
-        Intent icFabStartGroup=new Intent(getActivity(), CreateGroupActivity.class);
+        Intent icFabStartGroup = new Intent(getActivity(), CreateGroupActivity.class);
         startActivityForResult(icFabStartGroup, Constant.activityCreateGroup);
     }
 
@@ -306,54 +313,75 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
         startActivity(MenuUtils.constructIntent(getActivity(), GroupTasksActivity.class, group));
     }
 
-  @Override public void onGroupRowLongClick(Group group) {
-    showQuickOptionsDialog(group);
-  }
+    @Override
+    public void onGroupRowLongClick(Group group) {
+        showQuickOptionsDialog(group);
+    }
 
-  private void showQuickOptionsDialog(final Group group) {
-    QuickTaskModalFragment dialog = QuickTaskModalFragment.newInstance(true, group,
-        new QuickTaskModalFragment.TaskModalListener() {
-          @Override public void onTaskClicked(String taskType) {
-            Intent i;
-            switch (taskType) {
-              case TaskConstants.MEETING:
-                i = MenuUtils.constructIntent(getActivity(), CreateMeetingActivity.class,
-                    group.getGroupUid(), group.getGroupName());
-                break;
-              case TaskConstants.VOTE:
-                i = MenuUtils.constructIntent(getActivity(), CreateVoteActivity.class,
-                    group.getGroupUid(), group.getGroupName());
-                break;
-              case TaskConstants.TODO:
-                i = MenuUtils.constructIntent(getActivity(), CreateTodoActivity.class,
-                    group.getGroupUid(), group.getGroupName());
-                break;
-              default:
-                throw new UnsupportedOperationException("Error! Unknown task type");
-            }
-            startActivityForResult(i, Constant.activityCreateTask);
-          }
-        });
-    dialog.show(getFragmentManager(), QuickTaskModalFragment.class.getSimpleName());
-  }
+    private void showQuickOptionsDialog(final Group group) {
+        QuickTaskModalFragment dialog = QuickTaskModalFragment.newInstance(true, group,
+                new QuickTaskModalFragment.TaskModalListener() {
+                    @Override
+                    public void onTaskClicked(String taskType) {
+                        Intent i;
+                        switch (taskType) {
+                            case TaskConstants.MEETING:
+                                i = MenuUtils.constructIntent(getActivity(), CreateMeetingActivity.class,
+                                        group.getGroupUid(), group.getGroupName());
+                                break;
+                            case TaskConstants.VOTE:
+                                i = MenuUtils.constructIntent(getActivity(), CreateVoteActivity.class,
+                                        group.getGroupUid(), group.getGroupName());
+                                break;
+                            case TaskConstants.TODO:
+                                i = MenuUtils.constructIntent(getActivity(), CreateTodoActivity.class,
+                                        group.getGroupUid(), group.getGroupName());
+                                break;
+                            default:
+                                throw new UnsupportedOperationException("Error! Unknown task type");
+                        }
+                        startActivityForResult(i, Constant.activityCreateTask);
+                    }
+                });
+        dialog.show(getFragmentManager(), QuickTaskModalFragment.class.getSimpleName());
+    }
 
-  @Override public void onGroupRowMemberClick(Group group, int position) {
-    GroupQuickMemberModalFragment dialog = new GroupQuickMemberModalFragment();
-    Bundle args = new Bundle();
-    args.putParcelable(GroupConstants.OBJECT_FIELD, group);
-    args.putInt(Constant.INDEX_FIELD, position);
-    dialog.setArguments(args);
-    dialog.show(getFragmentManager(), "GroupQuickMemberModalFragment");
-  }
+    @Override
+    public void onGroupRowMemberClick(Group group, int position) {
+        GroupQuickMemberModalFragment dialog = new GroupQuickMemberModalFragment();
+        Bundle args = new Bundle();
+        args.putParcelable(GroupConstants.OBJECT_FIELD, group);
+        args.putInt(Constant.INDEX_FIELD, position);
+        dialog.setArguments(args);
+        dialog.show(getFragmentManager(), "GroupQuickMemberModalFragment");
+    }
 
-  @Override public void onDetach() {
-    super.onDetach();
-    mCallbacks = null;
-  }
+    @Override
+    public void onGroupRowAvatarClick(Group group, int position) {
+        Intent intent = MenuUtils.constructIntent(getActivity(), GroupAvatarActivity.class,
+                group);
+        intent.putExtra(Constant.INDEX_FIELD, position);
+        startActivity(intent);
 
-  @Subscribe public void onEvent(NetworkActivityResultsEvent networkActivityResultsEvent) {
-    fetchGroupList();
-  }
+    }
+
+    @Override
+    public void onDetach() {
+        super.onDetach();
+        mCallbacks = null;
+    }
+
+    @Subscribe
+    public void onEvent(NetworkActivityResultsEvent networkActivityResultsEvent) {
+        fetchGroupList();
+    }
+
+    @Subscribe
+    public void onEvent(GroupPictureChangedEvent groupPictureUploadedEvent) {
+        Log.e(TAG, "picture uploaded");
+        fetchGroupList(); //would have preferred to use refreshGrouplist. that still needs debugging
+
+    }
 
     private void showProgress() {
         if (progressDialog == null) {
@@ -368,56 +396,61 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
         progressDialog.dismiss();
     }
 
-  @Subscribe public void onTaskCreatedEvent(TaskAddedEvent e) {
-      Log.e(TAG, "group list fragment triggered by task addition ...");
-      final TaskModel t = e.getTaskCreated();
-      final String groupUid = t.getParentUid();
-      // todo : may want to keep a hashmap of groups ... likely will be finding & updating groups quite a bit
-      for (Group g : userGroups) {
-          if (groupUid.equals(g.getGroupUid())) {
-              Realm realm = Realm.getDefaultInstance();
-              realm.beginTransaction();
-              g.setHasTasks(true);
-              realm.commitTransaction();
-              realm.close();
-              startActivity(MenuUtils.constructIntent(getActivity(), GroupTasksActivity.class, g));
-          }
-      }
-  }
+    @Subscribe
+    public void onTaskCreatedEvent(TaskAddedEvent e) {
+        Log.e(TAG, "group list fragment triggered by task addition ...");
+        final TaskModel t = e.getTaskCreated();
+        final String groupUid = t.getParentUid();
+        // todo : may want to keep a hashmap of groups ... likely will be finding & updating groups quite a bit
+        for (Group g : userGroups) {
+            if (groupUid.equals(g.getGroupUid())) {
+                Realm realm = Realm.getDefaultInstance();
+                realm.beginTransaction();
+                g.setHasTasks(true);
+                realm.commitTransaction();
+                realm.close();
+                startActivity(MenuUtils.constructIntent(getActivity(), GroupTasksActivity.class, g));
+            }
+        }
+    }
 
-  public void sortGroups() {
-    SortFragment sortFragment = new SortFragment();
-    Bundle b = new Bundle();
-    b.putBoolean("Date", date_click);
-    b.putBoolean("Role", role_click);
-    b.putBoolean("Default", defaults_click);
-    sortFragment.setArguments(b);
-    sortFragment.show(getFragmentManager(), "SortFragment");
-    sortFragment.setListener(new SortInterface() {
 
-      @Override public void tvDateClick(boolean date, boolean role, boolean defaults) {
-        date_click = true;
-        role_click = false;
-        Long start = SystemClock.currentThreadTimeMillis();
-        groupListRowAdapter.sortByDate();
-        Log.d(TAG, String.format("sorting group list took %d msecs",
-            SystemClock.currentThreadTimeMillis() - start));
-      }
+    public void sortGroups() {
+        SortFragment sortFragment = new SortFragment();
+        Bundle b = new Bundle();
+        b.putBoolean("Date", date_click);
+        b.putBoolean("Role", role_click);
+        b.putBoolean("Default", defaults_click);
+        sortFragment.setArguments(b);
+        sortFragment.show(getFragmentManager(), "SortFragment");
+        sortFragment.setListener(new SortInterface() {
 
-      @Override public void roleClick(boolean date, boolean role, boolean defaults) {
-        date_click = false;
-        role_click = true;
-        Long start = SystemClock.currentThreadTimeMillis();
-        groupListRowAdapter.sortByRole();
-        Log.d(TAG, String.format("sorting group list took %d msecs",
-            SystemClock.currentThreadTimeMillis() - start));
-      }
+            @Override
+            public void tvDateClick(boolean date, boolean role, boolean defaults) {
+                date_click = true;
+                role_click = false;
+                Long start = SystemClock.currentThreadTimeMillis();
+                groupListRowAdapter.sortByDate();
+                Log.d(TAG, String.format("sorting group list took %d msecs",
+                        SystemClock.currentThreadTimeMillis() - start));
+            }
 
-      @Override public void defaultsClick(boolean date, boolean role, boolean defaults) {
-        // todo : restore whatever was here
-      }
-    });
-  }
+            @Override
+            public void roleClick(boolean date, boolean role, boolean defaults) {
+                date_click = false;
+                role_click = true;
+                Long start = SystemClock.currentThreadTimeMillis();
+                groupListRowAdapter.sortByRole();
+                Log.d(TAG, String.format("sorting group list took %d msecs",
+                        SystemClock.currentThreadTimeMillis() - start));
+            }
+
+            @Override
+            public void defaultsClick(boolean date, boolean role, boolean defaults) {
+                // todo : restore whatever was here
+            }
+        });
+    }
 
     public void searchStringChanged(String query) {
         if (TextUtils.isEmpty(query)) {

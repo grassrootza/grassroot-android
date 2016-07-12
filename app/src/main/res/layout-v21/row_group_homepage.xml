@@ -26,7 +26,22 @@
             card_view:cardBackgroundColor="#fff"
             >
 
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+            <ImageView
+                android:id="@+id/iv_gp_avatar"
+                android:layout_width="80dp"
+                android:layout_height="80dp"
+                android:layout_alignParentLeft="true"
+                android:layout_marginRight="8dp"
+                android:src="@drawable/ic_profile_image"
+                android:layout_alignParentTop="true" />
+
             <LinearLayout
+                android:layout_toEndOf="@+id/iv_gp_avatar"
+                android:layout_toRightOf="@+id/iv_gp_avatar"
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
@@ -57,34 +72,16 @@
                     android:text="Group  owner name"
                     />
 
-                <TextView
-                    android:id="@+id/txt_groupdesc"
-                    android:layout_width="fill_parent"
-                    android:layout_height="wrap_content"
-                    android:textColor="@color/text_grey"
-                    android:gravity="center_vertical"
-                    android:textSize="@dimen/txt_small"
-                    android:padding="2dp"
-                    android:ellipsize = "end"
-                    android:singleLine="true"
-                    android:layout_marginRight="120dp"
-                    android:text="Truncated of description of latest events"
-                    />
 
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_height="1dp"
-                    android:background="@color/black"
-                    android:layout_marginTop="5dp"
-                    >
-
-                </View>
+            </LinearLayout>
 
                 <RelativeLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
 
-                    >
+                    android:layout_below="@+id/view2"
+                    android:layout_alignParentLeft="true"
+                    android:layout_alignParentStart="true">
                     <RelativeLayout
                         android:id="@+id/member_icons"
                         android:layout_width="wrap_content"
@@ -124,9 +121,33 @@
 
                 </RelativeLayout>
 
+                <TextView
+                    android:id="@+id/txt_groupdesc"
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/text_grey"
+                    android:gravity="center_vertical"
+                    android:textSize="@dimen/txt_small"
+                    android:padding="2dp"
+                    android:ellipsize = "end"
+                    android:singleLine="true"
+                    android:text="Truncated of description of latest events"
+                    android:layout_below="@+id/iv_gp_avatar"
+                    android:layout_alignParentLeft="true"
+                    android:layout_alignParentStart="true" />
 
-            </LinearLayout>
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:background="@color/black"
+                    android:id="@+id/view2"
+                    android:layout_below="@+id/iv_gp_avatar"
+                    android:layout_alignParentLeft="true"
+                    android:layout_alignParentStart="true"
+                    android:layout_marginTop="22dp">
 
+                </View>
+            </RelativeLayout>
 
         </android.support.v7.widget.CardView>
 

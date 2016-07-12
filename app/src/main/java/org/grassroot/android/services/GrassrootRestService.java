@@ -36,6 +36,7 @@ import java.util.Set;
 
 import io.realm.RealmList;
 import io.realm.RealmObject;
+import okhttp3.MultipartBody;
 import okhttp3.OkHttpClient;
 import okhttp3.logging.HttpLoggingInterceptor;
 import retrofit2.Call;
@@ -44,7 +45,9 @@ import retrofit2.converter.gson.GsonConverterFactory;
 import retrofit2.http.Body;
 import retrofit2.http.GET;
 import retrofit2.http.Headers;
+import retrofit2.http.Multipart;
 import retrofit2.http.POST;
+import retrofit2.http.Part;
 import retrofit2.http.Path;
 import retrofit2.http.Query;
 
@@ -196,6 +199,16 @@ public class GrassrootRestService {
     Call<GroupResponse> createGroup(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
         @Path("groupName") String groupName, @Path("description") String groupDescription,
         @Body List<Member> membersToAdd);
+
+    @Multipart
+    @POST("group/image/upload/{phoneNumber}/{code}/{groupUid}")
+    Call<GenericResponse> uploadImage(@Path("phoneNumber") String phoneNumber, @Path("code") String code, @Path("groupUid") String groupUid,
+                                      @Part  MultipartBody.Part image);
+
+    @GET("group/image/remove/{phoneNumber}/{code}/{groupUid}")
+    Call<GenericResponse> removeImage(@Path("phoneNumber") String phoneNumber, @Path("code") String code, @Path("groupUid") String groupUid);
+
+
 
     //user groups
     @GET("group/list/{phoneNumber}/{code}")
