@@ -1,21 +1,23 @@
-package org.grassroot.android.activities;
+package org.grassroot.android.fragments;
 
 import android.app.ProgressDialog;
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.v4.app.Fragment;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.support.v7.widget.Toolbar;
+import android.text.TextUtils;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
-import android.widget.LinearLayout;
-import android.widget.ProgressBar;
+import android.view.ViewGroup;
 import android.widget.RelativeLayout;
-import android.widget.TextView;
 
 import org.grassroot.android.R;
+import org.grassroot.android.activities.ViewTaskActivity;
 import org.grassroot.android.adapters.NotificationAdapter;
+import org.grassroot.android.adapters.RecyclerTouchListener;
 import org.grassroot.android.events.NotificationEvent;
 import org.grassroot.android.interfaces.ClickListener;
 import org.grassroot.android.models.Notification;
@@ -23,7 +25,6 @@ import org.grassroot.android.models.NotificationList;
 import org.grassroot.android.services.GcmListenerService;
 import org.grassroot.android.services.GrassrootRestService;
 import org.grassroot.android.services.NotificationUpdateService;
-import org.grassroot.android.adapters.RecyclerTouchListener;
 import org.grassroot.android.utils.Constant;
 import org.grassroot.android.utils.ErrorUtils;
 import org.grassroot.android.utils.PreferenceUtils;
@@ -34,38 +35,21 @@ import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
-import butterknife.OnClick;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class NotificationCenter extends PortraitActivity {
+public class NotificationCenterFragment extends Fragment {
 
-    private static final String TAG = "NotificationCenter";
-    @BindView(R.id.tlb_nc)
-    Toolbar tlbNc;
+    private static final String TAG = NotificationCenterFragment.class.getSimpleName();
+
     @BindView(R.id.rc_nc)
     RecyclerView rcNc;
-    @BindView(R.id.txt_tlb_nc)
-    TextView txtTlbNc;
     @BindView(R.id.rl_root_nc)
     RelativeLayout rlRootNc;
 
     private ProgressDialog progressDialog;
 
-    @BindView(R.id.prg_nc_paging)
-    ProgressBar prgNcPaging;
-
-    @BindView(R.id.error_layout)
-    View errorLayout;
-    @BindView(R.id.ll_no_result)
-    LinearLayout llNoResult;
-    @BindView(R.id.ll_no_internet)
-    LinearLayout llNoInternet;
-    @BindView(R.id.ll_server_error)
-    LinearLayout llServerError;
-    @BindView(R.id.ll_invalid_token)
-    LinearLayout llInvalidToken;
     private LinearLayoutManager mLayoutManager;
     private Integer pageNumber = 0;
     private Integer totalPages = 0;
@@ -76,50 +60,40 @@ public class NotificationCenter extends PortraitActivity {
     private boolean isLoading;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_notification_center);
-        ButterKnife.bind(this);
-        GcmListenerService.clearNotifications(this);
-        setUpToolbar();
+    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                                Bundle savedInstanceState) {
+        View viewToReturn = inflater.inflate(R.layout.activity_notification_center, container, false);
+        ButterKnife.bind(this, viewToReturn);
+        GcmListenerService.clearNotifications(getContext());
         setRecylerview();
         init();
-
+        return viewToReturn;
     }
 
     private void init() {
-
         notificationAdapter = new NotificationAdapter();
         rcNc.setAdapter(notificationAdapter);
+        progressDialog = new ProgressDialog(getActivity());
+        progressDialog.setMessage(getString(R.string.txt_pls_wait));
+        progressDialog.setIndeterminate(true);
         getNotifications(null, null);
-    }
-
-
-    private void setUpToolbar() {
-        tlbNc.setNavigationIcon(R.drawable.btn_back_wt);
-        tlbNc.setNavigationOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                onBackPressed();
-            }
-        });
     }
 
     private void setRecylerview() {
 
         rcNc.setHasFixedSize(false);
-        mLayoutManager = new LinearLayoutManager(getApplicationContext());
+        mLayoutManager = new LinearLayoutManager(getActivity());
         rcNc.setLayoutManager(mLayoutManager);
         rcNc.setItemAnimator(new DefaultItemAnimator());
 
-        rcNc.addOnItemTouchListener(new RecyclerTouchListener(NotificationCenter.this, rcNc, new ClickListener() {
+        rcNc.addOnItemTouchListener(new RecyclerTouchListener(getContext(), rcNc, new ClickListener() {
                     @Override
                     public void onClick(View view, int position) {
                         Notification notification = notificationAdapter.getNotifications().get(position);
                         updateNotificationStatus(notification);
                         Log.d(TAG, "clicked on item" + position + ", with message: " + notification.getMessage());
 
-                        Intent openactivity = new Intent(NotificationCenter.this, ViewTaskActivity.class);
+                        Intent openactivity = new Intent(getActivity(), ViewTaskActivity.class);
                         openactivity.putExtra(Constant.UID, notification.getEntityUid());
                         openactivity.putExtra(Constant.ENTITY_TYPE, notification.getEntityType());
                         startActivity(openactivity);
@@ -150,7 +124,7 @@ public class NotificationCenter extends PortraitActivity {
                 Log.e(TAG, "totalItemCount"+totalItemCount);
 
                 if (pageNumber <totalPages &&  totalItemCount <= (lastVisibileItem + 10) && !isLoading) {
-                    prgNcPaging.setVisibility(View.VISIBLE);
+                    progressDialog.show();
                     if(pageNumber ==1 ){
                       pageNumber++;
                     }
@@ -164,11 +138,9 @@ public class NotificationCenter extends PortraitActivity {
     }
 
     private void getNotifications(Integer page, Integer size) {
-        String phoneNumber = PreferenceUtils.getUserPhoneNumber(this);
-        String code = PreferenceUtils.getAuthToken(this);
+        String phoneNumber = PreferenceUtils.getPhoneNumber();
+        String code = PreferenceUtils.getAuthToken();
 
-        progressDialog = new ProgressDialog(this);
-        progressDialog.setMessage(getString(R.string.prg_message));
         progressDialog.show();
 
         GrassrootRestService.getInstance().getApi().getUserNotifications(phoneNumber, code, page, size).enqueue(new Callback<NotificationList>() {
@@ -182,10 +154,8 @@ public class NotificationCenter extends PortraitActivity {
                     rcNc.setVisibility(View.VISIBLE);
                     if (pageNumber > 1) {
                         notificationAdapter.updateData(notifications);
-
                     } else {
                         notificationAdapter.addData(notifications);
-
                     }
                     notificationAdapter.notifyDataSetChanged();
                     isLoading = false;
@@ -195,18 +165,9 @@ public class NotificationCenter extends PortraitActivity {
             @Override
             public void onFailure(Call<NotificationList> call, Throwable t) {
                 progressDialog.dismiss();
-                ErrorUtils.handleNetworkError(NotificationCenter.this, errorLayout, t);
+                ErrorUtils.handleNetworkError(getContext(), rlRootNc, t);
             }
         });
-
-    }
-
-
-    @OnClick(R.id.error_layout)
-    public void onClick(View v) {
-        if (v == llNoInternet || v == llNoResult || v == llNoResult)
-            getNotifications(null, null);
-
     }
 
     private void updateNotificationStatus(Notification notification) {
@@ -214,12 +175,20 @@ public class NotificationCenter extends PortraitActivity {
             String uid = notification.getUid();
             notification.setIsRead();
             notificationAdapter.notifyDataSetChanged();
-            int notificationCount = PreferenceUtils.getNotificationCounter(this);
+            int notificationCount = PreferenceUtils.getNotificationCounter(getContext());
             Log.e(TAG, "notification count " + notificationCount);
-            NotificationUpdateService.updateNotificationStatus(this, uid);
+            NotificationUpdateService.updateNotificationStatus(getContext(), uid);
             if(notificationCount >0){
-            PreferenceUtils.setNotificationCounter(this, --notificationCount);
+            PreferenceUtils.setNotificationCounter(getContext(), --notificationCount);
             EventBus.getDefault().post(new NotificationEvent(--notificationCount));
         }}
+    }
+
+    public void filterNotifications(String filterText) {
+        if (TextUtils.isEmpty(filterText)) {
+            notificationAdapter.resetToStored();
+        } else {
+            notificationAdapter.filter(filterText);
+        }
     }
 }

@@ -3,6 +3,7 @@ package org.grassroot.android.fragments;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.os.Bundle;
+import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
@@ -10,6 +11,7 @@ import android.support.v4.content.ContextCompat;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -17,21 +19,16 @@ import android.view.ViewGroup;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
-import butterknife.BindView;
-import butterknife.ButterKnife;
-import butterknife.OnClick;
-import butterknife.Unbinder;
-import io.realm.Realm;
-import java.util.HashMap;
-import java.util.Map;
 import org.grassroot.android.R;
 import org.grassroot.android.adapters.TasksAdapter;
 import org.grassroot.android.events.TaskAddedEvent;
+import org.grassroot.android.events.TaskCancelledEvent;
 import org.grassroot.android.events.TaskChangedEvent;
 import org.grassroot.android.fragments.dialogs.ConfirmCancelDialogFragment;
-import org.grassroot.android.interfaces.GroupConstants;
+import org.grassroot.android.interfaces.GroupPickCallbacks;
 import org.grassroot.android.interfaces.NetworkErrorDialogListener;
 import org.grassroot.android.interfaces.TaskConstants;
+import org.grassroot.android.models.Group;
 import org.grassroot.android.models.TaskModel;
 import org.grassroot.android.models.TaskResponse;
 import org.grassroot.android.services.GrassrootRestService;
@@ -41,6 +38,18 @@ import org.grassroot.android.utils.PreferenceUtils;
 import org.grassroot.android.utils.RealmUtils;
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+
+import butterknife.BindView;
+import butterknife.ButterKnife;
+import butterknife.OnClick;
+import butterknife.Unbinder;
+import io.realm.Realm;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -52,16 +61,22 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
 
   private static final String TAG = TaskListFragment.class.getCanonicalName();
 
+  GroupPickCallbacks mCallbacks;
+  TaskListListener listener;
+
   private TasksAdapter groupTasksAdapter;
   private String groupUid;
   private String phoneNumber;
   private String code;
+  private boolean noTaskMessageVisible;
+  private boolean displayFAB; // todo : just show it always (move FAB from GT-Activity to here)
 
   private ViewGroup container;
   private Unbinder unbinder;
 
   @BindView(R.id.tl_swipe_refresh) SwipeRefreshLayout swipeRefreshLayout;
   @BindView(R.id.tl_recycler_view) RecyclerView rcTaskView;
+  @BindView(R.id.tl_fab) FloatingActionButton floatingActionButton;
 
   @BindView(R.id.tl_no_task_message) RelativeLayout noTaskMessageLayout;
   @BindView(R.id.tl_no_task_text) TextView noTaskMessageText;
@@ -71,32 +86,33 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
 
   ProgressDialog progressDialog;
 
+  public interface TaskListListener {
+    void onTaskLoaded(String taskName);
+  }
+
     /*
     SECTION : SET UP VIEWS AND POPULATE THE LIST
      */
 
   // pass null if this is a group-neutral task fragment
-  public static TaskListFragment newInstance(String parentUid) {
+  public static TaskListFragment newInstance(String parentUid, GroupPickCallbacks groupPickCallbacks, TaskListListener listener, boolean showFAB) {
     TaskListFragment fragment = new TaskListFragment();
     fragment.groupUid = parentUid;
+    fragment.mCallbacks = groupPickCallbacks;
+    fragment.listener = listener;
+    fragment.displayFAB = showFAB;
     return fragment;
   }
 
   @Override public void onAttach(Context context) {
     super.onAttach(context);
-    // optional for activity to implement listener
+    EventBus.getDefault().register(this);
   }
 
   @Override public void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
-
-    Bundle args = getArguments();
-    if (args != null) {
-      groupUid = args.getString(GroupConstants.UID_FIELD);
-    }
-
-    phoneNumber = PreferenceUtils.getUserPhoneNumber(getActivity());
-    code = PreferenceUtils.getAuthToken(getActivity());
+    phoneNumber = PreferenceUtils.getPhoneNumber();
+    code = PreferenceUtils.getAuthToken();
     filterFlags = new HashMap<>();
   }
 
@@ -104,13 +120,13 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
       Bundle savedInstanceState) {
     View viewToReturn = inflater.inflate(R.layout.fragment_task_list, container, false);
     unbinder = ButterKnife.bind(this, viewToReturn);
-    EventBus.getDefault().register(this);
     this.container = container;
 
     setUpSwipeRefresh();
     rcTaskView.setLayoutManager(new LinearLayoutManager(getActivity()));
     groupTasksAdapter = new TasksAdapter(this, getActivity(), groupUid);
     rcTaskView.setAdapter(groupTasksAdapter);
+    floatingActionButton.setVisibility(displayFAB ? View.VISIBLE : View.GONE);
 
     progressDialog = new ProgressDialog(getContext());
     progressDialog.setIndeterminate(true);
@@ -139,6 +155,11 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
     unbinder.unbind();
   }
 
+  @Override public void onDetach() {
+    super.onDetach();
+    EventBus.getDefault().unregister(this);
+  }
+
   private void fetchTaskList() {
     if (groupUid != null) {
       fetchGroupTasks();
@@ -150,6 +171,7 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
   private void fetchAllUpcomingTasks() {
     if (TaskService.getInstance().hasLoadedTasks) {
       if (TaskService.getInstance().hasUpcomingTasks()) {
+        noTaskMessageVisible = false;
         groupTasksAdapter.changeToTaskList(TaskService.getInstance().upcomingTasks);
       } else {
         handleNoTasksFound();
@@ -205,9 +227,26 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
     swipeRefreshLayout.setVisibility(View.GONE);
     if (groupUid == null) {
       noTaskMessageText.setText(R.string.txt_no_task_upcoming);
-      // todo : show a FAB
     }
     noTaskMessageLayout.setVisibility(View.VISIBLE);
+    noTaskMessageVisible = true;
+  }
+
+  /*
+  HANDLE NEW TASK
+   */
+
+  @OnClick(R.id.tl_fab)
+  public void quickTaskModal() {
+    if (mCallbacks != null) {
+      QuickTaskModalFragment modal = QuickTaskModalFragment.newInstance(false, null, new QuickTaskModalFragment.TaskModalListener() {
+        @Override
+        public void onTaskClicked(String taskType) {
+          mCallbacks.groupPickerTriggered(taskType);
+        }
+      });
+      modal.show(getFragmentManager(), QuickTaskModalFragment.class.getSimpleName());
+    }
   }
 
     /*
@@ -297,9 +336,9 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
     newFragment.show(getFragmentManager(), "dialog");
   }
 
-  @Override public void onCardClick(int position, String taskUid, String taskType) {
-    ViewTaskFragment taskFragment = ViewTaskFragment.newInstance(taskType, taskUid,
-        (ViewTaskFragment.ViewTaskListener) getActivity());
+  @Override public void onCardClick(int position, String taskUid, String taskType, String taskTitle) {
+    listener.onTaskLoaded(taskTitle);
+    ViewTaskFragment taskFragment = ViewTaskFragment.newInstance(taskType, taskUid);
     getFragmentManager().beginTransaction()
         .setCustomAnimations(R.anim.up_from_bottom, R.anim.down_from_top)
         .add(container.getId(), taskFragment, ViewTaskFragment.class.getCanonicalName())
@@ -309,8 +348,39 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
 
   //For some reason which i suspect have to do with the ui thread, the handler in the adapter is not updating view
   @Subscribe public void onTaskCreated(TaskAddedEvent event) {
+    Log.e(TAG, "onTaskCreated triggered ... ");
     final TaskModel task = event.getTaskCreated();
-    // groupTasksAdapter.onTaskCreated(event);
+    if (noTaskMessageVisible) {
+      noTaskMessageLayout.setVisibility(View.GONE);
+      noTaskMessageVisible = false;
+    }
+    fetchTaskList(); // todo : just insert the new task
+  }
+
+  @Subscribe
+  public void onTaskCancelledEvent(TaskCancelledEvent e) {
+    Log.e(TAG, "homeScreen : task cancelled!");
+    Fragment frag = getFragmentManager().findFragmentByTag(ViewTaskFragment.class.getCanonicalName());
+    if (frag != null && frag.isVisible()) {
+      Log.e(TAG, "homeScreen : found task!");
+      getFragmentManager().beginTransaction()
+              .setCustomAnimations(R.anim.push_down_in, R.anim.push_down_out)
+              .remove(frag)
+              .commit();
+    }
+  }
+
+  /*
+  HANDLE SEARCHING
+  todo : make this much more efficient
+   */
+
+  public void searchStringChanged(String query) {
+    if (TextUtils.isEmpty(query)) {
+      groupTasksAdapter.stopFiltering();
+    } else {
+      groupTasksAdapter.filterByName(query);
+    }
   }
 
     /*
@@ -323,7 +393,7 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
     }
     FilterFragment filterDialog = new FilterFragment();
     filterDialog.setArguments(assembleFilterBundle());
-    filterDialog.show(getActivity().getFragmentManager(), "FilterFragment");
+    filterDialog.show(getActivity().getSupportFragmentManager(), "FilterFragment");
 
     filterDialog.setListener(new FilterFragment.TasksFilterListener() {
       @Override public void itemClicked(String typeChanged, boolean changedFlagState) {
@@ -337,11 +407,6 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
         resetFilterFlags();
       }
     });
-  }
-
-  @Override public void onDestroy() {
-    super.onDestroy();
-    EventBus.getDefault().unregister(this);
   }
 
   private void startFiltering() {

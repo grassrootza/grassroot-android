@@ -11,25 +11,24 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 
-import java.util.HashSet;
-import java.util.Set;
 import org.grassroot.android.R;
+import org.grassroot.android.events.TaskCancelledEvent;
 import org.grassroot.android.fragments.JoinCodeFragment;
 import org.grassroot.android.fragments.NewTaskMenuFragment;
 import org.grassroot.android.fragments.TaskListFragment;
 import org.grassroot.android.fragments.ViewTaskFragment;
 import org.grassroot.android.interfaces.GroupConstants;
 import org.grassroot.android.models.Group;
-import org.grassroot.android.models.TaskModel;
 import org.grassroot.android.utils.Constant;
 import org.grassroot.android.utils.MenuUtils;
+import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
-import org.grassroot.android.utils.RealmUtils;
 
-public class GroupTasksActivity extends PortraitActivity implements NewTaskMenuFragment.NewTaskMenuListener, JoinCodeFragment.JoinCodeListener, ViewTaskFragment.ViewTaskListener {
+public class GroupTasksActivity extends PortraitActivity implements NewTaskMenuFragment.NewTaskMenuListener, JoinCodeFragment.JoinCodeListener, TaskListFragment.TaskListListener {
 
     private static final String TAG = GroupTasksActivity.class.getCanonicalName();
 
@@ -51,6 +50,7 @@ public class GroupTasksActivity extends PortraitActivity implements NewTaskMenuF
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_group_tasks);
         ButterKnife.bind(this);
+        EventBus.getDefault().register(this);
 
         final Bundle extras = getIntent().getExtras();
 
@@ -64,6 +64,12 @@ public class GroupTasksActivity extends PortraitActivity implements NewTaskMenuF
 
         setUpViews();
         setUpFragment();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        EventBus.getDefault().unregister(this);
     }
 
     @Override
@@ -93,11 +99,7 @@ public class GroupTasksActivity extends PortraitActivity implements NewTaskMenuF
     }
 
     private void setUpFragment() {
-        taskListFragment = new TaskListFragment();
-        Bundle args = new Bundle();
-        args.putString(GroupConstants.UID_FIELD, groupMembership.getGroupUid());
-        taskListFragment.setArguments(args);
-
+        taskListFragment = TaskListFragment.newInstance(groupMembership.getGroupUid(), null, this, false);
         getSupportFragmentManager().beginTransaction()
                 .add(R.id.gta_fragment_holder, taskListFragment)
                 .commit();
@@ -184,14 +186,15 @@ public class GroupTasksActivity extends PortraitActivity implements NewTaskMenuF
     }
 
     @Override
-    public void onTaskLoaded(TaskModel task) {
+    public void onTaskLoaded(String taskName) {
         getSupportActionBar().setHomeAsUpIndicator(R.drawable.btn_close_white);
         toggleMenuFilter(false);
         actionButton.setVisibility(View.GONE);
     }
 
-    @Override
-    public void onTaskCancelled(TaskModel task) {
+    @Subscribe
+    public void onTaskCancelled(TaskCancelledEvent e) {
+        Log.e(TAG, "task cancelled ...");
         closeViewTaskFragment();
     }
 

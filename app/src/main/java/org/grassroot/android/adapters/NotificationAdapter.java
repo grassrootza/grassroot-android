@@ -11,9 +11,11 @@ import android.widget.TextView;
 
 import org.grassroot.android.R;
 import org.grassroot.android.models.Notification;
+import org.grassroot.android.models.TaskModel;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -23,13 +25,12 @@ import butterknife.ButterKnife;
  */
 public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapter.ViewHolder> {
 
-
     private List<Notification> notifications = new ArrayList<>();
+    private List<Notification> storedNotifications = new ArrayList<>();
     private static final String TAG = "NotificationAdapter";
 
     public NotificationAdapter(ArrayList<Notification> dataList) {
         this.notifications = dataList;
-
     }
 
     public NotificationAdapter() {
@@ -45,10 +46,10 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
 
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
-
         Notification notification = notifications.get(position);
         holder.txtNcMessage.setText(notification.getMessage());
         holder.txtDate.setText(notification.getCreatedDateTime());
+
         //had to set this so that cards that should not be colored are not
         holder.setIsRecyclable(false);
         if(notification.isRead()){
@@ -57,8 +58,6 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
             Log.d(TAG, "notification not read, change color");
             holder.mainView.setCardBackgroundColor(Color.LTGRAY);
         }
-
-
     }
 
     @Override
@@ -86,16 +85,13 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
         if(!notification.isRead()){
             Log.e(TAG, "notification not read, changing color");
             holder.mainView.setCardBackgroundColor(Color.LTGRAY);
-
         }
-
     }
 
 
     public void addData(List<Notification> notificationList) {
         this.notifications.addAll(notificationList);
         this.notifyDataSetChanged();
-
     }
 
     public void updateData(List<Notification> notifications) {
@@ -103,7 +99,29 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
         this.notifications.addAll(notifications);
         Log.e(TAG, "size of list" + this.notifications.size());;
         this.notifyDataSetChanged();
+    }
 
+    public void filter(String queryText) {
+        if (storedNotifications == null || storedNotifications.isEmpty()) {
+                storedNotifications = new ArrayList<>(notifications);
+        }
+
+        notifications.clear();
+        for (Notification n : storedNotifications) {
+            // todo : probably want to also filter by group name etc
+            boolean add = n.getTitle().toLowerCase().contains(queryText) ||
+                    n.getMessage().toLowerCase().contains(queryText);
+            if (add) {
+                notifications.add(n);
+            }
+        }
+        notifyDataSetChanged();
+    }
+
+    public void resetToStored() {
+        notifications.clear();
+        notifications.addAll(storedNotifications);
+        notifyDataSetChanged();
     }
 
 

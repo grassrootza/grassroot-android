@@ -5,6 +5,7 @@ import org.grassroot.android.models.TaskResponse;
 import org.grassroot.android.utils.PreferenceUtils;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import io.realm.Realm;
@@ -60,9 +61,8 @@ public class TaskService {
     public void loadCachedUpcomingTasks(TaskServiceListener listener) {
         RealmList<TaskModel> tasks = new RealmList<>();
         if (realm != null && !realm.isClosed()) {
-            // todo : change this to just a date view in future
             RealmResults<TaskModel> results = realm.where(TaskModel.class)
-                    .equalTo("canAction", true).findAll();
+                    .greaterThan("deadlineDate", new Date()).findAll();
             tasks.addAll(results.subList(0, results.size()));
         }
         upcomingTasks = new ArrayList<>(tasks);

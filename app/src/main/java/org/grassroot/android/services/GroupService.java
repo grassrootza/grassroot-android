@@ -11,13 +11,17 @@ import java.util.HashMap;
 import java.util.List;
 
 import org.grassroot.android.R;
+import org.grassroot.android.events.GroupsRefreshedEvent;
+import org.grassroot.android.events.JoinRequestsReceived;
 import org.grassroot.android.interfaces.NetworkErrorDialogListener;
 import org.grassroot.android.models.Group;
+import org.grassroot.android.models.GroupJoinRequest;
 import org.grassroot.android.models.GroupResponse;
 import org.grassroot.android.models.Member;
 import org.grassroot.android.utils.ErrorUtils;
 import org.grassroot.android.utils.PreferenceUtils;
 import org.grassroot.android.utils.RealmUtils;
+import org.greenrobot.eventbus.EventBus;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -29,10 +33,9 @@ public class GroupService {
 
   public static final String TAG = GroupService.class.getSimpleName();
 
-
   // todo : remove these?
   public ArrayList<Group> userGroups;
-  public HashMap<String, Integer> groupUidMap;
+    public ArrayList<GroupJoinRequest> openJoinRequests;
 
   public boolean groupsLoading = false;
   public boolean groupsFinishedLoading = false;
@@ -41,13 +44,12 @@ public class GroupService {
 
   public interface GroupServiceListener {
     void groupListLoaded();
-
     void groupListLoadingError();
   }
 
   protected GroupService() {
-    userGroups = new ArrayList<>();
-    groupUidMap = new HashMap<>();
+      userGroups = new ArrayList<>();
+      openJoinRequests = new ArrayList<>();
   }
 
   public static GroupService getInstance() {
@@ -67,8 +69,7 @@ public class GroupService {
     if (userGroups == null || userGroups.isEmpty()) {
       return userGroups;
     } else {
-      userGroups = new ArrayList<>(RealmUtils.loadListFromDB(Group.class));
-      return userGroups;
+      return RealmUtils.loadListFromDB(Group.class);
     }
   }
 
@@ -88,12 +89,14 @@ public class GroupService {
         .getUserGroups(mobileNumber, userCode)
         .enqueue(new Callback<GroupResponse>() {
           @Override
+
           public void onResponse(Call<GroupResponse> call, Response<GroupResponse> response) {
             if (response.isSuccessful()) {
               groupsLoading = false;
               groupsFinishedLoading = true;
-              createUidMap();
+              userGroups = new ArrayList<>(response.body().getGroups());
               RealmUtils.saveDataToRealm(response.body().getGroups());
+              EventBus.getDefault().post(new GroupsRefreshedEvent());
               listener.groupListLoaded();
               for(Group g : response.body().getGroups()){
                 for(Member m : g.getMembers()){
@@ -117,6 +120,7 @@ public class GroupService {
         });
   }
   /*
+
  Called from "swipe refresh" on group recycler, so am just formally separating from the initiating call (which is triggered on app load)
   */
   public void refreshGroupList(final Activity activity, final GroupServiceListener listener) {
@@ -190,21 +194,55 @@ public class GroupService {
       listener.groupListLoadingError();
     }
   }
+    /* METHODS FOR RETRIEVING AND APPROVING GROUP JOIN REQUESTS */
 
-  private void createUidMap() {
+    public void fetchGroupJoinRequests() {
+        final String mobileNumber = PreferenceUtils.getPhoneNumber();
+        final String userToken = PreferenceUtils.getAuthToken();
+        GrassrootRestService.getInstance().getApi().getOpenJoinRequests(mobileNumber, userToken)
+                .enqueue(new Callback<RealmList<GroupJoinRequest>>() {
+                    @Override
+                    public void onResponse(Call<RealmList<GroupJoinRequest>> call, Response<RealmList<GroupJoinRequest>> response) {
+                        if (response.isSuccessful()) {
+                            saveJoinRequestsInDB(response.body());
+                            Log.d(TAG, "join requests received: " + response.body());
+                            if (!response.body().isEmpty()) {
+                                EventBus.getDefault().post(new JoinRequestsReceived());
+                            }
+                        } else {
+                            //loadGroupsFromDB();
+                            Log.e(TAG, "Error retrieving join requests!");
+                        }
+                    }
 
-    if (userGroups == null) {
-      throw new UnsupportedOperationException("Error! Group map creation called without groups");
+                    @Override
+                    public void onFailure(Call<RealmList<GroupJoinRequest>> call, Throwable t) {
+                        //loadGroupsFromDB();
+                        Log.e(TAG, "Error in network!"); // todo : anything?
+                    }
+                });
     }
 
-    if (groupUidMap == null) {
-      groupUidMap = new HashMap<>();
+    private void saveJoinRequestsInDB(RealmList<GroupJoinRequest> requests) {
+        Realm realm = Realm.getDefaultInstance();
+        if (requests != null && realm != null && !realm.isClosed()) {
+            realm.beginTransaction();
+            realm.copyToRealmOrUpdate(requests);
+            realm.commitTransaction();
+            realm.close();
+        }
     }
 
-    // note : watch out for / think about what to do if we create a group locally and don't have its UID yet
-    final int size = userGroups.size();
-    for (int i = 0; i < size; i++) {
-      groupUidMap.put(userGroups.get(i).getGroupUid(), i);
+    public RealmList<GroupJoinRequest> loadRequestsFromDB() {
+        Realm realm = Realm.getDefaultInstance();
+        RealmList<GroupJoinRequest> requests = new RealmList<>();
+        if (realm != null && !realm.isClosed()) {
+            // todo : probably want to filter by open, etc etc
+            RealmResults<GroupJoinRequest> results = realm.where(GroupJoinRequest.class).findAll();
+            requests.addAll(realm.copyFromRealm(results));
+        }
+        openJoinRequests = new ArrayList<>(requests);
+        realm.close();
+        return requests;
     }
-  }
 }

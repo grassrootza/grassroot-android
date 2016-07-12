@@ -14,6 +14,7 @@ import com.google.gson.stream.JsonWriter;
 
 import org.grassroot.android.models.EventResponse;
 import org.grassroot.android.models.GenericResponse;
+import org.grassroot.android.models.GroupJoinRequest;
 import org.grassroot.android.models.GroupResponse;
 import org.grassroot.android.models.GroupSearchResponse;
 import org.grassroot.android.models.Member;
@@ -211,6 +212,10 @@ public class GrassrootRestService {
         @Path("code") String code,
         @Query("uid") String uid);
 
+    //find open join requests assigned to this user
+    @GET("group/join/list/{phoneNumber}/{code}")
+    Call<RealmList<GroupJoinRequest>> getOpenJoinRequests(@Path("phoneNumber") String phoneNumber,
+                                                          @Path("code") String code);
 
     //search for public groups
     @GET("group/search")

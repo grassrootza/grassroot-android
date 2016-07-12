@@ -100,7 +100,15 @@
 
     <activity
         android:name=".activities.LoginRegisterActivity"
+        android:windowSoftInputMode="stateVisible|adjustResize"
         android:configChanges="keyboard|keyboardHidden|orientation|screenSize"/>
+
+    <activity
+        android:name=".activities.NoGroupWelcomeActivity"
+        android:configChanges="keyboardHidden|orientation"
+        android:launchMode="singleTask"
+        android:screenOrientation="portrait"
+        android:label="@string/title_activity_nogroup_welcome"/>
 
     <activity
         android:name=".activities.HomeScreenActivity"
@@ -113,7 +121,11 @@
         android:name=".activities.GroupTasksActivity"
         android:label="@string/title_activity_group_tasks"
         android:parentActivityName=".activities.HomeScreenActivity"
-        android:theme="@style/AppTheme"/>
+        android:theme="@style/AppTheme">
+      <meta-data
+        android:name="android.support.PARENT_ACTIVITY"
+        android:value=".activities.HomeScreenActivity" />
+    </activity>
 
     <!-- Group management activities -->
     <activity
@@ -127,12 +139,22 @@
     <activity
         android:name=".activities.RemoveMembersActivity"
         android:label="@string/title_activity_remove_members"
-        android:parentActivityName=".activities.GroupTasksActivity"/> <!-- todo: reorder to home -->
+        android:parentActivityName=".activities.GroupTasksActivity">
+      <!-- todo: reorder to home, possibly -->
+      <meta-data
+          android:name="android.support.PARENT_ACTIVITY"
+          android:value=".activities.GroupTasksActivity" />
+    </activity>
 
     <activity
         android:name=".activities.GroupMembersActivity"
         android:label="@string/title_activity_group_members"
-        android:parentActivityName=".activities.HomeScreenActivity"/>
+        android:parentActivityName=".activities.HomeScreenActivity">
+        <meta-data
+            android:name="android.support.PARENT_ACTIVITY"
+            android:value=".activities.HomeScreenActivity" />
+    </activity>
+
     <activity
         android:name=".activities.GroupSearchActivity"
         android:label="@string/title_activity_join__request"/>
@@ -188,7 +210,6 @@
         android:windowSoftInputMode="adjustNothing"/>
 
     <!-- Navigation drawer / system activities -->
-    <activity android:name=".activities.NotificationCenter"/>
     <activity android:name=".activities.FAQActivity"/>
     <activity android:name=".activities.ProfileSettingsActivity"/>
 

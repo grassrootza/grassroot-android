@@ -61,26 +61,17 @@ public class Group extends RealmObject implements Parcelable, Comparable<Group> 
 
   private boolean hasTasks;
 
-  public void setLastChangeType(String lastChangeType) {
-    this.lastChangeType = lastChangeType;
-  }
+  private RealmList<RealmString> permissions = new RealmList<>();
+  @Ignore private List<String> permissionsList;
 
   public Group() {
   }
-
-  private RealmList<RealmString> permissions = new RealmList<>();
-  // todo: convert this to a set so can do fast hashing
-  @Ignore private List<String> permissionsList;
 
   public List<String> getPermissionsList() {
     if (permissionsList == null) {
       permissionsList = RealmUtils.convertListOfRealmStringInListOfString(permissions);
     }
     return permissionsList;
-  }
-
-  public void setPermissionsList(List<String> permissionsList) {
-    this.permissionsList = permissionsList;
   }
 
   public String getGroupUid() {
@@ -117,6 +108,10 @@ public class Group extends RealmObject implements Parcelable, Comparable<Group> 
 
   public Integer getGroupMemberCount() {
     return groupMemberCount;
+  }
+
+  public void setLastChangeType(String lastChangeType) {
+    this.lastChangeType = lastChangeType;
   }
 
   public String getJoinCode() {
@@ -174,7 +169,7 @@ public class Group extends RealmObject implements Parcelable, Comparable<Group> 
     this.permissions = permissions;
   }
 
-    /* Helper methods to centralize checking permissions */
+  /* Helper methods to centralize checking permissions */
 
   public boolean canCallMeeting() {
     return getPermissionsList().contains(GroupConstants.PERM_CREATE_MTG);

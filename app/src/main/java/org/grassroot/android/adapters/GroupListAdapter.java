@@ -1,6 +1,7 @@
 package org.grassroot.android.adapters;
 
 import android.content.Context;
+import android.os.Build;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
@@ -8,6 +9,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.AlphaAnimation;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
@@ -77,7 +79,13 @@ public class GroupListAdapter extends RecyclerView.Adapter<GroupListAdapter.GHP_
 
     holder.itemView.setLongClickable(true);
     final Group group = displayedGroups.get(position);
-    holder.itemView.setAlpha(!group.getIsLocal() ? 1f : 0.3f);
+    if (Build.VERSION.SDK_INT < 11) {
+      final AlphaAnimation animation = new AlphaAnimation(!group.getIsLocal() ? 1f :0.3f, !group.getIsLocal() ? 1f :0.3f);
+      animation.setDuration(50);
+      animation.setFillAfter(true);
+      holder.itemView.startAnimation(animation);
+    } else
+      holder.itemView.setAlpha(!group.getIsLocal() ? 1f :0.3f);
 
     final String groupOrganizerDescription =
         String.format(context.getString(R.string.group_organizer_prefix), group.getGroupCreator());

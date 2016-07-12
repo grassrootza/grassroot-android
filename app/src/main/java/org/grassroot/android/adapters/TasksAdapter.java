@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import org.grassroot.android.R;
 import org.grassroot.android.events.TaskAddedEvent;
@@ -48,8 +49,7 @@ public class TasksAdapter extends RecyclerView.Adapter<TasksAdapter.TaskViewHold
 
   public interface TaskListListener {
     void respondToTask(String taskUid, String taskType, String response, int position);
-
-    void onCardClick(int position, String taskUid, String taskType);
+    void onCardClick(int position, String taskUid, String taskType, String taskTitle);
   }
 
   // note : pass in parentUid as null if the task list is for all of a user's groups / entities
@@ -63,20 +63,17 @@ public class TasksAdapter extends RecyclerView.Adapter<TasksAdapter.TaskViewHold
   }
 
   public void registerForEvents() {
-    Log.d(TAG, "registering for events");
     EventBus.getDefault().register(this);
   }
 
   public void deRegisterEvents() {
-    Log.d(TAG, "deregistering for events");
     EventBus.getDefault().unregister(this);
   }
 
   @Override public void onDetachedFromRecyclerView(RecyclerView recyclerView) {
     // note :this is not called often ... may be more efficient to unregister in a custom method?
     super.onDetachedFromRecyclerView(recyclerView);
-    Log.e(TAG, "cleaning up task adapter!");
-    EventBus.getDefault().unregister(this);
+    deRegisterEvents();
   }
 
   @Override public TaskViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
@@ -96,7 +93,7 @@ public class TasksAdapter extends RecyclerView.Adapter<TasksAdapter.TaskViewHold
   private void setCardListener(CardView view, final TaskModel task, final int position) {
     view.setOnClickListener(new View.OnClickListener() {
       @Override public void onClick(View view) {
-        listener.onCardClick(position, task.getTaskUid(), task.getType());
+        listener.onCardClick(position, task.getTaskUid(), task.getType(), task.getTitle());
       }
     });
   }
@@ -306,6 +303,20 @@ public class TasksAdapter extends RecyclerView.Adapter<TasksAdapter.TaskViewHold
         "decomposed task list, sizes: %d total, %d votes, %d mtgs, %d todos, took %d msecs",
         fullTaskList.size(), voteList.size(), meetingList.size(), toDoList.size(),
         SystemClock.currentThreadTimeMillis() - startTime));
+  }
+
+  // todo : optimize / make much more efficient
+  public void filterByName(String query) {
+    if (fullTaskList == null || fullTaskList.isEmpty()) {
+      fullTaskList = new ArrayList<>(viewedTasks);
+    }
+    viewedTasks.clear();
+    for (TaskModel t : fullTaskList) {
+      if (t.getTitle().trim().toLowerCase(Locale.getDefault()).contains(query)) {
+        viewedTasks.add(t);
+      }
+    }
+    notifyDataSetChanged();
   }
 
   public void startFiltering() {

@@ -21,6 +21,7 @@ import org.grassroot.android.interfaces.NotificationConstants;
 import org.grassroot.android.models.GenericResponse;
 import org.grassroot.android.models.Token;
 import org.grassroot.android.models.TokenResponse;
+import org.grassroot.android.services.ApplicationLoader;
 import org.grassroot.android.services.GcmRegistrationService;
 import org.grassroot.android.services.GrassrootRestService;
 import org.grassroot.android.utils.Constant;
@@ -200,9 +201,8 @@ public class LoginRegisterActivity extends AppCompatActivity implements LoginScr
 
                             registerOrRefreshGCM(msisdn);
                             PreferenceUtils.setGroupListMustBeRefreshed(LoginRegisterActivity.this, true);
+                            launchHomeScreen(response.body().getHasGroups());
 
-                            Intent intent = new Intent(LoginRegisterActivity.this, HomeScreenActivity.class);
-                            startActivity(intent);
                             finish();
                         } else {
                             ErrorUtils.handleServerError(rootView, LoginRegisterActivity.this, response);
@@ -234,10 +234,9 @@ public class LoginRegisterActivity extends AppCompatActivity implements LoginScr
                             PreferenceUtils.setLoggedInStatus(LoginRegisterActivity.this, true);
 
                             registerOrRefreshGCM(msisdn);
-                            PreferenceUtils.setGroupListMustBeRefreshed(LoginRegisterActivity.this, true);
 
-                            Intent homeScreenIntent = new Intent(LoginRegisterActivity.this, HomeScreenActivity.class);
-                            startActivity(homeScreenIntent);
+                            PreferenceUtils.setUserHasGroups(ApplicationLoader.applicationContext, false);
+                            launchHomeScreen(false); // by definition, registering means no group
                             finish();
 
                         } else {
@@ -258,6 +257,16 @@ public class LoginRegisterActivity extends AppCompatActivity implements LoginScr
         gcmRegistrationIntent.putExtra(NotificationConstants.ACTION, NotificationConstants.GCM_REGISTER);
         gcmRegistrationIntent.putExtra(NotificationConstants.PHONE_NUMBER, phoneNumber);
         startService(gcmRegistrationIntent);
+    }
+
+    private void launchHomeScreen(boolean userHasGroups) {
+        if (userHasGroups) {
+            Intent homeScreenIntent = new Intent(LoginRegisterActivity.this, HomeScreenActivity.class);
+            startActivity(homeScreenIntent);
+        } else {
+            Intent welcomeScreenIntent = new Intent(LoginRegisterActivity.this, NoGroupWelcomeActivity.class);
+            startActivity(welcomeScreenIntent);
+        }
     }
 
     @Override

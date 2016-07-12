@@ -4,30 +4,13 @@
     android:id="@+id/rl_root_nc"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".activities.NotificationCenter">
-
-    <android.support.v7.widget.Toolbar
-        android:id="@+id/tlb_nc"
-        android:layout_width="match_parent"
-        android:layout_height="?actionBarSize"
-        android:background="@color/primaryColor">
-
-        <TextView
-            android:id="@+id/txt_tlb_nc"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/nc_txt_tlb"
-            android:textColor="@color/white"
-            android:textSize="@dimen/txt_large" />
-
-    </android.support.v7.widget.Toolbar>
-
+    tools:context=".fragments.NotificationCenterFragment">
 
     <android.support.v7.widget.RecyclerView
         android:id="@+id/rc_nc"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_below="@+id/tlb_nc"
+        android:layout_alignParentTop="true"
         android:layout_marginLeft="5dp"
         android:layout_marginRight="5dp"
         android:clipToPadding="false"
@@ -36,24 +19,5 @@
         tools:listitem="@layout/row_notification">
 
     </android.support.v7.widget.RecyclerView>
-
-    <ProgressBar
-        android:id="@+id/prg_nc_paging"
-        android:layout_width="25dp"
-        android:layout_height="25dp"
-        android:layout_alignParentBottom="true"
-        android:layout_centerHorizontal="true"
-        android:visibility="gone"
-        />
-
-    <include
-        android:id="@+id/error_layout"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        layout="@layout/qube_error_layout"
-        android:layout_centerInParent="true"
-        android:visibility="gone"
-        />
-
 
 </RelativeLayout>

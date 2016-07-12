@@ -51,7 +51,7 @@ public class ViewTaskActivity extends PortraitActivity {
         }
 
         setUpToolbar();
-        fragment = ViewTaskFragment.newInstance(taskType, taskUid, null);
+        fragment = ViewTaskFragment.newInstance(taskType, taskUid);
         getSupportFragmentManager().beginTransaction()
                 .add(R.id.vta_fragment_holder, fragment)
                 .commitAllowingStateLoss();

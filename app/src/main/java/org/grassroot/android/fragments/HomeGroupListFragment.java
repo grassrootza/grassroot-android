@@ -13,6 +13,7 @@ import android.support.v4.content.ContextCompat;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -31,9 +32,11 @@ import org.grassroot.android.activities.CreateVoteActivity;
 import org.grassroot.android.activities.GroupSearchActivity;
 import org.grassroot.android.activities.GroupTasksActivity;
 import org.grassroot.android.adapters.GroupListAdapter;
+import org.grassroot.android.events.JoinRequestsReceived;
 import org.grassroot.android.events.NetworkActivityResultsEvent;
 import org.grassroot.android.events.TaskAddedEvent;
 import org.grassroot.android.interfaces.GroupConstants;
+import org.grassroot.android.interfaces.GroupPickCallbacks;
 import org.grassroot.android.interfaces.SortInterface;
 import org.grassroot.android.interfaces.TaskConstants;
 import org.grassroot.android.models.Group;
@@ -67,29 +70,17 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
   private Unbinder unbinder;
 
   @BindView(R.id.rl_ghp_root) RelativeLayout rlGhpRoot;
-  @BindView(R.id.iv_ghp_drawer) ImageView ivGhpDrawer;
-  @BindView(R.id.ghp_title) TextView tvTitle;
-
-  @BindView(R.id.iv_ghp_search) ImageView ivGhpSearch;
-  @BindView(R.id.iv_ghp_sort) ImageView ivGhpSort;
 
   @BindView(R.id.gl_swipe_refresh) SwipeRefreshLayout glSwipeRefresh;
   @BindView(R.id.recycler_view) RecyclerView rcGroupList;
 
-    private boolean floatingMenuOpen = false;
-    @BindView(R.id.fab_menu_open) FloatingActionButton fabOpenMenu;
-    @BindView(R.id.ll_fab_new_task) LinearLayout fabNewTask;
-    @BindView(R.id.ll_fab_join_group) LinearLayout fabFindGroup;
-    @BindView(R.id.ll_fab_start_group) LinearLayout fabStartGroup;
-
-  @BindView(R.id.iv_cross) ImageView ivCross;
-  @BindView(R.id.et_search) EditText et_search;
-  @BindView(R.id.rl_search) RelativeLayout rlSearch;
-  @BindView(R.id.rl_simple) RelativeLayout rlSimple;
+  private boolean floatingMenuOpen = false;
+  @BindView(R.id.fab_menu_open) FloatingActionButton fabOpenMenu;
+  @BindView(R.id.ll_fab_new_task) LinearLayout fabNewTask;
+  @BindView(R.id.ll_fab_join_group) LinearLayout fabFindGroup;
+  @BindView(R.id.ll_fab_start_group) LinearLayout fabStartGroup;
 
   ProgressDialog progressDialog;
-
-
 
     private GroupListAdapter groupListRowAdapter;
     private List<Group> userGroups;
@@ -97,19 +88,13 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
     private boolean creating;
     public boolean date_click = false, role_click = false, defaults_click = false;
 
-    private GroupListFragmentListener mCallbacks;
-
-    public interface GroupListFragmentListener {
-        void menuClick();
-        void groupPickerTriggered(String taskType);
-    }
+    private GroupPickCallbacks mCallbacks;
 
     @Override public void onAttach(Context context) {
         super.onAttach(context);
         Activity activity = (Activity) context;
         try {
-            mCallbacks = (GroupListFragmentListener) activity;
-            Log.e("onAttach", "Attached");
+            mCallbacks = (GroupPickCallbacks) activity;
         } catch (ClassCastException e) {
             throw new ClassCastException("Activity must implement Fragment One.");
         }
@@ -118,26 +103,20 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
   @Override public void onActivityCreated(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     creating = true;
+    Log.e(TAG, "onActivityCreated Called ... initiating");
     init();
     fetchGroupList();
+      checkForJoinRequests();
   }
 
   @Override public void onResume() {
-    super.onResume();
-    if (!creating && PreferenceUtils.getGroupListMustRefresh(getContext())) {
-      refreshGroupList();
-      PreferenceUtils.setGroupListMustBeRefreshed(getContext(), false);
-    }
-      setActionBarToDefault();
-    creating = false;
+      super.onResume();
+      fabOpenMenu.setVisibility(View.VISIBLE);
+      creating = false;
   }
 
   private void init() {
-
     userGroups = new ArrayList<>();
-    ivGhpSort.setEnabled(false);
-    ivGhpSearch.setEnabled(false);
-
     setUpRecyclerView();
 
     //first load from db
@@ -154,18 +133,14 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
     userGroups = new ArrayList<>(groups);
     rcGroupList.setVisibility(View.VISIBLE);
     groupListRowAdapter.setGroupList(userGroups);
-    ivGhpSearch.setEnabled(true);
-    ivGhpSort.setEnabled(true);
     rcGroupList.setVisibility(View.VISIBLE);
   }
-
 
   @Override public View onCreateView(LayoutInflater inflater, ViewGroup container,
       Bundle savedInstanceState) {
     View view = inflater.inflate(R.layout.activity_group__homepage, container, false);
     unbinder = ButterKnife.bind(this, view);
     EventBus.getDefault().register(this);
-    toggleClickableTitle(true);
     return view;
   }
 
@@ -194,8 +169,6 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
             hideProgress();
             rcGroupList.setVisibility(View.VISIBLE);
             groupListRowAdapter.setGroupList(RealmUtils.loadListFromDB(Group.class));
-            ivGhpSearch.setEnabled(true);
-            ivGhpSort.setEnabled(true);
             rcGroupList.setVisibility(View.VISIBLE);
           }
 
@@ -204,6 +177,18 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
           }
         });
   }
+
+    /*
+    Possibly move this to its own fragment
+     */
+    public void checkForJoinRequests() {
+        GroupService.getInstance().fetchGroupJoinRequests();
+    }
+
+    @Subscribe
+    public void onGroupJoinRequestsLoaded(JoinRequestsReceived e) {
+        Log.e(TAG, "group join requests received! this many: " + GroupService.getInstance().openJoinRequests.size());
+    }
 
   /*
   Separating this method from the above, because we will probably want it to call some kind of diff
@@ -294,52 +279,12 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
         QuickTaskModalFragment modal = QuickTaskModalFragment.newInstance(false, null, new QuickTaskModalFragment.TaskModalListener() {
             @Override
             public void onTaskClicked(String taskType) {
-                switchActionBarToPicker();
+                fabOpenMenu.setVisibility(View.GONE);
                 mCallbacks.groupPickerTriggered(taskType);
             }
         });
         modal.show(getFragmentManager(), QuickTaskModalFragment.class.getSimpleName());
     }
-
-    public void switchActionBarToPicker() {
-        fabOpenMenu.setVisibility(View.GONE);
-        tvTitle.setText(R.string.home_group_pick);
-        ivGhpDrawer.setImageResource(R.drawable.btn_close_white);
-        ivGhpDrawer.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                setActionBarToDefault();
-                getFragmentManager().popBackStack();
-            }
-        });
-        toggleClickableTitle(false);
-    }
-
-    public void setActionBarToDefault() {
-        fabOpenMenu.setVisibility(View.VISIBLE);
-        tvTitle.setText(R.string.ghp_toolbar_title);
-        ivGhpDrawer.setImageResource(R.drawable.btn_navigation);
-        ivGhpDrawer.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                mCallbacks.menuClick();
-            }
-        });
-        toggleClickableTitle(true);
-    }
-
-  public void toggleClickableTitle(boolean clickable) {
-    if (clickable) {
-      tvTitle.setClickable(true);
-      tvTitle.setOnClickListener(new View.OnClickListener() {
-        @Override public void onClick(View v) {
-          icFabNewTask();
-        }
-      });
-    } else {
-      tvTitle.setClickable(false);
-    }
-  }
 
     @OnClick(R.id.ic_fab_join_group)
     public void icFabJoinGroup() {
@@ -362,10 +307,10 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
     }
 
   @Override public void onGroupRowLongClick(Group group) {
-    showQuickOptionsDialog(group, false);
+    showQuickOptionsDialog(group);
   }
 
-  private void showQuickOptionsDialog(final Group group, boolean addMembersOption) {
+  private void showQuickOptionsDialog(final Group group) {
     QuickTaskModalFragment dialog = QuickTaskModalFragment.newInstance(true, group,
         new QuickTaskModalFragment.TaskModalListener() {
           @Override public void onTaskClicked(String taskType) {
@@ -424,63 +369,23 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
     }
 
   @Subscribe public void onTaskCreatedEvent(TaskAddedEvent e) {
-    Log.e(TAG, "group list fragment triggered by task addition ...");
-    final TaskModel t = e.getTaskCreated();
-    final String groupUid = t.getParentUid();
-    // todo : may want to keep a hashmap of groups ... likely will be finding & updating groups quite a bit
-    for (Group g : userGroups) {
-      if (groupUid.equals(g.getGroupUid())) {
-        Realm realm = Realm.getDefaultInstance();
-        realm.beginTransaction();
-        g.setHasTasks(true);
-        realm.commitTransaction();
-        realm.close();
-        startActivity(MenuUtils.constructIntent(getActivity(), GroupTasksActivity.class, g));
+      Log.e(TAG, "group list fragment triggered by task addition ...");
+      final TaskModel t = e.getTaskCreated();
+      final String groupUid = t.getParentUid();
+      // todo : may want to keep a hashmap of groups ... likely will be finding & updating groups quite a bit
+      for (Group g : userGroups) {
+          if (groupUid.equals(g.getGroupUid())) {
+              Realm realm = Realm.getDefaultInstance();
+              realm.beginTransaction();
+              g.setHasTasks(true);
+              realm.commitTransaction();
+              realm.close();
+              startActivity(MenuUtils.constructIntent(getActivity(), GroupTasksActivity.class, g));
+          }
       }
-    }
   }
 
-  /*
-  SECTION : search methods
-   */
-  @OnTextChanged(value = R.id.et_search, callback = OnTextChanged.Callback.AFTER_TEXT_CHANGED)
-  public void searchStringChanged(CharSequence s) {
-    String str = s.length() > 0 ? et_search.getText().toString() : "";
-    String searchwords = str.toLowerCase(Locale.getDefault());
-    filter(searchwords);
-  }
-
-  private void filter(String searchwords) {
-    //first clear the current data
-    Log.e(TAG, "filter search_string is " + searchwords);
-
-    if (searchwords.equals("")) {
-      groupListRowAdapter.setGroupList(userGroups);
-    } else {
-      final List<Group> filteredGroups = new ArrayList<>();
-
-      for (Group group : userGroups) {
-        if (group.getGroupName().trim().toLowerCase(Locale.getDefault()).contains(searchwords)) {
-          Log.e(TAG, "model.groupName.trim() " + group.getGroupName()
-              .trim()
-              .toLowerCase(Locale.getDefault()));
-          Log.e(TAG, "searchwords is " + searchwords);
-          filteredGroups.add(group);
-        } else {
-          //Log.e(TAG,"not found");
-        }
-      }
-
-      groupListRowAdapter.setGroupList(filteredGroups);
-    }
-  }
-
-  @OnClick(R.id.iv_ghp_search) public void ivGhpSearch() {
-    rlSimple.setVisibility(View.GONE);
-    rlSearch.setVisibility(View.VISIBLE);
-  }
-
-  @OnClick(R.id.iv_ghp_sort) public void ivGhpSort() {
+  public void sortGroups() {
     SortFragment sortFragment = new SortFragment();
     Bundle b = new Bundle();
     b.putBoolean("Date", date_click);
@@ -506,7 +411,6 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
         groupListRowAdapter.sortByRole();
         Log.d(TAG, String.format("sorting group list took %d msecs",
             SystemClock.currentThreadTimeMillis() - start));
-        et_search.setText("");
       }
 
       @Override public void defaultsClick(boolean date, boolean role, boolean defaults) {
@@ -514,4 +418,18 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
       }
     });
   }
+
+    public void searchStringChanged(String query) {
+        if (TextUtils.isEmpty(query)) {
+            groupListRowAdapter.setGroupList(userGroups);
+        } else {
+            final List<Group> filteredGroups = new ArrayList<>();
+            for (Group group : userGroups) {
+                if (group.getGroupName().trim().toLowerCase(Locale.getDefault()).contains(query)) {
+                    filteredGroups.add(group);
+                }
+            }
+            groupListRowAdapter.setGroupList(filteredGroups);
+        }
+    }
 }
