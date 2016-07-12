@@ -1,6 +1,9 @@
 package org.grassroot.android.fragments;
 
 import android.app.Activity;
+import android.app.DatePickerDialog;
+import android.app.ProgressDialog;
+import android.app.TimePickerDialog;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.Snackbar;
@@ -16,17 +19,21 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.EditorInfo;
 import android.widget.Button;
+import android.widget.DatePicker;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.widget.TimePicker;
+
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnCheckedChanged;
 import butterknife.OnClick;
 import butterknife.OnTextChanged;
-import io.realm.Realm;
+
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
@@ -34,14 +41,16 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import org.grassroot.android.R;
+import org.grassroot.android.activities.ActionCompleteActivity;
 import org.grassroot.android.events.TaskAddedEvent;
+import org.grassroot.android.fragments.dialogs.DatePickerFragment;
+import org.grassroot.android.fragments.dialogs.TimePickerFragment;
 import org.grassroot.android.interfaces.GroupConstants;
-import org.grassroot.android.interfaces.NetworkErrorDialogListener;
 import org.grassroot.android.interfaces.TaskConstants;
+import org.grassroot.android.models.Group;
 import org.grassroot.android.models.Member;
 import org.grassroot.android.models.TaskModel;
-import org.grassroot.android.models.TaskResponse;
-import org.grassroot.android.services.GrassrootRestService;
+import org.grassroot.android.services.TaskService;
 import org.grassroot.android.slideDateTimePicker.SlideDateTimeListener;
 import org.grassroot.android.slideDateTimePicker.SlideDateTimePicker;
 import org.grassroot.android.utils.Constant;
@@ -52,9 +61,6 @@ import org.grassroot.android.utils.PreferenceUtils;
 import org.grassroot.android.utils.RealmUtils;
 import org.grassroot.android.utils.Utilities;
 import org.greenrobot.eventbus.EventBus;
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
 
 /**
  * Created by luke on 2016/06/01.
@@ -68,17 +74,24 @@ public class CreateTaskFragment extends Fragment {
   private boolean groupLocal;
 
   private Date selectedDateTime;
+  private Calendar selectedDateTimeCal; // Java 7 nastiness
   private boolean includeWholeGroup;
   private Set<Member> assignedMembers;
 
   private ViewGroup vContainer;
 
+  private ProgressDialog progressDialog;
+
   @BindView(R.id.ctsk_et_title) TextInputEditText etTitleInput;
   @BindView(R.id.ctsk_et_location) TextInputEditText etLocationInput;
   @BindView(R.id.ctsk_et_description) TextInputEditText etDescriptionInput;
 
-  private SlideDateTimeListener datePickerListener;
-  @BindView(R.id.ctsk_txt_deadline) TextView dateTimeDisplayed;
+  DatePickerFragment datePicker;
+  TimePickerFragment timePicker;
+  @BindView(R.id.ctsk_cv_datepicker) CardView datePickTrigger;
+  @BindView(R.id.ctsk_txt_deadline) TextView dateDisplayed;
+  @BindView(R.id.ctsk_cv_timepicker) CardView timePickTrigger;
+  @BindView(R.id.ctsk_txt_time) TextView timeDisplayed;
 
   @BindView(R.id.ctsk_sw_one_day) SwitchCompat swOneDayAhead;
   @BindView(R.id.ctsk_sw_half_day) SwitchCompat swHalfDayAhead;
@@ -103,14 +116,16 @@ public class CreateTaskFragment extends Fragment {
     groupUid = b.getString(GroupConstants.UID_FIELD);
     taskType = b.getString(TaskConstants.TASK_TYPE_FIELD);
     groupLocal = b.getBoolean(Constant.GROUP_LOCAL);
+    selectedDateTimeCal = Calendar.getInstance();
+
     includeWholeGroup = true;
 
-    datePickerListener = new SlideDateTimeListener() {
+    /*datePickerListener = new SlideDateTimeListener() {
       @Override public void onDateTimeSet(Date date) {
         selectedDateTime = date;
-        dateTimeDisplayed.setText(TaskConstants.dateDisplayFormatWithHours.format(date));
+        dateDisplayed.setText(TaskConstants.dateDisplayFormatWithHours.format(date));
       }
-    };
+    };*/
   }
 
   @Override public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -118,17 +133,58 @@ public class CreateTaskFragment extends Fragment {
     View viewToReturn = inflater.inflate(R.layout.fragment_create_task, container, false);
     ButterKnife.bind(this, viewToReturn);
     this.vContainer = container;
+    progressDialog = new ProgressDialog(getContext());
+    progressDialog.setIndeterminate(true);
+    progressDialog.setMessage(getString(R.string.txt_pls_wait));
     setUpStrings();
     return viewToReturn;
   }
 
   @OnClick(R.id.ctsk_cv_datepicker) public void launchDateTimePicker() {
-    new SlideDateTimePicker.Builder(getFragmentManager()).setInitialDate(new Date())
-        .setMinDate(new Date())
-        .setIndicatorColor(R.color.primaryColor)
-        .setListener(datePickerListener)
-        .build()
-        .show();
+    if (datePicker == null) {
+      setUpDatePicker();
+    }
+    datePicker.show(getFragmentManager(), DatePickerFragment.class.getCanonicalName());
+  }
+
+  private void setUpDatePicker() {
+    datePicker = DatePickerFragment.newInstance(new DatePickerDialog.OnDateSetListener() {
+      @Override
+      public void onDateSet(DatePicker view, int year, int monthOfYear, int dayOfMonth) {
+        selectedDateTimeCal.set(Calendar.YEAR, year);
+        selectedDateTimeCal.set(Calendar.MONTH, monthOfYear);
+        selectedDateTimeCal.set(Calendar.DAY_OF_MONTH, dayOfMonth);
+        updateDate();
+      }
+    });
+  }
+
+  private void updateDate() {
+    selectedDateTime = selectedDateTimeCal.getTime();
+    dateDisplayed.setText(TaskConstants.dateDisplayWithoutHours.format(selectedDateTime));
+  }
+
+  @OnClick(R.id.ctsk_cv_timepicker) public void launchTimePicker() {
+    if (timePicker == null) {
+      setUpTimePicker();
+    }
+    timePicker.show(getFragmentManager(), TimePickerFragment.class.getCanonicalName());
+  }
+
+  private void setUpTimePicker() {
+    timePicker = TimePickerFragment.newInstance(new TimePickerDialog.OnTimeSetListener() {
+      @Override
+      public void onTimeSet(TimePicker view, int hourOfDay, int minute) {
+        selectedDateTimeCal.set(Calendar.HOUR_OF_DAY, hourOfDay);
+        selectedDateTimeCal.set(Calendar.MINUTE, minute);
+        updateTime();
+      }
+    });
+  }
+
+  private void updateTime() {
+    selectedDateTime = selectedDateTimeCal.getTime();
+    timeDisplayed.setText(TaskConstants.timeDisplayWithoutDate.format(selectedDateTime));
   }
 
   @OnCheckedChanged(R.id.sw_notifyall) public void selectAssignedMembers(boolean checked) {
@@ -199,43 +255,48 @@ public class CreateTaskFragment extends Fragment {
     }
   }
 
-  private void generateSuccessTask(TaskModel model) {
-    Intent i = new Intent();
-    String successString = generateSuccessString();
-    i.putExtra(Constant.SUCCESS_MESSAGE, successString);
-    getActivity().setResult(Activity.RESULT_OK, i);
-    Log.e(TAG, "putting task created event on the bus ...");
-    EventBus.getDefault().post(new TaskAddedEvent(model, successString));
-    getActivity().finish(); // todo : double check calling finish on activity from within fragment is okay
+  public void createTask() {
+    progressDialog.show();
+    TaskModel model = generateTaskObject();
+    TaskService.getInstance().createTask(model, new TaskService.TaskCreationListener() {
+      @Override
+      public void taskCreatedLocally(TaskModel task) {
+        progressDialog.dismiss();
+        generateSuccessTask(task);
+      }
+
+      @Override
+      public void taskCreatedOnServer(TaskModel task) {
+        progressDialog.dismiss();
+        generateSuccessTask(task);
+      }
+
+      @Override
+      public void taskCreationError(TaskModel task) {
+        progressDialog.dismiss();
+        ErrorUtils.showSnackBar(vContainer, "Error! Something went wrong", Snackbar.LENGTH_LONG,
+                "", null);
+      }
+    });
   }
 
-  public void createTask() {
-    TaskModel model = generateTaskObject();
-    if (NetworkUtils.isNetworkAvailable(getContext())) {
-      setUpApiCall(model).enqueue(new Callback<TaskResponse>() {
-        @Override public void onResponse(Call<TaskResponse> call, Response<TaskResponse> response) {
-          if (response.isSuccessful()) {
-           generateSuccessTask(response.body().getTasks().get(0));
-          } else {
-            ErrorUtils.showSnackBar(vContainer, "Error! Something went wrong", Snackbar.LENGTH_LONG,
-                "", null);
-          }
-        }
-
-        @Override public void onFailure(Call<TaskResponse> call, Throwable t) {
-          // todo: improve and fix this
-          ErrorUtils.connectivityError(getActivity(), R.string.error_no_network,
-              new NetworkErrorDialogListener() {
-                @Override public void retryClicked() {
-                  createTask();
-                }
-              });
-        }
-      });
+  private void generateSuccessTask(TaskModel model) {
+    Intent i = new Intent(getActivity(), ActionCompleteActivity.class);
+    if (model.isLocal()) {
+      i.putExtra(ActionCompleteActivity.BODY_FIELD, getString(R.string.ac_body_task_create_local));
+      i.putExtra(ActionCompleteActivity.HEADER_FIELD, R.string.ac_header_task_create_local);
     } else {
-      RealmUtils.saveDataToRealm(model);
-      generateSuccessTask(model);
+      i.putExtra(ActionCompleteActivity.HEADER_FIELD, R.string.ac_header_task_create);
+      i.putExtra(ActionCompleteActivity.BODY_FIELD, generateSuccessString());
     }
+    i.putExtra(ActionCompleteActivity.TASK_BUTTONS, false);
+    i.putExtra(ActionCompleteActivity.ACTION_INTENT, ActionCompleteActivity.GROUP_SCREEN);
+    Group taskGroup = RealmUtils.loadObjectFromDB(Group.class, "groupUid", model.getParentUid());
+    i.putExtra(GroupConstants.OBJECT_FIELD, taskGroup);
+    i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+    EventBus.getDefault().post(new TaskAddedEvent(model, generateSuccessString()));
+    startActivity(i);
+    // todo : add getActivity().finish ? should be redundant ...
   }
 
   private TaskModel generateTaskObject() {
@@ -269,32 +330,6 @@ public class CreateTaskFragment extends Fragment {
     model.setMemberUIDS(RealmUtils.convertListOfStringInRealmListOfString(new ArrayList<>(memberUids)));
     RealmUtils.saveDataToRealm(RealmUtils.convertListOfStringInRealmListOfString(new ArrayList<>(memberUids)));
     return model;
-  }
-
-  public Call<TaskResponse> setUpApiCall(TaskModel model) {
-    final String phoneNumber = PreferenceUtils.getUserPhoneNumber(getContext());
-    final String code = PreferenceUtils.getAuthToken(getContext());
-
-    switch (taskType) {
-      case TaskConstants.MEETING:
-        final String location = etLocationInput.getText().toString();
-        return GrassrootRestService.getInstance()
-            .getApi()
-            .createMeeting(phoneNumber, code, groupUid, model.getTitle(), model.getDescription(),
-                model.getDeadlineISO(), model.getMinutes(), location, new HashSet<>(RealmUtils.convertListOfRealmStringInListOfString(model.getMemberUIDS())));
-      case TaskConstants.VOTE:
-        return GrassrootRestService.getInstance()
-            .getApi()
-            .createVote(phoneNumber, code, groupUid, model.getTitle(), model.getDescription(),
-                model.getDeadlineISO(), model.getMinutes(), new HashSet<>(RealmUtils.convertListOfRealmStringInListOfString(model.getMemberUIDS())), false);
-      case TaskConstants.TODO:
-        return GrassrootRestService.getInstance()
-            .getApi()
-            .createTodo(phoneNumber, code, groupUid, model.getTitle(), model.getDescription(),
-                model.getDeadlineISO(), model.getMinutes(), new HashSet<>(RealmUtils.convertListOfRealmStringInListOfString(model.getMemberUIDS())));
-      default:
-        throw new UnsupportedOperationException("Error! Missing task type in call");
-    }
   }
 
   private int obtainReminderMinutes() {

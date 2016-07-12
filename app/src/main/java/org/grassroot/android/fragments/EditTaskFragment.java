@@ -154,6 +154,8 @@ public class EditTaskFragment extends Fragment implements DatePickerDialog.OnDat
         unbinder = ButterKnife.bind(this, viewToReturn);
         vContainer = container;
         progressDialog = new ProgressDialog(getContext());
+        progressDialog.setMessage(getString(R.string.txt_pls_wait));
+        progressDialog.setIndeterminate(true);
         populateFields();
         fetchAssignedMembers();
         return viewToReturn;
@@ -366,10 +368,12 @@ public class EditTaskFragment extends Fragment implements DatePickerDialog.OnDat
     }
 
     public void updateTask() {
+        progressDialog.show();
         TaskModel model = generateTaskObject();
         if(NetworkUtils.isNetworkAvailable(getContext())) {
             setUpUpdateApiCall(model).enqueue(new Callback<TaskModel>() {
                 @Override public void onResponse(Call<TaskModel> call, Response<TaskModel> response) {
+                    progressDialog.hide();
                     if (response.isSuccessful()) {
                         generateSuccessIntent(response.body());
                     } else {
@@ -378,6 +382,7 @@ public class EditTaskFragment extends Fragment implements DatePickerDialog.OnDat
                 }
 
                 @Override public void onFailure(Call<TaskModel> call, Throwable t) {
+                    progressDialog.hide();
                     ErrorUtils.connectivityError(getActivity(), R.string.error_no_network, new NetworkErrorDialogListener() {
                         @Override public void retryClicked() {
                             updateTask();

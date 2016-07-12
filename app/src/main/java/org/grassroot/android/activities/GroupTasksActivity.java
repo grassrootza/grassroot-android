@@ -59,6 +59,10 @@ public class GroupTasksActivity extends PortraitActivity implements NewTaskMenuF
         }
 
         groupMembership = extras.getParcelable(GroupConstants.OBJECT_FIELD);
+        if (groupMembership == null) {
+            throw new UnsupportedOperationException("Error! Group tasks activity called without group passed");
+        }
+
         newTaskMenuFragment = NewTaskMenuFragment.newInstance(groupMembership, true);
         canCreateTask = groupMembership.canCallMeeting() || groupMembership.canCallVote() || groupMembership.canCreateTodo();
 

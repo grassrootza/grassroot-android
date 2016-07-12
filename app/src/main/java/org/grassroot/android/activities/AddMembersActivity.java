@@ -1,5 +1,6 @@
 package org.grassroot.android.activities;
 
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.SystemClock;
@@ -66,6 +67,8 @@ public class AddMembersActivity extends AppCompatActivity implements
     private boolean onMainScreen;
     private boolean menuOpen;
 
+    ProgressDialog progressDialog;
+
     @BindView(R.id.rl_am_root) RelativeLayout amRlRoot;
     @BindView(R.id.am_txt_toolbar) TextView toolbarTitle;
 
@@ -107,6 +110,10 @@ public class AddMembersActivity extends AppCompatActivity implements
         membersFromContacts = new HashMap<>();
         manuallyAddedMembers = new ArrayList<>();
         onMainScreen = true;
+
+        progressDialog = new ProgressDialog(this);
+        progressDialog.setMessage(getString(R.string.txt_pls_wait));
+        progressDialog.setIndeterminate(true);
     }
 
     @OnClick(R.id.am_add_member_options)
@@ -256,7 +263,8 @@ public class AddMembersActivity extends AppCompatActivity implements
         if (newMemberListFragment != null) {
             final List<Member> membersToAdd = newMemberListFragment.getSelectedMembers();
             if (membersToAdd != null && membersToAdd.size() > 0) {
-               if(NetworkUtils.isNetworkAvailable(getApplicationContext())) {
+                progressDialog.show();
+                if(NetworkUtils.isNetworkAvailable(getApplicationContext())) {
                    postNewMembersToGroup(membersToAdd);
                }else{
                    RealmUtils.saveDataToRealm(membersToAdd);
@@ -264,6 +272,7 @@ public class AddMembersActivity extends AppCompatActivity implements
                    i.putExtra(Constant.GROUPUID_FIELD, groupUid);
                    i.putExtra(Constant.INDEX_FIELD, groupPosition);
                    setResult(RESULT_OK, i);
+                   progressDialog.dismiss();
                    finish();
                }
             } else {
@@ -296,8 +305,10 @@ public class AddMembersActivity extends AppCompatActivity implements
                             i.putExtra(Constant.GROUPUID_FIELD, groupUid);
                             i.putExtra(Constant.INDEX_FIELD, groupPosition);
                             setResult(RESULT_OK, i);
+                            progressDialog.dismiss();
                             finish();
                         } else {
+                            progressDialog.dismiss();
                             ErrorUtils.showSnackBar(amRlRoot, R.string.error_wrong_number, Snackbar.LENGTH_SHORT);
                         }
                     }
