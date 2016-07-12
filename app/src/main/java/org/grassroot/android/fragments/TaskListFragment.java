@@ -35,6 +35,7 @@ import org.grassroot.android.services.GrassrootRestService;
 import org.grassroot.android.services.TaskService;
 import org.grassroot.android.utils.ErrorUtils;
 import org.grassroot.android.utils.PreferenceUtils;
+import org.grassroot.android.utils.RealmUtils;
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 
@@ -60,7 +61,6 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
 
   private static final String TAG = TaskListFragment.class.getCanonicalName();
 
-  Realm realm;
   GroupPickCallbacks mCallbacks;
   TaskListListener listener;
 
@@ -182,10 +182,7 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
   }
 
   private void fetchGroupTasks() {
-    realm = Realm.getDefaultInstance();
-    realm.beginTransaction();
-    groupTasksAdapter.changeToTaskList(realm.where(TaskModel.class).equalTo("parentUid", groupUid).findAll());
-    realm.commitTransaction();
+    groupTasksAdapter.changeToTaskList(RealmUtils.loadListFromDB(TaskModel.class,"parentUid",groupUid));
     swipeRefreshLayout.setRefreshing(true);
     progressDialog.show();
 
@@ -204,9 +201,7 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
             handleNoTasksFound();
           } else {
             groupTasksAdapter.changeToTaskList(taskResponse.getTasks());
-            realm.beginTransaction();
-            realm.copyToRealmOrUpdate(taskResponse.getTasks());
-            realm.commitTransaction();
+            RealmUtils.saveDataToRealm(taskResponse.getTasks());
           }
           return;
         }
@@ -398,7 +393,7 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
     }
     FilterFragment filterDialog = new FilterFragment();
     filterDialog.setArguments(assembleFilterBundle());
-    filterDialog.show(getActivity().getFragmentManager(), "FilterFragment");
+    filterDialog.show(getActivity().getSupportFragmentManager(), "FilterFragment");
 
     filterDialog.setListener(new FilterFragment.TasksFilterListener() {
       @Override public void itemClicked(String typeChanged, boolean changedFlagState) {

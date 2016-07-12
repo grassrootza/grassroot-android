@@ -29,6 +29,7 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.TimePicker;
 
+import java.util.UUID;
 import org.grassroot.android.R;
 import org.grassroot.android.events.TaskUpdatedEvent;
 import org.grassroot.android.fragments.dialogs.ConfirmCancelDialogFragment;
@@ -43,7 +44,9 @@ import org.grassroot.android.services.GrassrootRestService;
 import org.grassroot.android.utils.Constant;
 import org.grassroot.android.utils.ErrorUtils;
 import org.grassroot.android.utils.MenuUtils;
+import org.grassroot.android.utils.NetworkUtils;
 import org.grassroot.android.utils.PreferenceUtils;
+import org.grassroot.android.utils.RealmUtils;
 import org.grassroot.android.utils.Utilities;
 import org.greenrobot.eventbus.EventBus;
 
@@ -363,55 +366,76 @@ public class EditTaskFragment extends Fragment implements DatePickerDialog.OnDat
     }
 
     public void updateTask() {
-        setUpUpdateApiCall().enqueue(new Callback<TaskModel>() {
-            @Override
-            public void onResponse(Call<TaskModel> call, Response<TaskModel> response) {
-                if (response.isSuccessful()) {
-                    Intent i = new Intent();
-                    i.putExtra(Constant.SUCCESS_MESSAGE, generateSuccessString());
-                    getActivity().setResult(Activity.RESULT_OK, i);
-                    EventBus.getDefault().post(new TaskUpdatedEvent(response.body()));
-                    getActivity().finish();
-                } else {
-                    ErrorUtils.showSnackBar(vContainer, "Error! Something went wrong", Snackbar.LENGTH_LONG, "", null);
-                }
-            }
-
-            @Override
-            public void onFailure(Call<TaskModel> call, Throwable t) {
-                ErrorUtils.connectivityError(getActivity(), R.string.error_no_network, new NetworkErrorDialogListener() {
-                    @Override
-                    public void retryClicked() {
-                        updateTask();
+        TaskModel model = generateTaskObject();
+        if(NetworkUtils.isNetworkAvailable(getContext())) {
+            setUpUpdateApiCall(model).enqueue(new Callback<TaskModel>() {
+                @Override public void onResponse(Call<TaskModel> call, Response<TaskModel> response) {
+                    if (response.isSuccessful()) {
+                        generateSuccessIntent(response.body());
+                    } else {
+                        ErrorUtils.showSnackBar(vContainer, "Error! Something went wrong", Snackbar.LENGTH_LONG, "", null);
                     }
+                }
 
-                });
-            }
-        });
+                @Override public void onFailure(Call<TaskModel> call, Throwable t) {
+                    ErrorUtils.connectivityError(getActivity(), R.string.error_no_network, new NetworkErrorDialogListener() {
+                        @Override public void retryClicked() {
+                            updateTask();
+                        }
+                    });
+                }
+            });
+        }else{
+            generateSuccessIntent(model);
+        }
     }
 
-    public Call<TaskModel> setUpUpdateApiCall() {
-        final String uid = task.getTaskUid();
+    private void generateSuccessIntent(TaskModel model){
+        Intent i = new Intent();
+        i.putExtra(Constant.SUCCESS_MESSAGE, generateSuccessString());
+        getActivity().setResult(Activity.RESULT_OK, i);
+        EventBus.getDefault().post(new TaskUpdatedEvent(model));
+        RealmUtils.saveDataToRealm(model);
+        getActivity().finish();
+
+    }
+    private TaskModel generateTaskObject() {
+        final String title = etTitleInput.getText().toString();
+        final String description = etDescriptionInput.getText().toString().trim();
+
+        TaskModel model = new TaskModel();
+        model.setDescription(description);
+        model.setTitle(title);
+        model.setTaskUid(task.getTaskUid());
+        model.setParentUid(task.getParentUid());
+        model.setUpdateTime(calendar.getTime().getTime());
+        model.setLocation(etLocationInput.getText().toString());
+        model.setType(taskType);
+        model.setEdited(true);
+        model.setLocal(!NetworkUtils.isNetworkAvailable(getContext()));
+        model.setParentLocal(task.isParentLocal());
+        model.setReply(task.getReply());
+        model.setCanAction(task.isCanAction());
+        model.setCanEdit(task.isCanEdit());
+        model.setCanMarkCompleted(task.isCanMarkCompleted());
+        model.setCreatedByUserName(task.getCreatedByUserName());
+        model.setDeadlineISO(Constant.isoDateTimeSDF.format(new Date(model.getUpdateTime())));
+        return model;
+    }
+    public Call<TaskModel> setUpUpdateApiCall(TaskModel model) {
+        Set<String> memberUids = (selectedMembers == null) ? Collections.EMPTY_SET : Utilities.convertMemberListToUids(selectedMembers);
         final String phoneNumber = PreferenceUtils.getUserPhoneNumber(ApplicationLoader.applicationContext);
         final String code = PreferenceUtils.getAuthToken(ApplicationLoader.applicationContext);
-        final String title = etTitleInput.getText().toString();
-        final String description = etDescriptionInput.getText().toString();
-
-        Date updatedDate = calendar.getTime();
-        final String dateTimeISO = Constant.isoDateTimeSDF.format(updatedDate);
-        Set<String> memberUids = (selectedMembers == null) ? Collections.EMPTY_SET : Utilities.convertMemberListToUids(selectedMembers);
-
         switch (taskType) {
             case TaskConstants.MEETING:
-                final String location = etLocationInput.getText().toString();
-                return GrassrootRestService.getInstance().getApi().editMeeting(phoneNumber, code, uid,
-                        title, description, location, dateTimeISO, memberUids);
+                return GrassrootRestService.getInstance().getApi().editMeeting(phoneNumber, code, model.getTaskUid(),
+                        model.getTitle(), model.getDescription(), model.getLocation(), model.getDeadlineISO(), memberUids);
             case TaskConstants.VOTE:
-                return GrassrootRestService.getInstance().getApi().editVote(phoneNumber, code, uid, title,
-                        description, dateTimeISO);
+                return GrassrootRestService.getInstance().getApi().editVote(phoneNumber, code, model.getTaskUid(), model.getTitle(),
+                        model.getDescription(), model.getDeadlineISO());
             case TaskConstants.TODO:
-                return GrassrootRestService.getInstance().getApi().editTodo(phoneNumber, code, title,
-                        dateTimeISO, null);
+                return GrassrootRestService.getInstance().getApi().editTodo(phoneNumber, code, model.getTitle(),
+                        model.getDeadlineISO(), null);
             default:
                 throw new UnsupportedOperationException("Error! Missing task type in call");
         }

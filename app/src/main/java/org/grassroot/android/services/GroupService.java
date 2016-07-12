@@ -23,13 +23,12 @@ import org.grassroot.android.models.GroupJoinRequest;
 import org.grassroot.android.models.GroupResponse;
 import org.grassroot.android.models.Member;
 import org.grassroot.android.models.RealmString;
-import org.grassroot.android.models.TaskModel;
 import org.grassroot.android.utils.ErrorUtils;
 import org.grassroot.android.utils.NetworkUtils;
 import org.grassroot.android.utils.PermissionUtils;
 import org.grassroot.android.utils.PreferenceUtils;
+import org.grassroot.android.utils.RealmUtils;
 import org.greenrobot.eventbus.EventBus;
-
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -83,7 +82,7 @@ public class GroupService {
     if (userGroups == null || userGroups.isEmpty()) {
       return userGroups;
     } else {
-      return loadGroupsFromDB();
+      return RealmUtils.loadListFromDB(Group.class);
     }
   }
 
@@ -103,14 +102,21 @@ public class GroupService {
         .getUserGroups(mobileNumber, userCode)
         .enqueue(new Callback<GroupResponse>() {
           @Override
+
           public void onResponse(Call<GroupResponse> call, Response<GroupResponse> response) {
             if (response.isSuccessful()) {
               groupsLoading = false;
               groupsFinishedLoading = true;
               userGroups = new ArrayList<>(response.body().getGroups());
-              saveGroupsInDB(response.body().getGroups());
+              RealmUtils.saveDataToRealm(response.body().getGroups());
               EventBus.getDefault().post(new GroupsRefreshedEvent());
               listener.groupListLoaded();
+              for(Group g : response.body().getGroups()){
+                for(Member m : g.getMembers()){
+                  m.setMemberGroupUid();
+                  RealmUtils.saveDataToRealm(m);
+                }
+              }
             } else {
               Log.e(TAG, response.message());
               ErrorUtils.handleServerError(errorViewHolder, activity, response);
@@ -121,24 +127,11 @@ public class GroupService {
           @Override public void onFailure(Call<GroupResponse> call, Throwable t) {
             // default back to loading from DB
             ErrorUtils.handleNetworkError(activity, errorViewHolder, t);
-            loadGroupsFromDB();
+            userGroups = new ArrayList<>(RealmUtils.loadListFromDB(Group.class));
             listener.groupListLoadingError();
           }
         });
   }
-
-    public RealmList<Group> loadGroupsFromDB() {
-        Realm realm = Realm.getDefaultInstance();
-        RealmList<Group> groups = new RealmList<>();
-        if (realm != null && !realm.isClosed()) {
-            RealmResults<Group> results = realm.where(Group.class).findAll();
-            groups.addAll(realm.copyFromRealm(results));
-        }
-        userGroups = new ArrayList<>(groups);
-        realm.close();
-        return groups;
-    }
-
   /*
 
  Called from "swipe refresh" on group recycler, so am just formally separating from the initiating call (which is triggered on app load)
@@ -295,7 +288,6 @@ public class GroupService {
         return group;
     }
 
-
     /* METHODS FOR RETRIEVING AND APPROVING GROUP JOIN REQUESTS */
 
     public void fetchGroupJoinRequests() {
@@ -312,14 +304,14 @@ public class GroupService {
                                 EventBus.getDefault().post(new JoinRequestsReceived());
                             }
                         } else {
-                            loadGroupsFromDB();
+                            //loadGroupsFromDB();
                             Log.e(TAG, "Error retrieving join requests!");
                         }
                     }
 
                     @Override
                     public void onFailure(Call<RealmList<GroupJoinRequest>> call, Throwable t) {
-                        loadGroupsFromDB();
+                        //loadGroupsFromDB();
                         Log.e(TAG, "Error in network!"); // todo : anything?
                     }
                 });

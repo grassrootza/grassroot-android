@@ -16,7 +16,7 @@ import butterknife.ButterKnife;
 public class CreateVoteActivity extends PortraitActivity {
 
     private static final String TAG = CreateVoteActivity.class.getCanonicalName();
-
+    private boolean isGroupLocal;
     private String groupUid;
 
     @BindView(R.id.cvote_tlb)
@@ -36,6 +36,7 @@ public class CreateVoteActivity extends PortraitActivity {
         }
 
         groupUid = b.getString(Constant.GROUPUID_FIELD);
+        isGroupLocal = b.getBoolean(Constant.GROUP_LOCAL);
         setUpToolbar();
         launchFragment();
     }
@@ -57,6 +58,7 @@ public class CreateVoteActivity extends PortraitActivity {
         Bundle args = new Bundle();
         args.putString(TaskConstants.TASK_TYPE_FIELD, TaskConstants.VOTE);
         args.putString(GroupConstants.UID_FIELD, groupUid);
+        args.putBoolean(Constant.GROUP_LOCAL,isGroupLocal);
         ctskFragment.setArguments(args);
 
         getSupportFragmentManager().beginTransaction()

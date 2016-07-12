@@ -26,7 +26,6 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 import butterknife.Unbinder;
-import io.realm.Realm;
 import java.util.Date;
 import java.util.List;
 import org.grassroot.android.R;
@@ -47,7 +46,9 @@ import org.grassroot.android.models.TaskModel;
 import org.grassroot.android.models.TaskResponse;
 import org.grassroot.android.services.GrassrootRestService;
 import org.grassroot.android.utils.ErrorUtils;
+import org.grassroot.android.utils.NetworkUtils;
 import org.grassroot.android.utils.PreferenceUtils;
+import org.grassroot.android.utils.RealmUtils;
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import retrofit2.Call;
@@ -157,11 +158,7 @@ public class ViewTaskFragment extends Fragment {
     if (task == null) {
       retrieveTaskDetails();
     } else {
-      Realm realm = Realm.getDefaultInstance();
-      realm.beginTransaction();
       setUpViews(task);
-      realm.commitTransaction();
-      realm.close();
     }
     return viewToReturn;
   }
@@ -172,33 +169,32 @@ public class ViewTaskFragment extends Fragment {
   }
 
   private void retrieveTaskDetails() {
-    progressDialog.show();
-    Realm realm = Realm.getDefaultInstance();
-    realm.beginTransaction();
-    task = realm.where(TaskModel.class).equalTo("taskUid", taskUid).findFirst();
-    setUpViews(task);
-    realm.commitTransaction();
-    realm.close();
-    GrassrootRestService.getInstance()
-        .getApi()
-        .fetchTaskEntity(phoneNumber, code, taskUid, taskType)
-        .enqueue(new Callback<TaskResponse>() {
-          @Override
-          public void onResponse(Call<TaskResponse> call, Response<TaskResponse> response) {
-            progressDialog.dismiss();
-            if (response.isSuccessful()) {
-              Log.d(TAG, response.body().toString());
-              task = response.body().getTasks().get(0);
-              Log.e(TAG, task.toString());
-              setUpViews(task);
+    if (!NetworkUtils.isNetworkAvailable(getContext())) {
+      task = RealmUtils.loadObjectFromDB(TaskModel.class, "taskUid", taskUid);
+      setUpViews(task);
+    } else {
+      progressDialog.show();
+      GrassrootRestService.getInstance()
+          .getApi()
+          .fetchTaskEntity(phoneNumber, code, taskUid, taskType)
+          .enqueue(new Callback<TaskResponse>() {
+            @Override
+            public void onResponse(Call<TaskResponse> call, Response<TaskResponse> response) {
+              progressDialog.dismiss();
+              if (response.isSuccessful()) {
+                Log.d(TAG, response.body().toString());
+                task = response.body().getTasks().get(0);
+                Log.e(TAG, task.toString());
+                setUpViews(task);
+              }
             }
-          }
 
-          @Override public void onFailure(Call<TaskResponse> call, Throwable t) {
-            progressDialog.dismiss();
-            handleNoNetwork("FETCH");
-          }
-        });
+            @Override public void onFailure(Call<TaskResponse> call, Throwable t) {
+              progressDialog.dismiss();
+              handleNoNetwork("FETCH");
+            }
+          });
+    }
   }
 
   private void setUpViews(TaskModel task) {
@@ -418,7 +414,7 @@ public class ViewTaskFragment extends Fragment {
     memberListAdapter = new MemberListAdapter(getActivity());
     rcResponseList.setLayoutManager(new LinearLayoutManager(getContext()));
     rcResponseList.setAdapter(memberListAdapter);
-
+if(NetworkUtils.isNetworkAvailable(getContext())){
     GrassrootRestService.getInstance()
         .getApi()
         .getTodoAssigned(phoneNumber, code, taskUid)
@@ -444,7 +440,7 @@ public class ViewTaskFragment extends Fragment {
             handleNoNetwork("ASSIGNED_MEMBERS");
           }
         });
-  }
+  }}
 
   private void handleSuccessfulReply(Response<TaskResponse> response, String reply) {
     task = response.body().getTasks().get(0);
@@ -492,58 +488,60 @@ public class ViewTaskFragment extends Fragment {
     mtgRsvpAdapter = new MtgRsvpAdapter();
     rcResponseList.setLayoutManager(new LinearLayoutManager(getContext()));
     rcResponseList.setAdapter(mtgRsvpAdapter);
-
-    GrassrootRestService.getInstance()
-        .getApi()
-        .fetchMeetingRsvps(phoneNumber, code, taskUid)
-        .enqueue(new Callback<RsvpListModel>() {
-          @Override
-          public void onResponse(Call<RsvpListModel> call, Response<RsvpListModel> response) {
-            if (response.isSuccessful()) {
-              RsvpListModel rsvps = response.body();
-              tvResponsesCount.setText(
-                  String.format(getString(R.string.vt_mtg_response_count), rsvps.getNumberInvited(),
-                      rsvps.getNumberYes()));
-              if (rsvps.isCanViewRsvps()) {
-                icResponsesExpand.setVisibility(View.VISIBLE);
-                mtgRsvpAdapter.setMapOfResponses(rsvps.getRsvpResponses());
-                canViewResponses = true;
+    if (NetworkUtils.isNetworkAvailable(getContext())) {
+      GrassrootRestService.getInstance()
+          .getApi()
+          .fetchMeetingRsvps(phoneNumber, code, taskUid)
+          .enqueue(new Callback<RsvpListModel>() {
+            @Override
+            public void onResponse(Call<RsvpListModel> call, Response<RsvpListModel> response) {
+              if (response.isSuccessful()) {
+                RsvpListModel rsvps = response.body();
+                tvResponsesCount.setText(String.format(getString(R.string.vt_mtg_response_count),
+                    rsvps.getNumberInvited(), rsvps.getNumberYes()));
+                if (rsvps.isCanViewRsvps()) {
+                  icResponsesExpand.setVisibility(View.VISIBLE);
+                  mtgRsvpAdapter.setMapOfResponses(rsvps.getRsvpResponses());
+                  canViewResponses = true;
+                } else {
+                  icResponsesExpand.setVisibility(View.GONE);
+                }
               } else {
-                icResponsesExpand.setVisibility(View.GONE);
+                Log.e(TAG, "error! printing: " + response.errorBody());
               }
-            } else {
-              Log.e(TAG, "error! printing: " + response.errorBody());
             }
-          }
 
-          @Override public void onFailure(Call<RsvpListModel> call, Throwable t) {
-            handleNoNetwork("MTG_RSVP");
-          }
-        });
+            @Override public void onFailure(Call<RsvpListModel> call, Throwable t) {
+              handleNoNetwork("MTG_RSVP");
+            }
+          });
+    }
   }
 
   private void setVoteResponseView() {
     tvResponsesCount.setText(task.getDeadlineDate().after(new Date()) ? R.string.vt_vote_count_open
         : R.string.vt_vote_count_closed);
-    GrassrootRestService.getInstance()
-        .getApi()
-        .fetchVoteTotals(phoneNumber, code, taskUid)
-        .enqueue(new Callback<ResponseTotalsModel>() {
-          @Override public void onResponse(Call<ResponseTotalsModel> call,
-              Response<ResponseTotalsModel> response) {
-            if (response.isSuccessful()) {
-              ResponseTotalsModel totals = response.body();
-              displayVoteTotals(totals);
-              canViewResponses = true;
-            } else {
-              Log.e(TAG, "error! printing: " + response.errorBody());
+    if (NetworkUtils.isNetworkAvailable(getContext())) {
+      GrassrootRestService.getInstance()
+          .getApi()
+          .fetchVoteTotals(phoneNumber, code, taskUid)
+          .enqueue(new Callback<ResponseTotalsModel>() {
+            @Override public void onResponse(Call<ResponseTotalsModel> call,
+                Response<ResponseTotalsModel> response) {
+              if (response.isSuccessful()) {
+                ResponseTotalsModel totals = response.body();
+                displayVoteTotals(totals);
+                canViewResponses = true;
+              } else {
+                Log.e(TAG, "error! printing: " + response.errorBody());
+              }
             }
-          }
 
-          @Override public void onFailure(Call<ResponseTotalsModel> call, Throwable t) {
-            handleNoNetwork("VOTE_TOTALS");
-          }
-        });
+            @Override public void onFailure(Call<ResponseTotalsModel> call, Throwable t) {
+              handleNoNetwork("VOTE_TOTALS");
+            }
+          });
+    }
   }
 
   private void displayVoteTotals(ResponseTotalsModel model) {
@@ -607,7 +605,6 @@ public class ViewTaskFragment extends Fragment {
     if (task.isCanEdit()) {
       Intent editMtg = new Intent(getActivity(), EditTaskActivity.class);
       editMtg.putExtra(TaskConstants.TASK_ENTITY_FIELD, task);
-      ;
       startActivityForResult(editMtg, 1);
     }
   }

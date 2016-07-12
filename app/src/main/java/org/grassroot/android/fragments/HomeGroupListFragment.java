@@ -46,6 +46,7 @@ import org.grassroot.android.utils.Constant;
 import org.grassroot.android.utils.ErrorUtils;
 import org.grassroot.android.utils.MenuUtils;
 import org.grassroot.android.utils.PreferenceUtils;
+import org.grassroot.android.utils.RealmUtils;
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 
@@ -60,7 +61,6 @@ import butterknife.OnTextChanged;
 import butterknife.Unbinder;
 import io.realm.Realm;
 import io.realm.RealmList;
-import io.realm.RealmResults;
 
 public class HomeGroupListFragment extends android.support.v4.app.Fragment
     implements GroupListAdapter.GroupRowListener {
@@ -120,7 +120,7 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
     setUpRecyclerView();
 
     //first load from db
-    showGroups(GroupService.getInstance().loadGroupsFromDB());
+    showGroups(RealmUtils.loadListFromDB(Group.class));
   }
 
   /**
@@ -168,7 +168,8 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
           @Override public void groupListLoaded() {
             hideProgress();
             rcGroupList.setVisibility(View.VISIBLE);
-            groupListRowAdapter.setGroupList(GroupService.getInstance().userGroups);
+            groupListRowAdapter.setGroupList(RealmUtils.loadListFromDB(Group.class));
+            rcGroupList.setVisibility(View.VISIBLE);
           }
 
           @Override public void groupListLoadingError() {
@@ -197,7 +198,7 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
     GroupService.getInstance()
         .refreshGroupList(getActivity(), new GroupService.GroupServiceListener() {
           @Override public void groupListLoaded() {
-            groupListRowAdapter.setGroupList(GroupService.getInstance().getGroups());
+            groupListRowAdapter.setGroupList(RealmUtils.loadListFromDB(Group.class));
             glSwipeRefresh.setRefreshing(false);
           }
 
