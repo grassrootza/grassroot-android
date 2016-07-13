@@ -93,8 +93,7 @@
                                 android:imeOptions="actionNext"
                                 android:textSize="34sp"
                                 android:textColor="@color/white"
-                                android:textStyle="normal"
-                                android:textCursorDrawable="@drawable/color_cursor" />
+                                android:textStyle="normal" />
 
                         </android.support.design.widget.TextInputLayout>
 

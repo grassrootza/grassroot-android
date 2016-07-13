@@ -101,7 +101,7 @@
                         android:layout_height="wrap_content">
 
                         <TextView
-                            android:id="@+id/txt_deadline_title"
+                            android:id="@+id/txt_date_title"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_alignParentLeft="true"

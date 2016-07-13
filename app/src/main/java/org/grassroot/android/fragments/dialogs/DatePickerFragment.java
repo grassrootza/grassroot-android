@@ -6,6 +6,8 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.DialogFragment;
 
+import org.grassroot.android.R;
+
 import java.util.Calendar;
 
 /**
@@ -19,6 +21,13 @@ public class DatePickerFragment extends DialogFragment {
         DatePickerFragment fragment = new DatePickerFragment();
         fragment.listener = listener;
         return fragment;
+    }
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        // todo : figure out how to style the colors on this
+        setStyle(DialogFragment.STYLE_NORMAL, R.style.AppTheme);
     }
 
     @Override

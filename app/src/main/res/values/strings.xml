@@ -249,14 +249,15 @@
 
     <string name="cvote_title">Call a vote</string>
     <string name="cvote_subject">Vote subject</string>
-    <string name="cvote_datetime">Closing time</string>
+    <string name="cvote_date">Closing date</string>
+    <string name="cvote_time">Closing time</string>
     <string name="cvote_desc_hint">Add extra notes on the vote subject</string>
     <string name="cvote_invite_all">Vote includes all members</string>
     <string name="cvote_button">Send</string>
 
     <string name="ctodo_title">Record an action</string>
     <string name="ctodo_subject">The action to complete</string>
-    <string name="ctodo_datetime">Due date</string>
+    <string name="ctodo_date">Due date</string>
     <string name="ctodo_desc_hint">Add extra notes on the action</string>
     <string name="ctodo_invite_all">Assigned to whole group</string>
     <string name="ctodo_button">Send</string>

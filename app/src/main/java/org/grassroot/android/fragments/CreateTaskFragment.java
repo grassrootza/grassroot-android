@@ -51,8 +51,6 @@ import org.grassroot.android.models.Group;
 import org.grassroot.android.models.Member;
 import org.grassroot.android.models.TaskModel;
 import org.grassroot.android.services.TaskService;
-import org.grassroot.android.slideDateTimePicker.SlideDateTimeListener;
-import org.grassroot.android.slideDateTimePicker.SlideDateTimePicker;
 import org.grassroot.android.utils.Constant;
 import org.grassroot.android.utils.ErrorUtils;
 import org.grassroot.android.utils.MenuUtils;
@@ -73,6 +71,7 @@ public class CreateTaskFragment extends Fragment {
   private String taskType;
   private boolean groupLocal;
 
+  private boolean datePicked, timePicked;
   private Date selectedDateTime;
   private Calendar selectedDateTimeCal; // Java 7 nastiness
   private boolean includeWholeGroup;
@@ -86,8 +85,8 @@ public class CreateTaskFragment extends Fragment {
   @BindView(R.id.ctsk_et_location) TextInputEditText etLocationInput;
   @BindView(R.id.ctsk_et_description) TextInputEditText etDescriptionInput;
 
-  DatePickerFragment datePicker;
-  TimePickerFragment timePicker;
+  private DatePickerFragment datePicker;
+  private TimePickerFragment timePicker;
   @BindView(R.id.ctsk_cv_datepicker) CardView datePickTrigger;
   @BindView(R.id.ctsk_txt_deadline) TextView dateDisplayed;
   @BindView(R.id.ctsk_cv_timepicker) CardView timePickTrigger;
@@ -153,6 +152,7 @@ public class CreateTaskFragment extends Fragment {
   }
 
   private void updateDate() {
+    datePicked = true;
     selectedDateTime = selectedDateTimeCal.getTime();
     dateDisplayed.setText(TaskConstants.dateDisplayWithoutHours.format(selectedDateTime));
   }
@@ -176,6 +176,7 @@ public class CreateTaskFragment extends Fragment {
   }
 
   private void updateTime() {
+    timePicked = true;
     selectedDateTime = selectedDateTimeCal.getTime();
     timeDisplayed.setText(TaskConstants.timeDisplayWithoutDate.format(selectedDateTime));
   }
@@ -240,7 +241,7 @@ public class CreateTaskFragment extends Fragment {
         .equals("")) {
       ErrorUtils.showSnackBar(vContainer, "Please enter a location", Snackbar.LENGTH_LONG, "",
           null);
-    } else if (selectedDateTime == null) {
+    } else if (!datePicked || (!taskType.equals(TaskConstants.TODO) && !timePicked)) {
       ErrorUtils.showSnackBar(vContainer, "Please enter a date and time for the meeting",
           Snackbar.LENGTH_LONG, "", null);
     } else {
@@ -367,7 +368,8 @@ public class CreateTaskFragment extends Fragment {
 
   @BindView(R.id.ctsk_txt_ipl) TextInputLayout subjectInput;
   @BindView(R.id.ctsk_til_location) TextInputLayout locationInput;
-  @BindView(R.id.txt_deadline_title) TextView deadlineTitle;
+  @BindView(R.id.txt_date_title) TextView dateTitle;
+  @BindView(R.id.txt_time_title) TextView timeTitle;
   @BindView(R.id.ctsk_cv_reminder) CardView reminderCard;
   @BindView(R.id.ctsk_tv_assign_label) TextView assignmentLabel;
 
@@ -386,7 +388,8 @@ public class CreateTaskFragment extends Fragment {
         break;
       case TaskConstants.VOTE:
         subjectInput.setHint(getContext().getString(R.string.cvote_subject));
-        deadlineTitle.setText(R.string.cvote_datetime);
+        dateTitle.setText(R.string.cvote_date);
+        timeTitle.setText(R.string.cvote_time);
         reminderCard.setVisibility(View.GONE);
 
         descriptionBody.setVisibility(View.VISIBLE);
@@ -398,7 +401,8 @@ public class CreateTaskFragment extends Fragment {
         break;
       case TaskConstants.TODO:
         subjectInput.setHint(getContext().getString(R.string.ctodo_subject));
-        deadlineTitle.setText(R.string.ctodo_datetime);
+        dateTitle.setText(R.string.ctodo_date);
+        timePickTrigger.setVisibility(View.GONE);
         descriptionInput.setHint(getContext().getString(R.string.ctodo_desc_hint));
         assignmentLabel.setText(R.string.ctodo_invite_all);
         btTaskCreate.setText(R.string.ctodo_button);

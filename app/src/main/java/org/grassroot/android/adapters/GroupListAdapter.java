@@ -134,10 +134,8 @@ public class GroupListAdapter extends RecyclerView.Adapter<GroupListAdapter.GHP_
         params.width = width;
 
         holder.profileV2.setLayoutParams(params);
-        holder.profileV1.setVisibility(View.VISIBLE);
-        holder.profileV2.setVisibility(View.VISIBLE);
-
         holder.profileV2.setText("+" + String.valueOf(group.getGroupMemberCount()));
+        holder.profileV1.bringToFront();
 
         holder.datetime.setText(
                 String.format(context.getString(R.string.date_time_pattern), getChangePrefix(group),
