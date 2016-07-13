@@ -49,34 +49,43 @@
 
     </RelativeLayout>
 
-        <RelativeLayout
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_below="@+id/rl">
+    <RelativeLayout
+        android:id="@+id/gs_rl_text_icon"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="visible"
+        android:layout_below="@+id/rl">
 
-            <include
-                android:id="@+id/error_layout"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_centerInParent="true"
-                layout="@layout/error_layout"
-                android:visibility="gone">
+        <ImageView
+            android:id="@+id/gs_im_icon"
+            android:layout_width="@dimen/group_avatar_large"
+            android:layout_height="@dimen/group_avatar_large"
+            android:layout_centerHorizontal="true"
+            android:src="@drawable/im_no_groups"
+            android:layout_above="@+id/gs_text_body" />
 
-            </include>
+        <TextView
+            android:id="@+id/gs_text_body"
+            style="@style/TextCentral"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/gs_describe_activity"
+            android:layout_centerInParent="true"/>
 
-            <android.support.v7.widget.RecyclerView
-                android:id="@+id/jr_RecyclerView"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:scrollbars="none"
-                android:background="@color/light_background"
-                android:paddingLeft="10dp"
-                android:paddingRight="10dp"
-                android:paddingTop="8dp"
-                android:clipToPadding="false">
+    </RelativeLayout>
 
-            </android.support.v7.widget.RecyclerView>
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/jr_RecyclerView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@+id/rl"
+        android:visibility="gone"
 
-        </RelativeLayout>
+        android:scrollbars="none"
+        android:background="@color/light_background"
+        android:paddingLeft="@dimen/padding_half"
+        android:paddingRight="@dimen/padding_half"
+        android:paddingTop="@dimen/padding_half"
+        android:clipToPadding="false" />
 
 </RelativeLayout>

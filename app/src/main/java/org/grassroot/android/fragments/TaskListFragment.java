@@ -210,8 +210,10 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
 
       @Override
       public void onFailure(Call<TaskResponse> call, Throwable t) {
-        swipeRefreshLayout.setRefreshing(false);
-        progressDialog.hide();
+        if (swipeRefreshLayout != null && swipeRefreshLayout.isRefreshing()) {
+          swipeRefreshLayout.setRefreshing(false);
+        }
+        progressDialog.dismiss();
         ErrorUtils.connectivityError(getActivity(), R.string.error_no_network,
                 new NetworkErrorDialogListener() {
                   @Override

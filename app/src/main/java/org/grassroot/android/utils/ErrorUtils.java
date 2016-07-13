@@ -98,7 +98,6 @@ public class ErrorUtils {
     public static void connectivityError(Activity context, int message, NetworkErrorDialogListener networkErrorDialogListener) {
         NetworkErrorDialogFragment networkErrorDialogFragment = NetworkErrorDialogFragment.newInstance(message, networkErrorDialogListener);
         networkErrorDialogFragment.show(context.getFragmentManager(), "error_dialog");
-
     }
 
     public static void hostError(View holder, UnknownHostException e) {
