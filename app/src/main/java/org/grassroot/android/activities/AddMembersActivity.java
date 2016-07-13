@@ -22,6 +22,7 @@ import org.grassroot.android.fragments.MemberListFragment;
 import org.grassroot.android.interfaces.GroupConstants;
 import org.grassroot.android.models.Contact;
 import org.grassroot.android.models.GenericResponse;
+import org.grassroot.android.models.GroupResponse;
 import org.grassroot.android.models.Member;
 import org.grassroot.android.services.GrassrootRestService;
 import org.grassroot.android.utils.Constant;
@@ -281,9 +282,9 @@ public class AddMembersActivity extends AppCompatActivity implements
         final String sessionCode = PreferenceUtils.getAuthToken(getApplicationContext());
         GrassrootRestService.getInstance().getApi()
                 .addGroupMembers(groupUid, mobileNumber, sessionCode, membersToAdd)
-                .enqueue(new Callback<GenericResponse>() {
+                .enqueue(new Callback<GroupResponse>() {
                     @Override
-                    public void onResponse(Call<GenericResponse> call, Response<GenericResponse> response) {
+                    public void onResponse(Call<GroupResponse> call, Response<GroupResponse> response) {
                         if (response.isSuccessful()) {
                             // todo : maybe, maybe a progress dialog
                             Map<String,Object> map = new HashMap<String, Object>();
@@ -291,7 +292,7 @@ public class AddMembersActivity extends AppCompatActivity implements
                             map.put("isLocal",true);
                             //todo return members here from API
                             RealmUtils.removeObjectsFromDatabase(Member.class,map);
-                            RealmUtils.saveDataToRealm(membersToAdd);
+                            RealmUtils.saveDataToRealm(response.body().getGroups());
                             Intent i = new Intent();
                             i.putExtra(Constant.GROUPUID_FIELD, groupUid);
                             i.putExtra(Constant.INDEX_FIELD, groupPosition);
@@ -303,7 +304,7 @@ public class AddMembersActivity extends AppCompatActivity implements
                     }
 
                     @Override
-                    public void onFailure(Call<GenericResponse> call, Throwable t) {
+                    public void onFailure(Call<GroupResponse> call, Throwable t) {
                         ErrorUtils.handleNetworkError(AddMembersActivity.this, amRlRoot, t);
                     }
                 });

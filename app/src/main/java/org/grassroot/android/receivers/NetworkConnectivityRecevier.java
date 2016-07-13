@@ -199,9 +199,9 @@ public class NetworkConnectivityRecevier extends BroadcastReceiver {
     GrassrootRestService.getInstance()
         .getApi()
         .addGroupMembers(groupUid, mobileNumber, sessionCode, membersToAdd)
-        .enqueue(new Callback<GenericResponse>() {
+        .enqueue(new Callback<GroupResponse>() {
           @Override
-          public void onResponse(Call<GenericResponse> call, Response<GenericResponse> response) {
+          public void onResponse(Call<GroupResponse> call, Response<GroupResponse> response) {
             if (response.isSuccessful()) {
               // todo : maybe, maybe a progress dialog
               //todo return members here from API
@@ -209,11 +209,12 @@ public class NetworkConnectivityRecevier extends BroadcastReceiver {
               map2.put("isLocal", true);
               map2.put("groupUid", membersToAdd.get(0).getGroupUid());
               RealmUtils.removeObjectsFromDatabase(Member.class,map2);
+              RealmUtils.saveDataToRealm(response.body().getGroups());
             } else {
             }
           }
 
-          @Override public void onFailure(Call<GenericResponse> call, Throwable t) {
+          @Override public void onFailure(Call<GroupResponse> call, Throwable t) {
           }
         });
   }
