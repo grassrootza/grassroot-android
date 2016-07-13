@@ -29,6 +29,15 @@ public class Group extends RealmObject implements Parcelable, Comparable<Group> 
   private String role;
   private Integer groupMemberCount;
   private String imageUrl;
+  private boolean fetchedTasks;
+
+  public boolean isFetchedTasks() {
+    return fetchedTasks;
+  }
+
+  public void setFetchedTasks(boolean fetchedTasks) {
+    this.fetchedTasks = fetchedTasks;
+  }
 
   private RealmList<Member> members=new RealmList<>();
 

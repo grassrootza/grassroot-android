@@ -1,11 +1,16 @@
 package org.grassroot.android.services;
 
+import android.util.Log;
+
+import org.grassroot.android.interfaces.TaskConstants;
 import org.grassroot.android.models.TaskModel;
 import org.grassroot.android.models.TaskResponse;
-import org.grassroot.android.utils.PreferenceUtils;
+import org.grassroot.android.utils.NetworkUtils;
+import org.grassroot.android.utils.RealmUtils;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 
 import io.realm.Realm;
@@ -33,6 +38,12 @@ public class TaskService {
         void tasksLoadedFromServer();
         void taskLoadingFromServerFailed(ResponseBody errorBody);
         void tasksLoadedFromDB();
+    }
+
+    public interface TaskCreationListener {
+        void taskCreatedLocally(TaskModel task);
+        void taskCreatedOnServer(TaskModel task);
+        void taskCreationError(TaskModel task);
     }
 
     protected TaskService() {
@@ -81,8 +92,8 @@ public class TaskService {
 
     public void fetchUpcomingTasks(final TaskServiceListener listener) {
         loadCachedUpcomingTasks(listener);
-        final String mobile = PreferenceUtils.getPhoneNumber();
-        final String code = PreferenceUtils.getAuthToken();
+        final String mobile = RealmUtils.loadPreferencesFromDB().getMobileNumber();
+        final String code = RealmUtils.loadPreferencesFromDB().getToken();
         GrassrootRestService.getInstance().getApi().getUserTasks(mobile, code)
                 .enqueue(new Callback<TaskResponse>() {
                     @Override
@@ -104,5 +115,58 @@ public class TaskService {
                     }
                 });
     }
+
+    public void createTask(final TaskModel task, final TaskCreationListener listener) {
+        if (NetworkUtils.isNetworkAvailable(ApplicationLoader.applicationContext)) {
+            setUpApiCall(task).enqueue(new Callback<TaskResponse>() {
+                @Override
+                public void onResponse(Call<TaskResponse> call, Response<TaskResponse> response) {
+                    if (response.isSuccessful()) {
+                        listener.taskCreatedOnServer(response.body().getTasks().get(0));
+                    } else {
+                        listener.taskCreationError(task);
+                    }
+                }
+
+                @Override
+                public void onFailure(Call<TaskResponse> call, Throwable t) {
+                    Log.e(TAG, "Error! Should not occur ... check Network Utils");
+                    RealmUtils.saveDataToRealm(task);
+                    listener.taskCreatedLocally(task);
+                }
+            });
+        } else {
+            RealmUtils.saveDataToRealm(task);
+            listener.taskCreatedLocally(task);
+        }
+    }
+
+    private Call<TaskResponse> setUpApiCall(TaskModel task) {
+        final String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
+        final String code = RealmUtils.loadPreferencesFromDB().getToken();
+
+        switch (task.getType()) {
+            case TaskConstants.MEETING:
+                final String location = task.getLocation();
+                return GrassrootRestService.getInstance()
+                        .getApi()
+                        .createMeeting(phoneNumber, code, task.getParentUid(), task.getTitle(), task.getDescription(),
+                                task.getDeadlineISO(), task.getMinutes(), location, new HashSet<>(RealmUtils.convertListOfRealmStringInListOfString(task.getMemberUIDS())));
+            case TaskConstants.VOTE:
+                return GrassrootRestService.getInstance()
+                        .getApi()
+                        .createVote(phoneNumber, code, task.getParentUid(), task.getTitle(), task.getDescription(),
+                                task.getDeadlineISO(), task.getMinutes(), new HashSet<>(RealmUtils.convertListOfRealmStringInListOfString(task.getMemberUIDS())), false);
+            case TaskConstants.TODO:
+                return GrassrootRestService.getInstance()
+                        .getApi()
+                        .createTodo(phoneNumber, code, task.getParentUid(), task.getTitle(), task.getDescription(),
+                                task.getDeadlineISO(), task.getMinutes(), new HashSet<>(RealmUtils.convertListOfRealmStringInListOfString(task.getMemberUIDS())));
+            default:
+                throw new UnsupportedOperationException("Error! Missing task type in call");
+        }
+    }
+
+
 
 }

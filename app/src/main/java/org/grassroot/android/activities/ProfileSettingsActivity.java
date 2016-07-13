@@ -11,187 +11,176 @@ import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
-
+import butterknife.BindView;
+import butterknife.ButterKnife;
+import butterknife.OnClick;
 import org.grassroot.android.R;
 import org.grassroot.android.adapters.ProfileAdapter;
+import org.grassroot.android.adapters.RecyclerTouchListener;
 import org.grassroot.android.fragments.dialogs.EditTextDialogFragment;
 import org.grassroot.android.fragments.dialogs.RadioSelectDialogFragment;
 import org.grassroot.android.interfaces.ClickListener;
 import org.grassroot.android.models.GenericResponse;
+import org.grassroot.android.models.PreferenceObject;
 import org.grassroot.android.models.ProfileResponse;
 import org.grassroot.android.services.GrassrootRestService;
-import org.grassroot.android.adapters.RecyclerTouchListener;
-import org.grassroot.android.utils.PreferenceUtils;
-
-import butterknife.BindView;
-import butterknife.ButterKnife;
-import butterknife.OnClick;
+import org.grassroot.android.utils.RealmUtils;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class ProfileSettingsActivity extends PortraitActivity implements
-        EditTextDialogFragment.EditTextDialogListener, RadioSelectDialogFragment.RadioChoiceListener {
+public class ProfileSettingsActivity extends PortraitActivity
+    implements EditTextDialogFragment.EditTextDialogListener,
+    RadioSelectDialogFragment.RadioChoiceListener {
 
-    private static final String TAG = ProfileSettingsActivity.class.getSimpleName();
+  private static final String TAG = ProfileSettingsActivity.class.getSimpleName();
 
-    @BindView(R.id.rl_root)
-    RelativeLayout rlRoot;
-    @BindView(R.id.pp_toolbar)
-    LinearLayout ppToolbar;
-    @BindView(R.id.iv_pp_profile)
-    ImageView ivPpProfile;
-    @BindView(R.id.txt_pp_username)
-    TextView txtPpUsername;
-    @BindView(R.id.txt_pp_number)
-    TextView txtPpNumber;
-    @BindView(R.id.rc_pp)
-    RecyclerView mRecyclerView;
-    @BindView(R.id.bt_pp_update)
-    Button btnupdate;
-    @BindView(R.id.iv_pp_back)
-    ImageView ivPpBack;
+  @BindView(R.id.rl_root) RelativeLayout rlRoot;
+  @BindView(R.id.pp_toolbar) LinearLayout ppToolbar;
+  @BindView(R.id.iv_pp_profile) ImageView ivPpProfile;
+  @BindView(R.id.txt_pp_username) TextView txtPpUsername;
+  @BindView(R.id.txt_pp_number) TextView txtPpNumber;
+  @BindView(R.id.rc_pp) RecyclerView mRecyclerView;
+  @BindView(R.id.bt_pp_update) Button btnupdate;
+  @BindView(R.id.iv_pp_back) ImageView ivPpBack;
 
-    private ProfileAdapter pAdapter;
-    private String username;
-    private String language;
-    private String alertPreference;
+  private ProfileAdapter pAdapter;
+  private String username;
+  private String language;
+  private String alertPreference;
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_profile_settings);
-        ButterKnife.bind(this);
-        getProfileSettings();
-    }
+  @Override protected void onCreate(Bundle savedInstanceState) {
+    super.onCreate(savedInstanceState);
+    setContentView(R.layout.activity_profile_settings);
+    ButterKnife.bind(this);
+    getProfileSettings();
+  }
 
-    private void getProfileSettings() {
+  private void getProfileSettings() {
 
-        final String phoneNumber = PreferenceUtils.getUserPhoneNumber(this);
-        final String code = PreferenceUtils.getAuthToken(this);
-        GrassrootRestService.getInstance().getApi().getUserProfile(phoneNumber,code).enqueue(new Callback<ProfileResponse>() {
-            @Override
-            public void onResponse(Call<ProfileResponse> call, Response<ProfileResponse> response) {
-                if (response.isSuccessful()) {
-                    username = response.body().getProfile().getDisplay_name();
-                    language = response.body().getProfile().getLanguage();
-                    alertPreference = response.body().getProfile().getAlertPreference();
-                    setAllViews();
-                }
+    final String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
+    final String code = RealmUtils.loadPreferencesFromDB().getToken();
+    GrassrootRestService.getInstance()
+        .getApi()
+        .getUserProfile(phoneNumber, code)
+        .enqueue(new Callback<ProfileResponse>() {
+          @Override
+          public void onResponse(Call<ProfileResponse> call, Response<ProfileResponse> response) {
+            if (response.isSuccessful()) {
+              username = response.body().getProfile().getDisplay_name();
+              language = response.body().getProfile().getLanguage();
+              alertPreference = response.body().getProfile().getAlertPreference();
+              setAllViews();
             }
+          }
 
-            @Override
-            public void onFailure(Call<ProfileResponse> call, Throwable t) {
-                Toast.makeText(ProfileSettingsActivity.this, t.getMessage(), Toast.LENGTH_LONG);
-            }
+          @Override public void onFailure(Call<ProfileResponse> call, Throwable t) {
+            Toast.makeText(ProfileSettingsActivity.this, t.getMessage(), Toast.LENGTH_LONG);
+          }
         });
+  }
 
-    }
+  private void updateProfileSetting() {
 
-    private void updateProfileSetting() {
+    final ProgressDialog progressDialog = new ProgressDialog(this);
+    progressDialog.setMessage(getString(R.string.wait_message));
+    final String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
+    final String code = RealmUtils.loadPreferencesFromDB().getToken();
+    progressDialog.show();
 
-        final ProgressDialog progressDialog = new ProgressDialog(this);
-        progressDialog.setMessage(getString(R.string.wait_message));
-        final String phoneNumber = PreferenceUtils.getUserPhoneNumber(this);
-        final String code = PreferenceUtils.getAuthToken(this);
-        progressDialog.show();
-
-        GrassrootRestService.getInstance().getApi().updateProfile(phoneNumber, code, username, language, alertPreference).enqueue(new Callback<GenericResponse>() {
-            @Override
-            public void onResponse(Call<GenericResponse> call, Response<GenericResponse> response) {
-                progressDialog.dismiss();
-                if (response.isSuccessful()) {
-                    PreferenceUtils.setUserName(ProfileSettingsActivity.this, username);
-                    PreferenceUtils.setPrefLanguage(ProfileSettingsActivity.this, language);
-                    PreferenceUtils.setPrefAlert(ProfileSettingsActivity.this, alertPreference);
-                    Toast.makeText(ProfileSettingsActivity.this, R.string.profile_updated, Toast.LENGTH_SHORT).show();
-                }
+    GrassrootRestService.getInstance()
+        .getApi()
+        .updateProfile(phoneNumber, code, username, language, alertPreference)
+        .enqueue(new Callback<GenericResponse>() {
+          @Override
+          public void onResponse(Call<GenericResponse> call, Response<GenericResponse> response) {
+            progressDialog.dismiss();
+            if (response.isSuccessful()) {
+              PreferenceObject object = RealmUtils.loadPreferencesFromDB();
+              object.setUserName(username);
+              object.setLanguagePreference(language);
+              object.setAlert(alertPreference);
+              Toast.makeText(ProfileSettingsActivity.this, R.string.profile_updated,
+                  Toast.LENGTH_SHORT).show();
             }
+          }
 
-            @Override
-            public void onFailure(Call<GenericResponse> call, Throwable t) {
-                progressDialog.dismiss();
-                Toast.makeText(ProfileSettingsActivity.this, t.getMessage(), Toast.LENGTH_LONG);
-            }
+          @Override public void onFailure(Call<GenericResponse> call, Throwable t) {
+            progressDialog.dismiss();
+            Toast.makeText(ProfileSettingsActivity.this, t.getMessage(), Toast.LENGTH_LONG);
+          }
         });
+  }
 
+  private void setAllViews() {
+    txtPpUsername.setText(username);
+    txtPpNumber.setText(RealmUtils.loadPreferencesFromDB().getMobileNumber());
+    mRecyclerView();
+    btnupdate.setVisibility(View.VISIBLE);
+  }
 
-    }
+  @OnClick(R.id.iv_pp_back) public void onBack() {
+    onBackPressed();
+  }
 
-    private void setAllViews() {
-        txtPpUsername.setText(username);
-        txtPpNumber.setText(PreferenceUtils.getUserPhoneNumber(ProfileSettingsActivity.this));
-        mRecyclerView();
-        btnupdate.setVisibility(View.VISIBLE);
-    }
+  @Override public void onBackPressed() {
+    super.onBackPressed();
+    finish();
+  }
 
+  @OnClick(R.id.bt_pp_update) public void onUpdateButton() {
+    updateProfileSetting();
+  }
 
-    @OnClick(R.id.iv_pp_back)
-    public void onBack() {
-        onBackPressed();
-    }
+  private void mRecyclerView() {
 
-    @Override
-    public void onBackPressed() {
-        super.onBackPressed();
-        finish();
+    this.mRecyclerView.setLayoutManager(new LinearLayoutManager(this));
+    pAdapter = new ProfileAdapter();
+    this.mRecyclerView.setAdapter(this.pAdapter);
+    mRecyclerView.setHasFixedSize(true);
 
-    }
+    mRecyclerView.addOnItemTouchListener(
+        new RecyclerTouchListener(getApplicationContext(), mRecyclerView, new ClickListener() {
+          @Override public void onClick(View view, int position) {
 
-    @OnClick(R.id.bt_pp_update)
-    public void onUpdateButton() {
-        updateProfileSetting();
-    }
+            switch (position) {
+              case 0://UpdateName
+                final String currentName = RealmUtils.loadPreferencesFromDB().getUserName();
+                EditTextDialogFragment.newInstance(R.string.pp_name_dialog, currentName,
+                    ProfileSettingsActivity.this).show(getSupportFragmentManager(), "displayname");
+                break;
 
-    private void mRecyclerView() {
+              case 1://language : todo : add "confirm" button
+                RadioSelectDialogFragment.newInstance(R.string.pp_language_dialog_title,
+                    R.array.language, 0, ProfileSettingsActivity.this)
+                    .show(getSupportFragmentManager(), "language");
+                break;
 
-        this.mRecyclerView.setLayoutManager(new LinearLayoutManager(this));
-        pAdapter = new ProfileAdapter();
-        this.mRecyclerView.setAdapter(this.pAdapter);
-        mRecyclerView.setHasFixedSize(true);
+              case 2://notifications
+                RadioSelectDialogFragment.newInstance(R.string.pp_notifications_dialog_title,
+                    R.array.Notifications, 0, ProfileSettingsActivity.this)
+                    .show(getSupportFragmentManager(), "notifications");
+                break;
 
-        mRecyclerView.addOnItemTouchListener(new RecyclerTouchListener(getApplicationContext(), mRecyclerView, new ClickListener() {
-            @Override
-            public void onClick(View view, int position) {
+              case 3://Settings
 
-                switch (position) {
-                    case 0://UpdateName
-                        final String currentName = PreferenceUtils.getUserName(getApplicationContext());
-                        EditTextDialogFragment.newInstance(R.string.pp_name_dialog, currentName, ProfileSettingsActivity.this)
-                                .show(getSupportFragmentManager(), "displayname");
-                        break;
-
-                    case 1://language : todo : add "confirm" button
-                        RadioSelectDialogFragment.newInstance(R.string.pp_language_dialog_title, R.array.language, 0, ProfileSettingsActivity.this)
-                                .show(getSupportFragmentManager(), "language");
-                        break;
-
-                    case 2://notifications
-                        RadioSelectDialogFragment.newInstance(R.string.pp_notifications_dialog_title, R.array.Notifications, 0, ProfileSettingsActivity.this)
-                                .show(getSupportFragmentManager(), "notifications");
-                        break;
-
-                    case 3://Settings
-
-                        break;
-                }
-
+                break;
             }
-            @Override
-            public void onLongClick(View view, int position) {
+          }
 
-            }
+          @Override public void onLongClick(View view, int position) {
+
+          }
         }));
-    }
+  }
 
-    @Override
-    public void radioButtonPicked(int position, String identifier) {
-        language = getResources().getStringArray(R.array.languagekey)[position]; // uh : actually set this
-    }
+  @Override public void radioButtonPicked(int position, String identifier) {
+    language =
+        getResources().getStringArray(R.array.languagekey)[position]; // uh : actually set this
+  }
 
-    @Override
-    public void confirmClicked(String textEntered) {
-        txtPpUsername.setText(textEntered);
-        username = textEntered;
-    }
+  @Override public void confirmClicked(String textEntered) {
+    txtPpUsername.setText(textEntered);
+    username = textEntered;
+  }
 }

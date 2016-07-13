@@ -1,5 +1,6 @@
 package org.grassroot.android.activities;
 
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.SystemClock;
@@ -12,16 +13,13 @@ import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
-import io.realm.RealmList;
 import java.util.Map;
-import java.util.Objects;
 import java.util.UUID;
 import org.grassroot.android.R;
 import org.grassroot.android.fragments.ContactSelectionFragment;
 import org.grassroot.android.fragments.MemberListFragment;
 import org.grassroot.android.interfaces.GroupConstants;
 import org.grassroot.android.models.Contact;
-import org.grassroot.android.models.GenericResponse;
 import org.grassroot.android.models.GroupResponse;
 import org.grassroot.android.models.Member;
 import org.grassroot.android.services.GrassrootRestService;
@@ -29,7 +27,6 @@ import org.grassroot.android.utils.Constant;
 import org.grassroot.android.utils.ErrorUtils;
 import org.grassroot.android.utils.NetworkUtils;
 import org.grassroot.android.utils.PermissionUtils;
-import org.grassroot.android.utils.PreferenceUtils;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -66,6 +63,8 @@ public class AddMembersActivity extends AppCompatActivity implements
 
     private boolean onMainScreen;
     private boolean menuOpen;
+
+    ProgressDialog progressDialog;
 
     @BindView(R.id.rl_am_root) RelativeLayout amRlRoot;
     @BindView(R.id.am_txt_toolbar) TextView toolbarTitle;
@@ -108,6 +107,10 @@ public class AddMembersActivity extends AppCompatActivity implements
         membersFromContacts = new HashMap<>();
         manuallyAddedMembers = new ArrayList<>();
         onMainScreen = true;
+
+        progressDialog = new ProgressDialog(this);
+        progressDialog.setMessage(getString(R.string.txt_pls_wait));
+        progressDialog.setIndeterminate(true);
     }
 
     @OnClick(R.id.am_add_member_options)
@@ -257,7 +260,8 @@ public class AddMembersActivity extends AppCompatActivity implements
         if (newMemberListFragment != null) {
             final List<Member> membersToAdd = newMemberListFragment.getSelectedMembers();
             if (membersToAdd != null && membersToAdd.size() > 0) {
-               if(NetworkUtils.isNetworkAvailable(getApplicationContext())) {
+                progressDialog.show();
+                if(NetworkUtils.isNetworkAvailable(getApplicationContext())) {
                    postNewMembersToGroup(membersToAdd);
                }else{
                    RealmUtils.saveDataToRealm(membersToAdd);
@@ -265,6 +269,7 @@ public class AddMembersActivity extends AppCompatActivity implements
                    i.putExtra(Constant.GROUPUID_FIELD, groupUid);
                    i.putExtra(Constant.INDEX_FIELD, groupPosition);
                    setResult(RESULT_OK, i);
+                   progressDialog.dismiss();
                    finish();
                }
             } else {
@@ -278,15 +283,15 @@ public class AddMembersActivity extends AppCompatActivity implements
     }
 
     private void postNewMembersToGroup(final List<Member> membersToAdd) {
-        final String mobileNumber = PreferenceUtils.getUserPhoneNumber(getApplicationContext());
-        final String sessionCode = PreferenceUtils.getAuthToken(getApplicationContext());
+        final String mobileNumber =
+            RealmUtils.loadPreferencesFromDB().getMobileNumber();
+        final String sessionCode = RealmUtils.loadPreferencesFromDB().getToken();
         GrassrootRestService.getInstance().getApi()
                 .addGroupMembers(groupUid, mobileNumber, sessionCode, membersToAdd)
                 .enqueue(new Callback<GroupResponse>() {
                     @Override
                     public void onResponse(Call<GroupResponse> call, Response<GroupResponse> response) {
                         if (response.isSuccessful()) {
-                            // todo : maybe, maybe a progress dialog
                             Map<String,Object> map = new HashMap<String, Object>();
                             map.put("groupUid",groupUid);
                             map.put("isLocal",true);
@@ -297,8 +302,10 @@ public class AddMembersActivity extends AppCompatActivity implements
                             i.putExtra(Constant.GROUPUID_FIELD, groupUid);
                             i.putExtra(Constant.INDEX_FIELD, groupPosition);
                             setResult(RESULT_OK, i);
+                            progressDialog.dismiss();
                             finish();
                         } else {
+                            progressDialog.dismiss();
                             ErrorUtils.showSnackBar(amRlRoot, R.string.error_wrong_number, Snackbar.LENGTH_SHORT);
                         }
                     }

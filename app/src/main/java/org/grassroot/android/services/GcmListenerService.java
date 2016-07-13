@@ -19,8 +19,9 @@ import org.grassroot.android.R;
 import org.grassroot.android.activities.ViewTaskActivity;
 import org.grassroot.android.events.NotificationEvent;
 import org.grassroot.android.models.GenericResponse;
+import org.grassroot.android.models.PreferenceObject;
 import org.grassroot.android.utils.Constant;
-import org.grassroot.android.utils.PreferenceUtils;
+import org.grassroot.android.utils.RealmUtils;
 import org.greenrobot.eventbus.EventBus;
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -105,8 +106,8 @@ public class GcmListenerService extends com.google.android.gms.gcm.GcmListenerSe
 
     GrassrootRestService.getInstance()
         .getApi()
-        .updateRead(PreferenceUtils.getUserPhoneNumber(getApplicationContext()),
-            PreferenceUtils.getAuthToken(getApplicationContext()), msg.getString(Constant.UID))
+        .updateRead(RealmUtils.loadPreferencesFromDB().getMobileNumber(),
+            RealmUtils.loadPreferencesFromDB().getToken(), msg.getString(Constant.UID))
         .enqueue(new Callback<GenericResponse>() {
           @Override
           public void onResponse(Call<GenericResponse> call, Response<GenericResponse> response) {
@@ -149,13 +150,16 @@ public class GcmListenerService extends com.google.android.gms.gcm.GcmListenerSe
   }
 
   public void incrementNotificationCounter() {
-    final int currentCount = PreferenceUtils.getNotificationCounter(this);
+    PreferenceObject preferenceObject = RealmUtils.loadPreferencesFromDB();
+
+    final int currentCount = preferenceObject.getNotificationCounter();
     new Handler(getMainLooper()).post(new Runnable() {
       @Override public void run() {
         EventBus.getDefault().post(new NotificationEvent(currentCount + 1));
       }
     });
-    PreferenceUtils.setNotificationCounter(this, currentCount + 1);
+    preferenceObject.setNotificationCounter(currentCount + 1);
+    RealmUtils.saveDataToRealm(preferenceObject);
   }
 
   private PendingIntent generateResultIntent(Bundle msg) {

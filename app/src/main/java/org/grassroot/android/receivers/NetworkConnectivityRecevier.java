@@ -13,16 +13,14 @@ import java.util.Map;
 import java.util.Set;
 import org.grassroot.android.events.GroupCreatedEvent;
 import org.grassroot.android.interfaces.TaskConstants;
-import org.grassroot.android.models.GenericResponse;
 import org.grassroot.android.models.Group;
 import org.grassroot.android.models.GroupResponse;
 import org.grassroot.android.models.Member;
+import org.grassroot.android.models.PreferenceObject;
 import org.grassroot.android.models.TaskModel;
 import org.grassroot.android.models.TaskResponse;
-import org.grassroot.android.services.ApplicationLoader;
 import org.grassroot.android.services.GrassrootRestService;
 import org.grassroot.android.utils.NetworkUtils;
-import org.grassroot.android.utils.PreferenceUtils;
 import org.grassroot.android.utils.RealmUtils;
 import org.greenrobot.eventbus.EventBus;
 import retrofit2.Call;
@@ -39,18 +37,23 @@ public class NetworkConnectivityRecevier extends BroadcastReceiver {
         e.printStackTrace();
       }
       RealmList<Group> list = RealmUtils.loadListFromDB(Group.class, "isLocal", true);
+      final String phoneNumber =
+          RealmUtils.loadPreferencesFromDB().getMobileNumber();
+      final String code = RealmUtils.loadPreferencesFromDB().getToken();
       for (final Group g : list) {
         final RealmList<Member> members =
             RealmUtils.loadListFromDB(Member.class, "groupUid", g.getGroupUid());
         GrassrootRestService.getInstance()
             .getApi()
-            .createGroup(PreferenceUtils.getPhoneNumber(), PreferenceUtils.getAuthToken(),
+            .createGroup(phoneNumber, code,
                 g.getGroupName(), g.getDescription(), members)
             .enqueue(new Callback<GroupResponse>() {
               @Override
               public void onResponse(Call<GroupResponse> call, Response<GroupResponse> response) {
                 if (response.isSuccessful()) {
-                  PreferenceUtils.setUserHasGroups(context, true);
+                  PreferenceObject preferenceObject = RealmUtils.loadPreferencesFromDB();
+                  preferenceObject.setHasGroups(true);
+                  RealmUtils.saveDataToRealm(preferenceObject);
                   RealmUtils.saveDataToRealm(response.body().getGroups().first());
                   //sure local, edited or not, same result --> POST to create
                   RealmList<TaskModel> models =
@@ -138,8 +141,9 @@ public class NetworkConnectivityRecevier extends BroadcastReceiver {
   }
 
   public Call<TaskResponse> setUpApiCall(TaskModel model, Context context) {
-    final String phoneNumber = PreferenceUtils.getUserPhoneNumber(context);
-    final String code = PreferenceUtils.getAuthToken(context);
+    final String phoneNumber =
+        RealmUtils.loadPreferencesFromDB().getMobileNumber();
+    final String code = RealmUtils.loadPreferencesFromDB().getToken();
 
     switch (model.getType()) {
       case TaskConstants.MEETING:
@@ -170,8 +174,8 @@ public class NetworkConnectivityRecevier extends BroadcastReceiver {
   public Call<TaskModel> setUpUpdateApiCall(TaskModel model) {
     Set<String> memberUids = Collections.EMPTY_SET;
     final String phoneNumber =
-        PreferenceUtils.getUserPhoneNumber(ApplicationLoader.applicationContext);
-    final String code = PreferenceUtils.getAuthToken(ApplicationLoader.applicationContext);
+        RealmUtils.loadPreferencesFromDB().getMobileNumber();
+    final String code = RealmUtils.loadPreferencesFromDB().getToken();
     switch (model.getType()) {
       case TaskConstants.MEETING:
         return GrassrootRestService.getInstance()
@@ -194,8 +198,8 @@ public class NetworkConnectivityRecevier extends BroadcastReceiver {
 
   private void postNewMembersToGroup(final List<Member> membersToAdd, String groupUid) {
     final String mobileNumber =
-        PreferenceUtils.getUserPhoneNumber(ApplicationLoader.applicationContext);
-    final String sessionCode = PreferenceUtils.getAuthToken(ApplicationLoader.applicationContext);
+        RealmUtils.loadPreferencesFromDB().getMobileNumber();
+    final String sessionCode = RealmUtils.loadPreferencesFromDB().getToken();
     GrassrootRestService.getInstance()
         .getApi()
         .addGroupMembers(groupUid, mobileNumber, sessionCode, membersToAdd)

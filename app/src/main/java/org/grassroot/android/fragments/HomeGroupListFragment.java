@@ -88,7 +88,6 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
     private GroupListAdapter groupListRowAdapter;
     private List<Group> userGroups;
 
-    private boolean creating;
     public boolean date_click = false, role_click = false, defaults_click = false;
 
     private GroupPickCallbacks mCallbacks;
@@ -106,7 +105,6 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
 
   @Override public void onActivityCreated(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
-    creating = true;
     Log.e(TAG, "onActivityCreated Called ... initiating");
     init();
     fetchGroupList();
@@ -116,7 +114,6 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
   @Override public void onResume() {
       super.onResume();
       fabOpenMenu.setVisibility(View.VISIBLE);
-      creating = false;
   }
 
   private void init() {
@@ -166,7 +163,9 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
    * of a connection very well, at all. Will probably need to rethink.
    */
   public void fetchGroupList() {
-    showProgress();
+    if (groupListRowAdapter.getItemCount() == 0) {
+        showProgress();
+    }
     GroupService.getInstance()
         .fetchGroupList(getActivity(), rlGhpRoot, new GroupService.GroupServiceListener() {
           @Override public void groupListLoaded() {
@@ -362,7 +361,6 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
                 group);
         intent.putExtra(Constant.INDEX_FIELD, position);
         startActivity(intent);
-
     }
 
     @Override
@@ -393,7 +391,9 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
     }
 
     private void hideProgress() {
-        progressDialog.dismiss();
+        if (progressDialog != null) {
+            progressDialog.dismiss();
+        }
     }
 
     @Subscribe

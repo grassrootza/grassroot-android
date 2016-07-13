@@ -1,5 +1,6 @@
 package org.grassroot.android.activities;
 
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
@@ -18,7 +19,6 @@ import org.grassroot.android.models.Member;
 import org.grassroot.android.services.GrassrootRestService;
 import org.grassroot.android.utils.Constant;
 import org.grassroot.android.utils.ErrorUtils;
-import org.grassroot.android.utils.PreferenceUtils;
 
 import java.util.HashSet;
 import java.util.List;
@@ -27,6 +27,7 @@ import java.util.Set;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
+import org.grassroot.android.utils.RealmUtils;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -46,6 +47,8 @@ public class RemoveMembersActivity extends PortraitActivity implements MemberLis
     private MemberListFragment memberListFragment;
 
     private Set<String> membersToRemove;
+
+    private ProgressDialog progressDialog;
 
     @BindView(R.id.rl_rm_root)
     RelativeLayout root;
@@ -73,12 +76,13 @@ public class RemoveMembersActivity extends PortraitActivity implements MemberLis
         groupPosition = extras.getInt(Constant.INDEX_FIELD);
 
         membersToRemove = new HashSet<>();
+        progressDialog = new ProgressDialog(this);
+        progressDialog.setIndeterminate(true);
+        progressDialog.setMessage(getString(R.string.txt_pls_wait));
         // todo: permissions, of course
 
         setUpToolbar();
         setUpMemberListFragment();
-
-
     }
 
     @Override
@@ -130,12 +134,14 @@ public class RemoveMembersActivity extends PortraitActivity implements MemberLis
     }
 
     private void saveRemoval() {
-        final String phoneNumber = PreferenceUtils.getUserPhoneNumber(this);
-        final String code = PreferenceUtils.getAuthToken(this);
+        progressDialog.show();
+        final String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
+        final String code = RealmUtils.loadPreferencesFromDB().getToken();
         GrassrootRestService.getInstance().getApi().removeGroupMembers(phoneNumber, code, groupUid, membersToRemove)
                 .enqueue(new Callback<GenericResponse>() {
                     @Override
                     public void onResponse(Call<GenericResponse> call, Response<GenericResponse> response) {
+                        progressDialog.dismiss();
                         Intent i = new Intent();
                         i.putExtra(Constant.GROUPUID_FIELD, groupUid);
                         i.putExtra(Constant.INDEX_FIELD, groupPosition);
@@ -146,6 +152,7 @@ public class RemoveMembersActivity extends PortraitActivity implements MemberLis
 
                     @Override
                     public void onFailure(Call<GenericResponse> call, Throwable t) {
+                        progressDialog.dismiss();
                         ErrorUtils.handleNetworkError(RemoveMembersActivity.this, root, t);
                     }
                 });

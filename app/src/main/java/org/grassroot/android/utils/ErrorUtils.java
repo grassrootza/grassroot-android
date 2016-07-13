@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
 import android.support.design.widget.Snackbar;
+import android.support.v4.app.FragmentActivity;
 import android.util.Log;
 import android.view.View;
 
@@ -61,7 +62,7 @@ public class ErrorUtils {
                         activity.getString(R.string.LOG_OUT), new View.OnClickListener() {
                             @Override
                             public void onClick(View v) {
-                                PreferenceUtils.clearAll(activity.getApplicationContext());
+                                RealmUtils.deleteAllObjects();
                                 Intent open = new Intent(activity, StartActivity.class);
                                 activity.startActivity(open);
                                 activity.finish();
@@ -97,7 +98,7 @@ public class ErrorUtils {
 
     public static void connectivityError(Activity context, int message, NetworkErrorDialogListener networkErrorDialogListener) {
         NetworkErrorDialogFragment networkErrorDialogFragment = NetworkErrorDialogFragment.newInstance(message, networkErrorDialogListener);
-        networkErrorDialogFragment.show(context.getFragmentManager(), "error_dialog");
+        networkErrorDialogFragment.show(((FragmentActivity) context).getSupportFragmentManager(), "error_dialog");
 
     }
 

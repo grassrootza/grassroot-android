@@ -19,14 +19,14 @@ import org.grassroot.android.fragments.OtpScreenFragment;
 import org.grassroot.android.fragments.RegisterScreenFragment;
 import org.grassroot.android.interfaces.NotificationConstants;
 import org.grassroot.android.models.GenericResponse;
+import org.grassroot.android.models.PreferenceObject;
 import org.grassroot.android.models.Token;
 import org.grassroot.android.models.TokenResponse;
-import org.grassroot.android.services.ApplicationLoader;
 import org.grassroot.android.services.GcmRegistrationService;
 import org.grassroot.android.services.GrassrootRestService;
 import org.grassroot.android.utils.Constant;
 import org.grassroot.android.utils.ErrorUtils;
-import org.grassroot.android.utils.PreferenceUtils;
+import org.grassroot.android.utils.RealmUtils;
 import org.grassroot.android.utils.Utilities;
 
 import retrofit2.Call;
@@ -192,15 +192,17 @@ public class LoginRegisterActivity extends AppCompatActivity implements LoginScr
                         if (response.isSuccessful()) {
                             progressDialog.dismiss();
                             Token token = response.body().getToken();
-                            PreferenceUtils.setAuthToken(LoginRegisterActivity.this, token.getCode());
-                            PreferenceUtils.setUserPhoneNumber(LoginRegisterActivity.this, msisdn);
-                            PreferenceUtils.setLoggedInStatus(LoginRegisterActivity.this, true);
-
-                            PreferenceUtils.setUserHasGroups(LoginRegisterActivity.this, response.body().getHasGroups());
-                            PreferenceUtils.setUserName(LoginRegisterActivity.this, response.body().getDisplayName());
+                            PreferenceObject preference = new PreferenceObject();
+                            preference.setToken(token.getCode());
+                            preference.setMobileNumber(msisdn);
+                            preference.setLoggedIn(true);
+                            preference.setHasGroups(response.body().getHasGroups());
+                            preference.setUserName(response.body().getDisplayName());
+                            preference.setMustRefresh(true);
+                            RealmUtils.saveDataToRealm(preference);
 
                             registerOrRefreshGCM(msisdn);
-                            PreferenceUtils.setGroupListMustBeRefreshed(LoginRegisterActivity.this, true);
+
                             launchHomeScreen(response.body().getHasGroups());
 
                             finish();
@@ -217,7 +219,7 @@ public class LoginRegisterActivity extends AppCompatActivity implements LoginScr
                 });
     }
 
-    private void verifyRegistration(String tokenCode) {
+    private void verifyRegistration(final String tokenCode) {
         progressDialog.show();
         GrassrootRestService.getInstance().getApi()
                 .verify(msisdn, tokenCode)
@@ -228,14 +230,16 @@ public class LoginRegisterActivity extends AppCompatActivity implements LoginScr
                         if (response.isSuccessful()) {
                             progressDialog.dismiss();
                             Token token = response.body().getToken();
-                            PreferenceUtils.setAuthToken(LoginRegisterActivity.this, token.getCode());
-                            PreferenceUtils.setUserPhoneNumber(LoginRegisterActivity.this, msisdn);
-                            PreferenceUtils.setUserName(LoginRegisterActivity.this, displayName);
-                            PreferenceUtils.setLoggedInStatus(LoginRegisterActivity.this, true);
+                            PreferenceObject preference = new PreferenceObject();
+                            preference.setToken(token.getCode());
+                            preference.setMobileNumber(msisdn);
+                            preference.setUserName(displayName);
+                            preference.setLoggedIn(true);
 
                             registerOrRefreshGCM(msisdn);
 
-                            PreferenceUtils.setUserHasGroups(ApplicationLoader.applicationContext, false);
+                            preference.setHasGroups(false);
+                            RealmUtils.saveDataToRealm(preference);
                             launchHomeScreen(false); // by definition, registering means no group
                             finish();
 

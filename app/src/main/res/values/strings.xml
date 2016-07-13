@@ -234,11 +234,14 @@
     <string name="ctsk_assign_members_prefix">You have selected</string>
     <string name="ctsk_assign_member_suffix">member</string> <!-- todo : use android getplural instead -->
     <string name="ctsk_assign_members_suffix">members</string>
+    <string name="ctsk_select_date">Select date</string>
+    <string name="ctsk_select_time">Select time</string>
 
     <string name="cmtg_title">Call a meeting</string>
     <string name="cmtg_button">Send</string>
     <string name="cmtg_title_hint">Meeting subject</string>
-    <string name="cmtg_datetime">Meeting date and time</string>
+    <string name="cmtg_date">Meeting date</string>
+    <string name="cmtg_time">Meeting time</string>
     <string name="cmtg_desc_hint">Longer description or notes on the meeting</string>
     <string name="cmtg_invite_all">Invite whole group</string>
     <string name="cmtg_config_reminders_heading">Configure reminder</string>
@@ -246,14 +249,15 @@
 
     <string name="cvote_title">Call a vote</string>
     <string name="cvote_subject">Vote subject</string>
-    <string name="cvote_datetime">Closing time</string>
+    <string name="cvote_date">Closing date</string>
+    <string name="cvote_time">Closing time</string>
     <string name="cvote_desc_hint">Add extra notes on the vote subject</string>
     <string name="cvote_invite_all">Vote includes all members</string>
     <string name="cvote_button">Send</string>
 
     <string name="ctodo_title">Record an action</string>
     <string name="ctodo_subject">The action to complete</string>
-    <string name="ctodo_datetime">Due date</string>
+    <string name="ctodo_date">Due date</string>
     <string name="ctodo_desc_hint">Add extra notes on the action</string>
     <string name="ctodo_invite_all">Assigned to whole group</string>
     <string name="ctodo_button">Send</string>
@@ -373,10 +377,12 @@
     <string name="ac_header_group_create">Created!</string>
     <string name="ac_body_group_create_server">%1$s, has been created with %2$d members. What next? </string>
     <string name="ac_body_group_create_local">You are working offline, so the group %1$s has been created
-        and stored on your phone, and will be sent to the server next time you connect.</string>
+        and stored on your phone, and will be sent to the server next time you connect</string>
 
     <string name="ac_header_task_create">Sent!</string>
-    <string name="ac_body_task_create">We\'ve sent notices to %1$d members about the %2$s</string>
+    <string name="ac_header_task_create_local">Done!</string>
+    <string name="ac_body_task_create_local">You are working offline, so we have created the %1$s
+    and will send it next time you connect</string>
 
     <string name="ac_btn_done">DONE</string>
     <string name="ac_btn_home">HOME</string>
