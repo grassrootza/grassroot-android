@@ -47,7 +47,6 @@ import org.grassroot.android.models.TaskResponse;
 import org.grassroot.android.services.GrassrootRestService;
 import org.grassroot.android.utils.ErrorUtils;
 import org.grassroot.android.utils.NetworkUtils;
-import org.grassroot.android.utils.PreferenceUtils;
 import org.grassroot.android.utils.RealmUtils;
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
@@ -137,8 +136,8 @@ public class ViewTaskFragment extends Fragment {
             "Error! View task fragment with type or UID missing");
       }
 
-      phoneNumber = PreferenceUtils.getPhoneNumber();
-      code = PreferenceUtils.getAuthToken();
+      phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
+      code = RealmUtils.loadPreferencesFromDB().getToken();
       canViewResponses = false;
     } else {
       throw new UnsupportedOperationException(
@@ -663,8 +662,8 @@ if(NetworkUtils.isNetworkAvailable(getContext())){
 
   private Call<GenericResponse> setUpCancelApiCall() {
     final String uid = task.getTaskUid();
-    final String phoneNumber = PreferenceUtils.getUserPhoneNumber(getContext());
-    final String code = PreferenceUtils.getAuthToken(getContext());
+    final String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
+    final String code = RealmUtils.loadPreferencesFromDB().getToken();
     switch (taskType) {
       case TaskConstants.MEETING:
         return GrassrootRestService.getInstance().getApi().cancelMeeting(phoneNumber, code, uid);

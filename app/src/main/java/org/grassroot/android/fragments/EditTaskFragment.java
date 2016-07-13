@@ -7,7 +7,6 @@ import android.app.TimePickerDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.security.keystore.UserNotAuthenticatedException;
 import android.support.design.widget.Snackbar;
 import android.support.design.widget.TextInputEditText;
 import android.support.design.widget.TextInputLayout;
@@ -17,7 +16,6 @@ import android.support.v7.widget.CardView;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.EditorInfo;
@@ -29,23 +27,19 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.TimePicker;
 
-import java.util.UUID;
 import org.grassroot.android.R;
 import org.grassroot.android.events.TaskUpdatedEvent;
 import org.grassroot.android.fragments.dialogs.ConfirmCancelDialogFragment;
 import org.grassroot.android.interfaces.NetworkErrorDialogListener;
 import org.grassroot.android.interfaces.TaskConstants;
 import org.grassroot.android.models.Member;
-import org.grassroot.android.models.MemberList;
 import org.grassroot.android.models.TaskModel;
-import org.grassroot.android.models.TaskResponse;
 import org.grassroot.android.services.ApplicationLoader;
 import org.grassroot.android.services.GrassrootRestService;
 import org.grassroot.android.utils.Constant;
 import org.grassroot.android.utils.ErrorUtils;
 import org.grassroot.android.utils.MenuUtils;
 import org.grassroot.android.utils.NetworkUtils;
-import org.grassroot.android.utils.PreferenceUtils;
 import org.grassroot.android.utils.RealmUtils;
 import org.grassroot.android.utils.Utilities;
 import org.greenrobot.eventbus.EventBus;
@@ -54,7 +48,6 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -63,7 +56,6 @@ import butterknife.ButterKnife;
 import butterknife.OnClick;
 import butterknife.OnEditorAction;
 import butterknife.OnTextChanged;
-import butterknife.OnTouch;
 import butterknife.Unbinder;
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -214,7 +206,7 @@ public class EditTaskFragment extends Fragment implements DatePickerDialog.OnDat
             selectedMembers = new ArrayList<>();
         } else {
             GrassrootRestService.getInstance().getApi().fetchAssignedMembers(
-                    PreferenceUtils.getPhoneNumber(), PreferenceUtils.getAuthToken(),
+                    RealmUtils.loadPreferencesFromDB().getMobileNumber(), RealmUtils.loadPreferencesFromDB().getToken(),
                     task.getTaskUid(), taskType).enqueue(new Callback<List<Member>>() {
                 @Override
                 public void onResponse(Call<List<Member>> call, Response<List<Member>> response) {
@@ -429,8 +421,8 @@ public class EditTaskFragment extends Fragment implements DatePickerDialog.OnDat
     }
     public Call<TaskModel> setUpUpdateApiCall(TaskModel model) {
         Set<String> memberUids = (selectedMembers == null) ? Collections.EMPTY_SET : Utilities.convertMemberListToUids(selectedMembers);
-        final String phoneNumber = PreferenceUtils.getUserPhoneNumber(ApplicationLoader.applicationContext);
-        final String code = PreferenceUtils.getAuthToken(ApplicationLoader.applicationContext);
+        final String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
+        final String code = RealmUtils.loadPreferencesFromDB().getToken();
         switch (taskType) {
             case TaskConstants.MEETING:
                 return GrassrootRestService.getInstance().getApi().editMeeting(phoneNumber, code, model.getTaskUid(),

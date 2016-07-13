@@ -7,8 +7,8 @@ import android.util.Log;
 
 import org.grassroot.android.models.GenericResponse;
 import org.grassroot.android.utils.Constant;
-import org.grassroot.android.utils.PreferenceUtils;
 
+import org.grassroot.android.utils.RealmUtils;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -36,10 +36,10 @@ public class NotificationUpdateService extends IntentService {
 
     private void update(final String uid) {
 
-        String phoneNumber = PreferenceUtils.getUserPhoneNumber(this);
-        String code = PreferenceUtils.getAuthToken(this);
+      String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
+      String userToken = RealmUtils.loadPreferencesFromDB().getToken();
 
-        GrassrootRestService.getInstance().getApi().updateRead(phoneNumber, code, uid).
+        GrassrootRestService.getInstance().getApi().updateRead(phoneNumber, userToken, uid).
                 enqueue(new Callback<GenericResponse>() {
                     @Override
                     public void onResponse(Call<GenericResponse> call, Response<GenericResponse> response) {

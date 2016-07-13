@@ -6,7 +6,6 @@ import org.grassroot.android.interfaces.TaskConstants;
 import org.grassroot.android.models.TaskModel;
 import org.grassroot.android.models.TaskResponse;
 import org.grassroot.android.utils.NetworkUtils;
-import org.grassroot.android.utils.PreferenceUtils;
 import org.grassroot.android.utils.RealmUtils;
 
 import java.util.ArrayList;
@@ -93,8 +92,8 @@ public class TaskService {
 
     public void fetchUpcomingTasks(final TaskServiceListener listener) {
         loadCachedUpcomingTasks(listener);
-        final String mobile = PreferenceUtils.getPhoneNumber();
-        final String code = PreferenceUtils.getAuthToken();
+        final String mobile = RealmUtils.loadPreferencesFromDB().getMobileNumber();
+        final String code = RealmUtils.loadPreferencesFromDB().getToken();
         GrassrootRestService.getInstance().getApi().getUserTasks(mobile, code)
                 .enqueue(new Callback<TaskResponse>() {
                     @Override
@@ -143,8 +142,8 @@ public class TaskService {
     }
 
     private Call<TaskResponse> setUpApiCall(TaskModel task) {
-        final String phoneNumber = PreferenceUtils.getPhoneNumber();
-        final String code = PreferenceUtils.getAuthToken();
+        final String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
+        final String code = RealmUtils.loadPreferencesFromDB().getToken();
 
         switch (task.getType()) {
             case TaskConstants.MEETING:

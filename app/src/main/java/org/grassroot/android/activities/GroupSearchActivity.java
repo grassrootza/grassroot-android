@@ -31,7 +31,6 @@ import org.grassroot.android.models.GroupSearchResponse;
 import org.grassroot.android.services.GrassrootRestService;
 import org.grassroot.android.adapters.RecyclerTouchListener;
 import org.grassroot.android.utils.ErrorUtils;
-import org.grassroot.android.utils.PreferenceUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -42,6 +41,7 @@ import butterknife.OnClick;
 import butterknife.OnEditorAction;
 import butterknife.OnTextChanged;
 import butterknife.OnTouch;
+import org.grassroot.android.utils.RealmUtils;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -236,8 +236,8 @@ public class GroupSearchActivity extends PortraitActivity implements OnClickList
 
     private void sendJoinRequest() {
         progressDialog.show();
-        String phoneNumber = PreferenceUtils.getUserPhoneNumber(this);
-        String code = PreferenceUtils.getAuthToken(this);
+        final String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
+        final String code = RealmUtils.loadPreferencesFromDB().getToken();
         GrassrootRestService.getInstance().getApi().groupJoinRequest(phoneNumber, code, uid)
                 .enqueue(new Callback<GenericResponse>() {
                     @Override

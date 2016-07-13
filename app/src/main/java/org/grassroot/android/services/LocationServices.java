@@ -20,8 +20,8 @@ import com.google.android.gms.location.LocationSettingsResult;
 import org.grassroot.android.models.GenericResponse;
 import org.grassroot.android.utils.Constant;
 import org.grassroot.android.utils.PermissionUtils;
-import org.grassroot.android.utils.PreferenceUtils;
 
+import org.grassroot.android.utils.RealmUtils;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -141,8 +141,8 @@ public class LocationServices implements GoogleApiClient.ConnectionCallbacks, Go
     }
 
     private void storeUserLocation(double latitude, double longitude) {
-        String userNumber = PreferenceUtils.getUserPhoneNumber(context);
-        String userToken = PreferenceUtils.getAuthToken(context);
+        String userNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
+        String userToken = RealmUtils.loadPreferencesFromDB().getToken();
 
         GrassrootRestService.getInstance().getApi()
                 .logLocation(userNumber, userToken, latitude, longitude)

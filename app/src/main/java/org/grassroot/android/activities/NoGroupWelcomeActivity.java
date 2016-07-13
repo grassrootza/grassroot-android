@@ -10,8 +10,8 @@ import org.grassroot.android.events.GroupCreatedEvent;
 import org.grassroot.android.events.UserLoggedOutEvent;
 import org.grassroot.android.fragments.NavigationDrawerFragment;
 import org.grassroot.android.fragments.WelcomeFragment;
-import org.grassroot.android.services.ApplicationLoader;
-import org.grassroot.android.utils.PreferenceUtils;
+import org.grassroot.android.models.PreferenceObject;
+import org.grassroot.android.utils.RealmUtils;
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 
@@ -54,7 +54,10 @@ public class NoGroupWelcomeActivity extends PortraitActivity implements WelcomeF
 
     @Subscribe
     public void onGroupCreated(GroupCreatedEvent e) {
-        PreferenceUtils.setUserHasGroups(ApplicationLoader.applicationContext, true); // todo : may be able to remove this
+        PreferenceObject object = RealmUtils.loadPreferencesFromDB();
+        object.setHasGroups(true);
+        RealmUtils.saveDataToRealm(object);
+        // todo : may be able to remove this
         Intent goToHomeScreen = new Intent(NoGroupWelcomeActivity.this, HomeScreenActivity.class);
         goToHomeScreen.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         startActivity(goToHomeScreen);
