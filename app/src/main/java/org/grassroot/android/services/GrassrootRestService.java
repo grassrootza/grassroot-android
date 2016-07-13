@@ -140,7 +140,7 @@ public class GrassrootRestService {
      */
     @GET("user/add/{phoneNumber}/{displayName}")
     Call<GenericResponse> addUser(@Path("phoneNumber") String phoneNumber,
-        @Path("displayName") String displayName);
+                                  @Path("displayName") String displayName);
 
     @GET("user/login/{phoneNumber}")
     Call<GenericResponse> login(@Path("phoneNumber") String phoneNumber);

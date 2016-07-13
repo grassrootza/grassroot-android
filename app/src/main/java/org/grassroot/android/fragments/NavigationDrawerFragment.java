@@ -131,7 +131,7 @@ public class NavigationDrawerFragment extends Fragment implements TaskService.Ta
     public List<NavDrawerItem> getData() {
         draweritems = new ArrayList<>();
 
-        groups = new NavDrawerItem(getString(R.string.drawer_group_list), R.drawable.ic_home, R.drawable.ic_home_green, true, true);
+        groups = new NavDrawerItem(getString(R.string.drawer_group_list), R.drawable.ic_groups_general, R.drawable.ic_groups_general, true, true);
         groups.setItemCount(RealmUtils.loadListFromDB(Group.class).size());
         Log.e(TAG, "size of groups loaded: " + groups.getItemCount());
         draweritems.add(groups);

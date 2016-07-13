@@ -282,7 +282,7 @@ public class HomeScreenActivity extends PortraitActivity implements NavigationDr
 
     private void toggleClickableTitle(boolean clickable) {
         if (toolbarTitle == null) {
-          //  toolbarTitle = findToolbarTitle();
+          toolbarTitle = findToolbarTitle();
         }
 
         // not fully confident of action bar behavior, and don't want to crash app for this, hence check again

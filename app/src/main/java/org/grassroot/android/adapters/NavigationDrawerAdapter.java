@@ -4,13 +4,11 @@ package org.grassroot.android.adapters;
  * Created by Ravi on 29/07/15.
  */
 
-import android.animation.AnimatorInflater;
 import android.animation.AnimatorSet;
 import android.content.Context;
 import android.graphics.Typeface;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -19,12 +17,8 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import org.grassroot.android.R;
-import org.grassroot.android.interfaces.NavigationConstants;
 import org.grassroot.android.models.NavDrawerItem;
-import org.grassroot.android.services.ApplicationLoader;
-import org.grassroot.android.utils.PreferenceUtils;
 
-import java.util.ArrayList;
 import java.util.List;
 
 
@@ -33,9 +27,7 @@ public class NavigationDrawerAdapter extends RecyclerView.Adapter<NavigationDraw
     private static final String TAG = NavigationDrawerAdapter.class.getCanonicalName();
 
     List<NavDrawerItem> data;
-    private Context mContext;
     private LayoutInflater inflater;
-    private AnimatorSet set;
     private MyViewHolder holder;
 
     final int textSelectedColor;
@@ -45,7 +37,6 @@ public class NavigationDrawerAdapter extends RecyclerView.Adapter<NavigationDraw
 
     public NavigationDrawerAdapter(Context context, List<NavDrawerItem> data) {
         this.data = data;
-        this.mContext = context;
         this.inflater = LayoutInflater.from(context);
 
         textSelectedColor = ContextCompat.getColor(context, R.color.primaryColor);
