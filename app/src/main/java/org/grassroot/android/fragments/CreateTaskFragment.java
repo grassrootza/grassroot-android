@@ -119,13 +119,6 @@ public class CreateTaskFragment extends Fragment {
     selectedDateTimeCal = Calendar.getInstance();
 
     includeWholeGroup = true;
-
-    /*datePickerListener = new SlideDateTimeListener() {
-      @Override public void onDateTimeSet(Date date) {
-        selectedDateTime = date;
-        dateDisplayed.setText(TaskConstants.dateDisplayFormatWithHours.format(date));
-      }
-    };*/
   }
 
   @Override public View onCreateView(LayoutInflater inflater, ViewGroup container,

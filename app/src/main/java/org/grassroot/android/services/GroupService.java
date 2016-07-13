@@ -21,6 +21,7 @@ import org.grassroot.android.interfaces.TaskConstants;
 import org.grassroot.android.models.Group;
 import org.grassroot.android.models.GroupJoinRequest;
 import org.grassroot.android.models.GroupResponse;
+import org.grassroot.android.models.GroupsChangedResponse;
 import org.grassroot.android.models.Member;
 import org.grassroot.android.models.RealmString;
 import org.grassroot.android.utils.ErrorUtils;
@@ -100,18 +101,18 @@ public class GroupService {
     GrassrootRestService.getInstance()
         .getApi()
         .getUserGroups(mobileNumber, userCode)
-        .enqueue(new Callback<GroupResponse>() {
+        .enqueue(new Callback<GroupsChangedResponse>() {
           @Override
 
-          public void onResponse(Call<GroupResponse> call, Response<GroupResponse> response) {
+          public void onResponse(Call<GroupsChangedResponse> call, Response<GroupsChangedResponse> response) {
             if (response.isSuccessful()) {
               groupsLoading = false;
               groupsFinishedLoading = true;
-              userGroups = new ArrayList<>(response.body().getGroups());
-              RealmUtils.saveDataToRealm(response.body().getGroups());
+              userGroups = new ArrayList<>(response.body().getAddedAndUpdated());
+              RealmUtils.saveDataToRealm(response.body().getAddedAndUpdated());
               EventBus.getDefault().post(new GroupsRefreshedEvent());
               listener.groupListLoaded();
-              for(Group g : response.body().getGroups()){
+              for(Group g : response.body().getAddedAndUpdated()){
                 for(Member m : g.getMembers()){
                   m.setMemberGroupUid();
                   RealmUtils.saveDataToRealm(m);
@@ -124,7 +125,7 @@ public class GroupService {
             }
           }
 
-          @Override public void onFailure(Call<GroupResponse> call, Throwable t) {
+          @Override public void onFailure(Call<GroupsChangedResponse> call, Throwable t) {
             // default back to loading from DB
             ErrorUtils.handleNetworkError(activity, errorViewHolder, t);
             userGroups = new ArrayList<>(RealmUtils.loadListFromDB(Group.class));
@@ -142,9 +143,9 @@ public class GroupService {
     GrassrootRestService.getInstance()
         .getApi()
         .getUserGroups(mobileNumber, userCode)
-        .enqueue(new Callback<GroupResponse>() {
+        .enqueue(new Callback<GroupsChangedResponse>() {
           @Override
-          public void onResponse(Call<GroupResponse> call, Response<GroupResponse> response) {
+          public void onResponse(Call<GroupsChangedResponse> call, Response<GroupsChangedResponse> response) {
             if (response.isSuccessful()) {
               listener.groupListLoaded();
             } else {
@@ -152,7 +153,7 @@ public class GroupService {
             }
           }
 
-          @Override public void onFailure(Call<GroupResponse> call, Throwable t) {
+          @Override public void onFailure(Call<GroupsChangedResponse> call, Throwable t) {
             ErrorUtils.connectivityError(activity, R.string.error_no_network,
                 new NetworkErrorDialogListener() {
                   @Override public void retryClicked() {

@@ -12,11 +12,11 @@ import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 
-import org.grassroot.android.models.EventResponse;
 import org.grassroot.android.models.GenericResponse;
 import org.grassroot.android.models.GroupJoinRequest;
 import org.grassroot.android.models.GroupResponse;
 import org.grassroot.android.models.GroupSearchResponse;
+import org.grassroot.android.models.GroupsChangedResponse;
 import org.grassroot.android.models.Member;
 import org.grassroot.android.models.MemberList;
 import org.grassroot.android.models.NotificationList;
@@ -208,12 +208,10 @@ public class GrassrootRestService {
     @GET("group/image/remove/{phoneNumber}/{code}/{groupUid}")
     Call<GenericResponse> removeImage(@Path("phoneNumber") String phoneNumber, @Path("code") String code, @Path("groupUid") String groupUid);
 
-
-
     //user groups
     @GET("group/list/{phoneNumber}/{code}")
-    Call<GroupResponse> getUserGroups(@Path("phoneNumber") String phoneNumber,
-        @Path("code") String code);
+    Call<GroupsChangedResponse> getUserGroups(@Path("phoneNumber") String phoneNumber,
+                                              @Path("code") String code);
 
     @GET("group/get/{phoneNumber}/{code}/{groupUid}")
     Call<GroupResponse> getSingleGroup(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
@@ -234,15 +232,10 @@ public class GrassrootRestService {
     @GET("group/search")
     Call<GroupSearchResponse> search(@Query("searchTerm") String searchTerm);
 
-    // retrieve group members
-    @GET("group/members/list/{phoneNumber}/{code}/{groupUid}/{selected}")
-    Call<MemberList> getGroupMembers(@Path("groupUid") String groupUid, @Path("phoneNumber") String phoneNumber,
-        @Path("code") String code, @Path("selected") boolean selected);
-
     // add members to a group
     @Headers("Content-Type: application/json")
     @POST("group/members/add/{phoneNumber}/{code}/{uid}")
-    Call<GenericResponse> addGroupMembers(@Path("uid") String groupUid, @Path("phoneNumber") String phoneNumber,
+    Call<GroupResponse> addGroupMembers(@Path("uid") String groupUid, @Path("phoneNumber") String phoneNumber,
         @Path("code") String code, @Body List<Member> membersToAdd);
 
     // remove members from a group
@@ -267,11 +260,6 @@ public class GrassrootRestService {
     @GET("task/fetch/{phoneNumber}/{code}/{taskUid}/{taskType}")
     Call<TaskResponse> fetchTaskEntity(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
         @Path("taskUid") String taskUid, @Path("taskType") String taskType);
-
-    //view vote
-    @GET("vote/view/{id}/{phoneNumber}/{code}")
-    Call<EventResponse> viewVote(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
-        @Path("id") String id);
 
     // get meeting RSVP list
     @GET("meeting/rsvps/{phoneNumber}/{code}/{meetingUid}")

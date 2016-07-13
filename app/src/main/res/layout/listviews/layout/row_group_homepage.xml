@@ -32,8 +32,8 @@
 
                 <ImageView
                     android:id="@+id/iv_gp_avatar"
-                    android:layout_width="80dp"
-                    android:layout_height="80dp"
+                    android:layout_width="@dimen/group_avatar_small"
+                    android:layout_height="@dimen/group_avatar_small"
                     android:layout_alignParentLeft="true"
                     android:layout_marginRight="8dp"
                     android:src="@drawable/ic_profile_image"
