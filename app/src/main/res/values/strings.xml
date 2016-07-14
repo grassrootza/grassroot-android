@@ -158,12 +158,23 @@
     <!--Group search and join -->
     <string name="search">Search</string>
     <string name="search_box">Enter group name</string>
-    <string name="validate_search_box">Please search for a group</string>
-    <string name="alertbox">Are you sure you want to send a group join request ?</string>
-    <string name="USER_ALREADY_PART">User already part of group</string>
+    <string name="gs_describe_activity">Please enter the name or part of a name to search for groups.
+    Only groups that are set to public will be found. To join private groups, ask the organizer for
+    the join code and enter it in the search box.</string>
+    <string name="gs_none_found_text">Sorry, we didn\'t find any groups that match that term. Please
+    enter another search word, or a group join code.</string>
+    <string name="validate_search_box">Please enter a search word to find public groups</string>
+
+    <string name="gs_dialog_title">Send join request?</string>
+    <string name="gs_dialog_message_hint">Enter a message to let the group organizer know who you are</string>
+    <string name="gs_dialog_message_error">Please enter a message to send</string>
+    <string name="gs_dialog_send">SEND</string>
+    <string name="gs_dialog_cancel">CANCEL</string>
 
     <string name="Title_Dialog_GroupJoin">Group join request</string>
     <string name="Title_Join_Request_Sent">Join request sent!</string>
+
+    <string name="USER_ALREADY_PART">User already part of group</string>
     <string name="none">NONE</string>
 
     <!-- Member list fragment -->

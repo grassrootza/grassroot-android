@@ -221,7 +221,7 @@ public class GrassrootRestService {
     @POST("group/join/request/{phoneNumber}/{code}")
     Call<GenericResponse> groupJoinRequest(@Path("phoneNumber") String phoneNumber,
         @Path("code") String code,
-        @Query("uid") String uid);
+        @Query("uid") String uid, @Query("message") String message);
 
     //find open join requests assigned to this user
     @GET("group/join/list/{phoneNumber}/{code}")
@@ -229,8 +229,10 @@ public class GrassrootRestService {
         @Path("code") String code);
 
     //search for public groups
-    @GET("group/search")
-    Call<GroupSearchResponse> search(@Query("searchTerm") String searchTerm);
+    @GET("group/search/{phoneNumber}/{code}")
+    Call<GroupSearchResponse> search(@Path("phoneNumber") String phoneNumber,
+                                     @Path("code") String code,
+                                     @Query("searchTerm") String searchTerm);
 
     // add members to a group
     @Headers("Content-Type: application/json")

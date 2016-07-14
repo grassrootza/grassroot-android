@@ -31,6 +31,7 @@ import org.grassroot.android.events.TaskCancelledEvent;
 import org.grassroot.android.events.TaskChangedEvent;
 import org.grassroot.android.fragments.dialogs.ConfirmCancelDialogFragment;
 import org.grassroot.android.interfaces.GroupPickCallbacks;
+import org.grassroot.android.interfaces.NetworkErrorDialogListener;
 import org.grassroot.android.interfaces.TaskConstants;
 import org.grassroot.android.models.Group;
 import org.grassroot.android.models.TaskModel;
@@ -202,16 +203,20 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
         ErrorUtils.handleServerError(rcTaskView, getActivity(), response);
       }
 
-      @Override public void onFailure(Call<TaskResponse> call, Throwable t) {
-        swipeRefreshLayout.setRefreshing(false);
-        progressDialog.hide();
-        //ErrorUtils.connectivityError(getActivity(), R.string.error_no_network,
-        //        new NetworkErrorDialogListener() {
-        //          @Override
-        //          public void retryClicked() {
-        //            fetchTaskList();
-        //          }
-        //        });
+      @Override
+      public void onFailure(Call<TaskResponse> call, Throwable t) {
+        if (swipeRefreshLayout != null && swipeRefreshLayout.isRefreshing()) {
+          swipeRefreshLayout.setRefreshing(false);
+        }
+        progressDialog.dismiss();
+        /* todo : do actually need to make this work
+        ErrorUtils.connectivityError(getActivity(), R.string.error_no_network,
+                new NetworkErrorDialogListener() {
+                  @Override
+                  public void retryClicked() {
+                    fetchTaskList();
+                  }
+                });*/
       }
     });
   }
