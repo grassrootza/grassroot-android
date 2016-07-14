@@ -23,6 +23,7 @@ import butterknife.ButterKnife;
 import butterknife.OnClick;
 import butterknife.Unbinder;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import org.grassroot.android.R;
 import org.grassroot.android.adapters.TasksAdapter;
@@ -176,52 +177,42 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
 
   private void fetchGroupTasks() {
     final Group group = RealmUtils.loadObjectFromDB(Group.class, "groupUid", groupUid);
-    if(group.isFetchedTasks()) groupTasksAdapter.changeToTaskList(
-        RealmUtils.loadListFromDB(TaskModel.class, "parentUid", groupUid));
+    if (group.isFetchedTasks()) {
+      groupTasksAdapter.changeToTaskList(
+          RealmUtils.loadListFromDB(TaskModel.class, "parentUid", groupUid));
+    }
     swipeRefreshLayout.setRefreshing(true);
     progressDialog.show();
-
-    Call<TaskResponse> call =
-        GrassrootRestService.getInstance().getApi().getGroupTasks(phoneNumber, code, groupUid);
-
-    call.enqueue(new Callback<TaskResponse>() {
-      @Override public void onResponse(Call<TaskResponse> call, Response<TaskResponse> response) {
-        progressDialog.hide();
-        if (response.isSuccessful()) {
-          swipeRefreshLayout.setRefreshing(false);
-          final TaskResponse taskResponse = response.body();
-          if (taskResponse.getTasks() == null || taskResponse.getTasks().isEmpty()) {
-            handleNoTasksFound();
-          } else {
-            groupTasksAdapter.changeToTaskList(taskResponse.getTasks());
-            RealmUtils.saveDataToRealm(taskResponse.getTasks());
-          }
-          group.setFetchedTasks(true);
-          RealmUtils.saveDataToRealm(group);
-          return;
-        }
-        ErrorUtils.handleServerError(rcTaskView, getActivity(), response);
+    TaskService.getInstance().fetchGroupTasks(groupUid, new TaskService.TaskServiceListener() {
+      @Override public void tasksLoadedFromServer(List<TaskModel> tasks) {
+        handleTaskLoaded(tasks, group);
       }
 
-      @Override
-      public void onFailure(Call<TaskResponse> call, Throwable t) {
-        if (swipeRefreshLayout != null && swipeRefreshLayout.isRefreshing()) {
-          swipeRefreshLayout.setRefreshing(false);
-        }
-        progressDialog.dismiss();
-        /* todo : do actually need to make this work
-        ErrorUtils.connectivityError(getActivity(), R.string.error_no_network,
-                new NetworkErrorDialogListener() {
-                  @Override
-                  public void retryClicked() {
-                    fetchTaskList();
-                  }
-                });*/
+      @Override public void taskLoadingFromServerFailed(Response errorBody) {
+        progressDialog.hide();
+        ErrorUtils.handleServerError(rcTaskView, getActivity(), errorBody);
+      }
+
+      @Override public void tasksLoadedFromDB(List<TaskModel> tasks) {
+        handleTaskLoaded(tasks, group);
       }
     });
   }
 
+  private void handleTaskLoaded(List<TaskModel> tasks, Group group) {
+    progressDialog.hide();
+    swipeRefreshLayout.setRefreshing(false);
+    if (tasks == null || tasks.isEmpty()) {
+      handleNoTasksFound();
+    } else {
+      groupTasksAdapter.changeToTaskList(tasks);
+      group.setFetchedTasks(true);
+      RealmUtils.saveDataToRealm(group);
+    }
+  }
+
   private void handleNoTasksFound() {
+    progressDialog.hide();
     swipeRefreshLayout.setVisibility(View.GONE);
     if (groupUid == null) {
       noTaskMessageText.setText(R.string.txt_no_task_upcoming);

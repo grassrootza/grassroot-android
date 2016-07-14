@@ -31,6 +31,7 @@ import org.grassroot.android.interfaces.NavigationConstants;
 import org.grassroot.android.interfaces.NotificationConstants;
 import org.grassroot.android.models.Group;
 import org.grassroot.android.models.NavDrawerItem;
+import org.grassroot.android.models.TaskModel;
 import org.grassroot.android.services.GcmRegistrationService;
 import org.grassroot.android.adapters.RecyclerTouchListener;
 import org.grassroot.android.services.GroupService;
@@ -46,7 +47,7 @@ import java.util.List;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import okhttp3.ResponseBody;
-
+import retrofit2.Response;
 
 public class NavigationDrawerFragment extends Fragment implements TaskService.TaskServiceListener {
 
@@ -200,17 +201,17 @@ public class NavigationDrawerFragment extends Fragment implements TaskService.Ta
     }
 
     @Override
-    public void tasksLoadedFromServer() {
+    public void tasksLoadedFromServer(List<TaskModel> tasks) {
         updateTaskCount();
     }
 
     @Override
-    public void taskLoadingFromServerFailed(ResponseBody errorBody) {
+    public void taskLoadingFromServerFailed(Response errorBody) {
         // todo : do something with this, maybe
     }
 
     @Override
-    public void tasksLoadedFromDB() {
+    public void tasksLoadedFromDB(List<TaskModel> tasks) {
         updateTaskCount();
     }
 

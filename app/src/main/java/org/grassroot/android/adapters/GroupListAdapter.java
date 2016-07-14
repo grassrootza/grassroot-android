@@ -36,6 +36,7 @@ import org.grassroot.android.fragments.HomeGroupListFragment;
 import org.grassroot.android.interfaces.GroupConstants;
 import org.grassroot.android.models.Group;
 import org.grassroot.android.utils.CircularImageTransformer;
+import org.grassroot.android.utils.RealmUtils;
 import org.grassroot.android.utils.ScalingUtilities;
 
 /**

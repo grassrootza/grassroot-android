@@ -119,8 +119,9 @@ public class RealmUtils {
 
   public static PreferenceObject loadPreferencesFromDB() {
     Realm realm = Realm.getDefaultInstance();
-    PreferenceObject object = realm.where(PreferenceObject.class).findFirst();
-    return object != null ? object : new PreferenceObject();
+    List<PreferenceObject> object = realm.copyFromRealm(realm.where(PreferenceObject.class).findAll());
+    realm.close();
+    return object.size() > 0 ? object.get(0) : new PreferenceObject();
   }
 
   public static <T extends RealmObject> T loadObjectFromDB(Class<? extends RealmObject> model,

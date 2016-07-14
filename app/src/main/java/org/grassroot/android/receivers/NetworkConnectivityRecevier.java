@@ -11,7 +11,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import org.grassroot.android.events.GroupCreatedEvent;
 import org.grassroot.android.interfaces.TaskConstants;
 import org.grassroot.android.models.Group;
 import org.grassroot.android.models.GroupResponse;
@@ -22,7 +21,6 @@ import org.grassroot.android.models.TaskResponse;
 import org.grassroot.android.services.GrassrootRestService;
 import org.grassroot.android.utils.NetworkUtils;
 import org.grassroot.android.utils.RealmUtils;
-import org.greenrobot.eventbus.EventBus;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -81,7 +79,6 @@ public class NetworkConnectivityRecevier extends BroadcastReceiver {
                       .getGroups()
                       .get(0)
                       .getGroupUid());
-                  EventBus.getDefault().post(new GroupCreatedEvent());
                 } else {
 
                 }
