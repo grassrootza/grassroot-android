@@ -4,7 +4,7 @@ import com.google.gson.annotations.SerializedName;
 
 import io.realm.RealmList;
 import io.realm.RealmObject;
-import java.util.ArrayList;
+
 import java.util.List;
 
 /**
@@ -17,7 +17,7 @@ private String status;
 private Integer code;
 private String message;
 @SerializedName("data")
-private RealmList<GroupSearchModel> data = new RealmList<>();
+private RealmList<PublicGroupModel> data = new RealmList<>();
 
 /**
  *
@@ -78,7 +78,7 @@ public void setMessage(String message) {
  * @return
  * The data
  */
-public List<GroupSearchModel> getGroups() {
+public List<PublicGroupModel> getGroups() {
         return data;
         }
 
@@ -87,7 +87,7 @@ public List<GroupSearchModel> getGroups() {
  * @param data
  * The data
  */
-public void setData(RealmList<GroupSearchModel> data) {
+public void setData(RealmList<PublicGroupModel> data) {
         this.data = data;
         }
 

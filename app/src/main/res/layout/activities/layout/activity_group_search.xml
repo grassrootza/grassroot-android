@@ -1,0 +1,91 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:id="@+id/rl_root"
+     tools:context=".activities.GroupSearchActivity">
+
+
+    <android.support.v7.widget.Toolbar
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="?android:actionBarSize"
+        android:background="@color/primaryColor">
+        
+        <TextView
+            android:id="@+id/am_txt_toolbar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="@dimen/txt_large"
+            android:textColor="@color/white"
+            android:text="@string/search"
+            android:textAllCaps="true"
+            android:layout_gravity="center"
+            android:textStyle="bold" />
+
+    </android.support.v7.widget.Toolbar>
+
+    <RelativeLayout
+        android:id="@+id/rl"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/primaryColor"
+        android:layout_below="@+id/toolbar"
+        android:paddingLeft="12dp"
+        android:paddingRight="12dp"
+        android:paddingBottom="10dp">
+
+        <EditText
+            android:id="@+id/et_searchbox"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="@string/search_box"
+            android:drawableRight="@drawable/btn_search_gray"
+            android:drawablePadding="3dp"
+            android:background="#d2f2e0"
+            android:padding="10dp"
+            android:textSize="@dimen/txt_medium"
+            android:singleLine="true"
+            android:imeOptions="actionSearch" />
+
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:id="@+id/gs_rl_text_icon"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="visible"
+        android:layout_below="@+id/rl">
+
+        <ImageView
+            android:id="@+id/gs_im_icon"
+            android:layout_width="@dimen/group_avatar_large"
+            android:layout_height="@dimen/group_avatar_large"
+            android:layout_centerHorizontal="true"
+            android:src="@drawable/im_no_groups"
+            android:layout_above="@+id/gs_text_body" />
+
+        <TextView
+            android:id="@+id/gs_text_body"
+            style="@style/TextCentral"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/gs_describe_activity"
+            android:layout_centerInParent="true"/>
+
+    </RelativeLayout>
+
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/jr_RecyclerView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@+id/rl"
+        android:visibility="gone"
+
+        android:scrollbars="none"
+        android:background="@color/light_background"
+        android:paddingLeft="@dimen/padding_half"
+        android:paddingRight="@dimen/padding_half"
+        android:paddingTop="@dimen/padding_half"
+        android:clipToPadding="false" />
+
+</RelativeLayout>

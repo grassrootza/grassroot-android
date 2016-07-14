@@ -24,6 +24,12 @@
         <item name="colorControlActivated">@color/white</item>
     </style>
 
+    <style name="TextCentral">
+        <item name="android:textSize">@dimen/txt_large</item>
+        <item name="android:textColor">@color/primaryColor</item>
+        <item name="android:layout_margin">@dimen/margin_xlargeplus</item>
+    </style>
+
     <style name="Widget.CardContent" parent="android:Widget">
         <item name="android:paddingLeft">16dp</item>
         <item name="android:paddingRight">16dp</item>
@@ -58,18 +64,6 @@
         <item name="android:elevation">@dimen/fab_elevation</item>
         <item name="android:textColor">@color/white</item>
         <item name="android:textSize">@dimen/txt_medium</item>
-    </style>
-
-    <style name="PinnedHeader">
-        <item name="android:background">@color/light_background</item>
-        <item name="android:gravity">center_vertical|left</item>
-        <item name="android:paddingLeft">10dp</item>
-        <item name="android:paddingRight">10dp</item>
-        <item name="android:textAllCaps" tools:targetApi="ice_cream_sandwich">true</item>
-        <item name="textAllCaps">true</item>
-        <item name="android:textColor">@color/primaryColor</item>
-        <item name="android:textSize">14sp</item>
-        <item name="android:textStyle">bold</item>
     </style>
 
     <style name="GiantHeader">
@@ -116,13 +110,6 @@
         <item name="android:textColor">@color/dark_grey_text</item>
         <item name="android:textSize">@dimen/txt_small</item>
         <item name="android:textStyle">bold</item>
-    </style>
-
-    <style name="CardViewBodyText">
-        <item name="android:layout_width">wrap_content</item>
-        <item name="android:layout_height">wrap_content</item>
-        <item name="android:textColor">@color/dark_grey_text</item>
-        <item name="android:textSize">@dimen/txt_small</item>
     </style>
 
     <style name="CardViewFinePrint">
@@ -319,13 +306,14 @@
 
         <item name="android:textSize">@dimen/md_button_textsize</item>
         <item name="android:textStyle">bold</item>
-        <item name="android:textAllCaps">true</item>
         <item name="android:background">@drawable/button_flat_white</item>
 
-        <item name="android:minHeight">36dp</item>
-        <item name="android:minWidth">@dimen/md_button_min_width</item>
-        <item name="android:paddingLeft">@dimen/md_button_textpadding_horizontal</item>
-        <item name="android:paddingRight">@dimen/md_button_textpadding_horizontal</item>
+        <item name="android:minHeight">@dimen/flat_button_wrapper_height</item>
+        <item name="android:minWidth">@dimen/flat_button_width</item>
+        <item name="android:paddingLeft">@dimen/padding</item>
+        <item name="android:paddingRight">@dimen/padding</item>
+        <item name="android:paddingTop">@dimen/flat_button_padding_vertical</item>
+        <item name="android:paddingBottom">@dimen/flat_button_padding_vertical</item>
     </style>
 
     <!-- ANIMATIONS -->

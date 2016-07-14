@@ -9,12 +9,10 @@ public interface NavigationConstants {
     int HOME_NAV_GROUPS = 0;
     int HOME_NAV_TASKS = 1;
     int HOME_NAV_NOTIFICATIONS = 2;
-    int HOME_NAV_SHARE = 3;
-    int HOME_NAV_PROFILE = 4;
-    int HOME_NAV_FAQ = 5;
-    int HOME_NAV_LOGOUT = 6;
-
-    String TASKS_TAG = "TASKS";
-    String NOTIFICATIONS_TAG = "NOTIFICATIONS";
+    int HOME_NAV_JOIN_REQUESTS = 3;
+    int HOME_NAV_SHARE = 4;
+    int HOME_NAV_PROFILE = 5;
+    int HOME_NAV_FAQ = 6;
+    int HOME_NAV_LOGOUT = 7;
 
 }

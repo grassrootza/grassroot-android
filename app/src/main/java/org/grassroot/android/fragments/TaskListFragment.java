@@ -32,6 +32,7 @@ import org.grassroot.android.events.TaskCancelledEvent;
 import org.grassroot.android.events.TaskChangedEvent;
 import org.grassroot.android.fragments.dialogs.ConfirmCancelDialogFragment;
 import org.grassroot.android.interfaces.GroupPickCallbacks;
+import org.grassroot.android.interfaces.NetworkErrorDialogListener;
 import org.grassroot.android.interfaces.TaskConstants;
 import org.grassroot.android.models.Group;
 import org.grassroot.android.models.TaskModel;
@@ -51,7 +52,7 @@ import retrofit2.Response;
  */
 public class TaskListFragment extends Fragment implements TasksAdapter.TaskListListener {
 
-  private static final String TAG = TaskListFragment.class.getCanonicalName();
+  private static final String TAG = TaskListFragment.class.getSimpleName();
 
   GroupPickCallbacks mCallbacks;
   TaskListListener listener;

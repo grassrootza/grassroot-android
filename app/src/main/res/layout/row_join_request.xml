@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.v7.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    style="@style/FormCardView"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_margin="@dimen/margin_large">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="@dimen/padding">
+
+        <TextView
+            android:id="@+id/jreq_group_name"
+            style="@style/CardViewHeader"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentTop="true"
+            android:layout_alignParentLeft="true"
+            tools:text="Group name"/>
+
+        <TextView
+            android:id="@+id/jreq_requestor_name"
+            style="@style/CardViewSubHeader"
+            android:layout_below="@id/jreq_group_name"
+            android:layout_alignParentLeft="true"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            tools:text="Requestor name"/>
+
+        <TextView
+            android:id="@+id/jreq_requestor_number"
+            style="@style/CardViewSubHeader"
+            android:layout_below="@id/jreq_requestor_name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            tools:text="0810001234"/>
+
+        <View
+            android:id="@+id/jreq_separator"
+            android:layout_below="@id/jreq_requestor_number"
+            android:layout_marginTop="@dimen/margin_medium"
+            android:layout_width="match_parent"
+            android:layout_height="2dp"
+            android:background="@color/grey_divider"/>
+
+        <TextView
+            android:id="@+id/jreq_desc_header"
+            android:text="@string/jreq_desc_head"
+            android:layout_marginTop="@dimen/margin_medium"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/jreq_separator"/>
+
+
+        <TextView
+            android:id="@+id/jreq_request_description"
+            android:layout_below="@id/jreq_desc_header"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+
+            android:maxLines="5"
+            android:ellipsize="end"
+            android:singleLine="false"
+            android:textColor="@color/dark_grey_text"
+            android:textSize="@dimen/txt_medium"
+
+            tools:text="Abracadrabra and please let me enter the group"/>
+
+        <Button
+            android:id="@+id/jreq_btn_deny"
+            android:text="@string/jreq_deny"
+            android:background="@drawable/button_flat_white"
+            android:layout_below="@id/jreq_request_description"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:minWidth="@dimen/flat_button_width"
+            android:minHeight="@dimen/flat_button_wrapper_height"
+            android:paddingTop="@dimen/flat_button_padding_vertical"
+            android:paddingBottom="@dimen/flat_button_padding_vertical"
+            android:textSize="@dimen/txt_medium"
+            android:textColor="@color/red"
+            android:layout_marginTop="@dimen/margin_xlarge"
+            android:layout_marginLeft="@dimen/margin_xlarge" />
+
+        <Button
+            android:id="@+id/jreq_btn_approve"
+            android:text="@string/jreq_approve"
+            android:layout_below="@id/jreq_request_description"
+            android:layout_marginTop="@dimen/margin_xlarge"
+            android:layout_marginRight="@dimen/margin_xlarge"
+            style="@style/ButtonFlat"
+            android:textColor="@color/primaryColor"
+            android:layout_alignParentRight="true"
+            android:layout_alignParentEnd="true"/>
+
+    </RelativeLayout>
+
+</android.support.v7.widget.CardView>
