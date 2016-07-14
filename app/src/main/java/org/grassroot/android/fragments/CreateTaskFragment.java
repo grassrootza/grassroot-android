@@ -55,7 +55,6 @@ import org.grassroot.android.utils.Constant;
 import org.grassroot.android.utils.ErrorUtils;
 import org.grassroot.android.utils.MenuUtils;
 import org.grassroot.android.utils.NetworkUtils;
-import org.grassroot.android.utils.PreferenceUtils;
 import org.grassroot.android.utils.RealmUtils;
 import org.grassroot.android.utils.Utilities;
 import org.greenrobot.eventbus.EventBus;
@@ -310,7 +309,7 @@ public class CreateTaskFragment extends Fragment {
     TaskModel model = new TaskModel();
     model.setDescription(description);
     model.setTitle(title);
-    model.setCreatedByUserName(PreferenceUtils.getUserName(getContext()));
+    model.setCreatedByUserName(RealmUtils.loadPreferencesFromDB().getUserName());
     model.setDeadlineISO(dateTimeISO);
     model.setLocation(etLocationInput.getText().toString());
     model.setParentUid(groupUid);

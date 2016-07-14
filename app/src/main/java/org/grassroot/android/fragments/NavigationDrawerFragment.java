@@ -16,7 +16,6 @@ import android.widget.TextView;
 import org.grassroot.android.BuildConfig;
 import org.grassroot.android.R;
 import org.grassroot.android.activities.FAQActivity;
-import org.grassroot.android.activities.HomeScreenActivity;
 import org.grassroot.android.activities.ProfileSettingsActivity;
 import org.grassroot.android.activities.StartActivity;
 import org.grassroot.android.adapters.NavigationDrawerAdapter;
@@ -32,13 +31,11 @@ import org.grassroot.android.interfaces.NavigationConstants;
 import org.grassroot.android.interfaces.NotificationConstants;
 import org.grassroot.android.models.Group;
 import org.grassroot.android.models.NavDrawerItem;
-import org.grassroot.android.services.ApplicationLoader;
 import org.grassroot.android.services.GcmRegistrationService;
 import org.grassroot.android.adapters.RecyclerTouchListener;
 import org.grassroot.android.services.GroupService;
 import org.grassroot.android.services.TaskService;
 import org.grassroot.android.utils.Constant;
-import org.grassroot.android.utils.PreferenceUtils;
 import org.grassroot.android.utils.RealmUtils;
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
@@ -100,7 +97,7 @@ public class NavigationDrawerFragment extends Fragment implements TaskService.Ta
         View view = inflater.inflate(R.layout.fragment_navigation_drawer, container, false);
         ButterKnife.bind(this, view);
 
-        displayName.setText(PreferenceUtils.getUserName(ApplicationLoader.applicationContext));
+        displayName.setText(RealmUtils.loadPreferencesFromDB().getUserName());
         txtVersion.setText(String.format(getString(R.string.nav_bar_footer), BuildConfig.VERSION_NAME));
 
         drawerAdapter = new NavigationDrawerAdapter(getActivity(), getData());
@@ -142,7 +139,7 @@ public class NavigationDrawerFragment extends Fragment implements TaskService.Ta
         draweritems.add(tasks);
 
         notifications = new NavDrawerItem(getString(R.string.Notifications),R.drawable.ic_notification,R.drawable.ic_notification_green, false, true);
-        notifications.setItemCount(PreferenceUtils.getNotificationCounter(getContext()));
+        notifications.setItemCount(RealmUtils.loadPreferencesFromDB().getNotificationCounter());
         draweritems.add(notifications);
 
         draweritems.add(new NavDrawerItem(getString(R.string.Share), R.drawable.ic_share, R.drawable.ic_share_green, false, false));
@@ -234,7 +231,6 @@ public class NavigationDrawerFragment extends Fragment implements TaskService.Ta
                     @Override
                     public void doConfirmClicked() {
                         unregisterGcm();
-                        PreferenceUtils.clearAll(getActivity().getApplicationContext());
                         EventBus.getDefault().post(new UserLoggedOutEvent());
                         RealmUtils.deleteAllObjects();
                         Intent open = new Intent(getActivity(), StartActivity.class);
@@ -251,8 +247,8 @@ public class NavigationDrawerFragment extends Fragment implements TaskService.Ta
         final Context context = getActivity().getApplicationContext();
         Intent gcmUnregister = new Intent(getActivity(), GcmRegistrationService.class);
         gcmUnregister.putExtra(NotificationConstants.ACTION, NotificationConstants.GCM_UNREGISTER);
-        gcmUnregister.putExtra(NotificationConstants.PHONE_NUMBER, PreferenceUtils.getUserPhoneNumber(context));
-        gcmUnregister.putExtra(Constant.USER_TOKEN, PreferenceUtils.getAuthToken(context));
+        gcmUnregister.putExtra(NotificationConstants.PHONE_NUMBER, RealmUtils.loadPreferencesFromDB().getMobileNumber());
+        gcmUnregister.putExtra(Constant.USER_TOKEN, RealmUtils.loadPreferencesFromDB().getToken());
         getActivity().startService(gcmUnregister);
     }
 

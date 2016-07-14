@@ -32,7 +32,7 @@ import org.grassroot.android.models.GenericResponse;
 import org.grassroot.android.models.Group;
 import org.grassroot.android.services.GrassrootRestService;
 import org.grassroot.android.utils.CircularImageTransformer;
-import org.grassroot.android.utils.PreferenceUtils;
+import org.grassroot.android.utils.RealmUtils;
 import org.grassroot.android.utils.ScalingUtilities;
 import org.greenrobot.eventbus.EventBus;
 
@@ -175,8 +175,8 @@ public class GroupAvatarActivity extends PortraitActivity {
     @OnClick(R.id.bt_gp_remove)
     public void removePicture() {
 
-        final String phoneNumber = PreferenceUtils.getPhoneNumber();
-        final String code = PreferenceUtils.getAuthToken();
+        final String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
+        final String code = RealmUtils.loadPreferencesFromDB().getToken();
         final String groupUid = group.getGroupUid();
         ConfirmCancelDialogFragment dialogFragment = ConfirmCancelDialogFragment.newInstance(getString(R.string.gp_dlg_cnfrm), new ConfirmCancelDialogFragment.ConfirmDialogListener() {
             @Override
@@ -217,8 +217,8 @@ public class GroupAvatarActivity extends PortraitActivity {
                 RequestBody.create(MediaType.parse(mimeType), file);
         MultipartBody.Part image =
                 MultipartBody.Part.createFormData("image", file.getName(), requestFile);
-        String phoneNumber = PreferenceUtils.getPhoneNumber();
-        String code = PreferenceUtils.getAuthToken();
+        final String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
+        final String code = RealmUtils.loadPreferencesFromDB().getToken();
         String groupUid = group.getGroupUid();
         progressBar.setVisibility(View.VISIBLE);
         GrassrootRestService.getInstance().getApi().uploadImage(phoneNumber, code, groupUid, image).enqueue(new retrofit2.Callback<GenericResponse>() {

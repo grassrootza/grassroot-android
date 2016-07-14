@@ -22,11 +22,12 @@ import org.grassroot.android.models.Contact;
 import org.grassroot.android.models.Group;
 import org.grassroot.android.models.GroupResponse;
 import org.grassroot.android.models.Member;
+import org.grassroot.android.models.PreferenceObject;
 import org.grassroot.android.services.GroupService;
 import org.grassroot.android.utils.Constant;
 import org.grassroot.android.utils.ErrorUtils;
 import org.grassroot.android.utils.PermissionUtils;
-import org.grassroot.android.utils.PreferenceUtils;
+import org.grassroot.android.utils.RealmUtils;
 import org.greenrobot.eventbus.EventBus;
 
 import java.util.ArrayList;
@@ -220,8 +221,9 @@ public class CreateGroupActivity extends PortraitActivity
   }
 
   private void handleSuccessfulGroupCreation(Group group) {
-    PreferenceUtils.setUserHasGroups(getApplicationContext(), true);
-    EventBus.getDefault().post(new GroupCreatedEvent());
+    PreferenceObject preferenceObject = RealmUtils.loadPreferencesFromDB();
+    preferenceObject.setHasGroups(true);
+    RealmUtils.saveDataToRealm(preferenceObject);    EventBus.getDefault().post(new GroupCreatedEvent());
     Intent i = new Intent(CreateGroupActivity.this, ActionCompleteActivity.class);
     String completionMessage;
     if (!group.getIsLocal()) {

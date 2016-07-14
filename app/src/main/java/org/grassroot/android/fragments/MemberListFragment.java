@@ -15,12 +15,8 @@ import io.realm.RealmList;
 import org.grassroot.android.R;
 import org.grassroot.android.adapters.MemberListAdapter;
 import org.grassroot.android.interfaces.ClickListener;
-import org.grassroot.android.services.GrassrootRestService;
 import org.grassroot.android.models.Member;
-import org.grassroot.android.models.MemberList;
 import org.grassroot.android.adapters.RecyclerTouchListener;
-import org.grassroot.android.utils.ErrorUtils;
-import org.grassroot.android.utils.PreferenceUtils;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -30,9 +26,6 @@ import java.util.Map;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import org.grassroot.android.utils.RealmUtils;
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
 
 /**
  * Created by luke on 2016/05/08.
@@ -222,8 +215,6 @@ public class MemberListFragment extends Fragment {
         RealmList<Member> members = RealmUtils.loadListFromDB(Member.class,"groupUid",groupUid);
         handleReturnedMembers(members);
         mListener.onMemberListPopulated(members);
-        String userPhoneNumber = PreferenceUtils.getPhoneNumber();
-        String userSessionCode = PreferenceUtils.getAuthToken();
 
         Log.d(TAG, "inside MemberListFragment, retrieving group members for uid = " + groupUid);
 

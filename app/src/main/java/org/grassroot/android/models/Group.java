@@ -29,6 +29,15 @@ public class Group extends RealmObject implements Parcelable, Comparable<Group> 
   private String role;
   private Integer groupMemberCount;
   private String imageUrl;
+  private boolean fetchedTasks;
+
+  public boolean isFetchedTasks() {
+    return fetchedTasks;
+  }
+
+  public void setFetchedTasks(boolean fetchedTasks) {
+    this.fetchedTasks = fetchedTasks;
+  }
 
   private RealmList<Member> members=new RealmList<>();
 
@@ -44,6 +53,15 @@ public class Group extends RealmObject implements Parcelable, Comparable<Group> 
   private String lastChangeType;
   private String description;
   private boolean isLocal;
+  private boolean isSentToAPI;
+
+  public boolean isSentToAPI() {
+    return isSentToAPI;
+  }
+
+  public void setSentToAPI(boolean sentToAPI) {
+    isSentToAPI = sentToAPI;
+  }
 
   public boolean getIsLocal() {
     return isLocal;

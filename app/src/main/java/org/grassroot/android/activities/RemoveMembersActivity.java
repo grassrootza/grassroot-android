@@ -19,7 +19,6 @@ import org.grassroot.android.models.Member;
 import org.grassroot.android.services.GrassrootRestService;
 import org.grassroot.android.utils.Constant;
 import org.grassroot.android.utils.ErrorUtils;
-import org.grassroot.android.utils.PreferenceUtils;
 
 import java.util.HashSet;
 import java.util.List;
@@ -28,6 +27,7 @@ import java.util.Set;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
+import org.grassroot.android.utils.RealmUtils;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -135,8 +135,8 @@ public class RemoveMembersActivity extends PortraitActivity implements MemberLis
 
     private void saveRemoval() {
         progressDialog.show();
-        final String phoneNumber = PreferenceUtils.getPhoneNumber();
-        final String code = PreferenceUtils.getAuthToken();
+        final String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
+        final String code = RealmUtils.loadPreferencesFromDB().getToken();
         GrassrootRestService.getInstance().getApi().removeGroupMembers(phoneNumber, code, groupUid, membersToRemove)
                 .enqueue(new Callback<GenericResponse>() {
                     @Override

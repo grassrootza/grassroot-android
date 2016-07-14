@@ -13,16 +13,13 @@ import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
-import io.realm.RealmList;
 import java.util.Map;
-import java.util.Objects;
 import java.util.UUID;
 import org.grassroot.android.R;
 import org.grassroot.android.fragments.ContactSelectionFragment;
 import org.grassroot.android.fragments.MemberListFragment;
 import org.grassroot.android.interfaces.GroupConstants;
 import org.grassroot.android.models.Contact;
-import org.grassroot.android.models.GenericResponse;
 import org.grassroot.android.models.GroupResponse;
 import org.grassroot.android.models.Member;
 import org.grassroot.android.services.GrassrootRestService;
@@ -30,7 +27,6 @@ import org.grassroot.android.utils.Constant;
 import org.grassroot.android.utils.ErrorUtils;
 import org.grassroot.android.utils.NetworkUtils;
 import org.grassroot.android.utils.PermissionUtils;
-import org.grassroot.android.utils.PreferenceUtils;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -287,8 +283,9 @@ public class AddMembersActivity extends AppCompatActivity implements
     }
 
     private void postNewMembersToGroup(final List<Member> membersToAdd) {
-        final String mobileNumber = PreferenceUtils.getUserPhoneNumber(getApplicationContext());
-        final String sessionCode = PreferenceUtils.getAuthToken(getApplicationContext());
+        final String mobileNumber =
+            RealmUtils.loadPreferencesFromDB().getMobileNumber();
+        final String sessionCode = RealmUtils.loadPreferencesFromDB().getToken();
         GrassrootRestService.getInstance().getApi()
                 .addGroupMembers(groupUid, mobileNumber, sessionCode, membersToAdd)
                 .enqueue(new Callback<GroupResponse>() {
@@ -300,7 +297,7 @@ public class AddMembersActivity extends AppCompatActivity implements
                             map.put("isLocal",true);
                             //todo return members here from API
                             RealmUtils.removeObjectsFromDatabase(Member.class,map);
-                            RealmUtils.saveDataToRealm(membersToAdd);
+                            RealmUtils.saveDataToRealm(response.body().getGroups());
                             Intent i = new Intent();
                             i.putExtra(Constant.GROUPUID_FIELD, groupUid);
                             i.putExtra(Constant.INDEX_FIELD, groupPosition);

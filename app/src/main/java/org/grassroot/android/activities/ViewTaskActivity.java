@@ -9,9 +9,10 @@ import android.util.Log;
 import org.grassroot.android.R;
 import org.grassroot.android.events.NotificationEvent;
 import org.grassroot.android.fragments.ViewTaskFragment;
+import org.grassroot.android.models.PreferenceObject;
 import org.grassroot.android.services.NotificationUpdateService;
 import org.grassroot.android.utils.Constant;
-import org.grassroot.android.utils.PreferenceUtils;
+import org.grassroot.android.utils.RealmUtils;
 import org.greenrobot.eventbus.EventBus;
 
 import butterknife.BindView;
@@ -77,11 +78,13 @@ public class ViewTaskActivity extends PortraitActivity {
     }
 
     private void processNotification() {
-        int notificationCount = PreferenceUtils.getNotificationCounter(this);
+        PreferenceObject preferenceObject = RealmUtils.loadPreferencesFromDB();
+        int notificationCount = preferenceObject.getNotificationCounter();
         Log.e(TAG, "notification count currently: " + notificationCount);
         NotificationUpdateService.updateNotificationStatus(this, notificationUid);
         if (notificationCount > 0) {
-            PreferenceUtils.setNotificationCounter(this, --notificationCount);
+            preferenceObject.setNotificationCounter(--notificationCount);
+            RealmUtils.saveDataToRealm(preferenceObject);
         }
         EventBus.getDefault().post(new NotificationEvent(--notificationCount));
     }

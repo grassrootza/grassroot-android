@@ -2,22 +2,19 @@ package org.grassroot.android.services;
 
 import android.app.IntentService;
 import android.content.Intent;
-import android.os.Bundle;
 import android.util.Log;
 
-import com.google.android.gms.gcm.GoogleCloudMessaging;
 import com.google.android.gms.iid.InstanceID;
 
-import org.grassroot.android.BuildConfig;
-import org.grassroot.android.R;
 import org.grassroot.android.interfaces.NotificationConstants;
 import org.grassroot.android.models.GenericResponse;
+import org.grassroot.android.models.PreferenceObject;
 import org.grassroot.android.utils.Constant;
-import org.grassroot.android.utils.PreferenceUtils;
 
 import java.io.IOException;
 import java.util.Calendar;
 
+import org.grassroot.android.utils.RealmUtils;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -110,7 +107,9 @@ public class GcmRegistrationService extends IntentService {
                         public void onResponse(Call<GenericResponse> call, Response<GenericResponse> response) {
                             if (response.isSuccessful()) {
                                 Log.e(TAG, "Gcm unregistration successful");
-                                PreferenceUtils.setIsGcmEnabled(getApplicationContext(), false);
+                                PreferenceObject preferenceObject = RealmUtils.loadPreferencesFromDB();
+                                preferenceObject.setHasGcmRegistered(false);
+                                RealmUtils.saveDataToRealm(preferenceObject);
                             }
                         }
 

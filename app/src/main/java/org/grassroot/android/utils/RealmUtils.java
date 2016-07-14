@@ -7,6 +7,7 @@ import io.realm.RealmQuery;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import org.grassroot.android.models.PreferenceObject;
 import org.grassroot.android.models.RealmString;
 
 public class RealmUtils {
@@ -114,6 +115,12 @@ public class RealmUtils {
     groups.addAll(realm.copyFromRealm(realm.where(model).findAll()));
     realm.close();
     return (T) groups;
+  }
+
+  public static PreferenceObject loadPreferencesFromDB() {
+    Realm realm = Realm.getDefaultInstance();
+    PreferenceObject object = realm.where(PreferenceObject.class).findFirst();
+    return object != null ? object : new PreferenceObject();
   }
 
   public static <T extends RealmObject> T loadObjectFromDB(Class<? extends RealmObject> model,

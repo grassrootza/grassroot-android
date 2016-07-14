@@ -22,12 +22,13 @@ import org.grassroot.android.events.NotificationEvent;
 import org.grassroot.android.interfaces.ClickListener;
 import org.grassroot.android.models.Notification;
 import org.grassroot.android.models.NotificationList;
+import org.grassroot.android.models.PreferenceObject;
 import org.grassroot.android.services.GcmListenerService;
 import org.grassroot.android.services.GrassrootRestService;
 import org.grassroot.android.services.NotificationUpdateService;
 import org.grassroot.android.utils.Constant;
 import org.grassroot.android.utils.ErrorUtils;
-import org.grassroot.android.utils.PreferenceUtils;
+import org.grassroot.android.utils.RealmUtils;
 import org.greenrobot.eventbus.EventBus;
 
 import java.util.ArrayList;
@@ -138,8 +139,8 @@ public class NotificationCenterFragment extends Fragment {
     }
 
     private void getNotifications(Integer page, Integer size) {
-        String phoneNumber = PreferenceUtils.getPhoneNumber();
-        String code = PreferenceUtils.getAuthToken();
+        final String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
+        final String code = RealmUtils.loadPreferencesFromDB().getToken();
 
         progressDialog.show();
 
@@ -175,11 +176,13 @@ public class NotificationCenterFragment extends Fragment {
             String uid = notification.getUid();
             notification.setIsRead();
             notificationAdapter.notifyDataSetChanged();
-            int notificationCount = PreferenceUtils.getNotificationCounter(getContext());
+            int notificationCount = RealmUtils.loadPreferencesFromDB().getNotificationCounter();
             Log.e(TAG, "notification count " + notificationCount);
             NotificationUpdateService.updateNotificationStatus(getContext(), uid);
             if(notificationCount >0){
-            PreferenceUtils.setNotificationCounter(getContext(), --notificationCount);
+                PreferenceObject object = RealmUtils.loadPreferencesFromDB();
+            object.setNotificationCounter(--notificationCount);
+                RealmUtils.saveDataToRealm(object);
             EventBus.getDefault().post(new NotificationEvent(--notificationCount));
         }}
     }

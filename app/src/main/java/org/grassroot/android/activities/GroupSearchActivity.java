@@ -35,7 +35,6 @@ import org.grassroot.android.models.GroupSearchResponse;
 import org.grassroot.android.services.GrassrootRestService;
 import org.grassroot.android.adapters.RecyclerTouchListener;
 import org.grassroot.android.utils.ErrorUtils;
-import org.grassroot.android.utils.PreferenceUtils;
 
 import java.util.ArrayList;
 
@@ -44,6 +43,7 @@ import butterknife.ButterKnife;
 import butterknife.OnEditorAction;
 import butterknife.OnTextChanged;
 import butterknife.OnTouch;
+import org.grassroot.android.utils.RealmUtils;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -174,8 +174,8 @@ public class GroupSearchActivity extends PortraitActivity {
     }
 
     private void search() {
-        final String mobile = PreferenceUtils.getPhoneNumber();
-        final String code = PreferenceUtils.getAuthToken();
+        final String mobile = RealmUtils.loadPreferencesFromDB().getMobileNumber();
+        final String code = RealmUtils.loadPreferencesFromDB().getToken();
         final String searchTerm = et_searchbox.getText().toString().trim();
         GrassrootRestService.getInstance().getApi().search(mobile, code, searchTerm)
                 .enqueue(new Callback<GroupSearchResponse>() {
@@ -228,8 +228,8 @@ public class GroupSearchActivity extends PortraitActivity {
 
     private void sendJoinRequest(final PublicGroupModel groupModel) {
         progressDialog.show();
-        String phoneNumber = PreferenceUtils.getUserPhoneNumber(this);
-        String code = PreferenceUtils.getAuthToken(this);
+        final String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
+        final String code = RealmUtils.loadPreferencesFromDB().getToken();
         GrassrootRestService.getInstance().getApi().groupJoinRequest(phoneNumber, code,
                 groupModel.getId(), groupModel.getDescription()).enqueue(new Callback<GenericResponse>() {
                     @Override

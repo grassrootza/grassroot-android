@@ -18,7 +18,12 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
-
+import butterknife.BindView;
+import butterknife.ButterKnife;
+import butterknife.OnClick;
+import butterknife.Unbinder;
+import java.util.HashMap;
+import java.util.Map;
 import org.grassroot.android.R;
 import org.grassroot.android.adapters.TasksAdapter;
 import org.grassroot.android.events.TaskAddedEvent;
@@ -34,22 +39,9 @@ import org.grassroot.android.models.TaskResponse;
 import org.grassroot.android.services.GrassrootRestService;
 import org.grassroot.android.services.TaskService;
 import org.grassroot.android.utils.ErrorUtils;
-import org.grassroot.android.utils.PreferenceUtils;
 import org.grassroot.android.utils.RealmUtils;
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-
-import butterknife.BindView;
-import butterknife.ButterKnife;
-import butterknife.OnClick;
-import butterknife.Unbinder;
-import io.realm.Realm;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -95,7 +87,8 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
      */
 
   // pass null if this is a group-neutral task fragment
-  public static TaskListFragment newInstance(String parentUid, GroupPickCallbacks groupPickCallbacks, TaskListListener listener, boolean showFAB) {
+  public static TaskListFragment newInstance(String parentUid,
+      GroupPickCallbacks groupPickCallbacks, TaskListListener listener, boolean showFAB) {
     TaskListFragment fragment = new TaskListFragment();
     fragment.groupUid = parentUid;
     fragment.mCallbacks = groupPickCallbacks;
@@ -111,8 +104,8 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
 
   @Override public void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
-    phoneNumber = PreferenceUtils.getPhoneNumber();
-    code = PreferenceUtils.getAuthToken();
+    phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
+    code = RealmUtils.loadPreferencesFromDB().getToken();
     filterFlags = new HashMap<>();
   }
 
@@ -182,17 +175,17 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
   }
 
   private void fetchGroupTasks() {
-    groupTasksAdapter.changeToTaskList(RealmUtils.loadListFromDB(TaskModel.class,"parentUid",groupUid));
+    final Group group = RealmUtils.loadObjectFromDB(Group.class, "groupUid", groupUid);
+    if(group.isFetchedTasks()) groupTasksAdapter.changeToTaskList(
+        RealmUtils.loadListFromDB(TaskModel.class, "parentUid", groupUid));
     swipeRefreshLayout.setRefreshing(true);
     progressDialog.show();
 
-    Call<TaskResponse> call = GrassrootRestService.getInstance()
-            .getApi()
-            .getGroupTasks(phoneNumber, code, groupUid);
+    Call<TaskResponse> call =
+        GrassrootRestService.getInstance().getApi().getGroupTasks(phoneNumber, code, groupUid);
 
     call.enqueue(new Callback<TaskResponse>() {
-      @Override
-      public void onResponse(Call<TaskResponse> call, Response<TaskResponse> response) {
+      @Override public void onResponse(Call<TaskResponse> call, Response<TaskResponse> response) {
         progressDialog.hide();
         if (response.isSuccessful()) {
           swipeRefreshLayout.setRefreshing(false);
@@ -203,6 +196,8 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
             groupTasksAdapter.changeToTaskList(taskResponse.getTasks());
             RealmUtils.saveDataToRealm(taskResponse.getTasks());
           }
+          group.setFetchedTasks(true);
+          RealmUtils.saveDataToRealm(group);
           return;
         }
         ErrorUtils.handleServerError(rcTaskView, getActivity(), response);
@@ -214,13 +209,14 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
           swipeRefreshLayout.setRefreshing(false);
         }
         progressDialog.dismiss();
+        /* todo : do actually need to make this work
         ErrorUtils.connectivityError(getActivity(), R.string.error_no_network,
                 new NetworkErrorDialogListener() {
                   @Override
                   public void retryClicked() {
                     fetchTaskList();
                   }
-                });
+                });*/
       }
     });
   }
@@ -238,15 +234,14 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
   HANDLE NEW TASK
    */
 
-  @OnClick(R.id.tl_fab)
-  public void quickTaskModal() {
+  @OnClick(R.id.tl_fab) public void quickTaskModal() {
     if (mCallbacks != null) {
-      QuickTaskModalFragment modal = QuickTaskModalFragment.newInstance(false, null, new QuickTaskModalFragment.TaskModalListener() {
-        @Override
-        public void onTaskClicked(String taskType) {
-          mCallbacks.groupPickerTriggered(taskType);
-        }
-      });
+      QuickTaskModalFragment modal = QuickTaskModalFragment.newInstance(false, null,
+          new QuickTaskModalFragment.TaskModalListener() {
+            @Override public void onTaskClicked(String taskType) {
+              mCallbacks.groupPickerTriggered(taskType);
+            }
+          });
       modal.show(getFragmentManager(), QuickTaskModalFragment.class.getSimpleName());
     }
   }
@@ -338,7 +333,8 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
     newFragment.show(getFragmentManager(), "dialog");
   }
 
-  @Override public void onCardClick(int position, String taskUid, String taskType, String taskTitle) {
+  @Override
+  public void onCardClick(int position, String taskUid, String taskType, String taskTitle) {
     listener.onTaskLoaded(taskTitle);
     ViewTaskFragment taskFragment = ViewTaskFragment.newInstance(taskType, taskUid);
     getFragmentManager().beginTransaction()
@@ -359,16 +355,16 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
     fetchTaskList(); // todo : just insert the new task
   }
 
-  @Subscribe
-  public void onTaskCancelledEvent(TaskCancelledEvent e) {
+  @Subscribe public void onTaskCancelledEvent(TaskCancelledEvent e) {
     Log.e(TAG, "homeScreen : task cancelled!");
-    Fragment frag = getFragmentManager().findFragmentByTag(ViewTaskFragment.class.getCanonicalName());
+    Fragment frag =
+        getFragmentManager().findFragmentByTag(ViewTaskFragment.class.getCanonicalName());
     if (frag != null && frag.isVisible()) {
       Log.e(TAG, "homeScreen : found task!");
       getFragmentManager().beginTransaction()
-              .setCustomAnimations(R.anim.push_down_in, R.anim.push_down_out)
-              .remove(frag)
-              .commit();
+          .setCustomAnimations(R.anim.push_down_in, R.anim.push_down_out)
+          .remove(frag)
+          .commit();
     }
   }
 

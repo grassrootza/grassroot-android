@@ -140,7 +140,7 @@ public class GrassrootRestService {
      */
     @GET("user/add/{phoneNumber}/{displayName}")
     Call<GenericResponse> addUser(@Path("phoneNumber") String phoneNumber,
-                                  @Path("displayName") String displayName);
+        @Path("displayName") String displayName);
 
     @GET("user/login/{phoneNumber}")
     Call<GenericResponse> login(@Path("phoneNumber") String phoneNumber);
@@ -203,7 +203,7 @@ public class GrassrootRestService {
     @Multipart
     @POST("group/image/upload/{phoneNumber}/{code}/{groupUid}")
     Call<GenericResponse> uploadImage(@Path("phoneNumber") String phoneNumber, @Path("code") String code, @Path("groupUid") String groupUid,
-                                      @Part  MultipartBody.Part image);
+        @Part  MultipartBody.Part image);
 
     @GET("group/image/remove/{phoneNumber}/{code}/{groupUid}")
     Call<GenericResponse> removeImage(@Path("phoneNumber") String phoneNumber, @Path("code") String code, @Path("groupUid") String groupUid);
@@ -211,7 +211,7 @@ public class GrassrootRestService {
     //user groups
     @GET("group/list/{phoneNumber}/{code}")
     Call<GroupsChangedResponse> getUserGroups(@Path("phoneNumber") String phoneNumber,
-                                              @Path("code") String code);
+        @Path("code") String code);
 
     @GET("group/get/{phoneNumber}/{code}/{groupUid}")
     Call<GroupResponse> getSingleGroup(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
@@ -226,7 +226,7 @@ public class GrassrootRestService {
     //find open join requests assigned to this user
     @GET("group/join/list/{phoneNumber}/{code}")
     Call<RealmList<GroupJoinRequest>> getOpenJoinRequests(@Path("phoneNumber") String phoneNumber,
-                                                          @Path("code") String code);
+        @Path("code") String code);
 
     //search for public groups
     @GET("group/search/{phoneNumber}/{code}")
