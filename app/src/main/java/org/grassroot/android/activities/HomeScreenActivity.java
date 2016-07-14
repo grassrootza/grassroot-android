@@ -23,6 +23,7 @@ import org.grassroot.android.events.TaskCancelledEvent;
 import org.grassroot.android.events.UserLoggedOutEvent;
 import org.grassroot.android.fragments.GroupPickFragment;
 import org.grassroot.android.fragments.HomeGroupListFragment;
+import org.grassroot.android.fragments.JoinRequestsFragment;
 import org.grassroot.android.fragments.NavigationDrawerFragment;
 import org.grassroot.android.fragments.NewTaskMenuFragment;
 import org.grassroot.android.fragments.NotificationCenterFragment;
@@ -56,6 +57,7 @@ public class HomeScreenActivity extends PortraitActivity implements NavigationDr
     private HomeGroupListFragment groupListFragment;
     private TaskListFragment taskListFragment;
     private NotificationCenterFragment notificationCenterFragment;
+    private JoinRequestsFragment joinRequestsFragment;
 
     private boolean isFirstFragmentSwap = true;
     private boolean showMenuOptions = true;
@@ -162,6 +164,9 @@ public class HomeScreenActivity extends PortraitActivity implements NavigationDr
             case NavigationConstants.HOME_NAV_NOTIFICATIONS:
                 switchToNotificationFragment();
                 break;
+            case NavigationConstants.HOME_NAV_JOIN_REQUESTS:
+                switchToJoinRequestsFragment();
+                break;
             default:
                 break;
         }
@@ -196,6 +201,16 @@ public class HomeScreenActivity extends PortraitActivity implements NavigationDr
         }
         showOrReplaceFragment(notificationCenterFragment);
         currentMainFragment = NavigationConstants.HOME_NAV_NOTIFICATIONS;
+        invalidateOptionsMenu();
+    }
+
+    private void switchToJoinRequestsFragment() {
+        setTitle(R.string.jreq_frag_title);
+        if (joinRequestsFragment == null) {
+            joinRequestsFragment = new JoinRequestsFragment();
+        }
+        showOrReplaceFragment(joinRequestsFragment);
+        currentMainFragment = NavigationConstants.HOME_NAV_JOIN_REQUESTS;
         invalidateOptionsMenu();
     }
 

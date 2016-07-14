@@ -51,7 +51,7 @@ import retrofit2.Response;
  */
 public class TaskListFragment extends Fragment implements TasksAdapter.TaskListListener {
 
-  private static final String TAG = TaskListFragment.class.getCanonicalName();
+  private static final String TAG = TaskListFragment.class.getSimpleName();
 
   GroupPickCallbacks mCallbacks;
   TaskListListener listener;

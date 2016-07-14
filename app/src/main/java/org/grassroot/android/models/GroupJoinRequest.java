@@ -2,6 +2,7 @@ package org.grassroot.android.models;
 
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.text.TextUtils;
 
 import org.grassroot.android.utils.Constant;
 
@@ -44,7 +45,11 @@ public class GroupJoinRequest extends RealmObject implements Parcelable, Compara
     }
 
     public String getRequestorNumber() {
-        return requestorNumber;
+        if (TextUtils.isEmpty(requestorNumber)) {
+            return "N/A";
+        } else {
+            return requestorNumber;
+        }
     }
 
     public String getGroupUid() {

@@ -30,7 +30,7 @@ import org.grassroot.android.activities.GroupSearchActivity;
 import org.grassroot.android.activities.GroupTasksActivity;
 import org.grassroot.android.adapters.GroupListAdapter;
 import org.grassroot.android.events.GroupPictureChangedEvent;
-import org.grassroot.android.events.JoinRequestsReceived;
+import org.grassroot.android.events.JoinRequestReceived;
 import org.grassroot.android.events.NetworkActivityResultsEvent;
 import org.grassroot.android.events.TaskAddedEvent;
 import org.grassroot.android.interfaces.GroupConstants;
@@ -38,6 +38,7 @@ import org.grassroot.android.interfaces.GroupPickCallbacks;
 import org.grassroot.android.interfaces.SortInterface;
 import org.grassroot.android.interfaces.TaskConstants;
 import org.grassroot.android.models.Group;
+import org.grassroot.android.models.GroupJoinRequest;
 import org.grassroot.android.models.TaskModel;
 import org.grassroot.android.services.GroupService;
 import org.grassroot.android.utils.Constant;
@@ -182,15 +183,38 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
   }
 
     /*
-    Possibly move this to its own fragment
+    Just check and notify
      */
     public void checkForJoinRequests() {
-        GroupService.getInstance().fetchGroupJoinRequests();
+        GroupService.getInstance().fetchGroupJoinRequests(new GroupService.GroupJoinRequestListener() {
+            @Override
+            public void groupJoinRequestsOpen(RealmList<GroupJoinRequest> joinRequests) {
+                if (joinRequests != null && !joinRequests.isEmpty()) {
+                    displayJoinRequestNotice();
+                }
+            }
+
+            @Override
+            public void groupJoinRequestsOffline(RealmList<GroupJoinRequest> openJoinRequests) {
+                if (openJoinRequests != null && !openJoinRequests.isEmpty()) {
+                    displayJoinRequestNotice();
+                }
+            }
+
+            @Override
+            public void groupJoinRequestsEmpty() {
+                Log.d(TAG, "no join requests found ...");
+            }
+        });
     }
 
     @Subscribe
-    public void onGroupJoinRequestsLoaded(JoinRequestsReceived e) {
-        Log.e(TAG, "group join requests received! this many: " + GroupService.getInstance().openJoinRequests.size());
+    public void onGroupJoinRequestsLoaded(JoinRequestReceived e) {
+        displayJoinRequestNotice();
+    }
+
+    private void displayJoinRequestNotice() {
+        ErrorUtils.showSnackBar(rlGhpRoot, R.string.jreq_notice, Snackbar.LENGTH_LONG);
     }
 
     /*

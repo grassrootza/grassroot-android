@@ -24,7 +24,6 @@ import android.widget.TextView;
 
 import org.grassroot.android.R;
 import org.grassroot.android.adapters.PublicGroupAdapter;
-import org.grassroot.android.fragments.dialogs.ConfirmCancelDialogFragment;
 import org.grassroot.android.fragments.dialogs.SendJoinRequestFragment;
 import org.grassroot.android.interfaces.ClickListener;
 import org.grassroot.android.interfaces.GroupConstants;
@@ -230,7 +229,7 @@ public class GroupSearchActivity extends PortraitActivity {
         progressDialog.show();
         final String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
         final String code = RealmUtils.loadPreferencesFromDB().getToken();
-        GrassrootRestService.getInstance().getApi().groupJoinRequest(phoneNumber, code,
+        GrassrootRestService.getInstance().getApi().sendGroupJoinRequest(phoneNumber, code,
                 groupModel.getId(), groupModel.getDescription()).enqueue(new Callback<GenericResponse>() {
                     @Override
                     public void onResponse(Call<GenericResponse> call, Response<GenericResponse> response) {

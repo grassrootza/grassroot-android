@@ -4,16 +4,6 @@
          Customize dimensions originally defined in res/values/dimens.xml (such as
          screen margins) for sw600dp devices (e.g. 7" tablets) here.
     -->
-    <dimen name="requestsize">170dp</dimen>
-    <dimen name="supportsize">170dp</dimen>
-   <dimen name="tv">21sp</dimen>
-          <dimen name="vsize">275dp</dimen>
-                       <dimen name="dotsize">50sp</dimen>
-             <dimen name="viewimage">150dip</dimen>
-                                          <dimen name="viewimage2">150dip</dimen>
-<dimen name="HLviewsize">210dip</dimen>
-                        <dimen name="Headersize">20sp</dimen>
-      <dimen name="homeViewPagerFrame">350dp</dimen>
-    <dimen name="ForgotpasswordTextsize">14sp</dimen>
+    <dimen name="Headersize">20sp</dimen>
 
 </resources>

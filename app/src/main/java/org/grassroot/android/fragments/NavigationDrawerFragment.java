@@ -61,6 +61,7 @@ public class NavigationDrawerFragment extends Fragment implements TaskService.Ta
     NavDrawerItem groups;
     NavDrawerItem tasks;
     NavDrawerItem notifications;
+    NavDrawerItem joinRequests;
 
     @BindView(R.id.displayName) TextView displayName;
     @BindView(R.id.rv_nav_items) RecyclerView mDrawerRecyclerView;
@@ -142,6 +143,11 @@ public class NavigationDrawerFragment extends Fragment implements TaskService.Ta
         notifications.setItemCount(RealmUtils.loadPreferencesFromDB().getNotificationCounter());
         draweritems.add(notifications);
 
+        // todo : only show this if there are open requests
+        joinRequests = new NavDrawerItem(getString(R.string.drawer_join_request), R.drawable.ic_notification, R.drawable.ic_notification_green, false, true);
+        joinRequests.setItemCount(GroupService.getInstance().loadRequestsFromDB().size());
+        draweritems.add(joinRequests);
+
         draweritems.add(new NavDrawerItem(getString(R.string.Share), R.drawable.ic_share, R.drawable.ic_share_green, false, false));
         draweritems.add(new NavDrawerItem(getString(R.string.Profile),R.drawable.ic_profile,R.drawable.ic_profile_green,false, false));
         draweritems.add(new NavDrawerItem(getString(R.string.FAQs),R.drawable.ic_faq,R.drawable.ic_faq_green,false, false));
@@ -158,6 +164,7 @@ public class NavigationDrawerFragment extends Fragment implements TaskService.Ta
             case NavigationConstants.HOME_NAV_GROUPS:
             case NavigationConstants.HOME_NAV_TASKS:
             case NavigationConstants.HOME_NAV_NOTIFICATIONS:
+            case NavigationConstants.HOME_NAV_JOIN_REQUESTS:
                 break;
             case NavigationConstants.HOME_NAV_SHARE:
                 changeItemSelected = false;

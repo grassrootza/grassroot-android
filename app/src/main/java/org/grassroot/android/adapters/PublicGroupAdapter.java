@@ -19,7 +19,7 @@ import butterknife.ButterKnife;
 
 /**
  */
-public class PublicGroupAdapter extends RecyclerView.Adapter<PublicGroupAdapter.JoinRequestViewHolder> {
+public class PublicGroupAdapter extends RecyclerView.Adapter<PublicGroupAdapter.PublicGroupViewHolder> {
 
     private final List<PublicGroupModel> data;
     LayoutInflater inflater;
@@ -35,14 +35,14 @@ public class PublicGroupAdapter extends RecyclerView.Adapter<PublicGroupAdapter.
     }
 
     @Override
-    public JoinRequestViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        View v = inflater.inflate(R.layout.listview_row_joinrequest, parent, false);
-        JoinRequestViewHolder holder = new JoinRequestViewHolder(v);
+    public PublicGroupViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+        View v = inflater.inflate(R.layout.row_public_group, parent, false);
+        PublicGroupViewHolder holder = new PublicGroupViewHolder(v);
         return holder;
     }
 
     @Override
-    public void onBindViewHolder(JoinRequestViewHolder holder, int position) {
+    public void onBindViewHolder(PublicGroupViewHolder holder, int position) {
         PublicGroupModel model = data.get(position);
         holder.txtGroupname.setText(model.getGroupName());
         holder.txtGroupownername.setText(model.getGroupCreator());
@@ -76,7 +76,7 @@ public class PublicGroupAdapter extends RecyclerView.Adapter<PublicGroupAdapter.
         }
     }
 
-    public static class JoinRequestViewHolder extends RecyclerView.ViewHolder {
+    public static class PublicGroupViewHolder extends RecyclerView.ViewHolder {
         @BindView(R.id.txt_groupname)
         TextView txtGroupname;
         @BindView(R.id.txt_groupownername)
@@ -84,7 +84,7 @@ public class PublicGroupAdapter extends RecyclerView.Adapter<PublicGroupAdapter.
         @BindView(R.id.txt_groupdesc)
         TextView txtGroupdesc;
 
-        public JoinRequestViewHolder(View view) {
+        public PublicGroupViewHolder(View view) {
             super(view);
             ButterKnife.bind(this, view);
         }

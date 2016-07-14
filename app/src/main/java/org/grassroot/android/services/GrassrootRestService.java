@@ -217,22 +217,29 @@ public class GrassrootRestService {
     Call<GroupResponse> getSingleGroup(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
         @Path("groupUid") String groupUid);
 
-    //group join request
-    @POST("group/join/request/{phoneNumber}/{code}")
-    Call<GenericResponse> groupJoinRequest(@Path("phoneNumber") String phoneNumber,
-        @Path("code") String code,
-        @Query("uid") String uid, @Query("message") String message);
-
-    //find open join requests assigned to this user
-    @GET("group/join/list/{phoneNumber}/{code}")
-    Call<RealmList<GroupJoinRequest>> getOpenJoinRequests(@Path("phoneNumber") String phoneNumber,
-        @Path("code") String code);
-
     //search for public groups
     @GET("group/search/{phoneNumber}/{code}")
     Call<GroupSearchResponse> search(@Path("phoneNumber") String phoneNumber,
                                      @Path("code") String code,
                                      @Query("searchTerm") String searchTerm);
+
+    //group join request
+    @POST("group/join/request/{phoneNumber}/{code}")
+    Call<GenericResponse> sendGroupJoinRequest(@Path("phoneNumber") String phoneNumber,
+                                               @Path("code") String code,
+                                               @Query("uid") String uid, @Query("message") String message);
+
+    //find open join requests assigned to this user
+    @GET("group/join/list/{phoneNumber}/{code}")
+    Call<RealmList<GroupJoinRequest>> getOpenJoinRequests(@Path("phoneNumber") String phoneNumber,
+                                                          @Path("code") String code);
+
+    // send join request response
+    @POST("group/join/respond/{phoneNumber}/{code}")
+    Call<GenericResponse> respondToJoinRequest(@Path("phoneNumber") String phoneNumber,
+                                               @Path("code") String code,
+                                               @Query("requestUid") String requestUid,
+                                               @Query("response") String response);
 
     // add members to a group
     @Headers("Content-Type: application/json")
