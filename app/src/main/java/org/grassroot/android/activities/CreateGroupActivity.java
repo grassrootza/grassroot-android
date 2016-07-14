@@ -12,7 +12,15 @@ import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
-
+import butterknife.BindView;
+import butterknife.ButterKnife;
+import butterknife.OnClick;
+import butterknife.OnTextChanged;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import org.grassroot.android.R;
 import org.grassroot.android.events.GroupCreatedEvent;
 import org.grassroot.android.fragments.ContactSelectionFragment;
@@ -29,17 +37,6 @@ import org.grassroot.android.utils.ErrorUtils;
 import org.grassroot.android.utils.PermissionUtils;
 import org.grassroot.android.utils.RealmUtils;
 import org.greenrobot.eventbus.EventBus;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import butterknife.BindView;
-import butterknife.ButterKnife;
-import butterknife.OnClick;
-import butterknife.OnTextChanged;
 import retrofit2.Response;
 
 import static butterknife.OnTextChanged.Callback.AFTER_TEXT_CHANGED;
@@ -91,8 +88,7 @@ public class CreateGroupActivity extends PortraitActivity
     onMainScreen = true;
   }
 
-  @OnClick(R.id.cg_add_member_options)
-  public void toggleAddMenu() {
+  @OnClick(R.id.cg_add_member_options) public void toggleAddMenu() {
     addMemberOptions.setImageResource(menuOpen ? R.drawable.ic_add : R.drawable.ic_add_45d);
     addMemberFromContacts.setVisibility(menuOpen ? View.GONE : View.VISIBLE);
     addMemberManually.setVisibility(menuOpen ? View.GONE : View.VISIBLE);
@@ -199,38 +195,41 @@ public class CreateGroupActivity extends PortraitActivity
     List<Member> groupMembers = memberListFragment.getSelectedMembers();
 
     progressDialog.show();
-    GroupService.getInstance().createGroup(groupName, groupDescription, groupMembers, new GroupService.GroupCreationListener() {
-      @Override
-      public void groupCreatedLocally(Group group) {
-        progressDialog.dismiss();
-        handleSuccessfulGroupCreation(group);
-      }
+    GroupService.getInstance()
+        .createGroup(groupName, groupDescription, groupMembers,
+            new GroupService.GroupCreationListener() {
+              @Override public void groupCreatedLocally(Group group) {
+                progressDialog.dismiss();
+                handleSuccessfulGroupCreation(group);
+              }
 
-      @Override
-      public void groupCreatedOnServer(Group group) {
-        progressDialog.dismiss();
-        handleSuccessfulGroupCreation(group);
-      }
+              @Override public void groupCreatedOnServer(Group group) {
+                progressDialog.dismiss();
+                handleSuccessfulGroupCreation(group);
+              }
 
-      @Override
-      public void groupCreationError(Response<GroupResponse> response) {
-        progressDialog.dismiss();
-        ErrorUtils.showSnackBar(rlCgRoot, R.string.error_generic, Snackbar.LENGTH_SHORT);
-      }
-    });
+              @Override public void groupCreationError(Response<GroupResponse> response) {
+                progressDialog.dismiss();
+                ErrorUtils.showSnackBar(rlCgRoot, R.string.error_generic, Snackbar.LENGTH_SHORT);
+              }
+            });
   }
 
   private void handleSuccessfulGroupCreation(Group group) {
     PreferenceObject preferenceObject = RealmUtils.loadPreferencesFromDB();
     preferenceObject.setHasGroups(true);
-    RealmUtils.saveDataToRealm(preferenceObject);    EventBus.getDefault().post(new GroupCreatedEvent());
+    RealmUtils.saveDataToRealm(preferenceObject);
+    if (!group.getIsLocal()) RealmUtils.saveDataToRealm(group);
+    EventBus.getDefault().post(new GroupCreatedEvent(group));
     Intent i = new Intent(CreateGroupActivity.this, ActionCompleteActivity.class);
     String completionMessage;
     if (!group.getIsLocal()) {
-      completionMessage = String.format(getString(R.string.ac_body_group_create_server), group.getGroupName(),
+      completionMessage =
+          String.format(getString(R.string.ac_body_group_create_server), group.getGroupName(),
               group.getGroupMemberCount());
     } else {
-      completionMessage = String.format(getString(R.string.ac_body_group_create_local), group.getGroupName());
+      completionMessage =
+          String.format(getString(R.string.ac_body_group_create_local), group.getGroupName());
     }
     i.putExtra(ActionCompleteActivity.HEADER_FIELD, R.string.ac_header_group_create);
     i.putExtra(ActionCompleteActivity.BODY_FIELD, completionMessage);
@@ -246,7 +245,8 @@ public class CreateGroupActivity extends PortraitActivity
     super.onActivityResult(requestCode, resultCode, data);
     if (resultCode == Activity.RESULT_OK && data != null) {
       if (requestCode == Constant.activityManualMemberEntry) {
-        Member newMember = new Member(data.getStringExtra("selectedNumber"), data.getStringExtra("name"),
+        Member newMember =
+            new Member(data.getStringExtra("selectedNumber"), data.getStringExtra("name"),
                 GroupConstants.ROLE_ORDINARY_MEMBER, -1);
         manuallyAddedMembers.add(newMember);
         memberListFragment.addMembers(Collections.singletonList(newMember));

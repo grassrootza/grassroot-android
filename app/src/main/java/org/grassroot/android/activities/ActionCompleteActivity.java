@@ -101,15 +101,19 @@ public class ActionCompleteActivity extends PortraitActivity {
             switch (actionIntent) {
                 case HOME_SCREEN:
                     startActivity(homeIntent());
+                    finish();
                     break;
                 case GROUP_SCREEN:
                     Log.e(TAG, "action intent is group screen ...");
                     Intent i = new Intent(ActionCompleteActivity.this, GroupTasksActivity.class);
                     i.putExtra(GroupConstants.OBJECT_FIELD, groupToPass);
+                    i.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_CLEAR_TOP);
                     startActivity(i);
+                    finish();
                     break;
                 default:
                     startActivity(homeIntent());
+                    finish();
             }
         }
     }
@@ -119,6 +123,7 @@ public class ActionCompleteActivity extends PortraitActivity {
         Intent i = new Intent(ActionCompleteActivity.this, CreateMeetingActivity.class);
         i.putExtra(GroupConstants.UID_FIELD, groupToPass.getGroupUid());
         startActivity(i);
+        finish();
     }
 
     @OnClick(R.id.bt_vote)
@@ -126,6 +131,7 @@ public class ActionCompleteActivity extends PortraitActivity {
         Intent i = new Intent(ActionCompleteActivity.this, CreateVoteActivity.class);
         i.putExtra(GroupConstants.UID_FIELD, groupToPass.getGroupUid());
         startActivity(i);
+        finish();
     }
 
     @OnClick(R.id.bt_todo)
@@ -133,6 +139,7 @@ public class ActionCompleteActivity extends PortraitActivity {
         Intent i = new Intent(ActionCompleteActivity.this, CreateTodoActivity.class);
         i.putExtra(GroupConstants.UID_FIELD, groupToPass.getGroupUid());
         startActivity(i);
+        finish();
     }
 
     @OnClick(R.id.bt_home)
@@ -143,7 +150,7 @@ public class ActionCompleteActivity extends PortraitActivity {
     private Intent homeIntent() {
         Intent i = new Intent(ActionCompleteActivity.this, HomeScreenActivity.class);
         if (!showTaskButtons) {
-            i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+            i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
         }
         return i;
     }
