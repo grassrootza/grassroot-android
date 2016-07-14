@@ -36,12 +36,15 @@ import org.grassroot.android.interfaces.TaskConstants;
 import org.grassroot.android.models.Group;
 import org.grassroot.android.models.TaskModel;
 import org.grassroot.android.models.TaskResponse;
+import org.grassroot.android.models.TasksChangedResponse;
 import org.grassroot.android.services.GrassrootRestService;
 import org.grassroot.android.services.TaskService;
 import org.grassroot.android.utils.ErrorUtils;
 import org.grassroot.android.utils.RealmUtils;
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
+
+import io.realm.RealmList;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -122,6 +125,7 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
     floatingActionButton.setVisibility(displayFAB ? View.VISIBLE : View.GONE);
 
     progressDialog = new ProgressDialog(getContext());
+    progressDialog.setMessage(getString(R.string.txt_pls_wait));
     progressDialog.setIndeterminate(true);
 
     fetchTaskList();
@@ -181,20 +185,20 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
     swipeRefreshLayout.setRefreshing(true);
     progressDialog.show();
 
-    Call<TaskResponse> call =
+    Call<TasksChangedResponse> call =
         GrassrootRestService.getInstance().getApi().getGroupTasks(phoneNumber, code, groupUid);
 
-    call.enqueue(new Callback<TaskResponse>() {
-      @Override public void onResponse(Call<TaskResponse> call, Response<TaskResponse> response) {
+    call.enqueue(new Callback<TasksChangedResponse>() {
+      @Override public void onResponse(Call<TasksChangedResponse> call, Response<TasksChangedResponse> response) {
         progressDialog.hide();
         if (response.isSuccessful()) {
           swipeRefreshLayout.setRefreshing(false);
-          final TaskResponse taskResponse = response.body();
-          if (taskResponse.getTasks() == null || taskResponse.getTasks().isEmpty()) {
+          final RealmList<TaskModel> tasks = response.body().getAddedAndUpdated();
+          if (tasks == null || tasks.isEmpty()) {
             handleNoTasksFound();
           } else {
-            groupTasksAdapter.changeToTaskList(taskResponse.getTasks());
-            RealmUtils.saveDataToRealm(taskResponse.getTasks());
+            groupTasksAdapter.changeToTaskList(tasks);
+            RealmUtils.saveDataToRealm(tasks);
           }
           group.setFetchedTasks(true);
           RealmUtils.saveDataToRealm(group);
@@ -204,7 +208,7 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
       }
 
       @Override
-      public void onFailure(Call<TaskResponse> call, Throwable t) {
+      public void onFailure(Call<TasksChangedResponse> call, Throwable t) {
         if (swipeRefreshLayout != null && swipeRefreshLayout.isRefreshing()) {
           swipeRefreshLayout.setRefreshing(false);
         }

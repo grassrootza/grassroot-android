@@ -26,6 +26,7 @@ import org.grassroot.android.models.ResponseTotalsModel;
 import org.grassroot.android.models.RsvpListModel;
 import org.grassroot.android.models.TaskModel;
 import org.grassroot.android.models.TaskResponse;
+import org.grassroot.android.models.TasksChangedResponse;
 import org.grassroot.android.models.TokenResponse;
 import org.grassroot.android.utils.Constant;
 
@@ -262,8 +263,8 @@ public class GrassrootRestService {
 
     // get all the tasks for a group
     @GET("task/list/{phoneNumber}/{code}/{parentUid}")
-    Call<TaskResponse> getGroupTasks(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
-        @Path("parentUid") String groupUid);
+    Call<TasksChangedResponse> getGroupTasks(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
+                                             @Path("parentUid") String groupUid);
 
     // fetch a task (of any type)
     @GET("task/fetch/{phoneNumber}/{code}/{taskUid}/{taskType}")
