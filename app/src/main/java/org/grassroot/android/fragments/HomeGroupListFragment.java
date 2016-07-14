@@ -29,6 +29,7 @@ import org.grassroot.android.activities.GroupAvatarActivity;
 import org.grassroot.android.activities.GroupSearchActivity;
 import org.grassroot.android.activities.GroupTasksActivity;
 import org.grassroot.android.adapters.GroupListAdapter;
+import org.grassroot.android.events.GroupCreatedEvent;
 import org.grassroot.android.events.GroupPictureChangedEvent;
 import org.grassroot.android.events.JoinRequestReceived;
 import org.grassroot.android.events.NetworkActivityResultsEvent;
@@ -260,7 +261,8 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
     public void insertGroup(final int position, final Group group) {
         // todo : actually add it, for now, just do a refresh
         Log.e(TAG, "adding a group! at position " + position + ", the group looks like : " + group);
-        groupListRowAdapter.addGroup(0, group);
+        groupListRowAdapter.setGroupList(RealmUtils.loadListFromDB(Group.class));
+
     }
 
     private void setUpRecyclerView() {
@@ -436,6 +438,11 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
             }
         }
     }
+
+  @Subscribe
+  public void onGroupAdded(GroupCreatedEvent e) {
+    groupListRowAdapter.addGroup(0,e.getGroup());
+  }
 
 
     public void sortGroups() {

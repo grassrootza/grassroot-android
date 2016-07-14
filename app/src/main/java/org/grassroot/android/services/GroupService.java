@@ -208,15 +208,6 @@ public class GroupService {
     }
   }
 
-  private void saveGroupsInDB(RealmList<Group> groups) {
-    Realm realm = Realm.getDefaultInstance();
-    if (groups != null && realm != null && !realm.isClosed()) {
-      realm.beginTransaction();
-      realm.copyToRealmOrUpdate(groups);
-      realm.commitTransaction();
-      realm.close();
-    }
-  }
 
     /*
     METHODS FOR CREATING AND MODIFYING / EDITING GROUPS
@@ -242,6 +233,7 @@ public class GroupService {
                     .getGroups()
                     .get(0)
                     .getGroupUid());
+                RealmUtils.saveDataToRealm(response.body().getGroups().first());
                 listener.groupCreatedOnServer(response.body().getGroups().first());
               } else {
                 listener.groupCreationError(response);

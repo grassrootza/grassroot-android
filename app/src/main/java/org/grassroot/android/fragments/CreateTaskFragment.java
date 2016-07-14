@@ -25,13 +25,11 @@ import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.TimePicker;
-
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnCheckedChanged;
 import butterknife.OnClick;
 import butterknife.OnTextChanged;
-
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
@@ -140,8 +138,7 @@ public class CreateTaskFragment extends Fragment {
 
   private void setUpDatePicker() {
     datePicker = DatePickerFragment.newInstance(new DatePickerDialog.OnDateSetListener() {
-      @Override
-      public void onDateSet(DatePicker view, int year, int monthOfYear, int dayOfMonth) {
+      @Override public void onDateSet(DatePicker view, int year, int monthOfYear, int dayOfMonth) {
         selectedDateTimeCal.set(Calendar.YEAR, year);
         selectedDateTimeCal.set(Calendar.MONTH, monthOfYear);
         selectedDateTimeCal.set(Calendar.DAY_OF_MONTH, dayOfMonth);
@@ -165,8 +162,7 @@ public class CreateTaskFragment extends Fragment {
 
   private void setUpTimePicker() {
     timePicker = TimePickerFragment.newInstance(new TimePickerDialog.OnTimeSetListener() {
-      @Override
-      public void onTimeSet(TimePicker view, int hourOfDay, int minute) {
+      @Override public void onTimeSet(TimePicker view, int hourOfDay, int minute) {
         selectedDateTimeCal.set(Calendar.HOUR_OF_DAY, hourOfDay);
         selectedDateTimeCal.set(Calendar.MINUTE, minute);
         updateTime();
@@ -252,23 +248,20 @@ public class CreateTaskFragment extends Fragment {
     progressDialog.show();
     TaskModel model = generateTaskObject();
     TaskService.getInstance().createTask(model, new TaskService.TaskCreationListener() {
-      @Override
-      public void taskCreatedLocally(TaskModel task) {
+      @Override public void taskCreatedLocally(TaskModel task) {
         progressDialog.dismiss();
         generateSuccessTask(task);
       }
 
-      @Override
-      public void taskCreatedOnServer(TaskModel task) {
+      @Override public void taskCreatedOnServer(TaskModel task) {
         progressDialog.dismiss();
         generateSuccessTask(task);
       }
 
-      @Override
-      public void taskCreationError(TaskModel task) {
+      @Override public void taskCreationError(TaskModel task) {
         progressDialog.dismiss();
-        ErrorUtils.showSnackBar(vContainer, "Error! Something went wrong", Snackbar.LENGTH_LONG,
-                "", null);
+        ErrorUtils.showSnackBar(vContainer, "Error! Something went wrong", Snackbar.LENGTH_LONG, "",
+            null);
       }
     });
   }
@@ -286,9 +279,10 @@ public class CreateTaskFragment extends Fragment {
     i.putExtra(ActionCompleteActivity.ACTION_INTENT, ActionCompleteActivity.GROUP_SCREEN);
     Group taskGroup = RealmUtils.loadObjectFromDB(Group.class, "groupUid", model.getParentUid());
     i.putExtra(GroupConstants.OBJECT_FIELD, taskGroup);
-    i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+    i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
     EventBus.getDefault().post(new TaskAddedEvent(model, generateSuccessString()));
     startActivity(i);
+    getActivity().finish();
     // todo : add getActivity().finish ? should be redundant ...
   }
 
@@ -320,8 +314,10 @@ public class CreateTaskFragment extends Fragment {
     model.setMinutes(minutes);
     model.setCanEdit(true);
     model.setReply(TaskConstants.TODO_PENDING);
-    model.setMemberUIDS(RealmUtils.convertListOfStringInRealmListOfString(new ArrayList<>(memberUids)));
-    RealmUtils.saveDataToRealm(RealmUtils.convertListOfStringInRealmListOfString(new ArrayList<>(memberUids)));
+    model.setMemberUIDS(
+        RealmUtils.convertListOfStringInRealmListOfString(new ArrayList<>(memberUids)));
+    RealmUtils.saveDataToRealm(
+        RealmUtils.convertListOfStringInRealmListOfString(new ArrayList<>(memberUids)));
     return model;
   }
 

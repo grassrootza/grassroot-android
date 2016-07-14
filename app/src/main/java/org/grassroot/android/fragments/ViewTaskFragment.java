@@ -289,6 +289,7 @@ public class ViewTaskFragment extends Fragment {
       btCancelTask.setVisibility(View.GONE);
     }
 
+
     setVoteResponseView();
   }
 
@@ -332,6 +333,10 @@ public class ViewTaskFragment extends Fragment {
     icRespondNegative.setImageResource(
         task.respondedNo() ? R.drawable.ic_no_vote_active : R.drawable.ic_no_vote_inactive);
     icRespondNegative.setEnabled(!task.respondedNo());
+    if(task.hasResponded()){
+      icRespondPositive.setEnabled(false);
+      icRespondNegative.setEnabled(false);
+    }
   }
 
   private void setUpTodoResponseIconsCanAction() {
