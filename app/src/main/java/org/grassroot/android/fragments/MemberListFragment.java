@@ -217,28 +217,6 @@ public class MemberListFragment extends Fragment {
         mListener.onMemberListPopulated(members);
 
         Log.d(TAG, "inside MemberListFragment, retrieving group members for uid = " + groupUid);
-
-        //GrassrootRestService.getInstance().getApi()
-        //        .getGroupMembers(groupUid, userPhoneNumber, userSessionCode, selectedByDefault)
-        //        .enqueue(new Callback<MemberList>() {
-        //            @Override
-        //            public void onResponse(Call<MemberList> call, Response<MemberList> response) {
-        //                if (response.isSuccessful()) {
-        //                    final List<Member> membersReturned = response.body().getMembers();
-        //                    handleReturnedMembers(membersReturned);
-        //                    if (mListener != null) {
-        //                        mListener.onMemberListPopulated(membersReturned);
-        //                    }
-        //                } else {
-        //                    ErrorUtils.handleServerError(vgContainer, getActivity(), response);
-        //                }
-        //            }
-        //
-        //            @Override
-        //            public void onFailure(Call<MemberList> call, Throwable t) {
-        //                ErrorUtils.handleNetworkError(getContext(), vgContainer, t);
-        //            }
-        //        });
     }
 
     private void handleReturnedMembers(List<Member> membersReturned) {

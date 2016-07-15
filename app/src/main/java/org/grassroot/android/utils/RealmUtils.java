@@ -92,6 +92,7 @@ public class RealmUtils {
     realm.close();
   }
 
+
   public static void removeObjectsFromDatabase(Class<? extends RealmObject> clazz,
       Map<String, Object> map) {
     Realm realm = Realm.getDefaultInstance();
