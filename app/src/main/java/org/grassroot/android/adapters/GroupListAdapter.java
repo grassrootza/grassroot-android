@@ -169,8 +169,12 @@ public class GroupListAdapter extends RecyclerView.Adapter<GroupListAdapter.GHP_
 
         final String imageUrl = group.getImageUrl();
 
+
+
         if (imageUrl != null) {
             setAvatar(holder.avatar, imageUrl);
+        }else{
+            holder.avatar.setImageResource(R.drawable.ic_groups_default_avatar);
         }
     }
 
@@ -192,6 +196,11 @@ public class GroupListAdapter extends RecyclerView.Adapter<GroupListAdapter.GHP_
                 throw new UnsupportedOperationException(
                         "Error! Should only be one of standard change types");
         }
+    }
+
+    @Override
+    public int getItemViewType(int position) {
+        return position;
     }
 
     @Override
@@ -253,7 +262,8 @@ public class GroupListAdapter extends RecyclerView.Adapter<GroupListAdapter.GHP_
 
     private void setAvatar(final ImageView view, final String imageUrl) {
         Picasso.with(context).load(imageUrl)
-                .error(R.drawable.ic_profile_image)
+                .error(R.drawable.ic_groups_default_avatar)
+                .placeholder(R.drawable.ic_groups_default_avatar)
                 .networkPolicy(NetworkPolicy.OFFLINE)
                 .transform(new CircularImageTransformer())
                 .into(view, new Callback() {
@@ -262,8 +272,9 @@ public class GroupListAdapter extends RecyclerView.Adapter<GroupListAdapter.GHP_
                     @Override
                     public void onError() {
                         Picasso.with(context).load(imageUrl)
+                                .placeholder(R.drawable.ic_groups_default_avatar)
                                 .transform(new CircularImageTransformer())
-                                .error(R.drawable.ic_profile_image)
+                                .error(R.drawable.ic_groups_default_avatar)
                                 .into(view);
                     }
                 });
