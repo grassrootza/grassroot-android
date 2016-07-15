@@ -45,7 +45,7 @@ public class ApplicationLoader extends Application {
         Response originalResponse = chain.proceed(chain.request());
         return originalResponse.newBuilder().header("Cache-Control", "max-age=" + (60 * 60 * 24 * 365)).build();
       }
-    }).cache(new Cache(applicationContext.getCacheDir(), Integer.MAX_VALUE)).build();
+    }).cache(new Cache(applicationContext.getFilesDir(), Integer.MAX_VALUE)).build();
 
     Picasso.Builder builder = new Picasso.Builder(getApplicationContext());
     builder.downloader(new OkHttp3Downloader(okHttpClient));

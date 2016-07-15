@@ -32,13 +32,13 @@
 
     <ProgressBar
         android:id="@+id/progressBar"
-        android:layout_width="fill_parent"
-        android:layout_height="40dp"
+        android:layout_width="wrap_content"
+        android:layout_gravity="center"
+        android:layout_height="wrap_content"
         android:visibility="gone"
-        android:layout_below="@+id/iv_gp_avatar"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true"
-        android:layout_marginTop="40dp" />
+        android:layout_alignBottom="@+id/iv_gp_avatar"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="74dp" />
 
 
     <Button

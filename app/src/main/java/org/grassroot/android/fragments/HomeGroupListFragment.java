@@ -266,7 +266,11 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
     }
 
     private void setUpRecyclerView() {
+        rcGroupList.setHasFixedSize(true);
         rcGroupList.setLayoutManager(new LinearLayoutManager(getActivity()));
+        rcGroupList.setItemViewCacheSize(20);
+        rcGroupList.setDrawingCacheEnabled(true);
+        rcGroupList.setDrawingCacheQuality(View.DRAWING_CACHE_QUALITY_HIGH);
         groupListRowAdapter = new GroupListAdapter(new ArrayList<Group>(), HomeGroupListFragment.this);
         rcGroupList.setAdapter(groupListRowAdapter);
         glSwipeRefresh.setColorSchemeColors(

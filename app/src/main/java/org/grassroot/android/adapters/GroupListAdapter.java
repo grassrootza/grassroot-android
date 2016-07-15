@@ -169,8 +169,6 @@ public class GroupListAdapter extends RecyclerView.Adapter<GroupListAdapter.GHP_
 
         final String imageUrl = group.getImageUrl();
 
-
-
         if (imageUrl != null) {
             setAvatar(holder.avatar, imageUrl);
         }else{
