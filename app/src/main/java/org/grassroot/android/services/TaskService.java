@@ -9,11 +9,15 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import org.grassroot.android.interfaces.TaskConstants;
+import org.grassroot.android.models.Group;
 import org.grassroot.android.models.TaskChangedResponse;
 import org.grassroot.android.models.TaskModel;
 import org.grassroot.android.models.TaskResponse;
 import org.grassroot.android.utils.NetworkUtils;
 import org.grassroot.android.utils.RealmUtils;
+import org.grassroot.android.utils.Utilities;
+
+import io.realm.internal.Util;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -83,14 +87,27 @@ public class TaskService {
   }
 
   public void fetchGroupTasks(final String groupUid, final TaskServiceListener listener) {
-    String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
-    String code = RealmUtils.loadPreferencesFromDB().getToken();
-    Call<TaskChangedResponse> call =
-        GrassrootRestService.getInstance().getApi().getGroupTasks(phoneNumber, code, groupUid);
+    final String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
+    final String code = RealmUtils.loadPreferencesFromDB().getToken();
+    Group group = RealmUtils.loadObjectFromDB(Group.class, "groupUid", groupUid);
+    Log.e(TAG, "here is the group in taskService: " + group.toString());
+
+    Call<TaskChangedResponse> call;
+    Log.e(TAG, "group last time tasks fetched = " + group.getLastTimeTasksFetched());
+    if (group.getLastTimeTasksFetched() == null) {
+      Log.e(TAG, "group tasks never fetched");
+      call = GrassrootRestService.getInstance().getApi().getGroupTasks(phoneNumber, code, groupUid);
+    } else {
+      Log.e(TAG, "checking for tasks changed since: " + group.getLastTimeTasksFetched());
+      call = GrassrootRestService.getInstance().getApi()
+              .getGroupTasksChangedSince(phoneNumber, code, groupUid, Long.valueOf(group.getLastTimeTasksFetched()));
+    }
+
     call.enqueue(new Callback<TaskChangedResponse>() {
       @Override public void onResponse(Call<TaskChangedResponse> call, Response<TaskChangedResponse> response) {
         if (response.isSuccessful()) {
           RealmUtils.saveDataToRealm(response.body().getAddedAndUpdated());
+          updateTasksFetchedTime(groupUid);
           listener.tasksLoadedFromServer(RealmUtils.loadListFromDB(TaskModel.class,"parentUid",groupUid));
         } else {
           listener.taskLoadingFromServerFailed(response);
@@ -102,6 +119,13 @@ public class TaskService {
             RealmUtils.loadListFromDB(TaskModel.class, "parentUid", groupUid));
       }
     });
+  }
+
+  private void updateTasksFetchedTime(String parentUid) {
+    Group group = RealmUtils.loadObjectFromDB(Group.class, "groupUid", parentUid);
+    group.setLastTimeTasksFetched(String.valueOf(Utilities.getCurrentTimeInMillisAtUTC()));
+    RealmUtils.saveGroupToRealm(group);
+    Log.e(TAG, "group last time fetched after update: " + group.getLastTimeTasksFetched());
   }
 
   public void fetchUpcomingTasks(final TaskServiceListener listener) {

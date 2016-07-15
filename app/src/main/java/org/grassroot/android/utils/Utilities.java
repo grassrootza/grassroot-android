@@ -14,6 +14,7 @@ import org.grassroot.android.models.Member;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
@@ -34,6 +35,10 @@ public class Utilities {
         Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("GMT"), Locale.getDefault());
         String   timeZone = new SimpleDateFormat("Z").format(calendar.getTime());
         return timeZone.substring(0, 3) + ":"+ timeZone.substring(3, 5);
+    }
+
+    public static long getCurrentTimeInMillisAtUTC() {
+        return (new Date()).getTime();
     }
 
     // since google's libPhoneNumber is a mammoth 1mb JAR, not including, but hand rolling

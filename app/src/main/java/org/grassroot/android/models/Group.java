@@ -31,6 +31,8 @@ public class Group extends RealmObject implements Parcelable, Comparable<Group> 
   private String imageUrl;
   private boolean fetchedTasks;
 
+  private String lastTimeTasksFetched;
+
   public boolean isFetchedTasks() {
     return fetchedTasks;
   }
@@ -145,6 +147,10 @@ public class Group extends RealmObject implements Parcelable, Comparable<Group> 
   public void setHasTasks(boolean hasTasks) {
     this.hasTasks = hasTasks;
   }
+
+  public String getLastTimeTasksFetched() { return lastTimeTasksFetched; }
+
+  public void setLastTimeTasksFetched(String lastTimeTasksFetched) { this.lastTimeTasksFetched = lastTimeTasksFetched; }
 
   public String getDateTimeStringISO() {
     if (dateTimeStringISO == null || dateTimeStringISO.equals("")) {
@@ -347,6 +353,7 @@ public class Group extends RealmObject implements Parcelable, Comparable<Group> 
         "groupUid='" + groupUid + '\'' +
         ", lastChangeType='" + lastChangeType + '\'' +
         ", groupName='" + groupName + '\'' +
+        ", lastFetchedTasks='" + lastTimeTasksFetched + '\'' +
         '}';
   }
 
