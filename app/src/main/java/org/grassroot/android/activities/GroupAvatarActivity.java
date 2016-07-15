@@ -146,9 +146,7 @@ public class GroupAvatarActivity extends PortraitActivity {
                 .into(ivAvatar, new Callback() {
                     @Override
                     public void onSuccess() {
-                        if (btAvatarRemove.getVisibility() == View.INVISIBLE ||
-                                btAvatarRemove.getVisibility() == View.GONE)
-                            btAvatarRemove.setVisibility(View.VISIBLE);
+                      showRemoveButton();
                     }
 
                     @Override
@@ -185,9 +183,7 @@ public class GroupAvatarActivity extends PortraitActivity {
                     @Override
                     public void onResponse(Call<GenericResponse> call, Response<GenericResponse> response) {
                         if (response.isSuccessful()) {
-                            ivAvatar.setImageResource(R.drawable.ic_groups_default_avatar);
-                            btAvatarRemove.setVisibility(View.GONE);
-                            btAvatar.setText(R.string.gp_bt_txt_set);
+                            hideRemoveButton();
                             Snackbar.make(g_avt_relative, R.string.gp_remove_success, Snackbar.LENGTH_LONG).show();
                             EventBus.getDefault().post(new GroupPictureChangedEvent());
                         } else {
@@ -225,6 +221,7 @@ public class GroupAvatarActivity extends PortraitActivity {
             @Override
             public void onResponse(Call<GenericResponse> call, Response<GenericResponse> response) {
                 progressBar.setVisibility(View.GONE);
+                showRemoveButton();
                 Snackbar.make(g_avt_relative, R.string.gp_update_success, Snackbar.LENGTH_LONG).show();
                 EventBus.getDefault().post(new GroupPictureChangedEvent());
             }
@@ -302,6 +299,20 @@ public class GroupAvatarActivity extends PortraitActivity {
             return path;
         }
         return strMyImagePath;
+
+    }
+
+    private void hideRemoveButton(){
+        ivAvatar.setImageResource(R.drawable.ic_groups_default_avatar);
+        btAvatar.setText(R.string.gp_bt_txt_set);
+        btAvatarRemove.setVisibility(View.GONE);
+
+    }
+
+    private void showRemoveButton(){
+        if (btAvatarRemove.getVisibility() == View.INVISIBLE ||
+                btAvatarRemove.getVisibility() == View.GONE)
+            btAvatarRemove.setVisibility(View.VISIBLE);
 
     }
 
