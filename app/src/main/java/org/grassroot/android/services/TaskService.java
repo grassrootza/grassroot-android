@@ -106,6 +106,7 @@ public class TaskService {
     call.enqueue(new Callback<TaskChangedResponse>() {
       @Override public void onResponse(Call<TaskChangedResponse> call, Response<TaskChangedResponse> response) {
         if (response.isSuccessful()) {
+          System.out.println(Thread.currentThread().getName());
           RealmUtils.saveDataToRealm(response.body().getAddedAndUpdated());
           updateTasksFetchedTime(groupUid);
           listener.tasksLoadedFromServer(RealmUtils.loadListFromDB(TaskModel.class,"parentUid",groupUid));

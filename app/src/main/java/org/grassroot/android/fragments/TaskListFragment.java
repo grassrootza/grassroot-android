@@ -179,7 +179,7 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
   }
 
   private void fetchGroupTasks() {
-    final Group group = RealmUtils.loadObjectFromDB(Group.class, "groupUid", groupUid);
+    Group group = RealmUtils.loadObjectFromDB(Group.class,"groupUid",groupUid);
     if (group.isFetchedTasks()) {
       groupTasksAdapter.changeToTaskList(
           RealmUtils.loadListFromDB(TaskModel.class, "parentUid", groupUid));
@@ -188,7 +188,7 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
     progressDialog.show();
     TaskService.getInstance().fetchGroupTasks(groupUid, new TaskService.TaskServiceListener() {
       @Override public void tasksLoadedFromServer(List<TaskModel> tasks) {
-        handleTaskLoaded(tasks, group);
+        handleTaskLoaded(tasks);
       }
 
       @Override public void taskLoadingFromServerFailed(Response errorBody) {
@@ -197,18 +197,19 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
       }
 
       @Override public void tasksLoadedFromDB(List<TaskModel> tasks) {
-        handleTaskLoaded(tasks, group);
+        handleTaskLoaded(tasks);
       }
     });
   }
 
-  private void handleTaskLoaded(List<TaskModel> tasks, Group group) {
+  private void handleTaskLoaded(List<TaskModel> tasks) {
     progressDialog.hide();
     swipeRefreshLayout.setRefreshing(false);
     if (tasks == null || tasks.isEmpty()) {
       handleNoTasksFound();
     } else {
       groupTasksAdapter.changeToTaskList(tasks);
+      Group group = RealmUtils.loadObjectFromDB(Group.class,"groupUid",groupUid);
       group.setFetchedTasks(true);
       RealmUtils.saveDataToRealm(group);
     }
