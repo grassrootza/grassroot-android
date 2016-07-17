@@ -14,11 +14,13 @@ import org.grassroot.android.models.GroupJoinRequest;
 import org.grassroot.android.models.GroupResponse;
 import org.grassroot.android.models.GroupsChangedResponse;
 import org.grassroot.android.models.Member;
+import org.grassroot.android.models.PreferenceObject;
 import org.grassroot.android.models.RealmString;
 import org.grassroot.android.utils.ErrorUtils;
 import org.grassroot.android.utils.NetworkUtils;
 import org.grassroot.android.utils.PermissionUtils;
 import org.grassroot.android.utils.RealmUtils;
+import org.grassroot.android.utils.Utilities;
 import org.greenrobot.eventbus.EventBus;
 
 import java.util.ArrayList;
@@ -95,6 +97,9 @@ public class GroupService {
 
     final String mobileNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
     final String userCode = RealmUtils.loadPreferencesFromDB().getToken();
+    long lastTimeUpdated = RealmUtils.loadPreferencesFromDB().getLastTimeGroupsFetched();
+
+    Log.e(TAG, "last time groups updated = " + lastTimeUpdated);
 
     groupsLoading = true;
     GrassrootRestService.getInstance()
@@ -105,6 +110,7 @@ public class GroupService {
 
           public void onResponse(Call<GroupsChangedResponse> call, Response<GroupsChangedResponse> response) {
             if (response.isSuccessful()) {
+              updateGroupsFetchedTime();
               groupsLoading = false;
               groupsFinishedLoading = true;
               userGroups = new ArrayList<>(response.body().getAddedAndUpdated());
@@ -139,6 +145,10 @@ public class GroupService {
   public void refreshGroupList(final Activity activity, final GroupServiceListener listener) {
     final String mobileNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
     final String userCode = RealmUtils.loadPreferencesFromDB().getToken();
+    final long lastTimeGroupsUpdated = RealmUtils.loadPreferencesFromDB().getLastTimeGroupsFetched();
+
+    Log.e(TAG, "refresh group list, checking for changes since: " + lastTimeGroupsUpdated);
+
     GrassrootRestService.getInstance()
         .getApi()
         .getUserGroups(mobileNumber, userCode)
@@ -146,6 +156,7 @@ public class GroupService {
           @Override
           public void onResponse(Call<GroupsChangedResponse> call, Response<GroupsChangedResponse> response) {
             if (response.isSuccessful()) {
+              updateGroupsFetchedTime();
               listener.groupListLoaded();
             } else {
               listener.groupListLoadingError();
@@ -165,6 +176,12 @@ public class GroupService {
                 });
           }
         });
+  }
+
+  private void updateGroupsFetchedTime() {
+    PreferenceObject preferenceObject = RealmUtils.loadPreferencesFromDB();
+    preferenceObject.setLastTimeGroupsFetched(Utilities.getCurrentTimeInMillisAtUTC());
+    RealmUtils.saveDataToRealm(preferenceObject);
   }
 
   /*
