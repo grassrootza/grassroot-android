@@ -9,9 +9,10 @@ import io.realm.RealmResults;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.UUID;
+
 import org.grassroot.android.R;
-import org.grassroot.android.events.GroupRenamedEvent;
+import org.grassroot.android.events.GroupEditErrorEvent;
+import org.grassroot.android.events.GroupEditedEvent;
 import org.grassroot.android.events.GroupsRefreshedEvent;
 import org.grassroot.android.interfaces.GroupConstants;
 import org.grassroot.android.interfaces.NetworkErrorDialogListener;
@@ -303,8 +304,13 @@ public class GroupService {
 
   /* METHODS FOR EDITING GROUP */
 
-  public void renameGroup(final String groupUid, final String newName) {
-    Log.e(TAG, "renaming the group ... ");
+  public interface GroupEditingListener {
+    void joinCodeOpened(final String joinCode);
+    void apiCallComplete();
+  }
+
+  public void renameGroup(final Group group, final String newName) {
+    final String groupUid = group.getGroupUid();
     if (NetworkUtils.isNetworkAvailable(ApplicationLoader.applicationContext)) {
       final String mobileNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
       final String code = RealmUtils.loadPreferencesFromDB().getToken();
@@ -313,19 +319,98 @@ public class GroupService {
                 @Override
                 public void onResponse(Call<GenericResponse> call, Response<GenericResponse> response) {
                   if (response.isSuccessful()) {
-                    EventBus.getDefault().post(new GroupRenamedEvent(groupUid, newName));
+                    saveRenamedGroupToDB(group, newName);
+                    EventBus.getDefault().post(new GroupEditedEvent(GroupEditedEvent.RENAMED,
+                            GroupEditedEvent.CHANGED_ONLINE, groupUid, newName));
                   } else {
-                    // handle error somehow
+                    EventBus.getDefault().post(new GroupEditErrorEvent(response.errorBody()));
                   }
                 }
 
                 @Override
                 public void onFailure(Call<GenericResponse> call, Throwable t) {
-                  // todo : put in a queue
+                  // todo : put in a queue as well, to send later
+                  EventBus.getDefault().post(new GroupEditErrorEvent(t));
                 }
               });
     } else {
-      // todo : work out offline/online switching here
+      // todo : put in a queue for later ...
+      saveRenamedGroupToDB(group, newName);
+      EventBus.getDefault().post(new GroupEditedEvent(GroupEditedEvent.RENAMED,
+              GroupEditedEvent.CHANGED_OFFLINE, groupUid, newName));
+    }
+  }
+
+  private void saveRenamedGroupToDB(Group group, final String newName) {
+    group.setGroupName(newName);
+    RealmUtils.saveGroupToRealm(group);
+  }
+
+  public void switchGroupPublicStatus(final Group group, final boolean isPublic) {
+    final String groupUid = group.getGroupUid();
+    if (NetworkUtils.isNetworkAvailable(ApplicationLoader.applicationContext)) {
+      // GrassrootRestService.getInstance().getApi();
+    } else {
+
+    }
+  }
+
+  public void closeJoinCode(final Group group, final GroupEditingListener listener) {
+    final String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
+    final String token = RealmUtils.loadPreferencesFromDB().getToken();
+    if (NetworkUtils.isNetworkAvailable()) {
+      GrassrootRestService.getInstance().getApi().closeJoinCode(phoneNumber, token, group.getGroupUid())
+              .enqueue(new Callback<GenericResponse>() {
+                @Override
+                public void onResponse(Call<GenericResponse> call, Response<GenericResponse> response) {
+                  listener.apiCallComplete();
+                  if (response.isSuccessful()) {
+                    // group = response.getdata
+                    EventBus.getDefault().post(new GroupEditedEvent(GroupEditedEvent.JOIN_CODE_CLOSED,
+                            GroupEditedEvent.CHANGED_ONLINE, group.getGroupUid(), group.getGroupName()));
+                  } else {
+                    EventBus.getDefault().post(new GroupEditErrorEvent(response.errorBody()));
+                  }
+                }
+
+                @Override
+                public void onFailure(Call<GenericResponse> call, Throwable t) {
+                  EventBus.getDefault().post(new GroupEditErrorEvent(t));
+                  listener.apiCallComplete();
+                }
+              });
+    } else {
+      group.setJoinCode(null); // todo : queue, make sure this is right, etc
+      RealmUtils.saveGroupToRealm(group);
+    }
+  }
+
+  public void openJoinCode(final Group group, final GroupEditingListener listener) {
+    final String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
+    final String token = RealmUtils.loadPreferencesFromDB().getToken();
+    if (NetworkUtils.isNetworkAvailable()) {
+      GrassrootRestService.getInstance().getApi().openJoinCode(phoneNumber, token, group.getGroupUid())
+              .enqueue(new Callback<GenericResponse>() {
+                @Override
+                public void onResponse(Call<GenericResponse> call, Response<GenericResponse> response) {
+                  listener.apiCallComplete();
+                  if (response.isSuccessful()) {
+                    EventBus.getDefault().post(new GroupEditedEvent(GroupEditedEvent.JOIN_CODE_OPENED,
+                            GroupEditedEvent.CHANGED_ONLINE, group.getGroupUid(), group.getGroupUid()));
+                  } else {
+
+                  }
+                }
+
+                @Override
+                public void onFailure(Call<GenericResponse> call, Throwable t) {
+                  EventBus.getDefault().post(new GroupEditErrorEvent(t));
+                  listener.apiCallComplete();
+                }
+              });
+    } else {
+      // have to just queue it and report back ... can't open locally (uniqueness of token ...)
+      listener.apiCallComplete();
     }
   }
 
@@ -333,9 +418,7 @@ public class GroupService {
 
   public interface GroupJoinRequestListener {
     void groupJoinRequestsEmpty();
-
     void groupJoinRequestsOpen(RealmList<GroupJoinRequest> joinRequests);
-
     void groupJoinRequestsOffline(RealmList<GroupJoinRequest> openJoinRequests);
   }
 

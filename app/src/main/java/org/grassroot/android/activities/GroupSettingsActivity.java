@@ -1,16 +1,17 @@
 package org.grassroot.android.activities;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.MenuItem;
 
 import org.grassroot.android.R;
-import org.grassroot.android.events.GroupRenamedEvent;
 import org.grassroot.android.fragments.GroupSettingsMainFragment;
 import org.grassroot.android.interfaces.GroupConstants;
 import org.grassroot.android.models.Group;
-import org.greenrobot.eventbus.EventBus;
-import org.greenrobot.eventbus.Subscribe;
+import org.grassroot.android.utils.Constant;
+import org.grassroot.android.utils.MenuUtils;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -48,14 +49,24 @@ public class GroupSettingsActivity extends PortraitActivity implements GroupSett
         setTitle(R.string.gset_main_title);
         setSupportActionBar(toolbar);
         if (getSupportActionBar() != null) {
-            getSupportActionBar().setHomeAsUpIndicator(R.drawable.btn_back_wt);
+            getSupportActionBar().setHomeAsUpIndicator(R.drawable.btn_back_wt); // todo : insert group avatar
             getSupportActionBar().setHomeButtonEnabled(true);
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         }
 
         mainFragment = GroupSettingsMainFragment.newInstance(group, this);
         getSupportFragmentManager().beginTransaction()
                 .add(R.id.gsettings_fragment_holder, mainFragment, "main")
                 .commit();
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem menuItem) {
+        // todo : figure out how to do this without triggering group call ...
+        Intent parent = MenuUtils.constructIntent(this, GroupTasksActivity.class, group);
+        startActivity(parent);
+        finish();
+        return true;
     }
 
     @Override
@@ -67,6 +78,9 @@ public class GroupSettingsActivity extends PortraitActivity implements GroupSett
     @Override
     public void changeGroupPicture() {
         Log.e(TAG, "change group picture");
+        // todo : handle result (and/or make the avatar thing a fragment)
+        startActivityForResult(MenuUtils.constructIntent(this, GroupAvatarActivity.class, group),
+                Constant.activityChangeGroupPicture);
     }
 
     @Override

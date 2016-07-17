@@ -383,7 +383,6 @@ public class GrassrootRestService {
     Call<List<Member>> fetchAssignedMembers(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
         @Path("taskUid") String taskUid, @Path("taskType") String taskType);
 
-
     //cancel meeting
     @POST("meeting/cancel/{phoneNumber}/{code}")
     Call<GenericResponse> cancelMeeting(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
@@ -399,6 +398,20 @@ public class GrassrootRestService {
     @POST("group/edit/rename/{phoneNumber}/{code}")
     Call<GenericResponse> renameGroup(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
                                       @Query("groupUid") String groupUid, @Query("name") String name);
+
+    @POST("group/edit/public_switch/{phoneNumber}/{code}")
+    Call<GenericResponse> switchGroupPublicPrivate(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
+                                                   @Query("groupUid") String groupUid, @Query("state") boolean state);
+
+    @POST("group/edit/open_join/{phoneNumber}/{code}")
+    Call<GenericResponse> openJoinCode(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
+                                       @Query("groupUid") String groupUid);
+
+    @POST("group/edit/close_join/{phoneNumber}/{code}")
+    Call<GenericResponse> closeJoinCode(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
+                                        @Query("groupUid") String groupUid);
+
+
 
   }
 }

@@ -3,6 +3,8 @@ package org.grassroot.android.models;
 import android.content.Context;
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.text.TextUtils;
+
 import io.realm.Realm;
 import io.realm.RealmList;
 import io.realm.RealmObject;
@@ -29,9 +31,17 @@ public class Group extends RealmObject implements Parcelable, Comparable<Group> 
   private String role;
   private Integer groupMemberCount;
   private String imageUrl;
-  private boolean fetchedTasks;
 
+  private boolean fetchedTasks;
   private String lastTimeTasksFetched;
+
+  private String joinCode;
+  private boolean isPublic;
+  private String lastChangeType;
+  private String description;
+  private boolean isLocal;
+  private boolean isSentToAPI;
+
 
   public boolean isFetchedTasks() {
     return fetchedTasks;
@@ -50,12 +60,6 @@ public class Group extends RealmObject implements Parcelable, Comparable<Group> 
   public void setMembers(RealmList<Member> members) {
     this.members = members;
   }
-
-  private String joinCode;
-  private String lastChangeType;
-  private String description;
-  private boolean isLocal;
-  private boolean isSentToAPI;
 
   public boolean isSentToAPI() {
     return isSentToAPI;
@@ -144,6 +148,12 @@ public class Group extends RealmObject implements Parcelable, Comparable<Group> 
     return joinCode;
   }
 
+  public void setJoinCode(String joinCode) { this.joinCode = joinCode; }
+
+  public boolean hasJoinCode() {
+    return !TextUtils.isEmpty(joinCode);
+  }
+
   public boolean isHasTasks() {
     return hasTasks;
   }
@@ -155,6 +165,10 @@ public class Group extends RealmObject implements Parcelable, Comparable<Group> 
   public String getLastTimeTasksFetched() { return lastTimeTasksFetched; }
 
   public void setLastTimeTasksFetched(String lastTimeTasksFetched) { this.lastTimeTasksFetched = lastTimeTasksFetched; }
+
+  public boolean isPublic() { return this.isPublic; }
+
+  public void setPublic(boolean isPublic) { this.isPublic = isPublic; }
 
   public String getDateTimeStringISO() {
     if (dateTimeStringISO == null || dateTimeStringISO.equals("")) {

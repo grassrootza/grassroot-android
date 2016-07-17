@@ -22,7 +22,7 @@ public class Constant {
     public static final String stagingUrl = "https://staging.grassroot.org.za/api/";
     public static final String localUrl = "http://10.0.2.2:8080/api/";
 
-    public static final String restUrl = BuildConfig.BUILD_TYPE.equals("debug") ? stagingUrl
+    public static final String restUrl = BuildConfig.BUILD_TYPE.equals("debug") ? localUrl
             : BuildConfig.FLAVOR.equals(PROD) ? productionUrl : stagingUrl;
 
     public static final String USER_TOKEN = "user_token";
@@ -59,6 +59,7 @@ public class Constant {
     public static final int activitySelectGroupMembers = 7;
     public static final int activityNetworkSettings = 20; //todo request code for network, will have to do it robustly
     public static final int activityCreateTask = 11;
+    public static final int activityChangeGroupPicture = 12;
 
     public static final int alertAskForContactPermission = 91;
 

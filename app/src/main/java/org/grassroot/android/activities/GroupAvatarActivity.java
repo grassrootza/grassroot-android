@@ -83,6 +83,9 @@ public class GroupAvatarActivity extends PortraitActivity {
         ButterKnife.bind(this);
         Bundle extras = getIntent().getExtras();
         group = extras.getParcelable(GroupConstants.OBJECT_FIELD);
+        if (group == null) {
+
+        }
         setViews(group);
     }
 

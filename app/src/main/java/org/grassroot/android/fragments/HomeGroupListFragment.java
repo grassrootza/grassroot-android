@@ -34,6 +34,7 @@ import org.grassroot.android.events.GroupPictureChangedEvent;
 import org.grassroot.android.events.JoinRequestReceived;
 import org.grassroot.android.events.NetworkActivityResultsEvent;
 import org.grassroot.android.events.TaskAddedEvent;
+import org.grassroot.android.events.UserLoggedOutEvent;
 import org.grassroot.android.interfaces.GroupConstants;
 import org.grassroot.android.interfaces.GroupPickCallbacks;
 import org.grassroot.android.interfaces.SortInterface;
@@ -407,7 +408,6 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
     public void onEvent(GroupPictureChangedEvent groupPictureUploadedEvent) {
         Log.e(TAG, "picture uploaded");
         fetchGroupList(); //would have preferred to use refreshGrouplist. that still needs debugging
-
     }
 
     private void showProgress() {
@@ -498,5 +498,11 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
             }
             groupListRowAdapter.setGroupList(filteredGroups);
         }
+    }
+
+    @Subscribe
+    public void onEvent(UserLoggedOutEvent e) {
+        // finish on main activity seems to not clear this
+        groupListRowAdapter.setGroupList(new ArrayList<Group>());
     }
 }

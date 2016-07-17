@@ -221,6 +221,15 @@
     <string name="gset_public">Group can be found by search</string>
     <string name="gset_join_code">Group has a join code</string>
 
+    <string name="gset_public_to_off">People who search for the group will not be able to find it
+    without a join code. Continue?</string>
+    <string name="gset_public_to_on">People who search for your group name will find it, but will
+    have to ask your permission to join. Confirmed?</string>
+
+    <string name="gset_join_code_to_on">Open a join code for this group?</string>
+    <string name="gset_join_code_to_off">About to close this join code. Confirmed?</string>
+    <string name="gset_join_code_done">Done! Anyone can dial %s to join the group.</string>
+
     <string name="gset_role_organizer">Organizer</string>
     <string name="gset_committee">Committee member</string>
     <string name="gset_ordinary">Ordinary member</string>

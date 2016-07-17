@@ -53,10 +53,10 @@ public class RealmUtils {
   }
 
   public static void saveGroupToRealm(Group group) {
-    Log.e("REALM", "saving group: " + group.toString());
+    Log.d("REALM", "saving group: " + group.toString());
     saveDataToRealm(group);
     Group updatedGroup = RealmUtils.loadObjectFromDB(Group.class, "groupUid", group.getGroupUid());
-    Log.e("REALM", "group as in Realm : " + updatedGroup.toString());
+    Log.d("REALM", "group as in Realm : " + updatedGroup.toString());
   }
 
   public static <T extends RealmList> T loadListFromDB(Class<? extends RealmObject> model,
