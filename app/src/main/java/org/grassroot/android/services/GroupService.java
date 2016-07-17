@@ -3,7 +3,13 @@ package org.grassroot.android.services;
 import android.app.Activity;
 import android.util.Log;
 import android.view.View;
-
+import io.realm.Realm;
+import io.realm.RealmList;
+import io.realm.RealmResults;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.UUID;
 import org.grassroot.android.R;
 import org.grassroot.android.events.GroupRenamedEvent;
 import org.grassroot.android.events.GroupsRefreshedEvent;
@@ -24,15 +30,6 @@ import org.grassroot.android.utils.PermissionUtils;
 import org.grassroot.android.utils.RealmUtils;
 import org.grassroot.android.utils.Utilities;
 import org.greenrobot.eventbus.EventBus;
-
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.UUID;
-
-import io.realm.Realm;
-import io.realm.RealmList;
-import io.realm.RealmResults;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -55,12 +52,15 @@ public class GroupService {
 
   public interface GroupServiceListener {
     void groupListLoaded();
+
     void groupListLoadingError();
   }
 
   public interface GroupCreationListener {
     void groupCreatedLocally(Group group);
+
     void groupCreatedOnServer(Group group);
+
     void groupCreationError(Response<GroupResponse> response);
   }
 
@@ -110,7 +110,8 @@ public class GroupService {
         .enqueue(new Callback<GroupsChangedResponse>() {
           @Override
 
-          public void onResponse(Call<GroupsChangedResponse> call, Response<GroupsChangedResponse> response) {
+          public void onResponse(Call<GroupsChangedResponse> call,
+              Response<GroupsChangedResponse> response) {
             if (response.isSuccessful()) {
               updateGroupsFetchedTime();
               groupsLoading = false;
@@ -119,8 +120,8 @@ public class GroupService {
               RealmUtils.saveDataToRealm(response.body().getAddedAndUpdated());
               EventBus.getDefault().post(new GroupsRefreshedEvent());
               listener.groupListLoaded();
-              for(Group g : response.body().getAddedAndUpdated()){
-                for(Member m : g.getMembers()){
+              for (Group g : response.body().getAddedAndUpdated()) {
+                for (Member m : g.getMembers()) {
                   m.setMemberGroupUid();
                   RealmUtils.saveDataToRealm(m);
                 }
@@ -140,6 +141,7 @@ public class GroupService {
           }
         });
   }
+
   /*
 
  Called from "swipe refresh" on group recycler, so am just formally separating from the initiating call (which is triggered on app load)
@@ -155,8 +157,8 @@ public class GroupService {
         .getApi()
         .getUserGroups(mobileNumber, userCode)
         .enqueue(new Callback<GroupsChangedResponse>() {
-          @Override
-          public void onResponse(Call<GroupsChangedResponse> call, Response<GroupsChangedResponse> response) {
+          @Override public void onResponse(Call<GroupsChangedResponse> call,
+              Response<GroupsChangedResponse> response) {
             if (response.isSuccessful()) {
               updateGroupsFetchedTime();
               listener.groupListLoaded();
@@ -232,53 +234,53 @@ public class GroupService {
     METHODS FOR CREATING AND MODIFYING / EDITING GROUPS
      */
 
-  public void createGroup(final String groupName, final String groupDescription,
-      final List<Member> groupMembers, final GroupCreationListener listener) {
+  public void createGroup(final String groupUid, final String groupName,
+      final String groupDescription, final List<Member> groupMembers,
+      final GroupCreationListener listener) {
     String mobileNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
     String code = RealmUtils.loadPreferencesFromDB().getToken();
-
-    if (!NetworkUtils.isNetworkAvailable(ApplicationLoader.applicationContext)) {
-      Group group = createGroupLocally(groupName, groupDescription, groupMembers);
-      listener.groupCreatedLocally(group);
-    } else {
-      GrassrootRestService.getInstance()
-          .getApi()
-          .createGroup(mobileNumber, code, groupName, groupDescription, groupMembers)
-          .enqueue(new Callback<GroupResponse>() {
-            @Override
-            public void onResponse(Call<GroupResponse> call, Response<GroupResponse> response) {
-              if (response.isSuccessful()) {
-                Log.d(TAG, "returning group created! with UID : " + response.body()
-                    .getGroups()
-                    .get(0)
-                    .getGroupUid());
-                RealmUtils.saveDataToRealm(response.body().getGroups().first());
-                listener.groupCreatedOnServer(response.body().getGroups().first());
-              } else {
-                listener.groupCreationError(response);
+    final Group group = createGroupLocally(groupUid, groupName, groupDescription, groupMembers);
+    GrassrootRestService.getInstance()
+        .getApi()
+        .createGroup(mobileNumber, code, groupName, groupDescription, groupMembers)
+        .enqueue(new Callback<GroupResponse>() {
+          @Override
+          public void onResponse(Call<GroupResponse> call, Response<GroupResponse> response) {
+            if (response.isSuccessful()) {
+              Log.d(TAG, "returning group created! with UID : " + response.body()
+                  .getGroups()
+                  .get(0)
+                  .getGroupUid());
+              RealmUtils.removeObjectFromDatabase(Group.class, "groupUid", groupUid);
+              RealmUtils.removeObjectFromDatabase(Member.class,"groupUid", groupUid);
+              for(Member m :response.body().getGroups().first().getMembers()){
+                m.setMemberGroupUid();
+                RealmUtils.saveDataToRealm(m);
               }
+              RealmUtils.saveDataToRealm(response.body().getGroups().first());
+              listener.groupCreatedOnServer(response.body().getGroups().first());
+            } else {
+              listener.groupCreationError(response);
             }
+          }
 
-            @Override public void onFailure(Call<GroupResponse> call, Throwable t) {
-              Log.e(TAG, "Error! This should not occur");
-              Group group = createGroupLocally(groupName, groupDescription, groupMembers);
-              listener.groupCreatedLocally(group);
-            }
-          });
-    }
+          @Override public void onFailure(Call<GroupResponse> call, Throwable t) {
+            Log.e(TAG, "Error! This should not occur");
+            listener.groupCreatedLocally(group);
+          }
+        });
   }
 
-  private Group createGroupLocally(final String groupName, final String groupDescription,
-      final List<Member> groupMembers) {
+  public Group createGroupLocally(final String groupUid, final String groupName,
+      final String groupDescription, final List<Member> groupMembers) {
     Realm realm = Realm.getDefaultInstance();
-    Group group = new Group();
+    Group group = new Group(groupUid);
     group.setGroupName(groupName);
     group.setDescription(groupDescription);
     group.setIsLocal(true);
     group.setGroupCreator(RealmUtils.loadPreferencesFromDB().getUserName());
-    group.setGroupUid(UUID.randomUUID().toString());
     group.setLastChangeType(GroupConstants.GROUP_CREATED);
-    group.setGroupMemberCount(1);
+    group.setGroupMemberCount(groupMembers.size());
     group.setDate(new Date());
     group.setDateTimeStringISO(group.getDateTimeStringISO());
     RealmList<RealmString> permissions = new RealmList<>();
@@ -292,7 +294,7 @@ public class GroupService {
     realm.commitTransaction();
     realm.beginTransaction();
     for (Member m : groupMembers) {
-      m.setGroupUid(group.getGroupUid());
+      realm.copyToRealmOrUpdate(m);
     }
     realm.commitTransaction();
     realm.close();
@@ -331,7 +333,9 @@ public class GroupService {
 
   public interface GroupJoinRequestListener {
     void groupJoinRequestsEmpty();
+
     void groupJoinRequestsOpen(RealmList<GroupJoinRequest> joinRequests);
+
     void groupJoinRequestsOffline(RealmList<GroupJoinRequest> openJoinRequests);
   }
 
@@ -347,10 +351,12 @@ public class GroupService {
   public void fetchGroupJoinRequests(final GroupJoinRequestListener listener) {
     String mobileNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
     String code = RealmUtils.loadPreferencesFromDB().getToken();
-    GrassrootRestService.getInstance().getApi().getOpenJoinRequests(mobileNumber, code)
+    GrassrootRestService.getInstance()
+        .getApi()
+        .getOpenJoinRequests(mobileNumber, code)
         .enqueue(new Callback<RealmList<GroupJoinRequest>>() {
-          @Override
-          public void onResponse(Call<RealmList<GroupJoinRequest>> call, Response<RealmList<GroupJoinRequest>> response) {
+          @Override public void onResponse(Call<RealmList<GroupJoinRequest>> call,
+              Response<RealmList<GroupJoinRequest>> response) {
             if (response.isSuccessful()) {
               saveJoinRequestsInDB(response.body());
               Log.d(TAG, "join requests received: " + response.body());
@@ -366,8 +372,7 @@ public class GroupService {
             }
           }
 
-          @Override
-          public void onFailure(Call<RealmList<GroupJoinRequest>> call, Throwable t) {
+          @Override public void onFailure(Call<RealmList<GroupJoinRequest>> call, Throwable t) {
             Log.e(TAG, "Error in network!"); // todo : anything?
             listener.groupJoinRequestsOffline(loadRequestsFromDB());
           }

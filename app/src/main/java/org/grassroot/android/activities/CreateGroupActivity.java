@@ -21,6 +21,8 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
+import java.util.UUID;
 import org.grassroot.android.R;
 import org.grassroot.android.events.GroupCreatedEvent;
 import org.grassroot.android.fragments.ContactSelectionFragment;
@@ -64,6 +66,7 @@ public class CreateGroupActivity extends PortraitActivity
   private ContactSelectionFragment contactSelectionFragment;
   private boolean onMainScreen;
   private boolean menuOpen;
+  private String groupUid = UUID.randomUUID().toString();;
 
   private ProgressDialog progressDialog;
 
@@ -75,7 +78,6 @@ public class CreateGroupActivity extends PortraitActivity
     progressDialog = new ProgressDialog(this);
     progressDialog.setMessage(getString(R.string.txt_pls_wait));
     progressDialog.setIndeterminate(true);
-
     init();
     setUpMemberList();
   }
@@ -108,6 +110,7 @@ public class CreateGroupActivity extends PortraitActivity
       onMainScreen = true;
     } else {
       progressDialog.dismiss();
+      deleteLocalCreatedGroup();
       finish();
     }
   }
@@ -157,8 +160,13 @@ public class CreateGroupActivity extends PortraitActivity
         Member m =
             new Member(c.selectedMsisdn, c.getDisplayName(), GroupConstants.ROLE_ORDINARY_MEMBER,
                 c.id, true);
-        mapMembersContacts.put(c.id, m);
+        m.setGroupUid(groupUid);
+        m.setMemberUid(UUID.randomUUID().toString());
+        m.setMemberGroupUid();
+        RealmUtils.saveDataToRealm(m);
         selectedMembers.add(m);
+        GroupService.getInstance().createGroupLocally(groupUid,et_groupname.getText().toString(),et_group_description.getText().toString(),selectedMembers);
+        mapMembersContacts.put(c.id, m);
       }
     }
     memberListFragment.transitionToMemberList(selectedMembers);
@@ -196,7 +204,7 @@ public class CreateGroupActivity extends PortraitActivity
 
     progressDialog.show();
     GroupService.getInstance()
-        .createGroup(groupName, groupDescription, groupMembers,
+        .createGroup(groupUid,groupName, groupDescription, groupMembers,
             new GroupService.GroupCreationListener() {
               @Override public void groupCreatedLocally(Group group) {
                 progressDialog.dismiss();
@@ -236,7 +244,7 @@ public class CreateGroupActivity extends PortraitActivity
     i.putExtra(ActionCompleteActivity.TASK_BUTTONS, true);
     i.putExtra(ActionCompleteActivity.ACTION_INTENT, ActionCompleteActivity.HOME_SCREEN);
     i.putExtra(GroupConstants.OBJECT_FIELD, group);
-    i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+    i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
     startActivity(i);
     finish();
   }
@@ -248,8 +256,13 @@ public class CreateGroupActivity extends PortraitActivity
         Member newMember =
             new Member(data.getStringExtra("selectedNumber"), data.getStringExtra("name"),
                 GroupConstants.ROLE_ORDINARY_MEMBER, -1);
+        //added memberId here
+        newMember.setMemberUid(UUID.randomUUID().toString());
+        newMember.setGroupUid(groupUid);
+        newMember.setMemberGroupUid();
         manuallyAddedMembers.add(newMember);
         memberListFragment.addMembers(Collections.singletonList(newMember));
+        GroupService.getInstance().createGroupLocally(groupUid,et_groupname.getText().toString(),et_group_description.getText().toString(),memberListFragment.getSelectedMembers());
       }
     }
   }
@@ -280,5 +293,15 @@ public class CreateGroupActivity extends PortraitActivity
     Intent resultIntent = new Intent();
     resultIntent.putExtra(GroupConstants.OBJECT_FIELD, group);
     setResult(RESULT_OK, resultIntent);
+  }
+
+  @Override public void onBackPressed() {
+    super.onBackPressed();
+    deleteLocalCreatedGroup();
+  }
+
+  private void deleteLocalCreatedGroup(){
+    RealmUtils.removeObjectFromDatabase(Group.class,"groupUid",groupUid);
+    RealmUtils.removeObjectFromDatabase(Member.class,"groupUid",groupUid);
   }
 }

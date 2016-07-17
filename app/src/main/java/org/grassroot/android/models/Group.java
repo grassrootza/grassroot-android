@@ -41,7 +41,7 @@ public class Group extends RealmObject implements Parcelable, Comparable<Group> 
     this.fetchedTasks = fetchedTasks;
   }
 
-  private RealmList<Member> members=new RealmList<>();
+  private RealmList<Member> members = new RealmList<>();
 
   public RealmList<Member> getMembers() {
     return members;
@@ -87,6 +87,10 @@ public class Group extends RealmObject implements Parcelable, Comparable<Group> 
   @Ignore private List<String> permissionsList;
 
   public Group() {
+  }
+
+  public Group(String groupUid) {
+    this.groupUid = groupUid;
   }
 
   public List<String> getPermissionsList() {
@@ -232,7 +236,6 @@ public class Group extends RealmObject implements Parcelable, Comparable<Group> 
     return getPermissionsList().contains(GroupConstants.PERM_GROUP_SETTNGS);
   }
 
-
   private void constructDate() {
     Calendar calendar = Calendar.getInstance();
 
@@ -267,7 +270,6 @@ public class Group extends RealmObject implements Parcelable, Comparable<Group> 
     }
   }
 
-
   @Override public int describeContents() {
     return 0;
   }
@@ -285,7 +287,7 @@ public class Group extends RealmObject implements Parcelable, Comparable<Group> 
     dest.writeString(this.joinCode);
     dest.writeInt(hasTasks ? 1 : 0);
     dest.writeStringList(RealmUtils.convertListOfRealmStringInListOfString(this.permissions));
-    dest.writeInt(isLocal? 1 : 0);
+    dest.writeInt(isLocal ? 1 : 0);
     dest.writeList(members);
     dest.writeString(lastTimeTasksFetched);
   }
@@ -297,7 +299,7 @@ public class Group extends RealmObject implements Parcelable, Comparable<Group> 
     groupCreator = in.readString();
     role = in.readString();
     groupMemberCount = in.readInt();
-    imageUrl=in.readString();
+    imageUrl = in.readString();
     dateTimeStringISO = in.readString();
     lastChangeType = in.readString();
     joinCode = in.readString();
