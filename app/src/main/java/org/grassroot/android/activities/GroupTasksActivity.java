@@ -83,7 +83,7 @@ public class GroupTasksActivity extends PortraitActivity implements NewTaskMenuF
         menu.findItem(R.id.mi_add_members).setVisible(groupMembership.canAddMembers());
         menu.findItem(R.id.mi_remove_members).setVisible(groupMembership.canDeleteMembers());
         menu.findItem(R.id.mi_view_members).setVisible(groupMembership.canViewMembers());
-//        menu.findItem(R.id.mi_group_settings).setVisible(perms.contains(GroupConstants.PERM_GROUP_SETTNGS));
+        menu.findItem(R.id.mi_group_settings).setVisible(groupMembership.canEditGroup());
         this.thisMenu = menu;
         return true;
     }
@@ -151,6 +151,10 @@ public class GroupTasksActivity extends PortraitActivity implements NewTaskMenuF
             case R.id.mi_remove_members:
                 Intent removeMembers = MenuUtils.constructIntent(this, RemoveMembersActivity.class, groupUid, groupName);
                 startActivity(removeMembers);
+                return true;
+            case R.id.mi_group_settings:
+                Intent groupSettings = MenuUtils.constructIntent(this, GroupSettingsActivity.class, groupMembership);
+                startActivity(groupSettings);
                 return true;
             default:
                 return super.onOptionsItemSelected(item);

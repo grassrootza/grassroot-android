@@ -15,6 +15,7 @@ public class PreferenceObject extends RealmObject {
   private String userName;
   private String mobileNumber;
   private String token;
+  private long lastTimeGroupsFetched;
 
   public String getAlert() {
     return alert;
@@ -107,4 +108,8 @@ public class PreferenceObject extends RealmObject {
   public void setNotificationCounter(int notificationCounter) {
     this.notificationCounter = notificationCounter;
   }
+
+  public void setLastTimeGroupsFetched(long lastTimeGroupsFetched) { this.lastTimeGroupsFetched = lastTimeGroupsFetched; }
+
+  public long getLastTimeGroupsFetched() { return lastTimeGroupsFetched; }
 }

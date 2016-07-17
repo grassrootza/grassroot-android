@@ -31,6 +31,8 @@ public class Group extends RealmObject implements Parcelable, Comparable<Group> 
   private String imageUrl;
   private boolean fetchedTasks;
 
+  private String lastTimeTasksFetched;
+
   public boolean isFetchedTasks() {
     return fetchedTasks;
   }
@@ -149,6 +151,10 @@ public class Group extends RealmObject implements Parcelable, Comparable<Group> 
   public void setHasTasks(boolean hasTasks) {
     this.hasTasks = hasTasks;
   }
+
+  public String getLastTimeTasksFetched() { return lastTimeTasksFetched; }
+
+  public void setLastTimeTasksFetched(String lastTimeTasksFetched) { this.lastTimeTasksFetched = lastTimeTasksFetched; }
 
   public String getDateTimeStringISO() {
     if (dateTimeStringISO == null || dateTimeStringISO.equals("")) {
@@ -269,8 +275,6 @@ public class Group extends RealmObject implements Parcelable, Comparable<Group> 
   }
 
   @Override public void writeToParcel(Parcel dest, int flags) {
-    Realm realm = Realm.getDefaultInstance();
-    realm.beginTransaction();
     dest.writeString(this.groupUid);
     dest.writeString(this.groupName);
     dest.writeString(this.description);
@@ -285,8 +289,7 @@ public class Group extends RealmObject implements Parcelable, Comparable<Group> 
     dest.writeStringList(RealmUtils.convertListOfRealmStringInListOfString(this.permissions));
     dest.writeInt(isLocal ? 1 : 0);
     dest.writeList(members);
-    realm.commitTransaction();
-    realm.close();
+    dest.writeString(lastTimeTasksFetched);
   }
 
   protected Group(Parcel in) {
@@ -303,7 +306,8 @@ public class Group extends RealmObject implements Parcelable, Comparable<Group> 
     hasTasks = in.readInt() != 0;
     permissions = RealmUtils.convertListOfStringInRealmListOfString(in.createStringArrayList());
     isLocal = in.readInt() != 0;
-    in.readList(members, Member.class.getClassLoader());
+    in.readList(members,Member.class.getClassLoader());
+    lastTimeTasksFetched = in.readString();
   }
 
   public static final Creator<Group> CREATOR = new Creator<Group>() {
@@ -349,6 +353,7 @@ public class Group extends RealmObject implements Parcelable, Comparable<Group> 
         "groupUid='" + groupUid + '\'' +
         ", lastChangeType='" + lastChangeType + '\'' +
         ", groupName='" + groupName + '\'' +
+        ", lastFetchedTasks='" + lastTimeTasksFetched + '\'' +
         '}';
   }
 

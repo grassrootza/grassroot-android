@@ -266,6 +266,11 @@ public class GrassrootRestService {
     Call<TaskChangedResponse> getGroupTasks(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
         @Path("parentUid") String groupUid);
 
+    // get all the tasks that have changed since the specified time (in milliseconds at UTC)
+    @GET("task/{list}/{phoneNumber}/{code}/{parentUid}")
+    Call<TaskChangedResponse>  getGroupTasksChangedSince(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
+                                                         @Path("parentUid") String parentUid, @Query("changedSince") long changedSinceMillis);
+
     // fetch a task (of any type)
     @GET("task/fetch/{phoneNumber}/{code}/{taskUid}/{taskType}")
     Call<TaskResponse> fetchTaskEntity(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
@@ -389,6 +394,11 @@ public class GrassrootRestService {
     Call<GenericResponse> cancelVote(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
         @Query("uid") String uid);
 
+    /* SECTION : EDIT GROUPS */
+
+    @POST("group/edit/rename/{phoneNumber}/{code}")
+    Call<GenericResponse> renameGroup(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
+                                      @Query("groupUid") String groupUid, @Query("name") String name);
 
   }
 }

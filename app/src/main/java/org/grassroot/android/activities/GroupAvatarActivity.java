@@ -100,18 +100,14 @@ public class GroupAvatarActivity extends PortraitActivity {
                 int columnIndex = cursor.getColumnIndex(filePathColumn[0]);
                 String localImagePath = cursor.getString(columnIndex);
                 String mimeType = getMimeType(this, selectedImage);
-                uploadFile(localImagePath, mimeType);
                 cursor.close();
                 String compressedFilePath = decodeFile(localImagePath);
+                uploadFile(compressedFilePath, mimeType);
                 Bitmap bitmap = BitmapFactory.decodeFile(compressedFilePath);
                 ivAvatar.setImageBitmap(ScalingUtilities.getRoundedShape(bitmap));
-                if (btAvatarRemove.getVisibility() == View.INVISIBLE ||
-                        btAvatarRemove.getVisibility() == View.GONE)
-                    btAvatarRemove.setVisibility(View.VISIBLE);
-
-            } else {
-
             }
+
+
         } catch (Exception e) {
             Log.e(TAG, e.getMessage());
         }
@@ -133,8 +129,7 @@ public class GroupAvatarActivity extends PortraitActivity {
             btAvatar.setVisibility(View.VISIBLE);
             String buttonText = imageUrl == null ? getString(R.string.gp_bt_txt_set) : getString(R.string.gp_bt_txt_update);
             btAvatar.setText(buttonText);
-            if (imageUrl != null)
-                btAvatarRemove.setVisibility(View.VISIBLE);
+
         }
         if (imageUrl != null) {
             getAvatar(imageUrl);
@@ -144,20 +139,23 @@ public class GroupAvatarActivity extends PortraitActivity {
 
     private void getAvatar(final String imageUrl) {
         Picasso.with(this).load(imageUrl)
-                .error(R.drawable.ic_profile_image)
+                .placeholder(R.drawable.ic_groups_default_avatar)
+                .error(R.drawable.ic_groups_default_avatar)
                 .transform(new CircularImageTransformer())
                 .networkPolicy(NetworkPolicy.OFFLINE)
                 .into(ivAvatar, new Callback() {
                     @Override
                     public void onSuccess() {
+                      showRemoveButton();
                     }
 
                     @Override
                     public void onError() {
                         Picasso.with(GroupAvatarActivity.this).
                                 load(imageUrl)
+                                .placeholder(R.drawable.ic_groups_default_avatar)
                                 .transform(new CircularImageTransformer())
-                                .error(R.drawable.ic_profile_image)
+                                .error(R.drawable.ic_groups_default_avatar)
                                 .into(ivAvatar);
                     }
                 });
@@ -185,9 +183,7 @@ public class GroupAvatarActivity extends PortraitActivity {
                     @Override
                     public void onResponse(Call<GenericResponse> call, Response<GenericResponse> response) {
                         if (response.isSuccessful()) {
-                            ivAvatar.setImageResource(R.drawable.ic_profile_image);
-                            btAvatarRemove.setVisibility(View.GONE);
-                            btAvatar.setText(R.string.gp_bt_txt_set);
+                            hideRemoveButton();
                             Snackbar.make(g_avt_relative, R.string.gp_remove_success, Snackbar.LENGTH_LONG).show();
                             EventBus.getDefault().post(new GroupPictureChangedEvent());
                         } else {
@@ -225,6 +221,7 @@ public class GroupAvatarActivity extends PortraitActivity {
             @Override
             public void onResponse(Call<GenericResponse> call, Response<GenericResponse> response) {
                 progressBar.setVisibility(View.GONE);
+                showRemoveButton();
                 Snackbar.make(g_avt_relative, R.string.gp_update_success, Snackbar.LENGTH_LONG).show();
                 EventBus.getDefault().post(new GroupPictureChangedEvent());
             }
@@ -302,6 +299,20 @@ public class GroupAvatarActivity extends PortraitActivity {
             return path;
         }
         return strMyImagePath;
+
+    }
+
+    private void hideRemoveButton(){
+        ivAvatar.setImageResource(R.drawable.ic_groups_default_avatar);
+        btAvatar.setText(R.string.gp_bt_txt_set);
+        btAvatarRemove.setVisibility(View.GONE);
+
+    }
+
+    private void showRemoveButton(){
+        if (btAvatarRemove.getVisibility() == View.INVISIBLE ||
+                btAvatarRemove.getVisibility() == View.GONE)
+            btAvatarRemove.setVisibility(View.VISIBLE);
 
     }
 

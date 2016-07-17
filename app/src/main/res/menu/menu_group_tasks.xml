@@ -13,7 +13,6 @@
         android:title="@string/gta_menu_add_task"
         app:showAsAction="never" />
 
-
     <item android:id="@+id/mi_view_join_code"
         android:title="@string/gta_view_code"
         app:showAsAction="never" />
@@ -30,8 +29,8 @@
         android:title="@string/gta_del_members"
         app:showAsAction="never" />
 
-    <!-- <item android:id="@+id/mi_group_settings"
+    <item android:id="@+id/mi_group_settings"
         android:title="Group settings"
-        app:showAsAction="never" /> -->
+        app:showAsAction="never" />
 
 </menu>

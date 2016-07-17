@@ -1,5 +1,7 @@
 package org.grassroot.android.utils;
 
+import android.util.Log;
+
 import io.realm.Realm;
 import io.realm.RealmList;
 import io.realm.RealmObject;
@@ -7,6 +9,8 @@ import io.realm.RealmQuery;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+
+import org.grassroot.android.models.Group;
 import org.grassroot.android.models.PreferenceObject;
 import org.grassroot.android.models.RealmString;
 
@@ -46,6 +50,13 @@ public class RealmUtils {
     realm.copyToRealmOrUpdate(object);
     realm.commitTransaction();
     realm.close();
+  }
+
+  public static void saveGroupToRealm(Group group) {
+    Log.e("REALM", "saving group: " + group.toString());
+    saveDataToRealm(group);
+    Group updatedGroup = RealmUtils.loadObjectFromDB(Group.class, "groupUid", group.getGroupUid());
+    Log.e("REALM", "group as in Realm : " + updatedGroup.toString());
   }
 
   public static <T extends RealmList> T loadListFromDB(Class<? extends RealmObject> model,

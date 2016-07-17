@@ -12,6 +12,7 @@
     <string name="title_activity_view_task">ViewTaskActivity</string>
     <string name="title_activity_create_vote">CreateVote</string>
     <string name="title_activity_action_completed">Completed</string>
+    <string name="title_activity_group_settings">GroupSettings</string>
 
     <!-- Welcome, register, OTP screens -->
     <string name="txt_pls_wait">Please wait...</string>
@@ -48,7 +49,7 @@
     <string name="User_not_registered">Sorry, that number isn\'t registered yet.</string>
     <string name="otp_hint">Enter code sent by SMS</string>
     <string name="OTP_empty">Please enter the code sent by SMS</string>
-    <string name="INVALID_TOKEN">You seem to be signed in to another device. Please logout and login again</string>
+    <string name="INVALID_TOKEN">Sorry, wrong code. Please check again and re-enter.</string>
 
     <!-- Navigation drawer items -->
     <string name="drawer_group_list">Your groups</string>
@@ -205,6 +206,24 @@
     <string name="cs_title">Select contacts</string>
     <string name="cs_loading_contacts">Loading your contacts....</string>
     <string name="title_activity_add_contact_manually">AddContactManually</string>
+
+    <!-- Group settings activity -->
+    <string name="gset_main_title">Group settings</string>
+
+    <string name="gset_rename">Rename group</string>
+    <string name="gset_picture">Change group picture</string>
+    <string name="gset_add_org">Add another organizer</string>
+    <string name="gset_change_perms">Change permissions</string>
+
+    <string name="gset_rename_heading">Change group name</string>
+    <string name="gset_rename_hint">Enter new name for "%s"</string>
+
+    <string name="gset_public">Group can be found by search</string>
+    <string name="gset_join_code">Group has a join code</string>
+
+    <string name="gset_role_organizer">Organizer</string>
+    <string name="gset_committee">Committee member</string>
+    <string name="gset_ordinary">Ordinary member</string>
 
     <!--GroupTasksActivity :: mostly response strings -->
     <string name="RESPOND_YES">You have clicked on \'Yes\'. Do you want to proceed with the vote?</string>

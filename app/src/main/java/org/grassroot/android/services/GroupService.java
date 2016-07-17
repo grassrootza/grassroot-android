@@ -11,20 +11,24 @@ import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 import org.grassroot.android.R;
+import org.grassroot.android.events.GroupRenamedEvent;
 import org.grassroot.android.events.GroupsRefreshedEvent;
 import org.grassroot.android.interfaces.GroupConstants;
 import org.grassroot.android.interfaces.NetworkErrorDialogListener;
 import org.grassroot.android.interfaces.TaskConstants;
+import org.grassroot.android.models.GenericResponse;
 import org.grassroot.android.models.Group;
 import org.grassroot.android.models.GroupJoinRequest;
 import org.grassroot.android.models.GroupResponse;
 import org.grassroot.android.models.GroupsChangedResponse;
 import org.grassroot.android.models.Member;
+import org.grassroot.android.models.PreferenceObject;
 import org.grassroot.android.models.RealmString;
 import org.grassroot.android.utils.ErrorUtils;
 import org.grassroot.android.utils.NetworkUtils;
 import org.grassroot.android.utils.PermissionUtils;
 import org.grassroot.android.utils.RealmUtils;
+import org.grassroot.android.utils.Utilities;
 import org.greenrobot.eventbus.EventBus;
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -95,6 +99,9 @@ public class GroupService {
 
     final String mobileNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
     final String userCode = RealmUtils.loadPreferencesFromDB().getToken();
+    long lastTimeUpdated = RealmUtils.loadPreferencesFromDB().getLastTimeGroupsFetched();
+
+    Log.e(TAG, "last time groups updated = " + lastTimeUpdated);
 
     groupsLoading = true;
     GrassrootRestService.getInstance()
@@ -106,6 +113,7 @@ public class GroupService {
           public void onResponse(Call<GroupsChangedResponse> call,
               Response<GroupsChangedResponse> response) {
             if (response.isSuccessful()) {
+              updateGroupsFetchedTime();
               groupsLoading = false;
               groupsFinishedLoading = true;
               userGroups = new ArrayList<>(response.body().getAddedAndUpdated());
@@ -141,6 +149,10 @@ public class GroupService {
   public void refreshGroupList(final Activity activity, final GroupServiceListener listener) {
     final String mobileNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
     final String userCode = RealmUtils.loadPreferencesFromDB().getToken();
+    final long lastTimeGroupsUpdated = RealmUtils.loadPreferencesFromDB().getLastTimeGroupsFetched();
+
+    Log.e(TAG, "refresh group list, checking for changes since: " + lastTimeGroupsUpdated);
+
     GrassrootRestService.getInstance()
         .getApi()
         .getUserGroups(mobileNumber, userCode)
@@ -148,6 +160,7 @@ public class GroupService {
           @Override public void onResponse(Call<GroupsChangedResponse> call,
               Response<GroupsChangedResponse> response) {
             if (response.isSuccessful()) {
+              updateGroupsFetchedTime();
               listener.groupListLoaded();
             } else {
               listener.groupListLoadingError();
@@ -167,6 +180,12 @@ public class GroupService {
                 });
           }
         });
+  }
+
+  private void updateGroupsFetchedTime() {
+    PreferenceObject preferenceObject = RealmUtils.loadPreferencesFromDB();
+    preferenceObject.setLastTimeGroupsFetched(Utilities.getCurrentTimeInMillisAtUTC());
+    RealmUtils.saveDataToRealm(preferenceObject);
   }
 
   /*
@@ -280,6 +299,34 @@ public class GroupService {
     realm.commitTransaction();
     realm.close();
     return group;
+  }
+
+  /* METHODS FOR EDITING GROUP */
+
+  public void renameGroup(final String groupUid, final String newName) {
+    Log.e(TAG, "renaming the group ... ");
+    if (NetworkUtils.isNetworkAvailable(ApplicationLoader.applicationContext)) {
+      final String mobileNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
+      final String code = RealmUtils.loadPreferencesFromDB().getToken();
+      GrassrootRestService.getInstance().getApi().renameGroup(mobileNumber, code, groupUid, newName)
+              .enqueue(new Callback<GenericResponse>() {
+                @Override
+                public void onResponse(Call<GenericResponse> call, Response<GenericResponse> response) {
+                  if (response.isSuccessful()) {
+                    EventBus.getDefault().post(new GroupRenamedEvent(groupUid, newName));
+                  } else {
+                    // handle error somehow
+                  }
+                }
+
+                @Override
+                public void onFailure(Call<GenericResponse> call, Throwable t) {
+                  // todo : put in a queue
+                }
+              });
+    } else {
+      // todo : work out offline/online switching here
+    }
   }
 
     /* METHODS FOR RETRIEVING AND APPROVING GROUP JOIN REQUESTS */

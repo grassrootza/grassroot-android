@@ -121,7 +121,6 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
   private void init() {
     userGroups = new ArrayList<>();
     setUpRecyclerView();
-
     //first load from db
     showGroups(RealmUtils.loadListFromDB(Group.class));
   }
@@ -135,8 +134,10 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
   private void showGroups(RealmList<Group> groups) {
     userGroups = new ArrayList<>(groups);
     rcGroupList.setVisibility(View.VISIBLE);
-    groupListRowAdapter.setGroupList(userGroups);
-    rcGroupList.setVisibility(View.VISIBLE);
+    if (!userGroups.isEmpty()) {
+        groupListRowAdapter.setGroupList(userGroups);
+        rcGroupList.setVisibility(View.VISIBLE);
+    }
   }
 
   @Override public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -165,15 +166,14 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
    * of a connection very well, at all. Will probably need to rethink.
    */
   public void fetchGroupList() {
-    if (groupListRowAdapter.getItemCount() == 0) {
-        showProgress();
-    }
+    showProgress();
+
     GroupService.getInstance()
         .fetchGroupList(getActivity(), rlGhpRoot, new GroupService.GroupServiceListener() {
           @Override public void groupListLoaded() {
-            hideProgress();
             groupListRowAdapter.setGroupList(RealmUtils.loadListFromDB(Group.class));
             rcGroupList.setVisibility(View.VISIBLE);
+            hideProgress();
           }
 
           @Override public void groupListLoadingError() {
@@ -266,7 +266,11 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
     }
 
     private void setUpRecyclerView() {
+        rcGroupList.setHasFixedSize(true);
         rcGroupList.setLayoutManager(new LinearLayoutManager(getActivity()));
+        rcGroupList.setItemViewCacheSize(20);
+        rcGroupList.setDrawingCacheEnabled(true);
+        rcGroupList.setDrawingCacheQuality(View.DRAWING_CACHE_QUALITY_HIGH);
         groupListRowAdapter = new GroupListAdapter(new ArrayList<Group>(), HomeGroupListFragment.this);
         rcGroupList.setAdapter(groupListRowAdapter);
         glSwipeRefresh.setColorSchemeColors(

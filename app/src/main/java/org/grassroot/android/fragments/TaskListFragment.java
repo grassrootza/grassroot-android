@@ -18,13 +18,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
-import butterknife.BindView;
-import butterknife.ButterKnife;
-import butterknife.OnClick;
-import butterknife.Unbinder;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+
 import org.grassroot.android.R;
 import org.grassroot.android.adapters.TasksAdapter;
 import org.grassroot.android.events.TaskAddedEvent;
@@ -32,7 +26,6 @@ import org.grassroot.android.events.TaskCancelledEvent;
 import org.grassroot.android.events.TaskChangedEvent;
 import org.grassroot.android.fragments.dialogs.ConfirmCancelDialogFragment;
 import org.grassroot.android.interfaces.GroupPickCallbacks;
-import org.grassroot.android.interfaces.NetworkErrorDialogListener;
 import org.grassroot.android.interfaces.TaskConstants;
 import org.grassroot.android.models.Group;
 import org.grassroot.android.models.TaskModel;
@@ -43,6 +36,15 @@ import org.grassroot.android.utils.ErrorUtils;
 import org.grassroot.android.utils.RealmUtils;
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import butterknife.BindView;
+import butterknife.ButterKnife;
+import butterknife.OnClick;
+import butterknife.Unbinder;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -123,6 +125,7 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
     floatingActionButton.setVisibility(displayFAB ? View.VISIBLE : View.GONE);
 
     progressDialog = new ProgressDialog(getContext());
+    progressDialog.setMessage(getString(R.string.txt_pls_wait));
     progressDialog.setIndeterminate(true);
 
     fetchTaskList();
@@ -176,7 +179,7 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
   }
 
   private void fetchGroupTasks() {
-    final Group group = RealmUtils.loadObjectFromDB(Group.class, "groupUid", groupUid);
+    Group group = RealmUtils.loadObjectFromDB(Group.class,"groupUid",groupUid);
     if (group.isFetchedTasks()) {
       groupTasksAdapter.changeToTaskList(
           RealmUtils.loadListFromDB(TaskModel.class, "parentUid", groupUid));
@@ -185,7 +188,7 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
     progressDialog.show();
     TaskService.getInstance().fetchGroupTasks(groupUid, new TaskService.TaskServiceListener() {
       @Override public void tasksLoadedFromServer(List<TaskModel> tasks) {
-        handleTaskLoaded(tasks, group);
+        handleTaskLoaded(tasks);
       }
 
       @Override public void taskLoadingFromServerFailed(Response errorBody) {
@@ -194,18 +197,19 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
       }
 
       @Override public void tasksLoadedFromDB(List<TaskModel> tasks) {
-        handleTaskLoaded(tasks, group);
+        handleTaskLoaded(tasks);
       }
     });
   }
 
-  private void handleTaskLoaded(List<TaskModel> tasks, Group group) {
+  private void handleTaskLoaded(List<TaskModel> tasks) {
     progressDialog.hide();
     swipeRefreshLayout.setRefreshing(false);
     if (tasks == null || tasks.isEmpty()) {
       handleNoTasksFound();
     } else {
       groupTasksAdapter.changeToTaskList(tasks);
+      Group group = RealmUtils.loadObjectFromDB(Group.class,"groupUid",groupUid);
       group.setFetchedTasks(true);
       RealmUtils.saveDataToRealm(group);
     }
