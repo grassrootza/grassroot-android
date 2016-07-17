@@ -316,6 +316,55 @@
         <item name="android:paddingBottom">@dimen/flat_button_padding_vertical</item>
     </style>
 
+    <style name="SettingsBlockTightMargin">
+        <item name="android:layout_marginTop">@dimen/margin_xlarge</item>
+        <item name="android:paddingLeft">@dimen/padding_half</item>
+        <item name="android:paddingBottom">@dimen/margin_medium</item>
+        <item name="android:background">@color/white</item>
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+    </style>
+
+    <style name="SettingsBlockLargeMargin">
+        <item name="android:layout_marginTop">@dimen/margin_xlarge</item>
+        <item name="android:paddingLeft">@dimen/padding</item>
+        <item name="android:paddingBottom">@dimen/margin_large</item>
+        <item name="android:background">@color/white</item>
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+    </style>
+
+    <style name="SettingsTextView">
+        <item name="android:textSize">@dimen/txt_medium</item>
+        <item name="android:textColor">@color/black</item>
+        <item name="android:layout_alignParentLeft">true</item>
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginTop">@dimen/margin_large</item>
+        <item name="android:layout_marginBottom">@dimen/margin_large</item>
+    </style>
+
+    <style name="SettingsSwitch">
+        <item name="android:layout_alignParentRight">true</item>
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginRight">@dimen/margin_xlarge</item>
+    </style>
+
+    <style name="SettingsSeparator">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">@dimen/thin_separator_height</item>
+        <item name="android:background">@color/md_grey_200</item>
+    </style>
+
+    <style name="SettingsButton">
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:background">@drawable/button_flat_white</item>
+        <item name="android:textColor">@color/primaryColor</item>
+        <item name="android:textSize">@dimen/txt_medium</item>
+    </style>
+
     <!-- ANIMATIONS -->
     <style name="animation_fast_flyinout">
         <item name="android:windowEnterAnimation">@anim/flyin_fast</item>

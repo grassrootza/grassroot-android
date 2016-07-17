@@ -5,10 +5,12 @@ import android.util.Log;
 import android.view.View;
 
 import org.grassroot.android.R;
+import org.grassroot.android.events.GroupRenamedEvent;
 import org.grassroot.android.events.GroupsRefreshedEvent;
 import org.grassroot.android.interfaces.GroupConstants;
 import org.grassroot.android.interfaces.NetworkErrorDialogListener;
 import org.grassroot.android.interfaces.TaskConstants;
+import org.grassroot.android.models.GenericResponse;
 import org.grassroot.android.models.Group;
 import org.grassroot.android.models.GroupJoinRequest;
 import org.grassroot.android.models.GroupResponse;
@@ -295,6 +297,34 @@ public class GroupService {
     realm.commitTransaction();
     realm.close();
     return group;
+  }
+
+  /* METHODS FOR EDITING GROUP */
+
+  public void renameGroup(final String groupUid, final String newName) {
+    Log.e(TAG, "renaming the group ... ");
+    if (NetworkUtils.isNetworkAvailable(ApplicationLoader.applicationContext)) {
+      final String mobileNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
+      final String code = RealmUtils.loadPreferencesFromDB().getToken();
+      GrassrootRestService.getInstance().getApi().renameGroup(mobileNumber, code, groupUid, newName)
+              .enqueue(new Callback<GenericResponse>() {
+                @Override
+                public void onResponse(Call<GenericResponse> call, Response<GenericResponse> response) {
+                  if (response.isSuccessful()) {
+                    EventBus.getDefault().post(new GroupRenamedEvent(groupUid, newName));
+                  } else {
+                    // handle error somehow
+                  }
+                }
+
+                @Override
+                public void onFailure(Call<GenericResponse> call, Throwable t) {
+                  // todo : put in a queue
+                }
+              });
+    } else {
+      // todo : work out offline/online switching here
+    }
   }
 
     /* METHODS FOR RETRIEVING AND APPROVING GROUP JOIN REQUESTS */

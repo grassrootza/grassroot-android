@@ -394,6 +394,11 @@ public class GrassrootRestService {
     Call<GenericResponse> cancelVote(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
         @Query("uid") String uid);
 
+    /* SECTION : EDIT GROUPS */
+
+    @POST("group/edit/rename/{phoneNumber}/{code}")
+    Call<GenericResponse> renameGroup(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
+                                      @Query("groupUid") String groupUid, @Query("name") String name);
 
   }
 }

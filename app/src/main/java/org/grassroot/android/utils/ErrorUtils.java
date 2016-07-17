@@ -58,7 +58,7 @@ public class ErrorUtils {
 
         switch (response.code()) {
             case Constant.UNAUTHORISED:
-                showSnackBar(holder, activity.getString(R.string.INVALID_TOKEN), Snackbar.LENGTH_INDEFINITE,
+                showSnackBar(holder, activity.getString(R.string.INVALID_TOKEN), Snackbar.LENGTH_LONG,
                         activity.getString(R.string.LOG_OUT), new View.OnClickListener() {
                             @Override
                             public void onClick(View v) {
@@ -78,7 +78,7 @@ public class ErrorUtils {
                  }
                 break;
             case Constant.INTERNAL_SERVER_ERROR:
-                Snackbar.make(holder, R.string.error_generic, Snackbar.LENGTH_INDEFINITE).show();
+                Snackbar.make(holder, R.string.error_generic, Snackbar.LENGTH_LONG).show();
                 break;
             case Constant.NOT_FOUND:
                 Snackbar.make(holder, R.string.GROUP_NOT_FOUND, Snackbar.LENGTH_LONG).show();

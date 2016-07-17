@@ -156,6 +156,15 @@
     </activity>
 
     <activity
+        android:name=".activities.GroupSettingsActivity"
+        android:label="@string/title_activity_group_settings"
+        android:parentActivityName=".activities.GroupTasksActivity">
+        <meta-data
+          android:name="android.support.PARENT_ACTIVITY"
+          android:value=".activities.GroupTasksActivity" />
+    </activity>
+
+    <activity
         android:name=".activities.GroupSearchActivity"
         android:label="@string/title_activity_join__request"/>
 
