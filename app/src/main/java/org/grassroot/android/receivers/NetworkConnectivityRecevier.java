@@ -211,6 +211,10 @@ public class NetworkConnectivityRecevier extends BroadcastReceiver {
               map2.put("groupUid", membersToAdd.get(0).getGroupUid());
               RealmUtils.removeObjectsFromDatabase(Member.class,map2);
               RealmUtils.saveDataToRealm(response.body().getGroups());
+              for(Member m : response.body().getGroups().first().getMembers()){
+                m.setMemberGroupUid();
+                RealmUtils.saveDataToRealm(m);
+              }
             } else {
             }
           }

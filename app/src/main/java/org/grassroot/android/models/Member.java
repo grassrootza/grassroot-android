@@ -57,6 +57,7 @@ public class Member extends RealmObject implements Parcelable {
     dest.writeString(this.displayName);
     dest.writeString(this.roleName);
     dest.writeString(this.groupUid);
+    dest.writeString(memberGroupUid);
   }
 
   protected Member(Parcel incoming) {
@@ -66,6 +67,7 @@ public class Member extends RealmObject implements Parcelable {
     displayName = incoming.readString();
     roleName = incoming.readString();
     groupUid = incoming.readString();
+    memberGroupUid = incoming.readString();
     selected = true;
   }
 

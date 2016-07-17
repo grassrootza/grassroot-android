@@ -110,6 +110,7 @@ public class CreateGroupActivity extends PortraitActivity
       onMainScreen = true;
     } else {
       progressDialog.dismiss();
+      deleteLocalCreatedGroup();
       finish();
     }
   }
@@ -160,6 +161,8 @@ public class CreateGroupActivity extends PortraitActivity
             new Member(c.selectedMsisdn, c.getDisplayName(), GroupConstants.ROLE_ORDINARY_MEMBER,
                 c.id, true);
         m.setGroupUid(groupUid);
+        m.setMemberUid(UUID.randomUUID().toString());
+        m.setMemberGroupUid();
         RealmUtils.saveDataToRealm(m);
         selectedMembers.add(m);
         GroupService.getInstance().createGroupLocally(groupUid,et_groupname.getText().toString(),et_group_description.getText().toString(),selectedMembers);
@@ -253,7 +256,10 @@ public class CreateGroupActivity extends PortraitActivity
         Member newMember =
             new Member(data.getStringExtra("selectedNumber"), data.getStringExtra("name"),
                 GroupConstants.ROLE_ORDINARY_MEMBER, -1);
+        //added memberId here
+        newMember.setMemberUid(UUID.randomUUID().toString());
         newMember.setGroupUid(groupUid);
+        newMember.setMemberGroupUid();
         manuallyAddedMembers.add(newMember);
         memberListFragment.addMembers(Collections.singletonList(newMember));
         GroupService.getInstance().createGroupLocally(groupUid,et_groupname.getText().toString(),et_group_description.getText().toString(),memberListFragment.getSelectedMembers());
@@ -287,5 +293,15 @@ public class CreateGroupActivity extends PortraitActivity
     Intent resultIntent = new Intent();
     resultIntent.putExtra(GroupConstants.OBJECT_FIELD, group);
     setResult(RESULT_OK, resultIntent);
+  }
+
+  @Override public void onBackPressed() {
+    super.onBackPressed();
+    deleteLocalCreatedGroup();
+  }
+
+  private void deleteLocalCreatedGroup(){
+    RealmUtils.removeObjectFromDatabase(Group.class,"groupUid",groupUid);
+    RealmUtils.removeObjectFromDatabase(Member.class,"groupUid",groupUid);
   }
 }

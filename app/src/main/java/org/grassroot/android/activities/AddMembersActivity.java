@@ -298,6 +298,10 @@ public class AddMembersActivity extends AppCompatActivity implements
                             //todo return members here from API
                             RealmUtils.removeObjectsFromDatabase(Member.class,map);
                             RealmUtils.saveDataToRealm(response.body().getGroups());
+                            for(Member m : response.body().getGroups().first().getMembers()){
+                                m.setMemberGroupUid();
+                                RealmUtils.saveDataToRealm(m);
+                            }
                             Intent i = new Intent();
                             i.putExtra(Constant.GROUPUID_FIELD, groupUid);
                             i.putExtra(Constant.INDEX_FIELD, groupPosition);

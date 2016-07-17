@@ -232,8 +232,13 @@ public class GroupService {
                   .getGroups()
                   .get(0)
                   .getGroupUid());
-              RealmUtils.saveDataToRealm(response.body().getGroups().first());
               RealmUtils.removeObjectFromDatabase(Group.class, "groupUid", groupUid);
+              RealmUtils.removeObjectFromDatabase(Member.class,"groupUid", groupUid);
+              for(Member m :response.body().getGroups().first().getMembers()){
+                m.setMemberGroupUid();
+                RealmUtils.saveDataToRealm(m);
+              }
+              RealmUtils.saveDataToRealm(response.body().getGroups().first());
               listener.groupCreatedOnServer(response.body().getGroups().first());
             } else {
               listener.groupCreationError(response);
@@ -270,7 +275,7 @@ public class GroupService {
     realm.commitTransaction();
     realm.beginTransaction();
     for (Member m : groupMembers) {
-      m.setGroupUid(group.getGroupUid());
+      realm.copyToRealmOrUpdate(m);
     }
     realm.commitTransaction();
     realm.close();

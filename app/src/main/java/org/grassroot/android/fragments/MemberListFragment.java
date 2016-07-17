@@ -215,7 +215,6 @@ public class MemberListFragment extends Fragment {
         RealmList<Member> members = RealmUtils.loadListFromDB(Member.class,"groupUid",groupUid);
         handleReturnedMembers(members);
         mListener.onMemberListPopulated(members);
-
         Log.d(TAG, "inside MemberListFragment, retrieving group members for uid = " + groupUid);
     }
 

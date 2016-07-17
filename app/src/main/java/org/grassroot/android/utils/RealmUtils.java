@@ -87,7 +87,8 @@ public class RealmUtils {
       String pValue) {
     Realm realm = Realm.getDefaultInstance();
     realm.beginTransaction();
-    realm.where(clazz).equalTo(pName, pValue).findFirst().deleteFromRealm();
+    RealmObject object = realm.where(clazz).equalTo(pName, pValue).findFirst();
+    if(object!=null) object.deleteFromRealm();
     realm.commitTransaction();
     realm.close();
   }
@@ -105,7 +106,7 @@ public class RealmUtils {
       }
     }
     realm.beginTransaction();
-    query.findAll().deleteAllFromRealm();
+    if(query.findAll().size()>0) query.findAll().deleteAllFromRealm();
     realm.commitTransaction();
     realm.close();
   }
