@@ -6,6 +6,9 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.BitmapShader;
+import android.graphics.Canvas;
+import android.graphics.Paint;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
@@ -32,8 +35,8 @@ import org.grassroot.android.models.GenericResponse;
 import org.grassroot.android.models.Group;
 import org.grassroot.android.services.GrassrootRestService;
 import org.grassroot.android.utils.CircularImageTransformer;
+import org.grassroot.android.utils.ImageUtils;
 import org.grassroot.android.utils.RealmUtils;
-import org.grassroot.android.utils.ScalingUtilities;
 import org.greenrobot.eventbus.EventBus;
 
 import java.io.File;
@@ -104,10 +107,10 @@ public class GroupAvatarActivity extends PortraitActivity {
                 String localImagePath = cursor.getString(columnIndex);
                 String mimeType = getMimeType(this, selectedImage);
                 cursor.close();
-                String compressedFilePath = decodeFile(localImagePath);
+                String compressedFilePath = ImageUtils.decodeFile(localImagePath);
                 uploadFile(compressedFilePath, mimeType);
                 Bitmap bitmap = BitmapFactory.decodeFile(compressedFilePath);
-                ivAvatar.setImageBitmap(ScalingUtilities.getRoundedShape(bitmap));
+                ivAvatar.setImageBitmap(ImageUtils.getRoundedShape(bitmap));
             }
 
 
@@ -261,49 +264,8 @@ public class GroupAvatarActivity extends PortraitActivity {
         return mimeType;
     }
 
-    private String decodeFile(String path) {
-        String strMyImagePath = null;
-        Bitmap scaledBitmap;
 
-        try {
-            Bitmap unscaledBitmap = ScalingUtilities.decodeFile(path, 192, 192, ScalingUtilities.ScalingLogic.FIT);
-            if (!(unscaledBitmap.getWidth() <= 640 && unscaledBitmap.getHeight() <= 640)) {
-                scaledBitmap = ScalingUtilities.createScaledBitmap(unscaledBitmap, 192, 192, ScalingUtilities.ScalingLogic.FIT);
 
-            } else {
-                unscaledBitmap.recycle();
-                return path;
-            }
-            String extr = Environment.getExternalStorageDirectory().toString();
-            File mFolder = new File(extr + "/myTmpDir");
-            if (!mFolder.exists()) {
-                mFolder.mkdir();
-            }
-            String s = "tmp.png";
-            File file = new File(mFolder.getAbsolutePath(), s);
-            strMyImagePath = file.getAbsolutePath();
-            FileOutputStream fos = null;
-            try {
-                fos = new FileOutputStream(file);
-                scaledBitmap.compress(Bitmap.CompressFormat.PNG, 70, fos);
-                fos.flush();
-                fos.close();
-            } catch (FileNotFoundException e) {
-                e.printStackTrace();
-            } catch (Exception e) {
-
-                e.printStackTrace();
-            }
-            scaledBitmap.recycle();
-        } catch (Throwable e) {
-        }
-
-        if (strMyImagePath == null) {
-            return path;
-        }
-        return strMyImagePath;
-
-    }
 
     private void hideRemoveButton(){
         ivAvatar.setImageResource(R.drawable.ic_groups_default_avatar);
