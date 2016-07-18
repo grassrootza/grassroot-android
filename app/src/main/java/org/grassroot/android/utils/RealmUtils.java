@@ -146,6 +146,10 @@ public class RealmUtils {
     return (T) groups.get(0);
   }
 
+  public static Group loadGroupFromDB(final String groupUid) {
+    return loadObjectFromDB(Group.class, "groupUid", groupUid);
+  }
+
   public static RealmList<RealmString> convertListOfStringInRealmListOfString(List<String> list) {
     if (list != null) {
       String[] arrayOfStrings = new String[list.size()];

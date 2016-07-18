@@ -4,7 +4,6 @@ import android.app.ProgressDialog;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.widget.Button;
@@ -15,13 +14,11 @@ import org.grassroot.android.R;
 import org.grassroot.android.fragments.MemberListFragment;
 import org.grassroot.android.fragments.dialogs.ConfirmCancelDialogFragment;
 import org.grassroot.android.models.GenericResponse;
-import org.grassroot.android.models.Member;
 import org.grassroot.android.services.GrassrootRestService;
 import org.grassroot.android.utils.Constant;
 import org.grassroot.android.utils.ErrorUtils;
 
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 import butterknife.BindView;
@@ -35,8 +32,7 @@ import retrofit2.Response;
 /**
  * Created by luke on 2016/05/18.
  */
-public class RemoveMembersActivity extends PortraitActivity implements MemberListFragment.MemberListListener,
-        MemberListFragment.MemberClickListener {
+public class RemoveMembersActivity extends PortraitActivity implements MemberListFragment.MemberClickListener {
 
     private static final String TAG = RemoveMembersActivity.class.getCanonicalName();
 
@@ -103,7 +99,7 @@ public class RemoveMembersActivity extends PortraitActivity implements MemberLis
     }
 
     private void setUpMemberListFragment() {
-        memberListFragment = MemberListFragment.newInstance(groupUid, true, true, this, this, null);
+        memberListFragment = MemberListFragment.newInstance(groupUid, true, true, true, null, this);
         memberListFragment.setSelectedByDefault(true);
 
         getSupportFragmentManager().beginTransaction()
@@ -156,22 +152,6 @@ public class RemoveMembersActivity extends PortraitActivity implements MemberLis
                         ErrorUtils.handleNetworkError(RemoveMembersActivity.this, root, t);
                     }
                 });
-    }
-
-    @Override
-    public void onMemberListInitiated(MemberListFragment fragment) {
-        // todo : reexamine the case for this listener
-        Log.e(TAG, "Fragment initiated ...");
-    }
-
-    @Override
-    public void onMemberListPopulated(List<Member> memberList) {
-
-    }
-
-    @Override
-    public void onMemberListDone() {
-
     }
 
     @Override

@@ -22,7 +22,6 @@ public class ContactsAdapter extends ArrayAdapter<Contact> implements SectionInd
 
   private final Context mContext;
 
-  private List<Contact> contactsToDisplay;
   private StringArrayAlphabetIndexer indexer; // todo : move this to service
 
   public ContactsAdapter(Context context, int resource) {

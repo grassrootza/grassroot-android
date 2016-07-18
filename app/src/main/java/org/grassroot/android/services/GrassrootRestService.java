@@ -20,6 +20,8 @@ import org.grassroot.android.models.GroupsChangedResponse;
 import org.grassroot.android.models.Member;
 import org.grassroot.android.models.MemberList;
 import org.grassroot.android.models.NotificationList;
+import org.grassroot.android.models.Permission;
+import org.grassroot.android.models.PermissionResponse;
 import org.grassroot.android.models.ProfileResponse;
 import org.grassroot.android.models.RealmString;
 import org.grassroot.android.models.ResponseTotalsModel;
@@ -411,7 +413,17 @@ public class GrassrootRestService {
     Call<GenericResponse> closeJoinCode(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
                                         @Query("groupUid") String groupUid);
 
+    @POST("group/edit/add_organizer/{phoneNumber}/{code}")
+    Call<GenericResponse> addOrganizer(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
+                                       @Query("groupUid") String groupUid, @Query("memberUid") String memberUid);
 
+    @POST("group/edit/fetch_permissions/{phoneNumber}/{code}")
+    Call<PermissionResponse> fetchPermissions(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
+                                              @Query("groupUid") String groupUid, @Query("roleName") String roleName);
+
+    @POST("group/edit/update_permissions/{phoneNumber}/{code}")
+    Call<GenericResponse> updatePermissions(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
+                                            @Query("groupUid") String groupUid, @Query("permissions") List<Permission> permissions);
 
   }
 }

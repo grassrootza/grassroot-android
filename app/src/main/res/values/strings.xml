@@ -230,9 +230,28 @@
     <string name="gset_join_code_to_off">About to close this join code. Confirmed?</string>
     <string name="gset_join_code_done">Done! Anyone can dial %s to join the group.</string>
 
+    <string name="gset_organizer_confirm">Add as organizer?</string>
+
     <string name="gset_role_organizer">Organizer</string>
     <string name="gset_committee">Committee member</string>
     <string name="gset_ordinary">Ordinary member</string>
+
+    <string name="gset_perms_title">For which role?</string>
+    <string-array name="gset_roles">
+        <item>Group organizers</item>
+        <item>Committee members</item>
+        <item>Ordinary members</item>
+    </string-array>
+
+    <string-array name="gset_permissions">
+        <item>Call meetings</item>
+        <item>Call a vote</item>
+        <item>Record actions</item>
+        <item>View group members</item>
+        <item>Add members</item>
+        <item>Remove members</item>
+        <item>Change group settings</item>
+    </string-array>
 
     <!--GroupTasksActivity :: mostly response strings -->
     <string name="RESPOND_YES">You have clicked on \'Yes\'. Do you want to proceed with the vote?</string>

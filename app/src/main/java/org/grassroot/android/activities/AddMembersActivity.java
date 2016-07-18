@@ -37,6 +37,8 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 import org.grassroot.android.utils.RealmUtils;
+
+import io.realm.RealmList;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -45,7 +47,7 @@ import retrofit2.Response;
  * Created by luke on 2016/05/05.
  */
 public class AddMembersActivity extends AppCompatActivity implements
-        MemberListFragment.MemberListListener, MemberListFragment.MemberClickListener, ContactSelectionFragment.ContactSelectionListener {
+        ContactSelectionFragment.ContactSelectionListener {
 
     private static final String TAG = AddMembersActivity.class.getSimpleName();
 
@@ -122,24 +124,16 @@ public class AddMembersActivity extends AppCompatActivity implements
     }
 
     private void setupExistingMemberRecyclerView() {
-        existingMemberListFragment = MemberListFragment.newInstance(groupUid, false, false, this, this, null);
+        existingMemberListFragment = MemberListFragment.newInstance(groupUid, false, false, false, null, null);
+        RealmList<Member> members = RealmUtils.loadListFromDB(Member.class,"groupUid", groupUid); // todo : make sure this doesn't cause reference overwrite issues
+        contactSelectionFragment = ContactSelectionFragment.newInstance(Contact.convertFromMembers(members), false);
         getSupportFragmentManager().beginTransaction()
                 .add(R.id.am_existing_member_list_container, existingMemberListFragment)
                 .commit();
     }
 
-    @Override
-    public void onMemberListPopulated(List<Member> memberList) {
-        contactSelectionFragment = ContactSelectionFragment.newInstance(Contact.convertFromMembers(memberList), false);
-    }
-
-    @Override
-    public void onMemberListDone() {
-
-    }
-
     private void setupNewMemberRecyclerView() {
-        newMemberListFragment = MemberListFragment.newInstance(null, true, true, this, this, null);
+        newMemberListFragment = MemberListFragment.newInstance(null, true, true, true, null, null);
         getSupportFragmentManager().beginTransaction()
                 .add(R.id.am_new_member_list_container, newMemberListFragment)
                 .commit();
@@ -321,18 +315,4 @@ public class AddMembersActivity extends AppCompatActivity implements
                 });
     }
 
-    @Override
-    public void onMemberListInitiated(MemberListFragment fragment) {
-
-    }
-
-    @Override
-    public void onMemberDismissed(int position, String memberUid) {
-        // todo : deal with this (do we need to?)
-    }
-
-    @Override
-    public void onMemberClicked(int position, String memberUid) {
-        // todo : deal with this
-    }
 }

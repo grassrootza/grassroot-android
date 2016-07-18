@@ -22,7 +22,6 @@ import org.grassroot.android.utils.Constant;
 import org.grassroot.android.utils.MenuUtils;
 
 import java.util.ArrayList;
-import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -31,8 +30,7 @@ import butterknife.OnClick;
 /**
  * Created by luke on 2016/05/18.
  */
-public class GroupMembersActivity extends PortraitActivity implements MemberListFragment.MemberListListener,
-        MemberListFragment.MemberClickListener, NewTaskMenuFragment.NewTaskMenuListener {
+public class GroupMembersActivity extends PortraitActivity implements NewTaskMenuFragment.NewTaskMenuListener {
 
     private static final String TAG = GroupMembersActivity.class.getCanonicalName();
 
@@ -121,34 +119,10 @@ public class GroupMembersActivity extends PortraitActivity implements MemberList
     }
 
     private void setUpMemberListFragment() {
-        memberListFragment = MemberListFragment.newInstance(groupUid, selectMembers, false, this, this, membersSelected);
+        memberListFragment = MemberListFragment.newInstance(groupUid, selectMembers, selectMembers, false, membersSelected, null);
         getSupportFragmentManager().beginTransaction()
                 .add(R.id.lm_member_list_container, memberListFragment)
                 .commit();
-    }
-
-    @Override
-    public void onMemberListInitiated(MemberListFragment fragment) {
-    }
-
-    @Override
-    public void onMemberListPopulated(List<Member> memberList) {
-
-    }
-
-    @Override
-    public void onMemberDismissed(int position, String memberUid) {
-
-    }
-
-    @Override
-    public void onMemberListDone() {
-
-    }
-
-    @Override
-    public void onMemberClicked(int position, String memberUid) {
-
     }
 
     @OnClick(R.id.lm_btn_check_all)

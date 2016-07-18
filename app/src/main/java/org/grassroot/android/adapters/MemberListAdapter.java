@@ -21,6 +21,7 @@ import java.util.List;
 public class MemberListAdapter extends RecyclerView.Adapter<MemberListAdapter.ViewHolder> {
 
     private static final String TAG = MemberListAdapter.class.getCanonicalName();
+
     private List<Member> members;
     private boolean showSelected;
     private LayoutInflater layoutInflater;

@@ -21,7 +21,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
 import java.util.UUID;
 import org.grassroot.android.R;
 import org.grassroot.android.events.GroupCreatedEvent;
@@ -43,9 +42,7 @@ import retrofit2.Response;
 
 import static butterknife.OnTextChanged.Callback.AFTER_TEXT_CHANGED;
 
-public class CreateGroupActivity extends PortraitActivity
-    implements MemberListFragment.MemberListListener, MemberListFragment.MemberClickListener,
-    ContactSelectionFragment.ContactSelectionListener {
+public class CreateGroupActivity extends PortraitActivity implements ContactSelectionFragment.ContactSelectionListener {
 
   private static final String TAG = CreateGroupActivity.class.getSimpleName();
 
@@ -83,7 +80,7 @@ public class CreateGroupActivity extends PortraitActivity
   }
 
   private void init() {
-    memberListFragment = MemberListFragment.newInstance(null, false, false, this, this, null);
+    memberListFragment = MemberListFragment.newInstance(null, false, false, false, null, null);
     contactSelectionFragment = ContactSelectionFragment.newInstance(null, false);
     mapMembersContacts = new HashMap<>();
     manuallyAddedMembers = new ArrayList<>();
@@ -265,28 +262,6 @@ public class CreateGroupActivity extends PortraitActivity
         GroupService.getInstance().createGroupLocally(groupUid,et_groupname.getText().toString(),et_group_description.getText().toString(),memberListFragment.getSelectedMembers());
       }
     }
-  }
-
-  @Override public void onMemberListInitiated(MemberListFragment fragment) {
-    // todo: use this to handle fragment setting up & observation, instead of create at start...
-    // memberListFragment.setShowSelected(true);
-    // memberListFragment.setCanDismissItems(true);
-  }
-
-  @Override public void onMemberListPopulated(List<Member> memberList) {
-
-  }
-
-  @Override public void onMemberListDone() {
-
-  }
-
-  @Override public void onMemberDismissed(int position, String memberUid) {
-    // todo : deal with this (maybe)
-  }
-
-  @Override public void onMemberClicked(int position, String memberUid) {
-    // todo : deal with this
   }
 
   private void setResultIntent(Group group) {

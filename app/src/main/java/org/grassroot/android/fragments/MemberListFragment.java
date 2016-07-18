@@ -11,21 +11,20 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import io.realm.RealmList;
 import org.grassroot.android.R;
 import org.grassroot.android.adapters.MemberListAdapter;
-import org.grassroot.android.interfaces.ClickListener;
-import org.grassroot.android.models.Member;
 import org.grassroot.android.adapters.RecyclerTouchListener;
+import org.grassroot.android.interfaces.ClickListener;
+import org.grassroot.android.models.Group;
+import org.grassroot.android.models.Member;
+import org.grassroot.android.utils.RealmUtils;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import butterknife.BindView;
-import butterknife.ButterKnife;
-import org.grassroot.android.utils.RealmUtils;
+import io.realm.RealmList;
 
 /**
  * Created by luke on 2016/05/08.
@@ -34,27 +33,20 @@ public class MemberListFragment extends Fragment {
 
     private static final String TAG = MemberListFragment.class.getCanonicalName();
 
-    private String groupUid;
+    private Group group;
+
+    private boolean canClickItems;
     private boolean canDismissItems;
     private boolean showSelected;
     private boolean selectedByDefault;
-    private List<Member> preSelectedMembers;
 
-    private MemberListListener mListener;
+    private List<Member> preSelectedMembers;
+    private List<Member> filteredMembers;
+
     private MemberClickListener clickListener;
     private MemberListAdapter memberListAdapter;
 
-    @BindView(R.id.mlist_frag_recycler_view)
     RecyclerView memberListRecyclerView;
-
-    private ViewGroup vgContainer;
-
-    // todo : clean this up (probably don't need)
-    public interface MemberListListener {
-        void onMemberListInitiated(MemberListFragment fragment);
-        void onMemberListPopulated(List<Member> memberList);
-        void onMemberListDone();
-    }
 
     public interface MemberClickListener {
         void onMemberDismissed(int position, String memberUid);
@@ -62,16 +54,30 @@ public class MemberListFragment extends Fragment {
     }
 
     // note : groupUid can be set null, in which case we are adding members generated locally
-    public static MemberListFragment newInstance(String parentUid, boolean showSelected, boolean canDismissItems,
-                                                 MemberListListener listListener, MemberClickListener clickListener,
-                                                 List<Member> selectedMembers) {
+    public static MemberListFragment newInstance(String parentUid, boolean clickEnabled, boolean showSelected,
+                                                 boolean canDismissItems, List<Member> selectedMembers, MemberClickListener clickListener) {
         MemberListFragment fragment = new MemberListFragment();
-        fragment.groupUid = parentUid;
+        if (parentUid != null) {
+            fragment.group = RealmUtils.loadGroupFromDB(parentUid);
+        } else {
+            fragment.group = null;
+        }
+        fragment.canClickItems = clickEnabled;
         fragment.showSelected = showSelected;
         fragment.canDismissItems = canDismissItems;
-        fragment.mListener = listListener;
         fragment.clickListener = clickListener;
         fragment.preSelectedMembers = selectedMembers;
+        return fragment;
+    }
+
+    public static MemberListFragment newInstance(Group group, boolean showSelected, List<Member> filteredMembers,
+                                                 MemberClickListener clickListener) {
+        MemberListFragment fragment = new MemberListFragment();
+        fragment.group = group;
+        fragment.canClickItems = true;
+        fragment.showSelected = showSelected;
+        fragment.clickListener = clickListener;
+        fragment.filteredMembers = filteredMembers;
         return fragment;
     }
 
@@ -80,34 +86,18 @@ public class MemberListFragment extends Fragment {
     }
 
     @Override
-    public void onAttach(Context context) {
-        super.onAttach(context);
-        mListener = (context instanceof MemberListListener) ? (MemberListListener) context : null;
-        clickListener = (context instanceof MemberClickListener) ? (MemberClickListener) context : null;
-    }
-
-    @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        init();
-        if (mListener != null) {
-            mListener.onMemberListInitiated(this);
-        }
-    }
-
-    private void init() {
         if (memberListAdapter == null) {
             memberListAdapter = new MemberListAdapter(this.getContext());
-        }
+        };
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        Log.e(TAG, "setting up member list fragment view");
         View viewToReturn = inflater.inflate(R.layout.fragment_member_list, container, false);
-        ButterKnife.bind(this, viewToReturn);
+        memberListRecyclerView = (RecyclerView) viewToReturn.findViewById(R.id.mlist_frag_recycler_view);
         setUpRecyclerView();
-        this.vgContainer = container;
         return viewToReturn;
     }
 
@@ -155,11 +145,11 @@ public class MemberListFragment extends Fragment {
         memberListRecyclerView.setAdapter(memberListAdapter);
         memberListAdapter.setShowSelected(showSelected);
 
-        if (groupUid != null)
+        if (group != null)
             fetchGroupMembers();
         if (canDismissItems)
             setUpDismissal();
-        if (showSelected)
+        if (canClickItems)
             setUpSelectionListener();
 
         memberListRecyclerView.setVisibility(View.VISIBLE);
@@ -210,28 +200,22 @@ public class MemberListFragment extends Fragment {
     }
 
     private void fetchGroupMembers() {
-        if (groupUid == null)
-            throw new UnsupportedOperationException("Cannot retrieve group members from null group uid");
-        RealmList<Member> members = RealmUtils.loadListFromDB(Member.class,"groupUid",groupUid);
-        handleReturnedMembers(members);
-        mListener.onMemberListPopulated(members);
-        Log.d(TAG, "inside MemberListFragment, retrieving group members for uid = " + groupUid);
-    }
+        Log.d(TAG, "inside MemberListFragment, retrieving group members for uid = " + group.getGroupUid());
+        RealmList<Member> members = RealmUtils.loadListFromDB(Member.class,"groupUid", group.getGroupUid());
 
-    private void handleReturnedMembers(List<Member> membersReturned) {
-        if(memberListAdapter.getMembers().isEmpty()) {
-            memberListAdapter.addMembers(membersReturned);
-        } else {
-            membersReturned.removeAll(memberListAdapter.getMembers());
-            memberListAdapter.addMembers(membersReturned);
+        List<Member> membersToRemove = new ArrayList<>(memberListAdapter.getMembers());
+        if (filteredMembers != null) {
+            membersToRemove.addAll(filteredMembers);
         }
+        members.removeAll(membersToRemove);
+        memberListAdapter.addMembers(members);
 
         if (preSelectedMembers != null && !selectedByDefault) {
             // todo : consider using list.contains on members when can trust hashing/equals
             final Map<String, Integer> positionMap = new HashMap<>();
             final int listSize = preSelectedMembers.size();
             for (int i = 0; i < listSize; i++) {
-                positionMap.put(membersReturned.get(i).getMemberUid(),i);
+                positionMap.put(members.get(i).getMemberUid(),i);
             }
             for (Member m : preSelectedMembers) {
                 if (positionMap.containsKey(m.getMemberUid())) {

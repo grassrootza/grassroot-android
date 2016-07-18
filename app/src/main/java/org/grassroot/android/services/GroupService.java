@@ -23,6 +23,8 @@ import org.grassroot.android.models.GroupJoinRequest;
 import org.grassroot.android.models.GroupResponse;
 import org.grassroot.android.models.GroupsChangedResponse;
 import org.grassroot.android.models.Member;
+import org.grassroot.android.models.Permission;
+import org.grassroot.android.models.PermissionResponse;
 import org.grassroot.android.models.PreferenceObject;
 import org.grassroot.android.models.RealmString;
 import org.grassroot.android.utils.ErrorUtils;
@@ -396,7 +398,7 @@ public class GroupService {
                   listener.apiCallComplete();
                   if (response.isSuccessful()) {
                     EventBus.getDefault().post(new GroupEditedEvent(GroupEditedEvent.JOIN_CODE_OPENED,
-                            GroupEditedEvent.CHANGED_ONLINE, group.getGroupUid(), group.getGroupUid()));
+                            GroupEditedEvent.CHANGED_ONLINE, group.getGroupUid(), group.getGroupName()));
                   } else {
 
                   }
@@ -413,6 +415,77 @@ public class GroupService {
       listener.apiCallComplete();
     }
   }
+
+  public void addOrganizer(final Group group, final String memberUid, final GroupEditingListener listener) {
+    final String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
+    final String token = RealmUtils.loadPreferencesFromDB().getToken();
+    if (NetworkUtils.isNetworkAvailable()) {
+      GrassrootRestService.getInstance().getApi().addOrganizer(phoneNumber, token,
+              group.getGroupUid(), memberUid).enqueue(new Callback<GenericResponse>() {
+        @Override
+        public void onResponse(Call<GenericResponse> call, Response<GenericResponse> response) {
+          listener.apiCallComplete();
+          if (response.isSuccessful()) {
+            EventBus.getDefault().post(new GroupEditedEvent(GroupEditedEvent.ORGANIZER_ADDED,
+                    GroupEditedEvent.CHANGED_ONLINE, group.getGroupUid(), group.getGroupName()));
+          } else {
+            EventBus.getDefault().post(new GroupEditErrorEvent(response.errorBody()));
+          }
+        }
+
+        @Override
+        public void onFailure(Call<GenericResponse> call, Throwable t) {
+          listener.apiCallComplete();
+          EventBus.getDefault().post(new GroupEditErrorEvent(t));
+        }
+      });
+    } else {
+      // todo : queue it and report back
+      listener.apiCallComplete();
+    }
+  }
+
+  /*
+  METHODS FOR HANDLING PERMISSIONS, ROLE CHANGES ETC
+   */
+
+  public interface GroupPermissionsListener {
+    String OFFLINE = "offline";
+    String DENIED = "access_denied";
+
+    void permissionsLoaded(List<Permission> permissions);
+    void permissionsUpdated(List<Permission> permissions);
+    void errorLoadingPermissions(String errorDescription);
+  }
+
+  public void fetchGroupPermissions(Group group, String roleName, final GroupPermissionsListener listener) {
+    final String mobileNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
+    final String token = RealmUtils.loadPreferencesFromDB().getToken();
+
+    if (NetworkUtils.isNetworkAvailable()) {
+      GrassrootRestService.getInstance().getApi().fetchPermissions(mobileNumber, token,
+              group.getGroupUid(), roleName).enqueue(new Callback<PermissionResponse>() {
+        @Override
+        public void onResponse(Call<PermissionResponse> call, Response<PermissionResponse> response) {
+          if (response.isSuccessful()) {
+            listener.permissionsLoaded(response.body().getPermissions());
+          } else {
+            listener.errorLoadingPermissions(GroupPermissionsListener.DENIED);
+          }
+        }
+
+        @Override
+        public void onFailure(Call<PermissionResponse> call, Throwable t) {
+          listener.errorLoadingPermissions(GroupPermissionsListener.OFFLINE);
+        }
+      });
+    } else {
+      // todo : maybe we should store locally so can at least read (and, in general, have read only mode) ... tbd
+      listener.errorLoadingPermissions(GroupPermissionsListener.OFFLINE);
+    }
+  }
+
+
 
     /* METHODS FOR RETRIEVING AND APPROVING GROUP JOIN REQUESTS */
 
