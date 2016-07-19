@@ -1,6 +1,7 @@
 package org.grassroot.android.adapters;
 
 import android.content.Context;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -50,7 +51,6 @@ public class PermissionsAdapter extends ArrayAdapter<Permission> {
             viewHolder.permissionLabel = (TextView) viewToReturn.findViewById(R.id.permission_label);
             viewHolder.permissionDesc = (TextView) viewToReturn.findViewById(R.id.permission_description);
             viewHolder.permissionEnabled = (CheckBox) viewToReturn.findViewById(R.id.permission_selected);
-            // label.setText(permission.getPermissionName());
         }
 
         final Permission permission = permissions.get(position);
@@ -62,7 +62,6 @@ public class PermissionsAdapter extends ArrayAdapter<Permission> {
             @Override
             public void onClick(View v) {
                 CheckBox cb = (CheckBox) v;
-                cb.toggle();
                 permission.setPermissionEnabled(cb.isChecked());
             }
         });

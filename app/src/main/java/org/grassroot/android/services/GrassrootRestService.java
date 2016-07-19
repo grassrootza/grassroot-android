@@ -253,7 +253,7 @@ public class GrassrootRestService {
     // remove members from a group
     @POST("group/members/remove/{phoneNumber}/{code}/{groupUid}")
     Call<GenericResponse> removeGroupMembers(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
-        @Path("groupUid") String groupUid, @Query("memberUids") Set<String> memberUids);
+        @Query("groupUid") String groupUid, @Query("memberUids") Set<String> memberUids);
 
         /*
         SECTION: Fetch tasks, and task details
@@ -421,9 +421,15 @@ public class GrassrootRestService {
     Call<PermissionResponse> fetchPermissions(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
                                               @Query("groupUid") String groupUid, @Query("roleName") String roleName);
 
-    @POST("group/edit/update_permissions/{phoneNumber}/{code}")
+    @POST("group/edit/update_permissions/{phoneNumber}/{code}/{groupUid}/{roleName}")
     Call<GenericResponse> updatePermissions(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
-                                            @Query("groupUid") String groupUid, @Query("permissions") List<Permission> permissions);
+                                            @Path("groupUid") String groupUid, @Path("roleName") String roleName,
+                                            @Body List<Permission> permissions);
+
+    @POST("group/edit/change_role/{phoneNumber}/{code}")
+    Call<GenericResponse> changeMemberRole(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
+                                           @Query("groupUid") String groupUid, @Query("memberUid") String memberUid,
+                                           @Query("roleName") String newRole);
 
   }
 }

@@ -9,6 +9,7 @@ import io.realm.RealmResults;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
 
 import org.grassroot.android.R;
 import org.grassroot.android.events.GroupEditErrorEvent;
@@ -232,7 +233,6 @@ public class GroupService {
     }
   }
 
-
     /*
     METHODS FOR CREATING AND MODIFYING / EDITING GROUPS
      */
@@ -303,6 +303,39 @@ public class GroupService {
     realm.close();
     return group;
   }
+
+  /* METHODS FOR ADDING AND REMOVING MEMBERS */
+
+  public interface MembersRemovedListener {
+    void membersRemoved(String saveType);
+    void memberRemovalError(String errorType, Object data);
+  }
+
+  public void removeGroupMembers(Group group, Set<String> membersToRemoveUIDs, final MembersRemovedListener listener) {
+    final String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
+    final String code = RealmUtils.loadPreferencesFromDB().getToken();
+    if (NetworkUtils.isNetworkAvailable()) {
+      GrassrootRestService.getInstance().getApi().removeGroupMembers(phoneNumber, code,
+              group.getGroupUid(), membersToRemoveUIDs).enqueue(new Callback<GenericResponse>() {
+        @Override
+        public void onResponse(Call<GenericResponse> call, Response<GenericResponse> response) {
+          if (response.isSuccessful()) {
+            listener.membersRemoved("");
+          } else {
+            listener.memberRemovalError("", response.errorBody());
+          }
+        }
+
+        @Override
+        public void onFailure(Call<GenericResponse> call, Throwable t) {
+          listener.memberRemovalError("", t);
+        }
+      });
+    } else {
+      listener.membersRemoved("");
+    }
+  }
+
 
   /* METHODS FOR EDITING GROUP */
 
@@ -456,6 +489,7 @@ public class GroupService {
     void permissionsLoaded(List<Permission> permissions);
     void permissionsUpdated(List<Permission> permissions);
     void errorLoadingPermissions(String errorDescription);
+    void errorUpdatingPermissions(String errorDescription);
   }
 
   public void fetchGroupPermissions(Group group, String roleName, final GroupPermissionsListener listener) {
@@ -482,6 +516,59 @@ public class GroupService {
     } else {
       // todo : maybe we should store locally so can at least read (and, in general, have read only mode) ... tbd
       listener.errorLoadingPermissions(GroupPermissionsListener.OFFLINE);
+    }
+  }
+
+  public void updateGroupPermissions(Group group, String roleName, final List<Permission> updatedPermissions, final GroupPermissionsListener listener) {
+    final String mobileNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
+    final String token = RealmUtils.loadPreferencesFromDB().getToken();
+
+    if (NetworkUtils.isNetworkAvailable()) {
+      GrassrootRestService.getInstance().getApi().updatePermissions(mobileNumber, token,
+              group.getGroupUid(), roleName, updatedPermissions).enqueue(new Callback<GenericResponse>() {
+        @Override
+        public void onResponse(Call<GenericResponse> call, Response<GenericResponse> response) {
+          if (response.isSuccessful()) {
+            listener.permissionsUpdated(updatedPermissions);
+          } else {
+            listener.errorUpdatingPermissions(GroupPermissionsListener.DENIED);
+          }
+        }
+
+        @Override
+        public void onFailure(Call<GenericResponse> call, Throwable t) {
+          listener.errorUpdatingPermissions(GroupPermissionsListener.OFFLINE);
+        }
+      });
+    } else {
+      listener.errorUpdatingPermissions(GroupPermissionsListener.OFFLINE);
+    }
+  }
+
+  public void changeMemberRole(final String groupUid, final String memberUid, final String newRole) {
+    final String mobileNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
+    final String token = RealmUtils.loadPreferencesFromDB().getToken();
+
+    if (NetworkUtils.isNetworkAvailable()) {
+      GrassrootRestService.getInstance().getApi().changeMemberRole(mobileNumber, token, groupUid,
+              memberUid, newRole).enqueue(new Callback<GenericResponse>() {
+        @Override
+        public void onResponse(Call<GenericResponse> call, Response<GenericResponse> response) {
+          if (response.isSuccessful()) {
+            EventBus.getDefault().post(new GroupEditedEvent(GroupEditedEvent.ROLE_CHANGED, GroupEditedEvent.CHANGED_ONLINE,
+                    groupUid, null));
+          } else {
+            EventBus.getDefault().post(new GroupEditErrorEvent(response.errorBody()));
+          }
+        }
+
+        @Override
+        public void onFailure(Call<GenericResponse> call, Throwable t) {
+          EventBus.getDefault().post(new GroupEditErrorEvent(t));
+        }
+      });
+    } else {
+      // queue ? probably shouldn't allow
     }
   }
 

@@ -18,6 +18,11 @@ import org.grassroot.android.services.GroupService;
 
 import java.util.List;
 
+import butterknife.BindView;
+import butterknife.ButterKnife;
+import butterknife.OnClick;
+import butterknife.Unbinder;
+
 /**
  * Created by luke on 2016/07/18.
  */
@@ -28,8 +33,10 @@ public class GroupPermissionsFragment extends Fragment implements GroupService.G
     private Group group;
     private String role;
 
-    ListView listView;
+    @BindView(R.id.gset_permission_list) ListView listView;
     PermissionsAdapter permissionsAdapter;
+
+    private Unbinder unbinder;
 
     public static GroupPermissionsFragment newInstance(Group group, String role) {
         GroupPermissionsFragment fragment = new GroupPermissionsFragment();
@@ -49,22 +56,21 @@ public class GroupPermissionsFragment extends Fragment implements GroupService.G
     }
 
     @Override
-    public void onAttach(Context context) {
-        super.onAttach(context);
-    }
-
-    @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_permission_set, container, false);
-        listView = (ListView) view.findViewById(R.id.gset_permission_list);
-        Log.e(TAG, "fetching current permissions ... ");
+        unbinder = ButterKnife.bind(this, view);
         GroupService.getInstance().fetchGroupPermissions(group, role, this);
         return view;
     }
 
+    @OnClick(R.id.gset_perm_save)
+    public void onSaveClick() {
+        List<Permission> permissions = permissionsAdapter.getPermissions();
+        GroupService.getInstance().updateGroupPermissions(group, role, permissions, this);
+    }
+
     @Override
     public void permissionsLoaded(List<Permission> permissions) {
-        Log.e(TAG, "permissions loaded, back to fragment with: " + permissions);
         permissionsAdapter = new PermissionsAdapter(getContext(), permissions);
         listView.setAdapter(permissionsAdapter);
         listView.setVisibility(View.VISIBLE);
@@ -79,6 +85,11 @@ public class GroupPermissionsFragment extends Fragment implements GroupService.G
     @Override
     public void errorLoadingPermissions(String errorDescription) {
         // todo : show error
+    }
+
+    @Override
+    public void errorUpdatingPermissions(String errorDescription) {
+
     }
 
     // note : with so many potential issues with conflicting changes etc., this should only ever be called while online

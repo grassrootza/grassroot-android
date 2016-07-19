@@ -4,6 +4,7 @@ import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.v4.app.NavUtils;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
@@ -77,10 +78,17 @@ public class GroupSettingsActivity extends PortraitActivity implements
     @Override
     public boolean onOptionsItemSelected(MenuItem menuItem) {
         // todo : figure out how to do this without triggering group call ...
-        Intent parent = MenuUtils.constructIntent(this, GroupTasksActivity.class, group);
-        startActivity(parent);
-        finish();
-        return true;
+        if (menuItem.getItemId() == android.R.id.home) {
+            if (mainFragment != null && mainFragment.isAdded() && mainFragment.isVisible()) {
+                Intent upIntent = NavUtils.getParentActivityIntent(this);
+                upIntent.putExtra(GroupConstants.OBJECT_FIELD, group);
+                NavUtils.navigateUpTo(this, upIntent);
+            } else {
+                getSupportFragmentManager().popBackStack();
+            }
+            return true;
+        }
+        return super.onOptionsItemSelected(menuItem);
     }
 
     @Override
@@ -91,8 +99,7 @@ public class GroupSettingsActivity extends PortraitActivity implements
 
     @Override
     public void changeGroupPicture() {
-        Log.e(TAG, "change group picture");
-        // todo : handle result (and/or make the avatar thing a fragment)
+        // todo : handle result (and/or make the avatar setting a fragment)
         startActivityForResult(MenuUtils.constructIntent(this, GroupAvatarActivity.class, group),
                 Constant.activityChangeGroupPicture);
     }

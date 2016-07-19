@@ -8,8 +8,23 @@
         android:id="@+id/gset_permission_list"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:visibility="visible">
+        android:layout_above="@+id/gset_perm_save">
 
     </ListView>
+
+    <Button
+        android:id="@+id/gset_perm_save"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textAllCaps="true"
+        android:text="@string/bt_save"
+        android:textSize="@dimen/txt_large"
+        android:layout_marginTop="@dimen/margin_medium"
+        android:layout_marginBottom="@dimen/margin_medium"
+        android:textColor="@drawable/green_txt"
+        android:background="@drawable/register"
+        android:layout_alignParentBottom="true"
+        android:layout_marginLeft="@dimen/margin_large"
+        android:layout_marginRight="@dimen/margin_large" />
 
 </RelativeLayout>

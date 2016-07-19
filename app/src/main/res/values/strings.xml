@@ -232,11 +232,18 @@
 
     <string name="gset_organizer_confirm">Add as organizer?</string>
 
+    <string name="gset_member_remove">Remove %s</string>
+    <string name="gset_member_role">Change role</string>
+
     <string name="gset_role_organizer">Organizer</string>
-    <string name="gset_committee">Committee member</string>
-    <string name="gset_ordinary">Ordinary member</string>
+    <string name="gset_role_committee">Committee member</string>
+    <string name="gset_role_ordinary">Ordinary member</string>
+
+    <string name="gset_mrole_title">Change %s to &#8230;</string>
+    <string name="gset_remove_confirm">Remove %s, confirmed?</string>
 
     <string name="gset_perms_title">For which role?</string>
+
     <string-array name="gset_roles">
         <item>Group organizers</item>
         <item>Committee members</item>
