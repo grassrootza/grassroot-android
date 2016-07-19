@@ -5,7 +5,6 @@ import android.os.Parcel;
 import android.os.Parcelable;
 import android.text.TextUtils;
 
-import io.realm.Realm;
 import io.realm.RealmList;
 import io.realm.RealmObject;
 import io.realm.annotations.Ignore;
@@ -36,7 +35,7 @@ public class Group extends RealmObject implements Parcelable, Comparable<Group> 
   private String lastTimeTasksFetched;
 
   private String joinCode;
-  private boolean isPublic;
+  private boolean discoverable;
   private String lastChangeType;
   private String description;
   private boolean isLocal;
@@ -166,9 +165,9 @@ public class Group extends RealmObject implements Parcelable, Comparable<Group> 
 
   public void setLastTimeTasksFetched(String lastTimeTasksFetched) { this.lastTimeTasksFetched = lastTimeTasksFetched; }
 
-  public boolean isPublic() { return this.isPublic; }
+  public boolean isDiscoverable() { return this.discoverable; }
 
-  public void setPublic(boolean isPublic) { this.isPublic = isPublic; }
+  public void setDiscoverable(boolean isPublic) { this.discoverable = isPublic; }
 
   public String getDateTimeStringISO() {
     if (dateTimeStringISO == null || dateTimeStringISO.equals("")) {
@@ -302,6 +301,7 @@ public class Group extends RealmObject implements Parcelable, Comparable<Group> 
     dest.writeInt(hasTasks ? 1 : 0);
     dest.writeStringList(RealmUtils.convertListOfRealmStringInListOfString(this.permissions));
     dest.writeInt(isLocal ? 1 : 0);
+    dest.writeInt(discoverable ? 1 : 0);
     dest.writeList(members);
     dest.writeString(lastTimeTasksFetched);
   }
@@ -320,6 +320,7 @@ public class Group extends RealmObject implements Parcelable, Comparable<Group> 
     hasTasks = in.readInt() != 0;
     permissions = RealmUtils.convertListOfStringInRealmListOfString(in.createStringArrayList());
     isLocal = in.readInt() != 0;
+    discoverable = in.readInt() != 0;
     in.readList(members,Member.class.getClassLoader());
     lastTimeTasksFetched = in.readString();
   }
@@ -368,6 +369,7 @@ public class Group extends RealmObject implements Parcelable, Comparable<Group> 
         ", lastChangeType='" + lastChangeType + '\'' +
         ", groupName='" + groupName + '\'' +
         ", lastFetchedTasks='" + lastTimeTasksFetched + '\'' +
+        ", discoverable='" + discoverable + '\'' +
         '}';
   }
 

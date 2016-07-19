@@ -228,7 +228,7 @@
 
     <string name="gset_join_code_to_on">Open a join code for this group?</string>
     <string name="gset_join_code_to_off">About to close this join code. Confirmed?</string>
-    <string name="gset_join_code_done">Done! Anyone can dial %s to join the group.</string>
+    <string name="gset_join_code_done">Done! Anyone can dial *134*1994*%s# to join the group.</string>
 
     <string name="gset_organizer_confirm">Add as organizer?</string>
 
@@ -245,9 +245,9 @@
     <string name="gset_perms_title">For which role?</string>
 
     <string-array name="gset_roles">
-        <item>Group organizers</item>
-        <item>Committee members</item>
-        <item>Ordinary members</item>
+        <item>Organizer</item>
+        <item>Committee member</item>
+        <item>Ordinary member</item>
     </string-array>
 
     <string-array name="gset_permissions">
@@ -259,6 +259,13 @@
         <item>Remove members</item>
         <item>Change group settings</item>
     </string-array>
+
+    <!-- todo : refine all of these -->
+    <string name="gset_error_join_code_create_offline">Sorry, creating a join code requires a connection. Please check and try again.</string>
+    <string name="gset_error_join_code_create_online">Sorry, something went wrong creating the code. Please try again later.</string>
+    <string name="gset_error_join_code_close_offline">Sorry, we could not close the join code. Please try again later.</string>
+    <string name="gset_error_join_code_close_online">Sorry, something went wrong closing the code. Please try again later.</string>
+    <string name="gset_error_public_online">Sorry, something went wrong. Please try again later.</string>
 
     <!--GroupTasksActivity :: mostly response strings -->
     <string name="RESPOND_YES">You have clicked on \'Yes\'. Do you want to proceed with the vote?</string>

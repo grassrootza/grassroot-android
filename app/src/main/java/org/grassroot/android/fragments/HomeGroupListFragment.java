@@ -30,6 +30,7 @@ import org.grassroot.android.activities.GroupSearchActivity;
 import org.grassroot.android.activities.GroupTasksActivity;
 import org.grassroot.android.adapters.GroupListAdapter;
 import org.grassroot.android.events.GroupCreatedEvent;
+import org.grassroot.android.events.GroupEditedEvent;
 import org.grassroot.android.events.GroupPictureChangedEvent;
 import org.grassroot.android.events.JoinRequestReceived;
 import org.grassroot.android.events.NetworkActivityResultsEvent;
@@ -448,6 +449,19 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
     groupListRowAdapter.addGroup(0,e.getGroup());
   }
 
+    @Subscribe
+    public void onGroupEditedEvent(GroupEditedEvent e) {
+        // todo : use a map to find the position of the group and update there only
+        Log.d(TAG, "home group list subscribe method triggered ... for event: " + e);
+        groupListRowAdapter.refreshGroupsToDB();
+    }
+
+
+    @Subscribe
+    public void onEvent(UserLoggedOutEvent e) {
+        // finish on main activity seems to not clear this
+        groupListRowAdapter.setGroupList(new ArrayList<Group>());
+    }
 
     public void sortGroups() {
         SortFragment sortFragment = new SortFragment();
@@ -498,11 +512,5 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
             }
             groupListRowAdapter.setGroupList(filteredGroups);
         }
-    }
-
-    @Subscribe
-    public void onEvent(UserLoggedOutEvent e) {
-        // finish on main activity seems to not clear this
-        groupListRowAdapter.setGroupList(new ArrayList<Group>());
     }
 }

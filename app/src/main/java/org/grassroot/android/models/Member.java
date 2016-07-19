@@ -14,6 +14,8 @@ import org.grassroot.android.interfaces.GroupConstants;
 public class Member extends RealmObject implements Parcelable {
 
   private static final String TAG = Member.class.getCanonicalName();
+  public static final String PKEY = "memberGroupUid";
+
   private String memberUid;
   private String groupUid;
 
@@ -124,6 +126,8 @@ public class Member extends RealmObject implements Parcelable {
   public String getRoleName() {
     return roleName;
   }
+
+  public void setRoleName(String roleName) { this.roleName = roleName; }
 
   public int getContactId() {
     return contactId;

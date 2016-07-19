@@ -253,7 +253,7 @@ public class GrassrootRestService {
     // remove members from a group
     @POST("group/members/remove/{phoneNumber}/{code}/{groupUid}")
     Call<GenericResponse> removeGroupMembers(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
-        @Query("groupUid") String groupUid, @Query("memberUids") Set<String> memberUids);
+        @Path("groupUid") String groupUid, @Query("memberUids") Set<String> memberUids);
 
         /*
         SECTION: Fetch tasks, and task details

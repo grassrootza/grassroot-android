@@ -24,8 +24,11 @@ public class MemberRoleAdapter extends RecyclerView.Adapter<MemberRoleAdapter.Me
 
     private static final String TAG = MemberRoleAdapter.class.getSimpleName();
 
+    final private String groupUid;
     private RealmList<Member> members;
+    private Map<String, Integer> mapUidPosition;
     private final Map<String, Integer> roleMap;
+
     private MemberRoleClickListener listener;
     private final String userMobile; // for disallowing click on self
 
@@ -34,6 +37,7 @@ public class MemberRoleAdapter extends RecyclerView.Adapter<MemberRoleAdapter.Me
     }
 
     public MemberRoleAdapter(String groupUid, MemberRoleClickListener listener) {
+        this.groupUid  = groupUid;
         members = RealmUtils.loadListFromDB(Member.class, "groupUid", groupUid);
         userMobile = RealmUtils.loadPreferencesFromDB().getMobileNumber();
         roleMap = new HashMap<>();
@@ -41,6 +45,7 @@ public class MemberRoleAdapter extends RecyclerView.Adapter<MemberRoleAdapter.Me
         roleMap.put(GroupConstants.ROLE_COMMITTEE_MEMBER, R.string.gset_role_committee);
         roleMap.put(GroupConstants.ROLE_ORDINARY_MEMBER, R.string.gset_role_ordinary);
         this.listener = listener;
+        mapUidPosition = new HashMap<>();
     }
 
     @Override
@@ -53,6 +58,7 @@ public class MemberRoleAdapter extends RecyclerView.Adapter<MemberRoleAdapter.Me
     @Override
     public void onBindViewHolder(MemberRoleViewHolder holder, int position) {
         final Member member = members.get(position);
+        mapUidPosition.put(member.getMemberUid(), position);
         holder.userName.setText(member.getDisplayName());
         holder.userRole.setText(roleMap.get(member.getRoleName()));
         if (!userMobile.equals(member.getPhoneNumber())) {
@@ -71,6 +77,24 @@ public class MemberRoleAdapter extends RecyclerView.Adapter<MemberRoleAdapter.Me
     @Override
     public int getItemCount() {
         return members.size();
+    }
+
+    public void refreshDisplayedMember(final String memberUid) {
+        Log.e(TAG, "refreshing group member");
+        int position = mapUidPosition.get(memberUid);
+        Member updatedMember = RealmUtils.loadObjectFromDB(Member.class, Member.PKEY, memberUid + groupUid);
+        members.set(position, updatedMember);
+        Log.e(TAG, "current role of member: " + members.get(position).getRoleName());
+        notifyItemChanged(position);
+    }
+
+    public void removeDisplayedMember(final String memberUid) {
+        int position = mapUidPosition.get(memberUid);
+        // do a double check in case reference elsewhere has already removed...
+        if (members.get(position).getMemberUid().equals(memberUid)) {
+            members.remove(position);
+        }
+        notifyItemRemoved(position);
     }
 
     public static class MemberRoleViewHolder extends RecyclerView.ViewHolder {

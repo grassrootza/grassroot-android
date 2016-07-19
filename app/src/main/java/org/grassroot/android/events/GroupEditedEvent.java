@@ -6,6 +6,7 @@ package org.grassroot.android.events;
 public class GroupEditedEvent {
 
     public static final String RENAMED = "renamed";
+    public static final String PUBLIC_STATUS_CHANGED = "changed_public";
     public static final String JOIN_CODE_OPENED = "join_opened";
     public static final String JOIN_CODE_CLOSED = "join_closed";
     public static final String ORGANIZER_ADDED = "organizer_added";
@@ -17,13 +18,22 @@ public class GroupEditedEvent {
     public final String editAction;
     public final String typeOfSave;
     public final String groupUid;
-    public final String groupName;
+    public final String auxString;
 
-    public GroupEditedEvent(String editAction, String typeOfSave, String groupUid, String groupName) {
+    public GroupEditedEvent(String editAction, String typeOfSave, String groupUid, String auxString) {
         this.editAction = editAction;
         this.typeOfSave = typeOfSave;
         this.groupUid = groupUid;
-        this.groupName = groupName;
+        this.auxString = auxString;
     }
 
+    @Override
+    public String toString() {
+        return "GroupEditedEvent{" +
+                "editAction='" + editAction + '\'' +
+                ", typeOfSave='" + typeOfSave + '\'' +
+                ", auxString='" + auxString + '\'' +
+                ", groupUid='" + groupUid + '\'' +
+                '}';
+    }
 }

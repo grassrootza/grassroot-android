@@ -31,6 +31,7 @@ import org.grassroot.android.fragments.HomeGroupListFragment;
 import org.grassroot.android.interfaces.GroupConstants;
 import org.grassroot.android.models.Group;
 import org.grassroot.android.utils.CircularImageTransformer;
+import org.grassroot.android.utils.RealmUtils;
 
 /**
  * P
@@ -61,8 +62,7 @@ public class GroupListAdapter extends RecyclerView.Adapter<GroupListAdapter.GHP_
 
     // todo: consider moving these back out to fragment (esp given notifyDataSet being bad..)
     public void sortByDate() {
-        Collections.sort(displayedGroups,
-                Collections.reverseOrder()); // since Date entity sorts earliest to latest
+        Collections.sort(displayedGroups, Collections.reverseOrder()); // since Date entity sorts earliest to latest
         notifyDataSetChanged();
     }
 
@@ -199,12 +199,6 @@ public class GroupListAdapter extends RecyclerView.Adapter<GroupListAdapter.GHP_
         return displayedGroups.size();
     }
 
-    public void addData(List<Group> groupList) {
-        Log.e(TAG, "adding data to group list! number of groups: " + groupList.size());
-        displayedGroups.addAll(groupList);
-        this.notifyItemRangeInserted(0, groupList.size() - 1);
-    }
-
     // todo: this might not be the best way to do this (maybe rethink whole list structure/handling etc)
     public void updateGroup(int position, Group group) {
         displayedGroups.set(position, group);
@@ -222,6 +216,12 @@ public class GroupListAdapter extends RecyclerView.Adapter<GroupListAdapter.GHP_
         displayedGroups.clear();
         displayedGroups.addAll(groupList);
         notifyDataSetChanged(); // calling item range inserted causes a strange crash (related to main/background threads, I think)
+    }
+
+    public void refreshGroupsToDB() {
+        displayedGroups.clear();
+        displayedGroups.addAll(RealmUtils.loadListFromDB(Group.class));
+        notifyDataSetChanged();
     }
 
     public class GHP_ViewHolder extends RecyclerView.ViewHolder {

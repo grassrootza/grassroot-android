@@ -193,5 +193,10 @@ public class GroupSettingsActivity extends PortraitActivity implements
     }
 
     @Override
+    public void apiCallFailed(String tag, String offOrOnline) {
+        dismissProgress();
+    }
+
+    @Override
     public void joinCodeOpened(String joinCode) { }
 }
