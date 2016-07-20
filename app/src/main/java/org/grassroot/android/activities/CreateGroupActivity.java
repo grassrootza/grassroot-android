@@ -2,12 +2,15 @@ package org.grassroot.android.activities;
 
 import android.app.Activity;
 import android.app.ProgressDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.design.widget.TextInputEditText;
+import android.support.v7.app.AlertDialog;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
@@ -26,6 +29,7 @@ import org.grassroot.android.R;
 import org.grassroot.android.events.GroupCreatedEvent;
 import org.grassroot.android.fragments.ContactSelectionFragment;
 import org.grassroot.android.fragments.MemberListFragment;
+import org.grassroot.android.fragments.dialogs.ConfirmCancelDialogFragment;
 import org.grassroot.android.interfaces.GroupConstants;
 import org.grassroot.android.models.Contact;
 import org.grassroot.android.models.Group;
@@ -80,7 +84,16 @@ public class CreateGroupActivity extends PortraitActivity implements ContactSele
   }
 
   private void init() {
-    memberListFragment = MemberListFragment.newInstance(null, false, false, false, null, null);
+    memberListFragment = MemberListFragment.newInstance(null, true, false, false, null,
+            new MemberListFragment.MemberClickListener() {
+      @Override
+      public void onMemberClicked(int position, String memberUid) {
+        memberContextMenu(position, memberUid);
+      }
+
+      @Override
+      public void onMemberDismissed(int position, String memberUid) { }
+    });
     contactSelectionFragment = ContactSelectionFragment.newInstance(null, false);
     mapMembersContacts = new HashMap<>();
     manuallyAddedMembers = new ArrayList<>();
@@ -177,7 +190,55 @@ public class CreateGroupActivity extends PortraitActivity implements ContactSele
         Constant.activityManualMemberEntry);
   }
 
-  @OnClick(R.id.cg_bt_save) public void save() {
+  private void memberContextMenu(final int position, final String memberUid) {
+    Log.d(TAG, "viewing member dialog for UID: " + memberUid);
+    AlertDialog.Builder builder = new AlertDialog.Builder(this);
+    builder.setItems(R.array.cg_member_popup, new DialogInterface.OnClickListener() {
+              @Override
+              public void onClick(DialogInterface dialog, int which) {
+                if (which == 0) {
+                  editMember(position, memberUid);
+                } else {
+                  memberListFragment.removeMember(position);;
+                }
+              }
+            });
+    builder.create().show();
+  }
+
+  private void editMember(final int position, final String memberUid) {
+    Member member = RealmUtils.loadObjectFromDB(Member.class, "memberUid", memberUid);
+    Intent i = new Intent(CreateGroupActivity.this, AddContactManually.class);
+    i.putExtra(GroupConstants.MEMBER_OBJECT, member);
+    i.putExtra(Constant.INDEX_FIELD, position);
+    startActivityForResult(i, Constant.activityManualMemberEdit);
+  }
+
+  @Override
+  protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+    super.onActivityResult(requestCode, resultCode, data);
+    if (resultCode == Activity.RESULT_OK && data != null) {
+      if (requestCode == Constant.activityManualMemberEntry) {
+        Member newMember = new Member(data.getStringExtra("selectedNumber"), data.getStringExtra("name"),
+                        GroupConstants.ROLE_ORDINARY_MEMBER, -1);
+        //added memberId here
+        newMember.setMemberUid(UUID.randomUUID().toString());
+        newMember.setGroupUid(groupUid);
+        newMember.setMemberGroupUid();
+        manuallyAddedMembers.add(newMember);
+        memberListFragment.addMembers(Collections.singletonList(newMember));
+        GroupService.getInstance().createGroupLocally(groupUid,et_groupname.getText().toString(),et_group_description.getText().toString(),memberListFragment.getSelectedMembers());
+      } else if (requestCode == Constant.activityManualMemberEdit) {
+        Member revisedMember = data.getParcelableExtra(GroupConstants.MEMBER_OBJECT);
+        int position = data.getIntExtra(Constant.INDEX_FIELD, -1);
+        memberListFragment.updateMember(position, revisedMember);
+        Log.e(TAG, "at position: " + position + ", member received back : " + revisedMember);
+      }
+    }
+  }
+
+  @OnClick(R.id.cg_bt_save)
+  public void save() {
     if (menuOpen) {
       toggleAddMenu();
     }
@@ -244,30 +305,6 @@ public class CreateGroupActivity extends PortraitActivity implements ContactSele
     i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
     startActivity(i);
     finish();
-  }
-
-  @Override protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-    super.onActivityResult(requestCode, resultCode, data);
-    if (resultCode == Activity.RESULT_OK && data != null) {
-      if (requestCode == Constant.activityManualMemberEntry) {
-        Member newMember =
-            new Member(data.getStringExtra("selectedNumber"), data.getStringExtra("name"),
-                GroupConstants.ROLE_ORDINARY_MEMBER, -1);
-        //added memberId here
-        newMember.setMemberUid(UUID.randomUUID().toString());
-        newMember.setGroupUid(groupUid);
-        newMember.setMemberGroupUid();
-        manuallyAddedMembers.add(newMember);
-        memberListFragment.addMembers(Collections.singletonList(newMember));
-        GroupService.getInstance().createGroupLocally(groupUid,et_groupname.getText().toString(),et_group_description.getText().toString(),memberListFragment.getSelectedMembers());
-      }
-    }
-  }
-
-  private void setResultIntent(Group group) {
-    Intent resultIntent = new Intent();
-    resultIntent.putExtra(GroupConstants.OBJECT_FIELD, group);
-    setResult(RESULT_OK, resultIntent);
   }
 
   @Override public void onBackPressed() {

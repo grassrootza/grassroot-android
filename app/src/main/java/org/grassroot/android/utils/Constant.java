@@ -12,9 +12,7 @@ public class Constant {
     public static final String STAGING = "staging";
     public static final String PROD = "production";
 
-    public static long shortDelay = 300L;
     public static long mediumDelay = 500L;
-    public static long longDelay = 1000L;
 
     public static final String regexAlphaNumeric = "[^a-zA-Z0-9 ]";
 
@@ -30,8 +28,6 @@ public class Constant {
 
     public static final String USER_TOKEN = "user_token";
 
-    public static final String GROUPUID_FIELD = "groupUid";
-    public static final String GROUPNAME_FIELD = "groupName";
     public static final String GROUP_LOCAL = "group_local";
     public static final String INDEX_FIELD = "index";
     public static final String PARENT_TAG_FIELD = "parentTag";
@@ -47,8 +43,6 @@ public class Constant {
     public static final String BODY = "body";
     public static final String NOTIFICATION_UID = "notificationUid";
 
-    public static final String CANCELLABLE = "cancellable";
-
     public static final SimpleDateFormat isoDateTimeSDF = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
 
     /**
@@ -60,6 +54,7 @@ public class Constant {
     public static final int activityRemoveMembers = 5;
     public static final int activityCreateGroup = 6;
     public static final int activitySelectGroupMembers = 7;
+    public static final int activityManualMemberEdit = 8;
     public static final int activityNetworkSettings = 20; //todo request code for network, will have to do it robustly
     public static final int activityCreateTask = 11;
     public static final int activityChangeGroupPicture = 12;

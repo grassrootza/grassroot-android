@@ -1,11 +1,13 @@
 package org.grassroot.android.activities;
 
 import android.app.ProgressDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.SystemClock;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
@@ -23,6 +25,7 @@ import org.grassroot.android.models.Contact;
 import org.grassroot.android.models.GroupResponse;
 import org.grassroot.android.models.Member;
 import org.grassroot.android.services.GrassrootRestService;
+import org.grassroot.android.services.GroupService;
 import org.grassroot.android.utils.Constant;
 import org.grassroot.android.utils.ErrorUtils;
 import org.grassroot.android.utils.NetworkUtils;
@@ -101,8 +104,8 @@ public class AddMembersActivity extends AppCompatActivity implements
     }
 
     private void init(Bundle extras) {
-        groupUid = extras.getString(Constant.GROUPUID_FIELD);
-        groupName = extras.getString(Constant.GROUPNAME_FIELD);
+        groupUid = extras.getString(GroupConstants.UID_FIELD);
+        groupName = extras.getString(GroupConstants.NAME_FIELD);
         groupPosition = extras.getInt(Constant.INDEX_FIELD);
 
         contactSelectionFragment = new ContactSelectionFragment();
@@ -133,10 +136,43 @@ public class AddMembersActivity extends AppCompatActivity implements
     }
 
     private void setupNewMemberRecyclerView() {
-        newMemberListFragment = MemberListFragment.newInstance(null, true, true, true, null, null);
+        newMemberListFragment = MemberListFragment.newInstance(null, true, false, false, null, new MemberListFragment.MemberClickListener() {
+            @Override
+            public void onMemberClicked(int position, String memberUid) {
+                newMemberContextMenu(position, memberUid);
+            }
+
+            @Override
+            public void onMemberDismissed(int position, String memberUid) {
+
+            }
+        });
         getSupportFragmentManager().beginTransaction()
                 .add(R.id.am_new_member_list_container, newMemberListFragment)
                 .commit();
+    }
+
+    private void newMemberContextMenu(final int position, final String memberUid) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setItems(R.array.cg_member_popup, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                if (which == 0) {
+                    editNewMember(position, memberUid);
+                } else {
+                    newMemberListFragment.removeMember(position);
+                }
+            }
+        });
+        builder.create().show();
+    }
+
+    private void editNewMember(final int position, final String memberUid) {
+        Member member = RealmUtils.loadObjectFromDB(Member.class, "memberUid", memberUid);
+        Intent i = new Intent(AddMembersActivity.this, AddContactManually.class);
+        i.putExtra(GroupConstants.MEMBER_OBJECT, member);
+        i.putExtra(Constant.INDEX_FIELD, position);
+        startActivityForResult(i, Constant.activityManualMemberEdit);
     }
 
     @OnClick(R.id.ll_add_member_contacts)
@@ -208,16 +244,23 @@ public class AddMembersActivity extends AppCompatActivity implements
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (resultCode == RESULT_OK && requestCode == Constant.activityManualMemberEntry) {
-            Member newMember = new Member(data.getStringExtra("selectedNumber"), data.getStringExtra("name"),
-                    GroupConstants.ROLE_ORDINARY_MEMBER, -1);
-            newMember.setGroupUid(groupUid);
-            newMember.setMemberUid(UUID.randomUUID().toString());
-            newMember.setMemberGroupUid();
-            newMember.setLocal(!NetworkUtils.isNetworkAvailable(getApplicationContext()));
-            manuallyAddedMembers.add(newMember);
-            newMemberListFragment.addMembers(Collections.singletonList(newMember));
-            setNewMembersVisible();
+        if (resultCode == RESULT_OK) {
+            if (requestCode == Constant.activityManualMemberEntry) {
+                Member newMember = new Member(data.getStringExtra("selectedNumber"), data.getStringExtra("name"),
+                        GroupConstants.ROLE_ORDINARY_MEMBER, -1);
+                newMember.setGroupUid(groupUid);
+                newMember.setMemberUid(UUID.randomUUID().toString());
+                newMember.setMemberGroupUid();
+                newMember.setLocal(!NetworkUtils.isNetworkAvailable(getApplicationContext()));
+                RealmUtils.saveDataToRealm(newMember);
+                manuallyAddedMembers.add(newMember);
+                newMemberListFragment.addMembers(Collections.singletonList(newMember));
+                setNewMembersVisible();
+            } else if (requestCode == Constant.activityManualMemberEdit) {
+                Member revisedMember = data.getParcelableExtra(GroupConstants.MEMBER_OBJECT);
+                int position = data.getIntExtra(Constant.INDEX_FIELD, -1);
+                newMemberListFragment.updateMember(position, revisedMember);
+            }
         }
     }
 
@@ -257,11 +300,11 @@ public class AddMembersActivity extends AppCompatActivity implements
                 progressDialog.show();
                 if(NetworkUtils.isNetworkAvailable(getApplicationContext())) {
                    postNewMembersToGroup(membersToAdd);
-               }else{
-                   RealmUtils.saveDataToRealm(membersToAdd);
+               } else {
+                   GroupService.getInstance().addGroupMembersLocally(groupUid, membersToAdd);
                    Intent i = new Intent();
-                   i.putExtra(Constant.GROUPUID_FIELD, groupUid);
-                   i.putExtra(Constant.INDEX_FIELD, groupPosition);
+                   i.putExtra(GroupConstants.UID_FIELD, groupUid);
+                   i.putExtra(GroupConstants.NAME_FIELD, groupPosition);
                    setResult(RESULT_OK, i);
                    progressDialog.dismiss();
                    finish();
@@ -297,7 +340,7 @@ public class AddMembersActivity extends AppCompatActivity implements
                                 RealmUtils.saveDataToRealm(m);
                             }
                             Intent i = new Intent();
-                            i.putExtra(Constant.GROUPUID_FIELD, groupUid);
+                            i.putExtra(GroupConstants.UID_FIELD, groupUid);
                             i.putExtra(Constant.INDEX_FIELD, groupPosition);
                             setResult(RESULT_OK, i);
                             progressDialog.dismiss();

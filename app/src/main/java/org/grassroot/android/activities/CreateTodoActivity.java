@@ -33,8 +33,8 @@ public class CreateTodoActivity extends PortraitActivity {
             throw new UnsupportedOperationException("Error! Activity must be called with bundle");
         }
 
-        groupUid = b.getString(Constant.GROUPUID_FIELD);
-        isGroupLocal = b.getBoolean(Constant.GROUP_LOCAL);
+        groupUid = b.getString(GroupConstants.UID_FIELD);
+        isGroupLocal = b.getBoolean(GroupConstants.LOCAL_FIELD);
         setUpToolbar();
         launchFragment();
     }

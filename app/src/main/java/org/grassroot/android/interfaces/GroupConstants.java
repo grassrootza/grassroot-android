@@ -10,6 +10,8 @@ public interface GroupConstants {
     String OBJECT_FIELD = "groupObject";
     String UID_FIELD = "groupUid";
     String NAME_FIELD = "groupName";
+    String LOCAL_FIELD = "group_local";
+    String MEMBER_OBJECT = "member_object";
 
     String NO_JOIN_CODE = "NONE";
     String JOIN_CODE = "joinCode";

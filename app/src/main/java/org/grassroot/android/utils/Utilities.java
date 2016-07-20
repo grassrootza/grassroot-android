@@ -64,6 +64,24 @@ public class Utilities {
         return normalizedNumber;
     }
 
+    public static String stripPrefixFromNumber(String phoneNumber) {
+        String normalized = PhoneNumberUtils.stripSeparators(phoneNumber);
+        if (nationalRegex.matcher(normalized).find()) {
+            return phoneNumber;
+        }
+
+        if (zaPhoneE164.matcher(normalized).find()) {
+            return "0" + normalized.substring(2);
+        }
+
+        if (zaPhoneE164Plus.matcher(normalized).find()) {
+            return "0" + normalized.substring(3);
+        }
+
+        // give up and just return what we have
+        return phoneNumber;
+    }
+
     public static boolean checkIfLocalNumber(String phoneNumber) {
 
         // todo: might be able to do this much quicker if use Google overall libPhoneNumber, but whole lib for this is heavy

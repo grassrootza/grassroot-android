@@ -114,6 +114,18 @@ public class MemberListFragment extends Fragment {
         }
     }
 
+    public void updateMember(int position, Member revisedMember) {
+        if (memberListAdapter != null) {
+            memberListAdapter.updateMember(position, revisedMember); // todo : rethink all this pass-through stuff
+        }
+    }
+
+    public void removeMember(int position) {
+        if (memberListAdapter != null) {
+            memberListAdapter.removeMembers(new int[] { position });
+        }
+    }
+
     public List<Member> getSelectedMembers() {
         if (!showSelected) {
             return memberListAdapter.getMembers();

@@ -95,7 +95,7 @@ public class HomeScreenActivity extends PortraitActivity implements NavigationDr
             // todo : swap these to using eventbus inside the fragment ...
             if (requestCode == Constant.activityAddMembersToGroup || requestCode == Constant.activityRemoveMembers) {
                 int groupPosition = data.getIntExtra(Constant.INDEX_FIELD, -1);
-                String groupUid = data.getStringExtra(Constant.GROUPUID_FIELD);
+                String groupUid = data.getStringExtra(GroupConstants.UID_FIELD);
                 groupListFragment.updateSingleGroup(groupPosition, groupUid);
             } else if (requestCode == Constant.activityCreateTask) {
                 groupListFragment.showSuccessMessage(data);

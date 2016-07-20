@@ -13,6 +13,7 @@ import android.widget.TextView;
 import org.grassroot.android.R;
 import org.grassroot.android.fragments.MemberListFragment;
 import org.grassroot.android.fragments.dialogs.ConfirmCancelDialogFragment;
+import org.grassroot.android.interfaces.GroupConstants;
 import org.grassroot.android.models.GenericResponse;
 import org.grassroot.android.services.GrassrootRestService;
 import org.grassroot.android.utils.Constant;
@@ -67,8 +68,8 @@ public class RemoveMembersActivity extends PortraitActivity implements MemberLis
         if (extras == null)
             throw new UnsupportedOperationException("Must pass extras to remove members activity");
 
-        groupUid = extras.getString(Constant.GROUPUID_FIELD);
-        groupName = extras.getString(Constant.GROUPNAME_FIELD);
+        groupUid = extras.getString(GroupConstants.UID_FIELD);
+        groupName = extras.getString(GroupConstants.NAME_FIELD);
         groupPosition = extras.getInt(Constant.INDEX_FIELD);
 
         membersToRemove = new HashSet<>();
@@ -139,7 +140,7 @@ public class RemoveMembersActivity extends PortraitActivity implements MemberLis
                     public void onResponse(Call<GenericResponse> call, Response<GenericResponse> response) {
                         progressDialog.dismiss();
                         Intent i = new Intent();
-                        i.putExtra(Constant.GROUPUID_FIELD, groupUid);
+                        i.putExtra(GroupConstants.UID_FIELD, groupUid);
                         i.putExtra(Constant.INDEX_FIELD, groupPosition);
                         setResult(RESULT_OK, i);
                         finish();

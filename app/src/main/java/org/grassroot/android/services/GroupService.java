@@ -312,6 +312,14 @@ public class GroupService {
     void memberRemovalError(String errorType, Object data);
   }
 
+  public Group addGroupMembersLocally(final String groupUid, final List<Member> membersToAdd) {
+    Group group = RealmUtils.loadGroupFromDB(groupUid);
+    group.getMembers().addAll(membersToAdd);
+    RealmUtils.saveGroupToRealm(group);
+    RealmUtils.saveDataToRealm(membersToAdd);
+    return group;
+  }
+
   public void removeGroupMembers(Group group, final Set<String> membersToRemoveUIDs, final MembersRemovedListener listener) {
     final String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
     final String code = RealmUtils.loadPreferencesFromDB().getToken();

@@ -14,21 +14,13 @@ import org.grassroot.android.interfaces.GroupConstants;
 public class Member extends RealmObject implements Parcelable {
 
   private static final String TAG = Member.class.getCanonicalName();
+
   public static final String PKEY = "memberGroupUid";
-
-  private String memberUid;
-  private String groupUid;
-
-  public String getMemberGroupUid() {
-    return memberGroupUid;
-  }
-
-  public void setMemberGroupUid() {
-    this.memberGroupUid = this.memberUid + this.groupUid;
-  }
 
   @PrimaryKey private String memberGroupUid;
 
+  private String memberUid;
+  private String groupUid;
 
   private String phoneNumber;
   private String displayName;
@@ -60,17 +52,21 @@ public class Member extends RealmObject implements Parcelable {
     dest.writeString(this.roleName);
     dest.writeString(this.groupUid);
     dest.writeString(memberGroupUid);
+    dest.writeInt(selected ? 1 : 0);
+    dest.writeInt(isLocal ? 1 : 0);
+    dest.writeInt(this.contactId);
   }
 
   protected Member(Parcel incoming) {
-    Log.d(TAG, "inside Member, constructing with incoming parcel : " + incoming.toString());
     memberUid = incoming.readString();
     phoneNumber = incoming.readString();
     displayName = incoming.readString();
     roleName = incoming.readString();
     groupUid = incoming.readString();
     memberGroupUid = incoming.readString();
-    selected = true;
+    selected = incoming.readInt() != 0;
+    isLocal = incoming.readInt() != 0;
+    contactId = incoming.readInt();
   }
 
   // todo : probably remove, soon-ish
@@ -103,6 +99,14 @@ public class Member extends RealmObject implements Parcelable {
 
   // GETTERS
 
+  public String getMemberGroupUid() {
+    return memberGroupUid;
+  }
+
+  public void setMemberGroupUid() {
+    this.memberGroupUid = this.memberUid + this.groupUid;
+  }
+
   public String getMemberUid() {
     return memberUid;
   }
@@ -115,9 +119,13 @@ public class Member extends RealmObject implements Parcelable {
     return phoneNumber;
   }
 
+  public void setPhoneNumber(String phoneNumber) { this.phoneNumber = phoneNumber; }
+
   public String getDisplayName() {
     return displayName;
   }
+
+  public void setDisplayName(String displayName) { this.displayName = displayName; }
 
   public String getGroupUid() {
     return groupUid;

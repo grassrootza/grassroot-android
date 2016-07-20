@@ -18,16 +18,16 @@ public final class MenuUtils {
 
     public static Intent constructIntent(Context callingContext, Class toActivityClass, String groupUid, String groupName,boolean isLocal) {
         Intent i = new Intent(callingContext, toActivityClass);
-        i.putExtra(Constant.GROUPUID_FIELD, groupUid);
-        i.putExtra(Constant.GROUPNAME_FIELD, groupName);
+        i.putExtra(GroupConstants.UID_FIELD, groupUid);
+        i.putExtra(GroupConstants.NAME_FIELD, groupName);
         i.putExtra(Constant.GROUP_LOCAL,isLocal);
         return i;
     }
 
     public static Intent constructIntent(Context callingContext, Class toActivityClass, String groupUid, String groupName) {
         Intent i = new Intent(callingContext, toActivityClass);
-        i.putExtra(Constant.GROUPUID_FIELD, groupUid);
-        i.putExtra(Constant.GROUPNAME_FIELD, groupName);
+        i.putExtra(GroupConstants.UID_FIELD, groupUid);
+        i.putExtra(GroupConstants.NAME_FIELD, groupName);
         return i;
     }
 

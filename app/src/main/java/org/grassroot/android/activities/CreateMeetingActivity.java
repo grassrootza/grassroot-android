@@ -39,8 +39,8 @@ public class CreateMeetingActivity extends PortraitActivity {
             throw new UnsupportedOperationException("Error! Activity must be called with bundle");
         }
 
-        groupUid = b.getString(Constant.GROUPUID_FIELD);
-        isGroupLocal = b.getBoolean(Constant.GROUP_LOCAL);
+        groupUid = b.getString(GroupConstants.UID_FIELD);
+        isGroupLocal = b.getBoolean(GroupConstants.LOCAL_FIELD);
         setUpToolbar();
         launchFragment();
     }
@@ -61,7 +61,7 @@ public class CreateMeetingActivity extends PortraitActivity {
         Bundle args = new Bundle();
         args.putString(TaskConstants.TASK_TYPE_FIELD, TaskConstants.MEETING);
         args.putString(GroupConstants.UID_FIELD, groupUid);
-        args.putBoolean(Constant.GROUP_LOCAL,isGroupLocal);
+        args.putBoolean(GroupConstants.LOCAL_FIELD, isGroupLocal);
         ctskFragment.setArguments(args);
 
         getSupportFragmentManager().beginTransaction()

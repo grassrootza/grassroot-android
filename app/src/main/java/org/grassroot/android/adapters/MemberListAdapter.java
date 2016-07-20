@@ -86,6 +86,11 @@ public class MemberListAdapter extends RecyclerView.Adapter<MemberListAdapter.Vi
         notifyDataSetChanged();
     }
 
+    public void updateMember(int position, Member member) {
+        members.set(position, member);
+        notifyDataSetChanged();
+    }
+
     /**
      * Method to create the view holder that will be filled with content
      * @param parent The view group containing this record

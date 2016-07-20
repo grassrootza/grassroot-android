@@ -191,6 +191,12 @@
     <string name="cg_group_description">Group description</string>
     <string name="cg_member_list_header">Group members</string>
 
+    <string name="cg_member_title">%1$s (%2$s)</string>
+    <string-array name="cg_member_popup">
+        <item>Edit</item>
+        <item>Remove</item>
+    </string-array>
+
     <string name="bt_add_manual">Add</string>
     <string name="bt_add_contacts">Add from contacts</string>
     <string name="bt_add_manually">Add manually</string>
@@ -201,6 +207,9 @@
     <string name="gm_new_task_lc">Call new event</string>
     <string name="error_group_name_blank">Please enter Group name</string>
     <string name="rm_confirm_number">You are about to remove %d members. Are you sure?</string>
+
+    <string name="amm_new_done">Add</string>
+    <string name="amm_edit_done">Save</string>
 
     <!-- Phone book and other strings -->
     <string name="cs_title">Select contacts</string>

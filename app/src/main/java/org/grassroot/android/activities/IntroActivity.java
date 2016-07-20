@@ -131,7 +131,7 @@ public class IntroActivity extends AppCompatActivity {
             ObjectAnimator pagerAnim = ObjectAnimator.ofFloat(viewPager, "y", heightShift);
             ObjectAnimator logoAnim = ObjectAnimator.ofPropertyValuesHolder(logoImage, scaleX, scaleY, pushUp);
 
-            logoAnim.setDuration(Constant.longDelay);
+            logoAnim.setDuration(Constant.mediumDelay);
             logoAnim.addListener(new AnimatorListenerAdapter() {
                 @Override
                 public void onAnimationEnd(Animator animation) {
@@ -144,7 +144,7 @@ public class IntroActivity extends AppCompatActivity {
             });
 
             AnimatorSet animatorSet = new AnimatorSet();
-            animatorSet.setDuration(Constant.longDelay);
+            animatorSet.setDuration(Constant.mediumDelay);
             animatorSet.playTogether(logoAnim, pagerAnim);
             animatorSet.start();
 

@@ -1,38 +1,53 @@
 package org.grassroot.android.activities;
 
-import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.Snackbar;
+import android.support.design.widget.TextInputEditText;
 import android.util.Log;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.RelativeLayout;
+
+import org.grassroot.android.R;
+import org.grassroot.android.interfaces.GroupConstants;
+import org.grassroot.android.models.Member;
+import org.grassroot.android.utils.Constant;
+import org.grassroot.android.utils.Utilities;
+
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import org.grassroot.android.R;
 
 public class AddContactManually extends PortraitActivity {
 
-  private static final String TAG = AddContactManually.class.getCanonicalName();
+  private static final String TAG = AddContactManually.class.getSimpleName();
+
+  private Member memberBeingEdited;
+  private int positionBeingEdited;
 
   @BindView(R.id.add_member_manual) RelativeLayout activityRegister;
 
-  @BindView(R.id.amm_et_name) EditText et_userName;
-  @BindView(R.id.amm_et_number) EditText et_mobile_register;
-
-  @BindView(R.id.amm_bt_add) Button bt_register;
-
-  private Snackbar snackbar;
+  @BindView(R.id.amm_et_name) TextInputEditText displayName;
+  @BindView(R.id.amm_et_number) TextInputEditText phoneNumber;
+  @BindView(R.id.amm_bt_add) Button addOrSave;
 
   @Override protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.activity_add_contact_manually);
     ButterKnife.bind(this);
+
+    // todo : check if we have a member passed to us, to edit
+    memberBeingEdited = getIntent().getParcelableExtra(GroupConstants.MEMBER_OBJECT);
+    if (memberBeingEdited != null) {
+      positionBeingEdited = getIntent().getIntExtra(Constant.INDEX_FIELD, -1);
+      displayName.setText(memberBeingEdited.getDisplayName());
+      phoneNumber.setText(Utilities.stripPrefixFromNumber(memberBeingEdited.getPhoneNumber()));
+      addOrSave.setText(R.string.amm_edit_done);
+    }
   }
 
   @OnClick(R.id.amm_bt_add) public void register() {
@@ -46,8 +61,16 @@ public class AddContactManually extends PortraitActivity {
 
     if (registerFormValidation()) {
       Intent i = new Intent();
-      i.putExtra("name", et_userName.getText().toString());
-      i.putExtra("selectedNumber", et_mobile_register.getText().toString());
+      if (memberBeingEdited == null) {
+        i.putExtra("name", displayName.getText().toString());
+        i.putExtra("selectedNumber", phoneNumber.getText().toString());
+      } else {
+        memberBeingEdited.setDisplayName(displayName.getText().toString());
+        memberBeingEdited.setPhoneNumber(phoneNumber.getText().toString());
+        i.putExtra(GroupConstants.MEMBER_OBJECT, memberBeingEdited);
+        i.putExtra(Constant.INDEX_FIELD, positionBeingEdited);
+      }
+
       setResult(RESULT_OK, i);
       finish();
     }
@@ -57,35 +80,27 @@ public class AddContactManually extends PortraitActivity {
   private boolean registerFormValidation() {
     String regex = "^((?:\\+27|27)|0)(\\d{2})-?(\\d{3})-?(\\d{4})$";
     Pattern p = Pattern.compile(regex);
-    Matcher m = p.matcher(et_mobile_register.getText().toString().trim());
-    System.out.println(m.matches());
-    if (et_userName.getText().toString().trim().isEmpty() || et_mobile_register.getText()
+    Matcher m = p.matcher(phoneNumber.getText().toString().trim());
+    if (displayName.getText().toString().trim().isEmpty() || phoneNumber.getText()
         .toString()
         .isEmpty()) {
-      showSnackBar(getApplicationContext(), "",
-          getResources().getString(R.string.Either_field_empty), "", 0, Snackbar.LENGTH_SHORT);
+      showSnackBar(getResources().getString(R.string.Either_field_empty), Snackbar.LENGTH_SHORT);
       return false;
     } else {
-      if (et_mobile_register.getText().toString().length() != 10
-          && et_mobile_register.getText().toString().length() < 10) {
-        showSnackBar(getApplicationContext(), "",
-            getResources().getString(R.string.Cellphone_number_invalid), "", 0,
-            Snackbar.LENGTH_SHORT);
+      if (phoneNumber.getText().toString().length() != 10
+          && phoneNumber.getText().toString().length() < 10) {
+        showSnackBar(getResources().getString(R.string.Cellphone_number_invalid), Snackbar.LENGTH_SHORT);
         return false;
       } else {
-        if (Integer.parseInt(String.valueOf(et_mobile_register.getText().toString().charAt(0)))
+        if (Integer.parseInt(String.valueOf(phoneNumber.getText().toString().charAt(0)))
             != 0) {
-          showSnackBar(getApplicationContext(), "",
-              getResources().getString(R.string.Cellphone_number_invalid), "", 0,
-              Snackbar.LENGTH_SHORT);
+          showSnackBar(getResources().getString(R.string.Cellphone_number_invalid), Snackbar.LENGTH_SHORT);
           return false;
         } else if (Integer.parseInt(
-            String.valueOf(et_mobile_register.getText().toString().charAt(1))) == 0
-            || Integer.parseInt(String.valueOf(et_mobile_register.getText().toString().charAt(1)))
+            String.valueOf(phoneNumber.getText().toString().charAt(1))) == 0
+            || Integer.parseInt(String.valueOf(phoneNumber.getText().toString().charAt(1)))
             == 9) {
-          showSnackBar(getApplicationContext(), "",
-              getResources().getString(R.string.Cellphone_number_invalid), "", 0,
-              Snackbar.LENGTH_SHORT);
+          showSnackBar(getResources().getString(R.string.Cellphone_number_invalid), Snackbar.LENGTH_SHORT);
           return false;
         } else {
           return true;
@@ -94,9 +109,7 @@ public class AddContactManually extends PortraitActivity {
     }
   }
 
-  private void showSnackBar(Context applicationContext, String s, String string, String s1, int i,
-      int lengthShort) {
-    snackbar = Snackbar.make(activityRegister, string, lengthShort);
-    snackbar.show();
+  private void showSnackBar(String string, int lengthShort) {
+    Snackbar.make(activityRegister, string, lengthShort).show();
   }
 }
