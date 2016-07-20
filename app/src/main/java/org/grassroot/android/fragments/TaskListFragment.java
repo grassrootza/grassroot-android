@@ -209,9 +209,6 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
       handleNoTasksFound();
     } else {
       groupTasksAdapter.changeToTaskList(tasks);
-      Group group = RealmUtils.loadObjectFromDB(Group.class,"groupUid",groupUid);
-      group.setFetchedTasks(true);
-      RealmUtils.saveDataToRealm(group);
     }
   }
 

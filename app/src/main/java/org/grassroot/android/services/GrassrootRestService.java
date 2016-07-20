@@ -216,6 +216,11 @@ public class GrassrootRestService {
     Call<GroupsChangedResponse> getUserGroups(@Path("phoneNumber") String phoneNumber,
         @Path("code") String code);
 
+    @GET("group/list/{phoneNumber}/{code}")
+    Call<GroupsChangedResponse> getUserGroupsChangedSince(@Path("phoneNumber") String phoneNumber,
+                                                          @Path("code") String code,
+                                                          @Query("changedSince") Long changedSince);
+
     @GET("group/get/{phoneNumber}/{code}/{groupUid}")
     Call<GroupResponse> getSingleGroup(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
         @Path("groupUid") String groupUid);
@@ -269,7 +274,7 @@ public class GrassrootRestService {
         @Path("parentUid") String groupUid);
 
     // get all the tasks that have changed since the specified time (in milliseconds at UTC)
-    @GET("task/{list}/{phoneNumber}/{code}/{parentUid}")
+    @GET("task/list/{phoneNumber}/{code}/{parentUid}")
     Call<TaskChangedResponse>  getGroupTasksChangedSince(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
                                                          @Path("parentUid") String parentUid, @Query("changedSince") long changedSinceMillis);
 

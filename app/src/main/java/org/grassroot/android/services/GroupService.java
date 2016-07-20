@@ -107,16 +107,15 @@ public class GroupService {
     long lastTimeUpdated = RealmUtils.loadPreferencesFromDB().getLastTimeGroupsFetched();
 
     Log.e(TAG, "last time groups updated = " + lastTimeUpdated);
-
     groupsLoading = true;
-    GrassrootRestService.getInstance()
-        .getApi()
-        .getUserGroups(mobileNumber, userCode)
-        .enqueue(new Callback<GroupsChangedResponse>() {
-          @Override
 
-          public void onResponse(Call<GroupsChangedResponse> call,
-              Response<GroupsChangedResponse> response) {
+    Call<GroupsChangedResponse> apiCall = (lastTimeUpdated == 0) ?
+            GrassrootRestService.getInstance().getApi().getUserGroups(mobileNumber, userCode) :
+            GrassrootRestService.getInstance().getApi().getUserGroupsChangedSince(mobileNumber, userCode, lastTimeUpdated);
+
+    apiCall.enqueue(new Callback<GroupsChangedResponse>() {
+          @Override
+          public void onResponse(Call<GroupsChangedResponse> call, Response<GroupsChangedResponse> response) {
             if (response.isSuccessful()) {
               updateGroupsFetchedTime();
               groupsLoading = false;

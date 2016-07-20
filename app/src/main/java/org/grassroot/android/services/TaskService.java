@@ -125,6 +125,7 @@ public class TaskService {
   private void updateTasksFetchedTime(String parentUid) {
     Group group = RealmUtils.loadObjectFromDB(Group.class, "groupUid", parentUid);
     group.setLastTimeTasksFetched(String.valueOf(Utilities.getCurrentTimeInMillisAtUTC()));
+    group.setFetchedTasks(true);
     RealmUtils.saveGroupToRealm(group);
     Log.e(TAG, "group last time fetched after update: " + group.getLastTimeTasksFetched());
   }
