@@ -6,12 +6,8 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.BitmapShader;
-import android.graphics.Canvas;
-import android.graphics.Paint;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.Environment;
 import android.provider.MediaStore;
 import android.support.design.widget.Snackbar;
 import android.support.v7.widget.Toolbar;
@@ -40,8 +36,6 @@ import org.grassroot.android.utils.RealmUtils;
 import org.greenrobot.eventbus.EventBus;
 
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -87,9 +81,10 @@ public class GroupAvatarActivity extends PortraitActivity {
         Bundle extras = getIntent().getExtras();
         group = extras.getParcelable(GroupConstants.OBJECT_FIELD);
         if (group == null) {
-
+            Log.e(TAG, "Error! This activity requires a group object");
+        } else {
+            setViews(group);
         }
-        setViews(group);
     }
 
 
@@ -107,13 +102,10 @@ public class GroupAvatarActivity extends PortraitActivity {
                 String localImagePath = cursor.getString(columnIndex);
                 String mimeType = getMimeType(this, selectedImage);
                 cursor.close();
-                String compressedFilePath = ImageUtils.decodeFile(localImagePath);
-                uploadFile(compressedFilePath, mimeType);
-                Bitmap bitmap = BitmapFactory.decodeFile(compressedFilePath);
-                ivAvatar.setImageBitmap(ImageUtils.getRoundedShape(bitmap));
+                String compressedFilePath = ImageUtils.getCompressedFileFromImage(localImagePath);
+                File file = new File(compressedFilePath);
+                uploadFile(file, mimeType);
             }
-
-
         } catch (Exception e) {
             Log.e(TAG, e.getMessage());
         }
@@ -207,14 +199,12 @@ public class GroupAvatarActivity extends PortraitActivity {
             }
         });
         dialogFragment.show(getSupportFragmentManager(), "");
-
-
     }
 
 
-    private void uploadFile(final String path, final String mimeType) {
+    private void uploadFile(final File file, final String mimeType) {
 
-        File file = new File(path);
+        Log.e(TAG, "file size : " + (file.length() / 1024));
         RequestBody requestFile =
                 RequestBody.create(MediaType.parse(mimeType), file);
         MultipartBody.Part image =
@@ -227,6 +217,9 @@ public class GroupAvatarActivity extends PortraitActivity {
             @Override
             public void onResponse(Call<GenericResponse> call, Response<GenericResponse> response) {
                 progressBar.setVisibility(View.GONE);
+                Bitmap bitmap = BitmapFactory.decodeFile(file.getAbsolutePath());
+                ivAvatar.setImageBitmap(ImageUtils.getRoundedShape(bitmap));
+                file.delete();
                 showRemoveButton();
                 Snackbar.make(g_avt_relative, R.string.gp_update_success, Snackbar.LENGTH_LONG).show();
                 EventBus.getDefault().post(new GroupPictureChangedEvent());
@@ -235,6 +228,7 @@ public class GroupAvatarActivity extends PortraitActivity {
             @Override
             public void onFailure(Call<GenericResponse> call, Throwable t) {
                 progressBar.setVisibility(View.GONE);
+                file.delete();
                 Snackbar.make(g_avt_relative, R.string.gp_update_failure, Snackbar.LENGTH_LONG).show();
             }
         });
@@ -264,21 +258,16 @@ public class GroupAvatarActivity extends PortraitActivity {
         return mimeType;
     }
 
-
-
-
     private void hideRemoveButton(){
         ivAvatar.setImageResource(R.drawable.ic_groups_default_avatar);
         btAvatar.setText(R.string.gp_bt_txt_set);
         btAvatarRemove.setVisibility(View.GONE);
-
     }
 
     private void showRemoveButton(){
         if (btAvatarRemove.getVisibility() == View.INVISIBLE ||
                 btAvatarRemove.getVisibility() == View.GONE)
             btAvatarRemove.setVisibility(View.VISIBLE);
-
     }
 
 }

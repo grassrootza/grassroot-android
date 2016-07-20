@@ -17,45 +17,47 @@ import java.io.FileOutputStream;
  */
 public class ImageUtils {
 
+    private static final String TAG = ImageUtils.class.getSimpleName();
 
+    public static int JPEG_QUALITY = 70;
+    public static int MAX_DIMEN = 640;
 
-    public static String decodeFile(String path) {
+    public static String getCompressedFileFromImage(String path) {
         String strMyImagePath = null;
         Bitmap scaledBitmap;
 
         try {
 
-            Bitmap unscaledBitmap = BitmapFactory.decodeFile(path);
-            if ((unscaledBitmap.getWidth() >= 640 && unscaledBitmap.getHeight() >= 640)) {
-                int h=unscaledBitmap.getHeight();
-                int w=unscaledBitmap.getWidth();
-                h=h/4;
-                w=w/4;
+            final BitmapFactory.Options options = new BitmapFactory.Options();
+            options.inJustDecodeBounds = true;
+            BitmapFactory.decodeFile(path, options);
 
-                scaledBitmap=Bitmap.createScaledBitmap(unscaledBitmap, w,h , true);
-            } else {
-                unscaledBitmap.recycle();
-                return path;
-            }
+            options.inSampleSize = calculateInSampleSize(options);
+            options.inJustDecodeBounds = false;
+            Bitmap unscaledBitmap = BitmapFactory.decodeFile(path, options);
+
+            scaledBitmap= cropScaleCenter(unscaledBitmap);
 
             String extr = Environment.getExternalStorageDirectory().toString();
             File mFolder = new File(extr + "/myTmpDir");
+
             if (!mFolder.exists()) {
                 mFolder.mkdir();
             }
+
             String s = "tmp.jpg";
             File file = new File(mFolder.getAbsolutePath(), s);
+
             strMyImagePath = file.getAbsolutePath();
-            FileOutputStream fos = null;
+            FileOutputStream fos;
             try {
                 fos = new FileOutputStream(file);
-                scaledBitmap.compress(Bitmap.CompressFormat.JPEG, 70, fos);
+                scaledBitmap.compress(Bitmap.CompressFormat.JPEG, JPEG_QUALITY, fos);
                 fos.flush();
                 fos.close();
-            } catch (FileNotFoundException e) {
-                e.printStackTrace();
+                Log.e(TAG, "scaled and compressed bitmap, size = " + scaledBitmap.getHeight() + ", " +
+                        "file size = " + (file.length() / 1024));
             } catch (Exception e) {
-
                 e.printStackTrace();
             }
             scaledBitmap.recycle();
@@ -66,6 +68,53 @@ public class ImageUtils {
             return path;
         }
         return strMyImagePath;
+
+    }
+
+    public static Bitmap cropScaleCenter(Bitmap unscaledBitmap) {
+        // first, crop it to a central square
+        Log.e(TAG, "cropping and scaling image ...");
+        Bitmap destBitmap;
+        final int height = unscaledBitmap.getHeight();
+        final int width = unscaledBitmap.getWidth();
+        if (width > height) {
+            destBitmap = Bitmap.createBitmap(unscaledBitmap,
+                    width / 2 - height / 2,
+                    0,
+                    height,
+                    height);
+        } else {
+            destBitmap = Bitmap.createBitmap(unscaledBitmap,
+                    0,
+                    height / 2 - width /2,
+                    width,
+                    width);
+        }
+
+        // next, if the square is bigger than 640x640, scale it
+        final int squaredSide = Math.max(height, width);
+        if (squaredSide > MAX_DIMEN) {
+            destBitmap = Bitmap.createScaledBitmap(destBitmap, MAX_DIMEN, MAX_DIMEN, true);
+        }
+
+        return destBitmap;
+    }
+
+    public static int calculateInSampleSize(BitmapFactory.Options options) {
+        final int height = options.outHeight;
+        final int width = options.outWidth;
+        int sampleSize = 1;
+
+        if (height > MAX_DIMEN || width > MAX_DIMEN) {
+            final int halfHeight = height / 2;
+            final int halfWidth = width / 2;
+
+            while ((halfHeight / sampleSize) >= MAX_DIMEN && (halfWidth / sampleSize >= MAX_DIMEN)) {
+                sampleSize *= 2;
+            }
+        }
+
+        return sampleSize;
 
     }
 
