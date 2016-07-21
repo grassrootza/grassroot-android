@@ -63,9 +63,7 @@ public class GroupService {
 
   public interface GroupCreationListener {
     void groupCreatedLocally(Group group);
-
     void groupCreatedOnServer(Group group);
-
     void groupCreationError(Response<GroupResponse> response);
   }
 
@@ -286,6 +284,7 @@ public class GroupService {
     group.setGroupMemberCount(groupMembers.size());
     group.setDate(new Date());
     group.setDateTimeStringISO(group.getDateTimeStringISO());
+    group.setLastMajorChangeMillis(Utilities.getCurrentTimeInMillisAtUTC());
     RealmList<RealmString> permissions = new RealmList<>();
     //TODO investigate permission per user
     permissions.add(new RealmString(PermissionUtils.permissionForTaskType(TaskConstants.MEETING)));

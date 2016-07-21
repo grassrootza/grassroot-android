@@ -68,6 +68,7 @@ public class HomeScreenActivity extends PortraitActivity implements NavigationDr
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Log.e(TAG, "on activity create called");
         setContentView(R.layout.activity_home_screen);
         ButterKnife.bind(this);
         EventBus.getDefault().register(this);
@@ -174,8 +175,10 @@ public class HomeScreenActivity extends PortraitActivity implements NavigationDr
 
     // todo : fix lifecycle management so it doesn't call this all the time
     private void switchToGroupFragment() {
+        Log.e(TAG, "switching to group fragment");
         setTitle(R.string.ghp_toolbar_title);
         if (groupListFragment == null) {
+            Log.e(TAG, "group list fragment is null ..");
             groupListFragment = new HomeGroupListFragment();
         }
         showOrReplaceFragment(groupListFragment);
@@ -221,8 +224,10 @@ public class HomeScreenActivity extends PortraitActivity implements NavigationDr
 
         FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
         if (fragment.isAdded()) {
+            Log.e(TAG, "fragment is already added : " + fragment.toString());
             transaction.show(fragment);
         } else {
+            Log.e(TAG, "fragment is not considered added ... " + fragment.toString());
             transaction.replace(R.id.home_fragment_container, fragment);
         }
 

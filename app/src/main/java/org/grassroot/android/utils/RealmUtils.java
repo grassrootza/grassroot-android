@@ -170,4 +170,12 @@ public class RealmUtils {
     }
     return realmStrings;
   }
+
+  public static long countObjectsInDB(Class<? extends RealmObject> clazz) {
+    Realm realm = Realm.getDefaultInstance();
+    RealmQuery<? extends RealmObject> query = realm.where(clazz);
+    long count = query.count();
+    realm.close();
+    return count;
+  }
 }

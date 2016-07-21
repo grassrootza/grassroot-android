@@ -83,7 +83,7 @@ public class GrassrootRestService {
 
   private GrassrootRestService(Context context) {
     HttpLoggingInterceptor logging = new HttpLoggingInterceptor();
-    logging.setLevel(HttpLoggingInterceptor.Level.BODY);
+    logging.setLevel(HttpLoggingInterceptor.Level.HEADERS);
 
     OkHttpClient client = new OkHttpClient.Builder()
         .addInterceptor(logging)
@@ -200,8 +200,8 @@ public class GrassrootRestService {
      */
     @POST("group/create/{phoneNumber}/{code}/{groupName}/{description}")
     Call<GroupResponse> createGroup(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
-        @Path("groupName") String groupName, @Path("description") String groupDescription,
-        @Body List<Member> membersToAdd);
+                                    @Path("groupName") String groupName, @Path("description") String groupDescription,
+                                    @Body List<Member> membersToAdd);
 
     @Multipart
     @POST("group/image/upload/{phoneNumber}/{code}/{groupUid}")

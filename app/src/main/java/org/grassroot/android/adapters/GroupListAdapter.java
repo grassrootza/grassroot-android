@@ -22,9 +22,11 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 import org.grassroot.android.R;
 import org.grassroot.android.fragments.HomeGroupListFragment;
@@ -43,6 +45,7 @@ public class GroupListAdapter extends RecyclerView.Adapter<GroupListAdapter.GHP_
     private final Context context;
     private final GroupRowListener listener;
 
+    List<Group> fullGroupList;
     List<Group> displayedGroups;
 
     private static final SimpleDateFormat outputSDF = new SimpleDateFormat("EEE, d MMM");
@@ -60,16 +63,47 @@ public class GroupListAdapter extends RecyclerView.Adapter<GroupListAdapter.GHP_
         this.listener = fragment;
     }
 
-    // todo: consider moving these back out to fragment (esp given notifyDataSet being bad..)
+    public void setGroupList(List<Group> groupList) {
+        displayedGroups.clear();
+        displayedGroups.addAll(groupList);
+        notifyDataSetChanged(); // calling item range inserted causes a strange crash (related to main/background threads, I think)
+    }
+
+    public void refreshGroupsToDB() {
+        displayedGroups.clear();
+        displayedGroups.addAll(RealmUtils.loadListFromDB(Group.class));
+        sortByChangedTime();
+    }
+
+    public void sortByChangedTime() {
+        Collections.sort(displayedGroups, Collections.reverseOrder());
+        notifyDataSetChanged();
+    }
+
+    // todo : make sure interactions of this and refresh from DB are okay
     public void sortByDate() {
-        Collections.sort(displayedGroups, Collections.reverseOrder()); // since Date entity sorts earliest to latest
+        Collections.sort(displayedGroups, Collections.reverseOrder(Group.GroupTaskDateComparator)); // since Date entity sorts earliest to latest
         notifyDataSetChanged();
     }
 
     public void sortByRole() {
-        Collections.sort(displayedGroups,
-                Collections.reverseOrder(Group.GroupRoleComparator)); // as above
+        Collections.sort(displayedGroups, Collections.reverseOrder(Group.GroupRoleComparator)); // as above
         notifyDataSetChanged();
+    }
+
+    // todo : maybe just use Realm query to do this
+    public void simpleSearchByName(String searchText) {
+        if (fullGroupList == null) {
+            fullGroupList = new ArrayList<>(displayedGroups);
+        }
+
+        final List<Group> filteredGroups = new ArrayList<>();
+        for (Group group : fullGroupList) {
+            if (group.getGroupName().trim().toLowerCase(Locale.getDefault()).contains(searchText)) {
+                filteredGroups.add(group);
+            }
+        }
+        setGroupList(filteredGroups);
     }
 
     @Override
@@ -199,28 +233,9 @@ public class GroupListAdapter extends RecyclerView.Adapter<GroupListAdapter.GHP_
         return displayedGroups.size();
     }
 
-    // todo: this might not be the best way to do this (maybe rethink whole list structure/handling etc)
-    public void updateGroup(int position, Group group) {
-        displayedGroups.set(position, group);
+    public void updateGroup(int position, final String groupUid) {
+        displayedGroups.set(position, RealmUtils.loadGroupFromDB(groupUid));
         notifyItemChanged(position);
-        notifyDataSetChanged(); // for some reason, the line above calls onBindViewHolder, but doesn't rewrite the text view!!
-    }
-
-    public void addGroup(int position, Group group) {
-        displayedGroups.add(position, group);
-        notifyItemInserted(position);
-        notifyDataSetChanged(); // ugh, again, item inserted is not working! really need to figure out / fix
-    }
-
-    public void setGroupList(List<Group> groupList) {
-        displayedGroups.clear();
-        displayedGroups.addAll(groupList);
-        notifyDataSetChanged(); // calling item range inserted causes a strange crash (related to main/background threads, I think)
-    }
-
-    public void refreshGroupsToDB() {
-        displayedGroups.clear();
-        displayedGroups.addAll(RealmUtils.loadListFromDB(Group.class));
         notifyDataSetChanged();
     }
 

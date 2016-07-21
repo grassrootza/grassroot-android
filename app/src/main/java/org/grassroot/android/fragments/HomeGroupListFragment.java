@@ -5,11 +5,13 @@ import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.SystemClock;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.widget.SwipeRefreshLayout;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
@@ -72,6 +74,8 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
     @BindView(R.id.rl_ghp_root)
     RelativeLayout rlGhpRoot;
 
+    private GroupListAdapter groupListRowAdapter;
+    private boolean hasFetchedGroups = false;
     @BindView(R.id.gl_swipe_refresh)
     SwipeRefreshLayout glSwipeRefresh;
     @BindView(R.id.recycler_view)
@@ -89,9 +93,6 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
 
     ProgressDialog progressDialog;
 
-    private GroupListAdapter groupListRowAdapter;
-    private List<Group> userGroups;
-
     public boolean date_click = false, role_click = false, defaults_click = false;
 
     private GroupPickCallbacks mCallbacks;
@@ -103,52 +104,53 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
         try {
             mCallbacks = (GroupPickCallbacks) activity;
         } catch (ClassCastException e) {
-            throw new ClassCastException("Activity must implement Fragment One.");
+            throw new ClassCastException("Activity must implement group pick callbacks");
         }
     }
 
   @Override public void onActivityCreated(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
-    Log.e(TAG, "onActivityCreated Called ... initiating");
-    init();
-    fetchGroupList();
-      checkForJoinRequests();
-  }
-
-  @Override public void onResume() {
-      super.onResume();
-      fabOpenMenu.setVisibility(View.VISIBLE);
-  }
-
-  private void init() {
-    userGroups = new ArrayList<>();
-    setUpRecyclerView();
-    //first load from db
-    showGroups(RealmUtils.loadListFromDB(Group.class));
-  }
-
-  /**
-   * Method executed to retrieve and populate list of groups. Note: this does not handle the
-   * absence
-   * of a connection very well, at all. Will probably need to rethink.
-   */
-
-  private void showGroups(RealmList<Group> groups) {
-    userGroups = new ArrayList<>(groups);
-    rcGroupList.setVisibility(View.VISIBLE);
-    if (!userGroups.isEmpty()) {
-        groupListRowAdapter.setGroupList(userGroups);
-        rcGroupList.setVisibility(View.VISIBLE);
+    Log.e(TAG, "onActivityCreate called in home group list fragment ...");
+      setUpRecyclerView();
+    if (!hasFetchedGroups) {
+        fetchGroupList();
     }
+    checkForJoinRequests();
   }
+
+    private void setUpRecyclerView() {
+        rcGroupList.setHasFixedSize(true);
+        rcGroupList.setLayoutManager(new LinearLayoutManager(getActivity()));
+        rcGroupList.setItemViewCacheSize(20);
+        rcGroupList.setDrawingCacheEnabled(true);
+        rcGroupList.setDrawingCacheQuality(View.DRAWING_CACHE_QUALITY_HIGH);
+        groupListRowAdapter = new GroupListAdapter(RealmUtils.loadListFromDB(Group.class), HomeGroupListFragment.this);
+        rcGroupList.setAdapter(groupListRowAdapter);
+        rcGroupList.setVisibility(View.VISIBLE);
+        glSwipeRefresh.setColorSchemeColors(ContextCompat.getColor(getActivity(), R.color.primaryColor));
+        glSwipeRefresh.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                refreshGroupList();
+            }
+        });
+    }
 
   @Override public View onCreateView(LayoutInflater inflater, ViewGroup container,
       Bundle savedInstanceState) {
     View view = inflater.inflate(R.layout.activity_group__homepage, container, false);
     unbinder = ButterKnife.bind(this, view);
     EventBus.getDefault().register(this);
+    if (groupListRowAdapter == null || groupListRowAdapter.getItemCount() == 0) {
+        showProgress();
+    }
     return view;
   }
+
+    @Override public void onResume() {
+        super.onResume();
+        fabOpenMenu.setVisibility(View.VISIBLE);
+    }
 
     @Override
     public void onDestroyView() {
@@ -163,23 +165,29 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
     }
 
   /**
-   * Method executed to retrieve and populate list of groups. Note: this does not handle the
-   * absence
-   * of a connection very well, at all. Will probably need to rethink.
+   * Method executed to retrieve and populate list of groups.
+   * todo : set some preference or flag as "offline" if error, and show a dialog box
    */
   public void fetchGroupList() {
     showProgress();
-
+    Log.e(TAG, "fetching group list ...");
     GroupService.getInstance()
         .fetchGroupList(getActivity(), rlGhpRoot, new GroupService.GroupServiceListener() {
           @Override public void groupListLoaded() {
-            groupListRowAdapter.setGroupList(RealmUtils.loadListFromDB(Group.class));
-            rcGroupList.setVisibility(View.VISIBLE);
-            hideProgress();
+            hasFetchedGroups = true;
+            groupListRowAdapter.refreshGroupsToDB();
+            final Handler handler = new Handler();
+              handler.postDelayed(new Runnable() {
+                  @Override
+                  public void run() {
+                      hideProgress();
+                  }
+              }, Constant.shortDelay); // otherwise the dialog disappears before groups show up
           }
 
           @Override public void groupListLoadingError() {
-            hideProgress();
+              hideProgress();
+              // todo : a "try again" / "offline" dialog
           }
         });
   }
@@ -227,12 +235,13 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
         GroupService.getInstance()
                 .refreshGroupList(getActivity(), new GroupService.GroupServiceListener() {
                     @Override public void groupListLoaded() {
-                        groupListRowAdapter.setGroupList(RealmUtils.loadListFromDB(Group.class));
+                        groupListRowAdapter.refreshGroupsToDB();
                         glSwipeRefresh.setRefreshing(false);
                     }
 
                     @Override public void groupListLoadingError() {
                         glSwipeRefresh.setRefreshing(false);
+                        // todo : online/offline dialog error
                     }
                 });
     }
@@ -248,41 +257,15 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
                         new GroupService.GroupServiceListener() {
                             @Override
                             public void groupListLoaded() {
-                                groupListRowAdapter.updateGroup(position,
-                                        GroupService.getInstance().userGroups.get(position));
+                                groupListRowAdapter.updateGroup(position, groupUid);
                             }
 
                             @Override
                             public void groupListLoadingError() {
-                                // todo : handle this better
+                                // todo : online/offline dialog
                                 Log.e(TAG, "ERROR! Group position and ID do not match, not updating");
                             }
                         });
-    }
-
-    public void insertGroup(final int position, final Group group) {
-        // todo : actually add it, for now, just do a refresh
-        Log.e(TAG, "adding a group! at position " + position + ", the group looks like : " + group);
-        groupListRowAdapter.setGroupList(RealmUtils.loadListFromDB(Group.class));
-
-    }
-
-    private void setUpRecyclerView() {
-        rcGroupList.setHasFixedSize(true);
-        rcGroupList.setLayoutManager(new LinearLayoutManager(getActivity()));
-        rcGroupList.setItemViewCacheSize(20);
-        rcGroupList.setDrawingCacheEnabled(true);
-        rcGroupList.setDrawingCacheQuality(View.DRAWING_CACHE_QUALITY_HIGH);
-        groupListRowAdapter = new GroupListAdapter(new ArrayList<Group>(), HomeGroupListFragment.this);
-        rcGroupList.setAdapter(groupListRowAdapter);
-        glSwipeRefresh.setColorSchemeColors(
-                ContextCompat.getColor(getActivity(), R.color.primaryColor));
-        glSwipeRefresh.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
-            @Override
-            public void onRefresh() {
-                refreshGroupList();
-            }
-        });
     }
 
     @OnClick(R.id.fab_menu_open)
@@ -405,12 +388,6 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
         fetchGroupList();
     }
 
-    @Subscribe
-    public void onEvent(GroupPictureChangedEvent groupPictureUploadedEvent) {
-        Log.e(TAG, "picture uploaded");
-        fetchGroupList(); //would have preferred to use refreshGrouplist. that still needs debugging
-    }
-
     private void showProgress() {
         if (progressDialog == null) {
             progressDialog = new ProgressDialog(getContext());
@@ -427,33 +404,23 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
     }
 
     @Subscribe
+    public void onEvent(GroupPictureChangedEvent groupPictureUploadedEvent) {
+        groupListRowAdapter.refreshGroupsToDB();
+    }
+
+    @Subscribe
     public void onTaskCreatedEvent(TaskAddedEvent e) {
-        Log.e(TAG, "group list fragment triggered by task addition ...");
-        final TaskModel t = e.getTaskCreated();
-        final String groupUid = t.getParentUid();
-        // todo : may want to keep a hashmap of groups ... likely will be finding & updating groups quite a bit
-        for (Group g : userGroups) {
-            if (groupUid.equals(g.getGroupUid())) {
-                Realm realm = Realm.getDefaultInstance();
-                realm.beginTransaction();
-                g.setHasTasks(true);
-                realm.commitTransaction();
-                realm.close();
-                startActivity(MenuUtils.constructIntent(getActivity(), GroupTasksActivity.class, g));
-            }
-        }
+      groupListRowAdapter.refreshGroupsToDB();
     }
 
   @Subscribe
   public void onGroupAdded(GroupCreatedEvent e) {
-    groupListRowAdapter.addGroup(0,e.getGroup());
+      groupListRowAdapter.refreshGroupsToDB();
   }
 
     @Subscribe
     public void onGroupEditedEvent(GroupEditedEvent e) {
-        // todo : use a map to find the position of the group and update there only
-        Log.d(TAG, "home group list subscribe method triggered ... for event: " + e);
-        groupListRowAdapter.refreshGroupsToDB();
+      groupListRowAdapter.refreshGroupsToDB();
     }
 
 
@@ -502,15 +469,9 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
 
     public void searchStringChanged(String query) {
         if (TextUtils.isEmpty(query)) {
-            groupListRowAdapter.setGroupList(userGroups);
+            groupListRowAdapter.refreshGroupsToDB();
         } else {
-            final List<Group> filteredGroups = new ArrayList<>();
-            for (Group group : userGroups) {
-                if (group.getGroupName().trim().toLowerCase(Locale.getDefault()).contains(query)) {
-                    filteredGroups.add(group);
-                }
-            }
-            groupListRowAdapter.setGroupList(filteredGroups);
+            groupListRowAdapter.simpleSearchByName(query);
         }
     }
 }

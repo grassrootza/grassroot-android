@@ -51,7 +51,7 @@ public class ApplicationLoader extends Application {
     builder.downloader(new OkHttp3Downloader(okHttpClient));
     Picasso built = builder.build();
     built.setIndicatorsEnabled(true);
-    built.setLoggingEnabled(true);
+    built.setLoggingEnabled(false);
     Picasso.setSingletonInstance(built);
   }
 

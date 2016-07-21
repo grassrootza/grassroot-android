@@ -95,6 +95,9 @@
 
     <string name="ghp_toolbar_title">Your groups</string>
 
+    <string name="offline_dialog_message">You don\'t seem to have a working connection. But you can work offline, and we will
+    sync your groups next time you connect.</string>
+
     <string name="tasks_toolbar_title">Upcoming events</string>
 
     <string name="ghp_fab_new_task">New event or action</string>
@@ -188,7 +191,7 @@
     <!-- Create Group--><!--cg-->
     <string name="cg_title">Create new group</string>
     <string name="cg_group_name">Group name</string>
-    <string name="cg_group_description">Group description</string>
+    <string name="cg_group_description">Group description (optional)</string>
     <string name="cg_member_list_header">Group members</string>
 
     <string name="cg_member_title">%1$s (%2$s)</string>

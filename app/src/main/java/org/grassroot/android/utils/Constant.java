@@ -12,6 +12,7 @@ public class Constant {
     public static final String STAGING = "staging";
     public static final String PROD = "production";
 
+    public static long shortDelay = 300L;
     public static long mediumDelay = 500L;
 
     public static final String regexAlphaNumeric = "[^a-zA-Z0-9 ]";

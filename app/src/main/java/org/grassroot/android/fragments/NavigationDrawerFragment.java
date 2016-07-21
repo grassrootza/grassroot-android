@@ -46,7 +46,6 @@ import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
-import okhttp3.ResponseBody;
 import retrofit2.Response;
 
 public class NavigationDrawerFragment extends Fragment implements TaskService.TaskServiceListener {
@@ -102,9 +101,10 @@ public class NavigationDrawerFragment extends Fragment implements TaskService.Ta
         displayName.setText(RealmUtils.loadPreferencesFromDB().getUserName());
         txtVersion.setText(String.format(getString(R.string.nav_bar_footer), BuildConfig.VERSION_NAME));
 
-        drawerAdapter = new NavigationDrawerAdapter(getActivity(), getData());
+        drawerAdapter = new NavigationDrawerAdapter(getActivity(), setUpItems());
 
         mDrawerRecyclerView.setHasFixedSize(true);
+        mDrawerRecyclerView.setItemViewCacheSize(8);
         mDrawerRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
         mDrawerRecyclerView.setAdapter(drawerAdapter);
         mDrawerRecyclerView.setItemAnimator(new DefaultItemAnimator());
@@ -123,16 +123,12 @@ public class NavigationDrawerFragment extends Fragment implements TaskService.Ta
         return view ;
     }
 
-    public void resetToDefault() {
-        switchSelectedState(NavigationConstants.HOME_NAV_GROUPS);
-    }
-
-    public List<NavDrawerItem> getData() {
+    public List<NavDrawerItem> setUpItems() {
         draweritems = new ArrayList<>();
 
         groups = new NavDrawerItem(getString(R.string.drawer_group_list), R.drawable.ic_groups_general, R.drawable.ic_groups_general, true, true);
-        groups.setItemCount(RealmUtils.loadListFromDB(Group.class).size());
-        Log.e(TAG, "size of groups loaded: " + groups.getItemCount());
+        groups.setItemCount((int) RealmUtils.countObjectsInDB(Group.class));
+        Log.e(TAG, "on set up ... size of groups loaded: " + groups.getItemCount());
         draweritems.add(groups);
 
         tasks = new NavDrawerItem(getString(R.string.drawer_open_tasks), R.drawable.ic_star_gray, R.drawable.ic_star_green, false, true); // todo: fix icon
@@ -161,7 +157,7 @@ public class NavigationDrawerFragment extends Fragment implements TaskService.Ta
         int itemToSetSelected = position;
         boolean changeItemSelected = true;
         switch (position) {
-            // note: first three are handed back to home screen activity to handle fragment switching
+            // note: first four are handed back to home screen activity to handle fragment switching
             case NavigationConstants.HOME_NAV_GROUPS:
             case NavigationConstants.HOME_NAV_TASKS:
             case NavigationConstants.HOME_NAV_NOTIFICATIONS:
@@ -222,11 +218,6 @@ public class NavigationDrawerFragment extends Fragment implements TaskService.Ta
         }
     }
 
-    public void updateGroupCount(int groupCount) {
-        groups.setItemCount(groupCount);
-        drawerAdapter.notifyItemChanged(NavigationConstants.HOME_NAV_GROUPS);
-    }
-
     private void shareApp() {
         Intent shareIntent = new Intent(Intent.ACTION_SEND);
         shareIntent.setType("text/plain");
@@ -252,7 +243,6 @@ public class NavigationDrawerFragment extends Fragment implements TaskService.Ta
     // todo : move this onto a background thread?
     private void unregisterGcm() {
         Log.e(TAG, "unregistering from GCM ...");
-        final Context context = getActivity().getApplicationContext();
         Intent gcmUnregister = new Intent(getActivity(), GcmRegistrationService.class);
         gcmUnregister.putExtra(NotificationConstants.ACTION, NotificationConstants.GCM_UNREGISTER);
         gcmUnregister.putExtra(NotificationConstants.PHONE_NUMBER, RealmUtils.loadPreferencesFromDB().getMobileNumber());
@@ -266,11 +256,20 @@ public class NavigationDrawerFragment extends Fragment implements TaskService.Ta
         EventBus.getDefault().unregister(this);
     }
 
+    public void refreshGroupCount() {
+        groups.setItemCount((int) RealmUtils.countObjectsInDB(Group.class));
+        drawerAdapter.notifyDataSetChanged();
+        Log.e(TAG, "group count refreshed ... now : " + groups.getItemCount());
+    }
+
     @Subscribe
     public void onGroupsRefreshedEvent(GroupsRefreshedEvent e) {
-        int groupCount = GroupService.getInstance().getGroups().size();
-        groups.setItemCount(groupCount);
-        drawerAdapter.notifyItemChanged(NavigationConstants.HOME_NAV_GROUPS);
+        refreshGroupCount();
+    }
+
+    @Subscribe
+    public void onGroupAdded(GroupCreatedEvent e) {
+        refreshGroupCount();
     }
 
     @Subscribe
@@ -290,12 +289,6 @@ public class NavigationDrawerFragment extends Fragment implements TaskService.Ta
     public void onTaskCancelledEvent(TaskCancelledEvent e) {
         tasks.decrementItemCount();
         drawerAdapter.notifyItemChanged(NavigationConstants.HOME_NAV_TASKS);
-    }
-
-    @Subscribe
-    public void onGroupAdded(GroupCreatedEvent e) {
-        groups.incrementItemCount();
-        drawerAdapter.notifyItemChanged(NavigationConstants.HOME_NAV_GROUPS);
     }
 
 }

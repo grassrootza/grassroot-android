@@ -31,6 +31,7 @@ public class Group extends RealmObject implements Parcelable, Comparable<Group> 
   private Integer groupMemberCount;
   private String imageUrl;
 
+  private long lastMajorChangeMillis;
   private boolean fetchedTasks;
   private String lastTimeTasksFetched;
 
@@ -38,8 +39,18 @@ public class Group extends RealmObject implements Parcelable, Comparable<Group> 
   private boolean discoverable;
   private String lastChangeType;
   private String description;
+
   private boolean isLocal;
   private boolean isSentToAPI;
+
+  @Ignore private Date date;
+  private DateTime dateTime; // used in JSON conversion
+  private String dateTimeStringISO;
+
+  private boolean hasTasks;
+
+  private RealmList<RealmString> permissions = new RealmList<>();
+  @Ignore private List<String> permissionsList;
 
 
   public boolean isFetchedTasks() {
@@ -79,15 +90,6 @@ public class Group extends RealmObject implements Parcelable, Comparable<Group> 
   public void setDate(Date date) {
     this.date = date;
   }
-
-  @Ignore private Date date;
-  private DateTime dateTime; // used in JSON conversion
-  private String dateTimeStringISO;
-
-  private boolean hasTasks;
-
-  private RealmList<RealmString> permissions = new RealmList<>();
-  @Ignore private List<String> permissionsList;
 
   public Group() {
   }
@@ -142,6 +144,10 @@ public class Group extends RealmObject implements Parcelable, Comparable<Group> 
   public void setLastChangeType(String lastChangeType) {
     this.lastChangeType = lastChangeType;
   }
+
+  public long getLastMajorChangeMillis() { return lastMajorChangeMillis; }
+
+  public void setLastMajorChangeMillis(long lastMajorChangeMillis) { this.lastMajorChangeMillis = lastMajorChangeMillis; }
 
   public String getJoinCode() {
     return joinCode;
@@ -304,6 +310,7 @@ public class Group extends RealmObject implements Parcelable, Comparable<Group> 
     dest.writeInt(discoverable ? 1 : 0);
     dest.writeList(members);
     dest.writeString(lastTimeTasksFetched);
+    dest.writeLong(lastMajorChangeMillis);
   }
 
   protected Group(Parcel in) {
@@ -323,6 +330,7 @@ public class Group extends RealmObject implements Parcelable, Comparable<Group> 
     discoverable = in.readInt() != 0;
     in.readList(members,Member.class.getClassLoader());
     lastTimeTasksFetched = in.readString();
+    lastMajorChangeMillis = in.readLong();
   }
 
   public static final Creator<Group> CREATOR = new Creator<Group>() {
@@ -336,8 +344,18 @@ public class Group extends RealmObject implements Parcelable, Comparable<Group> 
   };
 
   @Override public int compareTo(Group g2) {
-    return this.getDate().compareTo(g2.getDate());
+    // note : this is going to sort like Java Dates usually do, i.e., from earliest to latest, so for most cases, use reverse order
+    return (this.lastMajorChangeMillis > g2.lastMajorChangeMillis) ? 1
+            : (this.lastMajorChangeMillis < g2.lastMajorChangeMillis) ? -1 :
+            this.getDate().compareTo(g2.getDate()); // last one just in case both are zero for some reason
   }
+
+  public static Comparator<Group> GroupTaskDateComparator = new Comparator<Group>() {
+    @Override
+    public int compare(Group lhs, Group rhs) {
+      return lhs.getDate().compareTo(rhs.getDate());
+    }
+  };
 
   public static Comparator<Group> GroupRoleComparator = new Comparator<Group>() {
     @Override public int compare(Group group, Group t1) {
@@ -367,6 +385,7 @@ public class Group extends RealmObject implements Parcelable, Comparable<Group> 
     return "Group{" +
         "groupUid='" + groupUid + '\'' +
         ", lastChangeType='" + lastChangeType + '\'' +
+        ", lastMajorChangeTime ='" + lastMajorChangeMillis + '\'' +
         ", groupName='" + groupName + '\'' +
         ", lastFetchedTasks='" + lastTimeTasksFetched + '\'' +
         ", discoverable='" + discoverable + '\'' +
