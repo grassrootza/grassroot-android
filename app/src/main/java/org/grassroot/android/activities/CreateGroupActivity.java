@@ -67,7 +67,11 @@ public class CreateGroupActivity extends PortraitActivity implements ContactSele
   private ContactSelectionFragment contactSelectionFragment;
   private boolean onMainScreen;
   private boolean menuOpen;
+
   private String groupUid = UUID.randomUUID().toString();;
+  private Group cachedGroup;
+
+  private String descCharCounter;
 
   private ProgressDialog progressDialog;
 
@@ -98,13 +102,7 @@ public class CreateGroupActivity extends PortraitActivity implements ContactSele
     mapMembersContacts = new HashMap<>();
     manuallyAddedMembers = new ArrayList<>();
     onMainScreen = true;
-  }
-
-  @OnClick(R.id.cg_add_member_options) public void toggleAddMenu() {
-    addMemberOptions.setImageResource(menuOpen ? R.drawable.ic_add : R.drawable.ic_add_45d);
-    addMemberFromContacts.setVisibility(menuOpen ? View.GONE : View.VISIBLE);
-    addMemberManually.setVisibility(menuOpen ? View.GONE : View.VISIBLE);
-    menuOpen = !menuOpen;
+    descCharCounter = getString(R.string.generic_160_char_counter);
   }
 
   private void setUpMemberList() {
@@ -113,9 +111,29 @@ public class CreateGroupActivity extends PortraitActivity implements ContactSele
         .commit();
   }
 
+  // we do this so the user can always come back to it ... being extra careful on list fragment though
+  private void cacheWipGroup() {
+    final String currentName = et_groupname.getText().toString().trim();
+    if (!TextUtils.isEmpty(currentName)) {
+      final String currentDesc = et_groupname.getText().toString().trim();
+      final List<Member> currentMembers = memberListFragment.getSelectedMembers();
+      if (cachedGroup == null) {
+        cachedGroup = GroupService.getInstance().createGroupLocally(groupUid,
+                currentName,
+                currentDesc,
+                currentMembers);
+      } else {
+        cachedGroup = GroupService.getInstance().updateLocalGroup(cachedGroup,
+                currentName,
+                currentDesc,
+                currentMembers);
+      }
+    }
+  }
+
   @OnClick(R.id.cg_iv_crossimage) public void ivCrossimage() {
     if (!onMainScreen) {
-      // note : this means we do not save / return the contacts on cross clicked
+      // note : this means we do not saveGroupIfNamed / return the contacts on cross clicked
       getSupportFragmentManager().popBackStack();
       onMainScreen = true;
     } else {
@@ -125,9 +143,11 @@ public class CreateGroupActivity extends PortraitActivity implements ContactSele
     }
   }
 
-  @OnTextChanged(value = R.id.et_group_description, callback = AFTER_TEXT_CHANGED)
-  public void changeLengthCounter(CharSequence s) {
-    tvCounter.setText("" + s.length() + "/" + "160");
+  @OnClick(R.id.cg_add_member_options) public void toggleAddMenu() {
+    addMemberOptions.setImageResource(menuOpen ? R.drawable.ic_add : R.drawable.ic_add_45d);
+    addMemberFromContacts.setVisibility(menuOpen ? View.GONE : View.VISIBLE);
+    addMemberManually.setVisibility(menuOpen ? View.GONE : View.VISIBLE);
+    menuOpen = !menuOpen;
   }
 
   @OnClick(R.id.ll_add_member_contacts) public void icon_add_from_contacts() {
@@ -167,21 +187,20 @@ public class CreateGroupActivity extends PortraitActivity implements ContactSele
       if (mapMembersContacts.containsKey(c.id)) {
         selectedMembers.add(mapMembersContacts.get(c.id));
       } else {
-        Member m =
-            new Member(c.selectedMsisdn, c.getDisplayName(), GroupConstants.ROLE_ORDINARY_MEMBER,
+        Member m = new Member(c.selectedMsisdn, c.getDisplayName(), GroupConstants.ROLE_ORDINARY_MEMBER,
                 c.id, true);
         m.setGroupUid(groupUid);
         m.setMemberUid(UUID.randomUUID().toString());
         m.setMemberGroupUid();
         RealmUtils.saveDataToRealm(m);
         selectedMembers.add(m);
-        GroupService.getInstance().createGroupLocally(groupUid,et_groupname.getText().toString(),et_group_description.getText().toString(),selectedMembers);
         mapMembersContacts.put(c.id, m);
       }
     }
     memberListFragment.transitionToMemberList(selectedMembers);
     closeContactSelectionFragment();
     progressDialog.hide();
+    cacheWipGroup();
   }
 
   @OnClick(R.id.ll_add_member_manually) public void ic_edit_call() {
@@ -191,7 +210,6 @@ public class CreateGroupActivity extends PortraitActivity implements ContactSele
   }
 
   private void memberContextMenu(final int position, final String memberUid) {
-    Log.d(TAG, "viewing member dialog for UID: " + memberUid);
     AlertDialog.Builder builder = new AlertDialog.Builder(this);
     builder.setItems(R.array.cg_member_popup, new DialogInterface.OnClickListener() {
               @Override
@@ -227,7 +245,7 @@ public class CreateGroupActivity extends PortraitActivity implements ContactSele
         newMember.setMemberGroupUid();
         manuallyAddedMembers.add(newMember);
         memberListFragment.addMembers(Collections.singletonList(newMember));
-        GroupService.getInstance().createGroupLocally(groupUid,et_groupname.getText().toString(),et_group_description.getText().toString(),memberListFragment.getSelectedMembers());
+
       } else if (requestCode == Constant.activityManualMemberEdit) {
         Member revisedMember = data.getParcelableExtra(GroupConstants.MEMBER_OBJECT);
         int position = data.getIntExtra(Constant.INDEX_FIELD, -1);
@@ -235,22 +253,20 @@ public class CreateGroupActivity extends PortraitActivity implements ContactSele
         Log.e(TAG, "at position: " + position + ", member received back : " + revisedMember);
       }
     }
+    cacheWipGroup();
   }
 
   @OnClick(R.id.cg_bt_save)
-  public void save() {
+  public void saveGroupIfNamed() {
     if (menuOpen) {
       toggleAddMenu();
     }
-    validate_allFields();
-  }
 
-  private void validate_allFields() {
-    if (!(TextUtils.isEmpty(
-        et_groupname.getText().toString().trim().replaceAll(Constant.regexAlphaNumeric, "")))) {
-      createGroup();
-    } else {
+
+    if (TextUtils.isEmpty(et_groupname.getText())) {
       ErrorUtils.showSnackBar(rlCgRoot, R.string.error_group_name_blank, Snackbar.LENGTH_SHORT);
+    } else {
+      createGroup();
     }
   }
 
@@ -260,18 +276,19 @@ public class CreateGroupActivity extends PortraitActivity implements ContactSele
     String groupDescription = et_group_description.getText().toString().trim();
     List<Member> groupMembers = memberListFragment.getSelectedMembers();
 
+    cacheWipGroup();
+
     progressDialog.show();
     GroupService.getInstance()
-        .createGroup(groupUid,groupName, groupDescription, groupMembers,
-            new GroupService.GroupCreationListener() {
+        .sendNewGroupToServer(groupUid, new GroupService.GroupCreationListener() {
               @Override public void groupCreatedLocally(Group group) {
                 progressDialog.dismiss();
-                handleSuccessfulGroupCreation(group);
+                handleSuccessfulGroupCreation(group, false); // todo : say, "it's local"
               }
 
               @Override public void groupCreatedOnServer(Group group) {
                 progressDialog.dismiss();
-                handleSuccessfulGroupCreation(group);
+                handleSuccessfulGroupCreation(group, true);
               }
 
               @Override public void groupCreationError(Response<GroupResponse> response) {
@@ -281,11 +298,7 @@ public class CreateGroupActivity extends PortraitActivity implements ContactSele
             });
   }
 
-  private void handleSuccessfulGroupCreation(Group group) {
-    PreferenceObject preferenceObject = RealmUtils.loadPreferencesFromDB();
-    preferenceObject.setHasGroups(true);
-    RealmUtils.saveDataToRealm(preferenceObject);
-    if (!group.getIsLocal()) RealmUtils.saveDataToRealm(group);
+  private void handleSuccessfulGroupCreation(Group group, boolean successfullySavedToServer) {
     EventBus.getDefault().post(new GroupCreatedEvent(group));
     Intent i = new Intent(CreateGroupActivity.this, ActionCompleteActivity.class);
     String completionMessage;
@@ -313,7 +326,14 @@ public class CreateGroupActivity extends PortraitActivity implements ContactSele
   }
 
   private void deleteLocalCreatedGroup(){
-    RealmUtils.removeObjectFromDatabase(Group.class,"groupUid",groupUid);
-    RealmUtils.removeObjectFromDatabase(Member.class,"groupUid",groupUid);
+    if (cachedGroup != null) {
+      RealmUtils.removeObjectFromDatabase(Group.class,"groupUid",groupUid);
+      RealmUtils.removeObjectFromDatabase(Member.class,"groupUid",groupUid);
+    }
+  }
+
+  @OnTextChanged(value = R.id.et_group_description, callback = AFTER_TEXT_CHANGED)
+  public void changeLengthCounter(CharSequence s) {
+    tvCounter.setText(String.format(descCharCounter, s.length()));
   }
 }

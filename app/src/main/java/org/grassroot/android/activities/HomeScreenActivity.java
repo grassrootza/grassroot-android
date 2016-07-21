@@ -36,6 +36,7 @@ import org.grassroot.android.interfaces.NavigationConstants;
 import org.grassroot.android.interfaces.TaskConstants;
 import org.grassroot.android.models.Group;
 import org.grassroot.android.utils.Constant;
+import org.grassroot.android.utils.NetworkUtils;
 import org.grassroot.android.utils.PermissionUtils;
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
@@ -74,6 +75,8 @@ public class HomeScreenActivity extends PortraitActivity implements NavigationDr
         EventBus.getDefault().register(this);
         setUpToolbar();
         switchToGroupFragment();
+        // todo : move this into a background thread ...
+        NetworkUtils.sendLocalQueuedEntities(this);
     }
 
     private void setUpToolbar() {

@@ -203,8 +203,7 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
   }
 
   private void handleTaskLoaded(List<TaskModel> tasks) {
-    progressDialog.hide();
-    swipeRefreshLayout.setRefreshing(false);
+    hideProgress();
     if (tasks == null || tasks.isEmpty()) {
       handleNoTasksFound();
     } else {
@@ -357,6 +356,15 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
           .setCustomAnimations(R.anim.push_down_in, R.anim.push_down_out)
           .remove(frag)
           .commit();
+    }
+  }
+
+  private void hideProgress() {
+    if (progressDialog != null) {
+      progressDialog.hide();
+    }
+    if (swipeRefreshLayout != null) {
+      swipeRefreshLayout.setRefreshing(false);
     }
   }
 

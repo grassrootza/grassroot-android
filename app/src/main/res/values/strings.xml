@@ -194,6 +194,8 @@
     <string name="cg_group_description">Group description (optional)</string>
     <string name="cg_member_list_header">Group members</string>
 
+    <string name="generic_160_char_counter">%d/160</string>
+
     <string name="cg_member_title">%1$s (%2$s)</string>
     <string-array name="cg_member_popup">
         <item>Edit</item>

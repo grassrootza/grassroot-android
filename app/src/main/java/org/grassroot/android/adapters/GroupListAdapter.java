@@ -41,6 +41,7 @@ import org.grassroot.android.utils.RealmUtils;
 public class GroupListAdapter extends RecyclerView.Adapter<GroupListAdapter.GHP_ViewHolder> {
 
     private String TAG = GroupListAdapter.class.getSimpleName();
+    private final int defaultAvatar = R.drawable.ic_groups_default_avatar;
 
     private final Context context;
     private final GroupRowListener listener;
@@ -49,6 +50,7 @@ public class GroupListAdapter extends RecyclerView.Adapter<GroupListAdapter.GHP_
     List<Group> displayedGroups;
 
     private static final SimpleDateFormat outputSDF = new SimpleDateFormat("EEE, d MMM");
+    private final float localGroupAlpha = 0.5f;
 
     public interface GroupRowListener {
         void onGroupRowShortClick(Group group);
@@ -123,12 +125,13 @@ public class GroupListAdapter extends RecyclerView.Adapter<GroupListAdapter.GHP_
         holder.itemView.setLongClickable(true);
         final Group group = displayedGroups.get(position);
         if (Build.VERSION.SDK_INT < 11) {
-            final AlphaAnimation animation = new AlphaAnimation(!group.getIsLocal() ? 1f :0.3f, !group.getIsLocal() ? 1f :0.3f);
+            final AlphaAnimation animation = new AlphaAnimation(!group.getIsLocal() ? 1f : localGroupAlpha,
+                    !group.getIsLocal() ? 1f : localGroupAlpha);
             animation.setDuration(50);
             animation.setFillAfter(true);
             holder.itemView.startAnimation(animation);
         } else {
-            holder.itemView.setAlpha(!group.getIsLocal() ? 1f : 0.3f);
+            holder.itemView.setAlpha(!group.getIsLocal() ? 1f : localGroupAlpha);
         }
 
         final String groupOrganizerDescription =
@@ -198,8 +201,8 @@ public class GroupListAdapter extends RecyclerView.Adapter<GroupListAdapter.GHP_
 
         if (imageUrl != null) {
             setAvatar(holder.avatar, imageUrl);
-        }else{
-            holder.avatar.setImageResource(R.drawable.ic_groups_default_avatar);
+        } else {
+            holder.avatar.setImageResource(defaultAvatar);
         }
     }
 
@@ -268,8 +271,8 @@ public class GroupListAdapter extends RecyclerView.Adapter<GroupListAdapter.GHP_
 
     private void setAvatar(final ImageView view, final String imageUrl) {
         Picasso.with(context).load(imageUrl)
-                .error(R.drawable.ic_groups_default_avatar)
-                .placeholder(R.drawable.ic_groups_default_avatar)
+                .error(defaultAvatar)
+                .placeholder(defaultAvatar)
                 .networkPolicy(NetworkPolicy.OFFLINE)
                 .transform(new CircularImageTransformer())
                 .into(view, new Callback() {
@@ -278,9 +281,9 @@ public class GroupListAdapter extends RecyclerView.Adapter<GroupListAdapter.GHP_
                     @Override
                     public void onError() {
                         Picasso.with(context).load(imageUrl)
-                                .placeholder(R.drawable.ic_groups_default_avatar)
+                                .placeholder(defaultAvatar)
                                 .transform(new CircularImageTransformer())
-                                .error(R.drawable.ic_groups_default_avatar)
+                                .error(defaultAvatar)
                                 .into(view);
                     }
                 });

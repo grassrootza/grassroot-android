@@ -121,7 +121,7 @@ public class TaskService {
       RealmUtils.removeObjectsByUid(TaskModel.class, "taskUid", responseBody.getRemovedUids());
       updateTasksFetchedTime(groupUid);
     } catch (Exception e) {
-      Log.e(TAG, "exception in realm save ... not updating last time fetched ...");
+      Log.e(TAG, "exception in realm saveGroupIfNamed ... not updating last time fetched ...");
       e.printStackTrace();
     }
   }

@@ -131,12 +131,12 @@ public class NavigationDrawerFragment extends Fragment implements TaskService.Ta
         Log.e(TAG, "on set up ... size of groups loaded: " + groups.getItemCount());
         draweritems.add(groups);
 
-        tasks = new NavDrawerItem(getString(R.string.drawer_open_tasks), R.drawable.ic_star_gray, R.drawable.ic_star_green, false, true); // todo: fix icon
+        tasks = new NavDrawerItem(getString(R.string.drawer_open_tasks), R.drawable.ic_small_task_tick, R.drawable.ic_small_task_tick, false, true); // todo: fix icon
         tasks.setItemCount(TaskService.getInstance().upcomingTasks.size());
         TaskService.getInstance().fetchUpcomingTasks(this);
         draweritems.add(tasks);
 
-        notifications = new NavDrawerItem(getString(R.string.Notifications),R.drawable.ic_notification,R.drawable.ic_notification_green, false, true);
+        notifications = new NavDrawerItem(getString(R.string.Notifications),R.drawable.ic_exclamation_small,R.drawable.ic_exclamation_small, false, true);
         notifications.setItemCount(RealmUtils.loadPreferencesFromDB().getNotificationCounter());
         draweritems.add(notifications);
 

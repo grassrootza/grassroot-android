@@ -44,13 +44,13 @@
     <dimen name="expanded_title_margin_bottom">12dp</dimen>
     <dimen name="thin_separator_height">1dp</dimen>
 
+    <dimen name="nav_bar_icon_max">24dp</dimen>
+
     <dimen name="md_button_min_width">72dp</dimen>
-    <!-- Above and below buttons, 36+6+6=48 for the height of the button frame
--->
+    <!-- Above and below buttons, 36+6+6=48 for the height of the button frame-->
     <dimen name="md_button_textpadding_horizontal">1dp</dimen>
     <!-- 16dp - 4dp (inset from background drawable) -->
-    <!-- actual content padding bottom is 16dp, but we split between button bar and content
--->
+    <!-- actual content padding bottom is 16dp, but we split between button bar and content-->
     <dimen name="md_button_textsize">16sp</dimen>
     <dimen name="md_icon_max_size">48dp</dimen>
 

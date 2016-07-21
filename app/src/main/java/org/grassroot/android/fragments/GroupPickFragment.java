@@ -53,7 +53,7 @@ public class GroupPickFragment extends Fragment implements GroupPickAdapter.Grou
 
         GroupPickFragment fragment = new GroupPickFragment();
         List<Group> groups = new ArrayList<>();
-        List<Group> allGroups = RealmUtils.loadListFromDB(Group.class); // todo : should probably have a sort query ...
+        List<Group> allGroups = RealmUtils.loadGroupsSorted();
 
         Log.e(TAG, "allGroups ... " + allGroups.size());
         for (Group g : allGroups) {

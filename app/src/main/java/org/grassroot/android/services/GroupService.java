@@ -58,7 +58,6 @@ public class GroupService {
 
   public interface GroupServiceListener {
     void groupListLoaded();
-
     void groupListLoadingError();
   }
 
@@ -198,43 +197,7 @@ public class GroupService {
     METHODS FOR CREATING AND MODIFYING / EDITING GROUPS
      */
 
-  public void createGroup(final String groupUid, final String groupName,
-      final String groupDescription, final List<Member> groupMembers,
-      final GroupCreationListener listener) {
-    String mobileNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
-    String code = RealmUtils.loadPreferencesFromDB().getToken();
-    final Group group = createGroupLocally(groupUid, groupName, groupDescription, groupMembers);
-    GrassrootRestService.getInstance()
-        .getApi()
-        .createGroup(mobileNumber, code, groupName, groupDescription, groupMembers)
-        .enqueue(new Callback<GroupResponse>() {
-          @Override
-          public void onResponse(Call<GroupResponse> call, Response<GroupResponse> response) {
-            if (response.isSuccessful()) {
-              Log.d(TAG, "returning group created! with UID : " + response.body()
-                  .getGroups()
-                  .get(0)
-                  .getGroupUid());
-              RealmUtils.removeObjectFromDatabase(Group.class, "groupUid", groupUid);
-              RealmUtils.removeObjectFromDatabase(Member.class,"groupUid", groupUid);
-              for(Member m :response.body().getGroups().first().getMembers()){
-                m.setMemberGroupUid();
-                RealmUtils.saveDataToRealm(m);
-              }
-              RealmUtils.saveDataToRealm(response.body().getGroups().first());
-              listener.groupCreatedOnServer(response.body().getGroups().first());
-            } else {
-              listener.groupCreationError(response);
-            }
-          }
-
-          @Override public void onFailure(Call<GroupResponse> call, Throwable t) {
-            Log.e(TAG, "Error! This should not occur");
-            listener.groupCreatedLocally(group);
-          }
-        });
-  }
-
+  // todo : don't need to do set members?
   public Group createGroupLocally(final String groupUid, final String groupName,
       final String groupDescription, final List<Member> groupMembers) {
     Realm realm = Realm.getDefaultInstance();
@@ -266,12 +229,30 @@ public class GroupService {
     return group;
   }
 
-  public void sendNewGroupToServer(final String localGroupUid, final Context context) {
+  public Group updateLocalGroup(Group group, final String updatedName, final String groupDescription,
+                                final List<Member> groupMembers) {
+    Realm realm = Realm.getDefaultInstance();
+    group.setGroupName(updatedName);
+    group.setDescription(groupDescription);
+    group.setLastMajorChangeMillis(Utilities.getCurrentTimeInMillisAtUTC());
+    realm.beginTransaction();
+    realm.copyToRealmOrUpdate(group);
+    realm.commitTransaction();
+    realm.beginTransaction();
+    for (Member m : groupMembers) {
+      realm.copyToRealmOrUpdate(m);
+    }
+    realm.commitTransaction();
+    realm.close();
+    return group;
+  }
+
+  public void sendNewGroupToServer(final String localGroupUid, final GroupCreationListener listener) {
     final String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
     final String code = RealmUtils.loadPreferencesFromDB().getToken();
     final Group localGroup = RealmUtils.loadGroupFromDB(localGroupUid);
+    final RealmList<Member> members = RealmUtils.loadListFromDB(Member.class, "groupUid", localGroupUid);
 
-    final RealmList<Member> members = RealmUtils.loadListFromDB(Member.class, "groupUid", localGroup.getGroupUid());
     GrassrootRestService.getInstance()
             .getApi()
             .createGroup(phoneNumber, code, localGroup.getGroupName(), localGroup.getDescription(), members)
@@ -279,34 +260,50 @@ public class GroupService {
               @Override
               public void onResponse(Call<GroupResponse> call, Response<GroupResponse> response) {
                 if (response.isSuccessful()) {
-                  PreferenceObject preferenceObject = RealmUtils.loadPreferencesFromDB();
-                  preferenceObject.setHasGroups(true);
-                  RealmUtils.saveDataToRealm(preferenceObject);
-                  RealmUtils.saveDataToRealm(response.body().getGroups().first());
-                  //sure local, edited or not, same result --> POST to create
-                  RealmList<TaskModel> models =
-                          RealmUtils.loadListFromDB(TaskModel.class, "parentUid", localGroupUid);
-                  for (int i = 0; i < models.size(); i++) {
-                    models.get(i).setParentUid(response.body().getGroups().first().getGroupUid());
-                    TaskService.getInstance().sendNewTaskToServer(models.get(i), null);
+                  final Group groupFromServer = response.body().getGroups().first();
+                  saveCreatedGroupToRealm(groupFromServer);
+                  cleanUpLocalGroup(localGroupUid, members, groupFromServer);
+                  Log.d("tag", "returning group created! with UID : " + groupFromServer.getGroupUid());
+                  if (listener != null) {
+                    listener.groupCreatedOnServer(groupFromServer);
                   }
-                  RealmUtils.removeObjectFromDatabase(Group.class, "groupUid", localGroupUid);
-                  for (Member member : members) {
-                    RealmUtils.removeObjectFromDatabase(Member.class, "groupUid",
-                            member.getGroupUid());
-                  }
-                  Log.d("tag", "returning group created! with UID : " + response.body()
-                          .getGroups()
-                          .get(0)
-                          .getGroupUid());
                 } else {
-
+                  saveCreatedGroupToRealm(localGroup);
+                  if (listener != null) {
+                    // listener.groupCreationError(response); // todo : decide if we want to call this
+                    listener.groupCreatedLocally(localGroup); // we probably also want to send an error ..
+                  }
                 }
               }
 
               @Override public void onFailure(Call<GroupResponse> call, Throwable t) {
+                saveCreatedGroupToRealm(localGroup);
+                if (listener != null) {
+                  listener.groupCreatedLocally(localGroup);
+                }
               }
             });
+  }
+
+  private void saveCreatedGroupToRealm(Group group) {
+    PreferenceObject preferenceObject = RealmUtils.loadPreferencesFromDB();
+    preferenceObject.setHasGroups(true);
+    RealmUtils.saveDataToRealm(preferenceObject);
+    RealmUtils.saveGroupToRealm(group);
+  }
+
+  private void cleanUpLocalGroup(final String localGroupUid, RealmList<Member> localMembers, Group groupFromServer) {
+    RealmList<TaskModel> models = RealmUtils.loadListFromDB(TaskModel.class, "parentUid", localGroupUid);
+    for (int i = 0; i < models.size(); i++) {
+      models.get(i).setParentUid(groupFromServer.getGroupUid());
+      TaskService.getInstance().sendNewTaskToServer(models.get(i), null);
+    }
+    RealmUtils.removeObjectFromDatabase(Group.class, "groupUid", localGroupUid);
+    RealmUtils.removeObjectFromDatabase(Member.class,"groupUid", localGroupUid);
+    for(Member m : groupFromServer.getMembers()){
+      m.setMemberGroupUid();
+      RealmUtils.saveDataToRealm(m);
+    }
   }
 
   /* METHODS FOR ADDING AND REMOVING MEMBERS */
