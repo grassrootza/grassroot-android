@@ -71,8 +71,8 @@ public class GroupListAdapter extends RecyclerView.Adapter<GroupListAdapter.GHP_
 
     public void refreshGroupsToDB() {
         displayedGroups.clear();
-        displayedGroups.addAll(RealmUtils.loadListFromDB(Group.class));
-        sortByChangedTime();
+        displayedGroups.addAll(RealmUtils.loadGroupsSorted());
+        notifyDataSetChanged();
     }
 
     public void sortByChangedTime() {

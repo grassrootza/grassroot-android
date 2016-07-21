@@ -377,7 +377,7 @@ public class GrassrootRestService {
         @Query("description") String description,
         @Query("location") String location,
         @Query("startTime") String startTime,
-        @Query("members") Set<String> assignedMemberUids);
+        @Query("members") List<String> assignedMemberUids);
 
     //edit logbook
     @POST("logbook/update/{phoneNumber}/{code}/{uid}")

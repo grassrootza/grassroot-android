@@ -6,6 +6,9 @@ import io.realm.Realm;
 import io.realm.RealmList;
 import io.realm.RealmObject;
 import io.realm.RealmQuery;
+import io.realm.RealmResults;
+import io.realm.Sort;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -15,6 +18,8 @@ import org.grassroot.android.models.PreferenceObject;
 import org.grassroot.android.models.RealmString;
 
 public class RealmUtils {
+
+  private static final String TAG = RealmUtils.class.getSimpleName();
 
   public static List<String> convertListOfRealmStringInListOfString(
       RealmList<RealmString> realmList) {
@@ -57,6 +62,17 @@ public class RealmUtils {
     saveDataToRealm(group);
     Group updatedGroup = RealmUtils.loadObjectFromDB(Group.class, "groupUid", group.getGroupUid());
     Log.d("REALM", "group as in Realm : " + updatedGroup.toString());
+  }
+
+  public static RealmList<Group> loadGroupsSorted() {
+    RealmList<Group> groups = new RealmList<>();
+    Realm realm = Realm.getDefaultInstance();
+    groups.addAll(realm.copyFromRealm(realm
+            .where(Group.class)
+            .findAll()
+            .sort("lastMajorChangeMillis", Sort.DESCENDING)));
+    realm.close();
+    return groups;
   }
 
   public static <T extends RealmList> T loadListFromDB(Class<? extends RealmObject> model,
@@ -120,6 +136,26 @@ public class RealmUtils {
     if(query.findAll().size()>0) query.findAll().deleteAllFromRealm();
     realm.commitTransaction();
     realm.close();
+  }
+
+  public static void removeObjectsByUid(Class<? extends RealmObject> clazz, final String pName,
+                                        List<String> pValues) {
+    if (pValues != null && pValues.size() > 0) {
+      Realm realm = Realm.getDefaultInstance();
+      final int size = pValues.size();
+      RealmQuery<? extends RealmObject> query = realm.where(clazz).equalTo(pName, pValues.get(0));
+      for (int i = 1; i < size; i++) {
+        query = query.or().equalTo(pName, pValues.get(i));
+      }
+      final RealmResults<? extends RealmObject> results = query.findAll();
+      realm.executeTransaction(new Realm.Transaction() {
+        @Override
+        public void execute(Realm realm) {
+          results.deleteAllFromRealm();
+        }
+      });
+      realm.close();
+    }
   }
 
   public static <T extends RealmList> T loadListFromDB(Class<? extends RealmObject> model) {

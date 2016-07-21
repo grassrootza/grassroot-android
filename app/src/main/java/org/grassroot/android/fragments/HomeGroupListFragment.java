@@ -124,7 +124,7 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
         rcGroupList.setItemViewCacheSize(20);
         rcGroupList.setDrawingCacheEnabled(true);
         rcGroupList.setDrawingCacheQuality(View.DRAWING_CACHE_QUALITY_HIGH);
-        groupListRowAdapter = new GroupListAdapter(RealmUtils.loadListFromDB(Group.class), HomeGroupListFragment.this);
+        groupListRowAdapter = new GroupListAdapter(RealmUtils.loadGroupsSorted(), HomeGroupListFragment.this);
         rcGroupList.setAdapter(groupListRowAdapter);
         rcGroupList.setVisibility(View.VISIBLE);
         glSwipeRefresh.setColorSchemeColors(ContextCompat.getColor(getActivity(), R.color.primaryColor));
@@ -233,7 +233,7 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
    */
     public void refreshGroupList() {
         GroupService.getInstance()
-                .refreshGroupList(getActivity(), new GroupService.GroupServiceListener() {
+                .fetchGroupList(getActivity(), null, new GroupService.GroupServiceListener() {
                     @Override public void groupListLoaded() {
                         groupListRowAdapter.refreshGroupsToDB();
                         glSwipeRefresh.setRefreshing(false);

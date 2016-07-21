@@ -1,10 +1,13 @@
 package org.grassroot.android.models;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import io.realm.RealmList;
 
 public class TaskChangedResponse {
   RealmList<TaskModel> addedAndUpdated = new RealmList<>();
-  RealmList<RealmString> removedUids = new RealmList<>();
+  List<String> removedUids = new ArrayList<>();
 
   public TaskChangedResponse() {
 
@@ -18,11 +21,11 @@ public class TaskChangedResponse {
     this.addedAndUpdated = addedAndUpdated;
   }
 
-  public RealmList<RealmString> getRemovedUids() {
+  public List<String> getRemovedUids() {
     return removedUids;
   }
 
-  public void setRemovedUids(RealmList<RealmString> removedUids) {
+  public void setRemovedUids(List<String> removedUids) {
     this.removedUids = removedUids;
   }
 

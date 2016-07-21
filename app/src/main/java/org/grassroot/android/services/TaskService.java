@@ -1,13 +1,7 @@
 package org.grassroot.android.services;
 
 import android.util.Log;
-import io.realm.Realm;
-import io.realm.RealmList;
-import io.realm.RealmResults;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.List;
+
 import org.grassroot.android.interfaces.TaskConstants;
 import org.grassroot.android.models.Group;
 import org.grassroot.android.models.TaskChangedResponse;
@@ -17,7 +11,15 @@ import org.grassroot.android.utils.NetworkUtils;
 import org.grassroot.android.utils.RealmUtils;
 import org.grassroot.android.utils.Utilities;
 
-import io.realm.internal.Util;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
+
+import io.realm.Realm;
+import io.realm.RealmList;
+import io.realm.RealmResults;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -37,17 +39,13 @@ public class TaskService {
 
   public interface TaskServiceListener {
     void tasksLoadedFromServer(List<TaskModel> tasks);
-
     void taskLoadingFromServerFailed(Response errorBody);
-
     void tasksLoadedFromDB(List<TaskModel> tasks);
   }
 
   public interface TaskCreationListener {
     void taskCreatedLocally(TaskModel task);
-
     void taskCreatedOnServer(TaskModel task);
-
     void taskCreationError(TaskModel task);
   }
 
@@ -90,15 +88,11 @@ public class TaskService {
     final String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
     final String code = RealmUtils.loadPreferencesFromDB().getToken();
     Group group = RealmUtils.loadObjectFromDB(Group.class, "groupUid", groupUid);
-    Log.e(TAG, "here is the group in taskService: " + group.toString());
 
     Call<TaskChangedResponse> call;
-    Log.e(TAG, "group last time tasks fetched = " + group.getLastTimeTasksFetched());
     if (group.getLastTimeTasksFetched() == null) {
-      Log.e(TAG, "group tasks never fetched");
       call = GrassrootRestService.getInstance().getApi().getGroupTasks(phoneNumber, code, groupUid);
     } else {
-      Log.e(TAG, "checking for tasks changed since: " + group.getLastTimeTasksFetched());
       call = GrassrootRestService.getInstance().getApi()
               .getGroupTasksChangedSince(phoneNumber, code, groupUid, Long.valueOf(group.getLastTimeTasksFetched()));
     }
@@ -107,8 +101,7 @@ public class TaskService {
       @Override public void onResponse(Call<TaskChangedResponse> call, Response<TaskChangedResponse> response) {
         if (response.isSuccessful()) {
           System.out.println(Thread.currentThread().getName());
-          RealmUtils.saveDataToRealm(response.body().getAddedAndUpdated());
-          updateTasksFetchedTime(groupUid);
+          updateAndRemoveTasks(response.body(), groupUid);
           listener.tasksLoadedFromServer(RealmUtils.loadListFromDB(TaskModel.class,"parentUid",groupUid));
         } else {
           listener.taskLoadingFromServerFailed(response);
@@ -120,6 +113,17 @@ public class TaskService {
             RealmUtils.loadListFromDB(TaskModel.class, "parentUid", groupUid));
       }
     });
+  }
+
+  private void updateAndRemoveTasks(final TaskChangedResponse responseBody, final String groupUid) {
+    try {
+      RealmUtils.saveDataToRealm(responseBody.getAddedAndUpdated());
+      RealmUtils.removeObjectsByUid(TaskModel.class, "taskUid", responseBody.getRemovedUids());
+      updateTasksFetchedTime(groupUid);
+    } catch (Exception e) {
+      Log.e(TAG, "exception in realm save ... not updating last time fetched ...");
+      e.printStackTrace();
+    }
   }
 
   private void updateTasksFetchedTime(String parentUid) {
@@ -159,7 +163,7 @@ public class TaskService {
 
   public void createTask(final TaskModel task, final TaskCreationListener listener) {
     if (NetworkUtils.isNetworkAvailable(ApplicationLoader.applicationContext)) {
-      setUpApiCall(task).enqueue(new Callback<TaskResponse>() {
+      newTaskApiCall(task).enqueue(new Callback<TaskResponse>() {
         @Override public void onResponse(Call<TaskResponse> call, Response<TaskResponse> response) {
           if (response.isSuccessful()) {
             listener.taskCreatedOnServer(response.body().getTasks().get(0));
@@ -180,7 +184,26 @@ public class TaskService {
     }
   }
 
-  private Call<TaskResponse> setUpApiCall(TaskModel task) {
+  public void sendNewTaskToServer(final TaskModel model, final TaskCreationListener listener) {
+    newTaskApiCall(model).enqueue(new Callback<TaskResponse>() {
+      @Override public void onResponse(Call<TaskResponse> call, Response<TaskResponse> response) {
+        Log.d(TAG, response.body().getTasks().get(0).toString());
+        if (listener != null) {
+          listener.taskCreatedLocally(response.body().getTasks().get(0));
+        }
+      }
+
+      @Override public void onFailure(Call<TaskResponse> call, Throwable t) {
+        t.printStackTrace();
+        if (listener != null) {
+          listener.taskCreationError(model);
+        }
+      }
+    });
+
+  }
+
+  private Call<TaskResponse> newTaskApiCall(TaskModel task) {
     final String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
     final String code = RealmUtils.loadPreferencesFromDB().getToken();
 
@@ -210,4 +233,44 @@ public class TaskService {
         throw new UnsupportedOperationException("Error! Missing task type in call");
     }
   }
+
+  public void sendTaskUpdateToServer(final TaskModel taskModel, boolean selectedMembersChanged) {
+    updateTaskApiCall(taskModel, selectedMembersChanged).enqueue(new Callback<TaskModel>() {
+      @Override public void onResponse(Call<TaskModel> call, Response<TaskModel> response) {
+        RealmUtils.saveDataToRealm(response.body());
+        //RealmUtils.removeObjectFromDatabase(TaskModel.class,"taskUid",model.getTaskUid());
+        System.out.println("TASK edited" + response.body().toString());
+      }
+
+      @Override public void onFailure(Call<TaskModel> call, Throwable t) {
+        t.printStackTrace();
+      }
+    });
+  }
+
+  private Call<TaskModel> updateTaskApiCall(TaskModel model, boolean selectedMembersChanged) {
+    List<String> memberUids = selectedMembersChanged ? model.getMemberUIDS() : Collections.EMPTY_LIST;
+    final String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
+    final String code = RealmUtils.loadPreferencesFromDB().getToken();
+    switch (model.getType()) {
+      case TaskConstants.MEETING:
+        return GrassrootRestService.getInstance()
+                .getApi()
+                .editMeeting(phoneNumber, code, model.getTaskUid(), model.getTitle(),
+                        model.getDescription(), model.getLocation(), model.getDeadlineISO(), memberUids);
+      case TaskConstants.VOTE:
+        return GrassrootRestService.getInstance()
+                .getApi()
+                .editVote(phoneNumber, code, model.getTaskUid(), model.getTitle(),
+                        model.getDescription(), model.getDeadlineISO());
+      case TaskConstants.TODO:
+        return GrassrootRestService.getInstance()
+                .getApi()
+                .editTodo(phoneNumber, code, model.getTitle(), model.getDeadlineISO(), null);
+      default:
+        throw new UnsupportedOperationException("Error! Missing task type in call");
+    }
+  }
+
+
 }

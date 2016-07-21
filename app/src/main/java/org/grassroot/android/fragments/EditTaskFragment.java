@@ -80,8 +80,6 @@ public class EditTaskFragment extends Fragment implements DatePickerDialog.OnDat
     private ProgressDialog progressDialog;
     private Unbinder unbinder;
 
-    @BindView(R.id.etsk_title_ipl)
-    TextInputLayout subjectInput;
     @BindView(R.id.etsk_til_location)
     TextInputLayout locationInput;
     @BindView(R.id.etsk_et_title)
@@ -98,14 +96,10 @@ public class EditTaskFragment extends Fragment implements DatePickerDialog.OnDat
     @BindView(R.id.etsk_deadline_time)
     TextView timeDisplayed;
 
-    @BindView(R.id.etsk_cv_description)
-    CardView descriptionCard;
     @BindView(R.id.etsk_desc_header)
     TextView descriptionHeader;
     @BindView(R.id.etsk_rl_desc_body)
     RelativeLayout descriptionBody;
-    @BindView(R.id.etsk_til_desc)
-    TextInputLayout descriptionInput;
     @BindView(R.id.etsk_desc_expand)
     ImageView ivDescExpandIcon;
 
@@ -419,8 +413,10 @@ public class EditTaskFragment extends Fragment implements DatePickerDialog.OnDat
         model.setDeadlineISO(Constant.isoDateTimeSDF.format(new Date(model.getUpdateTime())));
         return model;
     }
+
     public Call<TaskModel> setUpUpdateApiCall(TaskModel model) {
-        Set<String> memberUids = (selectedMembers == null) ? Collections.EMPTY_SET : Utilities.convertMemberListToUids(selectedMembers);
+        List<String> memberUids = (selectedMembers == null) ? Collections.EMPTY_LIST :
+                new ArrayList<>(Utilities.convertMemberListToUids(selectedMembers));
         final String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
         final String code = RealmUtils.loadPreferencesFromDB().getToken();
         switch (taskType) {

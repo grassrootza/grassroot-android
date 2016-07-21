@@ -1,6 +1,7 @@
 package org.grassroot.android.services;
 
 import android.app.Activity;
+import android.content.Context;
 import android.util.Log;
 import android.view.View;
 import io.realm.Realm;
@@ -8,7 +9,9 @@ import io.realm.RealmList;
 import io.realm.RealmResults;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.grassroot.android.R;
@@ -28,6 +31,7 @@ import org.grassroot.android.models.Permission;
 import org.grassroot.android.models.PermissionResponse;
 import org.grassroot.android.models.PreferenceObject;
 import org.grassroot.android.models.RealmString;
+import org.grassroot.android.models.TaskModel;
 import org.grassroot.android.utils.Constant;
 import org.grassroot.android.utils.ErrorUtils;
 import org.grassroot.android.utils.NetworkUtils;
@@ -49,9 +53,6 @@ public class GroupService {
   // todo : remove these?
   public ArrayList<Group> userGroups;
   public ArrayList<GroupJoinRequest> openJoinRequests;
-
-  public boolean groupsLoading = false;
-  public boolean groupsFinishedLoading = false;
 
   private static GroupService instance = null;
 
@@ -85,14 +86,6 @@ public class GroupService {
     return methodInstance;
   }
 
-  public List<Group> getGroups() {
-    if (userGroups == null || userGroups.isEmpty()) {
-      return userGroups;
-    } else {
-      return RealmUtils.loadListFromDB(Group.class);
-    }
-  }
-
   public void fetchGroupList(final Activity activity, final View errorViewHolder,
       final GroupServiceListener listener) {
 
@@ -105,7 +98,6 @@ public class GroupService {
     long lastTimeUpdated = RealmUtils.loadPreferencesFromDB().getLastTimeGroupsFetched();
 
     Log.e(TAG, "last time groups updated = " + lastTimeUpdated);
-    groupsLoading = true;
 
     Call<GroupsChangedResponse> apiCall = (lastTimeUpdated == 0) ?
             GrassrootRestService.getInstance().getApi().getUserGroups(mobileNumber, userCode) :
@@ -115,13 +107,11 @@ public class GroupService {
           @Override
           public void onResponse(Call<GroupsChangedResponse> call, Response<GroupsChangedResponse> response) {
             if (response.isSuccessful()) {
-              updateGroupsFetchedTime();
-              groupsLoading = false;
-              groupsFinishedLoading = true;
               userGroups = new ArrayList<>(response.body().getAddedAndUpdated());
-              RealmUtils.saveDataToRealm(response.body().getAddedAndUpdated());
+              persistGroupsAddedUpdated(response.body());
               EventBus.getDefault().post(new GroupsRefreshedEvent());
               listener.groupListLoaded();
+              // note: put this on a background thread, and do it in refresh too (if we keep refresh method)
               for (Group g : response.body().getAddedAndUpdated()) {
                 for (Member m : g.getMembers()) {
                   m.setMemberGroupUid();
@@ -130,58 +120,31 @@ public class GroupService {
               }
             } else {
               Log.e(TAG, response.message());
-              ErrorUtils.handleServerError(errorViewHolder, activity, response);
+              if (errorViewHolder != null) {
+                ErrorUtils.handleServerError(errorViewHolder, activity, response);
+              }
               listener.groupListLoadingError();
             }
           }
 
           @Override public void onFailure(Call<GroupsChangedResponse> call, Throwable t) {
             // default back to loading from DB
-            ErrorUtils.handleNetworkError(activity, errorViewHolder, t);
-            userGroups = new ArrayList<>(RealmUtils.loadListFromDB(Group.class));
+            if (errorViewHolder != null) {
+              ErrorUtils.handleNetworkError(activity, errorViewHolder, t);
+            }
+            userGroups = new ArrayList<>(RealmUtils.loadGroupsSorted());
             listener.groupListLoadingError();
           }
         });
   }
 
-  /*
-
- Called from "swipe refresh" on group recycler, so am just formally separating from the initiating call (which is triggered on app load)
-  */
-  public void refreshGroupList(final Activity activity, final GroupServiceListener listener) {
-    final String mobileNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
-    final String userCode = RealmUtils.loadPreferencesFromDB().getToken();
-    final long lastTimeGroupsUpdated = RealmUtils.loadPreferencesFromDB().getLastTimeGroupsFetched();
-
-    Log.e(TAG, "refresh group list, checking for changes since: " + lastTimeGroupsUpdated);
-
-    GrassrootRestService.getInstance()
-        .getApi()
-        .getUserGroups(mobileNumber, userCode)
-        .enqueue(new Callback<GroupsChangedResponse>() {
-          @Override public void onResponse(Call<GroupsChangedResponse> call,
-              Response<GroupsChangedResponse> response) {
-            if (response.isSuccessful()) {
-              updateGroupsFetchedTime();
-              listener.groupListLoaded();
-            } else {
-              listener.groupListLoadingError();
-            }
-          }
-
-          @Override public void onFailure(Call<GroupsChangedResponse> call, Throwable t) {
-            ErrorUtils.connectivityError(activity, R.string.error_no_network,
-                new NetworkErrorDialogListener() {
-                  @Override public void retryClicked() {
-                    refreshGroupList(activity, listener);
-                  }
-
-                  @Override public void offlineClicked() {
-                    listener.groupListLoadingError();
-                  }
-                });
-          }
-        });
+  private void persistGroupsAddedUpdated(GroupsChangedResponse responseBody) {
+    RealmUtils.saveDataToRealm(responseBody.getAddedAndUpdated());
+    if (!responseBody.getRemovedUids().isEmpty()) {
+      RealmUtils.removeObjectsByUid(Group.class, "groupUid",
+              RealmUtils.convertListOfRealmStringInListOfString(responseBody.getRemovedUids())); // todo : just switch this to List<String> in object
+    }
+    updateGroupsFetchedTime();
   }
 
   private void updateGroupsFetchedTime() {
@@ -303,6 +266,49 @@ public class GroupService {
     return group;
   }
 
+  public void sendNewGroupToServer(final String localGroupUid, final Context context) {
+    final String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
+    final String code = RealmUtils.loadPreferencesFromDB().getToken();
+    final Group localGroup = RealmUtils.loadGroupFromDB(localGroupUid);
+
+    final RealmList<Member> members = RealmUtils.loadListFromDB(Member.class, "groupUid", localGroup.getGroupUid());
+    GrassrootRestService.getInstance()
+            .getApi()
+            .createGroup(phoneNumber, code, localGroup.getGroupName(), localGroup.getDescription(), members)
+            .enqueue(new Callback<GroupResponse>() {
+              @Override
+              public void onResponse(Call<GroupResponse> call, Response<GroupResponse> response) {
+                if (response.isSuccessful()) {
+                  PreferenceObject preferenceObject = RealmUtils.loadPreferencesFromDB();
+                  preferenceObject.setHasGroups(true);
+                  RealmUtils.saveDataToRealm(preferenceObject);
+                  RealmUtils.saveDataToRealm(response.body().getGroups().first());
+                  //sure local, edited or not, same result --> POST to create
+                  RealmList<TaskModel> models =
+                          RealmUtils.loadListFromDB(TaskModel.class, "parentUid", localGroupUid);
+                  for (int i = 0; i < models.size(); i++) {
+                    models.get(i).setParentUid(response.body().getGroups().first().getGroupUid());
+                    TaskService.getInstance().sendNewTaskToServer(models.get(i), null);
+                  }
+                  RealmUtils.removeObjectFromDatabase(Group.class, "groupUid", localGroupUid);
+                  for (Member member : members) {
+                    RealmUtils.removeObjectFromDatabase(Member.class, "groupUid",
+                            member.getGroupUid());
+                  }
+                  Log.d("tag", "returning group created! with UID : " + response.body()
+                          .getGroups()
+                          .get(0)
+                          .getGroupUid());
+                } else {
+
+                }
+              }
+
+              @Override public void onFailure(Call<GroupResponse> call, Throwable t) {
+              }
+            });
+  }
+
   /* METHODS FOR ADDING AND REMOVING MEMBERS */
 
   public interface MembersRemovedListener {
@@ -316,6 +322,34 @@ public class GroupService {
     RealmUtils.saveGroupToRealm(group);
     RealmUtils.saveDataToRealm(membersToAdd);
     return group;
+  }
+
+  public void postNewGroupMembers(final List<Member> membersToAdd, final String groupUid) {
+    final String mobileNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
+    final String sessionCode = RealmUtils.loadPreferencesFromDB().getToken();
+    GrassrootRestService.getInstance()
+            .getApi()
+            .addGroupMembers(groupUid, mobileNumber, sessionCode, membersToAdd)
+            .enqueue(new Callback<GroupResponse>() {
+              @Override
+              public void onResponse(Call<GroupResponse> call, Response<GroupResponse> response) {
+                if (response.isSuccessful()) {
+                  Map<String, Object> map2 = new HashMap<>();
+                  map2.put("isLocal", true);
+                  map2.put("groupUid", membersToAdd.get(0).getGroupUid());
+                  RealmUtils.removeObjectsFromDatabase(Member.class,map2);
+                  RealmUtils.saveDataToRealm(response.body().getGroups());
+                  for(Member m : response.body().getGroups().first().getMembers()){
+                    m.setMemberGroupUid();
+                    RealmUtils.saveDataToRealm(m);
+                  }
+                } else {
+                }
+              }
+
+              @Override public void onFailure(Call<GroupResponse> call, Throwable t) {
+              }
+            });
   }
 
   public void removeGroupMembers(Group group, final Set<String> membersToRemoveUIDs, final MembersRemovedListener listener) {
@@ -352,7 +386,6 @@ public class GroupService {
       RealmUtils.removeObjectFromDatabase(Member.class, "memberGroupUid", memberGroupUid);
     }
   }
-
 
   /* METHODS FOR EDITING GROUP */
 
