@@ -77,7 +77,7 @@ public class TaskResponse extends RealmObject {
    * @return
    * The data
    */
-  public List<TaskModel> getTasks() {
+  public RealmList<TaskModel> getTasks() {
     return tasks;
   }
 

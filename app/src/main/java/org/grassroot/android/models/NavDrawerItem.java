@@ -5,18 +5,21 @@ package org.grassroot.android.models;
  */
 public class NavDrawerItem {
 
-    public int icon;
-    public String title;
-    public int changeicon;
-    private boolean isChecked;
-    private String tag;
-    private boolean showItemCount;
+    public int defaultIcon;
+    public String itemLabel;
+    public int selectedIcon;
+
+    private boolean isChecked = false;
+    private boolean showItemCount = false;
     private int itemCount;
 
-    public  NavDrawerItem(String title, int icon, int changeicon, boolean isChecked, boolean showItemCount) {
-        this.icon = icon;
-        this.title = title;
-        this.changeicon = changeicon;
+    private String tag;
+
+    public  NavDrawerItem(String tag, String itemLabel, int defaultIcon, int selectedIcon, boolean isChecked, boolean showItemCount) {
+        this.tag = tag;
+        this.defaultIcon = defaultIcon;
+        this.itemLabel = itemLabel;
+        this.selectedIcon = selectedIcon;
         this.isChecked = isChecked;
         this.showItemCount = showItemCount;
         this.itemCount = 0;
@@ -26,24 +29,24 @@ public class NavDrawerItem {
 
     }
 
-    public int getIcon() {
-        return icon;
+    public int getDefaultIcon() {
+        return defaultIcon;
     }
 
-    public void setIcon(int icon) {
-        this.icon = icon;
+    public void setDefaultIcon(int defaultIcon) {
+        this.defaultIcon = defaultIcon;
     }
 
-    public String getTitle() {
-        return title;
+    public String getItemLabel() {
+        return itemLabel;
     }
 
-    public void setTitle(String title) {
-        this.title = title;
+    public void setItemLabel(String itemLabel) {
+        this.itemLabel = itemLabel;
     }
 
-    public int getChangeicon() {
-        return changeicon;
+    public int getSelectedIcon() {
+        return selectedIcon;
     }
 
     public boolean isChecked() {

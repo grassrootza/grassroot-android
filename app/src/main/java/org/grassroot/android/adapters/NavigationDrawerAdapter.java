@@ -4,13 +4,10 @@ package org.grassroot.android.adapters;
  * Created by Ravi on 29/07/15.
  */
 
-import android.animation.AnimatorSet;
 import android.content.Context;
-import android.graphics.PorterDuff;
 import android.graphics.Typeface;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -28,18 +25,27 @@ public class NavigationDrawerAdapter extends RecyclerView.Adapter<NavigationDraw
 
     private static final String TAG = NavigationDrawerAdapter.class.getCanonicalName();
 
-    List<NavDrawerItem> data;
-    private LayoutInflater inflater;
-    private MyViewHolder holder;
+    private List<NavDrawerItem> data;
+    private NavDrawerItemListener listener;
+
+    public interface NavDrawerItemListener {
+        void onItemClicked(final String tag);
+    }
+
+    private final boolean showCounters;
+    private final boolean showSelected;
 
     final int textSelectedColor;
     final int rowSelectedBgColor;
     final int textNormalColor;
     final int rowNormalColor;
 
-    public NavigationDrawerAdapter(Context context, List<NavDrawerItem> data) {
+    public NavigationDrawerAdapter(Context context, List<NavDrawerItem> data, boolean showCounters,
+                                   boolean showSelected, NavDrawerItemListener listener) {
         this.data = data;
-        this.inflater = LayoutInflater.from(context);
+        this.listener = listener;
+        this.showCounters = showCounters;
+        this.showSelected = showSelected;
 
         textSelectedColor = ContextCompat.getColor(context, R.color.primaryColor);
         rowSelectedBgColor = ContextCompat.getColor(context, R.color.text_beige);
@@ -49,33 +55,41 @@ public class NavigationDrawerAdapter extends RecyclerView.Adapter<NavigationDraw
 
     @Override
     public MyViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        View view = inflater.inflate(R.layout.listview_row_navigationdrawer, parent, false);
-        holder = new MyViewHolder(view);
-        return holder;
+        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.listview_row_navigationdrawer, parent, false);
+        return new MyViewHolder(view);
     }
 
     @Override
     public void onBindViewHolder(MyViewHolder holder, int position) {
 
-        NavDrawerItem drawerItem = data.get(position);
+        final NavDrawerItem drawerItem = data.get(position);
 
-        holder.title.setText(drawerItem.getTitle());
-        holder.titleicon.setBackgroundResource(drawerItem.getIcon());
+        holder.title.setText(drawerItem.getItemLabel());
+        holder.titleicon.setBackgroundResource(drawerItem.getDefaultIcon());
 
-        if (drawerItem.isChecked()) {
+        if (showSelected && drawerItem.isChecked()) {
             holder.rlDrawerRow.setBackgroundColor(rowSelectedBgColor);
             holder.title.setTextColor(textSelectedColor);
             holder.title.setTypeface(Typeface.DEFAULT_BOLD);
-            holder.titleicon.setBackgroundResource(drawerItem.getChangeicon());
+            holder.titleicon.setBackgroundResource(drawerItem.getSelectedIcon());
         } else {
             holder.rlDrawerRow.setBackgroundColor(rowNormalColor);
             holder.title.setTextColor(textNormalColor);
         }
 
-        if (drawerItem.isShowItemCount()) {
+        if (showCounters && drawerItem.isShowItemCount()) {
             holder.txtTitleCounter.setVisibility(View.VISIBLE);
             holder.txtTitleCounter.setText(String.valueOf(drawerItem.getItemCount()));
+        } else {
+            holder.txtTitleCounter.setVisibility(View.GONE);
         }
+
+        holder.rlDrawerRow.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                listener.onItemClicked(drawerItem.getTag());
+            }
+        });
     }
 
     @Override
@@ -84,7 +98,9 @@ public class NavigationDrawerAdapter extends RecyclerView.Adapter<NavigationDraw
     }
 
     public static class MyViewHolder extends RecyclerView.ViewHolder {
-        private final RelativeLayout rlDrawerRow;
+
+        RelativeLayout rlDrawerRow;
+
         TextView title;
         TextView txtTitleCounter;
         ImageView titleicon;

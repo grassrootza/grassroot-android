@@ -73,15 +73,11 @@ public class TaskService {
   }
 
   public void loadCachedUpcomingTasks(TaskServiceListener listener) {
-    RealmList<TaskModel> tasks = new RealmList<>();
-    if (realm != null && !realm.isClosed()) {
-      RealmResults<TaskModel> results =
-          realm.where(TaskModel.class).greaterThan("deadlineDate", new Date()).findAll();
-      tasks.addAll(results.subList(0, results.size()));
-    }
-    upcomingTasks = new ArrayList<>(tasks);
+    upcomingTasks = new ArrayList<>(RealmUtils.loadUpcomingTasksFromDB());
     hasLoadedTasks = true;
-    listener.tasksLoadedFromDB(upcomingTasks);
+    if (listener != null) {
+      listener.tasksLoadedFromDB(upcomingTasks);
+    }
   }
 
   public void fetchGroupTasks(final String groupUid, final TaskServiceListener listener) {
@@ -145,7 +141,6 @@ public class TaskService {
           @Override
           public void onResponse(Call<TaskResponse> call, Response<TaskResponse> response) {
             if (response.isSuccessful()) {
-              // todo : probably better ways of doing this
               upcomingTasks = new ArrayList<>(response.body().getTasks());
               RealmUtils.saveDataToRealm(response.body().getTasks());
               if (listener != null) {
@@ -160,7 +155,9 @@ public class TaskService {
           }
 
           @Override public void onFailure(Call<TaskResponse> call, Throwable t) {
-            listener.taskLoadingFromServerFailed(null);
+            if (listener != null) {
+              listener.taskLoadingFromServerFailed(null);
+            }
           }
         });
   }

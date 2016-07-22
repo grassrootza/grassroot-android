@@ -151,22 +151,22 @@ public class HomeScreenActivity extends PortraitActivity implements NavigationDr
     }
 
     @Override
-    public void onNavigationDrawerItemSelected(int position) {
+    public void onNavigationDrawerItemSelected(final String tag) {
         if (drawer != null) {
             drawer.closeDrawer(Gravity.LEFT);
         }
 
-        switch (position) {
-            case NavigationConstants.HOME_NAV_GROUPS:
+        switch (tag) {
+            case NavigationDrawerFragment.ITEM_SHOW_GROUPS:
                 switchToGroupFragment();
                 break;
-            case NavigationConstants.HOME_NAV_TASKS:
+            case NavigationDrawerFragment.ITEM_TASKS:
                 switchToTasksFragment();
                 break;
-            case NavigationConstants.HOME_NAV_NOTIFICATIONS:
+            case NavigationDrawerFragment.ITEM_NOTIFICATIONS:
                 switchToNotificationFragment();
                 break;
-            case NavigationConstants.HOME_NAV_JOIN_REQUESTS:
+            case NavigationDrawerFragment.ITEM_JOIN_REQS:
                 switchToJoinRequestsFragment();
                 break;
             default:

@@ -57,7 +57,7 @@ public class NetworkUtils {
 			if (isNetworkAvailable(context)) {
 				GroupService.getInstance().fetchGroupListWithoutError();
 				GroupService.getInstance().fetchGroupJoinRequests(null);
-				// TaskService.getInstance().fetchUpcomingTasks(null);
+				TaskService.getInstance().fetchUpcomingTasks(null);
 			}
 		}
 		fetchingServerEntities = false;

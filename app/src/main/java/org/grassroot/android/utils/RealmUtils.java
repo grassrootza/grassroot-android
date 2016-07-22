@@ -10,6 +10,7 @@ import io.realm.RealmResults;
 import io.realm.Sort;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -17,6 +18,7 @@ import org.grassroot.android.models.Group;
 import org.grassroot.android.models.Member;
 import org.grassroot.android.models.PreferenceObject;
 import org.grassroot.android.models.RealmString;
+import org.grassroot.android.models.TaskModel;
 
 public class RealmUtils {
 
@@ -189,6 +191,18 @@ public class RealmUtils {
 
   public static RealmList<Member> loadGroupMembers(final String groupUid) {
     return loadListFromDB(Member.class, "groupUid", groupUid);
+  }
+
+  public static List<TaskModel> loadUpcomingTasksFromDB() {
+    RealmList<TaskModel> tasks = new RealmList<>();
+    Realm realm = Realm.getDefaultInstance();
+    RealmResults<TaskModel> results = realm
+            .where(TaskModel.class)
+            .greaterThan("deadlineDate", new Date())
+            .findAll();
+    tasks.addAll(realm.copyFromRealm(results));
+    realm.close();
+    return tasks;
   }
 
   public static RealmList<RealmString> convertListOfStringInRealmListOfString(List<String> list) {

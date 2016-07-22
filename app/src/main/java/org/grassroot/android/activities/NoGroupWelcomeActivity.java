@@ -75,7 +75,7 @@ public class NoGroupWelcomeActivity extends PortraitActivity implements WelcomeF
     }
 
     @Override
-    public void onNavigationDrawerItemSelected(int position) {
+    public void onNavigationDrawerItemSelected(String tag) {
         // todo : not really anything we can do, no?
     }
 }

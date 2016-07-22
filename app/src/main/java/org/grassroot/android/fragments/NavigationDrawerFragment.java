@@ -4,7 +4,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
-import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -19,7 +18,6 @@ import org.grassroot.android.activities.FAQActivity;
 import org.grassroot.android.activities.ProfileSettingsActivity;
 import org.grassroot.android.activities.StartActivity;
 import org.grassroot.android.adapters.NavigationDrawerAdapter;
-import org.grassroot.android.adapters.RecyclerTouchListener;
 import org.grassroot.android.events.GroupCreatedEvent;
 import org.grassroot.android.events.GroupsRefreshedEvent;
 import org.grassroot.android.events.NotificationEvent;
@@ -27,12 +25,10 @@ import org.grassroot.android.events.TaskAddedEvent;
 import org.grassroot.android.events.TaskCancelledEvent;
 import org.grassroot.android.events.UserLoggedOutEvent;
 import org.grassroot.android.fragments.dialogs.ConfirmCancelDialogFragment;
-import org.grassroot.android.interfaces.ClickListener;
 import org.grassroot.android.interfaces.NavigationConstants;
 import org.grassroot.android.interfaces.NotificationConstants;
 import org.grassroot.android.models.Group;
 import org.grassroot.android.models.NavDrawerItem;
-import org.grassroot.android.models.TaskModel;
 import org.grassroot.android.services.GcmRegistrationService;
 import org.grassroot.android.services.GroupService;
 import org.grassroot.android.services.TaskService;
@@ -46,16 +42,31 @@ import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
-import retrofit2.Response;
 
-public class NavigationDrawerFragment extends Fragment implements TaskService.TaskServiceListener {
+public class NavigationDrawerFragment extends Fragment implements NavigationDrawerAdapter.NavDrawerItemListener {
 
-    public static final String TAG = NavigationDrawerFragment.class.getCanonicalName();
+    private static final String TAG = NavigationDrawerFragment.class.getCanonicalName();
+
+    public static final String ITEM_SHOW_GROUPS = "show_groups";
+    public static final String ITEM_TASKS = "upcoming_tasks";
+    public static final String ITEM_NOTIFICATIONS = "notifications";
+    public static final String ITEM_JOIN_REQS = "join_requests";
+
+    public static final String ITEM_OFFLINE = "offline_online";
+    public static final String ITEM_PROFILE = "profile_settings";
+    public static final String ITEM_SHARE = "item_share";
+    public static final String ITEM_FAQ = "item_faq";
+
+    public static final String ITEM_LOGOUT = "item_logout";
 
     private NavigationDrawerCallbacks mCallbacks;
 
-    List<NavDrawerItem> draweritems;
-    private NavigationDrawerAdapter drawerAdapter;
+    List<NavDrawerItem> primaryItems;
+    private NavigationDrawerAdapter primaryAdapter;
+
+    List<NavDrawerItem> secondaryItems;
+    private NavigationDrawerAdapter secondaryAdapter;
+
     private int currentlySelectedItem = NavigationConstants.HOME_NAV_GROUPS;
 
     NavDrawerItem groups;
@@ -64,11 +75,12 @@ public class NavigationDrawerFragment extends Fragment implements TaskService.Ta
     NavDrawerItem joinRequests;
 
     @BindView(R.id.displayName) TextView displayName;
-    @BindView(R.id.rv_nav_items) RecyclerView mDrawerRecyclerView;
+    @BindView(R.id.nav_items_primary) RecyclerView primaryItemsView;
+    @BindView(R.id.nav_items_secondary) RecyclerView secondaryItemsView;
     @BindView(R.id.nav_tv_footer) TextView txtVersion;
 
     public interface NavigationDrawerCallbacks {
-        void onNavigationDrawerItemSelected(int position);
+        void onNavigationDrawerItemSelected(final String tag);
     }
 
     public NavigationDrawerFragment() {
@@ -101,120 +113,101 @@ public class NavigationDrawerFragment extends Fragment implements TaskService.Ta
         displayName.setText(RealmUtils.loadPreferencesFromDB().getUserName());
         txtVersion.setText(String.format(getString(R.string.nav_bar_footer), BuildConfig.VERSION_NAME));
 
-        drawerAdapter = new NavigationDrawerAdapter(getActivity(), setUpItems());
+        primaryAdapter = new NavigationDrawerAdapter(getActivity(), setUpPrimaryItems(), true, true, this);
+        primaryItemsView.setHasFixedSize(true);
+        primaryItemsView.setItemViewCacheSize(4);
+        primaryItemsView.setLayoutManager(new LinearLayoutManager(getContext()));
+        primaryItemsView.setAdapter(primaryAdapter);
 
-        mDrawerRecyclerView.setHasFixedSize(true);
-        mDrawerRecyclerView.setItemViewCacheSize(8);
-        mDrawerRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
-        mDrawerRecyclerView.setAdapter(drawerAdapter);
-        mDrawerRecyclerView.setItemAnimator(new DefaultItemAnimator());
-
-        mDrawerRecyclerView.addOnItemTouchListener(new RecyclerTouchListener(getActivity(), mDrawerRecyclerView, new ClickListener() {
-            @Override
-            public void onClick(View view, int position) {
-                selectItem(position);
-            }
-
-            @Override
-            public void onLongClick(View view, int position) {
-            }
-        }));
+        secondaryAdapter = new NavigationDrawerAdapter(getActivity(), setUpSecondaryItems(), false, false, this);
+        secondaryItemsView.setHasFixedSize(true);
+        secondaryItemsView.setItemViewCacheSize(5);
+        secondaryItemsView.setLayoutManager(new LinearLayoutManager(getContext()));
+        secondaryItemsView.setAdapter(secondaryAdapter);
 
         return view ;
     }
 
-    public List<NavDrawerItem> setUpItems() {
-        draweritems = new ArrayList<>();
+    public List<NavDrawerItem> setUpPrimaryItems() {
+        primaryItems = new ArrayList<>();
 
-        groups = new NavDrawerItem(getString(R.string.drawer_group_list), R.drawable.ic_groups_general, R.drawable.ic_groups_general, true, true);
+        groups = new NavDrawerItem(ITEM_SHOW_GROUPS, getString(R.string.drawer_group_list), R.drawable.ic_groups_general, R.drawable.ic_groups_general, true, true);
         groups.setItemCount((int) RealmUtils.countObjectsInDB(Group.class));
         Log.d(TAG, "on set up ... size of groups loaded: " + groups.getItemCount());
-        draweritems.add(groups);
+        primaryItems.add(groups);
 
-        tasks = new NavDrawerItem(getString(R.string.drawer_open_tasks), R.drawable.ic_task_green, R.drawable.ic_task_green, false, true); // todo: fix icon
+        tasks = new NavDrawerItem(ITEM_TASKS, getString(R.string.drawer_open_tasks), R.drawable.ic_task_green, R.drawable.ic_task_green, false, true); // todo: fix icon
         tasks.setItemCount(TaskService.getInstance().upcomingTasks.size());
-        TaskService.getInstance().fetchUpcomingTasks(this);
-        draweritems.add(tasks);
+        primaryItems.add(tasks);
 
-        notifications = new NavDrawerItem(getString(R.string.Notifications),R.drawable.ic_exclamation_small,R.drawable.ic_exclamation_small, false, true);
+        notifications = new NavDrawerItem(ITEM_NOTIFICATIONS, getString(R.string.Notifications), R.drawable.ic_exclamation_small, R.drawable.ic_exclamation_small, false, true);
         notifications.setItemCount(RealmUtils.loadPreferencesFromDB().getNotificationCounter());
-        draweritems.add(notifications);
+        primaryItems.add(notifications);
 
-        // todo : only show this if there are open requests
-        joinRequests = new NavDrawerItem(getString(R.string.drawer_join_request), R.drawable.ic_notification, R.drawable.ic_notification_green, false, true);
+        joinRequests = new NavDrawerItem(ITEM_JOIN_REQS, getString(R.string.drawer_join_request), R.drawable.ic_notification, R.drawable.ic_notification_green, false, true);
         joinRequests.setItemCount(GroupService.getInstance().loadRequestsFromDB().size());
-        draweritems.add(joinRequests);
+        primaryItems.add(joinRequests);
 
-        draweritems.add(new NavDrawerItem(getString(R.string.Share), R.drawable.ic_share, R.drawable.ic_share_green, false, false));
-        draweritems.add(new NavDrawerItem(getString(R.string.Profile),R.drawable.ic_profile,R.drawable.ic_profile_green,false, false));
-        draweritems.add(new NavDrawerItem(getString(R.string.FAQs),R.drawable.ic_faq,R.drawable.ic_faq_green,false, false));
-        draweritems.add(new NavDrawerItem(getString(R.string.Logout),R.drawable.ic_logout,R.drawable.ic_logout_green,false, false));
-        return draweritems;
+        return primaryItems;
     }
 
-    private void selectItem(int position) {
+    public List<NavDrawerItem> setUpSecondaryItems() {
+        secondaryItems = new ArrayList<>();
+
+        secondaryItems.add(new NavDrawerItem(ITEM_SHARE, getString(R.string.Share), R.drawable.ic_share, R.drawable.ic_share_green, false, false));
+        secondaryItems.add(new NavDrawerItem(ITEM_PROFILE, getString(R.string.Profile),R.drawable.ic_profile,R.drawable.ic_profile_green,false, false));
+        secondaryItems.add(new NavDrawerItem(ITEM_FAQ, getString(R.string.FAQs),R.drawable.ic_faq,R.drawable.ic_faq_green,false, false));
+        secondaryItems.add(new NavDrawerItem(ITEM_LOGOUT, getString(R.string.Logout),R.drawable.ic_logout,R.drawable.ic_logout_green,false, false));
+
+        return secondaryItems;
+    }
+
+    @Override
+    public void onItemClicked(final String tag) {
         // handle common & reusable things here, pass back more complex or context-dependent to activity
-        int itemToSetSelected = position;
         boolean changeItemSelected = true;
-        switch (position) {
+        switch (tag) {
             // note: first four are handed back to home screen activity to handle fragment switching
-            case NavigationConstants.HOME_NAV_GROUPS:
-            case NavigationConstants.HOME_NAV_TASKS:
-            case NavigationConstants.HOME_NAV_NOTIFICATIONS:
-            case NavigationConstants.HOME_NAV_JOIN_REQUESTS:
+            case ITEM_SHOW_GROUPS:
+            case ITEM_TASKS:
+            case ITEM_NOTIFICATIONS:
+            case ITEM_JOIN_REQS:
                 break;
-            case NavigationConstants.HOME_NAV_SHARE:
+            case ITEM_SHARE:
                 changeItemSelected = false;
                 shareApp();
                 break;
-            case NavigationConstants.HOME_NAV_PROFILE:
+            case ITEM_PROFILE:
                 changeItemSelected = false; // until switch that to fragmet w/nav bar instead of back
                 startActivity(new Intent(getActivity(), ProfileSettingsActivity.class));
                 break;
-            case NavigationConstants.HOME_NAV_FAQ:
+            case ITEM_FAQ:
                 changeItemSelected = false; // as above
                 startActivity(new Intent(getActivity(), FAQActivity.class));
                 break;
-            case NavigationConstants.HOME_NAV_LOGOUT:
-                itemToSetSelected = NavigationConstants.HOME_NAV_GROUPS; // in case activity restored, on homegrouplist
+            case ITEM_LOGOUT:
                 logout();
                 break;
             default:
                 // todo : put in handling non-standard items
         }
-
         if (changeItemSelected) {
-            switchSelectedState(itemToSetSelected);
+            // swap it ...
         }
-        mCallbacks.onNavigationDrawerItemSelected(position);
+        mCallbacks.onNavigationDrawerItemSelected(tag);
     }
 
     private void switchSelectedState(final int selectedItem) {
-        draweritems.get(currentlySelectedItem).setIsChecked(false);
-        draweritems.get(selectedItem).setIsChecked(true);
+        primaryItems.get(currentlySelectedItem).setIsChecked(false);
+        primaryItems.get(selectedItem).setIsChecked(true);
         currentlySelectedItem = selectedItem;
-        drawerAdapter.notifyDataSetChanged();
-    }
-
-    @Override
-    public void tasksLoadedFromServer(List<TaskModel> tasks) {
-        updateTaskCount();
-    }
-
-    @Override
-    public void taskLoadingFromServerFailed(Response errorBody) {
-        // todo : do something with this, maybe
-    }
-
-    @Override
-    public void tasksLoadedFromDB(List<TaskModel> tasks) {
-        updateTaskCount();
+        primaryAdapter.notifyDataSetChanged();
     }
 
     private void updateTaskCount() {
         tasks.setItemCount(TaskService.getInstance().upcomingTasks.size());
-        if (drawerAdapter != null) {
-            drawerAdapter.notifyItemChanged(NavigationConstants.HOME_NAV_TASKS);
+        if (primaryAdapter != null) {
+            primaryAdapter.notifyItemChanged(NavigationConstants.HOME_NAV_TASKS);
         }
     }
 
@@ -258,7 +251,7 @@ public class NavigationDrawerFragment extends Fragment implements TaskService.Ta
 
     public void refreshGroupCount() {
         groups.setItemCount((int) RealmUtils.countObjectsInDB(Group.class));
-        drawerAdapter.notifyDataSetChanged();
+        primaryAdapter.notifyDataSetChanged();
         Log.d(TAG, "group count refreshed ... now : " + groups.getItemCount());
     }
 
@@ -276,19 +269,19 @@ public class NavigationDrawerFragment extends Fragment implements TaskService.Ta
     public void onNewNotificationEvent(NotificationEvent event) {
         int notificationCount = event.getNotificationCount();
         Log.d(TAG, "notification count" + notificationCount);
-        drawerAdapter.notifyDataSetChanged();
+        primaryAdapter.notifyDataSetChanged();
     }
 
     @Subscribe
     public void onTaskCreatedEvent(TaskAddedEvent e) {
         tasks.incrementItemCount();
-        drawerAdapter.notifyItemChanged(NavigationConstants.HOME_NAV_TASKS);
+        primaryAdapter.notifyItemChanged(NavigationConstants.HOME_NAV_TASKS);
     }
 
     @Subscribe
     public void onTaskCancelledEvent(TaskCancelledEvent e) {
         tasks.decrementItemCount();
-        drawerAdapter.notifyItemChanged(NavigationConstants.HOME_NAV_TASKS);
+        primaryAdapter.notifyItemChanged(NavigationConstants.HOME_NAV_TASKS);
     }
 
 }

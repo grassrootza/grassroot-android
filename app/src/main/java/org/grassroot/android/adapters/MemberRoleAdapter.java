@@ -51,8 +51,7 @@ public class MemberRoleAdapter extends RecyclerView.Adapter<MemberRoleAdapter.Me
     @Override
     public MemberRoleViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         View item = LayoutInflater.from(parent.getContext()).inflate(R.layout.row_member_role, parent, false);
-        MemberRoleViewHolder holder = new MemberRoleViewHolder(item);
-        return holder;
+        return new MemberRoleViewHolder(item);
     }
 
     @Override
