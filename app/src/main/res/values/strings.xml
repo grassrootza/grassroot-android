@@ -206,6 +206,13 @@
     <string name="bt_add_contacts">Add from contacts</string>
     <string name="bt_add_manually">Add manually</string>
 
+    <string name="cg_wip_message">Offline group</string>
+    <string-array name="cg_offline_group">
+        <item>Continue creating</item>
+        <item>Call an event</item>
+        <item>Delete group</item>
+    </string-array>
+
     <!-- Add & remove members -->
     <string name="am_title">Add members to group</string>
     <string name="gm_add_members_lc">Add members</string>

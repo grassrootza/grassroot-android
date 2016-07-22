@@ -45,6 +45,7 @@
     <dimen name="thin_separator_height">1dp</dimen>
 
     <dimen name="nav_bar_icon_max">24dp</dimen>
+    <dimen name="nav_bar_counter_size">20dp</dimen>
 
     <dimen name="md_button_min_width">72dp</dimen>
     <!-- Above and below buttons, 36+6+6=48 for the height of the button frame-->

@@ -4,14 +4,17 @@ import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.support.v7.app.AlertDialog;
+import android.util.Log;
 
 import org.grassroot.android.R;
+import org.grassroot.android.events.OfflineActionsSent;
 import org.grassroot.android.models.Group;
 import org.grassroot.android.models.Member;
 import org.grassroot.android.models.TaskModel;
 import org.grassroot.android.services.ApplicationLoader;
 import org.grassroot.android.services.GroupService;
 import org.grassroot.android.services.TaskService;
+import org.greenrobot.eventbus.EventBus;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -19,6 +22,11 @@ import java.util.Map;
 import io.realm.RealmList;
 
 public class NetworkUtils {
+
+	private static final String TAG = NetworkUtils.class.getSimpleName();
+
+	static boolean sendingLocalQueue = false;
+	static boolean fetchingServerEntities = false;
 
 	public static boolean isNetworkAvailable() {
 		return isNetworkAvailable(ApplicationLoader.applicationContext);
@@ -30,16 +38,32 @@ public class NetworkUtils {
 		return (ni != null && ni.isAvailable() && ni.isConnected());
 	}
 
-	public static void sendLocalQueuedEntities(Context context) {
-		if (isNetworkAvailable(context)) {
-			sendLocalGroups(context);
-			sendLocallyAddedMembers();
-			sendNewLocalTasks();
-			sendEditedTasks();
+	public static void syncLocalAndServer(Context context) {
+		Log.e(TAG, "inside network utils ... about to call sending queued entities ...");
+		if (!sendingLocalQueue) {
+			sendingLocalQueue = true;
+			if (isNetworkAvailable(context)) {
+				sendLocalGroups();
+				sendLocallyAddedMembers();
+				sendNewLocalTasks();
+				sendEditedTasks();
+				EventBus.getDefault().post(new OfflineActionsSent());
+			}
 		}
+		sendingLocalQueue = false;
+		Log.e(TAG, "inside network utils .... fetching server entities ...");
+		if (!fetchingServerEntities) {
+			fetchingServerEntities = true;
+			if (isNetworkAvailable(context)) {
+				GroupService.getInstance().fetchGroupListWithoutError();
+				GroupService.getInstance().fetchGroupJoinRequests(null);
+				// TaskService.getInstance().fetchUpcomingTasks(null);
+			}
+		}
+		fetchingServerEntities = false;
 	}
 
-	private static void sendLocalGroups(final Context context) {
+	private static void sendLocalGroups() {
 		RealmList<Group> list = RealmUtils.loadListFromDB(Group.class, "isLocal", true);
 		for (final Group g : list) {
 			GroupService.getInstance().sendNewGroupToServer(g.getGroupUid(), null);

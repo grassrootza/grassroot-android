@@ -145,13 +145,17 @@ public class TaskService {
           @Override
           public void onResponse(Call<TaskResponse> call, Response<TaskResponse> response) {
             if (response.isSuccessful()) {
-              // todo : obviously better ways of doing this
+              // todo : probably better ways of doing this
               upcomingTasks = new ArrayList<>(response.body().getTasks());
               RealmUtils.saveDataToRealm(response.body().getTasks());
-              listener.tasksLoadedFromServer(upcomingTasks);
+              if (listener != null) {
+                listener.tasksLoadedFromServer(upcomingTasks);
+              }
             } else {
-              listener.taskLoadingFromServerFailed(response);
-              loadCachedUpcomingTasks(listener);
+              if (listener != null) {
+                listener.taskLoadingFromServerFailed(response);
+                loadCachedUpcomingTasks(listener);
+              }
             }
           }
 

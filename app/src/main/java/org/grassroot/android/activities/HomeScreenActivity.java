@@ -29,7 +29,6 @@ import org.grassroot.android.fragments.NewTaskMenuFragment;
 import org.grassroot.android.fragments.NotificationCenterFragment;
 import org.grassroot.android.fragments.QuickTaskModalFragment;
 import org.grassroot.android.fragments.TaskListFragment;
-import org.grassroot.android.fragments.ViewTaskFragment;
 import org.grassroot.android.interfaces.GroupConstants;
 import org.grassroot.android.interfaces.GroupPickCallbacks;
 import org.grassroot.android.interfaces.NavigationConstants;
@@ -69,14 +68,13 @@ public class HomeScreenActivity extends PortraitActivity implements NavigationDr
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Log.e(TAG, "on activity create called");
         setContentView(R.layout.activity_home_screen);
         ButterKnife.bind(this);
         EventBus.getDefault().register(this);
         setUpToolbar();
         switchToGroupFragment();
         // todo : move this into a background thread ...
-        NetworkUtils.sendLocalQueuedEntities(this);
+        NetworkUtils.syncLocalAndServer(this);
     }
 
     private void setUpToolbar() {

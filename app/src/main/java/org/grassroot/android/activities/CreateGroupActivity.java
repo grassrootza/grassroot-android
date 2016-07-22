@@ -12,6 +12,7 @@ import android.support.v7.app.AlertDialog;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
+import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
@@ -42,6 +43,8 @@ import org.grassroot.android.utils.ErrorUtils;
 import org.grassroot.android.utils.PermissionUtils;
 import org.grassroot.android.utils.RealmUtils;
 import org.greenrobot.eventbus.EventBus;
+
+import io.realm.RealmList;
 import retrofit2.Response;
 
 import static butterknife.OnTextChanged.Callback.AFTER_TEXT_CHANGED;
@@ -60,6 +63,8 @@ public class CreateGroupActivity extends PortraitActivity implements ContactSele
   @BindView(R.id.et_groupname) TextInputEditText et_groupname;
   @BindView(R.id.et_group_description) TextInputEditText et_group_description;
 
+  @BindView(R.id.cg_bt_save) Button save;
+
   private List<Member> manuallyAddedMembers;
   private Map<Integer, Member> mapMembersContacts;
   private MemberListFragment memberListFragment;
@@ -70,6 +75,7 @@ public class CreateGroupActivity extends PortraitActivity implements ContactSele
 
   private String groupUid = UUID.randomUUID().toString();;
   private Group cachedGroup;
+  private boolean editingOfflineGroup = false;
 
   private String descCharCounter;
 
@@ -80,32 +86,50 @@ public class CreateGroupActivity extends PortraitActivity implements ContactSele
     setContentView(R.layout.activity_create__group);
     ButterKnife.bind(this);
 
+    descCharCounter = getString(R.string.generic_160_char_counter);
     progressDialog = new ProgressDialog(this);
     progressDialog.setMessage(getString(R.string.txt_pls_wait));
     progressDialog.setIndeterminate(true);
+
     init();
+    checkForWipGroup();
     setUpMemberList();
   }
 
-  private void init() {
-    memberListFragment = MemberListFragment.newInstance(null, true, false, false, null,
-            new MemberListFragment.MemberClickListener() {
-      @Override
-      public void onMemberClicked(int position, String memberUid) {
-        memberContextMenu(position, memberUid);
+  private void checkForWipGroup() {
+    cachedGroup = getIntent().getParcelableExtra(GroupConstants.OBJECT_FIELD);
+    if (cachedGroup != null) {
+      if (cachedGroup.getIsLocal()) {
+        groupUid = cachedGroup.getGroupUid();
+        et_groupname.setText(cachedGroup.getGroupName());
+        et_group_description.setText(cachedGroup.getDescription());
+        editingOfflineGroup = true;
+      } else {
+        cachedGroup = null;
       }
+    }
+  }
 
-      @Override
-      public void onMemberDismissed(int position, String memberUid) { }
-    });
+  private void init() {
     contactSelectionFragment = ContactSelectionFragment.newInstance(null, false);
     mapMembersContacts = new HashMap<>();
     manuallyAddedMembers = new ArrayList<>();
     onMainScreen = true;
-    descCharCounter = getString(R.string.generic_160_char_counter);
   }
 
   private void setUpMemberList() {
+    Log.e(TAG, "okay trying new member list setup");
+    memberListFragment = MemberListFragment.newInstance(cachedGroup, false, null,
+            new MemberListFragment.MemberClickListener() {
+              @Override
+              public void onMemberClicked(int position, String memberUid) {
+                memberContextMenu(position, memberUid);
+              }
+
+              @Override
+              public void onMemberDismissed(int position, String memberUid) { }
+            });
+
     getSupportFragmentManager().beginTransaction()
         .add(R.id.cg_new_member_list_container, memberListFragment)
         .commit();
@@ -115,7 +139,7 @@ public class CreateGroupActivity extends PortraitActivity implements ContactSele
   private void cacheWipGroup() {
     final String currentName = et_groupname.getText().toString().trim();
     if (!TextUtils.isEmpty(currentName)) {
-      final String currentDesc = et_groupname.getText().toString().trim();
+      final String currentDesc = et_group_description.getText().toString().trim();
       final List<Member> currentMembers = memberListFragment.getSelectedMembers();
       if (cachedGroup == null) {
         cachedGroup = GroupService.getInstance().createGroupLocally(groupUid,
@@ -239,7 +263,6 @@ public class CreateGroupActivity extends PortraitActivity implements ContactSele
       if (requestCode == Constant.activityManualMemberEntry) {
         Member newMember = new Member(data.getStringExtra("selectedNumber"), data.getStringExtra("name"),
                         GroupConstants.ROLE_ORDINARY_MEMBER, -1);
-        //added memberId here
         newMember.setMemberUid(UUID.randomUUID().toString());
         newMember.setGroupUid(groupUid);
         newMember.setMemberGroupUid();
@@ -262,7 +285,6 @@ public class CreateGroupActivity extends PortraitActivity implements ContactSele
       toggleAddMenu();
     }
 
-
     if (TextUtils.isEmpty(et_groupname.getText())) {
       ErrorUtils.showSnackBar(rlCgRoot, R.string.error_group_name_blank, Snackbar.LENGTH_SHORT);
     } else {
@@ -271,18 +293,15 @@ public class CreateGroupActivity extends PortraitActivity implements ContactSele
   }
 
   private void createGroup() {
-    String groupName =
-        et_groupname.getText().toString().trim().replaceAll(Constant.regexAlphaNumeric, "");
-    String groupDescription = et_group_description.getText().toString().trim();
-    List<Member> groupMembers = memberListFragment.getSelectedMembers();
-
+    save.setEnabled(false);
     cacheWipGroup();
-
     progressDialog.show();
+    progressDialog.setCancelable(false);
     GroupService.getInstance()
         .sendNewGroupToServer(groupUid, new GroupService.GroupCreationListener() {
               @Override public void groupCreatedLocally(Group group) {
                 progressDialog.dismiss();
+                save.setEnabled(true); // just in case
                 handleSuccessfulGroupCreation(group, false); // todo : say, "it's local"
               }
 
@@ -293,6 +312,7 @@ public class CreateGroupActivity extends PortraitActivity implements ContactSele
 
               @Override public void groupCreationError(Response<GroupResponse> response) {
                 progressDialog.dismiss();
+                save.setEnabled(true); // again, just in case, but shouldn't happen
                 ErrorUtils.showSnackBar(rlCgRoot, R.string.error_generic, Snackbar.LENGTH_SHORT);
               }
             });
@@ -326,9 +346,8 @@ public class CreateGroupActivity extends PortraitActivity implements ContactSele
   }
 
   private void deleteLocalCreatedGroup(){
-    if (cachedGroup != null) {
-      RealmUtils.removeObjectFromDatabase(Group.class,"groupUid",groupUid);
-      RealmUtils.removeObjectFromDatabase(Member.class,"groupUid",groupUid);
+    if (cachedGroup != null && !editingOfflineGroup) {
+      GroupService.getInstance().deleteLocallyCreatedGroup(groupUid);
     }
   }
 

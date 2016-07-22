@@ -3,6 +3,7 @@ package org.grassroot.android.fragments;
 import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
@@ -32,10 +33,12 @@ import org.grassroot.android.activities.GroupSearchActivity;
 import org.grassroot.android.activities.GroupTasksActivity;
 import org.grassroot.android.adapters.GroupListAdapter;
 import org.grassroot.android.events.GroupCreatedEvent;
+import org.grassroot.android.events.GroupDeletedEvent;
 import org.grassroot.android.events.GroupEditedEvent;
 import org.grassroot.android.events.GroupPictureChangedEvent;
 import org.grassroot.android.events.JoinRequestReceived;
 import org.grassroot.android.events.NetworkActivityResultsEvent;
+import org.grassroot.android.events.OfflineActionsSent;
 import org.grassroot.android.events.TaskAddedEvent;
 import org.grassroot.android.events.UserLoggedOutEvent;
 import org.grassroot.android.interfaces.GroupConstants;
@@ -44,24 +47,21 @@ import org.grassroot.android.interfaces.SortInterface;
 import org.grassroot.android.interfaces.TaskConstants;
 import org.grassroot.android.models.Group;
 import org.grassroot.android.models.GroupJoinRequest;
-import org.grassroot.android.models.TaskModel;
 import org.grassroot.android.services.GroupService;
 import org.grassroot.android.utils.Constant;
 import org.grassroot.android.utils.ErrorUtils;
 import org.grassroot.android.utils.MenuUtils;
+import org.grassroot.android.utils.NetworkUtils;
 import org.grassroot.android.utils.RealmUtils;
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 
 import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 import butterknife.Unbinder;
-import io.realm.Realm;
 import io.realm.RealmList;
 
 public class HomeGroupListFragment extends android.support.v4.app.Fragment
@@ -155,6 +155,7 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
     @Override
     public void onDestroyView() {
         super.onDestroyView();
+        hideProgress();
         EventBus.getDefault().unregister(this);
         unbinder.unbind();
     }
@@ -172,7 +173,7 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
     showProgress();
     Log.e(TAG, "fetching group list ...");
     GroupService.getInstance()
-        .fetchGroupList(getActivity(), rlGhpRoot, new GroupService.GroupServiceListener() {
+        .fetchGroupListWithErrorDisplay(getActivity(), rlGhpRoot, new GroupService.GroupServiceListener() {
           @Override public void groupListLoaded() {
             hasFetchedGroups = true;
             groupListRowAdapter.refreshGroupsToDB();
@@ -233,7 +234,7 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
    */
     public void refreshGroupList() {
         GroupService.getInstance()
-                .fetchGroupList(getActivity(), null, new GroupService.GroupServiceListener() {
+                .fetchGroupListWithErrorDisplay(getActivity(), null, new GroupService.GroupServiceListener() {
                     @Override public void groupListLoaded() {
                         groupListRowAdapter.refreshGroupsToDB();
                         glSwipeRefresh.setRefreshing(false);
@@ -323,7 +324,35 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
     @Override
     public void onGroupRowShortClick(Group group) {
         if (floatingMenuOpen) closeFloatingMenu();
-        startActivity(MenuUtils.constructIntent(getActivity(), GroupTasksActivity.class, group));
+        if (!group.getIsLocal()) {
+            startActivity(MenuUtils.constructIntent(getActivity(), GroupTasksActivity.class, group));
+        } else {
+            showGroupWipMenu(group);
+        }
+    }
+
+    private void showGroupWipMenu(final Group group) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+        builder.setTitle(R.string.cg_wip_message);
+        builder.setItems(R.array.cg_offline_group, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                switch (which) {
+                    case 0:
+                        startActivity(MenuUtils.constructIntent(getActivity(), CreateGroupActivity.class, group));
+                        break;
+                    case 1:
+                        startActivity(MenuUtils.constructIntent(getActivity(), GroupTasksActivity.class, group));
+                        break;
+                    case 2:
+                        GroupService.getInstance().deleteLocallyCreatedGroup(group.getGroupUid());
+                        break;
+                    default:
+                        break;
+                }
+            }
+        });
+        builder.create().show();
     }
 
     @Override
@@ -385,7 +414,14 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
 
     @Subscribe
     public void onEvent(NetworkActivityResultsEvent networkActivityResultsEvent) {
-        fetchGroupList();
+        NetworkUtils.syncLocalAndServer(getContext()); // todo : decide if we need this here
+    }
+
+    @Subscribe
+    public void onEvent(OfflineActionsSent e) {
+        if (groupListRowAdapter != null) {
+            groupListRowAdapter.refreshGroupsToDB();
+        }
     }
 
     private void showProgress() {
@@ -423,6 +459,7 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
       groupListRowAdapter.refreshGroupsToDB();
     }
 
+    @Subscribe public void onGroupDeletedEvent(GroupDeletedEvent e) { groupListRowAdapter.refreshGroupsToDB(); } // todo : make more efficient ...
 
     @Subscribe
     public void onEvent(UserLoggedOutEvent e) {

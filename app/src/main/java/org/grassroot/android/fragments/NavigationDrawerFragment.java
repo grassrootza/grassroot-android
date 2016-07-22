@@ -19,6 +19,7 @@ import org.grassroot.android.activities.FAQActivity;
 import org.grassroot.android.activities.ProfileSettingsActivity;
 import org.grassroot.android.activities.StartActivity;
 import org.grassroot.android.adapters.NavigationDrawerAdapter;
+import org.grassroot.android.adapters.RecyclerTouchListener;
 import org.grassroot.android.events.GroupCreatedEvent;
 import org.grassroot.android.events.GroupsRefreshedEvent;
 import org.grassroot.android.events.NotificationEvent;
@@ -33,7 +34,6 @@ import org.grassroot.android.models.Group;
 import org.grassroot.android.models.NavDrawerItem;
 import org.grassroot.android.models.TaskModel;
 import org.grassroot.android.services.GcmRegistrationService;
-import org.grassroot.android.adapters.RecyclerTouchListener;
 import org.grassroot.android.services.GroupService;
 import org.grassroot.android.services.TaskService;
 import org.grassroot.android.utils.Constant;
@@ -128,10 +128,10 @@ public class NavigationDrawerFragment extends Fragment implements TaskService.Ta
 
         groups = new NavDrawerItem(getString(R.string.drawer_group_list), R.drawable.ic_groups_general, R.drawable.ic_groups_general, true, true);
         groups.setItemCount((int) RealmUtils.countObjectsInDB(Group.class));
-        Log.e(TAG, "on set up ... size of groups loaded: " + groups.getItemCount());
+        Log.d(TAG, "on set up ... size of groups loaded: " + groups.getItemCount());
         draweritems.add(groups);
 
-        tasks = new NavDrawerItem(getString(R.string.drawer_open_tasks), R.drawable.ic_small_task_tick, R.drawable.ic_small_task_tick, false, true); // todo: fix icon
+        tasks = new NavDrawerItem(getString(R.string.drawer_open_tasks), R.drawable.ic_task_green, R.drawable.ic_task_green, false, true); // todo: fix icon
         tasks.setItemCount(TaskService.getInstance().upcomingTasks.size());
         TaskService.getInstance().fetchUpcomingTasks(this);
         draweritems.add(tasks);
@@ -242,7 +242,7 @@ public class NavigationDrawerFragment extends Fragment implements TaskService.Ta
 
     // todo : move this onto a background thread?
     private void unregisterGcm() {
-        Log.e(TAG, "unregistering from GCM ...");
+        Log.d(TAG, "unregistering from GCM ...");
         Intent gcmUnregister = new Intent(getActivity(), GcmRegistrationService.class);
         gcmUnregister.putExtra(NotificationConstants.ACTION, NotificationConstants.GCM_UNREGISTER);
         gcmUnregister.putExtra(NotificationConstants.PHONE_NUMBER, RealmUtils.loadPreferencesFromDB().getMobileNumber());
@@ -259,7 +259,7 @@ public class NavigationDrawerFragment extends Fragment implements TaskService.Ta
     public void refreshGroupCount() {
         groups.setItemCount((int) RealmUtils.countObjectsInDB(Group.class));
         drawerAdapter.notifyDataSetChanged();
-        Log.e(TAG, "group count refreshed ... now : " + groups.getItemCount());
+        Log.d(TAG, "group count refreshed ... now : " + groups.getItemCount());
     }
 
     @Subscribe
@@ -275,7 +275,7 @@ public class NavigationDrawerFragment extends Fragment implements TaskService.Ta
     @Subscribe
     public void onNewNotificationEvent(NotificationEvent event) {
         int notificationCount = event.getNotificationCount();
-        Log.e(TAG, "notification count" + notificationCount);
+        Log.d(TAG, "notification count" + notificationCount);
         drawerAdapter.notifyDataSetChanged();
     }
 

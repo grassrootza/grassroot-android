@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.grassroot.android.models.Group;
+import org.grassroot.android.models.Member;
 import org.grassroot.android.models.PreferenceObject;
 import org.grassroot.android.models.RealmString;
 
@@ -184,6 +185,10 @@ public class RealmUtils {
 
   public static Group loadGroupFromDB(final String groupUid) {
     return loadObjectFromDB(Group.class, "groupUid", groupUid);
+  }
+
+  public static RealmList<Member> loadGroupMembers(final String groupUid) {
+    return loadListFromDB(Member.class, "groupUid", groupUid);
   }
 
   public static RealmList<RealmString> convertListOfStringInRealmListOfString(List<String> list) {
