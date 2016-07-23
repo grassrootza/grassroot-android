@@ -5,15 +5,14 @@ package org.grassroot.android.models;
  */
 public class NavDrawerItem {
 
+    private String tag;
     public int defaultIcon;
     public String itemLabel;
-    public int selectedIcon;
 
+    public int selectedIcon;
     private boolean isChecked = false;
     private boolean showItemCount = false;
     private int itemCount;
-
-    private String tag;
 
     public  NavDrawerItem(String tag, String itemLabel, int defaultIcon, int selectedIcon, boolean isChecked, boolean showItemCount) {
         this.tag = tag;
@@ -24,6 +23,13 @@ public class NavDrawerItem {
         this.showItemCount = showItemCount;
         this.itemCount = 0;
     }
+
+    public NavDrawerItem(String tag, String itemLabel, int icon) {
+        this.tag = tag;
+        this.itemLabel = itemLabel;
+        this.defaultIcon = icon;
+    }
+
 
     public NavDrawerItem() {
 

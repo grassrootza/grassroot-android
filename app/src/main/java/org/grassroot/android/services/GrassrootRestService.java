@@ -189,11 +189,14 @@ public class GrassrootRestService {
     Call<GenericResponse> pushUnregister(@Path("phoneNumber") String phoneNumber,
         @Path("code") String code);
 
-
     //update notification read status
     @POST("notification/update/read/{phoneNumber}/{code}")
     Call<GenericResponse> updateRead(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
         @Query("uid") String uid);
+
+    //check if server connection is working (for online/offline switching)
+    @GET("user/connect/{phoneNumber}/{code}")
+    Call<GenericResponse> testConnection(@Path("phoneNumber") String phoneNumber, @Path("code") String code);
 
     /*
     SECTION : Group related calls

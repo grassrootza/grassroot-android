@@ -310,7 +310,7 @@ public class CreateTaskFragment extends Fragment {
     model.setTaskUid(UUID.randomUUID().toString());
     model.setType(taskType);
     model.setParentLocal(groupLocal);
-    model.setLocal(!NetworkUtils.isNetworkAvailable(getContext()));
+    model.setLocal(!NetworkUtils.isOnline(getContext()));
     model.setMinutes(minutes);
     model.setCanEdit(true);
     model.setReply(TaskConstants.TODO_PENDING);

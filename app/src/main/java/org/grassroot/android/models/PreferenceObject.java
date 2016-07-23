@@ -1,5 +1,9 @@
 package org.grassroot.android.models;
 
+import android.text.TextUtils;
+
+import org.grassroot.android.utils.NetworkUtils;
+
 import io.realm.RealmObject;
 import io.realm.annotations.PrimaryKey;
 
@@ -16,14 +20,8 @@ public class PreferenceObject extends RealmObject {
   private String mobileNumber;
   private String token;
   private long lastTimeGroupsFetched;
-
-  public String getAlert() {
-    return alert;
-  }
-
-  public void setAlert(String alert) {
-    this.alert = alert;
-  }
+  private String onlineStatus;
+  private boolean showOnlineOfflinePicker = true;
 
   private String alert;
   private String languagePreference;
@@ -112,4 +110,26 @@ public class PreferenceObject extends RealmObject {
   public void setLastTimeGroupsFetched(long lastTimeGroupsFetched) { this.lastTimeGroupsFetched = lastTimeGroupsFetched; }
 
   public long getLastTimeGroupsFetched() { return lastTimeGroupsFetched; }
+
+  public String getAlert() {
+    return alert;
+  }
+
+  public void setAlert(String alert) {
+    this.alert = alert;
+  }
+
+  public void setOnlineStatus(String onlineStatus) { this.onlineStatus = onlineStatus; }
+
+  public String getOnlineStatus() {
+    if (TextUtils.isEmpty(onlineStatus)) {
+      onlineStatus = NetworkUtils.ONLINE_DEFAULT;
+    }
+    return onlineStatus;
+  }
+
+  public void setShowOnlineOfflinePicker(boolean showOnlineOfflinePicker) { this.showOnlineOfflinePicker = showOnlineOfflinePicker; }
+
+  public boolean isShowOnlineOfflinePicker() { return showOnlineOfflinePicker; }
+
 }

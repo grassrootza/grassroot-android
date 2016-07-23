@@ -1,9 +1,11 @@
 package org.grassroot.android.fragments;
 
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -18,9 +20,12 @@ import org.grassroot.android.activities.FAQActivity;
 import org.grassroot.android.activities.ProfileSettingsActivity;
 import org.grassroot.android.activities.StartActivity;
 import org.grassroot.android.adapters.NavigationDrawerAdapter;
+import org.grassroot.android.events.ConnectionFailedEvent;
 import org.grassroot.android.events.GroupCreatedEvent;
 import org.grassroot.android.events.GroupsRefreshedEvent;
 import org.grassroot.android.events.NotificationEvent;
+import org.grassroot.android.events.OfflineActionsSent;
+import org.grassroot.android.events.OnlineOfflineToggledEvent;
 import org.grassroot.android.events.TaskAddedEvent;
 import org.grassroot.android.events.TaskCancelledEvent;
 import org.grassroot.android.events.UserLoggedOutEvent;
@@ -28,11 +33,12 @@ import org.grassroot.android.fragments.dialogs.ConfirmCancelDialogFragment;
 import org.grassroot.android.interfaces.NavigationConstants;
 import org.grassroot.android.interfaces.NotificationConstants;
 import org.grassroot.android.models.Group;
+import org.grassroot.android.models.GroupJoinRequest;
 import org.grassroot.android.models.NavDrawerItem;
 import org.grassroot.android.services.GcmRegistrationService;
-import org.grassroot.android.services.GroupService;
 import org.grassroot.android.services.TaskService;
 import org.grassroot.android.utils.Constant;
+import org.grassroot.android.utils.NetworkUtils;
 import org.grassroot.android.utils.RealmUtils;
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
@@ -43,7 +49,7 @@ import java.util.List;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 
-public class NavigationDrawerFragment extends Fragment implements NavigationDrawerAdapter.NavDrawerItemListener {
+public class NavigationDrawerFragment extends Fragment implements NavigationDrawerAdapter.NavDrawerItemListener, NetworkUtils.NetworkListener {
 
     private static final String TAG = NavigationDrawerFragment.class.getCanonicalName();
 
@@ -67,12 +73,10 @@ public class NavigationDrawerFragment extends Fragment implements NavigationDraw
     List<NavDrawerItem> secondaryItems;
     private NavigationDrawerAdapter secondaryAdapter;
 
-    private int currentlySelectedItem = NavigationConstants.HOME_NAV_GROUPS;
-
-    NavDrawerItem groups;
-    NavDrawerItem tasks;
-    NavDrawerItem notifications;
-    NavDrawerItem joinRequests;
+    private NavDrawerItem groups;
+    private NavDrawerItem tasks;
+    private NavDrawerItem notifications;
+    private NavDrawerItem joinRequests;
 
     @BindView(R.id.displayName) TextView displayName;
     @BindView(R.id.nav_items_primary) RecyclerView primaryItemsView;
@@ -125,27 +129,26 @@ public class NavigationDrawerFragment extends Fragment implements NavigationDraw
         secondaryItemsView.setLayoutManager(new LinearLayoutManager(getContext()));
         secondaryItemsView.setAdapter(secondaryAdapter);
 
-        return view ;
+        return view;
     }
 
     public List<NavDrawerItem> setUpPrimaryItems() {
         primaryItems = new ArrayList<>();
 
-        groups = new NavDrawerItem(ITEM_SHOW_GROUPS, getString(R.string.drawer_group_list), R.drawable.ic_groups_general, R.drawable.ic_groups_general, true, true);
+        groups = new NavDrawerItem(ITEM_SHOW_GROUPS, getString(R.string.drawer_group_list), R.drawable.ic_groups_black, R.drawable.ic_groups_green, true, true);
         groups.setItemCount((int) RealmUtils.countObjectsInDB(Group.class));
-        Log.d(TAG, "on set up ... size of groups loaded: " + groups.getItemCount());
         primaryItems.add(groups);
 
-        tasks = new NavDrawerItem(ITEM_TASKS, getString(R.string.drawer_open_tasks), R.drawable.ic_task_green, R.drawable.ic_task_green, false, true); // todo: fix icon
-        tasks.setItemCount(TaskService.getInstance().upcomingTasks.size());
+        tasks = new NavDrawerItem(ITEM_TASKS, getString(R.string.drawer_open_tasks), R.drawable.ic_tasks_black, R.drawable.ic_tasks_green, false, true); // todo: fix icon
+        tasks.setItemCount(RealmUtils.loadUpcomingTasksFromDB().size());
         primaryItems.add(tasks);
 
-        notifications = new NavDrawerItem(ITEM_NOTIFICATIONS, getString(R.string.Notifications), R.drawable.ic_exclamation_small, R.drawable.ic_exclamation_small, false, true);
+        notifications = new NavDrawerItem(ITEM_NOTIFICATIONS, getString(R.string.drawer_notis), R.drawable.ic_exclamation_black, R.drawable.ic_excl_green, false, true);
         notifications.setItemCount(RealmUtils.loadPreferencesFromDB().getNotificationCounter());
         primaryItems.add(notifications);
 
-        joinRequests = new NavDrawerItem(ITEM_JOIN_REQS, getString(R.string.drawer_join_request), R.drawable.ic_notification, R.drawable.ic_notification_green, false, true);
-        joinRequests.setItemCount(GroupService.getInstance().loadRequestsFromDB().size());
+        joinRequests = new NavDrawerItem(ITEM_JOIN_REQS, getString(R.string.drawer_join_request), R.drawable.ic_join_black, R.drawable.ic_join_green, false, true);
+        joinRequests.setItemCount((int) RealmUtils.countObjectsInDB(GroupJoinRequest.class));
         primaryItems.add(joinRequests);
 
         return primaryItems;
@@ -154,35 +157,59 @@ public class NavigationDrawerFragment extends Fragment implements NavigationDraw
     public List<NavDrawerItem> setUpSecondaryItems() {
         secondaryItems = new ArrayList<>();
 
-        secondaryItems.add(new NavDrawerItem(ITEM_SHARE, getString(R.string.Share), R.drawable.ic_share, R.drawable.ic_share_green, false, false));
-        secondaryItems.add(new NavDrawerItem(ITEM_PROFILE, getString(R.string.Profile),R.drawable.ic_profile,R.drawable.ic_profile_green,false, false));
-        secondaryItems.add(new NavDrawerItem(ITEM_FAQ, getString(R.string.FAQs),R.drawable.ic_faq,R.drawable.ic_faq_green,false, false));
-        secondaryItems.add(new NavDrawerItem(ITEM_LOGOUT, getString(R.string.Logout),R.drawable.ic_logout,R.drawable.ic_logout_green,false, false));
+        setupOnlineSwitch();
+        secondaryItems.add(new NavDrawerItem(ITEM_SHARE, getString(R.string.drawer_share), R.drawable.ic_share));
+        secondaryItems.add(new NavDrawerItem(ITEM_PROFILE, getString(R.string.drawer_profile),R.drawable.ic_profile));
+        secondaryItems.add(new NavDrawerItem(ITEM_FAQ, getString(R.string.drawer_faqs),R.drawable.ic_faq));
+        secondaryItems.add(new NavDrawerItem(ITEM_LOGOUT, getString(R.string.drawer_logout),R.drawable.ic_logout));
 
         return secondaryItems;
+    }
+
+    private void setupOnlineSwitch() {
+        final String currentStatus = RealmUtils.loadPreferencesFromDB().getOnlineStatus();
+        int labelResource;
+        switch (currentStatus) {
+            case NetworkUtils.ONLINE_DEFAULT:
+                labelResource = R.string.drawer_offline;
+                break;
+            case NetworkUtils.OFFLINE_ON_FAIL:
+                labelResource = R.string.drawer_online_failed;
+                break;
+            case NetworkUtils.OFFLINE_SELECTED:
+                labelResource = R.string.drawer_online_delib;
+                break;
+            default:
+                return;
+        }
+
+        if (secondaryItems.isEmpty()) {
+            secondaryItems.add(new NavDrawerItem(ITEM_OFFLINE, getString(labelResource), R.drawable.ic_configure));
+        } else {
+            secondaryItems.get(0).setItemLabel(getString(labelResource));
+            secondaryAdapter.notifyItemChanged(0);
+        }
     }
 
     @Override
     public void onItemClicked(final String tag) {
         // handle common & reusable things here, pass back more complex or context-dependent to activity
-        boolean changeItemSelected = true;
         switch (tag) {
-            // note: first four are handed back to home screen activity to handle fragment switching
             case ITEM_SHOW_GROUPS:
             case ITEM_TASKS:
             case ITEM_NOTIFICATIONS:
             case ITEM_JOIN_REQS:
                 break;
+            case ITEM_OFFLINE:
+                offlineSwitch();
+                break;
             case ITEM_SHARE:
-                changeItemSelected = false;
                 shareApp();
                 break;
             case ITEM_PROFILE:
-                changeItemSelected = false; // until switch that to fragmet w/nav bar instead of back
                 startActivity(new Intent(getActivity(), ProfileSettingsActivity.class));
                 break;
             case ITEM_FAQ:
-                changeItemSelected = false; // as above
                 startActivity(new Intent(getActivity(), FAQActivity.class));
                 break;
             case ITEM_LOGOUT:
@@ -191,24 +218,52 @@ public class NavigationDrawerFragment extends Fragment implements NavigationDraw
             default:
                 // todo : put in handling non-standard items
         }
-        if (changeItemSelected) {
-            // swap it ...
-        }
         mCallbacks.onNavigationDrawerItemSelected(tag);
     }
 
-    private void switchSelectedState(final int selectedItem) {
-        primaryItems.get(currentlySelectedItem).setIsChecked(false);
-        primaryItems.get(selectedItem).setIsChecked(true);
-        currentlySelectedItem = selectedItem;
-        primaryAdapter.notifyDataSetChanged();
+    private void offlineSwitch() {
+        final String currentStatus = RealmUtils.loadPreferencesFromDB().getOnlineStatus();
+        int labelResource = currentStatus.equals(NetworkUtils.ONLINE_DEFAULT) ? R.string.online_go_offline
+                : currentStatus.equals(NetworkUtils.OFFLINE_SELECTED) ? R.string.offline_go_online_delib : R.string.offline_go_online_failed;
+        ConfirmCancelDialogFragment confirmDialog = ConfirmCancelDialogFragment.newInstance(labelResource, new ConfirmCancelDialogFragment.ConfirmDialogListener() {
+                    @Override
+                    public void doConfirmClicked() {
+                        NetworkUtils.toggleOnlineOffline(getContext(), true, NavigationDrawerFragment.this);
+                    }
+                });
+        confirmDialog.show(getFragmentManager(), "offline_online");
     }
 
-    private void updateTaskCount() {
-        tasks.setItemCount(TaskService.getInstance().upcomingTasks.size());
-        if (primaryAdapter != null) {
-            primaryAdapter.notifyItemChanged(NavigationConstants.HOME_NAV_TASKS);
-        }
+    @Override
+    public void connectionEstablished() {
+        showDoneDialog(R.string.go_online_success);
+    }
+
+    @Override
+    public void networkAvailableButConnectFailed(String failureType) {
+        showDoneDialog(R.string.go_online_failure_server);
+    }
+
+    @Override
+    public void networkNotAvailable() {
+        showDoneDialog(R.string.go_online_failure_network);
+    }
+
+    @Override
+    public void setOffline() {
+        showDoneDialog(R.string.gone_offline);
+    }
+
+    private void showDoneDialog(int message) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+        builder.setMessage(message);
+        builder.setPositiveButton(R.string.online_offline_done, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.dismiss();
+            }
+        });
+        builder.create().show();
     }
 
     private void shareApp() {
@@ -268,7 +323,6 @@ public class NavigationDrawerFragment extends Fragment implements NavigationDraw
     @Subscribe
     public void onNewNotificationEvent(NotificationEvent event) {
         int notificationCount = event.getNotificationCount();
-        Log.d(TAG, "notification count" + notificationCount);
         primaryAdapter.notifyDataSetChanged();
     }
 
@@ -282,6 +336,21 @@ public class NavigationDrawerFragment extends Fragment implements NavigationDraw
     public void onTaskCancelledEvent(TaskCancelledEvent e) {
         tasks.decrementItemCount();
         primaryAdapter.notifyItemChanged(NavigationConstants.HOME_NAV_TASKS);
+    }
+
+    @Subscribe
+    public void onEvent(ConnectionFailedEvent e) {
+        setupOnlineSwitch();
+    }
+
+    @Subscribe
+    public void onEvent(OfflineActionsSent e) {
+        setupOnlineSwitch();
+    }
+
+    @Subscribe
+    public void onEvent(OnlineOfflineToggledEvent e) {
+        setupOnlineSwitch();
     }
 
 }

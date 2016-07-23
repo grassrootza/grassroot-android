@@ -16,7 +16,7 @@ public class StartUpTask extends AsyncTask<Context, Void, Void> {
     protected Void doInBackground(Context... params) {
         LocationServices.getInstance().connect();
         final Context context = params[0];
-        if (NetworkUtils.isNetworkAvailable(context)) {
+        if (NetworkUtils.isOnline(context)) {
             NetworkUtils.syncLocalAndServer(context);
         }
         return null;

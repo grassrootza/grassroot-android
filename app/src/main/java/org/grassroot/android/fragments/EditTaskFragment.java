@@ -49,7 +49,6 @@ import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
-import java.util.Set;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -356,7 +355,7 @@ public class EditTaskFragment extends Fragment implements DatePickerDialog.OnDat
     public void updateTask() {
         progressDialog.show();
         TaskModel model = generateTaskObject();
-        if(NetworkUtils.isNetworkAvailable(getContext())) {
+        if(NetworkUtils.isOnline(getContext())) {
             setUpUpdateApiCall(model).enqueue(new Callback<TaskModel>() {
                 @Override public void onResponse(Call<TaskModel> call, Response<TaskModel> response) {
                     progressDialog.hide();
@@ -403,7 +402,7 @@ public class EditTaskFragment extends Fragment implements DatePickerDialog.OnDat
         model.setLocation(etLocationInput.getText().toString());
         model.setType(taskType);
         model.setEdited(true);
-        model.setLocal(!NetworkUtils.isNetworkAvailable(getContext()));
+        model.setLocal(!NetworkUtils.isOnline(getContext()));
         model.setParentLocal(task.isParentLocal());
         model.setReply(task.getReply());
         model.setCanAction(task.isCanAction());

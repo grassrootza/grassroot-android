@@ -58,7 +58,7 @@
 
             <android.support.design.widget.FloatingActionButton
                 android:id="@+id/ic_fab_new_task"
-                android:src="@drawable/ic_add"
+                android:src="@drawable/ic_tasks_white"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 app:elevation="6dp"
@@ -98,7 +98,7 @@
 
             <android.support.design.widget.FloatingActionButton
                 android:id="@+id/ic_fab_start_group"
-                android:src="@drawable/ic_fab_start_group"
+                android:src="@drawable/ic_groups_white"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 app:elevation="@dimen/fab_elevation"

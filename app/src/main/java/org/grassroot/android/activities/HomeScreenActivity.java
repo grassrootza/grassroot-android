@@ -199,7 +199,7 @@ public class HomeScreenActivity extends PortraitActivity implements NavigationDr
     }
 
     private void switchToNotificationFragment() {
-        setTitle(R.string.Notifications);
+        setTitle(R.string.drawer_notis);
         if (notificationCenterFragment == null) {
             notificationCenterFragment = new NotificationCenterFragment();
         }
@@ -361,7 +361,7 @@ public class HomeScreenActivity extends PortraitActivity implements NavigationDr
 
     private void switchActionBarOffPicker() {
         drawerToggle.setDrawerIndicatorEnabled(true);
-        final int title = (currentMainFragment == NavigationConstants.HOME_NAV_NOTIFICATIONS) ? R.string.Notifications
+        final int title = (currentMainFragment == NavigationConstants.HOME_NAV_NOTIFICATIONS) ? R.string.drawer_notis
                 : (currentMainFragment == NavigationConstants.HOME_NAV_TASKS) ? R.string.tasks_toolbar_title : R.string.ghp_toolbar_title;
         setTitle(title);
         toggleClickableTitle(true);

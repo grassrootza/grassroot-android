@@ -124,7 +124,7 @@ public class JoinRequestsFragment extends Fragment {
         GroupService.getInstance().refreshGroupJoinRequests(new GroupService.GroupJoinRequestListener() {
             @Override
             public void groupJoinRequestsOpen(RealmList<GroupJoinRequest> joinRequests) {
-                swipeRefreshLayout.setRefreshing(false);
+                swipeRefreshOff();
                 adapter.refreshList();
                 selectMessageOrList();
                 hideProgess();
@@ -132,15 +132,14 @@ public class JoinRequestsFragment extends Fragment {
 
             @Override
             public void groupJoinRequestsOffline(RealmList<GroupJoinRequest> openJoinRequests) {
-                swipeRefreshLayout.setRefreshing(false);
-                adapter.refreshList();
+                swipeRefreshOff();
                 selectMessageOrList();
                 hideProgess();
             }
 
             @Override
             public void groupJoinRequestsEmpty() {
-                swipeRefreshLayout.setRefreshing(false);
+                swipeRefreshOff();
                 adapter.clearList();
                 switchToEmptyList();
                 hideProgess();
@@ -148,8 +147,14 @@ public class JoinRequestsFragment extends Fragment {
         });
     }
 
+    private void swipeRefreshOff() {
+        if (swipeRefreshLayout != null) {
+            swipeRefreshLayout.setRefreshing(false);
+        }
+    }
+
     private void respondToJoinRequest(final String approvedOrDenied, final String requestUid, final int position) {
-        if (NetworkUtils.isNetworkAvailable(getContext())) {
+        if (NetworkUtils.isOnline(getContext())) {
             showProgress();
             GrassrootRestService.getInstance().getApi().respondToJoinRequest(mobile, code,
                     requestUid, approvedOrDenied).enqueue(new Callback<GenericResponse>() {

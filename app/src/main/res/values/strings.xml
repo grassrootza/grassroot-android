@@ -54,13 +54,27 @@
     <!-- Navigation drawer items -->
     <string name="drawer_group_list">Your groups</string>
     <string name="drawer_open_tasks">Upcoming events</string>
+    <string name="drawer_notis">Notifications</string>
     <string name="drawer_join_request">Join requests</string> <!-- todo : find better name -->
-    <string name="Profile">Profile Settings</string>
-    <string name="FAQs">FAQs</string>
-    <string name="Logout">Logout</string>
-    <string name="Share">Share App</string>
-    <string name="Notifications">Notifications</string>
+
+    <string name="drawer_offline">Switch to offline</string>
+    <string name="drawer_online_delib">Switch to online</string>
+    <string name="drawer_online_failed">Try reconnect</string>
+    <string name="drawer_profile">Profile settings</string>
+    <string name="drawer_faqs">FAQs</string>
+    <string name="drawer_logout">Logout</string>
+    <string name="drawer_share">Share app</string>
     <string name="nav_bar_footer">Grassroot %s</string>
+
+    <string name="online_go_offline">Switch to offline mode?</string>
+    <string name="offline_go_online_failed">Try connect to server?</string>
+    <string name="offline_go_online_delib">Switch to online mode?</string>
+
+    <string name="go_online_success">Done! You are now online</string>
+    <string name="go_online_failure_server">Sorry, something went wrong connection. Please try again later.</string>
+    <string name="go_online_failure_network">You don\'t seem to have the network turned on. Please try again later.</string>
+    <string name="gone_offline">Done, you won\'t use data until you select go online</string>
+    <string name="online_offline_done">Okay</string>
 
     <string name="logout_message">Are you sure you want to logout?</string>
     <string name="share_app_text">Meet, Vote and Act with Grassroot. Download it at: https://play.google.com/store/apps/details?id=za.org.grassroot.android</string>

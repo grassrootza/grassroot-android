@@ -3,15 +3,18 @@ package org.grassroot.android.utils;
 import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
-import android.support.v7.app.AlertDialog;
 import android.util.Log;
 
-import org.grassroot.android.R;
+import org.grassroot.android.events.ConnectionFailedEvent;
 import org.grassroot.android.events.OfflineActionsSent;
+import org.grassroot.android.events.OnlineOfflineToggledEvent;
+import org.grassroot.android.models.GenericResponse;
 import org.grassroot.android.models.Group;
 import org.grassroot.android.models.Member;
+import org.grassroot.android.models.PreferenceObject;
 import org.grassroot.android.models.TaskModel;
 import org.grassroot.android.services.ApplicationLoader;
+import org.grassroot.android.services.GrassrootRestService;
 import org.grassroot.android.services.GroupService;
 import org.grassroot.android.services.TaskService;
 import org.greenrobot.eventbus.EventBus;
@@ -20,16 +23,110 @@ import java.util.HashMap;
 import java.util.Map;
 
 import io.realm.RealmList;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class NetworkUtils {
 
 	private static final String TAG = NetworkUtils.class.getSimpleName();
 
+	public static final String ONLINE_DEFAULT = "default";
+	public static final String OFFLINE_SELECTED = "offline_selected"; // i.e., user chose to go offline
+	public static final String OFFLINE_ON_FAIL = "offline_on_fail"; // i.e., network calls failed, but user said to keep trying
+
+	public static final String SERVER_ERROR = "server_error";
+	public static final String CONNECT_ERROR = "connection_error";
+
 	static boolean sendingLocalQueue = false;
 	static boolean fetchingServerEntities = false;
 
-	public static boolean isNetworkAvailable() {
-		return isNetworkAvailable(ApplicationLoader.applicationContext);
+	public interface NetworkListener {
+		void connectionEstablished();
+		void networkAvailableButConnectFailed(String failureType);
+		void networkNotAvailable();
+		void setOffline();
+	}
+
+	public static boolean isOnline() {
+		return isOnline(ApplicationLoader.applicationContext);
+	}
+
+	public static void toggleOnlineOffline(final Context context, final boolean sendQueue, final NetworkListener listener) {
+		final String currentStatus = RealmUtils.loadPreferencesFromDB().getOnlineStatus();
+		Log.e(TAG, "toggling offline and online, from current status : " + currentStatus);
+		if (ONLINE_DEFAULT.equals(currentStatus)) {
+			switchToOfflineMode(listener);
+		} else {
+			trySwitchToOnline(context, sendQueue, listener);
+		}
+	}
+
+	public static void setOnline() {
+		PreferenceObject prefs = RealmUtils.loadPreferencesFromDB();
+		prefs.setOnlineStatus(ONLINE_DEFAULT);
+		RealmUtils.saveDataToRealm(prefs);
+	}
+
+	public static void switchToOfflineMode(NetworkListener listener) {
+		PreferenceObject prefs = RealmUtils.loadPreferencesFromDB();
+		prefs.setOnlineStatus(OFFLINE_SELECTED);
+		RealmUtils.saveDataToRealm(prefs);
+		EventBus.getDefault().post(new OnlineOfflineToggledEvent(false));
+		if (listener != null) {
+			listener.setOffline();
+		}
+	}
+
+	public static void setOnlineFailed() {
+		PreferenceObject prefs = RealmUtils.loadPreferencesFromDB();
+		prefs.setOnlineStatus(OFFLINE_ON_FAIL);
+		RealmUtils.saveDataToRealm(prefs);
+	}
+
+	public static void trySwitchToOnline(final Context context, final boolean sendQueue, final NetworkListener listener) {
+		if (!isNetworkAvailable(context)) {
+			listener.networkNotAvailable();
+		} else {
+			final String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
+			final String token = RealmUtils.loadPreferencesFromDB().getToken();
+			GrassrootRestService.getInstance().getApi().testConnection(phoneNumber, token)
+					.enqueue(new Callback<GenericResponse>() {
+						@Override
+						public void onResponse(Call<GenericResponse> call, Response<GenericResponse> response) {
+							if (response.isSuccessful()) {
+								setOnline();
+								EventBus.getDefault().post(new OnlineOfflineToggledEvent(true));
+								if (listener != null) {
+									listener.connectionEstablished();
+								}
+								if (sendQueue) {
+									syncLocalAndServer(context);
+								}
+							} else {
+								setOnlineFailed();
+								EventBus.getDefault().post(new ConnectionFailedEvent(SERVER_ERROR));
+								if (listener != null) {
+									listener.networkAvailableButConnectFailed(SERVER_ERROR);
+								}
+							}
+						}
+
+						@Override
+						public void onFailure(Call<GenericResponse> call, Throwable t) {
+							setOnlineFailed();
+							EventBus.getDefault().post(new ConnectionFailedEvent(CONNECT_ERROR));
+							if (listener != null) {
+								listener.networkAvailableButConnectFailed(CONNECT_ERROR);
+							}
+						}
+					});
+		}
+	}
+
+	public static boolean isOnline(Context context) {
+		final String status = RealmUtils.loadPreferencesFromDB().getOnlineStatus();
+		return (!status.equals(OFFLINE_SELECTED) && isNetworkAvailable(context)); // this means we try to connect every time, unless told not to
 	}
 
 	public static boolean isNetworkAvailable(Context context) {
@@ -42,7 +139,7 @@ public class NetworkUtils {
 		Log.e(TAG, "inside network utils ... about to call sending queued entities ...");
 		if (!sendingLocalQueue) {
 			sendingLocalQueue = true;
-			if (isNetworkAvailable(context)) {
+			if (isOnline(context)) {
 				sendLocalGroups();
 				sendLocallyAddedMembers();
 				sendNewLocalTasks();
@@ -54,7 +151,7 @@ public class NetworkUtils {
 		Log.e(TAG, "inside network utils .... fetching server entities ...");
 		if (!fetchingServerEntities) {
 			fetchingServerEntities = true;
-			if (isNetworkAvailable(context)) {
+			if (isOnline(context)) {
 				GroupService.getInstance().fetchGroupListWithoutError();
 				GroupService.getInstance().fetchGroupJoinRequests(null);
 				TaskService.getInstance().fetchUpcomingTasks(null);

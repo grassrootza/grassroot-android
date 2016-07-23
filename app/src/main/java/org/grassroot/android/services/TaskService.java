@@ -13,13 +13,10 @@ import org.grassroot.android.utils.Utilities;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 
 import io.realm.Realm;
-import io.realm.RealmList;
-import io.realm.RealmResults;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -163,7 +160,7 @@ public class TaskService {
   }
 
   public void createTask(final TaskModel task, final TaskCreationListener listener) {
-    if (NetworkUtils.isNetworkAvailable(ApplicationLoader.applicationContext)) {
+    if (NetworkUtils.isOnline(ApplicationLoader.applicationContext)) {
       newTaskApiCall(task).enqueue(new Callback<TaskResponse>() {
         @Override public void onResponse(Call<TaskResponse> call, Response<TaskResponse> response) {
           if (response.isSuccessful()) {

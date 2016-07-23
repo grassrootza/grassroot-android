@@ -9,7 +9,7 @@ import org.grassroot.android.utils.NetworkUtils;
 public class NetworkConnectivityRecevier extends BroadcastReceiver {
 
   @Override public void onReceive(final Context context, Intent intent) {
-    if (NetworkUtils.isNetworkAvailable(context)) {
+    if (NetworkUtils.isOnline(context)) {
 
       try {
         Thread.sleep(3000);

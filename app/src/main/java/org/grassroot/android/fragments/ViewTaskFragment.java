@@ -168,7 +168,7 @@ public class ViewTaskFragment extends Fragment {
   }
 
   private void retrieveTaskDetails() {
-    if (!NetworkUtils.isNetworkAvailable(getContext())) {
+    if (!NetworkUtils.isOnline(getContext())) {
       task = RealmUtils.loadObjectFromDB(TaskModel.class, "taskUid", taskUid);
       setUpViews(task);
     } else {
@@ -418,7 +418,7 @@ public class ViewTaskFragment extends Fragment {
     memberListAdapter = new MemberListAdapter(getActivity());
     rcResponseList.setLayoutManager(new LinearLayoutManager(getContext()));
     rcResponseList.setAdapter(memberListAdapter);
-if(NetworkUtils.isNetworkAvailable(getContext())){
+if(NetworkUtils.isOnline(getContext())){
     GrassrootRestService.getInstance()
         .getApi()
         .getTodoAssigned(phoneNumber, code, taskUid)
@@ -492,7 +492,7 @@ if(NetworkUtils.isNetworkAvailable(getContext())){
     mtgRsvpAdapter = new MtgRsvpAdapter();
     rcResponseList.setLayoutManager(new LinearLayoutManager(getContext()));
     rcResponseList.setAdapter(mtgRsvpAdapter);
-    if (NetworkUtils.isNetworkAvailable(getContext())) {
+    if (NetworkUtils.isOnline(getContext())) {
       GrassrootRestService.getInstance()
           .getApi()
           .fetchMeetingRsvps(phoneNumber, code, taskUid)
@@ -525,7 +525,7 @@ if(NetworkUtils.isNetworkAvailable(getContext())){
   private void setVoteResponseView() {
     tvResponsesCount.setText(task.getDeadlineDate().after(new Date()) ? R.string.vt_vote_count_open
         : R.string.vt_vote_count_closed);
-    if (NetworkUtils.isNetworkAvailable(getContext())) {
+    if (NetworkUtils.isOnline(getContext())) {
       GrassrootRestService.getInstance()
           .getApi()
           .fetchVoteTotals(phoneNumber, code, taskUid)

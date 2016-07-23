@@ -251,7 +251,7 @@ public class AddMembersActivity extends AppCompatActivity implements
                 newMember.setGroupUid(groupUid);
                 newMember.setMemberUid(UUID.randomUUID().toString());
                 newMember.setMemberGroupUid();
-                newMember.setLocal(!NetworkUtils.isNetworkAvailable(getApplicationContext()));
+                newMember.setLocal(!NetworkUtils.isOnline(getApplicationContext()));
                 RealmUtils.saveDataToRealm(newMember);
                 manuallyAddedMembers.add(newMember);
                 newMemberListFragment.addMembers(Collections.singletonList(newMember));
@@ -298,7 +298,7 @@ public class AddMembersActivity extends AppCompatActivity implements
             final List<Member> membersToAdd = newMemberListFragment.getSelectedMembers();
             if (membersToAdd != null && membersToAdd.size() > 0) {
                 progressDialog.show();
-                if(NetworkUtils.isNetworkAvailable(getApplicationContext())) {
+                if(NetworkUtils.isOnline(getApplicationContext())) {
                    postNewMembersToGroup(membersToAdd);
                } else {
                    GroupService.getInstance().addGroupMembersLocally(groupUid, membersToAdd);
