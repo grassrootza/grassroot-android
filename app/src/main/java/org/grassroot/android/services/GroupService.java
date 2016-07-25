@@ -33,6 +33,7 @@ import org.grassroot.android.utils.RealmUtils;
 import org.grassroot.android.utils.Utilities;
 import org.greenrobot.eventbus.EventBus;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -43,6 +44,9 @@ import java.util.Set;
 import io.realm.Realm;
 import io.realm.RealmList;
 import io.realm.RealmResults;
+import okhttp3.MediaType;
+import okhttp3.MultipartBody;
+import okhttp3.RequestBody;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -438,6 +442,66 @@ public class GroupService {
     void joinCodeOpened(final String joinCode);
     void apiCallComplete();
     void apiCallFailed(String tag, String offOrOnline);
+  }
+
+  /* FIRST, METHODS FOR ADJUSTING GROUP IMAGE */
+
+  public void changeGroupDefaultImage(final Group group, final String defaultImage, final int defaultImageRes,
+                                      final GroupEditingListener listener) {
+    group.setDefaultImage(defaultImage);
+    group.setDefaultImageRes(defaultImageRes);
+    RealmUtils.saveGroupToRealm(group);
+
+    final String mobile = RealmUtils.loadPreferencesFromDB().getMobileNumber();
+    final String token = RealmUtils.loadPreferencesFromDB().getToken();
+
+    GrassrootRestService.getInstance().getApi().changeDefaultImage(mobile, token, group.getGroupUid(),
+            defaultImage).enqueue(new Callback<GroupResponse>() {
+      @Override
+      public void onResponse(Call<GroupResponse> call, Response<GroupResponse> response) {
+        if (response.isSuccessful()) {
+          RealmUtils.saveGroupToRealm(response.body().getGroups().first()); // todo : reexamine whether we want call above
+          listener.apiCallComplete();
+        } else {
+          listener.apiCallFailed(GroupEditedEvent.IMAGE_TO_DEFAULT, Constant.ONLINE);
+        }
+      }
+
+      @Override
+      public void onFailure(Call<GroupResponse> call, Throwable t) {
+        listener.apiCallFailed(GroupEditedEvent.IMAGE_TO_DEFAULT, Constant.OFFLINE);
+      }
+    });
+  }
+
+  public void uploadCustomImage(final String groupUid, final String compressedFilePath, final String mimeType, final GroupEditingListener listener) {
+    final File file = new File(compressedFilePath);
+    Log.e(TAG, "file size : " + (file.length() / 1024));
+    RequestBody requestFile = RequestBody.create(MediaType.parse(mimeType), file);
+    MultipartBody.Part image = MultipartBody.Part.createFormData("image", file.getName(), requestFile);
+
+    final String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
+    final String code = RealmUtils.loadPreferencesFromDB().getToken();
+
+    GrassrootRestService.getInstance().getApi().uploadImage(phoneNumber, code, groupUid, image).enqueue(new Callback<GroupResponse>() {
+      @Override
+      public void onResponse(Call<GroupResponse> call, Response<GroupResponse> response) {
+        file.delete();
+        if (response.isSuccessful()) {
+          Group updatedGroup = response.body().getGroups().first();
+          RealmUtils.saveGroupToRealm(updatedGroup);
+          listener.apiCallComplete();
+        } else {
+          listener.apiCallFailed(GroupEditedEvent.IMAGE_UPLOADED, Constant.ONLINE);
+        }
+      }
+
+      @Override
+      public void onFailure(Call<GroupResponse> call, Throwable t) {
+        file.delete();
+        listener.apiCallFailed(GroupEditedEvent.IMAGE_UPLOADED, Constant.OFFLINE);
+      }
+    });
   }
 
   public void renameGroup(final Group group, final String newName) {

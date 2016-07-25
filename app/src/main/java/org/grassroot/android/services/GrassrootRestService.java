@@ -208,11 +208,12 @@ public class GrassrootRestService {
 
     @Multipart
     @POST("group/image/upload/{phoneNumber}/{code}/{groupUid}")
-    Call<GenericResponse> uploadImage(@Path("phoneNumber") String phoneNumber, @Path("code") String code, @Path("groupUid") String groupUid,
+    Call<GroupResponse> uploadImage(@Path("phoneNumber") String phoneNumber, @Path("code") String code, @Path("groupUid") String groupUid,
         @Part  MultipartBody.Part image);
-
-    @GET("group/image/remove/{phoneNumber}/{code}/{groupUid}")
-    Call<GenericResponse> removeImage(@Path("phoneNumber") String phoneNumber, @Path("code") String code, @Path("groupUid") String groupUid);
+    
+    @POST("group/image/default/{phoneNumber}/{code}")
+    Call<GroupResponse> changeDefaultImage(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
+                                             @Query("groupUid") String groupUid, @Query("defaultImage") String defaultImage);
 
     //user groups
     @GET("group/list/{phoneNumber}/{code}")

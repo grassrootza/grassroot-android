@@ -42,4 +42,10 @@ public interface GroupConstants {
     String JOIN_REQUEST_APPROVE = "APPROVE";
     String JOIN_REQUEST_DENY = "DENY";
 
+    String SOCIAL_MOVEMENT = "SOCIAL_MOVEMENT";
+    String COMMUNITY_GROUP = "COMMUNITY_GROUP";
+    String FAITH_GROUP = "FAITH_GROUP";
+    String SAVINGS_GROUP = "SAVINGS_GROUP";
+    String EDUCATION_GROUP = "EDUCATION_GROUP";
+
 }

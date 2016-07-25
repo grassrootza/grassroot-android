@@ -29,7 +29,10 @@ public class Group extends RealmObject implements Parcelable, Comparable<Group> 
   private String groupCreator;
   private String role;
   private Integer groupMemberCount;
+
   private String imageUrl;
+  private String defaultImage;
+  private int defaultImageRes;
 
   private long lastMajorChangeMillis;
   private boolean fetchedTasks;
@@ -41,17 +44,18 @@ public class Group extends RealmObject implements Parcelable, Comparable<Group> 
   private String description;
 
   private boolean isLocal;
-  private boolean isSentToAPI;
 
   @Ignore private Date date;
   private DateTime dateTime; // used in JSON conversion
   private String dateTimeStringISO;
 
-  private boolean hasTasks;
+  private boolean hasTasks; // todo : may be able to remove this
 
   private RealmList<RealmString> permissions = new RealmList<>();
   @Ignore private List<String> permissionsList;
 
+  public Group() {
+  }
 
   public boolean isFetchedTasks() {
     return fetchedTasks;
@@ -71,14 +75,6 @@ public class Group extends RealmObject implements Parcelable, Comparable<Group> 
     this.members = members;
   }
 
-  public boolean isSentToAPI() {
-    return isSentToAPI;
-  }
-
-  public void setSentToAPI(boolean sentToAPI) {
-    isSentToAPI = sentToAPI;
-  }
-
   public boolean getIsLocal() {
     return isLocal;
   }
@@ -89,9 +85,6 @@ public class Group extends RealmObject implements Parcelable, Comparable<Group> 
 
   public void setDate(Date date) {
     this.date = date;
-  }
-
-  public Group() {
   }
 
   public Group(String groupUid) {
@@ -175,6 +168,70 @@ public class Group extends RealmObject implements Parcelable, Comparable<Group> 
 
   public void setDiscoverable(boolean isPublic) { this.discoverable = isPublic; }
 
+  public void setDateTimeStringISO(String dateTimeStringISO) {
+    this.dateTimeStringISO = dateTimeStringISO;
+  }
+
+  public void setGroupCreator(String groupCreator) {
+    this.groupCreator = groupCreator;
+  }
+
+  public void setGroupMemberCount(Integer groupMemberCount) {
+    this.groupMemberCount = groupMemberCount;
+  }
+
+  public String getDefaultImage() { return defaultImage; }
+
+  public void setDefaultImage(String defaultImage) {
+    this.defaultImage = defaultImage;
+    updateDefaultImageRes();
+  }
+
+  public int getDefaultImageRes() {
+    if (defaultImageRes == 0) {
+      updateDefaultImageRes();
+    }
+    return defaultImageRes;
+  }
+
+  private void updateDefaultImageRes() {
+    if (TextUtils.isEmpty(defaultImage)) {
+      defaultImageRes = R.drawable.ic_groups_default_avatar;
+    } else {
+      switch (defaultImage) {
+        case GroupConstants.SOCIAL_MOVEMENT:
+          defaultImageRes = R.drawable.ic_groups_default_avatar;
+          break;
+        case GroupConstants.COMMUNITY_GROUP:
+          defaultImageRes = R.drawable.ic_group_avatar_hands;
+          break;
+        case GroupConstants.EDUCATION_GROUP:
+          defaultImageRes = R.drawable.ic_group_avatar_school;
+          break;
+        case GroupConstants.FAITH_GROUP:
+          defaultImageRes = R.drawable.ic_group_avatar_reli;
+          break;
+        case GroupConstants.SAVINGS_GROUP:
+          defaultImageRes = R.drawable.ic_group_avatar_money;
+          break;
+      }
+    }
+  }
+
+  public void setDefaultImageRes(int defaultImageRes) { this.defaultImageRes = defaultImageRes; }
+
+  public String getImageUrl() {
+    return imageUrl;
+  }
+
+  public void setImageUrl(String imageUrl) {
+    this.imageUrl = imageUrl;
+  }
+
+  public boolean hasCustomImage() {
+    return !TextUtils.isEmpty(imageUrl);
+  }
+
   public String getDateTimeStringISO() {
     if (dateTimeStringISO == null || dateTimeStringISO.equals("")) {
       dateTimeStringISO = Constant.isoDateTimeSDF.format(getDate());
@@ -202,8 +259,7 @@ public class Group extends RealmObject implements Parcelable, Comparable<Group> 
           return null;
         }
       } else {
-        throw new UnsupportedOperationException(
-            "Error! Group needs at least one source of a datetime");
+        throw new UnsupportedOperationException("Error! Group needs at least one source of a datetime");
       }
     } else {
       return date;
@@ -257,7 +313,6 @@ public class Group extends RealmObject implements Parcelable, Comparable<Group> 
 
   private void constructDate() {
     Calendar calendar = Calendar.getInstance();
-
     // NB: Java 7 datetime requires these to be set in order (argh, for Joda/Java8)
     calendar.set(Calendar.YEAR, dateTime.getYear());
     calendar.set(Calendar.MONTH, dateTime.getMonthValue() - 1);
@@ -311,6 +366,7 @@ public class Group extends RealmObject implements Parcelable, Comparable<Group> 
     dest.writeList(members);
     dest.writeString(lastTimeTasksFetched);
     dest.writeLong(lastMajorChangeMillis);
+    dest.writeInt(defaultImageRes);
   }
 
   protected Group(Parcel in) {
@@ -331,6 +387,7 @@ public class Group extends RealmObject implements Parcelable, Comparable<Group> 
     in.readList(members,Member.class.getClassLoader());
     lastTimeTasksFetched = in.readString();
     lastMajorChangeMillis = in.readLong();
+    defaultImageRes = in.readInt();
   }
 
   public static final Creator<Group> CREATOR = new Creator<Group>() {
@@ -343,8 +400,8 @@ public class Group extends RealmObject implements Parcelable, Comparable<Group> 
     }
   };
 
+  // note : this is going to sort like Java Dates usually do, i.e., from earliest to latest, so for most cases, use reverse order
   @Override public int compareTo(Group g2) {
-    // note : this is going to sort like Java Dates usually do, i.e., from earliest to latest, so for most cases, use reverse order
     return (this.lastMajorChangeMillis > g2.lastMajorChangeMillis) ? 1
             : (this.lastMajorChangeMillis < g2.lastMajorChangeMillis) ? -1 :
             this.getDate().compareTo(g2.getDate()); // last one just in case both are zero for some reason
@@ -390,25 +447,5 @@ public class Group extends RealmObject implements Parcelable, Comparable<Group> 
         ", lastFetchedTasks='" + lastTimeTasksFetched + '\'' +
         ", discoverable='" + discoverable + '\'' +
         '}';
-  }
-
-  public void setDateTimeStringISO(String dateTimeStringISO) {
-    this.dateTimeStringISO = dateTimeStringISO;
-  }
-
-  public void setGroupCreator(String groupCreator) {
-    this.groupCreator = groupCreator;
-  }
-
-  public void setGroupMemberCount(Integer groupMemberCount) {
-    this.groupMemberCount = groupMemberCount;
-  }
-
-  public String getImageUrl() {
-    return imageUrl;
-  }
-
-  public void setImageUrl(String imageUrl) {
-    this.imageUrl = imageUrl;
   }
 }

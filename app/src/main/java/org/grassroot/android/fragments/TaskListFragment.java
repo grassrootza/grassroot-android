@@ -212,13 +212,14 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
   }
 
   private void handleNoTasksFound() {
-    progressDialog.hide();
-    swipeRefreshLayout.setVisibility(View.GONE);
+    hideProgress();
     if (groupUid == null) {
       noTaskMessageText.setText(R.string.txt_no_task_upcoming);
     }
-    noTaskMessageLayout.setVisibility(View.VISIBLE);
-    noTaskMessageVisible = true;
+    if (noTaskMessageLayout != null) {
+      noTaskMessageLayout.setVisibility(View.VISIBLE);
+      noTaskMessageVisible = true;
+    }
   }
 
   /*

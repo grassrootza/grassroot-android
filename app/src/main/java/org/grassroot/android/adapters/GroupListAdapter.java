@@ -5,7 +5,6 @@ import android.os.Build;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -41,7 +40,6 @@ import org.grassroot.android.utils.RealmUtils;
 public class GroupListAdapter extends RecyclerView.Adapter<GroupListAdapter.GHP_ViewHolder> {
 
     private String TAG = GroupListAdapter.class.getSimpleName();
-    private final int defaultAvatar = R.drawable.ic_groups_default_avatar;
 
     private final Context context;
     private final GroupRowListener listener;
@@ -120,10 +118,19 @@ public class GroupListAdapter extends RecyclerView.Adapter<GroupListAdapter.GHP_
     @Override
     public void onBindViewHolder(final GHP_ViewHolder holder, final int position) {
 
-        // todo : this is a bit of a mess, see if possible to simplify
-
-        holder.itemView.setLongClickable(true);
         final Group group = displayedGroups.get(position);
+
+        setUpTextDescriptions(holder, group);
+        setUpMemberCount(holder, group);
+        setUpListeners(holder, group);
+        setAvatarImage(holder, group);
+
+        if (group.getIsLocal()) {
+            setAlphaForLocal(holder, group);
+        }
+    }
+
+    private void setAlphaForLocal(GHP_ViewHolder holder, final Group group) {
         if (Build.VERSION.SDK_INT < 11) {
             final AlphaAnimation animation = new AlphaAnimation(!group.getIsLocal() ? 1f : localGroupAlpha,
                     !group.getIsLocal() ? 1f : localGroupAlpha);
@@ -133,7 +140,9 @@ public class GroupListAdapter extends RecyclerView.Adapter<GroupListAdapter.GHP_
         } else {
             holder.itemView.setAlpha(!group.getIsLocal() ? 1f : localGroupAlpha);
         }
+    }
 
+    private void setUpTextDescriptions(GHP_ViewHolder holder, final Group group) {
         final String groupOrganizerDescription =
                 String.format(context.getString(R.string.group_organizer_prefix), group.getGroupCreator());
         holder.txtGroupname.setText(group.getGroupName());
@@ -152,6 +161,12 @@ public class GroupListAdapter extends RecyclerView.Adapter<GroupListAdapter.GHP_
             holder.txtGroupdesc.setText(tokenCode);
         }
 
+        holder.datetime.setText(
+                String.format(context.getString(R.string.date_time_pattern), getChangePrefix(group),
+                        outputSDF.format(group.getDate())));
+    }
+
+    private void setUpMemberCount(GHP_ViewHolder holder, final Group group) {
         // todo : check later if there's a more efficient way to do this?
         final int height = holder.profileV1.getDrawable().getIntrinsicWidth();
         final int width = holder.profileV1.getDrawable().getIntrinsicHeight();
@@ -163,11 +178,11 @@ public class GroupListAdapter extends RecyclerView.Adapter<GroupListAdapter.GHP_
 
         holder.profileV2.setLayoutParams(params);
         holder.profileV2.setText("+" + String.valueOf(group.getGroupMemberCount()));
-        // holder.profileV1.bringToFront();
+    }
 
-        holder.datetime.setText(
-                String.format(context.getString(R.string.date_time_pattern), getChangePrefix(group),
-                        outputSDF.format(group.getDate())));
+    private void setUpListeners(GHP_ViewHolder holder, final Group group) {
+        final int position = holder.getAdapterPosition();
+        holder.itemView.setLongClickable(true);
 
         holder.cardView.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -190,19 +205,21 @@ public class GroupListAdapter extends RecyclerView.Adapter<GroupListAdapter.GHP_
                 listener.onGroupRowMemberClick(group, position);
             }
         });
+
         holder.avatar.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 listener.onGroupRowAvatarClick(group, position);
             }
         });
+    }
 
+    private void setAvatarImage(GHP_ViewHolder holder, final Group group) {
         final String imageUrl = group.getImageUrl();
-
         if (imageUrl != null) {
-            setAvatar(holder.avatar, imageUrl);
+            setAvatar(holder.avatar, imageUrl, group.getDefaultImageRes());
         } else {
-            holder.avatar.setImageResource(defaultAvatar);
+            holder.avatar.setImageResource(group.getDefaultImageRes());
         }
     }
 
@@ -269,10 +286,10 @@ public class GroupListAdapter extends RecyclerView.Adapter<GroupListAdapter.GHP_
         }
     }
 
-    private void setAvatar(final ImageView view, final String imageUrl) {
+    private void setAvatar(final ImageView view, final String imageUrl, final int fallBackRes) {
         Picasso.with(context).load(imageUrl)
-                .error(defaultAvatar)
-                .placeholder(defaultAvatar)
+                .error(fallBackRes)
+                .placeholder(fallBackRes)
                 .networkPolicy(NetworkPolicy.OFFLINE)
                 .transform(new CircularImageTransformer())
                 .into(view, new Callback() {
@@ -281,9 +298,9 @@ public class GroupListAdapter extends RecyclerView.Adapter<GroupListAdapter.GHP_
                     @Override
                     public void onError() {
                         Picasso.with(context).load(imageUrl)
-                                .placeholder(defaultAvatar)
+                                .placeholder(fallBackRes)
                                 .transform(new CircularImageTransformer())
-                                .error(defaultAvatar)
+                                .error(fallBackRes)
                                 .into(view);
                     }
                 });

@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/ac_root_layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/primaryColor">
@@ -50,10 +51,16 @@
 
         <Button
             style="@style/NewTaskButton"
-            android:id="@+id/bt_vote"
-            android:text="@string/ac_btn_vote" />
+            android:id="@+id/bt_avatar"
+            android:text="@string/ac_btn_avatar" />
 
         <Button
+            style="@style/NewTaskButton"
+            android:id="@+id/bt_tasks"
+            android:text="@string/ac_btn_tasks"
+            android:layout_below="@+id/bt_avatar" />
+
+        <!-- <Button
             style="@style/NewTaskButton"
             android:id="@+id/bt_meeting"
             android:text="@string/ac_btn_mtg"
@@ -63,13 +70,13 @@
             style="@style/NewTaskButton"
             android:id="@+id/bt_todo"
             android:text="@string/ac_btn_todo"
-            android:layout_below="@+id/bt_meeting" />
+            android:layout_below="@+id/bt_meeting" /> -->
 
         <Button
             style="@style/NewTaskButton"
             android:id="@+id/bt_home"
             android:text="@string/ac_btn_home"
-            android:layout_below="@+id/bt_todo" />
+            android:layout_below="@+id/bt_tasks" />
 
     </RelativeLayout>
 

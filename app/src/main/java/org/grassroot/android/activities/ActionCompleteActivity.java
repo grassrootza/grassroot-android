@@ -11,8 +11,11 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import org.grassroot.android.R;
+import org.grassroot.android.fragments.NewTaskMenuFragment;
 import org.grassroot.android.interfaces.GroupConstants;
 import org.grassroot.android.models.Group;
+import org.grassroot.android.utils.Constant;
+import org.grassroot.android.utils.MenuUtils;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -22,7 +25,7 @@ import butterknife.OnClick;
  * Created by luke on 2016/07/12.
  * Simple class to display a screen notifying user that task has been complete (to be customized & reused in time)
  */
-public class ActionCompleteActivity extends PortraitActivity {
+public class ActionCompleteActivity extends PortraitActivity implements NewTaskMenuFragment.NewTaskMenuListener {
 
     private static final String TAG = ActionCompleteActivity.class.getSimpleName();
 
@@ -118,28 +121,21 @@ public class ActionCompleteActivity extends PortraitActivity {
         }
     }
 
-    @OnClick(R.id.bt_meeting)
-    public void newMeeting() {
-        Intent i = new Intent(ActionCompleteActivity.this, CreateMeetingActivity.class);
-        i.putExtra(GroupConstants.UID_FIELD, groupToPass.getGroupUid());
-        startActivity(i);
-        finish();
+    @OnClick(R.id.bt_avatar)
+    public void setAvatar() {
+        Intent intent = MenuUtils.constructIntent(this, GroupAvatarActivity.class, groupToPass);
+        intent.putExtra(Constant.INDEX_FIELD, 0);
+        startActivity(intent);
     }
 
-    @OnClick(R.id.bt_vote)
-    public void newVote() {
-        Intent i = new Intent(ActionCompleteActivity.this, CreateVoteActivity.class);
-        i.putExtra(GroupConstants.UID_FIELD, groupToPass.getGroupUid());
-        startActivity(i);
-        finish();
-    }
-
-    @OnClick(R.id.bt_todo)
-    public void newTodo() {
-        Intent i = new Intent(ActionCompleteActivity.this, CreateTodoActivity.class);
-        i.putExtra(GroupConstants.UID_FIELD, groupToPass.getGroupUid());
-        startActivity(i);
-        finish();
+    @OnClick(R.id.bt_tasks)
+    public void newTask() {
+        NewTaskMenuFragment fragment = NewTaskMenuFragment.newInstance(groupToPass, true);
+        fragment.setShowAddMembers(false);
+        getSupportFragmentManager().beginTransaction()
+                .replace(R.id.ac_root_layout, fragment)
+                .addToBackStack(null)
+                .commit();
     }
 
     @OnClick(R.id.bt_home)
@@ -155,4 +151,8 @@ public class ActionCompleteActivity extends PortraitActivity {
         return i;
     }
 
+    @Override
+    public void menuCloseClicked() {
+        getSupportFragmentManager().popBackStack();
+    }
 }

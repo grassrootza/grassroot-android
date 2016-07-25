@@ -477,6 +477,9 @@
     <string name="ac_btn_vote">TAKE A VOTE</string>
     <string name="ac_btn_todo">RECORD ACTION</string>
 
+    <string name="ac_btn_avatar">CHOOSE PICTURE</string>
+    <string name="ac_btn_tasks">MEETING, VOTE OR ACTION</string>
+
     <!--Profile-->
     <string name="pp_txt_toolbar">Profile Settings</string>
     <string name="pp_bt_update">Update</string>
@@ -494,15 +497,25 @@
     <string name="pp_OK">OK</string>
 
     <!--Group picture -->
-    <string name="gp_bt_txt_set">Set group picture</string>
-    <string name="gp_bt_txt_update">Update group picture</string>
-    <string name="gp_bt_txt_remove">Remove group picture</string>
-    <string name="gp_txt_title">Group Picture</string>
+    <string name="gp_custom_description"></string>
+
+    <string name="gp_social_move">Social movement</string>
+    <string name="gp_savings_group">Burial society, stokvel</string>
+    <string name="gp_faith_group">Faith group, church, mosque</string>
+    <string name="gp_school">School, creche, youth group</string>
+    <string name="gp_hands">Community group</string>
+    <string name="gp_custom">Custom image</string>
+
+    <string name="gp_bt_choose_own">CHOOSE MY OWN</string>
+    <string name="gp_bt_choose_another">CHOOSE ANOTHER</string>
+    <string name="gp_bt_select_default">REMOVE PICTURE</string>
+    <string name="gp_bt_save">SAVE</string>
+
+    <string name="gp_txt_title">Group picture</string>
     <string name="gp_update_success">Group photo updated</string>
     <string name="gp_update_failure">Group photo not uploaded. Please try again later.</string>
     <string name="gp_remove_success">Group picture successfully removed</string>
     <string name="gp_remove_failure">Group picture could not be removed. Try again later..</string>
-
 
     <!--Notification Center-->
 
