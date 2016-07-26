@@ -108,10 +108,20 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
         }
     }
 
-  @Override public void onActivityCreated(Bundle savedInstanceState) {
+    @Override public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                                       Bundle savedInstanceState) {
+        View view = inflater.inflate(R.layout.activity_group__homepage, container, false);
+        unbinder = ButterKnife.bind(this, view);
+        EventBus.getDefault().register(this);
+        if (groupListRowAdapter == null || groupListRowAdapter.getItemCount() == 0) {
+            showProgress();
+        }
+        return view;
+    }
+
+    @Override public void onActivityCreated(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
-    Log.e(TAG, "onActivityCreate called in home group list fragment ...");
-      setUpRecyclerView();
+    setUpRecyclerView();
     if (!hasFetchedGroups) {
         fetchGroupList();
     }
@@ -135,17 +145,6 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
             }
         });
     }
-
-  @Override public View onCreateView(LayoutInflater inflater, ViewGroup container,
-      Bundle savedInstanceState) {
-    View view = inflater.inflate(R.layout.activity_group__homepage, container, false);
-    unbinder = ButterKnife.bind(this, view);
-    EventBus.getDefault().register(this);
-    if (groupListRowAdapter == null || groupListRowAdapter.getItemCount() == 0) {
-        showProgress();
-    }
-    return view;
-  }
 
     @Override public void onResume() {
         super.onResume();

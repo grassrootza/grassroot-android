@@ -1,7 +1,9 @@
 package org.grassroot.android.services;
 
+import android.text.TextUtils;
 import android.util.Log;
 
+import org.grassroot.android.events.TasksRefreshedEvent;
 import org.grassroot.android.interfaces.TaskConstants;
 import org.grassroot.android.models.Group;
 import org.grassroot.android.models.TaskChangedResponse;
@@ -10,13 +12,14 @@ import org.grassroot.android.models.TaskResponse;
 import org.grassroot.android.utils.NetworkUtils;
 import org.grassroot.android.utils.RealmUtils;
 import org.grassroot.android.utils.Utilities;
+import org.greenrobot.eventbus.EventBus;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 
-import io.realm.Realm;
+import io.realm.RealmList;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -28,16 +31,17 @@ public class TaskService {
 
   private static final String TAG = TaskService.class.getSimpleName();
 
-  private Realm realm;
+  public static final String FETCH_OKAY = "fetch";
+  public static final String FETCH_ERROR = "fetch_error";
+  public static final String FETCH_OFFLINE = "offline_fetch";
+
   public ArrayList<TaskModel> upcomingTasks;
   public boolean hasLoadedTasks;
 
   private static TaskService instance;
 
   public interface TaskServiceListener {
-    void tasksLoadedFromServer(List<TaskModel> tasks);
-    void taskLoadingFromServerFailed(Response errorBody);
-    void tasksLoadedFromDB(List<TaskModel> tasks);
+    void taskFetchingComplete(String fetchType, Object data);
   }
 
   public interface TaskCreationListener {
@@ -49,7 +53,6 @@ public class TaskService {
   protected TaskService() {
     upcomingTasks = new ArrayList<>();
     hasLoadedTasks = false;
-    realm = Realm.getDefaultInstance();
   }
 
   public static TaskService getInstance() {
@@ -65,16 +68,46 @@ public class TaskService {
     return methodInstance;
   }
 
-  public boolean hasUpcomingTasks() {
-    return !upcomingTasks.isEmpty();
+  public void fetchTasks(final String parentUid, final TaskServiceListener listener) {
+    if (TextUtils.isEmpty(parentUid)) {
+      fetchUpcomingTasks(listener);
+    } else {
+      fetchGroupTasks(parentUid, listener);
+    }
   }
 
-  public void loadCachedUpcomingTasks(TaskServiceListener listener) {
-    upcomingTasks = new ArrayList<>(RealmUtils.loadUpcomingTasksFromDB());
-    hasLoadedTasks = true;
-    if (listener != null) {
-      listener.tasksLoadedFromDB(upcomingTasks);
-    }
+  public void fetchUpcomingTasks(final TaskServiceListener listener) {
+    final String mobile = RealmUtils.loadPreferencesFromDB().getMobileNumber();
+    final String code = RealmUtils.loadPreferencesFromDB().getToken();
+    GrassrootRestService.getInstance()
+        .getApi()
+        .getUserTasks(mobile, code)
+        .enqueue(new Callback<TaskResponse>() {
+          @Override
+          public void onResponse(Call<TaskResponse> call, Response<TaskResponse> response) {
+            if (response.isSuccessful()) {
+              upcomingTasks = new ArrayList<>(response.body().getTasks());
+              for (TaskModel task : upcomingTasks) {
+                task.getDeadlineDate(); // triggers processing & store of Date object (maybe move into a JSON converter)
+              }
+              RealmUtils.saveDataToRealm(upcomingTasks);
+              if (listener != null) {
+                listener.taskFetchingComplete(FETCH_OKAY, null);
+              }
+              EventBus.getDefault().post(new TasksRefreshedEvent());
+            } else {
+              if (listener != null) {
+                listener.taskFetchingComplete(FETCH_ERROR, response);
+              }
+            }
+          }
+
+          @Override public void onFailure(Call<TaskResponse> call, Throwable t) {
+            if (listener != null) {
+              listener.taskFetchingComplete(FETCH_ERROR, t);
+            }
+          }
+        });
   }
 
   public void fetchGroupTasks(final String groupUid, final TaskServiceListener listener) {
@@ -95,15 +128,14 @@ public class TaskService {
         if (response.isSuccessful()) {
           System.out.println(Thread.currentThread().getName());
           updateAndRemoveTasks(response.body(), groupUid);
-          listener.tasksLoadedFromServer(RealmUtils.loadListFromDB(TaskModel.class,"parentUid",groupUid));
+          listener.taskFetchingComplete(FETCH_OKAY, null);
         } else {
-          listener.taskLoadingFromServerFailed(response);
+          listener.taskFetchingComplete(FETCH_ERROR, response);
         }
       }
 
       @Override public void onFailure(Call<TaskChangedResponse> call, Throwable t) {
-        listener.tasksLoadedFromDB(
-            RealmUtils.loadListFromDB(TaskModel.class, "parentUid", groupUid));
+        listener.taskFetchingComplete(FETCH_ERROR, t);
       }
     });
   }
@@ -127,45 +159,18 @@ public class TaskService {
     Log.e(TAG, "group last time fetched after update: " + group.getLastTimeTasksFetched());
   }
 
-  public void fetchUpcomingTasks(final TaskServiceListener listener) {
-    loadCachedUpcomingTasks(listener);
-    final String mobile = RealmUtils.loadPreferencesFromDB().getMobileNumber();
-    final String code = RealmUtils.loadPreferencesFromDB().getToken();
-    GrassrootRestService.getInstance()
-        .getApi()
-        .getUserTasks(mobile, code)
-        .enqueue(new Callback<TaskResponse>() {
-          @Override
-          public void onResponse(Call<TaskResponse> call, Response<TaskResponse> response) {
-            if (response.isSuccessful()) {
-              upcomingTasks = new ArrayList<>(response.body().getTasks());
-              RealmUtils.saveDataToRealm(response.body().getTasks());
-              if (listener != null) {
-                listener.tasksLoadedFromServer(upcomingTasks);
-              }
-            } else {
-              if (listener != null) {
-                listener.taskLoadingFromServerFailed(response);
-                loadCachedUpcomingTasks(listener);
-              }
-            }
-          }
-
-          @Override public void onFailure(Call<TaskResponse> call, Throwable t) {
-            if (listener != null) {
-              listener.taskLoadingFromServerFailed(null);
-            }
-          }
-        });
-  }
 
   public void createTask(final TaskModel task, final TaskCreationListener listener) {
     if (NetworkUtils.isOnline(ApplicationLoader.applicationContext)) {
       newTaskApiCall(task).enqueue(new Callback<TaskResponse>() {
         @Override public void onResponse(Call<TaskResponse> call, Response<TaskResponse> response) {
           if (response.isSuccessful()) {
-            listener.taskCreatedOnServer(response.body().getTasks().get(0));
+            final TaskModel taskFromServer = response.body().getTasks().get(0);
+            taskFromServer.getDeadlineDate(); // trigger forming Date entity, as above, create custom converter
+            RealmUtils.saveDataToRealm(taskFromServer);
+            listener.taskCreatedOnServer(taskFromServer);
           } else {
+            RealmUtils.saveDataToRealm(task);
             listener.taskCreationError(task);
           }
         }
@@ -182,6 +187,7 @@ public class TaskService {
     }
   }
 
+  // todo : figure out DB replace etc logic here (currently won't save until next explicit fetch)
   public void sendNewTaskToServer(final TaskModel model, final TaskCreationListener listener) {
     newTaskApiCall(model).enqueue(new Callback<TaskResponse>() {
       @Override public void onResponse(Call<TaskResponse> call, Response<TaskResponse> response) {

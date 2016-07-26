@@ -27,7 +27,6 @@ import org.grassroot.android.events.TaskChangedEvent;
 import org.grassroot.android.fragments.dialogs.ConfirmCancelDialogFragment;
 import org.grassroot.android.interfaces.GroupPickCallbacks;
 import org.grassroot.android.interfaces.TaskConstants;
-import org.grassroot.android.models.Group;
 import org.grassroot.android.models.TaskModel;
 import org.grassroot.android.models.TaskResponse;
 import org.grassroot.android.services.GrassrootRestService;
@@ -45,6 +44,7 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 import butterknife.Unbinder;
+import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -59,7 +59,8 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
   GroupPickCallbacks mCallbacks;
   TaskListListener listener;
 
-  private TasksAdapter groupTasksAdapter;
+  private TasksAdapter tasksAdapter;
+
   private String groupUid;
   private String phoneNumber;
   private String code;
@@ -75,6 +76,8 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
 
   @BindView(R.id.tl_no_task_message) RelativeLayout noTaskMessageLayout;
   @BindView(R.id.tl_no_task_text) TextView noTaskMessageText;
+
+  private boolean hasFetchedTasks;
 
   private boolean filteringActive;
   private Map<String, Boolean> filterFlags;
@@ -92,12 +95,15 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
   // pass null if this is a group-neutral task fragment
   public static TaskListFragment newInstance(String parentUid,
       GroupPickCallbacks groupPickCallbacks, TaskListListener listener, boolean showFAB) {
+
     TaskListFragment fragment = new TaskListFragment();
     fragment.groupUid = parentUid;
     fragment.mCallbacks = groupPickCallbacks;
     fragment.listener = listener;
     fragment.displayFAB = showFAB;
+
     return fragment;
+
   }
 
   @Override public void onAttach(Context context) {
@@ -105,7 +111,8 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
     EventBus.getDefault().register(this);
   }
 
-  @Override public void onCreate(Bundle savedInstanceState) {
+  @Override public void
+  onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
     code = RealmUtils.loadPreferencesFromDB().getToken();
@@ -118,37 +125,40 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
     unbinder = ButterKnife.bind(this, viewToReturn);
     this.container = container;
 
-    setUpSwipeRefresh();
-    rcTaskView.setLayoutManager(new LinearLayoutManager(getActivity()));
-    groupTasksAdapter = new TasksAdapter(this, getActivity(), groupUid);
-    rcTaskView.setAdapter(groupTasksAdapter);
     floatingActionButton.setVisibility(displayFAB ? View.VISIBLE : View.GONE);
-
-    progressDialog = new ProgressDialog(getContext());
-    progressDialog.setMessage(getString(R.string.txt_pls_wait));
-    progressDialog.setIndeterminate(true);
-
-    fetchTaskList();
     return viewToReturn;
   }
 
-  @Override public void onResume() {
-    if (groupTasksAdapter != null) {
-      groupTasksAdapter.registerForEvents();
+  @Override
+  public void onActivityCreated(Bundle savedInstanceState) {
+    super.onActivityCreated(savedInstanceState);
+    setUpRecyclerView();
+    if (!hasFetchedTasks) {
+      fetchTaskList();
     }
-    super.onResume();
   }
 
-  @Override public void onPause() {
-    if (groupTasksAdapter != null) {
-      groupTasksAdapter.deRegisterEvents();
+  private void setUpRecyclerView() {
+    tasksAdapter = new TasksAdapter(this, getActivity(), groupUid);
+    rcTaskView.setLayoutManager(new LinearLayoutManager(getActivity()));
+    rcTaskView.setAdapter(tasksAdapter);
+    rcTaskView.setHasFixedSize(true);
+    rcTaskView.setDrawingCacheEnabled(true);
+
+    if (tasksAdapter == null || tasksAdapter.getItemCount() == 0) {
+      showProgress();
     }
-    super.onPause();
+
+    swipeRefreshLayout.setColorSchemeColors(ContextCompat.getColor(getActivity(), R.color.primaryColor));
+    swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+      @Override public void onRefresh() {
+        fetchTaskList();
+      }
+    });
   }
 
   @Override public void onDestroyView() {
     super.onDestroyView();
-    progressDialog.dismiss();
     unbinder.unbind();
   }
 
@@ -157,64 +167,42 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
     EventBus.getDefault().unregister(this);
   }
 
+  /*
+  SECTION : LOGIC FOR FETCHING AND DISPLAYING TASKS
+   */
+
+  // a null or empty groupUid passed through, tells the service to fetch all upcoming tasks, across groups
   private void fetchTaskList() {
-    if (groupUid != null) {
-      fetchGroupTasks();
-    } else {
-      fetchAllUpcomingTasks();
-    }
-  }
-
-  private void fetchAllUpcomingTasks() {
-    if (TaskService.getInstance().hasLoadedTasks) {
-      if (TaskService.getInstance().hasUpcomingTasks()) {
-        noTaskMessageVisible = false;
-        groupTasksAdapter.changeToTaskList(TaskService.getInstance().upcomingTasks);
-      } else {
-        handleNoTasksFound();
-      }
-    } else {
-      // todo : make this process cleaner
-    }
-  }
-
-  private void fetchGroupTasks() {
-    Group group = RealmUtils.loadObjectFromDB(Group.class,"groupUid",groupUid);
-    if (group.isFetchedTasks()) {
-      groupTasksAdapter.changeToTaskList(
-          RealmUtils.loadListFromDB(TaskModel.class, "parentUid", groupUid));
-    }
-    swipeRefreshLayout.setRefreshing(true);
-    progressDialog.show();
-    TaskService.getInstance().fetchGroupTasks(groupUid, new TaskService.TaskServiceListener() {
-      @Override public void tasksLoadedFromServer(List<TaskModel> tasks) {
-        handleTaskLoaded(tasks);
-      }
-
-      @Override public void taskLoadingFromServerFailed(Response errorBody) {
-        progressDialog.hide();
-        ErrorUtils.handleServerError(rcTaskView, getActivity(), errorBody);
-      }
-
-      @Override public void tasksLoadedFromDB(List<TaskModel> tasks) {
-        handleTaskLoaded(tasks);
+    showProgress();
+    TaskService.getInstance().fetchTasks(groupUid, new TaskService.TaskServiceListener() {
+      @Override
+      public void taskFetchingComplete(final String fetchType, final Object data) {
+        if (!TaskService.FETCH_ERROR.equals(fetchType)) {
+          handleTasksLoaded(fetchType);
+        } else {
+          handleTasksLoaded(fetchType);
+          if (data != null && data instanceof Response) {
+            ErrorUtils.handleServerError(rcTaskView, getActivity(), (Response) data);
+          }
+        }
       }
     });
   }
 
-  private void handleTaskLoaded(List<TaskModel> tasks) {
+  private void handleTasksLoaded(final String fetchType) {
     hideProgress();
-    if (tasks == null || tasks.isEmpty()) {
-      handleNoTasksFound();
-    } else {
-      groupTasksAdapter.changeToTaskList(tasks);
+    hasFetchedTasks = true;
+    tasksAdapter.refreshTaskListToDB();
+    if (tasksAdapter.getItemCount() == 0) {
+      handleNoTasksFound(fetchType);
     }
   }
 
-  private void handleNoTasksFound() {
-    hideProgress();
-    if (groupUid == null) {
-      noTaskMessageText.setText(R.string.txt_no_task_upcoming);
+  private void handleNoTasksFound(final String fetchType) {
+    if (fetchType.equals(TaskService.FETCH_OKAY)) {
+      noTaskMessageText.setText(groupUid == null ? R.string.txt_no_task_upcoming : R.string.txt_no_task_group);
+    } else {
+      noTaskMessageText.setText(R.string.txt_task_could_not_fetch);
     }
     if (noTaskMessageLayout != null) {
       noTaskMessageLayout.setVisibility(View.VISIBLE);
@@ -239,20 +227,6 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
   }
 
     /*
-    SECTION : REFRESH TASK LIST, IN WHOLE OR IN PART (SOME REDUNDANCE TO ABOVE FOR NOW, BUT THAT WILL CHANGE)
-     */
-
-  private void setUpSwipeRefresh() {
-    swipeRefreshLayout.setColorSchemeColors(
-        ContextCompat.getColor(getActivity(), R.color.primaryColor));
-    swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
-      @Override public void onRefresh() {
-        fetchTaskList();
-      }
-    });
-  }
-
-    /*
     SECTION : RESPOND TO MICRO INTERACTIONS / SWITCH TO VIEW AND EDITS
      */
 
@@ -261,8 +235,6 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
 
     Call<TaskResponse> restCall;
     final int confirmationMessage, msgSuccess, msgAlreadyResponded;
-
-    Log.e(TAG, "responding to task with uid = " + taskUid);
     switch (taskType) {
       case TaskConstants.VOTE:
         restCall = GrassrootRestService.getInstance()
@@ -321,7 +293,6 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
           }
         });
 
-    // todo: this seems awkward ... may want to switch to using app.Fragment, given only supporting v4.0+
     newFragment.show(getFragmentManager(), "dialog");
   }
 
@@ -336,15 +307,12 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
         .commit();
   }
 
-  //For some reason which i suspect have to do with the ui thread, the handler in the adapter is not updating view
-  @Subscribe public void onTaskCreated(TaskAddedEvent event) {
-    Log.e(TAG, "onTaskCreated triggered ... ");
-    final TaskModel task = event.getTaskCreated();
+  @Subscribe public void onEvent(TaskAddedEvent event) {
     if (noTaskMessageVisible) {
       noTaskMessageLayout.setVisibility(View.GONE);
       noTaskMessageVisible = false;
     }
-    fetchTaskList(); // todo : just insert the new task
+    tasksAdapter.refreshTaskListToDB(); // todo : just add it to top, maybe, once free of bugs
   }
 
   @Subscribe public void onTaskCancelledEvent(TaskCancelledEvent e) {
@@ -360,9 +328,21 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
     }
   }
 
+  private void showProgress() {
+    if (progressDialog == null) {
+      progressDialog = new ProgressDialog(getContext());
+      progressDialog.setMessage(getString(R.string.txt_pls_wait));
+      progressDialog.setIndeterminate(true);
+    }
+    progressDialog.show();
+    if (swipeRefreshLayout != null) {
+      swipeRefreshLayout.setRefreshing(true);
+    }
+  }
+
   private void hideProgress() {
     if (progressDialog != null) {
-      progressDialog.hide();
+      progressDialog.dismiss();
     }
     if (swipeRefreshLayout != null) {
       swipeRefreshLayout.setRefreshing(false);
@@ -376,9 +356,9 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
 
   public void searchStringChanged(String query) {
     if (TextUtils.isEmpty(query)) {
-      groupTasksAdapter.stopFiltering();
+      tasksAdapter.stopFiltering();
     } else {
-      groupTasksAdapter.filterByName(query);
+      tasksAdapter.filterByName(query);
     }
   }
 
@@ -397,12 +377,12 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
     filterDialog.setListener(new FilterFragment.TasksFilterListener() {
       @Override public void itemClicked(String typeChanged, boolean changedFlagState) {
         filterFlags.put(typeChanged, changedFlagState);
-        groupTasksAdapter.addOrRemoveTaskType(typeChanged, changedFlagState);
+        tasksAdapter.addOrRemoveTaskType(typeChanged, changedFlagState);
       }
 
       @Override public void clearFilters() {
         filteringActive = false;
-        groupTasksAdapter.stopFiltering();
+        tasksAdapter.stopFiltering();
         resetFilterFlags();
       }
     });
@@ -410,7 +390,7 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
 
   private void startFiltering() {
     resetFilterFlags();
-    groupTasksAdapter.startFiltering();
+    tasksAdapter.startFiltering();
     filteringActive = true;
   }
 

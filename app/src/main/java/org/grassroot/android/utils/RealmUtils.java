@@ -199,7 +199,8 @@ public class RealmUtils {
     RealmResults<TaskModel> results = realm
             .where(TaskModel.class)
             .greaterThan("deadlineDate", new Date())
-            .findAll();
+            .findAll()
+            .sort("deadlineDate", Sort.DESCENDING);
     tasks.addAll(realm.copyFromRealm(results));
     realm.close();
     return tasks;

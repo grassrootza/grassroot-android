@@ -18,6 +18,7 @@ import org.grassroot.android.events.TaskCancelledEvent;
 import org.grassroot.android.events.TaskChangedEvent;
 import org.grassroot.android.interfaces.TaskConstants;
 import org.grassroot.android.models.TaskModel;
+import org.grassroot.android.utils.RealmUtils;
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 
@@ -62,28 +63,13 @@ public class TasksAdapter extends RecyclerView.Adapter<TasksAdapter.TaskViewHold
     this.primaryColor = ContextCompat.getColor(context, R.color.primaryColor);
     this.textColor = ContextCompat.getColor(context, R.color.black);
     this.secondaryColor = ContextCompat.getColor(context, R.color.text_grey);
-    this.viewedTasks = new ArrayList<>();
-  }
-
-  public void registerForEvents() {
-    EventBus.getDefault().register(this);
-  }
-
-  public void deRegisterEvents() {
-    EventBus.getDefault().unregister(this);
-  }
-
-  @Override public void onDetachedFromRecyclerView(RecyclerView recyclerView) {
-    // note :this is not called often ... may be more efficient to unregister in a custom method?
-    super.onDetachedFromRecyclerView(recyclerView);
-    deRegisterEvents();
+    refreshTaskListToDB();
   }
 
   @Override public TaskViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
     View view = LayoutInflater.from(parent.getContext())
         .inflate(R.layout.row_group_activities, parent, false);
-    TaskViewHolder holder = new TaskViewHolder(view);
-    return holder;
+    return new TaskViewHolder(view);
   }
 
   @Override public void onBindViewHolder(TaskViewHolder holder, final int position) {
@@ -249,46 +235,13 @@ public class TasksAdapter extends RecyclerView.Adapter<TasksAdapter.TaskViewHold
     return viewedTasks.size();
   }
 
-  public void changeToTaskList(List<TaskModel> tasksToView) {
-    // todo: optimize this, a lot, is used in filtering what can be quite large lists
-    if (viewedTasks == null) {
-      viewedTasks = new ArrayList<>();
+  public void refreshTaskListToDB() {
+    if (parentUid == null) {
+      viewedTasks = RealmUtils.loadUpcomingTasksFromDB();
     } else {
-      viewedTasks.clear();
+      viewedTasks = RealmUtils.loadListFromDB(TaskModel.class, "parentUid", parentUid); // todo fix return type
     }
-    viewedTasks.addAll(
-        tasksToView); // not great, but otherwise run into lots of errors because of assignment etc
-    notifyDataSetChanged(); // very bad, just a stopgap
-  }
-
-  // todo : for both of these, work out why only notifyDateSetChanged is causing redraw, and handle filters
-  @Subscribe public void onTaskCreated(TaskAddedEvent event) {
-    Log.d(TAG, "task created! stick it at the top, if it matches this UID: " + parentUid);
-    if (parentUid == null || parentUid.equals(event.getTaskCreated().getParentUid())) {
-      final TaskModel task = event.getTaskCreated();
-      viewedTasks.add(0, task);
-      notifyItemInserted(0);
-      notifyDataSetChanged(); // todo : as everywhere else, work out why single item change isn't working
-      Log.d(TAG, "added task to list!");
-    }
-  }
-
-  @Subscribe public void onTaskChanged(TaskChangedEvent event) {
-    Log.e(TAG, "task changed! update its icons, if it is in this group");
-    if (parentUid == null || parentUid.equals(event.getTaskModel().getParentUid())) {
-      Log.e(TAG, event.getTaskModel().getParentUid());
-      final TaskModel updatedTask = event.getTaskModel();
-      viewedTasks.set(event.getPosition(), updatedTask);
-      notifyItemChanged(event.getPosition());
-    }
-  }
-
-  @Subscribe public void onTaskDeleted(TaskCancelledEvent event) {
-    if (parentUid == null || parentUid.equals(event.getTask().getParentUid())) {
-      final TaskModel task = event.getTask();
-      viewedTasks.remove(task);
-      notifyDataSetChanged();
-    }
+    notifyDataSetChanged();
   }
 
     /*

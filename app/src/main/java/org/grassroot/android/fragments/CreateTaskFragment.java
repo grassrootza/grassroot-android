@@ -276,7 +276,6 @@ public class CreateTaskFragment extends Fragment {
     EventBus.getDefault().post(new TaskAddedEvent(model, generateSuccessString()));
     startActivity(i);
     getActivity().finish();
-    // todo : add getActivity().finish ? should be redundant ...
   }
 
   private TaskModel generateTaskObject() {
@@ -294,10 +293,12 @@ public class CreateTaskFragment extends Fragment {
     }
 
     TaskModel model = new TaskModel();
+
     model.setDescription(description);
     model.setTitle(title);
     model.setCreatedByUserName(RealmUtils.loadPreferencesFromDB().getUserName());
     model.setDeadlineISO(dateTimeISO);
+    model.setDeadlineDate(selectedDateTime);
     model.setLocation(etLocationInput.getText().toString());
     model.setParentUid(groupUid);
     model.setTaskUid(UUID.randomUUID().toString());
@@ -307,10 +308,13 @@ public class CreateTaskFragment extends Fragment {
     model.setMinutes(minutes);
     model.setCanEdit(true);
     model.setReply(TaskConstants.TODO_PENDING);
+
     model.setMemberUIDS(
         RealmUtils.convertListOfStringInRealmListOfString(new ArrayList<>(memberUids)));
+    // todo : work out why doing call below
     RealmUtils.saveDataToRealm(
         RealmUtils.convertListOfStringInRealmListOfString(new ArrayList<>(memberUids)));
+
     return model;
   }
 

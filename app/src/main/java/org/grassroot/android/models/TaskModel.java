@@ -2,14 +2,15 @@ package org.grassroot.android.models;
 
 import android.os.Parcel;
 import android.os.Parcelable;
-import io.realm.Realm;
+import android.util.Log;
+
 import io.realm.RealmList;
 import io.realm.RealmObject;
 import io.realm.annotations.PrimaryKey;
 import java.text.ParseException;
 import java.util.Comparator;
 import java.util.Date;
-import java.util.Set;
+
 import org.grassroot.android.interfaces.TaskConstants;
 import org.grassroot.android.utils.Constant;
 
@@ -19,33 +20,19 @@ import org.grassroot.android.utils.Constant;
 public class TaskModel extends RealmObject implements Parcelable, Comparable<TaskModel> {
 
   private static final String TAG = TaskModel.class.getCanonicalName();
+
   @PrimaryKey private String taskUid;
+
   private String title;
   private String location;
   private String description;
   private String createdByUserName;
   private String type;
+
   private boolean isParentLocal;
-
-  public boolean isParentLocal() {
-    return isParentLocal;
-  }
-
-  public void setParentLocal(boolean parentLocal) {
-    isParentLocal = parentLocal;
-  }
-
   private String parentUid;
+
   private long updateTime;
-
-  public long getUpdateTime() {
-    return updateTime;
-  }
-
-  public void setUpdateTime(long updateTime) {
-    this.updateTime = updateTime;
-  }
-
   private String deadline;
   private String deadlineISO;
   private Date deadlineDate;
@@ -66,8 +53,131 @@ public class TaskModel extends RealmObject implements Parcelable, Comparable<Tas
   private boolean canRespondNo;
   private boolean canMarkCompleted;
   private int minutes;
+
   private boolean isLocal;
+  private boolean isEdited;
+
   private RealmList<RealmString> memberUIDS;
+
+  public TaskModel() {
+  }
+
+  public static final Creator<TaskModel> CREATOR = new Creator<TaskModel>() {
+    @Override public TaskModel createFromParcel(Parcel in) {
+      return new TaskModel(in);
+    }
+
+    @Override public TaskModel[] newArray(int size) {
+      return new TaskModel[size];
+    }
+  };
+
+  @Override public int compareTo(TaskModel task2) {
+    return getDeadlineDate().compareTo(task2.getDeadlineDate());
+  }
+
+  public static Comparator<TaskModel> canRespondComparator = new Comparator<TaskModel>() {
+    @Override public int compare(TaskModel taskModel, TaskModel t1) {
+      return (!taskModel.hasResponded && t1.hasResponded) ? 1
+              : (taskModel.hasResponded && !t1.hasResponded) ? -1
+              : -(taskModel.compareTo(t1)); // so it's reverse order on the date
+    }
+  };
+
+  @Override public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+
+    TaskModel taskModel = (TaskModel) o;
+
+    return taskUid != null ? taskUid.equals(taskModel.taskUid) : taskModel.taskUid == null;
+  }
+
+  @Override public int hashCode() {
+    return taskUid != null ? taskUid.hashCode() : 0;
+  }
+
+  @Override
+  public String toString() {
+    return "TaskModel{" +
+            "title='" + title + '\'' +
+            ", type='" + type + '\'' +
+            ", deadlineDate=" + deadlineDate +
+            ", createdByUserName='" + createdByUserName + '\'' +
+            '}';
+  }
+
+  @Override public int describeContents() {
+    return 0;
+  }
+
+  @Override public void writeToParcel(Parcel dest, int flags) {
+    dest.writeString(this.taskUid);
+    dest.writeString(this.title);
+    dest.writeString(this.description);
+    dest.writeString(this.location);
+    dest.writeString(this.parentUid);
+    dest.writeString(this.createdByUserName);
+    dest.writeString(this.type);
+    dest.writeString(this.deadline);
+    dest.writeString(this.deadlineISO);
+    dest.writeLong(this.deadlineDate.getTime());
+    dest.writeInt(this.hasResponded ? 1 : 0);
+    dest.writeInt(this.canAction ? 1 : 0);
+    dest.writeInt(this.canEdit ? 1 : 0);
+    dest.writeInt(this.wholeGroupAssigned ? 1 : 0);
+    dest.writeInt(this.assignedMemberCount);
+    dest.writeInt(this.canEdit ? 1 : 0);
+    dest.writeString(this.reply);
+    dest.writeString(this.completedYes);
+    dest.writeString(this.completedNo);
+    dest.writeInt(this.isLocal ? 1 : 0);
+    dest.writeInt(this.isEdited ? 1 : 0);
+    dest.writeInt(this.isParentLocal ? 1 : 0);
+  }
+
+  protected TaskModel(Parcel in) {
+    this.taskUid = in.readString();
+    this.title = in.readString();
+    this.description = in.readString();
+    this.location = in.readString();
+    this.parentUid = in.readString();
+    this.createdByUserName = in.readString();
+    this.type = in.readString();
+    this.deadline = in.readString();
+    this.deadlineISO = in.readString();
+    this.deadlineDate = new Date(in.readLong());
+    this.hasResponded = in.readInt() != 0;
+    this.canAction = in.readInt() != 0;
+    this.canEdit = in.readInt() != 0;
+    this.wholeGroupAssigned = in.readInt() != 0;
+    this.assignedMemberCount = in.readInt();
+    this.canEdit = in.readInt() != 0;
+    this.reply = in.readString();
+    this.completedYes = in.readString();
+    this.completedNo = in.readString();
+    this.isLocal = in.readInt() != 0;
+    this.isEdited = in.readInt() != 0;
+    this.isParentLocal = in.readInt() != 0;
+    resetResponseFlags();
+  }
+
+  public void resetResponseFlags() {
+    this.canRespondYes = canAction && !(hasResponded && "YES".equalsIgnoreCase(reply));
+    this.canRespondNo = canAction && !(hasResponded && "NO".equalsIgnoreCase(reply));
+    this.canMarkCompleted = canAction && !(hasResponded && "COMPLETED".equalsIgnoreCase(reply));
+  }
+
+  private Date parseDateFromIsoString() {
+    if (deadlineDate == null) {
+      try {
+        deadlineDate = Constant.isoDateTimeSDF.parse(deadlineISO);
+      } catch (ParseException e) {
+        Log.e(TAG, "error obtaining date");
+      }
+    }
+    return deadlineDate;
+  }
 
   public RealmList<RealmString> getMemberUIDS() {
     return memberUIDS;
@@ -85,8 +195,6 @@ public class TaskModel extends RealmObject implements Parcelable, Comparable<Tas
     isEdited = edited;
   }
 
-  private boolean isEdited;
-
   public boolean isLocal() {
     return isLocal;
   }
@@ -94,15 +202,6 @@ public class TaskModel extends RealmObject implements Parcelable, Comparable<Tas
   public void setLocal(boolean local) {
     isLocal = local;
   }
-  //private Rea<String> members;
-  //
-  //public Set<String> getMembers() {
-  //  return members;
-  //}
-  //
-  //public void setMembers(Set<String> members) {
-  //  this.members = members;
-  //}
 
   public int getMinutes() {
     return minutes;
@@ -110,9 +209,6 @@ public class TaskModel extends RealmObject implements Parcelable, Comparable<Tas
 
   public void setMinutes(int minutes) {
     this.minutes = minutes;
-  }
-
-  public TaskModel() {
   }
 
   public String getTaskUid() {
@@ -152,7 +248,10 @@ public class TaskModel extends RealmObject implements Parcelable, Comparable<Tas
   }
 
   public Date getDeadlineDate() {
-    return overcomeJava7AndroidDateCrapness();
+    if (deadlineDate == null) {
+      deadlineDate = parseDateFromIsoString();
+    }
+    return deadlineDate;
   }
 
   public boolean isInFuture() {
@@ -207,117 +306,23 @@ public class TaskModel extends RealmObject implements Parcelable, Comparable<Tas
     return createdByUser;
   }
 
-  @Override public int describeContents() {
-    return 0;
+  public long getUpdateTime() {
+    return updateTime;
   }
 
-  @Override public void writeToParcel(Parcel dest, int flags) {
-    dest.writeString(this.taskUid);
-    dest.writeString(this.title);
-    dest.writeString(this.description);
-    dest.writeString(this.location);
-    dest.writeString(this.parentUid);
-    dest.writeString(this.createdByUserName);
-    dest.writeString(this.type);
-    dest.writeString(this.deadline);
-    dest.writeString(this.deadlineISO);
-    dest.writeInt(this.hasResponded ? 1 : 0);
-    dest.writeInt(this.canAction ? 1 : 0);
-    dest.writeInt(this.canEdit ? 1 : 0);
-    dest.writeInt(this.wholeGroupAssigned ? 1 : 0);
-    dest.writeInt(this.assignedMemberCount);
-    dest.writeInt(this.canEdit ? 1 : 0);
-    dest.writeString(this.reply);
-    dest.writeString(this.completedYes);
-    dest.writeString(this.completedNo);
-    dest.writeInt(this.isLocal ? 1 : 0);
-    dest.writeInt(this.isEdited ? 1 : 0);
-    dest.writeInt(this.isParentLocal ? 1 : 0);
+  public void setUpdateTime(long updateTime) {
+    this.updateTime = updateTime;
   }
 
-  protected TaskModel(Parcel in) {
-    this.taskUid = in.readString();
-    this.title = in.readString();
-    this.description = in.readString();
-    this.location = in.readString();
-    this.parentUid = in.readString();
-    this.createdByUserName = in.readString();
-    this.type = in.readString();
-    this.deadline = in.readString();
-    this.deadlineISO = in.readString();
-    this.hasResponded = in.readInt() != 0;
-    this.canAction = in.readInt() != 0;
-    this.canEdit = in.readInt() != 0;
-    this.wholeGroupAssigned = in.readInt() != 0;
-    this.assignedMemberCount = in.readInt();
-    this.canEdit = in.readInt() != 0;
-    this.reply = in.readString();
-    this.completedYes = in.readString();
-    this.completedNo = in.readString();
-    this.isLocal = in.readInt() != 0;
-    this.isEdited = in.readInt() != 0;
-    this.isParentLocal = in.readInt() != 0;
-    resetResponseFlags();
+  public boolean isParentLocal() {
+    return isParentLocal;
   }
 
-  public void resetResponseFlags() {
-    this.canRespondYes = canAction && !(hasResponded && "YES".equalsIgnoreCase(reply));
-    this.canRespondNo = canAction && !(hasResponded && "NO".equalsIgnoreCase(reply));
-    this.canMarkCompleted = canAction && !(hasResponded && "COMPLETED".equalsIgnoreCase(reply));
+  public void setParentLocal(boolean parentLocal) {
+    isParentLocal = parentLocal;
   }
 
-  private Date overcomeJava7AndroidDateCrapness() {
-    if (deadlineDate == null) {
-      try {
-        deadlineDate = Constant.isoDateTimeSDF.parse(deadlineISO);
-      } catch (ParseException e) {
-        throw new UnsupportedOperationException("Sorry, couldn't overcome the crapness");
-      }
-    }
-    return deadlineDate;
-  }
-
-  public static final Creator<TaskModel> CREATOR = new Creator<TaskModel>() {
-    @Override public TaskModel createFromParcel(Parcel in) {
-      return new TaskModel(in);
-    }
-
-    @Override public TaskModel[] newArray(int size) {
-      return new TaskModel[size];
-    }
-  };
-
-  @Override public int compareTo(TaskModel task2) {
-    return getDeadlineDate().compareTo(task2.getDeadlineDate());
-  }
-
-  public static Comparator<TaskModel> canRespondComparator = new Comparator<TaskModel>() {
-    @Override public int compare(TaskModel taskModel, TaskModel t1) {
-      return (!taskModel.hasResponded && t1.hasResponded) ? 1
-          : (taskModel.hasResponded && !t1.hasResponded) ? -1
-              : -(taskModel.compareTo(t1)); // so it's reverse order on the date
-    }
-  };
-
-  @Override public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
-
-    TaskModel taskModel = (TaskModel) o;
-
-    return taskUid != null ? taskUid.equals(taskModel.taskUid) : taskModel.taskUid == null;
-  }
-
-  @Override public int hashCode() {
-    return taskUid != null ? taskUid.hashCode() : 0;
-  }
-
-  @Override public String toString() {
-    return "TaskModel{" +
-        "type='" + type + '\'' +
-        ", canEdit=" + canEdit +
-        '}';
-  }
+  public void setDeadlineDate(Date deadlineDate) { this.deadlineDate = deadlineDate; }
 
   public void setDeadlineISO(String deadlineISO) {
     this.deadlineISO = deadlineISO;

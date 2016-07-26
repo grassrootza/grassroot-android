@@ -28,6 +28,7 @@ import org.grassroot.android.events.OfflineActionsSent;
 import org.grassroot.android.events.OnlineOfflineToggledEvent;
 import org.grassroot.android.events.TaskAddedEvent;
 import org.grassroot.android.events.TaskCancelledEvent;
+import org.grassroot.android.events.TasksRefreshedEvent;
 import org.grassroot.android.events.UserLoggedOutEvent;
 import org.grassroot.android.fragments.dialogs.ConfirmCancelDialogFragment;
 import org.grassroot.android.interfaces.NavigationConstants;
@@ -336,6 +337,11 @@ public class NavigationDrawerFragment extends Fragment implements NavigationDraw
     public void onTaskCancelledEvent(TaskCancelledEvent e) {
         tasks.decrementItemCount();
         primaryAdapter.notifyItemChanged(NavigationConstants.HOME_NAV_TASKS);
+    }
+
+    @Subscribe
+    public void onTasksRefreshedEvent(TasksRefreshedEvent e) {
+        tasks.setItemCount(RealmUtils.loadUpcomingTasksFromDB().size());
     }
 
     @Subscribe

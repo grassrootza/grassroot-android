@@ -85,8 +85,10 @@
     <!--welcome content-->
     <string name="txt_welcome">Welcome to <b>Grassroot</b></string>
     <string name="txt_welcome_para">To get started, create your own group, or ask to join one. You can then call meetings, take votes, record decisions, and more&#8230;</string>
+
     <string name="txt_no_task_group">This group has no events or tasks yet. To get started, call a meeting, a vote, record an action, or add members &#8230; Just hit the + button below</string>
     <string name="txt_no_task_upcoming">You have no upcoming meetings, votes, or actions. To create one, just hit the + button below</string>
+    <string name="txt_task_could_not_fetch">Sorry, we had an error connecting to the server. Please retry later, or continue in offline mode.</string>
 
     <string name="txt_getstart">To get started</string>
     <string name="new_joingroup">Join Group</string>
