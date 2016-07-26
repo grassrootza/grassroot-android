@@ -16,6 +16,8 @@ import org.grassroot.android.interfaces.GroupConstants;
 import org.grassroot.android.models.Group;
 import org.grassroot.android.utils.Constant;
 import org.grassroot.android.utils.MenuUtils;
+import org.grassroot.android.utils.NetworkUtils;
+import org.grassroot.android.utils.RealmUtils;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -46,6 +48,7 @@ public class ActionCompleteActivity extends PortraitActivity implements NewTaskM
     @BindView(R.id.ac_header) TextView header;
     @BindView(R.id.ac_body) TextView body;
     @BindView(R.id.ac_bt_done) Button done;
+    @BindView(R.id.bt_avatar) Button pickAvatar;
     @BindView(R.id.ac_btn_tasks) RelativeLayout taskButtons;
 
     @Override
@@ -92,6 +95,10 @@ public class ActionCompleteActivity extends PortraitActivity implements NewTaskM
             done.setText(buttonInt);
             done.setVisibility(View.VISIBLE);
             taskButtons.setVisibility(View.GONE);
+        }
+
+        if (!NetworkUtils.ONLINE_DEFAULT.equals(RealmUtils.loadPreferencesFromDB().getOnlineStatus())) {
+            pickAvatar.setVisibility(View.GONE);
         }
     }
 

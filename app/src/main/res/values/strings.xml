@@ -506,16 +506,16 @@
     <string name="gp_hands">Community group</string>
     <string name="gp_custom">Custom image</string>
 
-    <string name="gp_bt_choose_own">CHOOSE MY OWN</string>
-    <string name="gp_bt_choose_another">CHOOSE ANOTHER</string>
-    <string name="gp_bt_select_default">REMOVE PICTURE</string>
+    <string name="gp_bt_choose_own">PICK MY OWN</string>
+    <string name="gp_bt_choose_another">CHANGE PICTURE</string>
+    <string name="gp_bt_select_default">PICK AN ICON</string>
     <string name="gp_bt_save">SAVE</string>
 
     <string name="gp_txt_title">Group picture</string>
     <string name="gp_update_success">Group photo updated</string>
-    <string name="gp_update_failure">Group photo not uploaded. Please try again later.</string>
-    <string name="gp_remove_success">Group picture successfully removed</string>
-    <string name="gp_remove_failure">Group picture could not be removed. Try again later..</string>
+    <string name="gp_update_failure">Sorry, we couldn\'t upload the photo. Please try again later.</string>
+
+    <string name="gp_image_load_error">Sorry, something went wrong loading picture. Defaulting to icons.</string>
 
     <!--Notification Center-->
 

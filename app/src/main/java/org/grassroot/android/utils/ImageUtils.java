@@ -1,12 +1,16 @@
 package org.grassroot.android.utils;
 
+import android.content.ContentResolver;
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.BitmapShader;
 import android.graphics.Canvas;
 import android.graphics.Paint;
+import android.net.Uri;
 import android.os.Environment;
 import android.util.Log;
+import android.webkit.MimeTypeMap;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -118,7 +122,6 @@ public class ImageUtils {
 
     }
 
-
     public static Bitmap getRoundedShape(Bitmap source) {
         int size = Math.min(source.getWidth(), source.getHeight());
         int x = (source.getWidth() - size) / 2;
@@ -141,4 +144,29 @@ public class ImageUtils {
         squaredBitmap.recycle();
         return bitmap;
     }
+
+    public static String getMimeType(Context context, Uri uri) {
+        String mimeType = null;
+        String extension;
+        if (uri.getScheme().equals(ContentResolver.SCHEME_CONTENT)) {
+            final MimeTypeMap mime = MimeTypeMap.getSingleton();
+            extension = mime.getExtensionFromMimeType(context.getContentResolver().getType(uri));
+        } else {
+            extension = MimeTypeMap.getFileExtensionFromUrl(Uri.fromFile(new File(uri.getPath())).toString());
+        }
+        switch (extension) {
+            case "jpg":
+            case "jpeg":
+                mimeType = "image/jpeg";
+                break;
+            case "png":
+                mimeType = "image/png";
+                break;
+            default:
+                break;
+        }
+
+        return mimeType;
+    }
+
 }

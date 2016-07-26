@@ -249,6 +249,8 @@ public class GroupService {
     permissions.add(new RealmString(PermissionUtils.permissionForTaskType(TaskConstants.MEETING)));
     permissions.add(new RealmString(PermissionUtils.permissionForTaskType(TaskConstants.VOTE)));
     permissions.add(new RealmString(PermissionUtils.permissionForTaskType(TaskConstants.TODO)));
+    permissions.add(new RealmString(GroupConstants.PERM_ADD_MEMBER));
+    permissions.add(new RealmString(GroupConstants.PERM_GROUP_SETTNGS));
     group.setPermissions(permissions);
     realm.beginTransaction();
     realm.copyToRealmOrUpdate(group);

@@ -1,7 +1,5 @@
 package org.grassroot.android.activities;
 
-import android.content.ContentResolver;
-import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Bitmap;
@@ -17,7 +15,6 @@ import android.support.v4.view.ViewPager;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.View;
-import android.webkit.MimeTypeMap;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -33,25 +30,15 @@ import org.grassroot.android.R;
 import org.grassroot.android.events.GroupPictureChangedEvent;
 import org.grassroot.android.fragments.ImageDetailFragment;
 import org.grassroot.android.interfaces.GroupConstants;
-import org.grassroot.android.models.GenericResponse;
 import org.grassroot.android.models.Group;
-import org.grassroot.android.services.GrassrootRestService;
 import org.grassroot.android.services.GroupService;
 import org.grassroot.android.utils.CircularImageTransformer;
 import org.grassroot.android.utils.ImageUtils;
-import org.grassroot.android.utils.RealmUtils;
 import org.greenrobot.eventbus.EventBus;
-
-import java.io.File;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
-import okhttp3.MediaType;
-import okhttp3.MultipartBody;
-import okhttp3.RequestBody;
-import retrofit2.Call;
-import retrofit2.Response;
 
 import static android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
 
@@ -66,7 +53,7 @@ public class GroupAvatarActivity extends PortraitActivity {
     private Group group;
 
     @BindView(R.id.tlb_gp) Toolbar toolbar;
-    @BindView(R.id.gp_avt_main_rl) RelativeLayout g_avt_relative;
+    @BindView(R.id.gp_avt_main_rl) RelativeLayout rootView;
 
     @BindView(R.id.iv_gp_avatar) ImageView ivAvatar;
     @BindView(R.id.image_tracker) LinearLayout pagerTracker;
@@ -77,6 +64,7 @@ public class GroupAvatarActivity extends PortraitActivity {
     private boolean defaultAvatarsSetUp = false;
     private boolean customImage = false;
     private boolean customImageChanged = false;
+
     private String compressedFilePath;
     private String mimeType;
 
@@ -181,6 +169,7 @@ public class GroupAvatarActivity extends PortraitActivity {
         defaultAvatars.setVisibility(View.VISIBLE);
         imageDescription.setVisibility(View.VISIBLE);
         pagerTracker.setVisibility(View.VISIBLE);
+        btOther.setText(R.string.gp_bt_choose_own);
         ivAvatar.setVisibility(View.GONE);
         btRemove.setVisibility(View.GONE);
         customImage = false;
@@ -191,12 +180,13 @@ public class GroupAvatarActivity extends PortraitActivity {
         defaultAvatars.setVisibility(View.GONE);
         pagerTracker.setVisibility(View.GONE);
         imageDescription.setVisibility(View.GONE);
+        btOther.setText(R.string.gp_bt_choose_another);
         btRemove.setVisibility(View.VISIBLE);
         customImage = true;
     }
 
     private void setViews(Group group) {
-        setTitle(getString(R.string.gp_txt_title));
+        setTitle(group.getGroupName());
         setSupportActionBar(toolbar);
         getSupportActionBar().setHomeButtonEnabled(true);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
@@ -223,7 +213,7 @@ public class GroupAvatarActivity extends PortraitActivity {
 
                     @Override
                     public void onError() {
-                        // todo : probably should show a message
+                        Snackbar.make(rootView, R.string.gp_image_load_error, Snackbar.LENGTH_LONG);
                         setViewToAvatars();
                     }
                 });
@@ -239,14 +229,14 @@ public class GroupAvatarActivity extends PortraitActivity {
         super.onActivityResult(requestCode, resultCode, data);
         try {
             if (requestCode == IMAGE_RESULT_INT && resultCode == RESULT_OK && data != null) {
-                // todo : move all this onto a background thread
+                // todo : make sure all of this is on a background thread
                 Uri selectedImage = data.getData();
                 String[] filePathColumn = {MediaStore.Images.Media.DATA};
                 Cursor cursor = getContentResolver().query(selectedImage, filePathColumn, null, null, null);
                 cursor.moveToFirst();
                 int columnIndex = cursor.getColumnIndex(filePathColumn[0]);
                 String localImagePath = cursor.getString(columnIndex);
-                mimeType = getMimeType(this, selectedImage);
+                mimeType = ImageUtils.getMimeType(this, selectedImage);
                 cursor.close();
                 compressedFilePath = ImageUtils.getCompressedFileFromImage(localImagePath);
                 Bitmap bitmap = BitmapFactory.decodeFile(compressedFilePath);
@@ -269,13 +259,13 @@ public class GroupAvatarActivity extends PortraitActivity {
         if (!customImage) {
             final String defaultSelected = defaultImageSequence[defaultAvatars.getCurrentItem()];
             final int defaultSelectedRes = imageResIds[defaultAvatars.getCurrentItem()];
-            if (defaultSelectedRes != group.getDefaultImageRes()) {
+            final boolean defaultImageChanged = defaultSelectedRes != group.getDefaultImageRes();
+            if (defaultImageChanged || group.hasCustomImage()) {
                 progressBar.setVisibility(View.VISIBLE);
                 GroupService.getInstance().changeGroupDefaultImage(group, defaultSelected, defaultSelectedRes, new GroupService.GroupEditingListener() {
                     @Override
                     public void apiCallComplete() {
                         progressBar.setVisibility(View.GONE);
-                        // Snackbar.make(g_avt_relative, R.string.gp_update_success, Snackbar.LENGTH_LONG).show();
                         EventBus.getDefault().post(new GroupPictureChangedEvent());
                         finish();
                     }
@@ -283,7 +273,7 @@ public class GroupAvatarActivity extends PortraitActivity {
                     @Override
                     public void apiCallFailed(String tag, String offOrOnline) {
                         progressBar.setVisibility(View.GONE);
-                        Snackbar.make(g_avt_relative, R.string.gp_update_failure, Snackbar.LENGTH_LONG).show();
+                        Snackbar.make(rootView, R.string.gp_update_failure, Snackbar.LENGTH_LONG).show();
                     }
 
                     @Override
@@ -296,45 +286,20 @@ public class GroupAvatarActivity extends PortraitActivity {
                 @Override
                 public void apiCallComplete() {
                     progressBar.setVisibility(View.GONE);
-                    // Snackbar.make(g_avt_relative, R.string.gp_update_success, Snackbar.LENGTH_LONG).show();
                     EventBus.getDefault().post(new GroupPictureChangedEvent());
-                    finish(); // todo : this will leak
+                    finish();
                 }
 
                 @Override
                 public void apiCallFailed(String tag, String offOrOnline) {
                     progressBar.setVisibility(View.GONE);
-                    Snackbar.make(g_avt_relative, R.string.gp_update_failure, Snackbar.LENGTH_LONG).show();
+                    Snackbar.make(rootView, R.string.gp_update_failure, Snackbar.LENGTH_LONG).show();
                 }
 
                 @Override
                 public void joinCodeOpened(String joinCode) {}
             });
         }
-    }
-
-    public static String getMimeType(Context context, Uri uri) {
-        String mimeType = null;
-        String extension;
-        if (uri.getScheme().equals(ContentResolver.SCHEME_CONTENT)) {
-            final MimeTypeMap mime = MimeTypeMap.getSingleton();
-            extension = mime.getExtensionFromMimeType(context.getContentResolver().getType(uri));
-        } else {
-            extension = MimeTypeMap.getFileExtensionFromUrl(Uri.fromFile(new File(uri.getPath())).toString());
-        }
-        switch (extension) {
-            case "jpg":
-            case "jpeg":
-                mimeType = "image/jpeg";
-                break;
-            case "png":
-                mimeType = "image/png";
-                break;
-            default:
-                break;
-        }
-
-        return mimeType;
     }
 
     private int getGroupItem() {
