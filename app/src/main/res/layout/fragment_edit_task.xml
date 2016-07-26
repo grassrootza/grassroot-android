@@ -207,7 +207,8 @@
                     </RelativeLayout>
                 </android.support.v7.widget.CardView>
 
-                <android.support.v7.widget.CardView android:id="@+id/etsk_cv_notify"
+                <android.support.v7.widget.CardView
+                    android:id="@+id/etsk_cv_notify"
                     style="@style/FormCardView"
                     android:layout_below="@id/etsk_cv_time"
                     card_view:cardBackgroundColor="@color/light_background"

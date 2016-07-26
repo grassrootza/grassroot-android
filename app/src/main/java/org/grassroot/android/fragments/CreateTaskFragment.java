@@ -77,6 +77,8 @@ public class CreateTaskFragment extends Fragment {
   private ViewGroup vContainer;
 
   private ProgressDialog progressDialog;
+  private String shortCharCounter;
+  private String longCharCounter;
 
   @BindView(R.id.ctsk_et_title) TextInputEditText etTitleInput;
   @BindView(R.id.ctsk_et_location) TextInputEditText etLocationInput;
@@ -93,7 +95,6 @@ public class CreateTaskFragment extends Fragment {
   @BindView(R.id.ctsk_sw_half_day) SwitchCompat swHalfDayAhead;
   @BindView(R.id.ctsk_sw_one_hour) SwitchCompat swOneHourAhead;
 
-  @BindView(R.id.sw_notifyall) SwitchCompat swNotifyAll;
   @BindView(R.id.ctsk_rl_notify_count) LinearLayout notifyCountHolder;
   @BindView(R.id.ctsk_tv_member_count) TextView notifyMembersCount;
   @BindView(R.id.ctsk_tv_suffix) TextView notifyCountSuffix;
@@ -125,6 +126,8 @@ public class CreateTaskFragment extends Fragment {
     progressDialog = new ProgressDialog(getContext());
     progressDialog.setIndeterminate(true);
     progressDialog.setMessage(getString(R.string.txt_pls_wait));
+    shortCharCounter = getString(R.string.generic_35_char_counter);
+    longCharCounter = getString(R.string.generic_250_char_conter);
     setUpStrings();
     return viewToReturn;
   }
@@ -176,32 +179,23 @@ public class CreateTaskFragment extends Fragment {
     timeDisplayed.setText(TaskConstants.timeDisplayWithoutDate.format(selectedDateTime));
   }
 
-  @OnCheckedChanged(R.id.sw_notifyall) public void selectAssignedMembers(boolean checked) {
-    includeWholeGroup = checked;
-    if (checked) {
-      notifyCountHolder.setVisibility(View.GONE);
-    } else {
-      ArrayList<Member> preSelectedMembers =
-          (assignedMembers == null) ? new ArrayList<Member>() : new ArrayList<>(assignedMembers);
-      Intent pickMember = MenuUtils.memberSelectionIntent(getActivity(), groupUid,
-          CreateTaskFragment.class.getCanonicalName(), preSelectedMembers);
-      startActivityForResult(pickMember, Constant.activitySelectGroupMembers);
-    }
+  @OnClick(R.id.ctsk_notify_switch)
+  public void selectAssignedMembers() {
+    ArrayList<Member> preSelectedMembers = (assignedMembers == null) ?
+            new ArrayList<>(RealmUtils.loadGroupMembers(groupUid)) : new ArrayList<>(assignedMembers);
+    Intent pickMember = MenuUtils.memberSelectionIntent(getActivity(), groupUid, CreateTaskFragment.class.getCanonicalName(), preSelectedMembers);
+    startActivityForResult(pickMember, Constant.activitySelectGroupMembers);
   }
 
   @Override public void onActivityResult(int requestCode, int resultCode, Intent data) {
     super.onActivityResult(requestCode, resultCode, data);
     if (resultCode == Activity.RESULT_OK && requestCode == Constant.activitySelectGroupMembers) {
-      Log.d(TAG, "got a result in fragment, from member picker");
       setAssignedMembers(data);
     }
   }
 
   @Override public void onResume() {
     super.onResume();
-    if (assignedMembers == null || assignedMembers.isEmpty()) {
-      swNotifyAll.setChecked(true);
-    }
   }
 
   // todo : see if we can structure the calls better so don't have to round trip through activity
@@ -218,7 +212,6 @@ public class CreateTaskFragment extends Fragment {
     assignedMembers = new HashSet<>(members);
     if (assignedMembers.isEmpty()) {
       includeWholeGroup = true;
-      swNotifyAll.setChecked(true);
     } else {
       includeWholeGroup = false;
       notifyMembersCount.setText(String.valueOf(assignedMembers.size()));
@@ -454,14 +447,14 @@ public class CreateTaskFragment extends Fragment {
   @BindView(R.id.ctsk_location_count) TextView locationCharCounter;
 
   @OnTextChanged(R.id.ctsk_et_title) public void changeCharCounter(CharSequence s) {
-    subjectCharCounter.setText(s.length() + " / 35"); // todo : externalize
+    subjectCharCounter.setText(String.format(shortCharCounter, s.length()));
   }
 
   @OnTextChanged(R.id.ctsk_et_location) public void changeLocCharCounter(CharSequence s) {
-    locationCharCounter.setText(s.length() + " / 35");
+    locationCharCounter.setText(String.format(shortCharCounter, s.length()));
   }
 
   @OnTextChanged(R.id.ctsk_et_description) public void changeDescCounter(CharSequence s) {
-    descriptionCharCounter.setText(s.length() + " / 250"); // todo : externalize
+    descriptionCharCounter.setText(String.format(longCharCounter, s.length()));
   }
 }

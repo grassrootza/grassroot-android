@@ -347,11 +347,6 @@
                             android:text="@string/cmtg_invite_all"
                             android:textColor="@color/dark_grey_text" />
 
-                        <android.support.v7.widget.SwitchCompat
-                            style="@style/FormSwitch"
-                            android:id="@+id/sw_notifyall"
-                            android:checked="true" />
-
                         <LinearLayout android:id="@+id/ctsk_rl_notify_count"
                             android:layout_below="@id/ctsk_tv_assign_label"
                             android:layout_width="wrap_content"

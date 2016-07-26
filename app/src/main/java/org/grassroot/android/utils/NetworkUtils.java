@@ -14,6 +14,7 @@ import org.grassroot.android.models.Member;
 import org.grassroot.android.models.PreferenceObject;
 import org.grassroot.android.models.TaskModel;
 import org.grassroot.android.services.ApplicationLoader;
+import org.grassroot.android.services.GcmRegistrationService;
 import org.grassroot.android.services.GrassrootRestService;
 import org.grassroot.android.services.GroupService;
 import org.grassroot.android.services.TaskService;

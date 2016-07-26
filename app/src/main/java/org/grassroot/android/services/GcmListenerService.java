@@ -59,6 +59,10 @@ public class GcmListenerService extends com.google.android.gms.gcm.GcmListenerSe
 
     NotificationManager mNotificationManager =
         (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+
+    final String entityReferencedUid = msg.getString(Constant.UID);
+    final String notificationUid = msg.getString(Constant.NOTIFICATION_UID);
+
     if (Build.VERSION.SDK_INT >= 21) {
       NotificationCompat.InboxStyle inboxStyle = new NotificationCompat.InboxStyle();
       NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(this);
@@ -78,9 +82,9 @@ public class GcmListenerService extends com.google.android.gms.gcm.GcmListenerSe
           .setGroupSummary(true)
           .build();
       if (isAppIsInBackground(this)) {
-        startForeground(msg.getString(Constant.UID).hashCode(), notification);
+        startForeground(entityReferencedUid.hashCode(), notification);
       } else {
-        mNotificationManager.notify(msg.getString(Constant.UID), (int) System.currentTimeMillis(),
+        mNotificationManager.notify(entityReferencedUid, (int) System.currentTimeMillis(),
             notification);
       }
     } else {
@@ -97,9 +101,9 @@ public class GcmListenerService extends com.google.android.gms.gcm.GcmListenerSe
               RingtoneManager.TYPE_NOTIFICATION))
           .build();
       if (isAppIsInBackground(this)) {
-        startForeground(msg.getString(Constant.UID).hashCode(), notification);
+        startForeground(entityReferencedUid.hashCode(), notification);
       } else {
-        mNotificationManager.notify(msg.getString(Constant.UID), (int) System.currentTimeMillis(),
+        mNotificationManager.notify(entityReferencedUid, (int) System.currentTimeMillis(),
             notification);
       }
     }
@@ -107,7 +111,7 @@ public class GcmListenerService extends com.google.android.gms.gcm.GcmListenerSe
     GrassrootRestService.getInstance()
         .getApi()
         .updateRead(RealmUtils.loadPreferencesFromDB().getMobileNumber(),
-            RealmUtils.loadPreferencesFromDB().getToken(), msg.getString(Constant.UID))
+            RealmUtils.loadPreferencesFromDB().getToken(), notificationUid)
         .enqueue(new Callback<GenericResponse>() {
           @Override
           public void onResponse(Call<GenericResponse> call, Response<GenericResponse> response) {
@@ -169,7 +173,7 @@ public class GcmListenerService extends com.google.android.gms.gcm.GcmListenerSe
     resultIntent.putExtra(Constant.ENTITY_TYPE, msg.getString(Constant.ENTITY_TYPE));
     Log.e(TAG, " entity_type" + msg.getString(Constant.ENTITY_TYPE));
     resultIntent.putExtra(Constant.UID, msg.getString(Constant.UID));
-    Log.e(TAG, "uid_field " + msg.getString(Constant.UID));
+    Log.e(TAG, "entity_uid_field " + msg.getString(Constant.UID));
     resultIntent.putExtra(Constant.NOTIFICATION_UID, msg.getString(Constant.NOTIFICATION_UID));
 
     PendingIntent resultPendingIntent =

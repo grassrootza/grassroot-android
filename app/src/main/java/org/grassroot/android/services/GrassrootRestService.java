@@ -191,8 +191,9 @@ public class GrassrootRestService {
 
     //update notification read status
     @POST("notification/update/read/{phoneNumber}/{code}")
-    Call<GenericResponse> updateRead(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
-        @Query("uid") String uid);
+    Call<GenericResponse> updateRead(@Path("phoneNumber") String phoneNumber,
+                                     @Path("code") String code,
+                                     @Query("uid") String uid);
 
     //check if server connection is working (for online/offline switching)
     @GET("user/connect/{phoneNumber}/{code}")

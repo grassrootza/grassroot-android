@@ -75,4 +75,3 @@ public class EditTaskActivity extends PortraitActivity {
 
     }
 }
-

@@ -97,6 +97,7 @@ public class NotificationCenterFragment extends Fragment {
                         Intent openactivity = new Intent(getActivity(), ViewTaskActivity.class);
                         openactivity.putExtra(Constant.UID, notification.getEntityUid());
                         openactivity.putExtra(Constant.ENTITY_TYPE, notification.getEntityType());
+                        openactivity.putExtra(Constant.NOTIFICATION_UID, notification.getUid());
                         startActivity(openactivity);
                     }
 

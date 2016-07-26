@@ -45,7 +45,7 @@ public class ViewTaskActivity extends PortraitActivity {
 
         taskUid =  getIntent().getStringExtra(Constant.UID);
         taskType =getIntent().getStringExtra(Constant.ENTITY_TYPE);
-        notificationUid = getIntent().getStringExtra(Constant.UID);
+        notificationUid = getIntent().getStringExtra(Constant.NOTIFICATION_UID);
 
         if (TextUtils.isEmpty(taskUid) || TextUtils.isEmpty(taskType)) {
             throw new UnsupportedOperationException("Error! View task activity started with empty type or UID");

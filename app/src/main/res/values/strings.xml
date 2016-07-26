@@ -208,7 +208,9 @@
     <string name="cg_group_description">Group description (optional)</string>
     <string name="cg_member_list_header">Group members</string>
 
+    <string name="generic_35_char_counter">%d / 35</string>
     <string name="generic_160_char_counter">%d/160</string>
+    <string name="generic_250_char_conter">%d / 250</string>
 
     <string name="cg_member_title">%1$s (%2$s)</string>
     <string-array name="cg_member_popup">
@@ -338,7 +340,7 @@
     <string name="cmtg_date">Meeting date</string>
     <string name="cmtg_time">Meeting time</string>
     <string name="cmtg_desc_hint">Longer description or notes on the meeting</string>
-    <string name="cmtg_invite_all">Invite whole group</string>
+    <string name="cmtg_invite_all">Select members</string>
     <string name="cmtg_config_reminders_heading">Configure reminder</string>
     <string name="cmtg_location_hint">Meeting location</string>
 

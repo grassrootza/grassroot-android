@@ -7,13 +7,11 @@ import android.util.Log;
 
 import org.grassroot.android.models.GenericResponse;
 import org.grassroot.android.utils.Constant;
-
 import org.grassroot.android.utils.RealmUtils;
+
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
-
-
 
 /**
  * Created by paballo on 2016/06/09.
@@ -29,22 +27,20 @@ public class NotificationUpdateService extends IntentService {
 
     @Override
     protected void onHandleIntent(Intent intent) {
-
-        String uid = intent.getStringExtra(Constant.UID);
+        String uid = intent.getStringExtra(Constant.NOTIFICATION_UID);
         update(uid);
     }
 
-    private void update(final String uid) {
-
+    private void update(final String notificationUid) {
       String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
       String userToken = RealmUtils.loadPreferencesFromDB().getToken();
 
-        GrassrootRestService.getInstance().getApi().updateRead(phoneNumber, userToken, uid).
+        GrassrootRestService.getInstance().getApi().updateRead(phoneNumber, userToken, notificationUid).
                 enqueue(new Callback<GenericResponse>() {
                     @Override
                     public void onResponse(Call<GenericResponse> call, Response<GenericResponse> response) {
                         if (response.isSuccessful()) {
-                            Log.e(TAG, "updated notification with uid " + uid + "to read status");
+                            Log.e(TAG, "updated notification with uid " + notificationUid + "to read status");
                         }
 
                     }
@@ -56,10 +52,9 @@ public class NotificationUpdateService extends IntentService {
                 });
     }
 
-    public static void updateNotificationStatus(Context context, String uid){
-        Log.e(TAG, "starting notification update service");
+    public static void updateNotificationStatus(Context context, String notificationUid){
         Intent intent = new Intent(context,NotificationUpdateService.class);
-        intent.putExtra(Constant.UID, uid);
+        intent.putExtra(Constant.NOTIFICATION_UID, notificationUid);
         context.startService(intent);
 
     }
