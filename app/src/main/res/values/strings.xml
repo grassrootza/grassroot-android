@@ -354,6 +354,7 @@
     <string name="ctodo_title">Record an action</string>
     <string name="ctodo_subject">The action to complete</string>
     <string name="ctodo_date">Due date</string>
+    <string name="ctodo_time">Due time (optional)</string>
     <string name="ctodo_desc_hint">Add extra notes on the action</string>
     <string name="ctodo_invite_all">Assigned to whole group</string>
     <string name="ctodo_button">Send</string>
@@ -372,7 +373,15 @@
     <string name="one_hour"><b>1 hour</b> ahead</string>
 
     <!-- View task strings -->
+    <string name="tlist_posted_by_mtg">Called by %s</string>
+    <string name="tlist_posted_by_mtg_past">Past meeting (called by %s)</string>
+    <string name="tlist_posted_by_vote">Posted by %s</string>
+    <string name="tlist_posted_by_vote_past">Prior vote (called by %s)</string>
+    <string name="tlist_posted_by_todo">Recorded by %s</string>
+    <string name="tlist_posted_by_todo_past">Past action (posted by %s)</string>
+
     <string name="vt_mtg_title">Meeting subject:</string>
+    <string name="vt_mtg_title_past">Past meeting about:</string>
     <string name="vt_mtg_posted">Called by %s</string>
     <string name="vt_mtg_location">Location: %s</string>
     <string name="vt_mtg_datetime">For %s</string>
@@ -396,6 +405,7 @@
     <string name="vt_mtg_cancel">Cancel meeting</string>
 
     <string name="vt_vote_title">Vote on:</string>
+    <string name="vt_vote_title_past">Old vote on:</string>
     <string name="vt_vote_posted">Called by %s</string>
     <string name="vt_vote_datetime">Closes %s</string>
     <string name="vt_vote_responseq">Vote yes or no?</string>
@@ -416,6 +426,8 @@
     <string name="vt_row_no_reply">No response</string>
     <string name="vt_vote_modify">Extend vote</string>
 
+    <string name="vt_todo_title">Action:</string>
+    <string name="vt_todo_title_past">Past action:</string>
     <string name="vt_todo_done">You have marked the action as done</string>
     <string name="vt_todo_datetime">Due %s</string>
     <string name="vt_todo_modify">Edit action</string>

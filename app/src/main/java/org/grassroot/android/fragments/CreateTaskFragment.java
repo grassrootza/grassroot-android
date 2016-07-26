@@ -390,7 +390,7 @@ public class CreateTaskFragment extends Fragment {
       case TaskConstants.TODO:
         subjectInput.setHint(getContext().getString(R.string.ctodo_subject));
         dateTitle.setText(R.string.ctodo_date);
-        timePickTrigger.setVisibility(View.GONE);
+        timeTitle.setText(R.string.ctodo_time);
         descriptionInput.setHint(getContext().getString(R.string.ctodo_desc_hint));
         assignmentLabel.setText(R.string.ctodo_invite_all);
         btTaskCreate.setText(R.string.ctodo_button);

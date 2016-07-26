@@ -11,15 +11,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
-import butterknife.BindView;
-import butterknife.ButterKnife;
-import io.realm.Realm;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
+
 import org.grassroot.android.R;
 import org.grassroot.android.events.TaskAddedEvent;
 import org.grassroot.android.events.TaskCancelledEvent;
@@ -28,6 +20,16 @@ import org.grassroot.android.interfaces.TaskConstants;
 import org.grassroot.android.models.TaskModel;
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+
+import butterknife.BindView;
+import butterknife.ButterKnife;
 
 /**
  * Created by ravi on 15/4/16.
@@ -45,7 +47,7 @@ public class TasksAdapter extends RecyclerView.Adapter<TasksAdapter.TaskViewHold
 
   private final int primaryColor, textColor, secondaryColor;
 
-  private final Realm realm = Realm.getDefaultInstance();
+  private final Context mContext;
 
   public interface TaskListListener {
     void respondToTask(String taskUid, String taskType, String response, int position);
@@ -56,6 +58,7 @@ public class TasksAdapter extends RecyclerView.Adapter<TasksAdapter.TaskViewHold
   public TasksAdapter(TaskListListener listListener, Context context, String parentUid) {
     this.parentUid = parentUid;
     this.listener = listListener;
+    this.mContext = context;
     this.primaryColor = ContextCompat.getColor(context, R.color.primaryColor);
     this.textColor = ContextCompat.getColor(context, R.color.black);
     this.secondaryColor = ContextCompat.getColor(context, R.color.text_grey);
@@ -110,9 +113,10 @@ public class TasksAdapter extends RecyclerView.Adapter<TasksAdapter.TaskViewHold
 
   private void setUpCardImagesAndView(final TaskModel task, TaskViewHolder holder,
       final int position) {
-    realm.beginTransaction();
+
     holder.txtTitle.setText(task.getTitle());
-    holder.txtTaskCallerName.setText("Posted by " + task.getName());
+    int postedByFormat = getPostedByString(task);
+    holder.txtTaskCallerName.setText(String.format(mContext.getString(postedByFormat), task.getName()));
 
     if (task.getDescription() == null || task.getDescription().trim().equals("")) {
       holder.txtTaskDesc.setVisibility(View.GONE);
@@ -122,7 +126,7 @@ public class TasksAdapter extends RecyclerView.Adapter<TasksAdapter.TaskViewHold
 
     holder.datetime.setText(TaskConstants.dateDisplayWithDayName.format(task.getDeadlineDate()));
     setUpCardStyle(holder, task.isInFuture());
-    realm.commitTransaction();
+
     switch (task.getType()) {
       case TaskConstants.MEETING:
         holder.iv_type.setImageResource(R.drawable.ic_home_call_meeting_active);
@@ -146,6 +150,19 @@ public class TasksAdapter extends RecyclerView.Adapter<TasksAdapter.TaskViewHold
     viewHolder.txtTaskCallerName.setTextColor(isCardPrimary ? textColor : secondaryColor);
     viewHolder.txtTaskDesc.setTextColor(isCardPrimary ? textColor : secondaryColor);
     viewHolder.divider.setBackgroundColor(isCardPrimary ? textColor : secondaryColor);
+  }
+
+  private int getPostedByString(final TaskModel task) {
+    switch (task.getType()) {
+      case TaskConstants.MEETING:
+        return task.isInFuture() ? R.string.tlist_posted_by_mtg : R.string.tlist_posted_by_mtg_past;
+      case TaskConstants.VOTE:
+        return task.isInFuture() ? R.string.tlist_posted_by_vote : R.string.tlist_posted_by_vote_past;
+      case TaskConstants.TODO:
+        return task.isInFuture() ? R.string.tlist_posted_by_todo : R.string.tlist_posted_by_todo_past;
+      default:
+        return R.string.tlist_posted_by_mtg;
+    }
   }
 
   private void setUpToDo(TaskViewHolder holder, final TaskModel task, final int position) {

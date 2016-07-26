@@ -8,6 +8,8 @@ import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
+import android.text.TextUtils;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
@@ -39,16 +41,18 @@ import retrofit2.Response;
 public class LoginRegisterActivity extends AppCompatActivity implements LoginScreenFragment.LoginFragmentListener,
         OtpScreenFragment.OtpListener, RegisterScreenFragment.RegisterListener {
 
-    private boolean defaultToLogin;
     private static final String LOGIN = "login";
     private static final String REGISTER = "register";
 
     private boolean onRegisterOrLogin;
+
     private ViewGroup rootView;
     private ProgressDialog progressDialog;
 
     private String msisdn;
     private String displayName;
+
+    private long otpRequestedTime;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -64,8 +68,9 @@ public class LoginRegisterActivity extends AppCompatActivity implements LoginScr
 
         rootView = (ViewGroup) findViewById(R.id.rl_activity_root);
 
-        defaultToLogin = getIntent().getBooleanExtra("default_to_login", false);
+        boolean defaultToLogin = getIntent().getBooleanExtra("default_to_login", false);
         onRegisterOrLogin = true;
+        otpRequestedTime = -1;
         switchFragments(defaultToLogin ? new LoginScreenFragment() : RegisterScreenFragment.newInstance(), false);
     }
 
@@ -83,71 +88,90 @@ public class LoginRegisterActivity extends AppCompatActivity implements LoginScr
 
     @Override
     public void requestLogin(String mobileNumber) {
-        progressDialog.show();
-        msisdn = Utilities.formatNumberToE164(mobileNumber);
-        GrassrootRestService.getInstance().getApi()
-                .login(msisdn)
-                .enqueue(new Callback<GenericResponse>() {
-                    @Override
-                    public void onResponse(Call<GenericResponse> call, Response<GenericResponse> response) {
-                        progressDialog.dismiss();
-                        if (response.isSuccessful()) {
-                            final String otpToPass = BuildConfig.FLAVOR.equals(Constant.STAGING) ? (String) response.body().getData() : "";
-                            switchToOtp(otpToPass, LOGIN);
-                        } else {
-                            ErrorUtils.showSnackBar(rootView, getResources().getString(R.string.User_not_registered),
-                                    Snackbar.LENGTH_LONG, "Register", new View.OnClickListener() {
-                                        @Override
-                                        public void onClick(View view) {
-                                            switchFragments(RegisterScreenFragment.newInstance(), true);
-                                        }
-                                    });
+        final String passedMobile = Utilities.formatNumberToE164(mobileNumber);
+        if (shouldRequestOtp(passedMobile)) {
+            progressDialog.show();
+            msisdn = passedMobile;
+            GrassrootRestService.getInstance().getApi()
+                    .login(msisdn)
+                    .enqueue(new Callback<GenericResponse>() {
+                        @Override
+                        public void onResponse(Call<GenericResponse> call, Response<GenericResponse> response) {
+                            progressDialog.dismiss();
+                            if (response.isSuccessful()) {
+                                otpRequestedTime = System.currentTimeMillis();
+                                final String otpToPass = BuildConfig.FLAVOR.equals(Constant.STAGING) ? (String) response.body().getData() : "";
+                                switchToOtp(otpToPass, LOGIN);
+                            } else {
+                                ErrorUtils.showSnackBar(rootView, getResources().getString(R.string.User_not_registered),
+                                        Snackbar.LENGTH_LONG, "Register", new View.OnClickListener() {
+                                            @Override
+                                            public void onClick(View view) {
+                                                switchFromLoginToRegister(msisdn);
+                                            }
+                                        });
+                            }
                         }
-                    }
 
-                    @Override
-                    public void onFailure(Call<GenericResponse> call, Throwable t) {
-                        progressDialog.dismiss();
-                        ErrorUtils.handleNetworkError(LoginRegisterActivity.this, rootView, t);
-                    }
-                });
+                        @Override
+                        public void onFailure(Call<GenericResponse> call, Throwable t) {
+                            otpRequestedTime = -1;
+                            progressDialog.dismiss();
+                            ErrorUtils.handleNetworkError(LoginRegisterActivity.this, rootView, t);
+                        }
+                    });
+        } else {
+            switchToOtp("", LOGIN);
+        }
     }
 
     // todo : change this to two screens (phone number then name, skip name if already exists, etc)
     @Override
     public void requestRegistration(String userName, String phoneNumber) {
-        progressDialog.show();
-        msisdn = Utilities.formatNumberToE164(phoneNumber);
+        final String passedMobile = Utilities.formatNumberToE164(phoneNumber);
         displayName = userName;
 
-        GrassrootRestService.getInstance().getApi()
-                .addUser(msisdn, userName)
-                .enqueue(new Callback<GenericResponse>() {
-                    @Override
-                    public void onResponse(Call<GenericResponse> call, Response<GenericResponse> response) {
-                        progressDialog.dismiss();
-                        if (response.isSuccessful()) {
-                            final String otpToPass = BuildConfig.FLAVOR.equals(Constant.STAGING) ?
-                                    (String) response.body().getData() : "";
-                            switchToOtp(otpToPass, REGISTER);
-                        } else {
-                            final String errorMsg = getResources().getString(R.string.error_user_exists);
-                            final String actionBtn = getResources().getString(R.string.bt_login);
-                            ErrorUtils.showSnackBar(rootView, errorMsg, Snackbar.LENGTH_LONG, actionBtn, new View.OnClickListener() {
-                                @Override
-                                public void onClick(View view) {
-                                    requestLogin(msisdn);
-                                }
-                            });
+        if (shouldRequestOtp(passedMobile)) {
+            progressDialog.show();
+            msisdn = passedMobile;
+            GrassrootRestService.getInstance().getApi()
+                    .addUser(msisdn, userName)
+                    .enqueue(new Callback<GenericResponse>() {
+                        @Override
+                        public void onResponse(Call<GenericResponse> call, Response<GenericResponse> response) {
+                            progressDialog.dismiss();
+                            if (response.isSuccessful()) {
+                                otpRequestedTime = System.currentTimeMillis();
+                                final String otpToPass = BuildConfig.FLAVOR.equals(Constant.STAGING) ?
+                                        (String) response.body().getData() : "";
+                                switchToOtp(otpToPass, REGISTER);
+                            } else {
+                                final String errorMsg = getResources().getString(R.string.error_user_exists);
+                                final String actionBtn = getResources().getString(R.string.bt_login);
+                                ErrorUtils.showSnackBar(rootView, errorMsg, Snackbar.LENGTH_LONG, actionBtn, new View.OnClickListener() {
+                                    @Override
+                                    public void onClick(View view) {
+                                        switchFromRegisterToLogin(msisdn);
+                                    }
+                                });
+                            }
                         }
-                    }
 
-                    @Override
-                    public void onFailure(Call<GenericResponse> call, Throwable t) {
-                        progressDialog.dismiss();
-                        ErrorUtils.handleNetworkError(LoginRegisterActivity.this, rootView, t);
-                    }
-                });
+                        @Override
+                        public void onFailure(Call<GenericResponse> call, Throwable t) {
+                            progressDialog.dismiss();
+                            ErrorUtils.handleNetworkError(LoginRegisterActivity.this, rootView, t);
+                        }
+                    });
+        } else {
+            switchToOtp("", LOGIN);
+        }
+    }
+
+    private boolean shouldRequestOtp(final String passedMobile) {
+        final int otpRequestInterval = 5 * 60 * 1000; // i.e., 5 minutes
+        return TextUtils.isEmpty(msisdn) || !msisdn.equals(passedMobile) ||
+                System.currentTimeMillis() > otpRequestedTime + otpRequestInterval;
     }
 
     private void switchToOtp(String otpToPass, String purpose) {
@@ -163,6 +187,22 @@ public class LoginRegisterActivity extends AppCompatActivity implements LoginScr
         }
     }
 
+    private void switchFromRegisterToLogin(final String userMobile) {
+        LoginScreenFragment fragment = LoginScreenFragment.newInstance(Utilities.stripPrefixFromNumber(userMobile));
+        getSupportFragmentManager().popBackStack(); // make sure register is gone
+        getSupportFragmentManager().beginTransaction()
+                .replace(R.id.lr_frag_content, fragment, LoginScreenFragment.class.getCanonicalName())
+                .commit();
+        requestLogin(userMobile);
+    }
+
+    private void switchFromLoginToRegister(final String userMobile) {
+        RegisterScreenFragment fragment = RegisterScreenFragment.newInstance(Utilities.stripPrefixFromNumber(userMobile));
+        getSupportFragmentManager().popBackStack(); // make sure login is gone
+        getSupportFragmentManager().beginTransaction()
+                .replace(R.id.lr_frag_content, fragment, RegisterScreenFragment.class.getCanonicalName())
+                .commit();
+    }
 
     @Override
     public void onTextResendClick(String purpose) {

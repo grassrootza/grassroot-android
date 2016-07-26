@@ -6,6 +6,7 @@ import android.os.Bundle;
 import android.support.design.widget.Snackbar;
 import android.support.design.widget.TextInputEditText;
 import android.support.v4.app.Fragment;
+import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -30,6 +31,8 @@ public class RegisterScreenFragment extends Fragment {
     @BindView(R.id.et_mobile_register)
     TextInputEditText etMobilePhone;
 
+    private String presetNumber;
+
     private ViewGroup container;
 
     private RegisterListener listener;
@@ -43,15 +46,10 @@ public class RegisterScreenFragment extends Fragment {
         return registerScreenFragment;
     }
 
-    @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.container_register, container, false);
-        ButterKnife.bind(this, view);
-        view.startAnimation(AnimationUtils.loadAnimation(getActivity(), R.anim.fade_in));
-        view.setLayoutParams(new ViewGroup.LayoutParams(-1, -1));
-        this.container = container;
-        return view;
+    public static RegisterScreenFragment newInstance(String presetNumber) {
+        RegisterScreenFragment fragment = new RegisterScreenFragment();
+        fragment.presetNumber = presetNumber;
+        return fragment;
     }
 
     @Override
@@ -64,6 +62,22 @@ public class RegisterScreenFragment extends Fragment {
             throw new UnsupportedOperationException(activity.toString()
                     + " must implement RegisterListener");
         }
+    }
+
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                             Bundle savedInstanceState) {
+        View view = inflater.inflate(R.layout.container_register, container, false);
+        ButterKnife.bind(this, view);
+        view.startAnimation(AnimationUtils.loadAnimation(getActivity(), R.anim.fade_in));
+        view.setLayoutParams(new ViewGroup.LayoutParams(-1, -1));
+        this.container = container;
+
+        if (!TextUtils.isEmpty(presetNumber)) {
+            etMobilePhone.setText(presetNumber);
+        }
+
+        return view;
     }
 
     @OnClick(R.id.bt_register)

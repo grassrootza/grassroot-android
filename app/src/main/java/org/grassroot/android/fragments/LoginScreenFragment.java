@@ -26,11 +26,21 @@ public class LoginScreenFragment extends Fragment {
     @BindView(R.id.et_mobile_login)
     TextInputEditText etNumberInput;
 
+    String presetNumber;
+
     public interface LoginFragmentListener {
         void requestLogin(String mobileNumber);
     }
 
     private LoginFragmentListener listener;
+
+    public static LoginScreenFragment newInstance(final String presetNumber) {
+        LoginScreenFragment fragment = new LoginScreenFragment();
+        if (!TextUtils.isEmpty(presetNumber)) {
+            fragment.presetNumber = presetNumber;
+        }
+        return fragment;
+    }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -55,11 +65,22 @@ public class LoginScreenFragment extends Fragment {
         view.startAnimation(AnimationUtils.loadAnimation(getActivity(), R.anim.fade_in));
         view.setLayoutParams(new ViewGroup.LayoutParams(-1, -1));
 
+        if (!TextUtils.isEmpty(presetNumber)) {
+            etNumberInput.setText(presetNumber);
+        }
+
         if (etNumberInput.requestFocus()) {
             InputMethodManager imm = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
             imm.showSoftInput(etNumberInput, InputMethodManager.SHOW_IMPLICIT);
         }
+
         return view;
+    }
+
+    public void setNumber(String number) {
+        if (etNumberInput != null) {
+            etNumberInput.setText(number);
+        }
     }
 
     @OnClick(R.id.bt_login)

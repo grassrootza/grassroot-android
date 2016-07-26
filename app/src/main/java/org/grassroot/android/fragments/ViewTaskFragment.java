@@ -213,9 +213,9 @@ public class ViewTaskFragment extends Fragment {
     }
   }
 
-  private void setViewForMeeting(TaskModel task) {
+  private void setViewForMeeting(final TaskModel task) {
 
-    tvTitle.setText(R.string.vt_mtg_title);
+    tvTitle.setText(task.isInFuture() ? R.string.vt_mtg_title : R.string.vt_mtg_title_past);
     tvHeader.setText(task.getTitle());
     tvLocation.setVisibility(View.VISIBLE);
     tvLocation.setText(String.format(getString(R.string.vt_mtg_location), task.getLocation())); // todo: integrate w/Maps
@@ -261,8 +261,8 @@ public class ViewTaskFragment extends Fragment {
     setMeetingRsvpView();
   }
 
-  private void setViewForVote(TaskModel task) {
-    tvTitle.setText(R.string.vt_vote_title);
+  private void setViewForVote(final TaskModel task) {
+    tvTitle.setText(task.isInFuture() ? R.string.vt_vote_title : R.string.vt_vote_title_past);
     tvHeader.setText(task.getTitle());
     tvLocation.setVisibility(View.GONE);
     tvPostedBy.setText(String.format(getString(R.string.vt_vote_posted), task.getName()));
@@ -293,8 +293,8 @@ public class ViewTaskFragment extends Fragment {
     setVoteResponseView();
   }
 
-  private void setViewForToDo(TaskModel task) {
-    tvTitle.setText(R.string.ctodo_subject);
+  private void setViewForToDo(final TaskModel task) {
+    tvTitle.setText(task.isInFuture() ? R.string.vt_todo_title : R.string.vt_todo_title_past);
     tvHeader.setText(task.getTitle());
     tvPostedBy.setText(String.format(getString(R.string.vt_vote_posted), task.getName()));
     tvDateTime.setText(String.format(getString(R.string.vt_todo_datetime),
