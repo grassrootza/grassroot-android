@@ -19,6 +19,7 @@ import android.view.ViewGroup;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
+import io.realm.RealmResults;
 import org.grassroot.android.R;
 import org.grassroot.android.adapters.TasksAdapter;
 import org.grassroot.android.events.TaskAddedEvent;
@@ -27,6 +28,7 @@ import org.grassroot.android.events.TaskChangedEvent;
 import org.grassroot.android.fragments.dialogs.ConfirmCancelDialogFragment;
 import org.grassroot.android.interfaces.GroupPickCallbacks;
 import org.grassroot.android.interfaces.TaskConstants;
+import org.grassroot.android.models.Group;
 import org.grassroot.android.models.TaskModel;
 import org.grassroot.android.models.TaskResponse;
 import org.grassroot.android.services.GrassrootRestService;
@@ -48,6 +50,7 @@ import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
+import rx.functions.Action1;
 
 /**
  * Created by luke on 2016/05/13.
@@ -170,6 +173,7 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
   /*
   SECTION : LOGIC FOR FETCHING AND DISPLAYING TASKS
    */
+
 
   // a null or empty groupUid passed through, tells the service to fetch all upcoming tasks, across groups
   private void fetchTaskList() {

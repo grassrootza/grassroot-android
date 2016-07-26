@@ -7,6 +7,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import io.realm.RealmObject;
+import io.realm.RealmResults;
 import org.grassroot.android.R;
 import org.grassroot.android.interfaces.GroupConstants;
 import org.grassroot.android.models.Member;
@@ -16,6 +18,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import io.realm.RealmList;
+import rx.functions.Action1;
 
 /**
  * Created by luke on 2016/07/19.
@@ -38,7 +41,13 @@ public class MemberRoleAdapter extends RecyclerView.Adapter<MemberRoleAdapter.Me
 
     public MemberRoleAdapter(String groupUid, MemberRoleClickListener listener) {
         this.groupUid  = groupUid;
-        members = RealmUtils.loadListFromDB(Member.class, "groupUid", groupUid);
+         RealmUtils.loadListFromDB(Member.class, "groupUid", groupUid).subscribe(new Action1<RealmResults>() {
+            @Override public void call(RealmResults realmResults) {
+                for(Object object : realmResults){
+                    members.add((Member) object);
+                };
+            }
+        });
         userMobile = RealmUtils.loadPreferencesFromDB().getMobileNumber();
         roleMap = new HashMap<>();
         roleMap.put(GroupConstants.ROLE_GROUP_ORGANIZER, R.string.gset_role_organizer);

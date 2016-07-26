@@ -1,24 +1,26 @@
 package org.grassroot.android.utils;
 
 import android.util.Log;
-
 import io.realm.Realm;
 import io.realm.RealmList;
+import io.realm.RealmModel;
 import io.realm.RealmObject;
 import io.realm.RealmQuery;
 import io.realm.RealmResults;
 import io.realm.Sort;
-
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
-
 import org.grassroot.android.models.Group;
-import org.grassroot.android.models.Member;
 import org.grassroot.android.models.PreferenceObject;
 import org.grassroot.android.models.RealmString;
 import org.grassroot.android.models.TaskModel;
+import rx.Observable;
+import rx.Subscriber;
+import rx.android.schedulers.AndroidSchedulers;
+import rx.functions.Action1;
+import rx.schedulers.Schedulers;
 
 public class RealmUtils {
 
@@ -44,56 +46,99 @@ public class RealmUtils {
     realm.close();
   }
 
-  public static void saveDataToRealm(List<? extends RealmObject> list) {
-    Realm realm = Realm.getDefaultInstance();
-    realm.beginTransaction();
-    realm.copyToRealmOrUpdate(list);
-    realm.commitTransaction();
-    realm.close();
+  public static void saveDataToRealm(final List<? extends RealmObject> list) {
+    Observable.create(new Observable.OnSubscribe<Boolean>() {
+      @Override public void call(Subscriber<? super Boolean> subscriber) {
+        Realm realm = Realm.getDefaultInstance();
+        realm.beginTransaction();
+        realm.copyToRealmOrUpdate(list);
+        realm.commitTransaction();
+        realm.close();
+        subscriber.onCompleted();
+      }
+    })
+        .subscribeOn(Schedulers.io())
+        .observeOn(AndroidSchedulers.mainThread())
+        .subscribe(new Action1<Boolean>() {
+          @Override public void call(Boolean aBoolean) {
+            System.out.println("saved list");
+          }
+        });
   }
 
-  public static void saveDataToRealm(RealmObject object) {
-    Realm realm = Realm.getDefaultInstance();
-    realm.beginTransaction();
-    realm.copyToRealmOrUpdate(object);
-    realm.commitTransaction();
-    realm.close();
+  public static Observable saveDataToRealm(final RealmObject object) {
+    return Observable.create(new Observable.OnSubscribe<Boolean>() {
+      @Override public void call(Subscriber<? super Boolean> subscriber) {
+        Realm realm = Realm.getDefaultInstance();
+        realm.beginTransaction();
+        realm.copyToRealmOrUpdate(object);
+        realm.commitTransaction();
+        realm.close();
+        subscriber.onNext(true);
+        subscriber.onCompleted();
+      }
+    }).subscribeOn(Schedulers.io());
   }
 
   public static void saveGroupToRealm(Group group) {
     Log.d("REALM", "saving group: " + group.toString());
     saveDataToRealm(group);
-    Group updatedGroup = RealmUtils.loadObjectFromDB(Group.class, "groupUid", group.getGroupUid());
-    Log.d("REALM", "group as in Realm : " + updatedGroup.toString());
   }
 
-  public static RealmList<Group> loadGroupsSorted() {
-    RealmList<Group> groups = new RealmList<>();
-    Realm realm = Realm.getDefaultInstance();
-    groups.addAll(realm.copyFromRealm(realm
-            .where(Group.class)
-            .findAll()
-            .sort("lastMajorChangeMillis", Sort.DESCENDING)));
-    realm.close();
-    return groups;
+  public static Observable<List<Group>> loadGroupsSorted() {
+    Observable<List<Group>> observable =
+        Observable.create(new Observable.OnSubscribe<List<Group>>() {
+          @Override public void call(Subscriber<? super List<Group>> subscriber) {
+            final Realm realm = Realm.getDefaultInstance();
+            List<Group> groups = realm.copyFromRealm(
+                realm.where(Group.class).findAllSorted("lastMajorChangeMillis", Sort.DESCENDING));
+            subscriber.onNext(groups);
+            subscriber.onCompleted();
+          }
+        }).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread());
+    return observable;
   }
 
-  public static <T extends RealmList> T loadListFromDB(Class<? extends RealmObject> model,
-      String pName, String pValue) {
-    RealmList<RealmObject> groups = new RealmList<>();
-    Realm realm = Realm.getDefaultInstance();
-    groups.addAll(realm.copyFromRealm(realm.where(model).equalTo(pName, pValue).findAll()));
-    realm.close();
-    return (T) groups;
+  public static <T> Observable loadListFromDB(
+      final Class<? extends RealmObject> model, final String pName, final String pValue) {
+    Observable<List<RealmObject>> observable = Observable.create(new Observable.OnSubscribe<List<RealmObject>>() {
+      @Override public void call(Subscriber<? super List<RealmObject>> subscriber) {
+        System.out.println("load list " + Thread.currentThread().getName());
+        final Realm realm = Realm.getDefaultInstance();
+        List<RealmObject> realmResults =
+            (List<RealmObject>) realm.copyFromRealm((realm.where(model).equalTo(pName, pValue).findAll()));
+        realm.close();
+        subscriber.onNext(realmResults);
+        subscriber.onCompleted();
+      }
+
+    }).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread());
+    return observable;
   }
 
-  public static <T extends RealmList> T loadListFromDB(Class<? extends RealmObject> model,
-      String pName, boolean pValue) {
-    RealmList<RealmObject> groups = new RealmList<>();
-    Realm realm = Realm.getDefaultInstance();
-    groups.addAll(realm.copyFromRealm(realm.where(model).equalTo(pName, pValue).findAll()));
-    realm.close();
-    return (T) groups;
+  public static <T> Observable<? extends RealmResults> loadListFromDB(
+      final Class<? extends RealmObject> model, final String pName, final boolean pValue) {
+    Observable<? extends RealmResults> observable =
+        Observable.create(new Observable.OnSubscribe<RealmResults>() {
+          @Override public void call(final Subscriber<? super RealmResults> subscriber) {
+            System.out.println("load list " + Thread.currentThread().getName());
+            final Realm realm = Realm.getDefaultInstance();
+            realm.where(model)
+                .equalTo(pName, pValue)
+                .findAll()
+                .asObservable()
+                .doOnNext(new Action1<RealmResults<? extends RealmObject>>() {
+                  @Override public void call(RealmResults<? extends RealmObject> realmObjects) {
+                    realm.close();
+                    subscriber.onNext(realmObjects);
+                    subscriber.onCompleted();
+                  }
+                })
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread());
+          }
+        });
+    return observable;
   }
 
   public static <T extends RealmList> T loadListFromDB(Class<? extends RealmObject> model,
@@ -118,11 +163,10 @@ public class RealmUtils {
     Realm realm = Realm.getDefaultInstance();
     realm.beginTransaction();
     RealmObject object = realm.where(clazz).equalTo(pName, pValue).findFirst();
-    if(object!=null) object.deleteFromRealm();
+    if (object != null) object.deleteFromRealm();
     realm.commitTransaction();
     realm.close();
   }
-
 
   public static void removeObjectsFromDatabase(Class<? extends RealmObject> clazz,
       Map<String, Object> map) {
@@ -136,13 +180,13 @@ public class RealmUtils {
       }
     }
     realm.beginTransaction();
-    if(query.findAll().size()>0) query.findAll().deleteAllFromRealm();
+    if (query.findAll().size() > 0) query.findAllAsync().deleteAllFromRealm();
     realm.commitTransaction();
     realm.close();
   }
 
   public static void removeObjectsByUid(Class<? extends RealmObject> clazz, final String pName,
-                                        List<String> pValues) {
+      List<String> pValues) {
     if (pValues != null && pValues.size() > 0) {
       Realm realm = Realm.getDefaultInstance();
       final int size = pValues.size();
@@ -152,8 +196,7 @@ public class RealmUtils {
       }
       final RealmResults<? extends RealmObject> results = query.findAll();
       realm.executeTransaction(new Realm.Transaction() {
-        @Override
-        public void execute(Realm realm) {
+        @Override public void execute(Realm realm) {
           results.deleteAllFromRealm();
         }
       });
@@ -171,7 +214,8 @@ public class RealmUtils {
 
   public static PreferenceObject loadPreferencesFromDB() {
     Realm realm = Realm.getDefaultInstance();
-    List<PreferenceObject> object = realm.copyFromRealm(realm.where(PreferenceObject.class).findAll());
+    List<PreferenceObject> object =
+        realm.copyFromRealm(realm.where(PreferenceObject.class).findAll());
     realm.close();
     return object.size() > 0 ? object.get(0) : new PreferenceObject();
   }
@@ -187,10 +231,6 @@ public class RealmUtils {
 
   public static Group loadGroupFromDB(final String groupUid) {
     return loadObjectFromDB(Group.class, "groupUid", groupUid);
-  }
-
-  public static RealmList<Member> loadGroupMembers(final String groupUid) {
-    return loadListFromDB(Member.class, "groupUid", groupUid);
   }
 
   public static List<TaskModel> loadUpcomingTasksFromDB() {

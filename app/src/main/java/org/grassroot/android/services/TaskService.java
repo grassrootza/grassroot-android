@@ -23,6 +23,7 @@ import io.realm.RealmList;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
+import rx.functions.Action1;
 
 /**
  * Created by luke on 2016/07/06.
@@ -136,6 +137,12 @@ public class TaskService {
 
       @Override public void onFailure(Call<TaskChangedResponse> call, Throwable t) {
         listener.taskFetchingComplete(FETCH_ERROR, t);
+        RealmUtils.loadListFromDB(TaskModel.class,"parentUid",groupUid).subscribe(
+            new Action1<List<TaskModel>>() {
+              @Override public void call(List<TaskModel> realmResults) {
+                listener.taskFetchingComplete(FETCH_ERROR,realmResults);
+              }
+            });
       }
     });
   }

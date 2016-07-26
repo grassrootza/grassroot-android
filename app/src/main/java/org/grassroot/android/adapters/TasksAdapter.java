@@ -31,6 +31,7 @@ import java.util.Map;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import rx.functions.Action1;
 
 /**
  * Created by ravi on 15/4/16.
@@ -238,10 +239,15 @@ public class TasksAdapter extends RecyclerView.Adapter<TasksAdapter.TaskViewHold
   public void refreshTaskListToDB() {
     if (parentUid == null) {
       viewedTasks = RealmUtils.loadUpcomingTasksFromDB();
+      notifyDataSetChanged();
     } else {
-      viewedTasks = RealmUtils.loadListFromDB(TaskModel.class, "parentUid", parentUid); // todo fix return type
+      RealmUtils.loadListFromDB(TaskModel.class, "parentUid", parentUid).subscribe(new Action1<List<TaskModel>>() {
+        @Override public void call(List<TaskModel> taskModels) {
+          viewedTasks = taskModels;
+          notifyDataSetChanged();
+        }
+      }); // todo fix return type
     }
-    notifyDataSetChanged();
   }
 
     /*

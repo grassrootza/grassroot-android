@@ -15,6 +15,7 @@ import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
+import io.realm.RealmResults;
 import java.util.Map;
 import java.util.UUID;
 import org.grassroot.android.R;
@@ -45,6 +46,7 @@ import io.realm.RealmList;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
+import rx.functions.Action1;
 
 /**
  * Created by luke on 2016/05/05.
@@ -128,11 +130,15 @@ public class AddMembersActivity extends AppCompatActivity implements
 
     private void setupExistingMemberRecyclerView() {
         existingMemberListFragment = MemberListFragment.newInstance(groupUid, false, false, false, null, null);
-        RealmList<Member> members = RealmUtils.loadListFromDB(Member.class,"groupUid", groupUid); // todo : make sure this doesn't cause reference overwrite issues
-        contactSelectionFragment = ContactSelectionFragment.newInstance(Contact.convertFromMembers(members), false);
-        getSupportFragmentManager().beginTransaction()
-                .add(R.id.am_existing_member_list_container, existingMemberListFragment)
-                .commit();
+        RealmUtils.loadListFromDB(Member.class,"groupUid", groupUid).subscribe(
+            new Action1<RealmResults>() {
+                @Override public void call(RealmResults members) {
+                    contactSelectionFragment = ContactSelectionFragment.newInstance(Contact.convertFromMembers(members), false);
+                    getSupportFragmentManager().beginTransaction()
+                        .add(R.id.am_existing_member_list_container, existingMemberListFragment)
+                        .commit();
+                }
+            }); // todo : make sure this doesn't cause reference overwrite issues
     }
 
     private void setupNewMemberRecyclerView() {
