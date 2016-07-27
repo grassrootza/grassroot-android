@@ -36,6 +36,7 @@ import org.grassroot.android.events.GroupCreatedEvent;
 import org.grassroot.android.events.GroupDeletedEvent;
 import org.grassroot.android.events.GroupEditedEvent;
 import org.grassroot.android.events.GroupPictureChangedEvent;
+import org.grassroot.android.events.GroupsRefreshedEvent;
 import org.grassroot.android.events.JoinRequestReceived;
 import org.grassroot.android.events.NetworkActivityResultsEvent;
 import org.grassroot.android.events.OfflineActionsSent;
@@ -75,7 +76,7 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
     RelativeLayout rlGhpRoot;
 
     private GroupListAdapter groupListRowAdapter;
-    private boolean hasFetchedGroups = false;
+
     @BindView(R.id.gl_swipe_refresh)
     SwipeRefreshLayout glSwipeRefresh;
     @BindView(R.id.recycler_view)
@@ -120,13 +121,9 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
     }
 
     @Override public void onActivityCreated(Bundle savedInstanceState) {
-    super.onCreate(savedInstanceState);
-    setUpRecyclerView();
-    if (!hasFetchedGroups) {
-        fetchGroupList();
+      super.onCreate(savedInstanceState);
+      setUpRecyclerView();
     }
-    checkForJoinRequests();
-  }
 
     private void setUpRecyclerView() {
         rcGroupList.setHasFixedSize(true);
@@ -146,9 +143,16 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
         });
     }
 
+    @Override
+    public void onStart() {
+      super.onStart();
+			toggleProgressIfGroupsShowing();
+    }
+
     @Override public void onResume() {
-        super.onResume();
-        fabOpenMenu.setVisibility(View.VISIBLE);
+      super.onResume();
+      fabOpenMenu.setVisibility(View.VISIBLE);
+			toggleProgressIfGroupsShowing();
     }
 
     @Override
@@ -169,12 +173,11 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
    * todo : set some preference or flag as "offline" if error, and show a dialog box
    */
   public void fetchGroupList() {
+
     showProgress();
-    Log.e(TAG, "fetching group list ...");
     GroupService.getInstance()
         .fetchGroupListWithErrorDisplay(getActivity(), rlGhpRoot, new GroupService.GroupServiceListener() {
           @Override public void groupListLoaded() {
-            hasFetchedGroups = true;
             groupListRowAdapter.refreshGroupsToDB();
             final Handler handler = new Handler();
               handler.postDelayed(new Runnable() {
@@ -182,49 +185,29 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
                   public void run() {
                       hideProgress();
                   }
-              }, Constant.shortDelay); // otherwise the dialog disappears before groups show up
+              }, Constant.shortDelay); // otherwise the dialog disappears before groups show up (but might not need it)
           }
 
           @Override public void groupListLoadingError() {
-              hideProgress();
               // todo : a "try again" / "offline" dialog
+              hideProgress();
+          }
+
+          @Override public void groupsAlreadyFetching() {
+              final Handler handler = new Handler();
+              handler.postDelayed(new Runnable() {
+                  @Override
+                  public void run() {
+                      hideProgress();
+                  }
+              }, Constant.shortDelay); // otherwise the dialog disappears before groups show up
           }
         });
   }
 
-    /*
-    Just check and notify
-     */
-    public void checkForJoinRequests() {
-        GroupService.getInstance().fetchGroupJoinRequests(new GroupService.GroupJoinRequestListener() {
-            @Override
-            public void groupJoinRequestsOpen(RealmList<GroupJoinRequest> joinRequests) {
-                if (joinRequests != null && !joinRequests.isEmpty()) {
-                    displayJoinRequestNotice();
-                }
-            }
-
-            @Override
-            public void groupJoinRequestsOffline(RealmList<GroupJoinRequest> openJoinRequests) {
-                if (openJoinRequests != null && !openJoinRequests.isEmpty()) {
-                    displayJoinRequestNotice();
-                }
-            }
-
-            @Override
-            public void groupJoinRequestsEmpty() {
-                Log.d(TAG, "no join requests found ...");
-            }
-        });
-    }
-
     @Subscribe
     public void onGroupJoinRequestsLoaded(JoinRequestReceived e) {
-        displayJoinRequestNotice();
-    }
-
-    private void displayJoinRequestNotice() {
-        ErrorUtils.showSnackBar(rlGhpRoot, R.string.jreq_notice, Snackbar.LENGTH_LONG);
+			ErrorUtils.showSnackBar(rlGhpRoot, R.string.jreq_notice, Snackbar.LENGTH_LONG);
     }
 
     /*
@@ -243,6 +226,10 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
                         glSwipeRefresh.setRefreshing(false);
                         // todo : online/offline dialog error
                     }
+
+                  @Override public void groupsAlreadyFetching() {
+                    glSwipeRefresh.setRefreshing(false);
+                  }
                 });
     }
 
@@ -265,6 +252,11 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
                                 // todo : online/offline dialog
                                 Log.e(TAG, "ERROR! Group position and ID do not match, not updating");
                             }
+
+                          @Override
+                          public void groupsAlreadyFetching() {
+                            Log.e(TAG, "already a background refresh happening");
+                          }
                         });
     }
 
@@ -411,34 +403,40 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
         mCallbacks = null;
     }
 
-    @Subscribe
-    public void onEvent(NetworkActivityResultsEvent networkActivityResultsEvent) {
-        NetworkUtils.syncLocalAndServer(getContext()); // todo : decide if we need this here
-    }
+	private void toggleProgressIfGroupsShowing() {
+		if (GroupService.isFetchingGroups) {
+			showProgress();
+		} else if (groupListRowAdapter == null || groupListRowAdapter.getItemCount() == 0) {
+			showProgress();
+		} else {
+			hideProgress();
+		}
+	}
 
-    @Subscribe
-    public void onEvent(OfflineActionsSent e) {
-        if (groupListRowAdapter != null) {
-            groupListRowAdapter.refreshGroupsToDB();
-        }
-    }
+	private void showProgress() {
+			if (progressDialog == null) {
+					progressDialog = new ProgressDialog(getContext());
+					progressDialog.setIndeterminate(true);
+					progressDialog.setMessage(getString(R.string.txt_pls_wait));
+			}
+			progressDialog.show();
+	}
 
-    private void showProgress() {
-        if (progressDialog == null) {
-            progressDialog = new ProgressDialog(getContext());
-            progressDialog.setIndeterminate(true);
-            progressDialog.setMessage(getString(R.string.txt_pls_wait));
-        }
-        progressDialog.show();
-    }
+	private void hideProgress() {
+			if (progressDialog != null) {
+					progressDialog.dismiss();
+			}
+	}
 
-    private void hideProgress() {
-        if (progressDialog != null) {
-            progressDialog.dismiss();
-        }
+  @Subscribe
+  public void onEvent(GroupsRefreshedEvent e) {
+    if (groupListRowAdapter != null) {
+      groupListRowAdapter.refreshGroupsToDB();
     }
+		hideProgress();
+	}
 
-    @Subscribe
+  @Subscribe
     public void onEvent(GroupPictureChangedEvent groupPictureUploadedEvent) {
         groupListRowAdapter.refreshGroupsToDB();
     }
@@ -448,8 +446,8 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
       groupListRowAdapter.refreshGroupsToDB();
     }
 
-  @Subscribe
-  public void onGroupAdded(GroupCreatedEvent e) {
+    @Subscribe
+    public void onGroupAdded(GroupCreatedEvent e) {
       groupListRowAdapter.refreshGroupsToDB();
   }
 

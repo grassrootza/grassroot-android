@@ -13,11 +13,13 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v4.app.NotificationCompat;
+import android.text.TextUtils;
 import android.util.Log;
 import java.util.List;
 import org.grassroot.android.R;
 import org.grassroot.android.activities.ViewTaskActivity;
 import org.grassroot.android.events.NotificationEvent;
+import org.grassroot.android.interfaces.NotificationConstants;
 import org.grassroot.android.models.GenericResponse;
 import org.grassroot.android.models.PreferenceObject;
 import org.grassroot.android.utils.Constant;
@@ -60,8 +62,8 @@ public class GcmListenerService extends com.google.android.gms.gcm.GcmListenerSe
     NotificationManager mNotificationManager =
         (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
 
-    final String entityReferencedUid = msg.getString(Constant.UID);
-    final String notificationUid = msg.getString(Constant.NOTIFICATION_UID);
+    final String entityReferencedUid = msg.getString(NotificationConstants.ENTITY_UID);
+    final String notificationUid = msg.getString(NotificationConstants.NOTIFICATION_UID);
 
     if (Build.VERSION.SDK_INT >= 21) {
       NotificationCompat.InboxStyle inboxStyle = new NotificationCompat.InboxStyle();
@@ -167,17 +169,19 @@ public class GcmListenerService extends com.google.android.gms.gcm.GcmListenerSe
   }
 
   private PendingIntent generateResultIntent(Bundle msg) {
+
     Log.d(TAG, "generateResultIntent called, with message bundle: " + msg.toString());
+
     Intent resultIntent = new Intent(this, ViewTaskActivity.class);
 
-    resultIntent.putExtra(Constant.ENTITY_TYPE, msg.getString(Constant.ENTITY_TYPE));
-    Log.e(TAG, " entity_type" + msg.getString(Constant.ENTITY_TYPE));
-    resultIntent.putExtra(Constant.UID, msg.getString(Constant.UID));
-    Log.e(TAG, "entity_uid_field " + msg.getString(Constant.UID));
-    resultIntent.putExtra(Constant.NOTIFICATION_UID, msg.getString(Constant.NOTIFICATION_UID));
+    // todo : consider just passing the whole message?
+    resultIntent.putExtra(NotificationConstants.ENTITY_TYPE, msg.getString(NotificationConstants.ENTITY_TYPE));
+    resultIntent.putExtra(NotificationConstants.ENTITY_UID, msg.getString(NotificationConstants.ENTITY_UID));
+    resultIntent.putExtra(NotificationConstants.NOTIFICATION_UID, msg.getString(NotificationConstants.NOTIFICATION_UID));
+    resultIntent.putExtra(NotificationConstants.CLICK_ACTION, msg.getString(NotificationConstants.CLICK_ACTION));
+    resultIntent.putExtra(NotificationConstants.BODY, msg.getString(NotificationConstants.BODY));
 
-    PendingIntent resultPendingIntent =
-        PendingIntent.getActivity(this, (int) System.currentTimeMillis(), resultIntent,
+    PendingIntent resultPendingIntent = PendingIntent.getActivity(this, (int) System.currentTimeMillis(), resultIntent,
             PendingIntent.FLAG_CANCEL_CURRENT);
 
     Log.e(TAG, "and generateResultIntent exits, with intent: " + resultPendingIntent.toString());

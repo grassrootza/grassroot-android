@@ -42,7 +42,7 @@ public class LocationServices implements GoogleApiClient.ConnectionCallbacks, Go
 
     private Location lastKnownLocation;
 
-    // todo : be careful of leaks from this
+    // todo : be careful of leaks from this, also move to background thread
     public static LocationServices getInstance() {
         LocationServices localInstance = instance;
         if (localInstance == null) {
@@ -85,7 +85,7 @@ public class LocationServices implements GoogleApiClient.ConnectionCallbacks, Go
 
     @Override
     public void onConnected(@Nullable Bundle bundle) {
-        // todo : check for permissions here too
+        // todo : check for permissions here too, plus move to background ...
         Log.e(TAG, "We're connected to location services!");
         if (havePermission()) {
             Log.e(TAG, "We have permission to access coarse locations!");

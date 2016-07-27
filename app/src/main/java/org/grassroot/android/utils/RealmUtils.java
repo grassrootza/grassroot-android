@@ -178,11 +178,15 @@ public class RealmUtils {
 
   public static <T extends RealmObject> T loadObjectFromDB(Class<? extends RealmObject> model,
       String pName, String pValue) {
-    RealmList<RealmObject> groups = new RealmList<>();
+    RealmList<RealmObject> objects = new RealmList<>();
     Realm realm = Realm.getDefaultInstance();
-    groups.addAll(realm.copyFromRealm(realm.where(model).equalTo(pName, pValue).findAll()));
+    objects.addAll(realm.copyFromRealm(realm.where(model).equalTo(pName, pValue).findAll()));
     realm.close();
-    return (T) groups.get(0);
+    if (!objects.isEmpty()) {
+      return (T) objects.get(0);
+    } else {
+      return null;
+    }
   }
 
   public static Group loadGroupFromDB(final String groupUid) {

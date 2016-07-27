@@ -8,6 +8,7 @@ import android.support.v4.app.Fragment;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -52,7 +53,7 @@ import butterknife.ButterKnife;
 
 public class NavigationDrawerFragment extends Fragment implements NavigationDrawerAdapter.NavDrawerItemListener, NetworkUtils.NetworkListener {
 
-    private static final String TAG = NavigationDrawerFragment.class.getCanonicalName();
+    private static final String TAG = NavigationDrawerFragment.class.getSimpleName();
 
     public static final String ITEM_SHOW_GROUPS = "show_groups";
     public static final String ITEM_TASKS = "upcoming_tasks";
@@ -74,6 +75,7 @@ public class NavigationDrawerFragment extends Fragment implements NavigationDraw
     List<NavDrawerItem> secondaryItems;
     private NavigationDrawerAdapter secondaryAdapter;
 
+    private String defaultSelectedItemTag;
     private NavDrawerItem groups;
     private NavDrawerItem tasks;
     private NavDrawerItem notifications;
@@ -108,6 +110,14 @@ public class NavigationDrawerFragment extends Fragment implements NavigationDraw
         }
     }
 
+    public void setSelectedItem(String itemTag) {
+        if (primaryAdapter == null || primaryAdapter.getItemCount() == 0) {
+            defaultSelectedItemTag = itemTag;
+        } else {
+            switchPrimarySelected(itemTag);
+        }
+    }
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
@@ -136,19 +146,25 @@ public class NavigationDrawerFragment extends Fragment implements NavigationDraw
     public List<NavDrawerItem> setUpPrimaryItems() {
         primaryItems = new ArrayList<>();
 
-        groups = new NavDrawerItem(ITEM_SHOW_GROUPS, getString(R.string.drawer_group_list), R.drawable.ic_groups_black, R.drawable.ic_groups_green, true, true);
+        final String defltItem = TextUtils.isEmpty(defaultSelectedItemTag) ? ITEM_SHOW_GROUPS : defaultSelectedItemTag;
+
+        groups = new NavDrawerItem(ITEM_SHOW_GROUPS, getString(R.string.drawer_group_list), R.drawable.ic_groups_black, R.drawable.ic_groups_green,
+            ITEM_SHOW_GROUPS.equals(defltItem), true);
         groups.setItemCount((int) RealmUtils.countObjectsInDB(Group.class));
         primaryItems.add(groups);
 
-        tasks = new NavDrawerItem(ITEM_TASKS, getString(R.string.drawer_open_tasks), R.drawable.ic_tasks_black, R.drawable.ic_tasks_green, false, true); // todo: fix icon
+        tasks = new NavDrawerItem(ITEM_TASKS, getString(R.string.drawer_open_tasks), R.drawable.ic_tasks_black, R.drawable.ic_tasks_green,
+            ITEM_TASKS.equals(defltItem), true);
         tasks.setItemCount(RealmUtils.loadUpcomingTasksFromDB().size());
         primaryItems.add(tasks);
 
-        notifications = new NavDrawerItem(ITEM_NOTIFICATIONS, getString(R.string.drawer_notis), R.drawable.ic_exclamation_black, R.drawable.ic_excl_green, false, true);
+        notifications = new NavDrawerItem(ITEM_NOTIFICATIONS, getString(R.string.drawer_notis), R.drawable.ic_exclamation_black, R.drawable.ic_excl_green,
+            ITEM_NOTIFICATIONS.equals(defltItem), true);
         notifications.setItemCount(RealmUtils.loadPreferencesFromDB().getNotificationCounter());
         primaryItems.add(notifications);
 
-        joinRequests = new NavDrawerItem(ITEM_JOIN_REQS, getString(R.string.drawer_join_request), R.drawable.ic_join_black, R.drawable.ic_join_green, false, true);
+        joinRequests = new NavDrawerItem(ITEM_JOIN_REQS, getString(R.string.drawer_join_request), R.drawable.ic_join_black, R.drawable.ic_join_green,
+            ITEM_JOIN_REQS.equals(defltItem), true);
         joinRequests.setItemCount((int) RealmUtils.countObjectsInDB(GroupJoinRequest.class));
         primaryItems.add(joinRequests);
 
@@ -220,6 +236,18 @@ public class NavigationDrawerFragment extends Fragment implements NavigationDraw
                 // todo : put in handling non-standard items
         }
         mCallbacks.onNavigationDrawerItemSelected(tag);
+    }
+
+    private void switchPrimarySelected(String item) {
+        try {
+            groups.setIsChecked(ITEM_SHOW_GROUPS.equals(item));
+            tasks.setIsChecked(ITEM_TASKS.equals(item));
+            notifications.setIsChecked(ITEM_NOTIFICATIONS.equals(item));
+            joinRequests.setIsChecked(ITEM_JOIN_REQS.equals(item));
+            primaryAdapter.notifyDataSetChanged();
+        } catch (Exception e) {
+            e.printStackTrace(); // means some weirdness with null pointers somewhere above
+        }
     }
 
     private void offlineSwitch() {

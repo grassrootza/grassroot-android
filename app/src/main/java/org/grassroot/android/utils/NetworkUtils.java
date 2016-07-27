@@ -14,7 +14,6 @@ import org.grassroot.android.models.Member;
 import org.grassroot.android.models.PreferenceObject;
 import org.grassroot.android.models.TaskModel;
 import org.grassroot.android.services.ApplicationLoader;
-import org.grassroot.android.services.GcmRegistrationService;
 import org.grassroot.android.services.GrassrootRestService;
 import org.grassroot.android.services.GroupService;
 import org.grassroot.android.services.TaskService;
@@ -137,7 +136,7 @@ public class NetworkUtils {
 	}
 
 	public static void syncLocalAndServer(Context context) {
-		Log.e(TAG, "inside network utils ... about to call sending queued entities ...");
+		Log.d(TAG, "inside network utils ... about to call sending queued entities ...");
 		if (!sendingLocalQueue) {
 			sendingLocalQueue = true;
 			if (isOnline(context)) {
@@ -149,7 +148,10 @@ public class NetworkUtils {
 			}
 		}
 		sendingLocalQueue = false;
-		Log.e(TAG, "inside network utils .... fetching server entities ...");
+		fetchEntitiesFromServer(context);
+	}
+
+	public static void fetchEntitiesFromServer(final Context context) {
 		if (!fetchingServerEntities) {
 			fetchingServerEntities = true;
 			if (isOnline(context)) {

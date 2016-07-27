@@ -63,10 +63,12 @@ public class GroupService {
   public ArrayList<GroupJoinRequest> openJoinRequests;
 
   private static GroupService instance = null;
+  public static boolean isFetchingGroups = false;
 
   public interface GroupServiceListener {
     void groupListLoaded();
     void groupListLoadingError();
+    void groupsAlreadyFetching();
   }
 
   public interface GroupCreationListener {
@@ -96,6 +98,8 @@ public class GroupService {
   public void fetchGroupListWithErrorDisplay(final Activity activity, final View errorViewHolder,
                                              final GroupServiceListener listener) {
 
+    isFetchingGroups = true;
+
     if (listener == null) {
       throw new UnsupportedOperationException("Error! Call to fetch group list must have listener");
     }
@@ -104,7 +108,6 @@ public class GroupService {
     final String userCode = RealmUtils.loadPreferencesFromDB().getToken();
     long lastTimeUpdated = RealmUtils.loadPreferencesFromDB().getLastTimeGroupsFetched();
 
-    Log.d(TAG, "checking for groups updated since : " + lastTimeUpdated);
     Call<GroupsChangedResponse> apiCall = (lastTimeUpdated == 0) ?
             GrassrootRestService.getInstance().getApi().getUserGroups(mobileNumber, userCode) :
             GrassrootRestService.getInstance().getApi().getUserGroupsChangedSince(mobileNumber, userCode, lastTimeUpdated);
@@ -112,6 +115,7 @@ public class GroupService {
     apiCall.enqueue(new Callback<GroupsChangedResponse>() {
           @Override
           public void onResponse(Call<GroupsChangedResponse> call, Response<GroupsChangedResponse> response) {
+            isFetchingGroups = false;
             if (response.isSuccessful()) {
               userGroups = new ArrayList<>(response.body().getAddedAndUpdated());
               persistGroupsAddedUpdated(response.body());
@@ -127,7 +131,7 @@ public class GroupService {
           }
 
           @Override public void onFailure(Call<GroupsChangedResponse> call, Throwable t) {
-            // default back to loading from DB
+            isFetchingGroups = false;
             if (errorViewHolder != null) {
               ErrorUtils.handleNetworkError(activity, errorViewHolder, t);
             }
@@ -138,6 +142,8 @@ public class GroupService {
   }
 
   public void fetchGroupListWithoutError() {
+    isFetchingGroups = true;
+
     final String mobileNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
     final String userCode = RealmUtils.loadPreferencesFromDB().getToken();
     long lastTimeUpdated = RealmUtils.loadPreferencesFromDB().getLastTimeGroupsFetched(); // todo : make sure this is thread safe vs above (e.g., if both start up and HGL fragment call it ...)
@@ -149,6 +155,7 @@ public class GroupService {
     apiCall.enqueue(new Callback<GroupsChangedResponse>() {
       @Override
       public void onResponse(Call<GroupsChangedResponse> call, Response<GroupsChangedResponse> response) {
+        isFetchingGroups = false;
         if (response.isSuccessful()) {
           userGroups = new ArrayList<>(response.body().getAddedAndUpdated()); // todo : might not need this
           persistGroupsAddedUpdated(response.body());
@@ -157,7 +164,9 @@ public class GroupService {
       }
 
       @Override
-      public void onFailure(Call<GroupsChangedResponse> call, Throwable t) { }
+      public void onFailure(Call<GroupsChangedResponse> call, Throwable t) {
+        isFetchingGroups = false;
+      }
     });
   }
 

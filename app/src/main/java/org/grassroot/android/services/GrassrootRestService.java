@@ -83,7 +83,7 @@ public class GrassrootRestService {
 
   private GrassrootRestService(Context context) {
     HttpLoggingInterceptor logging = new HttpLoggingInterceptor();
-    logging.setLevel(HttpLoggingInterceptor.Level.BODY);
+    logging.setLevel(HttpLoggingInterceptor.Level.HEADERS);
 
     OkHttpClient client = new OkHttpClient.Builder()
         .addInterceptor(logging)

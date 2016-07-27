@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.util.Log;
 
+import org.grassroot.android.interfaces.NotificationConstants;
 import org.grassroot.android.models.GenericResponse;
 import org.grassroot.android.utils.Constant;
 import org.grassroot.android.utils.RealmUtils;
@@ -27,7 +28,7 @@ public class NotificationUpdateService extends IntentService {
 
     @Override
     protected void onHandleIntent(Intent intent) {
-        String uid = intent.getStringExtra(Constant.NOTIFICATION_UID);
+        String uid = intent.getStringExtra(NotificationConstants.NOTIFICATION_UID);
         update(uid);
     }
 
@@ -54,7 +55,7 @@ public class NotificationUpdateService extends IntentService {
 
     public static void updateNotificationStatus(Context context, String notificationUid){
         Intent intent = new Intent(context,NotificationUpdateService.class);
-        intent.putExtra(Constant.NOTIFICATION_UID, notificationUid);
+        intent.putExtra(NotificationConstants.NOTIFICATION_UID, notificationUid);
         context.startService(intent);
 
     }

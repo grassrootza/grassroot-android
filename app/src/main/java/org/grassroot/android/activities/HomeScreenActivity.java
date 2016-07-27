@@ -64,6 +64,7 @@ public class HomeScreenActivity extends PortraitActivity implements NavigationDr
 
     private ActionBarDrawerToggle drawerToggle;
     private int currentMainFragment;
+    private int mainFragmentFromNewIntent = -1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -72,9 +73,21 @@ public class HomeScreenActivity extends PortraitActivity implements NavigationDr
         ButterKnife.bind(this);
         EventBus.getDefault().register(this);
         setUpToolbar();
-        switchToGroupFragment();
-        // todo : move this into a background thread ...
-        NetworkUtils.syncLocalAndServer(this);
+
+        int openOn = getIntent().getIntExtra(NavigationConstants.HOME_OPEN_ON_NAV, NavigationConstants.HOME_NAV_GROUPS);
+        Log.e(TAG, "in onCreate, intent extra for open on : " + openOn);
+        switch (openOn) {
+            case NavigationConstants.HOME_NAV_GROUPS:
+                switchToGroupFragment();
+                break;
+            case NavigationConstants.HOME_NAV_TASKS:
+                switchToTasksFragment();
+                setNavBarToItem(NavigationDrawerFragment.ITEM_TASKS);
+                break;
+            default:
+                switchToGroupFragment();
+                break;
+        }
     }
 
     private void setUpToolbar() {
@@ -86,6 +99,29 @@ public class HomeScreenActivity extends PortraitActivity implements NavigationDr
         drawer.addDrawerListener(drawerToggle);
         drawerToggle.syncState();
         toggleClickableTitle(true);
+    }
+
+    @Override
+    public void onNewIntent(Intent intent) {
+        Log.e(TAG, "on new intent called ... ");
+        mainFragmentFromNewIntent = intent.getIntExtra(NavigationConstants.HOME_OPEN_ON_NAV, -1);
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        if (mainFragmentFromNewIntent != -1 && mainFragmentFromNewIntent != currentMainFragment) {
+            Log.e(TAG, "well, we need to switch fragments ...");
+            switch(mainFragmentFromNewIntent) {
+                case NavigationConstants.HOME_NAV_TASKS:
+                    switchToTasksFragment();
+                    setNavBarToItem(NavigationDrawerFragment.ITEM_TASKS);
+                    break;
+                default:
+                    // well, expand this so any other fragment / activity can do similar
+                    break;
+            }
+        }
     }
 
     @Override
@@ -148,6 +184,13 @@ public class HomeScreenActivity extends PortraitActivity implements NavigationDr
     protected void onDestroy() {
         EventBus.getDefault().unregister(this);
         super.onDestroy();
+    }
+
+    private void setNavBarToItem(String tag) {
+        NavigationDrawerFragment navDrawer = (NavigationDrawerFragment) getSupportFragmentManager().findFragmentById(R.id.navigation_drawer);
+        if (navDrawer != null) {
+            navDrawer.setSelectedItem(tag);
+        }
     }
 
     @Override

@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/gm_root_layout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/primaryColor">
+
+    <TextView
+        android:id="@+id/gm_header"
+        style="@style/GiantHeader"
+        android:layout_width="wrap_content"
+        android:layout_gravity="center"
+        android:layout_marginBottom="20dp"
+        android:layout_centerHorizontal="true"
+        android:layout_above="@+id/gm_body"
+        tools:text="Action done" />
+
+    <TextView
+        android:id="@+id/gm_body"
+        android:layout_above="@+id/gm_btns"
+        android:layout_centerInParent="true"
+        android:layout_marginBottom="@dimen/margin_xxlarge"
+        style="@style/BoldWhiteText"
+        android:padding="@dimen/padding"
+        android:text="@string/txt_getstart"
+        android:textColor="@color/white"
+        android:textSize="@dimen/txt_large" />
+
+    <LinearLayout
+        android:id="@+id/gm_btns"
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:paddingLeft="@dimen/padding"
+        android:paddingRight="@dimen/padding"
+        android:visibility="visible"
+        android:layout_marginBottom="@dimen/margin_xxlarge">
+
+        <Button
+            android:id="@+id/gm_btn_1"
+            style="@style/NewTaskButton"
+            android:text="@string/ac_btn_done"/>
+
+        <Button
+            style="@style/NewTaskButton"
+            android:id="@+id/gm_btn_2"
+            android:text="@string/ac_btn_avatar" />
+
+        <Button
+            style="@style/NewTaskButton"
+            android:id="@+id/gm_btn_home"
+            android:text="@string/ac_btn_home" />
+
+    </LinearLayout>
+
+</RelativeLayout>

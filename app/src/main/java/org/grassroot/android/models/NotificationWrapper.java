@@ -10,13 +10,13 @@ public class NotificationWrapper {
 
     //todo I messed up in the backend, this class should not exist
 
-    private List<Notification> notifications = new ArrayList<>();
+    private List<TaskNotification> notifications = new ArrayList<>();
 
     private Integer pageNumber;
     private Integer nextPage;
     private Integer totalPages;
 
-    public List<Notification> getNotifications() {
+    public List<TaskNotification> getNotifications() {
         return notifications;
     }
 
