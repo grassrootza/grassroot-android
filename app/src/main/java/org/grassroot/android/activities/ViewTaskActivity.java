@@ -21,6 +21,7 @@ import org.grassroot.android.models.Group;
 import org.grassroot.android.models.PreferenceObject;
 import org.grassroot.android.models.TaskModel;
 import org.grassroot.android.services.NotificationUpdateService;
+import org.grassroot.android.services.TaskService;
 import org.grassroot.android.utils.RealmUtils;
 import org.greenrobot.eventbus.EventBus;
 
@@ -70,11 +71,14 @@ public class ViewTaskActivity extends PortraitActivity {
         setUpToolbar();
         if (NotificationConstants.TASK_CANCELLED.equals(clickAction)) {
             fragment = createCancelFragment(taskUid);
-        } else if (NotificationConstants.TASK_CHANGED.equals(clickAction)) {
-            fragment = createChangedFragment();
         } else {
-            fragment = ViewTaskFragment.newInstance(taskType, taskUid);
-            showSnackBar();
+            TaskService.getInstance().fetchAndStoreTask(taskUid, taskType); // done in background, so have it next time
+            if (NotificationConstants.TASK_CHANGED.equals(clickAction)) {
+                fragment = createChangedFragment();
+            } else {
+                fragment = ViewTaskFragment.newInstance(taskType, taskUid);
+                showSnackBar();
+            }
         }
 
         getSupportFragmentManager().beginTransaction()

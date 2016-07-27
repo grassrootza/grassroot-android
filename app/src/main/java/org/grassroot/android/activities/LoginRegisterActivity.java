@@ -9,6 +9,7 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
@@ -209,7 +210,20 @@ public class LoginRegisterActivity extends AppCompatActivity implements LoginScr
         if (LOGIN.equals(purpose)) {
             requestLogin(msisdn);
         } else {
-            // requestRegistration(userName, msisdn); // todo : create resend token rest call, for this
+            GrassrootRestService.getInstance().getApi().resendRegOtp(msisdn).enqueue(new Callback<GenericResponse>() {
+                @Override
+                public void onResponse(Call<GenericResponse> call, Response<GenericResponse> response) {
+                    otpRequestedTime = System.currentTimeMillis();
+                    final String otpToPass = BuildConfig.FLAVOR.equals(Constant.STAGING) ?
+                        (String) response.body().getData() : "";
+                    switchToOtp(otpToPass, REGISTER);
+                }
+
+                @Override
+                public void onFailure(Call<GenericResponse> call, Throwable t) {
+                    // todo : log / deal with (but shouldn't be possible ...);
+                }
+            });
         }
     }
 

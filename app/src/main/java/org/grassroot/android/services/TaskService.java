@@ -277,4 +277,31 @@ public class TaskService {
   }
 
 
+  /*
+  FETCH A TASK AND STORE IT LOCALLY (FOR USE IN BACKGROUND WHEN GET & VIEW NOTIFICATION)
+   */
+  public void fetchAndStoreTask(final String taskUid, final String taskType) {
+    final String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
+    final String code = RealmUtils.loadPreferencesFromDB().getToken();
+    if (NetworkUtils.isOnline()) {
+      GrassrootRestService.getInstance().getApi().fetchTaskEntity(phoneNumber, code, taskUid, taskType)
+          .enqueue(new Callback<TaskResponse>() {
+            @Override
+            public void onResponse(Call<TaskResponse> call, Response<TaskResponse> response) {
+              if (response.isSuccessful()) {
+                final TaskModel taskModel = response.body().getTasks().first();
+                if (taskModel != null) {
+                  RealmUtils.saveDataToRealm(taskModel);
+                }
+              }
+            }
+
+            @Override
+            public void onFailure(Call<TaskResponse> call, Throwable t) {
+
+            }
+          });
+    }
+  }
+
 }

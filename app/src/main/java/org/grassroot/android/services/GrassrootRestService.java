@@ -153,6 +153,10 @@ public class GrassrootRestService {
     Call<TokenResponse> authenticate(@Path("phoneNumber") String phoneNumber,
         @Path("code") String code);
 
+    //request resend of OTP for user registration
+    @GET("user/verify/resend/{phoneNumber}")
+    Call<GenericResponse> resendRegOtp(@Path("phoneNumber") String phoneNumber);
+
     //verify new user login credential
     @GET("user/verify/{phoneNumber}/{code}")
     Call<TokenResponse> verify(@Path("phoneNumber") String phoneNumber,
