@@ -72,7 +72,6 @@ public class GroupListAdapter extends RecyclerView.Adapter<GroupListAdapter.GHP_
   }
 
   public void refreshGroupsToDB() {
-    displayedGroups.clear();
     RealmUtils.loadGroupsSorted().subscribe(new Subscriber<List<Group>>() {
       @Override public void onCompleted() {
 
@@ -82,8 +81,10 @@ public class GroupListAdapter extends RecyclerView.Adapter<GroupListAdapter.GHP_
       }
 
       @Override public void onNext(List<Group> groups) {
+        displayedGroups.clear();
         displayedGroups.addAll(groups);
         notifyDataSetChanged();
+        System.out.println("loaded groups " + groups.size());
       }
     });
   }

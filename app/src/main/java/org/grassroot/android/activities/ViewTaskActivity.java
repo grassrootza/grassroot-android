@@ -84,7 +84,7 @@ public class ViewTaskActivity extends PortraitActivity {
         NotificationUpdateService.updateNotificationStatus(this, notificationUid);
         if (notificationCount > 0) {
             preferenceObject.setNotificationCounter(--notificationCount);
-            RealmUtils.saveDataToRealm(preferenceObject);
+            RealmUtils.saveDataToRealmWithSubscriber(preferenceObject);
         }
         EventBus.getDefault().post(new NotificationEvent(--notificationCount));
     }

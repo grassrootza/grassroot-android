@@ -73,13 +73,21 @@ public class NetworkUtils {
   public static void setOnline() {
     PreferenceObject prefs = RealmUtils.loadPreferencesFromDB();
     prefs.setOnlineStatus(ONLINE_DEFAULT);
-    RealmUtils.saveDataToRealm(prefs);
+    RealmUtils.saveDataToRealm(prefs).subscribe(new Action1() {
+      @Override public void call(Object o) {
+        System.out.println("saved preferences");
+      }
+    });
   }
 
   public static void switchToOfflineMode(NetworkListener listener) {
     PreferenceObject prefs = RealmUtils.loadPreferencesFromDB();
     prefs.setOnlineStatus(OFFLINE_SELECTED);
-    RealmUtils.saveDataToRealm(prefs);
+    RealmUtils.saveDataToRealm(prefs).subscribe(new Action1() {
+      @Override public void call(Object o) {
+        System.out.println("saved preferences");
+      }
+    });
     EventBus.getDefault().post(new OnlineOfflineToggledEvent(false));
     if (listener != null) {
       listener.setOffline();
@@ -89,7 +97,11 @@ public class NetworkUtils {
   public static void setOnlineFailed() {
     PreferenceObject prefs = RealmUtils.loadPreferencesFromDB();
     prefs.setOnlineStatus(OFFLINE_ON_FAIL);
-    RealmUtils.saveDataToRealm(prefs);
+    RealmUtils.saveDataToRealm(prefs).subscribe(new Action1() {
+      @Override public void call(Object o) {
+        System.out.println("saved preferences");
+      }
+    });
   }
 
   public static void trySwitchToOnline(final Context context, final boolean sendQueue,
@@ -173,10 +185,11 @@ public class NetworkUtils {
   }
 
   private static void sendLocalGroups() {
-    RealmUtils.loadListFromDB(Group.class, "isLocal", true).subscribe(new Action1<RealmResults>() {
-      @Override public void call(RealmResults realmResults) {
-        for (final Object g : realmResults) {
-          GroupService.getInstance().sendNewGroupToServer(((Group) g).getGroupUid(), null);
+    RealmUtils.loadListFromDB(Group.class, "isLocal", true).subscribe(new Action1<List<Group>>() {
+      @Override public void call(List<Group> realmResults) {
+        for (final Group g : realmResults) {
+          System.out.println("sending local group");
+          GroupService.getInstance().sendNewGroupToServer(g.getGroupUid(), null);
         }
       }
     });
@@ -197,10 +210,10 @@ public class NetworkUtils {
 
       @Override public void onNext(List<Group> groups) {
         for (final Group g : groups) {
-          queryMap.put("groupUid",  g.getGroupUid());
+          queryMap.put("groupUid", g.getGroupUid());
           final RealmList<Member> addedMembers = RealmUtils.loadListFromDB(Member.class, queryMap);
           if (addedMembers.size() > 0) {
-            GroupService.getInstance().postNewGroupMembers(addedMembers,  g.getGroupUid());
+            GroupService.getInstance().postNewGroupMembers(addedMembers, g.getGroupUid());
           }
         }
       }
@@ -217,7 +230,11 @@ public class NetworkUtils {
       final String localUid = model.getTaskUid();
       TaskService.getInstance().sendNewTaskToServer(model, new TaskService.TaskCreationListener() {
         @Override public void taskCreatedLocally(TaskModel task) {
-          RealmUtils.saveDataToRealm(task);
+          RealmUtils.saveDataToRealm(task).subscribe(new Action1() {
+            @Override public void call(Object o) {
+
+            }
+          });
           RealmUtils.removeObjectFromDatabase(TaskModel.class, "taskUid", localUid);
           System.out.println("TASK CREATED" + task.toString());
         }

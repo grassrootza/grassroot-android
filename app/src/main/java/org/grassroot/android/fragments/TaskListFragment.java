@@ -25,6 +25,7 @@ import org.grassroot.android.adapters.TasksAdapter;
 import org.grassroot.android.events.TaskAddedEvent;
 import org.grassroot.android.events.TaskCancelledEvent;
 import org.grassroot.android.events.TaskChangedEvent;
+import org.grassroot.android.events.TaskUpdatedEvent;
 import org.grassroot.android.fragments.dialogs.ConfirmCancelDialogFragment;
 import org.grassroot.android.interfaces.GroupPickCallbacks;
 import org.grassroot.android.interfaces.TaskConstants;
@@ -317,6 +318,9 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
       noTaskMessageVisible = false;
     }
     tasksAdapter.refreshTaskListToDB(); // todo : just add it to top, maybe, once free of bugs
+  }
+  @Subscribe public void onTaskUpdated(TaskUpdatedEvent event){
+    fetchTaskList();
   }
 
   @Subscribe public void onTaskCancelledEvent(TaskCancelledEvent e) {

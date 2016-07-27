@@ -216,7 +216,7 @@ public class CreateGroupActivity extends PortraitActivity implements ContactSele
         m.setGroupUid(groupUid);
         m.setMemberUid(UUID.randomUUID().toString());
         m.setMemberGroupUid();
-        RealmUtils.saveDataToRealm(m);
+        RealmUtils.saveDataToRealmWithSubscriber(m);
         selectedMembers.add(m);
         mapMembersContacts.put(c.id, m);
       }

@@ -280,9 +280,12 @@ public class LoginRegisterActivity extends AppCompatActivity implements LoginScr
                             registerOrRefreshGCM(msisdn);
 
                             preference.setHasGroups(false);
-                            RealmUtils.saveDataToRealm(preference);
-                            launchHomeScreen(false); // by definition, registering means no group
-                            finish();
+                            RealmUtils.saveDataToRealm(preference).subscribe(new Action1() {
+                                @Override public void call(Object o) {
+                                    launchHomeScreen(false); // by definition, registering means no group
+                                    finish();
+                                }
+                            });
 
                         } else {
                             ErrorUtils.handleServerError(rootView, LoginRegisterActivity.this, response);

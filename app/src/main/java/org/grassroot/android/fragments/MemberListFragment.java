@@ -215,8 +215,8 @@ public class MemberListFragment extends Fragment {
 
     private void fetchGroupMembers() {
         Log.d(TAG, "inside MemberListFragment, retrieving group members for uid = " + group.getGroupUid());
-        RealmUtils.loadListFromDB(Member.class,"groupUid", group.getGroupUid()).subscribe(new Action1<RealmResults>() {
-            @Override public void call(RealmResults realmResults) {
+        RealmUtils.loadListFromDB(Member.class,"groupUid", group.getGroupUid()).subscribe(new Action1<List<Member>>() {
+            @Override public void call(List<Member> realmResults) {
                 List<Member> membersToRemove = new ArrayList<>(memberListAdapter.getMembers());
                 if (filteredMembers != null) {
                     membersToRemove.addAll(filteredMembers);
@@ -229,7 +229,7 @@ public class MemberListFragment extends Fragment {
                     final Map<String, Integer> positionMap = new HashMap<>();
                     final int listSize = preSelectedMembers.size();
                     for (int i = 0; i < listSize; i++) {
-                        positionMap.put(((Member)realmResults.get(i)).getMemberUid(),i);
+                        positionMap.put((realmResults.get(i)).getMemberUid(),i);
                     }
                     for (Member m : preSelectedMembers) {
                         if (positionMap.containsKey(m.getMemberUid())) {

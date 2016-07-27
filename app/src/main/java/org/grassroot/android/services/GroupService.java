@@ -133,9 +133,7 @@ public class GroupService {
           Response<GroupsChangedResponse> response) {
         if (response.isSuccessful()) {
           userGroups = new ArrayList<>(response.body().getAddedAndUpdated());
-          persistGroupsAddedUpdated(response.body());
-          EventBus.getDefault().post(new GroupsRefreshedEvent());
-          listener.groupListLoaded();
+          persistGroupsAddedUpdated(response.body(), listener);
         } else {
           Log.e(TAG, response.message());
           if (errorViewHolder != null) {
@@ -161,7 +159,6 @@ public class GroupService {
 
           @Override public void onNext(List<Group> groups) {
             userGroups = new ArrayList<>(groups);
-
           }
         });
         listener.groupListLoadingError();
@@ -188,7 +185,7 @@ public class GroupService {
         if (response.isSuccessful()) {
           userGroups =
               new ArrayList<>(response.body().getAddedAndUpdated()); // todo : might not need this
-          persistGroupsAddedUpdated(response.body());
+          persistGroupsAddedUpdated(response.body(), null);
           EventBus.getDefault().post(new GroupsRefreshedEvent());
         }
       }
@@ -198,9 +195,18 @@ public class GroupService {
     });
   }
 
-  private void persistGroupsAddedUpdated(GroupsChangedResponse responseBody) {
+  private void persistGroupsAddedUpdated(GroupsChangedResponse responseBody,
+      final GroupServiceListener listener) {
     updateGroupsFetchedTime(); // in case another call comes in (see above re threads)
-    RealmUtils.saveDataToRealm(responseBody.getAddedAndUpdated());
+    RealmUtils.saveDataToRealm(responseBody.getAddedAndUpdated()).subscribe(new Action1() {
+      @Override public void call(Object o) {
+        System.out.println("saved groups");
+        if (listener != null) {
+          EventBus.getDefault().post(new GroupsRefreshedEvent());
+          listener.groupListLoaded();
+        }
+      }
+    });
     if (!responseBody.getRemovedUids().isEmpty()) {
       RealmUtils.removeObjectsByUid(Group.class, "groupUid",
           RealmUtils.convertListOfRealmStringInListOfString(
@@ -216,7 +222,7 @@ public class GroupService {
           }
 
           @Override public void onError(Throwable e) {
-e.printStackTrace();
+            e.printStackTrace();
           }
 
           @Override public void onNext(Object o) {
@@ -230,7 +236,19 @@ e.printStackTrace();
   private void updateGroupsFetchedTime() {
     PreferenceObject preferenceObject = RealmUtils.loadPreferencesFromDB();
     preferenceObject.setLastTimeGroupsFetched(Utilities.getCurrentTimeInMillisAtUTC());
-    RealmUtils.saveDataToRealm(preferenceObject);
+    RealmUtils.saveDataToRealm(preferenceObject).subscribe(new Subscriber() {
+      @Override public void onCompleted() {
+        System.out.println("saved preference");
+      }
+
+      @Override public void onError(Throwable e) {
+
+      }
+
+      @Override public void onNext(Object o) {
+
+      }
+    });
   }
 
   /*
@@ -344,15 +362,16 @@ e.printStackTrace();
 
       final String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
       final String code = RealmUtils.loadPreferencesFromDB().getToken();
-          RealmUtils.loadListFromDB(Member.class, "groupUid", localGroupUid).subscribe(new Action1<RealmResults>() {
-            @Override public void call(final RealmResults members) {
+      RealmUtils.loadListFromDB(Member.class, "groupUid", localGroupUid)
+          .subscribe(new Action1<List<Member>>() {
+            @Override public void call(final List<Member> members) {
               GrassrootRestService.getInstance()
                   .getApi()
-                  .createGroup(phoneNumber, code, localGroup.getGroupName(), localGroup.getDescription(),
-                      members)
+                  .createGroup(phoneNumber, code, localGroup.getGroupName(),
+                      localGroup.getDescription(), members)
                   .enqueue(new Callback<GroupResponse>() {
-                    @Override
-                    public void onResponse(Call<GroupResponse> call, Response<GroupResponse> response) {
+                    @Override public void onResponse(Call<GroupResponse> call,
+                        Response<GroupResponse> response) {
                       if (response.isSuccessful()) {
                         final Group groupFromServer = response.body().getGroups().first();
                         saveCreatedGroupToRealm(groupFromServer);
@@ -395,17 +414,21 @@ e.printStackTrace();
   private void saveCreatedGroupToRealm(Group group) {
     PreferenceObject preferenceObject = RealmUtils.loadPreferencesFromDB();
     preferenceObject.setHasGroups(true);
-    RealmUtils.saveDataToRealm(preferenceObject);
+    RealmUtils.saveDataToRealm(preferenceObject).subscribe(new Action1() {
+      @Override public void call(Object o) {
+
+      }
+    });
     RealmUtils.saveGroupToRealm(group);
   }
 
-  private void cleanUpLocalGroup(final String localGroupUid,
-      final Group groupFromServer) {
-        RealmUtils.loadListFromDB(TaskModel.class, "parentUid", localGroupUid).subscribe(new Action1<RealmResults>() {
-          @Override public void call(RealmResults models) {
+  private void cleanUpLocalGroup(final String localGroupUid, final Group groupFromServer) {
+    RealmUtils.loadListFromDB(TaskModel.class, "parentUid", localGroupUid)
+        .subscribe(new Action1<List<TaskModel>>() {
+          @Override public void call(List<TaskModel> models) {
             for (int i = 0; i < models.size(); i++) {
-              ((TaskModel)models.get(i)).setParentUid(groupFromServer.getGroupUid());
-              TaskService.getInstance().sendNewTaskToServer((TaskModel) models.get(i), null);
+              (models.get(i)).setParentUid(groupFromServer.getGroupUid());
+              TaskService.getInstance().sendNewTaskToServer(models.get(i), null);
             }
           }
         });

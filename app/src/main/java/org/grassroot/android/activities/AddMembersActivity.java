@@ -131,8 +131,8 @@ public class AddMembersActivity extends AppCompatActivity implements
     private void setupExistingMemberRecyclerView() {
         existingMemberListFragment = MemberListFragment.newInstance(groupUid, false, false, false, null, null);
         RealmUtils.loadListFromDB(Member.class,"groupUid", groupUid).subscribe(
-            new Action1<RealmResults>() {
-                @Override public void call(RealmResults members) {
+            new Action1<List<Member>>() {
+                @Override public void call(List<Member> members) {
                     contactSelectionFragment = ContactSelectionFragment.newInstance(Contact.convertFromMembers(members), false);
                     getSupportFragmentManager().beginTransaction()
                         .add(R.id.am_existing_member_list_container, existingMemberListFragment)
@@ -258,7 +258,7 @@ public class AddMembersActivity extends AppCompatActivity implements
                 newMember.setMemberUid(UUID.randomUUID().toString());
                 newMember.setMemberGroupUid();
                 newMember.setLocal(!NetworkUtils.isOnline(getApplicationContext()));
-                RealmUtils.saveDataToRealm(newMember);
+                RealmUtils.saveDataToRealmWithSubscriber(newMember);
                 manuallyAddedMembers.add(newMember);
                 newMemberListFragment.addMembers(Collections.singletonList(newMember));
                 setNewMembersVisible();
@@ -333,24 +333,28 @@ public class AddMembersActivity extends AppCompatActivity implements
                 .addGroupMembers(groupUid, mobileNumber, sessionCode, membersToAdd)
                 .enqueue(new Callback<GroupResponse>() {
                     @Override
-                    public void onResponse(Call<GroupResponse> call, Response<GroupResponse> response) {
+                    public void onResponse(Call<GroupResponse> call, final Response<GroupResponse> response) {
                         if (response.isSuccessful()) {
                             Map<String,Object> map = new HashMap<String, Object>();
                             map.put("groupUid",groupUid);
-                            map.put("isLocal",true);
+                            //map.put("isLocal",true);
                             //todo return members here from API
                             RealmUtils.removeObjectsFromDatabase(Member.class,map);
-                            RealmUtils.saveDataToRealm(response.body().getGroups());
-                            for(Member m : response.body().getGroups().first().getMembers()){
-                                m.setMemberGroupUid();
-                                RealmUtils.saveDataToRealm(m);
-                            }
-                            Intent i = new Intent();
-                            i.putExtra(GroupConstants.UID_FIELD, groupUid);
-                            i.putExtra(Constant.INDEX_FIELD, groupPosition);
-                            setResult(RESULT_OK, i);
-                            progressDialog.dismiss();
-                            finish();
+                            RealmUtils.saveDataToRealm(response.body().getGroups()).subscribe(new Action1() {
+                                @Override public void call(Object o) {
+                                    System.out.println(response.body().getGroups().first().getMembers().size());
+                                    for(Member m : response.body().getGroups().first().getMembers()){
+                                        m.setMemberGroupUid();
+                                        RealmUtils.saveDataToRealmWithSubscriber(m);
+                                    }
+                                    Intent i = new Intent();
+                                    i.putExtra(GroupConstants.UID_FIELD, groupUid);
+                                    i.putExtra(Constant.INDEX_FIELD, groupPosition);
+                                    setResult(RESULT_OK, i);
+                                    progressDialog.dismiss();
+                                    finish();
+                                }
+                            });
                         } else {
                             progressDialog.dismiss();
                             ErrorUtils.showSnackBar(amRlRoot, R.string.error_wrong_number, Snackbar.LENGTH_SHORT);

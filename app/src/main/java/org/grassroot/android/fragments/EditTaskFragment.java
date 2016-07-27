@@ -34,6 +34,7 @@ import org.grassroot.android.interfaces.NetworkErrorDialogListener;
 import org.grassroot.android.interfaces.TaskConstants;
 import org.grassroot.android.models.Member;
 import org.grassroot.android.models.TaskModel;
+import org.grassroot.android.models.TaskResponse;
 import org.grassroot.android.services.ApplicationLoader;
 import org.grassroot.android.services.GrassrootRestService;
 import org.grassroot.android.utils.Constant;
@@ -59,6 +60,7 @@ import butterknife.Unbinder;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
+import rx.functions.Action1;
 
 /**
  * Created by paballo on 2016/06/21.
@@ -356,17 +358,17 @@ public class EditTaskFragment extends Fragment implements DatePickerDialog.OnDat
         progressDialog.show();
         TaskModel model = generateTaskObject();
         if(NetworkUtils.isOnline(getContext())) {
-            setUpUpdateApiCall(model).enqueue(new Callback<TaskModel>() {
-                @Override public void onResponse(Call<TaskModel> call, Response<TaskModel> response) {
+            setUpUpdateApiCall(model).enqueue(new Callback<TaskResponse>() {
+                @Override public void onResponse(Call<TaskResponse> call, Response<TaskResponse> response) {
                     progressDialog.hide();
                     if (response.isSuccessful()) {
-                        generateSuccessIntent(response.body());
+                        generateSuccessIntent(response.body().getTasks().first());
                     } else {
                         ErrorUtils.showSnackBar(vContainer, "Error! Something went wrong", Snackbar.LENGTH_LONG, "", null);
                     }
                 }
 
-                @Override public void onFailure(Call<TaskModel> call, Throwable t) {
+                @Override public void onFailure(Call<TaskResponse> call, Throwable t) {
                     progressDialog.hide();
                     ErrorUtils.connectivityError(getActivity(), R.string.error_no_network, new NetworkErrorDialogListener() {
                         @Override public void retryClicked() {
@@ -380,13 +382,17 @@ public class EditTaskFragment extends Fragment implements DatePickerDialog.OnDat
         }
     }
 
-    private void generateSuccessIntent(TaskModel model){
+    private void generateSuccessIntent(final TaskModel model){
         Intent i = new Intent();
         i.putExtra(Constant.SUCCESS_MESSAGE, generateSuccessString());
         getActivity().setResult(Activity.RESULT_OK, i);
-        EventBus.getDefault().post(new TaskUpdatedEvent(model));
-        RealmUtils.saveDataToRealm(model);
-        getActivity().finish();
+        RealmUtils.saveDataToRealm(model).subscribe(new Action1() {
+            @Override public void call(Object o) {
+                EventBus.getDefault().post(new TaskUpdatedEvent(model));
+                System.out.println("Updated task");
+                getActivity().finish();
+            }
+        });
 
     }
     private TaskModel generateTaskObject() {
@@ -413,7 +419,7 @@ public class EditTaskFragment extends Fragment implements DatePickerDialog.OnDat
         return model;
     }
 
-    public Call<TaskModel> setUpUpdateApiCall(TaskModel model) {
+    public Call<TaskResponse> setUpUpdateApiCall(TaskModel model) {
         List<String> memberUids = (selectedMembers == null) ? Collections.EMPTY_LIST :
                 new ArrayList<>(Utilities.convertMemberListToUids(selectedMembers));
         final String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();

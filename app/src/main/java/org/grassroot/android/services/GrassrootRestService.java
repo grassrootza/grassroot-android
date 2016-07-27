@@ -368,7 +368,7 @@ public class GrassrootRestService {
 
     //edit vote
     @POST("vote/update/{uid}/{phoneNumber}/{code}")
-    Call<TaskModel> editVote(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
+    Call<TaskResponse> editVote(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
         @Path("uid") String id,
         @Query("title") String title,
         @Query("description") String description,
@@ -376,7 +376,7 @@ public class GrassrootRestService {
 
     //edit meeting
     @POST("meeting/update/{phoneNumber}/{code}/{meetingUid}")
-    Call<TaskModel> editMeeting(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
+    Call<TaskResponse> editMeeting(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
         @Path("meetingUid") String uid,
         @Query("title") String title,
         @Query("description") String description,
@@ -386,7 +386,7 @@ public class GrassrootRestService {
 
     //edit logbook
     @POST("logbook/update/{phoneNumber}/{code}/{uid}")
-    Call<TaskModel> editTodo(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
+    Call<TaskResponse> editTodo(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
         @Query("title") String title,
         @Query("dueDate") String dueDate,
         @Query("members") Set<String> membersAssigned);

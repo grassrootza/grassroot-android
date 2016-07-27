@@ -3,7 +3,6 @@ package org.grassroot.android.utils;
 import android.util.Log;
 import io.realm.Realm;
 import io.realm.RealmList;
-import io.realm.RealmModel;
 import io.realm.RealmObject;
 import io.realm.RealmQuery;
 import io.realm.RealmResults;
@@ -46,24 +45,19 @@ public class RealmUtils {
     realm.close();
   }
 
-  public static void saveDataToRealm(final List<? extends RealmObject> list) {
-    Observable.create(new Observable.OnSubscribe<Boolean>() {
+  public static Observable saveDataToRealm(final List<? extends RealmObject> list) {
+    return Observable.create(new Observable.OnSubscribe<Boolean>() {
       @Override public void call(Subscriber<? super Boolean> subscriber) {
         Realm realm = Realm.getDefaultInstance();
         realm.beginTransaction();
         realm.copyToRealmOrUpdate(list);
         realm.commitTransaction();
+        realm.stopWaitForChange();
         realm.close();
+        subscriber.onNext(true);
         subscriber.onCompleted();
       }
-    })
-        .subscribeOn(Schedulers.io())
-        .observeOn(AndroidSchedulers.mainThread())
-        .subscribe(new Action1<Boolean>() {
-          @Override public void call(Boolean aBoolean) {
-            System.out.println("saved list");
-          }
-        });
+    }).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread());
   }
 
   public static Observable saveDataToRealm(final RealmObject object) {
@@ -77,7 +71,28 @@ public class RealmUtils {
         subscriber.onNext(true);
         subscriber.onCompleted();
       }
-    }).subscribeOn(Schedulers.io());
+    }).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread());
+  }
+
+  public static void saveDataToRealmWithSubscriber(final RealmObject object) {
+    Observable.create(new Observable.OnSubscribe<Boolean>() {
+      @Override public void call(Subscriber<? super Boolean> subscriber) {
+        Realm realm = Realm.getDefaultInstance();
+        realm.beginTransaction();
+        realm.copyToRealmOrUpdate(object);
+        realm.commitTransaction();
+        realm.close();
+        subscriber.onNext(true);
+        subscriber.onCompleted();
+      }
+    })
+        .subscribeOn(Schedulers.io())
+        .observeOn(AndroidSchedulers.mainThread())
+        .subscribe(new Action1<Boolean>() {
+          @Override public void call(Boolean aBoolean) {
+            System.out.println("saved");
+          }
+        });
   }
 
   public static void saveGroupToRealm(Group group) {
@@ -99,45 +114,37 @@ public class RealmUtils {
     return observable;
   }
 
-  public static <T> Observable loadListFromDB(
-      final Class<? extends RealmObject> model, final String pName, final String pValue) {
-    Observable<List<RealmObject>> observable = Observable.create(new Observable.OnSubscribe<List<RealmObject>>() {
-      @Override public void call(Subscriber<? super List<RealmObject>> subscriber) {
-        System.out.println("load list " + Thread.currentThread().getName());
-        final Realm realm = Realm.getDefaultInstance();
-        List<RealmObject> realmResults =
-            (List<RealmObject>) realm.copyFromRealm((realm.where(model).equalTo(pName, pValue).findAll()));
-        realm.close();
-        subscriber.onNext(realmResults);
-        subscriber.onCompleted();
-      }
-
-    }).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread());
+  public static <T> Observable loadListFromDB(final Class<? extends RealmObject> model,
+      final String pName, final String pValue) {
+    Observable<List<RealmObject>> observable =
+        Observable.create(new Observable.OnSubscribe<List<RealmObject>>() {
+          @Override public void call(Subscriber<? super List<RealmObject>> subscriber) {
+            System.out.println("load list " + Thread.currentThread().getName());
+            final Realm realm = Realm.getDefaultInstance();
+            List<RealmObject> realmResults = (List<RealmObject>) realm.copyFromRealm(
+                (realm.where(model).equalTo(pName, pValue).findAll()));
+            realm.close();
+            subscriber.onNext(realmResults);
+            subscriber.onCompleted();
+          }
+        }).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread());
     return observable;
   }
 
-  public static <T> Observable<? extends RealmResults> loadListFromDB(
-      final Class<? extends RealmObject> model, final String pName, final boolean pValue) {
-    Observable<? extends RealmResults> observable =
-        Observable.create(new Observable.OnSubscribe<RealmResults>() {
-          @Override public void call(final Subscriber<? super RealmResults> subscriber) {
+  public static <T> Observable loadListFromDB(final Class<? extends RealmObject> model,
+      final String pName, final boolean pValue) {
+    Observable<List<RealmObject>> observable =
+        Observable.create(new Observable.OnSubscribe<List<RealmObject>>() {
+          @Override public void call(final Subscriber<? super List<RealmObject>> subscriber) {
             System.out.println("load list " + Thread.currentThread().getName());
             final Realm realm = Realm.getDefaultInstance();
-            realm.where(model)
-                .equalTo(pName, pValue)
-                .findAll()
-                .asObservable()
-                .doOnNext(new Action1<RealmResults<? extends RealmObject>>() {
-                  @Override public void call(RealmResults<? extends RealmObject> realmObjects) {
-                    realm.close();
-                    subscriber.onNext(realmObjects);
-                    subscriber.onCompleted();
-                  }
-                })
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread());
+            List<RealmObject> realmResults = (List<RealmObject>) realm.copyFromRealm(
+                (realm.where(model).equalTo(pName, pValue).findAll()));
+            realm.close();
+            subscriber.onNext(realmResults);
+            subscriber.onCompleted();
           }
-        });
+        }).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread());
     return observable;
   }
 
@@ -179,8 +186,9 @@ public class RealmUtils {
         query.equalTo(entry.getKey(), Boolean.valueOf(entry.getValue().toString()));
       }
     }
+    System.out.println("Removed members " + query.findAll().size());
     realm.beginTransaction();
-    if (query.findAll().size() > 0) query.findAllAsync().deleteAllFromRealm();
+    if (query.findAll().size() > 0) query.findAll().deleteAllFromRealm();
     realm.commitTransaction();
     realm.close();
   }
