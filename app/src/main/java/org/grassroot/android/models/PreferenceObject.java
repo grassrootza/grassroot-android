@@ -20,6 +20,7 @@ public class PreferenceObject extends RealmObject {
   private String mobileNumber;
   private String token;
   private long lastTimeGroupsFetched;
+  private long lastTimeUpcomingTasksFetched;
   private String onlineStatus;
   private boolean showOnlineOfflinePicker = true;
 
@@ -110,6 +111,10 @@ public class PreferenceObject extends RealmObject {
   public void setLastTimeGroupsFetched(long lastTimeGroupsFetched) { this.lastTimeGroupsFetched = lastTimeGroupsFetched; }
 
   public long getLastTimeGroupsFetched() { return lastTimeGroupsFetched; }
+
+  public void setLastTimeUpcomingTasksFetched(long lastTimeUpcomingTasksFetched) { this.lastTimeUpcomingTasksFetched = lastTimeUpcomingTasksFetched; }
+
+  public long getLastTimeUpcomingTasksFetched() { return lastTimeUpcomingTasksFetched; }
 
   public String getAlert() {
     return alert;

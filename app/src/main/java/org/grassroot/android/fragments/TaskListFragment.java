@@ -326,6 +326,7 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
           .remove(frag)
           .commit();
     }
+    tasksAdapter.refreshTaskListToDB(); // todo : maybe just find it and remove it in list
   }
 
   private void showProgress() {

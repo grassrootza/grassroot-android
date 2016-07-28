@@ -277,6 +277,12 @@ public class GrassrootRestService {
     @GET("task/list/{phoneNumber}/{code}")
     Call<TaskResponse> getUserTasks(@Path("phoneNumber") String phoneNumber, @Path("code") String code);
 
+    // get all the tasks for a user, including those cancelled, since last fetch
+    @GET("task/list/since/{phoneNumber}/{code}")
+    Call<TaskChangedResponse> getUpcomingTasksAndCancellations(@Path("phoneNumber") String phoneNumber,
+                                                               @Path("code") String code,
+                                                               @Query("changedSince") long changeedSinceMillis);
+
     // get all the tasks for a group
     @GET("task/list/{phoneNumber}/{code}/{parentUid}")
     Call<TaskChangedResponse> getGroupTasks(@Path("phoneNumber") String phoneNumber, @Path("code") String code,

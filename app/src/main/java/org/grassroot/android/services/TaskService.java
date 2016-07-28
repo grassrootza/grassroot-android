@@ -6,6 +6,7 @@ import android.util.Log;
 import org.grassroot.android.events.TasksRefreshedEvent;
 import org.grassroot.android.interfaces.TaskConstants;
 import org.grassroot.android.models.Group;
+import org.grassroot.android.models.PreferenceObject;
 import org.grassroot.android.models.TaskChangedResponse;
 import org.grassroot.android.models.TaskModel;
 import org.grassroot.android.models.TaskResponse;
@@ -35,9 +36,6 @@ public class TaskService {
   public static final String FETCH_ERROR = "fetch_error";
   public static final String FETCH_OFFLINE = "offline_fetch";
 
-  public ArrayList<TaskModel> upcomingTasks;
-  public boolean hasLoadedTasks;
-
   private static TaskService instance;
 
   public interface TaskServiceListener {
@@ -50,10 +48,7 @@ public class TaskService {
     void taskCreationError(TaskModel task);
   }
 
-  protected TaskService() {
-    upcomingTasks = new ArrayList<>();
-    hasLoadedTasks = false;
-  }
+  protected TaskService() { }
 
   public static TaskService getInstance() {
     TaskService methodInstance = instance;
@@ -77,8 +72,18 @@ public class TaskService {
   }
 
   public void fetchUpcomingTasks(final TaskServiceListener listener) {
-    final String mobile = RealmUtils.loadPreferencesFromDB().getMobileNumber();
+    final String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
     final String code = RealmUtils.loadPreferencesFromDB().getToken();
+    long lastTimeUpdated = RealmUtils.loadPreferencesFromDB().getLastTimeUpcomingTasksFetched();
+    if (lastTimeUpdated == 0) {
+      fetchUpcomingTasksForFirstTime(phoneNumber, code, listener);
+    } else {
+      fetchUpcomingTasksAndCheckForCancelled(lastTimeUpdated, phoneNumber, code, listener);
+    }
+  }
+
+  private void fetchUpcomingTasksForFirstTime(final String mobile, final String code,
+                                              final TaskServiceListener listener) {
     GrassrootRestService.getInstance()
         .getApi()
         .getUserTasks(mobile, code)
@@ -86,11 +91,8 @@ public class TaskService {
           @Override
           public void onResponse(Call<TaskResponse> call, Response<TaskResponse> response) {
             if (response.isSuccessful()) {
-              upcomingTasks = new ArrayList<>(response.body().getTasks());
-              for (TaskModel task : upcomingTasks) {
-                task.getDeadlineDate(); // triggers processing & store of Date object (maybe move into a JSON converter)
-              }
-              RealmUtils.saveDataToRealm(upcomingTasks);
+              persistUpcomingTasks(response.body().getTasks());
+              updateTasksFetchedTime(null);
               if (listener != null) {
                 listener.taskFetchingComplete(FETCH_OKAY, null);
               }
@@ -110,13 +112,52 @@ public class TaskService {
         });
   }
 
+  private void fetchUpcomingTasksAndCheckForCancelled(long changedSince, final String mobile, final String code,
+                                                      final TaskServiceListener listener) {
+
+    GrassrootRestService.getInstance().getApi().getUpcomingTasksAndCancellations(mobile, code, changedSince)
+        .enqueue(new Callback<TaskChangedResponse>() {
+          @Override
+          public void onResponse(Call<TaskChangedResponse> call, Response<TaskChangedResponse> response) {
+            if (response.isSuccessful()) {
+              persistUpcomingTasks(response.body().getAddedAndUpdated());
+              RealmUtils.removeObjectsByUid(TaskModel.class, "taskUid", response.body().getRemovedUids());
+              updateTasksFetchedTime(null);
+              if (listener != null) {
+                listener.taskFetchingComplete(FETCH_OKAY, null);
+              }
+              EventBus.getDefault().post(new TasksRefreshedEvent());
+            } else {
+              if (listener != null) {
+                listener.taskFetchingComplete(FETCH_ERROR, response);
+              }
+            }
+          }
+
+          @Override
+          public void onFailure(Call<TaskChangedResponse> call, Throwable t) {
+            if (listener != null) {
+              listener.taskFetchingComplete(FETCH_ERROR, t);
+            }
+          }
+        });
+
+  }
+
+  private void persistUpcomingTasks(RealmList<TaskModel> tasks) {
+    for (TaskModel task : tasks) {
+      task.getDeadlineDate(); // triggers processing & store of Date object (maybe move into a JSON converter)
+    }
+    RealmUtils.saveDataToRealm(tasks);
+  }
+
   public void fetchGroupTasks(final String groupUid, final TaskServiceListener listener) {
     final String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
     final String code = RealmUtils.loadPreferencesFromDB().getToken();
     Group group = RealmUtils.loadObjectFromDB(Group.class, "groupUid", groupUid);
 
     Call<TaskChangedResponse> call;
-    if (group.getLastTimeTasksFetched() == null) {
+    if (group == null || group.getLastTimeTasksFetched() == null) {
       call = GrassrootRestService.getInstance().getApi().getGroupTasks(phoneNumber, code, groupUid);
     } else {
       call = GrassrootRestService.getInstance().getApi()
@@ -152,11 +193,19 @@ public class TaskService {
   }
 
   private void updateTasksFetchedTime(String parentUid) {
-    Group group = RealmUtils.loadObjectFromDB(Group.class, "groupUid", parentUid);
-    group.setLastTimeTasksFetched(String.valueOf(Utilities.getCurrentTimeInMillisAtUTC()));
-    group.setFetchedTasks(true);
-    RealmUtils.saveGroupToRealm(group);
-    Log.e(TAG, "group last time fetched after update: " + group.getLastTimeTasksFetched());
+    if (!TextUtils.isEmpty(parentUid)) {
+      Group group = RealmUtils.loadObjectFromDB(Group.class, "groupUid", parentUid);
+      if (group != null) {
+        group.setLastTimeTasksFetched(String.valueOf(Utilities.getCurrentTimeInMillisAtUTC()));
+        group.setFetchedTasks(true);
+        RealmUtils.saveGroupToRealm(group);
+        Log.d(TAG, "group last time fetched after update: " + group.getLastTimeTasksFetched());
+      }
+    } else {
+      PreferenceObject prefs = RealmUtils.loadPreferencesFromDB();
+      prefs.setLastTimeUpcomingTasksFetched(Utilities.getCurrentTimeInMillisAtUTC());
+      RealmUtils.saveDataToRealm(prefs);
+    }
   }
 
 
