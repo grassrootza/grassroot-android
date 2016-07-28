@@ -254,7 +254,7 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
                     "ERROR! This should not be called without a valid position");
         }
 
-        GroupService.getInstance()
+        /* GroupService.getInstance()
                 .refreshSingleGroup(position, groupUid, getActivity(),
                         new GroupService.GroupServiceListener() {
                             @Override
@@ -268,11 +268,18 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
                                 Log.e(TAG, "ERROR! Group position and ID do not match, not updating");
                             }
 
+<<<<<<< HEAD
                             @Override
                             public void groupsAlreadyFetching() {
                                 Log.e(TAG, "already a background refresh happening");
                             }
                         });
+=======
+                          @Override
+                          public void groupsAlreadyFetching() {
+                            Log.e(TAG, "already a background refresh happening");
+                          }
+                        });*/
     }
 
     @OnClick(R.id.fab_menu_open)

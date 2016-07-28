@@ -171,16 +171,7 @@ public class NetworkUtils {
       }
     }
     sendingLocalQueue = false;
-    Log.e(TAG, "inside network utils .... fetching server entities ...");
-    if (!fetchingServerEntities) {
-      fetchingServerEntities = true;
-      if (isOnline(context)) {
-        GroupService.getInstance().fetchGroupListWithoutError();
-        GroupService.getInstance().fetchGroupJoinRequests(null);
-        TaskService.getInstance().fetchUpcomingTasks(null);
-      }
-    }
-    fetchingServerEntities = false;
+    fetchEntitiesFromServer(context);
   }
   public static void fetchEntitiesFromServer(final Context context) {
     if (!fetchingServerEntities) {
@@ -225,7 +216,17 @@ public class NetworkUtils {
             @Override
             public void call(List<Member> addedMembers) {
               if (addedMembers.size() > 0) {
-                GroupService.getInstance().postNewGroupMembers(addedMembers, g.getGroupUid());
+                GroupService.getInstance().postNewGroupMembers(addedMembers, g.getGroupUid(), new GroupService.MembersAddedListener() {
+                  @Override
+                  public void membersAdded(String saveType) {
+
+                  }
+
+                  @Override
+                  public void membersAddedError(String errorType, Object data) {
+
+                  }
+                });
               }
             }
           });

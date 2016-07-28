@@ -12,6 +12,7 @@ import android.widget.RelativeLayout;
 
 import org.grassroot.android.R;
 import org.grassroot.android.events.NotificationEvent;
+import org.grassroot.android.events.TaskCancelledEvent;
 import org.grassroot.android.fragments.GiantMessageFragment;
 import org.grassroot.android.fragments.ViewTaskFragment;
 import org.grassroot.android.interfaces.GroupConstants;
@@ -119,6 +120,7 @@ public class ViewTaskActivity extends PortraitActivity {
             }
         });
         RealmUtils.removeObjectFromDatabase(TaskModel.class, "taskUid", taskUid);
+        EventBus.getDefault().post(new TaskCancelledEvent());
         setTitle(R.string.vt_cancel_title);
         return fragment;
     }
