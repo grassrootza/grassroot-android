@@ -12,6 +12,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import org.grassroot.android.models.Group;
+import org.grassroot.android.models.Member;
 import org.grassroot.android.models.PreferenceObject;
 import org.grassroot.android.models.RealmString;
 import org.grassroot.android.models.TaskModel;
@@ -74,6 +75,15 @@ public class RealmUtils {
     }).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread());
   }
 
+  public static void saveDataToRealmSync(final RealmObject object) {
+        Realm realm = Realm.getDefaultInstance();
+        realm.beginTransaction();
+        realm.copyToRealmOrUpdate(object);
+        realm.commitTransaction();
+        realm.close();
+      }
+
+
   public static void saveDataToRealmWithSubscriber(final RealmObject object) {
     Observable.create(new Observable.OnSubscribe<Boolean>() {
       @Override public void call(Subscriber<? super Boolean> subscriber) {
@@ -97,7 +107,7 @@ public class RealmUtils {
 
   public static void saveGroupToRealm(Group group) {
     Log.d("REALM", "saving group: " + group.toString());
-    saveDataToRealm(group);
+    saveDataToRealmSync(group);
   }
 
   public static Observable<List<Group>> loadGroupsSorted() {
@@ -281,5 +291,10 @@ public class RealmUtils {
     long count = query.count();
     realm.close();
     return count;
+  }
+
+  public static RealmList<Member> loadGroupMembers(final String groupUid) {
+    return new RealmList<>();
+    //return loadListFromDB(Member.class, "groupUid", groupUid);
   }
 }

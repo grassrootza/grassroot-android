@@ -90,11 +90,15 @@ public class TaskService {
               for (TaskModel task : upcomingTasks) {
                 task.getDeadlineDate(); // triggers processing & store of Date object (maybe move into a JSON converter)
               }
-              RealmUtils.saveDataToRealm(upcomingTasks);
-              if (listener != null) {
-                listener.taskFetchingComplete(FETCH_OKAY, null);
-              }
-              EventBus.getDefault().post(new TasksRefreshedEvent());
+              RealmUtils.saveDataToRealm(upcomingTasks).subscribe(new Action1() {
+                @Override
+                public void call(Object o) {
+                  if (listener != null) {
+                    listener.taskFetchingComplete(FETCH_OKAY, null);
+                  }
+                  EventBus.getDefault().post(new TasksRefreshedEvent());
+                }
+              });
             } else {
               if (listener != null) {
                 listener.taskFetchingComplete(FETCH_ERROR, response);
@@ -186,10 +190,10 @@ public class TaskService {
           if (response.isSuccessful()) {
             final TaskModel taskFromServer = response.body().getTasks().get(0);
             taskFromServer.getDeadlineDate(); // trigger forming Date entity, as above, create custom converter
-            RealmUtils.saveDataToRealm(taskFromServer);
+            RealmUtils.saveDataToRealmSync(taskFromServer);
             listener.taskCreatedOnServer(taskFromServer);
           } else {
-            RealmUtils.saveDataToRealm(task);
+            RealmUtils.saveDataToRealmSync(task);
             listener.taskCreationError(task);
           }
         }

@@ -40,24 +40,11 @@ import org.grassroot.android.utils.PermissionUtils;
 import org.grassroot.android.utils.RealmUtils;
 import org.grassroot.android.utils.Utilities;
 import org.greenrobot.eventbus.EventBus;
-<<<<<<< d00710922649d7287c230fb99c8f633652cb1cb7
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
-import io.realm.Realm;
-import io.realm.RealmList;
-import io.realm.RealmResults;
 import okhttp3.MediaType;
 import okhttp3.MultipartBody;
 import okhttp3.RequestBody;
-=======
->>>>>>> Saving and reading data on backround threads
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -414,11 +401,7 @@ public class GroupService {
   private void saveCreatedGroupToRealm(Group group) {
     PreferenceObject preferenceObject = RealmUtils.loadPreferencesFromDB();
     preferenceObject.setHasGroups(true);
-    RealmUtils.saveDataToRealm(preferenceObject).subscribe(new Action1() {
-      @Override public void call(Object o) {
-
-      }
-    });
+    RealmUtils.saveDataToRealmSync(preferenceObject);
     RealmUtils.saveGroupToRealm(group);
   }
 

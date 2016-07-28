@@ -43,7 +43,7 @@ public class TasksAdapter extends RecyclerView.Adapter<TasksAdapter.TaskViewHold
   private final TaskListListener listener;
   private final String parentUid;
 
-  private List<TaskModel> viewedTasks;
+  private List<TaskModel> viewedTasks=new ArrayList<>();
   private List<TaskModel> fullTaskList;
   private Map<String, List<TaskModel>> decomposedList;
 
