@@ -179,7 +179,17 @@ public class NetworkUtils {
 			queryMap.put("groupUid", g.getGroupUid());
 			final RealmList<Member> addedMembers = RealmUtils.loadListFromDB(Member.class, queryMap);
 			if (addedMembers.size() > 0) {
-				GroupService.getInstance().postNewGroupMembers(addedMembers, g.getGroupUid());
+				GroupService.getInstance().postNewGroupMembers(addedMembers, g.getGroupUid(), new GroupService.MembersAddedListener() {
+					@Override
+					public void membersAdded(String saveType) {
+						// blank for now
+					}
+
+					@Override
+					public void membersAddedError(String errorType, Object data) {
+						// blank for now
+					}
+				});
 			}
 		}
 	}

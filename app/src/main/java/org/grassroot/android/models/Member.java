@@ -13,11 +13,12 @@ import org.grassroot.android.interfaces.GroupConstants;
  */
 public class Member extends RealmObject implements Parcelable {
 
-  private static final String TAG = Member.class.getCanonicalName();
+  private static final String TAG = Member.class.getSimpleName();
 
   public static final String PKEY = "memberGroupUid";
 
-  @PrimaryKey private String memberGroupUid;
+  @PrimaryKey
+  private String memberGroupUid;
 
   private String memberUid;
   private String groupUid;
@@ -30,14 +31,6 @@ public class Member extends RealmObject implements Parcelable {
   private boolean selected;
   private boolean isLocal;
 
-  public boolean isLocal() {
-    return isLocal;
-  }
-
-  public void setLocal(boolean local) {
-    isLocal = local;
-  }
-
   public Member() {
   }
 
@@ -46,45 +39,40 @@ public class Member extends RealmObject implements Parcelable {
   }
 
   @Override public void writeToParcel(Parcel dest, int flags) {
+    dest.writeString(this.memberGroupUid);
     dest.writeString(this.memberUid);
     dest.writeString(this.phoneNumber);
     dest.writeString(this.displayName);
     dest.writeString(this.roleName);
     dest.writeString(this.groupUid);
-    dest.writeString(memberGroupUid);
-    dest.writeInt(selected ? 1 : 0);
-    dest.writeInt(isLocal ? 1 : 0);
+    dest.writeInt(this.selected ? 1 : 0);
+    dest.writeInt(this.isLocal ? 1 : 0);
     dest.writeInt(this.contactId);
   }
 
   protected Member(Parcel incoming) {
+    memberGroupUid = incoming.readString();
     memberUid = incoming.readString();
     phoneNumber = incoming.readString();
     displayName = incoming.readString();
     roleName = incoming.readString();
     groupUid = incoming.readString();
-    memberGroupUid = incoming.readString();
     selected = incoming.readInt() != 0;
     isLocal = incoming.readInt() != 0;
     contactId = incoming.readInt();
   }
 
-  // todo : probably remove, soon-ish
-  public Member(String phoneNumber, String displayName, String roleName, int contactId) {
-    this.phoneNumber = phoneNumber;
-    this.displayName = displayName;
-    this.roleName = (roleName != null) ? roleName : GroupConstants.ROLE_ORDINARY_MEMBER;
-    this.contactId = contactId;
-    this.selected = true;
-  }
-
-  public Member(String phoneNumber, String displayName, String roleName, int contactId,
-      boolean selected) {
+  public Member(String memberUid, String parentUid, String phoneNumber, String displayName,
+                String roleName, int contactId, boolean selected) {
+    this.memberUid = memberUid;
+    this.groupUid = parentUid;
+    this.memberGroupUid = memberUid + parentUid;
     this.phoneNumber = phoneNumber;
     this.displayName = displayName;
     this.roleName = (roleName != null) ? roleName : GroupConstants.ROLE_ORDINARY_MEMBER;
     this.contactId = contactId;
     this.selected = selected;
+    Log.e(TAG, "created member, with groupUid : " + this.groupUid);
   }
 
   public static final Creator<Member> CREATOR = new Creator<Member>() {
@@ -103,8 +91,9 @@ public class Member extends RealmObject implements Parcelable {
     return memberGroupUid;
   }
 
-  public void setMemberGroupUid() {
+  public void composeMemberGroupUid() {
     this.memberGroupUid = this.memberUid + this.groupUid;
+    // Log.d(TAG, "primary key set, for member : " + this.displayName + ", as: " + memberGroupUid);
   }
 
   public String getMemberUid() {
@@ -157,6 +146,14 @@ public class Member extends RealmObject implements Parcelable {
     selected = !selected;
   }
 
+  public boolean isLocal() {
+    return isLocal;
+  }
+
+  public void setLocal(boolean local) {
+    this.isLocal = local;
+  }
+
   // toString etc
 
   @Override public boolean equals(Object o) {
@@ -182,6 +179,7 @@ public class Member extends RealmObject implements Parcelable {
         "memberUid='" + memberUid + '\'' +
         ", phoneNumber='" + phoneNumber + '\'' +
         ", displayName='" + displayName + '\'' +
+        ", local=" + isLocal + '\'' +
         ", contactId=" + contactId + '\'' +
         ", selected=" + selected + '\'' +
         '}';

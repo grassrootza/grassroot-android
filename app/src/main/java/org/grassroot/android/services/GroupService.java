@@ -182,7 +182,7 @@ public class GroupService {
     // note: put this on a background thread, and do it in refresh too (if we keep refresh method)
     for (Group g : responseBody.getAddedAndUpdated()) {
       for (Member m : g.getMembers()) {
-        m.setMemberGroupUid();
+        m.composeMemberGroupUid();
         RealmUtils.saveDataToRealm(m);
       }
     }
@@ -221,7 +221,7 @@ public class GroupService {
               ErrorUtils.connectivityError(activity, R.string.error_no_network,
                   new NetworkErrorDialogListener() {
                     @Override public void retryClicked() {
-                      refreshSingleGroup(position, groupUid, activity, listener);
+                      // refreshSingleGroup(position, groupUid, activity, listener);
                     }
 
                     @Override public void offlineClicked() {
@@ -364,12 +364,17 @@ public class GroupService {
     RealmUtils.removeObjectFromDatabase(Group.class, "groupUid", localGroupUid);
     RealmUtils.removeObjectFromDatabase(Member.class,"groupUid", localGroupUid);
     for(Member m : groupFromServer.getMembers()){
-      m.setMemberGroupUid();
+      m.composeMemberGroupUid();
       RealmUtils.saveDataToRealm(m);
     }
   }
 
   /* METHODS FOR ADDING AND REMOVING MEMBERS */
+
+  public interface MembersAddedListener {
+    void membersAdded(String saveType);
+    void membersAddedError(String errorType, Object data);
+  }
 
   public interface MembersRemovedListener {
     void membersRemoved(String saveType);
@@ -378,13 +383,12 @@ public class GroupService {
 
   public Group addGroupMembersLocally(final String groupUid, final List<Member> membersToAdd) {
     Group group = RealmUtils.loadGroupFromDB(groupUid);
-    group.getMembers().addAll(membersToAdd);
     RealmUtils.saveGroupToRealm(group);
     RealmUtils.saveDataToRealm(membersToAdd);
     return group;
   }
 
-  public void postNewGroupMembers(final List<Member> membersToAdd, final String groupUid) {
+  public void postNewGroupMembers(final List<Member> membersToAdd, final String groupUid, final MembersAddedListener listener) {
     final String mobileNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
     final String sessionCode = RealmUtils.loadPreferencesFromDB().getToken();
     GrassrootRestService.getInstance()
@@ -396,18 +400,21 @@ public class GroupService {
                 if (response.isSuccessful()) {
                   Map<String, Object> map2 = new HashMap<>();
                   map2.put("isLocal", true);
-                  map2.put("groupUid", membersToAdd.get(0).getGroupUid());
+                  map2.put("groupUid", groupUid);
                   RealmUtils.removeObjectsFromDatabase(Member.class,map2);
                   RealmUtils.saveDataToRealm(response.body().getGroups());
                   for(Member m : response.body().getGroups().first().getMembers()){
-                    m.setMemberGroupUid();
+                    m.composeMemberGroupUid();
                     RealmUtils.saveDataToRealm(m);
                   }
+                  listener.membersAdded(Constant.ONLINE);
                 } else {
+                  listener.membersAddedError(Constant.ONLINE, response);
                 }
               }
 
               @Override public void onFailure(Call<GroupResponse> call, Throwable t) {
+                listener.membersAddedError(Constant.OFFLINE, t);
               }
             });
   }

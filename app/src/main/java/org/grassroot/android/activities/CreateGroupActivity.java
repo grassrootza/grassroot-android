@@ -30,13 +30,11 @@ import org.grassroot.android.R;
 import org.grassroot.android.events.GroupCreatedEvent;
 import org.grassroot.android.fragments.ContactSelectionFragment;
 import org.grassroot.android.fragments.MemberListFragment;
-import org.grassroot.android.fragments.dialogs.ConfirmCancelDialogFragment;
 import org.grassroot.android.interfaces.GroupConstants;
 import org.grassroot.android.models.Contact;
 import org.grassroot.android.models.Group;
 import org.grassroot.android.models.GroupResponse;
 import org.grassroot.android.models.Member;
-import org.grassroot.android.models.PreferenceObject;
 import org.grassroot.android.services.GroupService;
 import org.grassroot.android.utils.Constant;
 import org.grassroot.android.utils.ErrorUtils;
@@ -44,7 +42,6 @@ import org.grassroot.android.utils.PermissionUtils;
 import org.grassroot.android.utils.RealmUtils;
 import org.greenrobot.eventbus.EventBus;
 
-import io.realm.RealmList;
 import retrofit2.Response;
 
 import static butterknife.OnTextChanged.Callback.AFTER_TEXT_CHANGED;
@@ -211,11 +208,9 @@ public class CreateGroupActivity extends PortraitActivity implements ContactSele
       if (mapMembersContacts.containsKey(c.id)) {
         selectedMembers.add(mapMembersContacts.get(c.id));
       } else {
-        Member m = new Member(c.selectedMsisdn, c.getDisplayName(), GroupConstants.ROLE_ORDINARY_MEMBER,
-                c.id, true);
-        m.setGroupUid(groupUid);
-        m.setMemberUid(UUID.randomUUID().toString());
-        m.setMemberGroupUid();
+        Member m = new Member(UUID.randomUUID().toString(), groupUid, c.selectedMsisdn,
+            c.getDisplayName(), GroupConstants.ROLE_ORDINARY_MEMBER, c.id, true);
+        m.setLocal(true);
         RealmUtils.saveDataToRealm(m);
         selectedMembers.add(m);
         mapMembersContacts.put(c.id, m);
@@ -261,14 +256,11 @@ public class CreateGroupActivity extends PortraitActivity implements ContactSele
     super.onActivityResult(requestCode, resultCode, data);
     if (resultCode == Activity.RESULT_OK && data != null) {
       if (requestCode == Constant.activityManualMemberEntry) {
-        Member newMember = new Member(data.getStringExtra("selectedNumber"), data.getStringExtra("name"),
-                        GroupConstants.ROLE_ORDINARY_MEMBER, -1);
-        newMember.setMemberUid(UUID.randomUUID().toString());
-        newMember.setGroupUid(groupUid);
-        newMember.setMemberGroupUid();
+        Member newMember = new Member(UUID.randomUUID().toString(), groupUid, data.getStringExtra("selectedNumber"),
+            data.getStringExtra("name"), GroupConstants.ROLE_ORDINARY_MEMBER, -1, true);
+        newMember.setLocal(true);
         manuallyAddedMembers.add(newMember);
         memberListFragment.addMembers(Collections.singletonList(newMember));
-
       } else if (requestCode == Constant.activityManualMemberEdit) {
         Member revisedMember = data.getParcelableExtra(GroupConstants.MEMBER_OBJECT);
         int position = data.getIntExtra(Constant.INDEX_FIELD, -1);

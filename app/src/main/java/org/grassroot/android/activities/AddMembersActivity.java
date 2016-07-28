@@ -230,9 +230,12 @@ public class AddMembersActivity extends AppCompatActivity implements
             if (membersFromContacts.containsKey(c.id)) {
                 selectedMembers.add(membersFromContacts.get(c.id));
             } else {
-                Member m = new Member(c.selectedMsisdn, c.getDisplayName(), GroupConstants.ROLE_ORDINARY_MEMBER, c.id, true);
+                Member m = new Member(UUID.randomUUID().toString(), groupUid, c.selectedMsisdn, c.getDisplayName(),
+                    GroupConstants.ROLE_ORDINARY_MEMBER, c.id, true);
+                m.setLocal(true);
                 membersFromContacts.put(c.id, m);
                 selectedMembers.add(m);
+                RealmUtils.saveDataToRealm(m);
             }
         }
         newMemberListFragment.transitionToMemberList(selectedMembers);
@@ -246,12 +249,10 @@ public class AddMembersActivity extends AppCompatActivity implements
         super.onActivityResult(requestCode, resultCode, data);
         if (resultCode == RESULT_OK) {
             if (requestCode == Constant.activityManualMemberEntry) {
-                Member newMember = new Member(data.getStringExtra("selectedNumber"), data.getStringExtra("name"),
-                        GroupConstants.ROLE_ORDINARY_MEMBER, -1);
-                newMember.setGroupUid(groupUid);
-                newMember.setMemberUid(UUID.randomUUID().toString());
-                newMember.setMemberGroupUid();
-                newMember.setLocal(!NetworkUtils.isOnline(getApplicationContext()));
+                final String newUid = UUID.randomUUID().toString();
+                Member newMember = new Member(newUid, groupUid, data.getStringExtra("selectedNumber"), data.getStringExtra("name"),
+                        GroupConstants.ROLE_ORDINARY_MEMBER, -1, true);
+                newMember.setLocal(true);
                 RealmUtils.saveDataToRealm(newMember);
                 manuallyAddedMembers.add(newMember);
                 newMemberListFragment.addMembers(Collections.singletonList(newMember));
@@ -299,7 +300,22 @@ public class AddMembersActivity extends AppCompatActivity implements
             if (membersToAdd != null && membersToAdd.size() > 0) {
                 progressDialog.show();
                 if(NetworkUtils.isOnline(getApplicationContext())) {
-                   postNewMembersToGroup(membersToAdd);
+                   GroupService.getInstance().postNewGroupMembers(membersToAdd, groupUid, new GroupService.MembersAddedListener() {
+                       @Override
+                       public void membersAdded(String saveType) {
+                           Intent i = new Intent();
+                           i.putExtra(GroupConstants.UID_FIELD, groupUid);
+                           i.putExtra(Constant.INDEX_FIELD, groupPosition);
+                           setResult(RESULT_OK, i);
+                           progressDialog.dismiss();
+                           finish();
+                       }
+
+                       @Override
+                       public void membersAddedError(String errorType, Object data) {
+                           progressDialog.dismiss();
+                       }
+                   });
                } else {
                    GroupService.getInstance().addGroupMembersLocally(groupUid, membersToAdd);
                    Intent i = new Intent();
@@ -317,45 +333,6 @@ public class AddMembersActivity extends AppCompatActivity implements
             Log.d(TAG, "Exited with no members to add!");
             finish();
         }
-    }
-
-    private void postNewMembersToGroup(final List<Member> membersToAdd) {
-        final String mobileNumber =
-            RealmUtils.loadPreferencesFromDB().getMobileNumber();
-        final String sessionCode = RealmUtils.loadPreferencesFromDB().getToken();
-        GrassrootRestService.getInstance().getApi()
-                .addGroupMembers(groupUid, mobileNumber, sessionCode, membersToAdd)
-                .enqueue(new Callback<GroupResponse>() {
-                    @Override
-                    public void onResponse(Call<GroupResponse> call, Response<GroupResponse> response) {
-                        if (response.isSuccessful()) {
-                            Map<String,Object> map = new HashMap<String, Object>();
-                            map.put("groupUid",groupUid);
-                            map.put("isLocal",true);
-                            //todo return members here from API
-                            RealmUtils.removeObjectsFromDatabase(Member.class,map);
-                            RealmUtils.saveDataToRealm(response.body().getGroups());
-                            for(Member m : response.body().getGroups().first().getMembers()){
-                                m.setMemberGroupUid();
-                                RealmUtils.saveDataToRealm(m);
-                            }
-                            Intent i = new Intent();
-                            i.putExtra(GroupConstants.UID_FIELD, groupUid);
-                            i.putExtra(Constant.INDEX_FIELD, groupPosition);
-                            setResult(RESULT_OK, i);
-                            progressDialog.dismiss();
-                            finish();
-                        } else {
-                            progressDialog.dismiss();
-                            ErrorUtils.showSnackBar(amRlRoot, R.string.error_wrong_number, Snackbar.LENGTH_SHORT);
-                        }
-                    }
-
-                    @Override
-                    public void onFailure(Call<GroupResponse> call, Throwable t) {
-                        ErrorUtils.handleNetworkError(AddMembersActivity.this, amRlRoot, t);
-                    }
-                });
     }
 
 }

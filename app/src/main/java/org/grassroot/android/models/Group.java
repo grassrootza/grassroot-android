@@ -54,6 +54,8 @@ public class Group extends RealmObject implements Parcelable, Comparable<Group> 
   private RealmList<RealmString> permissions = new RealmList<>();
   @Ignore private List<String> permissionsList;
 
+  @Ignore private RealmList<Member> members = new RealmList<>();
+
   public Group() {
   }
 
@@ -65,14 +67,9 @@ public class Group extends RealmObject implements Parcelable, Comparable<Group> 
     this.fetchedTasks = fetchedTasks;
   }
 
-  private RealmList<Member> members = new RealmList<>();
-
+  // NB : only ever call this to get members from a group returned from server, for any other purpose, fetch from Realm
   public RealmList<Member> getMembers() {
     return members;
-  }
-
-  public void setMembers(RealmList<Member> members) {
-    this.members = members;
   }
 
   public boolean getIsLocal() {

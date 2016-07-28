@@ -309,11 +309,7 @@ public class CreateTaskFragment extends Fragment {
     model.setCanEdit(true);
     model.setReply(TaskConstants.TODO_PENDING);
 
-    model.setMemberUIDS(
-        RealmUtils.convertListOfStringInRealmListOfString(new ArrayList<>(memberUids)));
-    // todo : work out why doing call below
-    RealmUtils.saveDataToRealm(
-        RealmUtils.convertListOfStringInRealmListOfString(new ArrayList<>(memberUids)));
+    model.setMemberUIDS(RealmUtils.convertListOfStringInRealmListOfString(new ArrayList<>(memberUids)));
 
     return model;
   }
