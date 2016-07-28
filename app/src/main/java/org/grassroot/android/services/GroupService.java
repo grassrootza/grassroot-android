@@ -442,7 +442,12 @@ public class GroupService {
     Group group = RealmUtils.loadGroupFromDB(groupUid);
     group.getMembers().addAll(membersToAdd);
     RealmUtils.saveGroupToRealm(group);
-    RealmUtils.saveDataToRealm(membersToAdd);
+    RealmUtils.saveDataToRealm(membersToAdd).subscribe(new Action1() {
+      @Override
+      public void call(Object o) {
+        System.out.println("saved " + membersToAdd.size());
+      }
+    });
     return group;
   }
 
@@ -454,17 +459,26 @@ public class GroupService {
         .addGroupMembers(groupUid, mobileNumber, sessionCode, membersToAdd)
         .enqueue(new Callback<GroupResponse>() {
           @Override
-          public void onResponse(Call<GroupResponse> call, Response<GroupResponse> response) {
+          public void onResponse(Call<GroupResponse> call, final Response<GroupResponse> response) {
             if (response.isSuccessful()) {
               Map<String, Object> map2 = new HashMap<>();
               map2.put("isLocal", true);
               map2.put("groupUid", membersToAdd.get(0).getGroupUid());
               RealmUtils.removeObjectsFromDatabase(Member.class, map2);
-              RealmUtils.saveDataToRealm(response.body().getGroups());
-              for (Member m : response.body().getGroups().first().getMembers()) {
-                m.setMemberGroupUid();
-                RealmUtils.saveDataToRealm(m);
-              }
+              RealmUtils.saveDataToRealm(response.body().getGroups()).subscribe(new Action1() {
+                @Override
+                public void call(Object o) {
+                  for (Member m : response.body().getGroups().first().getMembers()) {
+                    m.setMemberGroupUid();
+                    RealmUtils.saveDataToRealm(m).subscribe(new Action1() {
+                      @Override
+                      public void call(Object o) {
+
+                      }
+                    });
+                  }
+                }
+              });
             } else {
             }
           }
