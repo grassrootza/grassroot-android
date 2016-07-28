@@ -107,7 +107,7 @@ public class RealmUtils {
                 .subscribe(new Action1<Boolean>() {
                     @Override
                     public void call(Boolean aBoolean) {
-                        System.out.println("saved");
+                        Log.d(TAG, "saved");
                     }
                 });
     }

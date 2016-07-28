@@ -43,6 +43,8 @@ import rx.functions.Action1;
 public class LoginRegisterActivity extends AppCompatActivity implements LoginScreenFragment.LoginFragmentListener,
         OtpScreenFragment.OtpListener, RegisterScreenFragment.RegisterListener {
 
+    private static final String TAG = LoginRegisterActivity.class.getSimpleName();
+
     private static final String LOGIN = "login";
     private static final String REGISTER = "register";
 
@@ -254,8 +256,10 @@ public class LoginRegisterActivity extends AppCompatActivity implements LoginScr
                             preference.setHasGroups(response.body().getHasGroups());
                             preference.setUserName(response.body().getDisplayName());
                             preference.setMustRefresh(true);
+                            final long startTime = System.currentTimeMillis();
                             RealmUtils.saveDataToRealm(preference).subscribe(new Action1() {
                                 @Override public void call(Object o) {
+                                    Log.e(TAG, "back from realm ... took : " + String.valueOf(System.currentTimeMillis() - startTime));
                                     registerOrRefreshGCM(msisdn);
                                     launchHomeScreen(response.body().getHasGroups());
                                     finish();

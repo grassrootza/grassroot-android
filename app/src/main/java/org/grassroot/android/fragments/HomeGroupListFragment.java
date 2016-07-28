@@ -234,16 +234,15 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
                 .fetchGroupListWithErrorDisplay(getActivity(), null, new GroupService.GroupServiceListener() {
                     @Override public void groupListLoaded() {
                         groupListRowAdapter.refreshGroupsToDB();
-                        glSwipeRefresh.setRefreshing(false);
+                        hideProgress();
                     }
 
                     @Override public void groupListLoadingError() {
-                        glSwipeRefresh.setRefreshing(false);
-                        // todo : online/offline dialog error
+                        hideProgress();
                     }
 
                     @Override public void groupsAlreadyFetching() {
-                        glSwipeRefresh.setRefreshing(false);
+                        hideProgress();
                     }
                 });
     }
@@ -440,6 +439,9 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
     private void hideProgress() {
         if (progressDialog != null) {
             progressDialog.dismiss();
+        }
+        if (glSwipeRefresh != null && glSwipeRefresh.isRefreshing()) {
+            glSwipeRefresh.setRefreshing(false);
         }
     }
 

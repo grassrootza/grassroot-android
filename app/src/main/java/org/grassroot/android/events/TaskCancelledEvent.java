@@ -8,7 +8,7 @@ import org.grassroot.android.models.TaskModel;
 public class TaskCancelledEvent {
     private final TaskModel task;
 
-    private TaskCancelledEvent(){
+    public TaskCancelledEvent(){
         this.task = null;
     }
 

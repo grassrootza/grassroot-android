@@ -250,7 +250,7 @@ public class GroupService {
    */
   public void refreshSingleGroup(final int position, final String groupUid, final Activity activity,
       final GroupServiceListener listener) {
-    Group groupUpdated = userGroups.get(position);
+    /*Group groupUpdated = RealmUtils.loadGroupsSorted().get(position);
     if (groupUpdated.getGroupUid().equals(groupUid)) {
       String mobileNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
       String code = RealmUtils.loadPreferencesFromDB().getToken();
@@ -264,7 +264,7 @@ public class GroupService {
               // todo : consider shuffling this group to the top of the list
               Group group = response.body().getGroups().get(0);
               Log.e(TAG, "Group updated, has " + group.getGroupMemberCount() + " members");
-              userGroups.set(position, group);
+              // userGroups.set(position, group);
               listener.groupListLoaded();
             }
 
@@ -283,7 +283,7 @@ public class GroupService {
           });
     } else {
       listener.groupListLoadingError();
-    }
+    }*/
   }
 
     /*
