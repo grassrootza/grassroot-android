@@ -221,10 +221,14 @@ public class NetworkUtils {
       @Override public void onNext(List<Group> groups) {
         for (final Group g : groups) {
           queryMap.put("groupUid", g.getGroupUid());
-          final RealmList<Member> addedMembers = RealmUtils.loadListFromDB(Member.class, queryMap);
-          if (addedMembers.size() > 0) {
-            GroupService.getInstance().postNewGroupMembers(addedMembers, g.getGroupUid());
-          }
+          RealmUtils.loadListFromDB(Member.class, queryMap).subscribe(new Action1<List<Member>>() {
+            @Override
+            public void call(List<Member> addedMembers) {
+              if (addedMembers.size() > 0) {
+                GroupService.getInstance().postNewGroupMembers(addedMembers, g.getGroupUid());
+              }
+            }
+          });
         }
       }
     });
@@ -235,29 +239,33 @@ public class NetworkUtils {
     map.put("isLocal", true);
     map.put("isEdited", false);
     map.put("isParentLocal", false);
-    final RealmList<TaskModel> tasks = RealmUtils.loadListFromDB(TaskModel.class, map);
-    for (final TaskModel model : tasks) {
-      final String localUid = model.getTaskUid();
-      TaskService.getInstance().sendNewTaskToServer(model, new TaskService.TaskCreationListener() {
-        @Override public void taskCreatedLocally(TaskModel task) {
-          RealmUtils.saveDataToRealm(task).subscribe(new Action1() {
-            @Override public void call(Object o) {
+     RealmUtils.loadListFromDB(TaskModel.class, map).subscribe(new Action1<List<TaskModel>>() {
+       @Override
+       public void call(List<TaskModel> tasks) {
+         for (final TaskModel model : tasks) {
+           final String localUid = model.getTaskUid();
+           TaskService.getInstance().sendNewTaskToServer(model, new TaskService.TaskCreationListener() {
+             @Override public void taskCreatedLocally(TaskModel task) {
+               RealmUtils.saveDataToRealm(task).subscribe(new Action1() {
+                 @Override public void call(Object o) {
 
-            }
-          });
-          RealmUtils.removeObjectFromDatabase(TaskModel.class, "taskUid", localUid);
-          System.out.println("TASK CREATED" + task.toString());
-        }
+                 }
+               });
+               RealmUtils.removeObjectFromDatabase(TaskModel.class, "taskUid", localUid);
+               System.out.println("TASK CREATED" + task.toString());
+             }
 
-        @Override public void taskCreatedOnServer(TaskModel task) {
+             @Override public void taskCreatedOnServer(TaskModel task) {
 
-        }
+             }
 
-        @Override public void taskCreationError(TaskModel task) {
+             @Override public void taskCreationError(TaskModel task) {
 
-        }
-      });
-    }
+             }
+           });
+         }
+       }
+     });
   }
 
   private static void sendEditedTasks() {
@@ -265,10 +273,14 @@ public class NetworkUtils {
     map1.put("isLocal", true);
     map1.put("isEdited", true);
     map1.put("isParentLocal", false);
-    final RealmList<TaskModel> tasks1 = RealmUtils.loadListFromDB(TaskModel.class, map1);
-    for (final TaskModel model : tasks1) {
-      TaskService.getInstance()
-          .sendTaskUpdateToServer(model, true); // todo : work out selected member change logic
-    }
+    RealmUtils.loadListFromDB(TaskModel.class, map1).subscribe(new Action1<List<TaskModel>>() {
+      @Override
+      public void call(List<TaskModel> tasks1) {
+        for (final TaskModel model : tasks1) {
+          TaskService.getInstance()
+                  .sendTaskUpdateToServer(model, true); // todo : work out selected member change logic
+        }
+      }
+    });
   }
 }

@@ -222,6 +222,7 @@ public class MemberListFragment extends Fragment {
                     membersToRemove.addAll(filteredMembers);
                 }
                 realmResults.removeAll(membersToRemove);
+                System.out.println("size of list is " + realmResults.size());
                 memberListAdapter.addMembers(realmResults);
 
                 if (preSelectedMembers != null && !selectedByDefault) {

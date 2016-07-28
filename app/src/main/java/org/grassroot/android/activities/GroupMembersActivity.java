@@ -148,6 +148,9 @@ public class GroupMembersActivity extends PortraitActivity implements NewTaskMen
                 Intent i = MenuUtils.constructIntent(this, AddMembersActivity.class, groupUid, groupName);
                 startActivity(i);
                 return true;
+            case (android.R.id.home):
+                finish();
+                return true;
             default:
                 return super.onOptionsItemSelected(item);
         }
