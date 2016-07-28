@@ -179,7 +179,6 @@ public class GroupService {
           userGroups =
               new ArrayList<>(response.body().getAddedAndUpdated()); // todo : might not need this
           persistGroupsAddedUpdated(response.body(), null);
-          EventBus.getDefault().post(new GroupsRefreshedEvent());
         }
       }
 
@@ -197,9 +196,9 @@ public class GroupService {
       @Override public void call(Object o) {
         System.out.println("saved groups");
         if (listener != null) {
-          EventBus.getDefault().post(new GroupsRefreshedEvent());
           listener.groupListLoaded();
         }
+        EventBus.getDefault().post(new GroupsRefreshedEvent());
       }
     });
     if (!responseBody.getRemovedUids().isEmpty()) {
