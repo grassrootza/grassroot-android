@@ -10,12 +10,10 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import org.grassroot.android.R;
-import org.grassroot.android.models.Notification;
-import org.grassroot.android.models.TaskModel;
+import org.grassroot.android.models.TaskNotification;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -25,11 +23,11 @@ import butterknife.ButterKnife;
  */
 public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapter.ViewHolder> {
 
-    private List<Notification> notifications = new ArrayList<>();
-    private List<Notification> storedNotifications = new ArrayList<>();
+    private List<TaskNotification> notifications = new ArrayList<>();
+    private List<TaskNotification> storedNotifications = new ArrayList<>();
     private static final String TAG = "NotificationAdapter";
 
-    public NotificationAdapter(ArrayList<Notification> dataList) {
+    public NotificationAdapter(ArrayList<TaskNotification> dataList) {
         this.notifications = dataList;
     }
 
@@ -46,7 +44,7 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
 
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
-        Notification notification = notifications.get(position);
+        TaskNotification notification = notifications.get(position);
         holder.txtNcMessage.setText(notification.getMessage());
         holder.txtDate.setText(notification.getCreatedDateTime());
 
@@ -80,7 +78,7 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
         }
     }
 
-    private void setCardBackground(ViewHolder holder, Notification notification){
+    private void setCardBackground(ViewHolder holder, TaskNotification notification){
         Log.e(TAG, String.valueOf(notification.isRead()));
         if(!notification.isRead()){
             Log.e(TAG, "notification not read, changing color");
@@ -89,12 +87,12 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
     }
 
 
-    public void addData(List<Notification> notificationList) {
+    public void addData(List<TaskNotification> notificationList) {
         this.notifications.addAll(notificationList);
         this.notifyDataSetChanged();
     }
 
-    public void updateData(List<Notification> notifications) {
+    public void updateData(List<TaskNotification> notifications) {
         int size = this.notifications.size() + 1;
         this.notifications.addAll(notifications);
         Log.e(TAG, "size of list" + this.notifications.size());;
@@ -107,7 +105,7 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
         }
 
         notifications.clear();
-        for (Notification n : storedNotifications) {
+        for (TaskNotification n : storedNotifications) {
             // todo : probably want to also filter by group name etc
             boolean add = n.getTitle().toLowerCase().contains(queryText) ||
                     n.getMessage().toLowerCase().contains(queryText);
@@ -125,7 +123,7 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
     }
 
 
-    public List<Notification> getNotifications() {
+    public List<TaskNotification> getNotifications() {
         return notifications;
     }
 }

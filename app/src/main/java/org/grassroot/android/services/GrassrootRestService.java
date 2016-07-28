@@ -83,7 +83,7 @@ public class GrassrootRestService {
 
   private GrassrootRestService(Context context) {
     HttpLoggingInterceptor logging = new HttpLoggingInterceptor();
-    logging.setLevel(HttpLoggingInterceptor.Level.BODY);
+    logging.setLevel(HttpLoggingInterceptor.Level.HEADERS);
 
     OkHttpClient client = new OkHttpClient.Builder()
         .addInterceptor(logging)
@@ -152,6 +152,10 @@ public class GrassrootRestService {
     @GET("user/login/authenticate/{phoneNumber}/{code}")
     Call<TokenResponse> authenticate(@Path("phoneNumber") String phoneNumber,
         @Path("code") String code);
+
+    //request resend of OTP for user registration
+    @GET("user/verify/resend/{phoneNumber}")
+    Call<GenericResponse> resendRegOtp(@Path("phoneNumber") String phoneNumber);
 
     //verify new user login credential
     @GET("user/verify/{phoneNumber}/{code}")

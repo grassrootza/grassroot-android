@@ -15,8 +15,6 @@ public class Constant {
     public static long shortDelay = 300L;
     public static long mediumDelay = 500L;
 
-    public static final String regexAlphaNumeric = "[^a-zA-Z0-9 ]";
-
     public static final String productionUrl = "https://app.grassroot.org.za/api/";
     public static final String stagingUrl = "https://staging.grassroot.org.za/api/";
     public static final String localUrl = "http://10.0.2.2:8080/api/";
@@ -38,11 +36,8 @@ public class Constant {
     public static final String SHOW_ACTION_BUTTON_FLAG = "show_action_button";
     public static final String SUCCESS_MESSAGE = "success_message";
 
-    public static final String UID = "id";
     public static final String TITLE = "title";
-    public static final String ENTITY_TYPE = "entity_type";
     public static final String BODY = "body";
-    public static final String NOTIFICATION_UID = "notificationUid";
 
     public static final SimpleDateFormat isoDateTimeSDF = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
 

@@ -439,6 +439,18 @@
     <string name="vt_todo_members_assigned">Members assigned</string>
     <string name="vt_todo_group_assigned">Whole group assigned</string>
 
+    <!-- Section : Some strings for special display of notified tasks (e.g., cancelled) -->
+    <string name="vt_cancel_title">Cancelled</string>
+    <string name="vt_cancel_header">Cancelled</string>
+    <string name="vt_cancel_group">View Group</string>
+    <string name="vt_cancel_upcoming">Upcoming Tasks</string>
+    <string name="vt_cancel_home">Home</string>
+
+    <string name="vt_changed_header">Change</string>
+    <string name="vt_changed_task">View Details</string>
+    <string name="vt_changed_group">View Group</string>
+    <string name="vt_changed_home">Home</string>
+
     <!-- Section : edit task strings -->
 
     <string name="etsk_mtg_edit">Change meeting</string>

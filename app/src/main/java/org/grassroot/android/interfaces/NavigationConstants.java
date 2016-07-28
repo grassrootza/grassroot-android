@@ -5,6 +5,8 @@ package org.grassroot.android.interfaces;
  */
 public interface NavigationConstants {
 
+    String HOME_OPEN_ON_NAV = "nav_index";
+
     // note : the ints correspond to 0-indexed place in nav drawer, i.e., change values if change order
     int HOME_NAV_GROUPS = 0;
     int HOME_NAV_TASKS = 1;

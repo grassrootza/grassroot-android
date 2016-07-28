@@ -26,6 +26,7 @@ import org.grassroot.android.models.Token;
 import org.grassroot.android.models.TokenResponse;
 import org.grassroot.android.services.GcmRegistrationService;
 import org.grassroot.android.services.GrassrootRestService;
+import org.grassroot.android.services.LoginTask;
 import org.grassroot.android.utils.Constant;
 import org.grassroot.android.utils.ErrorUtils;
 import org.grassroot.android.utils.RealmUtils;
@@ -210,7 +211,20 @@ public class LoginRegisterActivity extends AppCompatActivity implements LoginScr
         if (LOGIN.equals(purpose)) {
             requestLogin(msisdn);
         } else {
-            // requestRegistration(userName, msisdn); // todo : create resend token rest call, for this
+            GrassrootRestService.getInstance().getApi().resendRegOtp(msisdn).enqueue(new Callback<GenericResponse>() {
+                @Override
+                public void onResponse(Call<GenericResponse> call, Response<GenericResponse> response) {
+                    otpRequestedTime = System.currentTimeMillis();
+                    final String otpToPass = BuildConfig.FLAVOR.equals(Constant.STAGING) ?
+                        (String) response.body().getData() : "";
+                    switchToOtp(otpToPass, REGISTER);
+                }
+
+                @Override
+                public void onFailure(Call<GenericResponse> call, Throwable t) {
+                    // todo : log / deal with (but shouldn't be possible ...);
+                }
+            });
         }
     }
 
@@ -309,6 +323,7 @@ public class LoginRegisterActivity extends AppCompatActivity implements LoginScr
 
     private void launchHomeScreen(boolean userHasGroups) {
         if (userHasGroups) {
+            new LoginTask().execute(this);
             Intent homeScreenIntent = new Intent(LoginRegisterActivity.this, HomeScreenActivity.class);
             startActivity(homeScreenIntent);
         } else {

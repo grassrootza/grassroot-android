@@ -4,6 +4,8 @@
     android:id="@+id/vt_root_layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:layout_marginLeft="@dimen/margin_small"
+    android:layout_marginRight="@dimen/margin_small"
     android:background="@color/md_grey_200"
     android:clickable="true"
     tools:context=".fragments.ViewTaskFragment">

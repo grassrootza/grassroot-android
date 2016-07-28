@@ -173,6 +173,7 @@ public class ViewTaskFragment extends Fragment {
       setUpViews(task);
     } else {
       progressDialog.show();
+      // todo : switch this to using task service, with an observer ...
       GrassrootRestService.getInstance()
           .getApi()
           .fetchTaskEntity(phoneNumber, code, taskUid, taskType)

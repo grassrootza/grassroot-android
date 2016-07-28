@@ -63,11 +63,13 @@ public class GroupService {
   public ArrayList<GroupJoinRequest> openJoinRequests;
 
   private static GroupService instance = null;
+  public static boolean isFetchingGroups = false;
 
   public interface GroupServiceListener {
     void groupListLoaded();
 
     void groupListLoadingError();
+    void groupsAlreadyFetching();
   }
 
   public interface GroupCreationListener {
@@ -98,6 +100,8 @@ public class GroupService {
 
   public void fetchGroupListWithErrorDisplay(final Activity activity, final View errorViewHolder,
       final GroupServiceListener listener) {
+
+    isFetchingGroups = true;
 
     if (listener == null) {
       throw new UnsupportedOperationException("Error! Call to fetch group list must have listener");
@@ -154,6 +158,8 @@ public class GroupService {
   }
 
   public void fetchGroupListWithoutError() {
+    isFetchingGroups = true;
+
     final String mobileNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
     final String userCode = RealmUtils.loadPreferencesFromDB().getToken();
     long lastTimeUpdated = RealmUtils.loadPreferencesFromDB()
@@ -177,7 +183,9 @@ public class GroupService {
         }
       }
 
-      @Override public void onFailure(Call<GroupsChangedResponse> call, Throwable t) {
+      @Override
+      public void onFailure(Call<GroupsChangedResponse> call, Throwable t) {
+        isFetchingGroups = false;
       }
     });
   }

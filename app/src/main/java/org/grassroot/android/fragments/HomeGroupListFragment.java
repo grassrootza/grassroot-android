@@ -22,13 +22,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
-import butterknife.BindView;
-import butterknife.ButterKnife;
-import butterknife.OnClick;
-import butterknife.Unbinder;
-import io.realm.RealmList;
-import java.util.ArrayList;
-import java.util.List;
+
 import org.grassroot.android.R;
 import org.grassroot.android.activities.CreateGroupActivity;
 import org.grassroot.android.activities.CreateMeetingActivity;
@@ -42,6 +36,7 @@ import org.grassroot.android.events.GroupCreatedEvent;
 import org.grassroot.android.events.GroupDeletedEvent;
 import org.grassroot.android.events.GroupEditedEvent;
 import org.grassroot.android.events.GroupPictureChangedEvent;
+import org.grassroot.android.events.GroupsRefreshedEvent;
 import org.grassroot.android.events.JoinRequestReceived;
 import org.grassroot.android.events.NetworkActivityResultsEvent;
 import org.grassroot.android.events.OfflineActionsSent;
@@ -61,433 +56,471 @@ import org.grassroot.android.utils.NetworkUtils;
 import org.grassroot.android.utils.RealmUtils;
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import butterknife.BindView;
+import butterknife.ButterKnife;
+import butterknife.OnClick;
+import butterknife.Unbinder;
+import io.realm.RealmList;
 import rx.Subscriber;
 
 public class HomeGroupListFragment extends android.support.v4.app.Fragment
-    implements GroupListAdapter.GroupRowListener {
+        implements GroupListAdapter.GroupRowListener {
 
-  private String TAG = HomeGroupListFragment.class.getSimpleName();
+    private String TAG = HomeGroupListFragment.class.getSimpleName();
 
-  private Unbinder unbinder;
+    private Unbinder unbinder;
 
-  @BindView(R.id.rl_ghp_root) RelativeLayout rlGhpRoot;
+    @BindView(R.id.rl_ghp_root)
+    RelativeLayout rlGhpRoot;
 
-  private GroupListAdapter groupListRowAdapter;
-  private boolean hasFetchedGroups = false;
-  @BindView(R.id.gl_swipe_refresh) SwipeRefreshLayout glSwipeRefresh;
-  @BindView(R.id.recycler_view) RecyclerView rcGroupList;
+    private GroupListAdapter groupListRowAdapter;
 
-  private boolean floatingMenuOpen = false;
-  @BindView(R.id.fab_menu_open) FloatingActionButton fabOpenMenu;
-  @BindView(R.id.ll_fab_new_task) LinearLayout fabNewTask;
-  @BindView(R.id.ll_fab_join_group) LinearLayout fabFindGroup;
-  @BindView(R.id.ll_fab_start_group) LinearLayout fabStartGroup;
+    @BindView(R.id.gl_swipe_refresh)
+    SwipeRefreshLayout glSwipeRefresh;
+    @BindView(R.id.recycler_view)
+    RecyclerView rcGroupList;
 
-  ProgressDialog progressDialog;
+    private boolean floatingMenuOpen = false;
+    @BindView(R.id.fab_menu_open)
+    FloatingActionButton fabOpenMenu;
+    @BindView(R.id.ll_fab_new_task)
+    LinearLayout fabNewTask;
+    @BindView(R.id.ll_fab_join_group)
+    LinearLayout fabFindGroup;
+    @BindView(R.id.ll_fab_start_group)
+    LinearLayout fabStartGroup;
 
-  public boolean date_click = false, role_click = false, defaults_click = false;
+    ProgressDialog progressDialog;
 
-  private GroupPickCallbacks mCallbacks;
+    public boolean date_click = false, role_click = false, defaults_click = false;
 
-  @Override public void onAttach(Context context) {
-    super.onAttach(context);
-    Activity activity = (Activity) context;
-    try {
-      mCallbacks = (GroupPickCallbacks) activity;
-    } catch (ClassCastException e) {
-      throw new ClassCastException("Activity must implement group pick callbacks");
+    private GroupPickCallbacks mCallbacks;
+
+    @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        Activity activity = (Activity) context;
+        try {
+            mCallbacks = (GroupPickCallbacks) activity;
+        } catch (ClassCastException e) {
+            throw new ClassCastException("Activity must implement group pick callbacks");
+        }
     }
-  }
+
+    @Override public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                                       Bundle savedInstanceState) {
+        View view = inflater.inflate(R.layout.activity_group__homepage, container, false);
+        unbinder = ButterKnife.bind(this, view);
+        EventBus.getDefault().register(this);
+        if (groupListRowAdapter == null || groupListRowAdapter.getItemCount() == 0) {
+            showProgress();
+        }
+        return view;
+    }
+
     @Override public void onActivityCreated(Bundle savedInstanceState) {
-    super.onCreate(savedInstanceState);
-    Log.e(TAG, "onActivityCreate called in home group list fragment ...");
-    setUpRecyclerView();
-    if (!hasFetchedGroups) {
-      fetchGroupList();
+        super.onCreate(savedInstanceState);
+        setUpRecyclerView();
     }
-    checkForJoinRequests();
-  }
 
-  private void setUpRecyclerView() {
-    rcGroupList.setHasFixedSize(true);
-    rcGroupList.setLayoutManager(new LinearLayoutManager(getActivity()));
-    rcGroupList.setItemViewCacheSize(20);
-    rcGroupList.setDrawingCacheEnabled(true);
-    rcGroupList.setDrawingCacheQuality(View.DRAWING_CACHE_QUALITY_HIGH);
-    groupListRowAdapter = new GroupListAdapter(new ArrayList<Group>(), HomeGroupListFragment.this);
-    rcGroupList.setAdapter(groupListRowAdapter);
-    rcGroupList.setVisibility(View.VISIBLE);
-    glSwipeRefresh.setColorSchemeColors(
-        ContextCompat.getColor(getActivity(), R.color.primaryColor));
-    glSwipeRefresh.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
-      @Override public void onRefresh() {
-        refreshGroupList();
-      }
-    });
-    RealmUtils.loadGroupsSorted().subscribe(new Subscriber<List<Group>>() {
-      @Override public void onCompleted() {
+    private void setUpRecyclerView() {
+        rcGroupList.setHasFixedSize(true);
+        rcGroupList.setLayoutManager(new LinearLayoutManager(getActivity()));
+        rcGroupList.setItemViewCacheSize(20);
+        rcGroupList.setDrawingCacheEnabled(true);
+        rcGroupList.setDrawingCacheQuality(View.DRAWING_CACHE_QUALITY_HIGH);
+        groupListRowAdapter = new GroupListAdapter(new ArrayList<Group>(), HomeGroupListFragment.this);
+        rcGroupList.setAdapter(groupListRowAdapter);
+        rcGroupList.setVisibility(View.VISIBLE);
+        glSwipeRefresh.setColorSchemeColors(ContextCompat.getColor(getActivity(), R.color.primaryColor));
+        glSwipeRefresh.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                refreshGroupList();
+            }
+        });
+        RealmUtils.loadGroupsSorted().subscribe(new Subscriber<List<Group>>() {
+            @Override public void onCompleted() {
 
-      }
+            }
 
-      @Override public void onError(Throwable e) {
+            @Override public void onError(Throwable e) {
 
-      }
+            }
 
-      @Override public void onNext(List<Group> groups) {
-        groupListRowAdapter.setGroupList(groups);
-      }
-    });
-  }
+            @Override public void onNext(List<Group> groups) {
+                groupListRowAdapter.setGroupList(groups);
+            }
+        });
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+        toggleProgressIfGroupsShowing();
+    }
 
     @Override public void onResume() {
         super.onResume();
         fabOpenMenu.setVisibility(View.VISIBLE);
+        toggleProgressIfGroupsShowing();
     }
-  @Override public View onCreateView(LayoutInflater inflater, ViewGroup container,
-      Bundle savedInstanceState) {
-    View view = inflater.inflate(R.layout.activity_group__homepage, container, false);
-    unbinder = ButterKnife.bind(this, view);
-    EventBus.getDefault().register(this);
-    if (groupListRowAdapter == null || groupListRowAdapter.getItemCount() == 0) {
-      showProgress();
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        hideProgress();
+        EventBus.getDefault().unregister(this);
+        unbinder.unbind();
     }
-    return view;
-  }
 
+    public void showSuccessMessage(Intent data) {
+        String message = data.getStringExtra(Constant.SUCCESS_MESSAGE);
+        ErrorUtils.showSnackBar(rlGhpRoot, message, Snackbar.LENGTH_LONG, "", null);
+    }
 
-  @Override public void onDestroyView() {
-    super.onDestroyView();
-    hideProgress();
-    EventBus.getDefault().unregister(this);
-    unbinder.unbind();
-  }
+    /**
+     * Method executed to retrieve and populate list of groups.
+     * todo : set some preference or flag as "offline" if error, and show a dialog box
+     */
+    public void fetchGroupList() {
 
-  public void showSuccessMessage(Intent data) {
-    String message = data.getStringExtra(Constant.SUCCESS_MESSAGE);
-    ErrorUtils.showSnackBar(rlGhpRoot, message, Snackbar.LENGTH_LONG, "", null);
-  }
+        showProgress();
+        GroupService.getInstance()
+                .fetchGroupListWithErrorDisplay(getActivity(), rlGhpRoot, new GroupService.GroupServiceListener() {
+                    @Override public void groupListLoaded() {
+                        groupListRowAdapter.refreshGroupsToDB();
+                        final Handler handler = new Handler();
+                        handler.postDelayed(new Runnable() {
+                            @Override
+                            public void run() {
+                                hideProgress();
+                            }
+                        }, Constant.shortDelay); // otherwise the dialog disappears before groups show up (but might not need it)
+                    }
 
-  /**
-   * Method executed to retrieve and populate list of groups.
-   * todo : set some preference or flag as "offline" if error, and show a dialog box
+                    @Override public void groupListLoadingError() {
+                        // todo : a "try again" / "offline" dialog
+                        hideProgress();
+                    }
+
+                    @Override public void groupsAlreadyFetching() {
+                        final Handler handler = new Handler();
+                        handler.postDelayed(new Runnable() {
+                            @Override
+                            public void run() {
+                                hideProgress();
+                            }
+                        }, Constant.shortDelay); // otherwise the dialog disappears before groups show up
+                    }
+                });
+    }
+
+    @Subscribe
+    public void onGroupJoinRequestsLoaded(JoinRequestReceived e) {
+        ErrorUtils.showSnackBar(rlGhpRoot, R.string.jreq_notice, Snackbar.LENGTH_LONG);
+    }
+
+    /*
+    Separating this method from the above, because we will probably want it to call some kind of diff
+    in time, rather than doing a full refresh, and don't need to worry about progress bar, etc
    */
-  public void fetchGroupList() {
-    showProgress();
-    Log.e(TAG, "fetching group list ...");
-    GroupService.getInstance()
-        .fetchGroupListWithErrorDisplay(getActivity(), rlGhpRoot,
-            new GroupService.GroupServiceListener() {
-              @Override public void groupListLoaded() {
-                hasFetchedGroups = true;
-                groupListRowAdapter.refreshGroupsToDB();
-                final Handler handler = new Handler();
-                handler.postDelayed(new Runnable() {
-                  @Override public void run() {
-                    hideProgress();
-                  }
-                }, Constant.shortDelay); // otherwise the dialog disappears before groups show up
-              }
+    public void refreshGroupList() {
+        GroupService.getInstance()
+                .fetchGroupListWithErrorDisplay(getActivity(), null, new GroupService.GroupServiceListener() {
+                    @Override public void groupListLoaded() {
+                        groupListRowAdapter.refreshGroupsToDB();
+                        glSwipeRefresh.setRefreshing(false);
+                    }
 
-              @Override public void groupListLoadingError() {
-                hideProgress();
-                // todo : a "try again" / "offline" dialog
-              }
-            });
-  }
+                    @Override public void groupListLoadingError() {
+                        glSwipeRefresh.setRefreshing(false);
+                        // todo : online/offline dialog error
+                    }
 
-  /*
-  Just check and notify
-   */
-  public void checkForJoinRequests() {
-    GroupService.getInstance().fetchGroupJoinRequests(new GroupService.GroupJoinRequestListener() {
-      @Override public void groupJoinRequestsOpen(RealmList<GroupJoinRequest> joinRequests) {
-        if (joinRequests != null && !joinRequests.isEmpty()) {
-          displayJoinRequestNotice();
-        }
-      }
-
-      @Override public void groupJoinRequestsOffline(RealmList<GroupJoinRequest> openJoinRequests) {
-        if (openJoinRequests != null && !openJoinRequests.isEmpty()) {
-          displayJoinRequestNotice();
-        }
-      }
-
-      @Override public void groupJoinRequestsEmpty() {
-        Log.d(TAG, "no join requests found ...");
-      }
-    });
-  }
-
-  @Subscribe public void onGroupJoinRequestsLoaded(JoinRequestReceived e) {
-    displayJoinRequestNotice();
-  }
-
-  private void displayJoinRequestNotice() {
-    ErrorUtils.showSnackBar(rlGhpRoot, R.string.jreq_notice, Snackbar.LENGTH_LONG);
-  }
-
-  /*
-  Separating this method from the above, because we will probably want it to call some kind of diff
-  in time, rather than doing a full refresh, and don't need to worry about progress bar, etc
- */
-  public void refreshGroupList() {
-    GroupService.getInstance()
-        .fetchGroupListWithErrorDisplay(getActivity(), null,
-            new GroupService.GroupServiceListener() {
-              @Override public void groupListLoaded() {
-                groupListRowAdapter.refreshGroupsToDB();
-                glSwipeRefresh.setRefreshing(false);
-              }
-
-              @Override public void groupListLoadingError() {
-                glSwipeRefresh.setRefreshing(false);
-                // todo : online/offline dialog error
-              }
-            });
-  }
-
-  public void updateSingleGroup(final int position, final String groupUid) {
-    if (position == -1) {
-      throw new UnsupportedOperationException(
-          "ERROR! This should not be called without a valid position");
+                    @Override public void groupsAlreadyFetching() {
+                        glSwipeRefresh.setRefreshing(false);
+                    }
+                });
     }
 
-    GroupService.getInstance()
-        .refreshSingleGroup(position, groupUid, getActivity(),
-            new GroupService.GroupServiceListener() {
-              @Override public void groupListLoaded() {
-                groupListRowAdapter.updateGroup(position, groupUid);
-              }
-
-              @Override public void groupListLoadingError() {
-                // todo : online/offline dialog
-                Log.e(TAG, "ERROR! Group position and ID do not match, not updating");
-              }
-            });
-  }
-
-  @OnClick(R.id.fab_menu_open) public void toggleFloatingMenu() {
-    if (!floatingMenuOpen) {
-      openFloatingMenu();
-    } else {
-      closeFloatingMenu();
-    }
-  }
-
-  private void openFloatingMenu() {
-    floatingMenuOpen = true;
-    fabOpenMenu.setImageResource(R.drawable.ic_add_45d);
-    fabNewTask.setVisibility(View.VISIBLE);
-    fabFindGroup.setVisibility(View.VISIBLE);
-    fabStartGroup.setVisibility(View.VISIBLE);
-  }
-
-  private void closeFloatingMenu() {
-    floatingMenuOpen = false;
-    fabOpenMenu.setImageResource(R.drawable.ic_add);
-    fabNewTask.setVisibility(View.GONE);
-    fabFindGroup.setVisibility(View.GONE);
-    fabStartGroup.setVisibility(View.GONE);
-  }
-
-  @OnClick(R.id.ic_fab_new_task) public void icFabNewTask() {
-    closeFloatingMenu();
-    QuickTaskModalFragment modal = QuickTaskModalFragment.newInstance(false, null,
-        new QuickTaskModalFragment.TaskModalListener() {
-          @Override public void onTaskClicked(String taskType) {
-            fabOpenMenu.setVisibility(View.GONE);
-            mCallbacks.groupPickerTriggered(taskType);
-          }
-        });
-    modal.show(getFragmentManager(), QuickTaskModalFragment.class.getSimpleName());
-  }
-
-  @OnClick(R.id.ic_fab_join_group) public void icFabJoinGroup() {
-    closeFloatingMenu();
-    Intent icFabJoinGroup = new Intent(getActivity(), GroupSearchActivity.class);
-    startActivity(icFabJoinGroup);
-  }
-
-  @OnClick(R.id.ic_fab_start_group) public void icFabStartGroup() {
-    closeFloatingMenu();
-    Intent icFabStartGroup = new Intent(getActivity(), CreateGroupActivity.class);
-    startActivityForResult(icFabStartGroup, Constant.activityCreateGroup);
-  }
-
-  @Override public void onGroupRowShortClick(Group group) {
-    if (floatingMenuOpen) closeFloatingMenu();
-    if (!group.getIsLocal()) {
-      startActivity(MenuUtils.constructIntent(getActivity(), GroupTasksActivity.class, group));
-    } else {
-      showGroupWipMenu(group);
-    }
-  }
-
-  private void showGroupWipMenu(final Group group) {
-    AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
-    builder.setTitle(R.string.cg_wip_message);
-    builder.setItems(R.array.cg_offline_group, new DialogInterface.OnClickListener() {
-      @Override public void onClick(DialogInterface dialog, int which) {
-        switch (which) {
-          case 0:
-            startActivity(
-                MenuUtils.constructIntent(getActivity(), CreateGroupActivity.class, group));
-            break;
-          case 1:
-            startActivity(
-                MenuUtils.constructIntent(getActivity(), GroupTasksActivity.class, group));
-            break;
-          case 2:
-            GroupService.getInstance().deleteLocallyCreatedGroup(group.getGroupUid());
-            break;
-          default:
-            break;
+    public void updateSingleGroup(final int position, final String groupUid) {
+        if (position == -1) {
+            throw new UnsupportedOperationException(
+                    "ERROR! This should not be called without a valid position");
         }
-      }
-    });
-    builder.create().show();
-  }
 
-  @Override public void onGroupRowLongClick(Group group) {
-    showQuickOptionsDialog(group);
-  }
+        GroupService.getInstance()
+                .refreshSingleGroup(position, groupUid, getActivity(),
+                        new GroupService.GroupServiceListener() {
+                            @Override
+                            public void groupListLoaded() {
+                                groupListRowAdapter.updateGroup(position, groupUid);
+                            }
 
-  private void showQuickOptionsDialog(final Group group) {
-    QuickTaskModalFragment dialog = QuickTaskModalFragment.newInstance(true, group,
-        new QuickTaskModalFragment.TaskModalListener() {
-          @Override public void onTaskClicked(String taskType) {
-            Intent i;
-            switch (taskType) {
-              case TaskConstants.MEETING:
-                i = MenuUtils.constructIntent(getActivity(), CreateMeetingActivity.class,
-                    group.getGroupUid(), group.getGroupName());
-                break;
-              case TaskConstants.VOTE:
-                i = MenuUtils.constructIntent(getActivity(), CreateVoteActivity.class,
-                    group.getGroupUid(), group.getGroupName());
-                break;
-              case TaskConstants.TODO:
-                i = MenuUtils.constructIntent(getActivity(), CreateTodoActivity.class,
-                    group.getGroupUid(), group.getGroupName());
-                break;
-              default:
-                throw new UnsupportedOperationException("Error! Unknown task type");
+                            @Override
+                            public void groupListLoadingError() {
+                                // todo : online/offline dialog
+                                Log.e(TAG, "ERROR! Group position and ID do not match, not updating");
+                            }
+
+                            @Override
+                            public void groupsAlreadyFetching() {
+                                Log.e(TAG, "already a background refresh happening");
+                            }
+                        });
+    }
+
+    @OnClick(R.id.fab_menu_open)
+    public void toggleFloatingMenu() {
+        if (!floatingMenuOpen) {
+            openFloatingMenu();
+        } else {
+            closeFloatingMenu();
+        }
+    }
+
+    private void openFloatingMenu() {
+        floatingMenuOpen = true;
+        fabOpenMenu.setImageResource(R.drawable.ic_add_45d);
+        fabNewTask.setVisibility(View.VISIBLE);
+        fabFindGroup.setVisibility(View.VISIBLE);
+        fabStartGroup.setVisibility(View.VISIBLE);
+    }
+
+    private void closeFloatingMenu() {
+        floatingMenuOpen = false;
+        fabOpenMenu.setImageResource(R.drawable.ic_add);
+        fabNewTask.setVisibility(View.GONE);
+        fabFindGroup.setVisibility(View.GONE);
+        fabStartGroup.setVisibility(View.GONE);
+    }
+
+    @OnClick(R.id.ic_fab_new_task)
+    public void icFabNewTask() {
+        closeFloatingMenu();
+        QuickTaskModalFragment modal = QuickTaskModalFragment.newInstance(false, null, new QuickTaskModalFragment.TaskModalListener() {
+            @Override
+            public void onTaskClicked(String taskType) {
+                fabOpenMenu.setVisibility(View.GONE);
+                mCallbacks.groupPickerTriggered(taskType);
             }
-            startActivityForResult(i, Constant.activityCreateTask);
-          }
         });
-    dialog.show(getFragmentManager(), QuickTaskModalFragment.class.getSimpleName());
-  }
-
-  @Override public void onGroupRowMemberClick(Group group, int position) {
-    GroupQuickMemberModalFragment dialog = new GroupQuickMemberModalFragment();
-    Bundle args = new Bundle();
-    args.putParcelable(GroupConstants.OBJECT_FIELD, group);
-    args.putInt(Constant.INDEX_FIELD, position);
-    dialog.setArguments(args);
-    dialog.show(getFragmentManager(), "GroupQuickMemberModalFragment");
-  }
-
-  @Override public void onGroupRowAvatarClick(Group group, int position) {
-    Intent intent = MenuUtils.constructIntent(getActivity(), GroupAvatarActivity.class, group);
-    intent.putExtra(Constant.INDEX_FIELD, position);
-    startActivity(intent);
-  }
-
-  @Override public void onDetach() {
-    super.onDetach();
-    mCallbacks = null;
-  }
-
-  @Subscribe public void onEvent(NetworkActivityResultsEvent networkActivityResultsEvent) {
-    NetworkUtils.syncLocalAndServer(getContext()); // todo : decide if we need this here
-  }
-
-  @Subscribe public void onEvent(OfflineActionsSent e) {
-    if (groupListRowAdapter != null) {
-      groupListRowAdapter.refreshGroupsToDB();
+        modal.show(getFragmentManager(), QuickTaskModalFragment.class.getSimpleName());
     }
-  }
 
-  private void showProgress() {
-    if (progressDialog == null) {
-      progressDialog = new ProgressDialog(getContext());
-      progressDialog.setIndeterminate(true);
-      progressDialog.setMessage(getString(R.string.txt_pls_wait));
+    @OnClick(R.id.ic_fab_join_group)
+    public void icFabJoinGroup() {
+        closeFloatingMenu();
+        Intent icFabJoinGroup = new Intent(getActivity(), GroupSearchActivity.class);
+        startActivity(icFabJoinGroup);
     }
-    progressDialog.show();
-  }
 
-  private void hideProgress() {
-    if (progressDialog != null) {
-      progressDialog.dismiss();
+    @OnClick(R.id.ic_fab_start_group)
+    public void icFabStartGroup() {
+        closeFloatingMenu();
+        Intent icFabStartGroup = new Intent(getActivity(), CreateGroupActivity.class);
+        startActivityForResult(icFabStartGroup, Constant.activityCreateGroup);
     }
-  }
 
-  @Subscribe public void onEvent(GroupPictureChangedEvent groupPictureUploadedEvent) {
-    groupListRowAdapter.refreshGroupsToDB();
-  }
-
-  @Subscribe public void onTaskCreatedEvent(TaskAddedEvent e) {
-    groupListRowAdapter.refreshGroupsToDB();
-  }
-
-  @Subscribe public void onGroupAdded(GroupCreatedEvent e) {
-    groupListRowAdapter.refreshGroupsToDB();
-  }
-
-  @Subscribe public void onGroupEditedEvent(GroupEditedEvent e) {
-    groupListRowAdapter.refreshGroupsToDB();
-  }
-
-  @Subscribe public void onGroupDeletedEvent(GroupDeletedEvent e) {
-    groupListRowAdapter.refreshGroupsToDB();
-  } // todo : make more efficient ...
-
-  @Subscribe public void onEvent(UserLoggedOutEvent e) {
-    // finish on main activity seems to not clear this
-    groupListRowAdapter.setGroupList(new ArrayList<Group>());
-  }
-
-  public void sortGroups() {
-    SortFragment sortFragment = new SortFragment();
-    Bundle b = new Bundle();
-    b.putBoolean("Date", date_click);
-    b.putBoolean("Role", role_click);
-    b.putBoolean("Default", defaults_click);
-    sortFragment.setArguments(b);
-    sortFragment.show(getFragmentManager(), "SortFragment");
-    sortFragment.setListener(new SortInterface() {
-
-      @Override public void tvDateClick(boolean date, boolean role, boolean defaults) {
-        date_click = true;
-        role_click = false;
-        Long start = SystemClock.currentThreadTimeMillis();
-        groupListRowAdapter.sortByDate();
-        Log.d(TAG, String.format("sorting group list took %d msecs",
-            SystemClock.currentThreadTimeMillis() - start));
-      }
-
-      @Override public void roleClick(boolean date, boolean role, boolean defaults) {
-        date_click = false;
-        role_click = true;
-        Long start = SystemClock.currentThreadTimeMillis();
-        groupListRowAdapter.sortByRole();
-        Log.d(TAG, String.format("sorting group list took %d msecs",
-            SystemClock.currentThreadTimeMillis() - start));
-      }
-
-      @Override public void defaultsClick(boolean date, boolean role, boolean defaults) {
-        // todo : restore whatever was here
-      }
-    });
-  }
-
-  public void searchStringChanged(String query) {
-    if (TextUtils.isEmpty(query)) {
-      groupListRowAdapter.refreshGroupsToDB();
-    } else {
-      groupListRowAdapter.simpleSearchByName(query);
+    @Override
+    public void onGroupRowShortClick(Group group) {
+        if (floatingMenuOpen) closeFloatingMenu();
+        if (!group.getIsLocal()) {
+            startActivity(MenuUtils.constructIntent(getActivity(), GroupTasksActivity.class, group));
+        } else {
+            showGroupWipMenu(group);
+        }
     }
-  }
+
+    private void showGroupWipMenu(final Group group) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+        builder.setTitle(R.string.cg_wip_message);
+        builder.setItems(R.array.cg_offline_group, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                switch (which) {
+                    case 0:
+                        startActivity(MenuUtils.constructIntent(getActivity(), CreateGroupActivity.class, group));
+                        break;
+                    case 1:
+                        startActivity(MenuUtils.constructIntent(getActivity(), GroupTasksActivity.class, group));
+                        break;
+                    case 2:
+                        GroupService.getInstance().deleteLocallyCreatedGroup(group.getGroupUid());
+                        break;
+                    default:
+                        break;
+                }
+            }
+        });
+        builder.create().show();
+    }
+
+    @Override
+    public void onGroupRowLongClick(Group group) {
+        showQuickOptionsDialog(group);
+    }
+
+    private void showQuickOptionsDialog(final Group group) {
+        QuickTaskModalFragment dialog = QuickTaskModalFragment.newInstance(true, group,
+                new QuickTaskModalFragment.TaskModalListener() {
+                    @Override
+                    public void onTaskClicked(String taskType) {
+                        Intent i;
+                        switch (taskType) {
+                            case TaskConstants.MEETING:
+                                i = MenuUtils.constructIntent(getActivity(), CreateMeetingActivity.class,
+                                        group.getGroupUid(), group.getGroupName());
+                                break;
+                            case TaskConstants.VOTE:
+                                i = MenuUtils.constructIntent(getActivity(), CreateVoteActivity.class,
+                                        group.getGroupUid(), group.getGroupName());
+                                break;
+                            case TaskConstants.TODO:
+                                i = MenuUtils.constructIntent(getActivity(), CreateTodoActivity.class,
+                                        group.getGroupUid(), group.getGroupName());
+                                break;
+                            default:
+                                throw new UnsupportedOperationException("Error! Unknown task type");
+                        }
+                        startActivityForResult(i, Constant.activityCreateTask);
+                    }
+                });
+        dialog.show(getFragmentManager(), QuickTaskModalFragment.class.getSimpleName());
+    }
+
+    @Override
+    public void onGroupRowMemberClick(Group group, int position) {
+        GroupQuickMemberModalFragment dialog = new GroupQuickMemberModalFragment();
+        Bundle args = new Bundle();
+        args.putParcelable(GroupConstants.OBJECT_FIELD, group);
+        args.putInt(Constant.INDEX_FIELD, position);
+        dialog.setArguments(args);
+        dialog.show(getFragmentManager(), "GroupQuickMemberModalFragment");
+    }
+
+    @Override
+    public void onGroupRowAvatarClick(Group group, int position) {
+        Intent intent = MenuUtils.constructIntent(getActivity(), GroupAvatarActivity.class,
+                group);
+        intent.putExtra(Constant.INDEX_FIELD, position);
+        startActivity(intent);
+    }
+
+    @Override
+    public void onDetach() {
+        super.onDetach();
+        mCallbacks = null;
+    }
+
+    private void toggleProgressIfGroupsShowing() {
+        if (GroupService.isFetchingGroups) {
+            showProgress();
+        } else if (groupListRowAdapter == null || groupListRowAdapter.getItemCount() == 0) {
+            showProgress();
+        } else {
+            hideProgress();
+        }
+    }
+
+    private void showProgress() {
+        if (progressDialog == null) {
+            progressDialog = new ProgressDialog(getContext());
+            progressDialog.setIndeterminate(true);
+            progressDialog.setMessage(getString(R.string.txt_pls_wait));
+        }
+        progressDialog.show();
+    }
+
+    private void hideProgress() {
+        if (progressDialog != null) {
+            progressDialog.dismiss();
+        }
+    }
+
+    @Subscribe
+    public void onEvent(GroupsRefreshedEvent e) {
+        if (groupListRowAdapter != null) {
+            groupListRowAdapter.refreshGroupsToDB();
+        }
+        hideProgress();
+    }
+
+    @Subscribe
+    public void onEvent(GroupPictureChangedEvent groupPictureUploadedEvent) {
+        groupListRowAdapter.refreshGroupsToDB();
+    }
+
+    @Subscribe
+    public void onTaskCreatedEvent(TaskAddedEvent e) {
+        groupListRowAdapter.refreshGroupsToDB();
+    }
+
+    @Subscribe
+    public void onGroupAdded(GroupCreatedEvent e) {
+        groupListRowAdapter.refreshGroupsToDB();
+    }
+
+    @Subscribe
+    public void onGroupEditedEvent(GroupEditedEvent e) {
+        groupListRowAdapter.refreshGroupsToDB();
+    }
+
+    @Subscribe public void onGroupDeletedEvent(GroupDeletedEvent e) { groupListRowAdapter.refreshGroupsToDB(); } // todo : make more efficient ...
+
+    @Subscribe
+    public void onEvent(UserLoggedOutEvent e) {
+        // finish on main activity seems to not clear this
+        groupListRowAdapter.setGroupList(new ArrayList<Group>());
+    }
+
+    public void sortGroups() {
+        SortFragment sortFragment = new SortFragment();
+        Bundle b = new Bundle();
+        b.putBoolean("Date", date_click);
+        b.putBoolean("Role", role_click);
+        b.putBoolean("Default", defaults_click);
+        sortFragment.setArguments(b);
+        sortFragment.show(getFragmentManager(), "SortFragment");
+        sortFragment.setListener(new SortInterface() {
+
+            @Override
+            public void tvDateClick(boolean date, boolean role, boolean defaults) {
+                date_click = true;
+                role_click = false;
+                Long start = SystemClock.currentThreadTimeMillis();
+                groupListRowAdapter.sortByDate();
+                Log.d(TAG, String.format("sorting group list took %d msecs",
+                        SystemClock.currentThreadTimeMillis() - start));
+            }
+
+            @Override
+            public void roleClick(boolean date, boolean role, boolean defaults) {
+                date_click = false;
+                role_click = true;
+                Long start = SystemClock.currentThreadTimeMillis();
+                groupListRowAdapter.sortByRole();
+                Log.d(TAG, String.format("sorting group list took %d msecs",
+                        SystemClock.currentThreadTimeMillis() - start));
+            }
+
+            @Override
+            public void defaultsClick(boolean date, boolean role, boolean defaults) {
+                // todo : restore whatever was here
+            }
+        });
+    }
+
+    public void searchStringChanged(String query) {
+        if (TextUtils.isEmpty(query)) {
+            groupListRowAdapter.refreshGroupsToDB();
+        } else {
+            groupListRowAdapter.simpleSearchByName(query);
+        }
+    }
 }

@@ -20,9 +20,10 @@ import org.grassroot.android.adapters.NotificationAdapter;
 import org.grassroot.android.adapters.RecyclerTouchListener;
 import org.grassroot.android.events.NotificationEvent;
 import org.grassroot.android.interfaces.ClickListener;
-import org.grassroot.android.models.Notification;
+import org.grassroot.android.interfaces.NotificationConstants;
 import org.grassroot.android.models.NotificationList;
 import org.grassroot.android.models.PreferenceObject;
+import org.grassroot.android.models.TaskNotification;
 import org.grassroot.android.services.GcmListenerService;
 import org.grassroot.android.services.GrassrootRestService;
 import org.grassroot.android.services.NotificationUpdateService;
@@ -56,7 +57,7 @@ public class NotificationCenterFragment extends Fragment {
     private Integer totalPages = 0;
     private Integer pageSize = null;
     private NotificationAdapter notificationAdapter;
-    private List<Notification> notifications = new ArrayList<>();
+    private List<TaskNotification> notifications = new ArrayList<>();
     private int firstVisibleItem, totalItemCount, lastVisibileItem;
     private boolean isLoading;
 
@@ -90,14 +91,14 @@ public class NotificationCenterFragment extends Fragment {
         rcNc.addOnItemTouchListener(new RecyclerTouchListener(getContext(), rcNc, new ClickListener() {
                     @Override
                     public void onClick(View view, int position) {
-                        Notification notification = notificationAdapter.getNotifications().get(position);
+                        TaskNotification notification = notificationAdapter.getNotifications().get(position);
                         updateNotificationStatus(notification);
                         Log.d(TAG, "clicked on item" + position + ", with message: " + notification.getMessage());
 
                         Intent openactivity = new Intent(getActivity(), ViewTaskActivity.class);
-                        openactivity.putExtra(Constant.UID, notification.getEntityUid());
-                        openactivity.putExtra(Constant.ENTITY_TYPE, notification.getEntityType());
-                        openactivity.putExtra(Constant.NOTIFICATION_UID, notification.getUid());
+                        openactivity.putExtra(NotificationConstants.ENTITY_UID, notification.getEntityUid());
+                        openactivity.putExtra(NotificationConstants.ENTITY_TYPE, notification.getEntityType());
+                        openactivity.putExtra(NotificationConstants.NOTIFICATION_UID, notification.getUid());
                         startActivity(openactivity);
                     }
 
@@ -172,7 +173,7 @@ public class NotificationCenterFragment extends Fragment {
         });
     }
 
-    private void updateNotificationStatus(Notification notification) {
+    private void updateNotificationStatus(TaskNotification notification) {
         if (!notification.isRead()) {
             String uid = notification.getUid();
             notification.setIsRead();
