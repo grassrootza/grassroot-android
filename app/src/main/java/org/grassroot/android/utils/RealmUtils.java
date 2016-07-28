@@ -57,7 +57,6 @@ public class RealmUtils {
                 realm.beginTransaction();
                 realm.copyToRealmOrUpdate(list);
                 realm.commitTransaction();
-                realm.stopWaitForChange();
                 realm.close();
                 subscriber.onNext(true);
                 subscriber.onCompleted();
@@ -142,9 +141,9 @@ public class RealmUtils {
                         final Realm realm = Realm.getDefaultInstance();
                         List<RealmObject> realmResults = (List<RealmObject>) realm.copyFromRealm(
                                 (realm.where(model).equalTo(pName, pValue).findAll()));
-                        realm.close();
                         subscriber.onNext(realmResults);
                         subscriber.onCompleted();
+                        realm.close();
                     }
                 }).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread());
         return observable;

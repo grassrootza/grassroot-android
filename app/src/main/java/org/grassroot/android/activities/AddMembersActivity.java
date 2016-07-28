@@ -343,16 +343,22 @@ public class AddMembersActivity extends AppCompatActivity implements
                             RealmUtils.saveDataToRealm(response.body().getGroups()).subscribe(new Action1() {
                                 @Override public void call(Object o) {
                                     System.out.println(response.body().getGroups().first().getMembers().size());
+                                    List<Member> members = new ArrayList<>();
                                     for(Member m : response.body().getGroups().first().getMembers()){
                                         m.setMemberGroupUid();
-                                        RealmUtils.saveDataToRealmWithSubscriber(m);
+                                        members.add(m);
                                     }
-                                    Intent i = new Intent();
-                                    i.putExtra(GroupConstants.UID_FIELD, groupUid);
-                                    i.putExtra(Constant.INDEX_FIELD, groupPosition);
-                                    setResult(RESULT_OK, i);
-                                    progressDialog.dismiss();
-                                    finish();
+                                    RealmUtils.saveDataToRealm(members).subscribe(new Action1() {
+                                        @Override
+                                        public void call(Object o) {
+                                            Intent i = new Intent();
+                                            i.putExtra(GroupConstants.UID_FIELD, groupUid);
+                                            i.putExtra(Constant.INDEX_FIELD, groupPosition);
+                                            setResult(RESULT_OK, i);
+                                            progressDialog.dismiss();
+                                            finish();
+                                        }
+                                    });
                                 }
                             });
                         } else {

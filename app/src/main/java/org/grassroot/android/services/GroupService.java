@@ -122,6 +122,7 @@ public class GroupService {
     apiCall.enqueue(new Callback<GroupsChangedResponse>() {
       @Override public void onResponse(Call<GroupsChangedResponse> call,
           Response<GroupsChangedResponse> response) {
+        isFetchingGroups = false;
         if (response.isSuccessful()) {
           userGroups = new ArrayList<>(response.body().getAddedAndUpdated());
           persistGroupsAddedUpdated(response.body(), listener);
@@ -136,6 +137,7 @@ public class GroupService {
 
       @Override public void onFailure(Call<GroupsChangedResponse> call, Throwable t) {
         // default back to loading from DB
+        isFetchingGroups = false;
         if (errorViewHolder != null) {
           ErrorUtils.handleNetworkError(activity, errorViewHolder, t);
         }
@@ -175,6 +177,7 @@ public class GroupService {
     apiCall.enqueue(new Callback<GroupsChangedResponse>() {
       @Override public void onResponse(Call<GroupsChangedResponse> call,
           Response<GroupsChangedResponse> response) {
+        isFetchingGroups = false;
         if (response.isSuccessful()) {
           userGroups =
               new ArrayList<>(response.body().getAddedAndUpdated()); // todo : might not need this
