@@ -15,6 +15,7 @@ import org.grassroot.android.models.Member;
 import org.grassroot.android.utils.RealmUtils;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import io.realm.RealmList;
@@ -28,7 +29,7 @@ public class MemberRoleAdapter extends RecyclerView.Adapter<MemberRoleAdapter.Me
     private static final String TAG = MemberRoleAdapter.class.getSimpleName();
 
     final private String groupUid;
-    private RealmList<Member> members;
+    private RealmList<Member> members=new RealmList<>();
     private Map<String, Integer> mapUidPosition;
     private final Map<String, Integer> roleMap;
 
@@ -41,10 +42,10 @@ public class MemberRoleAdapter extends RecyclerView.Adapter<MemberRoleAdapter.Me
 
     public MemberRoleAdapter(String groupUid, MemberRoleClickListener listener) {
         this.groupUid  = groupUid;
-         RealmUtils.loadListFromDB(Member.class, "groupUid", groupUid).subscribe(new Action1<RealmResults>() {
-            @Override public void call(RealmResults realmResults) {
-                for(Object object : realmResults){
-                    members.add((Member) object);
+         RealmUtils.loadListFromDB(Member.class, "groupUid", groupUid).subscribe(new Action1<List<Member>>() {
+            @Override public void call(List<Member> realmResults) {
+                for(Member m : realmResults){
+                    members.add(m);
                 };
             }
         });
