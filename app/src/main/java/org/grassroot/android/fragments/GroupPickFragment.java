@@ -32,8 +32,10 @@ public class GroupPickFragment extends Fragment
   private static final String TAG = GroupPickFragment.class.getSimpleName();
 
   private List<Group> filteredGroups;
+
   private GroupPickListener listener;
   private String returnTag;
+  private String permissionToFilter;
 
   @BindView(R.id.gpick_recycler_view) RecyclerView recyclerView;
 
@@ -50,9 +52,17 @@ public class GroupPickFragment extends Fragment
       throw new UnsupportedOperationException(
           "Error! Group picker called without groups, task type or listener");
     }
-
     final GroupPickFragment fragment = new GroupPickFragment();
-    final List<Group> groups = new ArrayList<>();
+    fragment.returnTag = returnTag;
+    fragment.listener = listener;
+    fragment.permissionToFilter = permissionToFilter;
+    return fragment;
+  }
+
+  @Override public void onCreate(Bundle savedInstanceState) {
+    super.onCreate(savedInstanceState);
+    filteredGroups = new ArrayList<>();
+    groupPickAdapter = GroupPickAdapter.newInstance(filteredGroups, getContext(), this);
     RealmUtils.loadGroupsSorted().subscribe(new Subscriber<List<Group>>() {
       @Override public void onCompleted() {
 
@@ -63,26 +73,16 @@ public class GroupPickFragment extends Fragment
       }
 
       @Override public void onNext(List<Group> groups) {
-        Log.e(TAG, "allGroups ... " + groups.size());
-        for (Object g : groups) {
-          List<String> permissions = ((Group) g).getPermissionsList();
+        // todo : show a friendlier error dialog if filtered groups list is empty
+        for (Group g : groups) {
+          List<String> permissions = g.getPermissionsList();
           if (permissions.contains(permissionToFilter)) {
-            groups.add((Group) g);
+            filteredGroups.add(g);
           }
         }
-
-        fragment.filteredGroups = groups;
-        fragment.returnTag = returnTag;
-        fragment.listener = listener;
+        groupPickAdapter.setGroupList(filteredGroups);
       }
     });
-    return fragment;
-  }
-
-  @Override public void onCreate(Bundle savedInstanceState) {
-    super.onCreate(savedInstanceState);
-    // todo : show a friendlier error dialog if filtered groups list is empty
-    groupPickAdapter = GroupPickAdapter.newInstance(filteredGroups, getContext(), this);
   }
 
   @Override public View onCreateView(LayoutInflater inflater, ViewGroup container,

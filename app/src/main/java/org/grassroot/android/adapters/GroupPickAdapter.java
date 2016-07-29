@@ -45,6 +45,11 @@ public class GroupPickAdapter extends RecyclerView.Adapter<GroupPickAdapter.Grou
         return adapter;
     }
 
+    public void setGroupList(List<Group> groupsToDisplay) {
+        this.groupsToDisplay = new ArrayList<>(groupsToDisplay);
+        notifyDataSetChanged();
+    }
+
     @Override
     public GroupPickViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.row_group_picker, parent, false);

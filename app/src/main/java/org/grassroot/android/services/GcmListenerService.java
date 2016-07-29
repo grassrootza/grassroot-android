@@ -165,7 +165,7 @@ public class GcmListenerService extends com.google.android.gms.gcm.GcmListenerSe
       }
     });
     preferenceObject.setNotificationCounter(currentCount + 1);
-    RealmUtils.saveDataToRealm(preferenceObject);
+    RealmUtils.saveDataToRealm(preferenceObject).subscribe();
   }
 
   private PendingIntent generateResultIntent(Bundle msg) {

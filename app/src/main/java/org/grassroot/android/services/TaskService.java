@@ -32,9 +32,9 @@ public class TaskService {
 
   private static final String TAG = TaskService.class.getSimpleName();
 
-  public static final String FETCH_OKAY = "fetch";
-  public static final String FETCH_ERROR = "fetch_error";
-  public static final String FETCH_OFFLINE = "offline_fetch";
+  public static final String FETCH_OKAY = "FETCH_OKAY";
+  public static final String FETCH_ERROR = "FETCH_ERROR";
+  public static final String QUICK_DB_LOAD = "QUICK_DB_LOAD";
 
   private static TaskService instance;
 
@@ -77,6 +77,7 @@ public class TaskService {
     final String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
     final String code = RealmUtils.loadPreferencesFromDB().getToken();
     long lastTimeUpdated = RealmUtils.loadPreferencesFromDB().getLastTimeUpcomingTasksFetched();
+    Log.e(TAG, "fetching upcoming tasks, last time checked: " + lastTimeUpdated);
     if (lastTimeUpdated == 0) {
       fetchUpcomingTasksForFirstTime(phoneNumber, code, listener);
     } else {
@@ -220,12 +221,11 @@ public class TaskService {
         group.setLastTimeTasksFetched(String.valueOf(Utilities.getCurrentTimeInMillisAtUTC()));
         group.setFetchedTasks(true);
         RealmUtils.saveGroupToRealm(group);
-        Log.d(TAG, "group last time fetched after update: " + group.getLastTimeTasksFetched());
       }
     } else {
       PreferenceObject prefs = RealmUtils.loadPreferencesFromDB();
       prefs.setLastTimeUpcomingTasksFetched(Utilities.getCurrentTimeInMillisAtUTC());
-      RealmUtils.saveDataToRealm(prefs);
+      RealmUtils.saveDataToRealm(prefs).subscribe();
     }
   }
 
@@ -372,7 +372,7 @@ public class TaskService {
               if (response.isSuccessful()) {
                 final TaskModel taskModel = response.body().getTasks().first();
                 if (taskModel != null) {
-                  RealmUtils.saveDataToRealm(taskModel);
+                  RealmUtils.saveDataToRealm(taskModel).subscribe();
                 }
               }
             }

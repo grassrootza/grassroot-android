@@ -197,7 +197,7 @@ public class GroupService {
     updateGroupsFetchedTime(); // in case another call comes in (see above re threads)
     RealmUtils.saveDataToRealm(responseBody.getAddedAndUpdated()).subscribe(new Action1() {
       @Override public void call(Object o) {
-        System.out.println("saved groups");
+        // System.out.println("saved groups");
         if (listener != null) {
           listener.groupListLoaded();
         }
@@ -215,7 +215,7 @@ public class GroupService {
         m.composeMemberGroupUid();;
         RealmUtils.saveDataToRealm(m).subscribe(new Subscriber() {
           @Override public void onCompleted() {
-            System.out.println("saved");
+            // System.out.println("saved");
           }
 
           @Override public void onError(Throwable e) {

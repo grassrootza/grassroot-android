@@ -36,7 +36,7 @@
         android:layout_width="@dimen/nav_bar_width"
         android:layout_height="match_parent"
         android:layout_gravity="start"
-        android:name="org.grassroot.android.fragments.NavigationDrawerFragment"
+        class="org.grassroot.android.fragments.NavigationDrawerFragment"
         android:tag="navigation_drawer"
         tools:layout="@layout/fragment_navigation_drawer" />
 

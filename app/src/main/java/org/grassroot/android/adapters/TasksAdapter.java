@@ -5,6 +5,7 @@ import android.os.SystemClock;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -13,14 +14,9 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import org.grassroot.android.R;
-import org.grassroot.android.events.TaskAddedEvent;
-import org.grassroot.android.events.TaskCancelledEvent;
-import org.grassroot.android.events.TaskChangedEvent;
 import org.grassroot.android.interfaces.TaskConstants;
 import org.grassroot.android.models.TaskModel;
 import org.grassroot.android.utils.RealmUtils;
-import org.greenrobot.eventbus.EventBus;
-import org.greenrobot.eventbus.Subscribe;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -52,6 +48,7 @@ public class TasksAdapter extends RecyclerView.Adapter<TasksAdapter.TaskViewHold
   private final Context mContext;
 
   public interface TaskListListener {
+    void tasksLoaded(String fetchType);
     void respondToTask(String taskUid, String taskType, String response, int position);
     void onCardClick(int position, String taskUid, String taskType, String taskTitle);
   }
@@ -64,7 +61,26 @@ public class TasksAdapter extends RecyclerView.Adapter<TasksAdapter.TaskViewHold
     this.primaryColor = ContextCompat.getColor(context, R.color.primaryColor);
     this.textColor = ContextCompat.getColor(context, R.color.black);
     this.secondaryColor = ContextCompat.getColor(context, R.color.text_grey);
-    refreshTaskListToDB();
+  }
+
+  public void refreshTaskListToDB(final String fetchType) {
+    if (parentUid == null) {
+      viewedTasks = RealmUtils.loadUpcomingTasksFromDB();
+      notifyDataSetChanged();
+      if (!TextUtils.isEmpty(fetchType)) {
+        listener.tasksLoaded(fetchType);
+      }
+    } else {
+      RealmUtils.loadListFromDB(TaskModel.class, "parentUid", parentUid).subscribe(new Action1<List<TaskModel>>() {
+        @Override public void call(List<TaskModel> taskModels) {
+          viewedTasks = taskModels;
+          notifyDataSetChanged();
+          if (!TextUtils.isEmpty(fetchType)) {
+            listener.tasksLoaded(fetchType);
+          }
+        }
+      });
+    }
   }
 
   @Override public TaskViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
@@ -234,20 +250,6 @@ public class TasksAdapter extends RecyclerView.Adapter<TasksAdapter.TaskViewHold
 
   @Override public int getItemCount() {
     return viewedTasks.size();
-  }
-
-  public void refreshTaskListToDB() {
-    if (parentUid == null) {
-      viewedTasks = RealmUtils.loadUpcomingTasksFromDB();
-      notifyDataSetChanged();
-    } else {
-      RealmUtils.loadListFromDB(TaskModel.class, "parentUid", parentUid).subscribe(new Action1<List<TaskModel>>() {
-        @Override public void call(List<TaskModel> taskModels) {
-          viewedTasks = taskModels;
-          notifyDataSetChanged();
-        }
-      }); // todo fix return type
-    }
   }
 
     /*
