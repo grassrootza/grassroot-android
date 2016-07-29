@@ -17,8 +17,12 @@ import com.squareup.picasso.Callback;
 import com.squareup.picasso.NetworkPolicy;
 import com.squareup.picasso.Picasso;
 
-import butterknife.BindView;
-import butterknife.ButterKnife;
+import org.grassroot.android.R;
+import org.grassroot.android.fragments.HomeGroupListFragment;
+import org.grassroot.android.interfaces.GroupConstants;
+import org.grassroot.android.models.Group;
+import org.grassroot.android.utils.CircularImageTransformer;
+import org.grassroot.android.utils.RealmUtils;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -27,12 +31,9 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
-import org.grassroot.android.R;
-import org.grassroot.android.fragments.HomeGroupListFragment;
-import org.grassroot.android.interfaces.GroupConstants;
-import org.grassroot.android.models.Group;
-import org.grassroot.android.utils.CircularImageTransformer;
-import org.grassroot.android.utils.RealmUtils;
+import butterknife.BindView;
+import butterknife.ButterKnife;
+import rx.Subscriber;
 
 /**
  * P
@@ -52,8 +53,11 @@ public class GroupListAdapter extends RecyclerView.Adapter<GroupListAdapter.GHP_
 
     public interface GroupRowListener {
         void onGroupRowShortClick(Group group);
+
         void onGroupRowLongClick(Group group);
+
         void onGroupRowMemberClick(Group group, int position);
+
         void onGroupRowAvatarClick(Group group, int position);
     }
 
@@ -70,9 +74,37 @@ public class GroupListAdapter extends RecyclerView.Adapter<GroupListAdapter.GHP_
     }
 
     public void refreshGroupsToDB() {
-        displayedGroups.clear();
-        displayedGroups.addAll(RealmUtils.loadGroupsSorted());
-        notifyDataSetChanged();
+        RealmUtils.loadGroupsSorted().subscribe(new Subscriber<List<Group>>() {
+            @Override
+            public void onCompleted() {
+
+            }
+
+            @Override
+            public void onError(Throwable e) {
+
+            }
+
+            @Override
+            public void onNext(List<Group> groups) {
+                displayedGroups.clear();
+                displayedGroups.addAll(groups);
+                notifyDataSetChanged();
+                System.out.println("loaded groups " + groups.size());
+            }
+        });
+    }
+
+    public void refreshSingleGroup(final String groupUid) {
+        Group group = RealmUtils.loadGroupFromDB(groupUid);
+        for (int i = 0; i < displayedGroups.size(); i++) {
+            if (displayedGroups.get(i).getGroupUid().equals(groupUid)) {
+                displayedGroups.remove(i);
+                displayedGroups.add(0, group);
+                notifyItemRangeChanged(0, i + 1);
+                System.out.println("Changed group " + groupUid);
+            }
+        }
     }
 
     public void sortByChangedTime() {
@@ -82,12 +114,14 @@ public class GroupListAdapter extends RecyclerView.Adapter<GroupListAdapter.GHP_
 
     // todo : make sure interactions of this and refresh from DB are okay
     public void sortByDate() {
-        Collections.sort(displayedGroups, Collections.reverseOrder(Group.GroupTaskDateComparator)); // since Date entity sorts earliest to latest
+        Collections.sort(displayedGroups, Collections.reverseOrder(
+                Group.GroupTaskDateComparator)); // since Date entity sorts earliest to latest
         notifyDataSetChanged();
     }
 
     public void sortByRole() {
-        Collections.sort(displayedGroups, Collections.reverseOrder(Group.GroupRoleComparator)); // as above
+        Collections.sort(displayedGroups,
+                Collections.reverseOrder(Group.GroupRoleComparator)); // as above
         notifyDataSetChanged();
     }
 
@@ -294,7 +328,9 @@ public class GroupListAdapter extends RecyclerView.Adapter<GroupListAdapter.GHP_
                 .transform(new CircularImageTransformer())
                 .into(view, new Callback() {
                     @Override
-                    public void onSuccess() {}
+                    public void onSuccess() {
+                    }
+
                     @Override
                     public void onError() {
                         Picasso.with(context).load(imageUrl)

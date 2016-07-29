@@ -35,12 +35,15 @@ import org.grassroot.android.utils.Utilities;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
+import rx.functions.Action1;
 
 /**
  * Created by luke on 2016/06/15.
  */
 public class LoginRegisterActivity extends AppCompatActivity implements LoginScreenFragment.LoginFragmentListener,
         OtpScreenFragment.OtpListener, RegisterScreenFragment.RegisterListener {
+
+    private static final String TAG = LoginRegisterActivity.class.getSimpleName();
 
     private static final String LOGIN = "login";
     private static final String REGISTER = "register";
@@ -241,7 +244,7 @@ public class LoginRegisterActivity extends AppCompatActivity implements LoginScr
         GrassrootRestService.getInstance().getApi().authenticate(msisdn, otp)
                 .enqueue(new Callback<TokenResponse>() {
                     @Override
-                    public void onResponse(Call<TokenResponse> call, Response<TokenResponse> response) {
+                    public void onResponse(Call<TokenResponse> call, final Response<TokenResponse> response) {
                         progressDialog.hide();
                         if (response.isSuccessful()) {
                             progressDialog.dismiss();
@@ -253,13 +256,15 @@ public class LoginRegisterActivity extends AppCompatActivity implements LoginScr
                             preference.setHasGroups(response.body().getHasGroups());
                             preference.setUserName(response.body().getDisplayName());
                             preference.setMustRefresh(true);
-                            RealmUtils.saveDataToRealm(preference);
-
-                            registerOrRefreshGCM(msisdn);
-
-                            launchHomeScreen(response.body().getHasGroups());
-
-                            finish();
+                            final long startTime = System.currentTimeMillis();
+                            RealmUtils.saveDataToRealm(preference).subscribe(new Action1() {
+                                @Override public void call(Object o) {
+                                    Log.e(TAG, "back from realm ... took : " + String.valueOf(System.currentTimeMillis() - startTime));
+                                    registerOrRefreshGCM(msisdn);
+                                    launchHomeScreen(response.body().getHasGroups());
+                                    finish();
+                                }
+                            });
                         } else {
                             ErrorUtils.handleServerError(rootView, LoginRegisterActivity.this, response);
                         }
@@ -293,9 +298,12 @@ public class LoginRegisterActivity extends AppCompatActivity implements LoginScr
                             registerOrRefreshGCM(msisdn);
 
                             preference.setHasGroups(false);
-                            RealmUtils.saveDataToRealm(preference);
-                            launchHomeScreen(false); // by definition, registering means no group
-                            finish();
+                            RealmUtils.saveDataToRealm(preference).subscribe(new Action1() {
+                                @Override public void call(Object o) {
+                                    launchHomeScreen(false); // by definition, registering means no group
+                                    finish();
+                                }
+                            });
 
                         } else {
                             ErrorUtils.handleServerError(rootView, LoginRegisterActivity.this, response);

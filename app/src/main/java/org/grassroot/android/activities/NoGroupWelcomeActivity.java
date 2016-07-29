@@ -56,7 +56,7 @@ public class NoGroupWelcomeActivity extends PortraitActivity implements WelcomeF
     public void onGroupCreated(GroupCreatedEvent e) {
         PreferenceObject object = RealmUtils.loadPreferencesFromDB();
         object.setHasGroups(true);
-        RealmUtils.saveDataToRealm(object);
+        RealmUtils.saveDataToRealmWithSubscriber(object);
         // todo : may be able to remove this
         Intent goToHomeScreen = new Intent(NoGroupWelcomeActivity.this, HomeScreenActivity.class);
         goToHomeScreen.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);

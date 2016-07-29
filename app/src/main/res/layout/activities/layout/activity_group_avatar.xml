@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical"
     android:layout_width="match_parent"
     android:id="@+id/gp_avt_main_rl"
     android:layout_height="match_parent">
@@ -16,85 +15,110 @@
 
     </android.support.v7.widget.Toolbar>
 
-    <LinearLayout
-        android:id="@+id/ll_image_holder"
-        android:orientation="vertical"
+    <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/tlb_gp"
-        android:gravity="center"
-        android:layout_marginTop="@dimen/group_avatar_giant_margin" >
-
-        <ImageView
-            android:id="@+id/iv_gp_avatar"
-            android:layout_width="fill_parent"
-            android:layout_height="@dimen/group_avatar_giant"
-            android:visibility="gone" />
-
-        <android.support.v4.view.ViewPager
-            android:id="@+id/avatar_pager"
-            android:layout_width="match_parent"
-            android:layout_height="@dimen/group_avatar_giant"
-            android:visibility="gone">
-
-        </android.support.v4.view.ViewPager>
-
-        <TextView
-            android:id="@+id/image_description"
-            android:layout_marginTop="@dimen/margin_large"
-            android:textColor="@color/primaryColor"
-            android:textSize="@dimen/txt_large"
-            android:textStyle="bold"
-            android:gravity="center_horizontal"
-            android:text="@string/gp_social_move"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
+        android:layout_height="match_parent"
+        android:layout_below="@+id/tlb_gp">
 
         <LinearLayout
-            android:id="@+id/image_tracker"
-            android:layout_width="wrap_content"
+            android:id="@+id/ll_image_holder"
+            android:orientation="vertical"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_gravity="center_horizontal"
-            android:layout_marginTop="@dimen/margin_large">
+            android:gravity="center"
+            android:layout_marginTop="@dimen/group_avatar_giant_margin" >
 
-            <View
-                android:id="@+id/gp_dot_zero"
-                android:layout_width="5dp"
-                android:layout_height="5dp"
-                android:background="@color/primaryColor"/>
+            <ImageView
+                android:id="@+id/iv_gp_avatar"
+                android:layout_width="fill_parent"
+                android:layout_height="@dimen/group_avatar_giant"
+                android:visibility="gone" />
 
-            <View
-                android:id="@+id/gp_dot_one"
-                android:layout_width="5dp"
-                android:layout_height="5dp"
-                android:background="#bbbbbb"
-                android:layout_marginLeft="7dp"/>
+            <android.support.v4.view.ViewPager
+                android:id="@+id/avatar_pager"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/group_avatar_giant"
+                android:visibility="gone">
 
-            <View
-                android:id="@+id/gp_dot_two"
-                android:layout_width="5dp"
-                android:layout_height="5dp"
-                android:background="#bbbbbb"
-                android:layout_marginLeft="7dp"/>
+            </android.support.v4.view.ViewPager>
 
-            <View
-                android:id="@+id/gp_dot_three"
-                android:layout_width="5dp"
-                android:layout_height="5dp"
-                android:background="#bbbbbb"
-                android:layout_marginLeft="7dp"/>
+            <TextView
+                android:id="@+id/image_description"
+                android:layout_marginTop="@dimen/margin_large"
+                android:textColor="@color/primaryColor"
+                android:textSize="@dimen/txt_large"
+                android:textStyle="bold"
+                android:gravity="center_horizontal"
+                android:text="@string/gp_social_move"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
 
-            <View
-                android:id="@+id/gp_dot_four"
-                android:layout_width="5dp"
-                android:layout_height="5dp"
-                android:background="#bbbbbb"
-                android:layout_marginLeft="7dp"/>
+            <LinearLayout
+                android:id="@+id/image_tracker"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="@dimen/margin_large">
+
+                <View
+                    android:id="@+id/gp_dot_zero"
+                    android:layout_width="5dp"
+                    android:layout_height="5dp"
+                    android:background="@color/primaryColor"/>
+
+                <View
+                    android:id="@+id/gp_dot_one"
+                    android:layout_width="5dp"
+                    android:layout_height="5dp"
+                    android:background="#bbbbbb"
+                    android:layout_marginLeft="7dp"/>
+
+                <View
+                    android:id="@+id/gp_dot_two"
+                    android:layout_width="5dp"
+                    android:layout_height="5dp"
+                    android:background="#bbbbbb"
+                    android:layout_marginLeft="7dp"/>
+
+                <View
+                    android:id="@+id/gp_dot_three"
+                    android:layout_width="5dp"
+                    android:layout_height="5dp"
+                    android:background="#bbbbbb"
+                    android:layout_marginLeft="7dp"/>
+
+                <View
+                    android:id="@+id/gp_dot_four"
+                    android:layout_width="5dp"
+                    android:layout_height="5dp"
+                    android:background="#bbbbbb"
+                    android:layout_marginLeft="7dp"/>
+
+            </LinearLayout>
+
+            <Button
+                style="@style/LargeButtonGreen"
+                android:id="@+id/gp_bt_other"
+                android:layout_marginTop="@dimen/margin_largest"
+                android:text="@string/gp_bt_choose_own" />
+
+            <Button
+                style="@style/LargeButtonGreen"
+                android:id="@+id/gp_bt_default"
+                android:layout_marginTop="@dimen/margin_medium"
+                android:text="@string/gp_bt_select_default"
+                android:visibility="gone"/>
+
+            <Button
+                style="@style/LargeButtonGreen"
+                android:id="@+id/gp_bt_save"
+                android:layout_marginTop="@dimen/margin_medium"
+                android:text="@string/gp_bt_save" />
 
         </LinearLayout>
 
-    </LinearLayout>
+    </ScrollView>
 
     <ProgressBar
         android:id="@+id/progressBar"
@@ -102,30 +126,7 @@
         android:layout_gravity="center"
         android:layout_height="wrap_content"
         android:visibility="gone"
-        android:layout_alignBottom="@id/ll_image_holder"
-        android:layout_centerHorizontal="true"
-        android:layout_marginBottom="74dp" />
-
-    <Button
-        style="@style/LargeButtonGreen"
-        android:id="@+id/gp_bt_other"
-        android:layout_marginTop="@dimen/margin_largest"
-        android:text="@string/gp_bt_choose_own"
-        android:layout_below="@+id/ll_image_holder" />
-
-    <Button
-        style="@style/LargeButtonGreen"
-        android:id="@+id/gp_bt_default"
-        android:layout_marginTop="@dimen/margin_medium"
-        android:text="@string/gp_bt_select_default"
-        android:layout_below="@+id/gp_bt_other"
-        android:visibility="gone"/>
-
-    <Button
-        style="@style/LargeButtonGreen"
-        android:id="@+id/gp_bt_save"
-        android:layout_marginTop="@dimen/margin_medium"
-        android:text="@string/gp_bt_save"
-        android:layout_below="@+id/gp_bt_default" />
+        android:layout_centerVertical="true"
+        android:layout_centerHorizontal="true" />
 
 </RelativeLayout>

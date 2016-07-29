@@ -2,7 +2,11 @@ package org.grassroot.android.services;
 
 import android.text.TextUtils;
 import android.util.Log;
-
+import io.realm.Realm;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
 import org.grassroot.android.events.TasksRefreshedEvent;
 import org.grassroot.android.interfaces.TaskConstants;
 import org.grassroot.android.models.Group;
@@ -15,15 +19,11 @@ import org.grassroot.android.utils.RealmUtils;
 import org.grassroot.android.utils.Utilities;
 import org.greenrobot.eventbus.EventBus;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-
 import io.realm.RealmList;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
+import rx.functions.Action1;
 
 /**
  * Created by luke on 2016/07/06.
@@ -32,9 +32,9 @@ public class TaskService {
 
   private static final String TAG = TaskService.class.getSimpleName();
 
-  public static final String FETCH_OKAY = "fetch";
-  public static final String FETCH_ERROR = "fetch_error";
-  public static final String FETCH_OFFLINE = "offline_fetch";
+  public static final String FETCH_OKAY = "FETCH_OKAY";
+  public static final String FETCH_ERROR = "FETCH_ERROR";
+  public static final String QUICK_DB_LOAD = "QUICK_DB_LOAD";
 
   private static TaskService instance;
 
@@ -44,7 +44,9 @@ public class TaskService {
 
   public interface TaskCreationListener {
     void taskCreatedLocally(TaskModel task);
+
     void taskCreatedOnServer(TaskModel task);
+
     void taskCreationError(TaskModel task);
   }
 
@@ -75,6 +77,7 @@ public class TaskService {
     final String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
     final String code = RealmUtils.loadPreferencesFromDB().getToken();
     long lastTimeUpdated = RealmUtils.loadPreferencesFromDB().getLastTimeUpcomingTasksFetched();
+    Log.e(TAG, "fetching upcoming tasks, last time checked: " + lastTimeUpdated);
     if (lastTimeUpdated == 0) {
       fetchUpcomingTasksForFirstTime(phoneNumber, code, listener);
     } else {
@@ -91,12 +94,8 @@ public class TaskService {
           @Override
           public void onResponse(Call<TaskResponse> call, Response<TaskResponse> response) {
             if (response.isSuccessful()) {
-              persistUpcomingTasks(response.body().getTasks());
               updateTasksFetchedTime(null);
-              if (listener != null) {
-                listener.taskFetchingComplete(FETCH_OKAY, null);
-              }
-              EventBus.getDefault().post(new TasksRefreshedEvent());
+              persistUpcomingTasks(response.body().getTasks(), listener);
             } else {
               if (listener != null) {
                 listener.taskFetchingComplete(FETCH_ERROR, response);
@@ -120,13 +119,9 @@ public class TaskService {
           @Override
           public void onResponse(Call<TaskChangedResponse> call, Response<TaskChangedResponse> response) {
             if (response.isSuccessful()) {
-              persistUpcomingTasks(response.body().getAddedAndUpdated());
-              RealmUtils.removeObjectsByUid(TaskModel.class, "taskUid", response.body().getRemovedUids());
               updateTasksFetchedTime(null);
-              if (listener != null) {
-                listener.taskFetchingComplete(FETCH_OKAY, null);
-              }
-              EventBus.getDefault().post(new TasksRefreshedEvent());
+              RealmUtils.removeObjectsByUid(TaskModel.class, "taskUid", response.body().getRemovedUids());
+              persistUpcomingTasks(response.body().getAddedAndUpdated(), listener);
             } else {
               if (listener != null) {
                 listener.taskFetchingComplete(FETCH_ERROR, response);
@@ -144,11 +139,19 @@ public class TaskService {
 
   }
 
-  private void persistUpcomingTasks(RealmList<TaskModel> tasks) {
+  private void persistUpcomingTasks(RealmList<TaskModel> tasks, final TaskServiceListener listener) {
     for (TaskModel task : tasks) {
       task.getDeadlineDate(); // triggers processing & store of Date object (maybe move into a JSON converter)
     }
-    RealmUtils.saveDataToRealm(tasks);
+    RealmUtils.saveDataToRealm(tasks).subscribe(new Action1() {
+      @Override
+      public void call(Object o) {
+        if (listener != null) {
+          listener.taskFetchingComplete(FETCH_OKAY, null);
+        }
+        EventBus.getDefault().post(new TasksRefreshedEvent());
+      }
+    });
   }
 
   public void fetchGroupTasks(final String groupUid, final TaskServiceListener listener) {
@@ -160,32 +163,51 @@ public class TaskService {
     if (group == null || group.getLastTimeTasksFetched() == null) {
       call = GrassrootRestService.getInstance().getApi().getGroupTasks(phoneNumber, code, groupUid);
     } else {
-      call = GrassrootRestService.getInstance().getApi()
-              .getGroupTasksChangedSince(phoneNumber, code, groupUid, Long.valueOf(group.getLastTimeTasksFetched()));
+      call = GrassrootRestService.getInstance()
+          .getApi()
+          .getGroupTasksChangedSince(phoneNumber, code, groupUid,
+              Long.valueOf(group.getLastTimeTasksFetched()));
     }
 
     call.enqueue(new Callback<TaskChangedResponse>() {
-      @Override public void onResponse(Call<TaskChangedResponse> call, Response<TaskChangedResponse> response) {
+      @Override public void onResponse(Call<TaskChangedResponse> call,
+          Response<TaskChangedResponse> response) {
         if (response.isSuccessful()) {
-          System.out.println(Thread.currentThread().getName());
-          updateAndRemoveTasks(response.body(), groupUid);
-          listener.taskFetchingComplete(FETCH_OKAY, null);
+          updateAndRemoveTasks(response.body(), groupUid, listener);
         } else {
           listener.taskFetchingComplete(FETCH_ERROR, response);
         }
       }
 
       @Override public void onFailure(Call<TaskChangedResponse> call, Throwable t) {
-        listener.taskFetchingComplete(FETCH_ERROR, t);
+        RealmUtils.loadListFromDB(TaskModel.class, "parentUid", groupUid)
+            .subscribe(new Action1<List<TaskModel>>() {
+              @Override public void call(List<TaskModel> realmResults) {
+                listener.taskFetchingComplete(FETCH_ERROR,realmResults);
+              }
+            });
       }
     });
   }
 
-  private void updateAndRemoveTasks(final TaskChangedResponse responseBody, final String groupUid) {
+  private void updateAndRemoveTasks(final TaskChangedResponse responseBody, final String groupUid,
+      final TaskServiceListener listener) {
+
     try {
-      RealmUtils.saveDataToRealm(responseBody.getAddedAndUpdated());
-      RealmUtils.removeObjectsByUid(TaskModel.class, "taskUid", responseBody.getRemovedUids());
-      updateTasksFetchedTime(groupUid);
+      RealmUtils.saveDataToRealm(responseBody.getAddedAndUpdated()).subscribe(new Action1() {
+        @Override public void call(Object o) {
+          System.out.println(responseBody.getAddedAndUpdated().size());
+          RealmUtils.removeObjectsByUid(TaskModel.class, "taskUid", responseBody.getRemovedUids());
+          RealmUtils.loadListFromDB(TaskModel.class, "parentUid", groupUid)
+              .subscribe(new Action1<List<TaskModel>>() {
+                @Override public void call(List<TaskModel> realmResults) {
+                  System.out.println(realmResults.size());
+                  listener.taskFetchingComplete(FETCH_OKAY,realmResults);
+                  updateTasksFetchedTime(groupUid);
+                }
+              });
+        }
+      });
     } catch (Exception e) {
       Log.e(TAG, "exception in realm saveGroupIfNamed ... not updating last time fetched ...");
       e.printStackTrace();
@@ -199,12 +221,11 @@ public class TaskService {
         group.setLastTimeTasksFetched(String.valueOf(Utilities.getCurrentTimeInMillisAtUTC()));
         group.setFetchedTasks(true);
         RealmUtils.saveGroupToRealm(group);
-        Log.d(TAG, "group last time fetched after update: " + group.getLastTimeTasksFetched());
       }
     } else {
       PreferenceObject prefs = RealmUtils.loadPreferencesFromDB();
       prefs.setLastTimeUpcomingTasksFetched(Utilities.getCurrentTimeInMillisAtUTC());
-      RealmUtils.saveDataToRealm(prefs);
+      RealmUtils.saveDataToRealm(prefs).subscribe();
     }
   }
 
@@ -216,23 +237,31 @@ public class TaskService {
           if (response.isSuccessful()) {
             final TaskModel taskFromServer = response.body().getTasks().get(0);
             taskFromServer.getDeadlineDate(); // trigger forming Date entity, as above, create custom converter
-            RealmUtils.saveDataToRealm(taskFromServer);
+            RealmUtils.saveDataToRealmSync(taskFromServer);
             listener.taskCreatedOnServer(taskFromServer);
           } else {
-            RealmUtils.saveDataToRealm(task);
+            RealmUtils.saveDataToRealmSync(task);
             listener.taskCreationError(task);
           }
         }
 
         @Override public void onFailure(Call<TaskResponse> call, Throwable t) {
           Log.e(TAG, "Error! Should not occur ... check Network Utils");
-          RealmUtils.saveDataToRealm(task);
-          listener.taskCreatedLocally(task);
+          RealmUtils.saveDataToRealm(task).subscribe(new Action1() {
+            @Override public void call(Object o) {
+              System.out.println("task saved");
+              listener.taskCreatedLocally(task);
+            }
+          });
         }
       });
     } else {
-      RealmUtils.saveDataToRealm(task);
-      listener.taskCreatedLocally(task);
+      RealmUtils.saveDataToRealm(task).subscribe(new Action1() {
+        @Override public void call(Object o) {
+          System.out.println("task saved");
+          listener.taskCreatedLocally(task);
+        }
+      });
     }
   }
 
@@ -253,7 +282,6 @@ public class TaskService {
         }
       }
     });
-
   }
 
   private Call<TaskResponse> newTaskApiCall(TaskModel task) {
@@ -288,38 +316,42 @@ public class TaskService {
   }
 
   public void sendTaskUpdateToServer(final TaskModel taskModel, boolean selectedMembersChanged) {
-    updateTaskApiCall(taskModel, selectedMembersChanged).enqueue(new Callback<TaskModel>() {
-      @Override public void onResponse(Call<TaskModel> call, Response<TaskModel> response) {
-        RealmUtils.saveDataToRealm(response.body());
+    updateTaskApiCall(taskModel, selectedMembersChanged).enqueue(new Callback<TaskResponse>() {
+      @Override public void onResponse(Call<TaskResponse> call, final Response<TaskResponse> response) {
+        RealmUtils.saveDataToRealm(response.body()).subscribe(new Action1() {
+          @Override public void call(Object o) {
+            System.out.println("TASK edited" + response.body().toString());
+          }
+        });
         //RealmUtils.removeObjectFromDatabase(TaskModel.class,"taskUid",model.getTaskUid());
-        System.out.println("TASK edited" + response.body().toString());
       }
 
-      @Override public void onFailure(Call<TaskModel> call, Throwable t) {
+      @Override public void onFailure(Call<TaskResponse> call, Throwable t) {
         t.printStackTrace();
       }
     });
   }
 
-  private Call<TaskModel> updateTaskApiCall(TaskModel model, boolean selectedMembersChanged) {
-    List<String> memberUids = selectedMembersChanged ? model.getMemberUIDS() : Collections.EMPTY_LIST;
+  private Call<TaskResponse> updateTaskApiCall(TaskModel model, boolean selectedMembersChanged) {
+    List<String> memberUids =
+        selectedMembersChanged ? model.getMemberUIDS() : Collections.EMPTY_LIST;
     final String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
     final String code = RealmUtils.loadPreferencesFromDB().getToken();
     switch (model.getType()) {
       case TaskConstants.MEETING:
         return GrassrootRestService.getInstance()
-                .getApi()
-                .editMeeting(phoneNumber, code, model.getTaskUid(), model.getTitle(),
-                        model.getDescription(), model.getLocation(), model.getDeadlineISO(), memberUids);
+            .getApi()
+            .editMeeting(phoneNumber, code, model.getTaskUid(), model.getTitle(),
+                model.getDescription(), model.getLocation(), model.getDeadlineISO(), memberUids);
       case TaskConstants.VOTE:
         return GrassrootRestService.getInstance()
-                .getApi()
-                .editVote(phoneNumber, code, model.getTaskUid(), model.getTitle(),
-                        model.getDescription(), model.getDeadlineISO());
+            .getApi()
+            .editVote(phoneNumber, code, model.getTaskUid(), model.getTitle(),
+                model.getDescription(), model.getDeadlineISO());
       case TaskConstants.TODO:
         return GrassrootRestService.getInstance()
-                .getApi()
-                .editTodo(phoneNumber, code, model.getTitle(), model.getDeadlineISO(), null);
+            .getApi()
+            .editTodo(phoneNumber, code, model.getTitle(), model.getDeadlineISO(), null);
       default:
         throw new UnsupportedOperationException("Error! Missing task type in call");
     }
@@ -340,7 +372,7 @@ public class TaskService {
               if (response.isSuccessful()) {
                 final TaskModel taskModel = response.body().getTasks().first();
                 if (taskModel != null) {
-                  RealmUtils.saveDataToRealm(taskModel);
+                  RealmUtils.saveDataToRealm(taskModel).subscribe();
                 }
               }
             }
@@ -352,5 +384,4 @@ public class TaskService {
           });
     }
   }
-
 }

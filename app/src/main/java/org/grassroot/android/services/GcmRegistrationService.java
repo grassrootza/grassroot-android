@@ -111,7 +111,7 @@ public class GcmRegistrationService extends IntentService {
                             if (response.isSuccessful()) {
                                 PreferenceObject preferenceObject = RealmUtils.loadPreferencesFromDB();
                                 preferenceObject.setHasGcmRegistered(false);
-                                RealmUtils.saveDataToRealm(preferenceObject);
+                                RealmUtils.saveDataToRealm(preferenceObject).subscribe();
                             }
                         }
 

@@ -128,7 +128,7 @@ public class HomeScreenActivity extends PortraitActivity implements NavigationDr
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == Constant.activityNetworkSettings) {
-            groupListFragment.fetchGroupList();
+            NetworkUtils.syncLocalAndServer(this);
         } else if (resultCode == RESULT_OK && data != null) {
             // todo : swap these to using eventbus inside the fragment ...
             if (requestCode == Constant.activityAddMembersToGroup || requestCode == Constant.activityRemoveMembers) {
@@ -219,7 +219,7 @@ public class HomeScreenActivity extends PortraitActivity implements NavigationDr
 
     // todo : fix lifecycle management so it doesn't call this all the time
     private void switchToGroupFragment() {
-        Log.e(TAG, "switching to group fragment");
+        Log.d(TAG, "switching to group fragment");
         setTitle(R.string.ghp_toolbar_title);
         if (groupListFragment == null) {
             Log.e(TAG, "group list fragment is null ..");
@@ -266,13 +266,20 @@ public class HomeScreenActivity extends PortraitActivity implements NavigationDr
             throw new UnsupportedOperationException("Error! Null fragment passed to swap");
         }
 
+        Fragment currentMain = getSupportFragmentManager().findFragmentByTag("CURRENT_MAIN");
         FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
+
+        if (currentMain != null && currentMain != groupListFragment) {
+            Log.d(TAG, "removing fragment, name : " + currentMain.toString());
+            transaction.remove(currentMain);
+        }
+
         if (fragment.isAdded()) {
-            Log.e(TAG, "fragment is already added : " + fragment.toString());
+            Log.d(TAG, "fragment is already added : " + fragment.toString());
             transaction.show(fragment);
         } else {
-            Log.e(TAG, "fragment is not considered added ... " + fragment.toString());
-            transaction.replace(R.id.home_fragment_container, fragment);
+            Log.d(TAG, "fragment is not considered added ... " + fragment.toString());
+            transaction.add(R.id.home_fragment_container, fragment, "CURRENT_MAIN");
         }
 
         if (!isFirstFragmentSwap) {

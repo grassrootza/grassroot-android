@@ -15,6 +15,7 @@ import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
+import io.realm.RealmResults;
 import java.util.Map;
 import java.util.UUID;
 import org.grassroot.android.R;
@@ -45,6 +46,7 @@ import io.realm.RealmList;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
+import rx.functions.Action1;
 
 /**
  * Created by luke on 2016/05/05.
@@ -128,11 +130,15 @@ public class AddMembersActivity extends AppCompatActivity implements
 
     private void setupExistingMemberRecyclerView() {
         existingMemberListFragment = MemberListFragment.newInstance(groupUid, false, false, false, null, null);
-        RealmList<Member> members = RealmUtils.loadListFromDB(Member.class,"groupUid", groupUid); // todo : make sure this doesn't cause reference overwrite issues
-        contactSelectionFragment = ContactSelectionFragment.newInstance(Contact.convertFromMembers(members), false);
-        getSupportFragmentManager().beginTransaction()
-                .add(R.id.am_existing_member_list_container, existingMemberListFragment)
-                .commit();
+        RealmUtils.loadListFromDB(Member.class,"groupUid", groupUid).subscribe(
+            new Action1<List<Member>>() {
+                @Override public void call(List<Member> members) {
+                    contactSelectionFragment = ContactSelectionFragment.newInstance(Contact.convertFromMembers(members), false);
+                    getSupportFragmentManager().beginTransaction()
+                        .add(R.id.am_existing_member_list_container, existingMemberListFragment)
+                        .commit();
+                }
+            }); // todo : make sure this doesn't cause reference overwrite issues
     }
 
     private void setupNewMemberRecyclerView() {
@@ -253,7 +259,7 @@ public class AddMembersActivity extends AppCompatActivity implements
                 Member newMember = new Member(newUid, groupUid, data.getStringExtra("selectedNumber"), data.getStringExtra("name"),
                         GroupConstants.ROLE_ORDINARY_MEMBER, -1, true);
                 newMember.setLocal(true);
-                RealmUtils.saveDataToRealm(newMember);
+                RealmUtils.saveDataToRealmWithSubscriber(newMember);
                 manuallyAddedMembers.add(newMember);
                 newMemberListFragment.addMembers(Collections.singletonList(newMember));
                 setNewMembersVisible();
@@ -333,6 +339,55 @@ public class AddMembersActivity extends AppCompatActivity implements
             Log.d(TAG, "Exited with no members to add!");
             finish();
         }
+    }
+
+    private void postNewMembersToGroup(final List<Member> membersToAdd) {
+        final String mobileNumber =
+            RealmUtils.loadPreferencesFromDB().getMobileNumber();
+        final String sessionCode = RealmUtils.loadPreferencesFromDB().getToken();
+        GrassrootRestService.getInstance().getApi()
+                .addGroupMembers(groupUid, mobileNumber, sessionCode, membersToAdd)
+                .enqueue(new Callback<GroupResponse>() {
+                    @Override
+                    public void onResponse(Call<GroupResponse> call, final Response<GroupResponse> response) {
+                        if (response.isSuccessful()) {
+                            Map<String,Object> map = new HashMap<String, Object>();
+                            map.put("groupUid",groupUid);
+                            //map.put("isLocal",true);
+                            //todo return members here from API
+                            RealmUtils.removeObjectsFromDatabase(Member.class,map);
+                            RealmUtils.saveDataToRealm(response.body().getGroups()).subscribe(new Action1() {
+                                @Override public void call(Object o) {
+                                    System.out.println(response.body().getGroups().first().getMembers().size());
+                                    List<Member> members = new ArrayList<>();
+                                    for(Member m : response.body().getGroups().first().getMembers()){
+                                        m.composeMemberGroupUid();
+                                        members.add(m);
+                                    }
+                                    RealmUtils.saveDataToRealm(members).subscribe(new Action1() {
+                                        @Override
+                                        public void call(Object o) {
+                                            Intent i = new Intent();
+                                            i.putExtra(GroupConstants.UID_FIELD, groupUid);
+                                            i.putExtra(Constant.INDEX_FIELD, groupPosition);
+                                            setResult(RESULT_OK, i);
+                                            progressDialog.dismiss();
+                                            finish();
+                                        }
+                                    });
+                                }
+                            });
+                        } else {
+                            progressDialog.dismiss();
+                            ErrorUtils.showSnackBar(amRlRoot, R.string.error_wrong_number, Snackbar.LENGTH_SHORT);
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(Call<GroupResponse> call, Throwable t) {
+                        ErrorUtils.handleNetworkError(AddMembersActivity.this, amRlRoot, t);
+                    }
+                });
     }
 
 }

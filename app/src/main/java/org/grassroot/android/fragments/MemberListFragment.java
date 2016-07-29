@@ -11,6 +11,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import io.realm.RealmResults;
 import org.grassroot.android.R;
 import org.grassroot.android.adapters.MemberListAdapter;
 import org.grassroot.android.adapters.RecyclerTouchListener;
@@ -25,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 
 import io.realm.RealmList;
+import rx.functions.Action1;
 
 /**
  * Created by luke on 2016/05/08.
@@ -213,28 +215,32 @@ public class MemberListFragment extends Fragment {
 
     private void fetchGroupMembers() {
         Log.d(TAG, "inside MemberListFragment, retrieving group members for uid = " + group.getGroupUid());
-        RealmList<Member> members = RealmUtils.loadListFromDB(Member.class,"groupUid", group.getGroupUid());
+        RealmUtils.loadListFromDB(Member.class,"groupUid", group.getGroupUid()).subscribe(new Action1<List<Member>>() {
+            @Override public void call(List<Member> realmResults) {
+                List<Member> membersToRemove = new ArrayList<>(memberListAdapter.getMembers());
+                if (filteredMembers != null) {
+                    membersToRemove.addAll(filteredMembers);
+                }
+                realmResults.removeAll(membersToRemove);
+                System.out.println("size of list is " + realmResults.size());
+                memberListAdapter.addMembers(realmResults);
 
-        List<Member> membersToRemove = new ArrayList<>(memberListAdapter.getMembers());
-        if (filteredMembers != null) {
-            membersToRemove.addAll(filteredMembers);
-        }
-        members.removeAll(membersToRemove);
-        memberListAdapter.addMembers(members);
-
-        if (preSelectedMembers != null && !selectedByDefault) {
-            // todo : consider using list.contains on members when can trust hashing/equals
-            final Map<String, Integer> positionMap = new HashMap<>();
-            final int listSize = preSelectedMembers.size();
-            for (int i = 0; i < listSize; i++) {
-                positionMap.put(members.get(i).getMemberUid(),i);
-            }
-            for (Member m : preSelectedMembers) {
-                if (positionMap.containsKey(m.getMemberUid())) {
-                    memberListAdapter.toggleMemberSelected(positionMap.get(m.getMemberUid()));
+                if (preSelectedMembers != null && !selectedByDefault) {
+                    // todo : consider using list.contains on members when can trust hashing/equals
+                    final Map<String, Integer> positionMap = new HashMap<>();
+                    final int listSize = preSelectedMembers.size();
+                    for (int i = 0; i < listSize; i++) {
+                        positionMap.put((realmResults.get(i)).getMemberUid(),i);
+                    }
+                    for (Member m : preSelectedMembers) {
+                        if (positionMap.containsKey(m.getMemberUid())) {
+                            memberListAdapter.toggleMemberSelected(positionMap.get(m.getMemberUid()));
+                        }
+                    }
                 }
             }
-        }
+        });
+
     }
 
 }
