@@ -647,6 +647,9 @@ public class GroupService {
 
   private void saveRenamedGroupToDB(Group group, final String newName) {
     group.setGroupName(newName);
+    group.setLastMajorChangeMillis(Utilities.getCurrentTimeInMillisAtUTC());
+    group.setLastChangeType(GroupConstants.GROUP_MOD_OTHER);
+    group.setDate(new Date());
     RealmUtils.saveGroupToRealm(group);
   }
 

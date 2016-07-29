@@ -126,6 +126,7 @@ public class RealmUtils {
                                 realm.where(Group.class).findAllSorted("lastMajorChangeMillis", Sort.DESCENDING));
                         subscriber.onNext(groups);
                         subscriber.onCompleted();
+                        realm.close();
                     }
                 }).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread());
         return observable;
