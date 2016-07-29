@@ -362,21 +362,22 @@ public class CreateTaskFragment extends Fragment {
         return model;
     }
 
-    private int obtainReminderMinutes() {
-        if (TaskConstants.MEETING.equals(taskType)) {
-            if (swOneDayAhead.isChecked()) {
-                return 60 * 24;
-            } else if (swHalfDayAhead.isChecked()) {
-                return 60 * 6;
-            } else if (swOneHourAhead.isChecked()) {
-                return 60;
-            } else {
-                return -1;
-            }
-        } else {
-            return -1;
-        }
+
+  private int obtainReminderMinutes() {
+    if (TaskConstants.MEETING.equals(taskType)) {
+      if (swOneDayAhead.isChecked()) {
+        return 60 * 24;
+      } else if (swHalfDayAhead.isChecked()) {
+        return 60 * 6;
+      } else if (swOneHourAhead.isChecked()) {
+        return 60;
+      } else {
+        return -1;
+      }
+    } else {
+      return -1;
     }
+  }
 
     // note : returning just the int might be slightly more efficient, but then break string/placeholder pattern
     private String generateSuccessString() {

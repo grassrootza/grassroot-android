@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -75,6 +76,7 @@ public class GroupMembersActivity extends PortraitActivity implements NewTaskMen
         } else {
             groupUid = group.getGroupUid();
             groupName = group.getGroupName();
+            Log.e(TAG, "inside group view members, entity looks like : " + group.toString());
         }
 
         if (groupUid == null) {
@@ -149,7 +151,7 @@ public class GroupMembersActivity extends PortraitActivity implements NewTaskMen
                 startActivity(i);
                 return true;
             case (android.R.id.home):
-                finish();
+                finish(); // maybe return the selection ... check w user feedback
                 return true;
             default:
                 return super.onOptionsItemSelected(item);

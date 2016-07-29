@@ -93,20 +93,8 @@ public class TaskService {
           @Override
           public void onResponse(Call<TaskResponse> call, Response<TaskResponse> response) {
             if (response.isSuccessful()) {
-              RealmList<TaskModel> upcomingTasks = response.body().getTasks();
-              for (TaskModel task : upcomingTasks) {
-                task.getDeadlineDate(); // triggers processing & store of Date object (maybe move into a JSON converter)
-              }
               updateTasksFetchedTime(null);
-              RealmUtils.saveDataToRealm(upcomingTasks).subscribe(new Action1() {
-                @Override
-                public void call(Object o) {
-                  if (listener != null) {
-                    listener.taskFetchingComplete(FETCH_OKAY, null);
-                  }
-                  EventBus.getDefault().post(new TasksRefreshedEvent());
-                }
-              });
+              persistUpcomingTasks(response.body().getTasks(), listener);
             } else {
               if (listener != null) {
                 listener.taskFetchingComplete(FETCH_ERROR, response);
@@ -130,13 +118,9 @@ public class TaskService {
           @Override
           public void onResponse(Call<TaskChangedResponse> call, Response<TaskChangedResponse> response) {
             if (response.isSuccessful()) {
-              persistUpcomingTasks(response.body().getAddedAndUpdated());
-              RealmUtils.removeObjectsByUid(TaskModel.class, "taskUid", response.body().getRemovedUids());
               updateTasksFetchedTime(null);
-              if (listener != null) {
-                listener.taskFetchingComplete(FETCH_OKAY, null);
-              }
-              EventBus.getDefault().post(new TasksRefreshedEvent());
+              RealmUtils.removeObjectsByUid(TaskModel.class, "taskUid", response.body().getRemovedUids());
+              persistUpcomingTasks(response.body().getAddedAndUpdated(), listener);
             } else {
               if (listener != null) {
                 listener.taskFetchingComplete(FETCH_ERROR, response);
@@ -154,11 +138,19 @@ public class TaskService {
 
   }
 
-  private void persistUpcomingTasks(RealmList<TaskModel> tasks) {
+  private void persistUpcomingTasks(RealmList<TaskModel> tasks, final TaskServiceListener listener) {
     for (TaskModel task : tasks) {
       task.getDeadlineDate(); // triggers processing & store of Date object (maybe move into a JSON converter)
     }
-    RealmUtils.saveDataToRealm(tasks);
+    RealmUtils.saveDataToRealm(tasks).subscribe(new Action1() {
+      @Override
+      public void call(Object o) {
+        if (listener != null) {
+          listener.taskFetchingComplete(FETCH_OKAY, null);
+        }
+        EventBus.getDefault().post(new TasksRefreshedEvent());
+      }
+    });
   }
 
   public void fetchGroupTasks(final String groupUid, final TaskServiceListener listener) {

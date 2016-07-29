@@ -236,9 +236,12 @@ public class AddMembersActivity extends AppCompatActivity implements
             if (membersFromContacts.containsKey(c.id)) {
                 selectedMembers.add(membersFromContacts.get(c.id));
             } else {
-                Member m = new Member(c.selectedMsisdn, c.getDisplayName(), GroupConstants.ROLE_ORDINARY_MEMBER, c.id, true);
+                Member m = new Member(UUID.randomUUID().toString(), groupUid, c.selectedMsisdn, c.getDisplayName(),
+                    GroupConstants.ROLE_ORDINARY_MEMBER, c.id, true);
+                m.setLocal(true);
                 membersFromContacts.put(c.id, m);
                 selectedMembers.add(m);
+                RealmUtils.saveDataToRealm(m);
             }
         }
         newMemberListFragment.transitionToMemberList(selectedMembers);
@@ -252,12 +255,10 @@ public class AddMembersActivity extends AppCompatActivity implements
         super.onActivityResult(requestCode, resultCode, data);
         if (resultCode == RESULT_OK) {
             if (requestCode == Constant.activityManualMemberEntry) {
-                Member newMember = new Member(data.getStringExtra("selectedNumber"), data.getStringExtra("name"),
-                        GroupConstants.ROLE_ORDINARY_MEMBER, -1);
-                newMember.setGroupUid(groupUid);
-                newMember.setMemberUid(UUID.randomUUID().toString());
-                newMember.setMemberGroupUid();
-                newMember.setLocal(!NetworkUtils.isOnline(getApplicationContext()));
+                final String newUid = UUID.randomUUID().toString();
+                Member newMember = new Member(newUid, groupUid, data.getStringExtra("selectedNumber"), data.getStringExtra("name"),
+                        GroupConstants.ROLE_ORDINARY_MEMBER, -1, true);
+                newMember.setLocal(true);
                 RealmUtils.saveDataToRealmWithSubscriber(newMember);
                 manuallyAddedMembers.add(newMember);
                 newMemberListFragment.addMembers(Collections.singletonList(newMember));
@@ -305,7 +306,22 @@ public class AddMembersActivity extends AppCompatActivity implements
             if (membersToAdd != null && membersToAdd.size() > 0) {
                 progressDialog.show();
                 if(NetworkUtils.isOnline(getApplicationContext())) {
-                   postNewMembersToGroup(membersToAdd);
+                   GroupService.getInstance().postNewGroupMembers(membersToAdd, groupUid, new GroupService.MembersAddedListener() {
+                       @Override
+                       public void membersAdded(String saveType) {
+                           Intent i = new Intent();
+                           i.putExtra(GroupConstants.UID_FIELD, groupUid);
+                           i.putExtra(Constant.INDEX_FIELD, groupPosition);
+                           setResult(RESULT_OK, i);
+                           progressDialog.dismiss();
+                           finish();
+                       }
+
+                       @Override
+                       public void membersAddedError(String errorType, Object data) {
+                           progressDialog.dismiss();
+                       }
+                   });
                } else {
                    GroupService.getInstance().addGroupMembersLocally(groupUid, membersToAdd);
                    Intent i = new Intent();
@@ -343,16 +359,22 @@ public class AddMembersActivity extends AppCompatActivity implements
                             RealmUtils.saveDataToRealm(response.body().getGroups()).subscribe(new Action1() {
                                 @Override public void call(Object o) {
                                     System.out.println(response.body().getGroups().first().getMembers().size());
+                                    List<Member> members = new ArrayList<>();
                                     for(Member m : response.body().getGroups().first().getMembers()){
-                                        m.setMemberGroupUid();
-                                        RealmUtils.saveDataToRealmWithSubscriber(m);
+                                        m.composeMemberGroupUid();
+                                        members.add(m);
                                     }
-                                    Intent i = new Intent();
-                                    i.putExtra(GroupConstants.UID_FIELD, groupUid);
-                                    i.putExtra(Constant.INDEX_FIELD, groupPosition);
-                                    setResult(RESULT_OK, i);
-                                    progressDialog.dismiss();
-                                    finish();
+                                    RealmUtils.saveDataToRealm(members).subscribe(new Action1() {
+                                        @Override
+                                        public void call(Object o) {
+                                            Intent i = new Intent();
+                                            i.putExtra(GroupConstants.UID_FIELD, groupUid);
+                                            i.putExtra(Constant.INDEX_FIELD, groupPosition);
+                                            setResult(RESULT_OK, i);
+                                            progressDialog.dismiss();
+                                            finish();
+                                        }
+                                    });
                                 }
                             });
                         } else {

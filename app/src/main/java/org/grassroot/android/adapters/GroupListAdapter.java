@@ -38,7 +38,6 @@ import rx.Subscriber;
 public class GroupListAdapter extends RecyclerView.Adapter<GroupListAdapter.GHP_ViewHolder> {
 
   private String TAG = GroupListAdapter.class.getSimpleName();
-  private final int defaultAvatar = R.drawable.ic_groups_default_avatar;
 
   private final Context context;
   private final GroupRowListener listener;
@@ -132,13 +131,21 @@ public class GroupListAdapter extends RecyclerView.Adapter<GroupListAdapter.GHP_
 
   @Override public void onBindViewHolder(final GHP_ViewHolder holder, final int position) {
 
-    // todo : this is a bit of a mess, see if possible to simplify
-
-    holder.itemView.setLongClickable(true);
     final Group group = displayedGroups.get(position);
+
+    setUpTextDescriptions(holder, group);
+    setUpMemberCount(holder, group);
+    setUpListeners(holder, group);
+    setAvatarImage(holder, group);
+
+    if (group.getIsLocal()) {
+      setAlphaForLocal(holder, group);
+    }
+  }
+
+  private void setAlphaForLocal(GHP_ViewHolder holder, final Group group) {
     if (Build.VERSION.SDK_INT < 11) {
-      final AlphaAnimation animation =
-          new AlphaAnimation(!group.getIsLocal() ? 1f : localGroupAlpha,
+      final AlphaAnimation animation = new AlphaAnimation(!group.getIsLocal() ? 1f : localGroupAlpha,
               !group.getIsLocal() ? 1f : localGroupAlpha);
       animation.setDuration(50);
       animation.setFillAfter(true);
@@ -146,9 +153,11 @@ public class GroupListAdapter extends RecyclerView.Adapter<GroupListAdapter.GHP_
     } else {
       holder.itemView.setAlpha(!group.getIsLocal() ? 1f : localGroupAlpha);
     }
+  }
 
+  private void setUpTextDescriptions(GHP_ViewHolder holder, final Group group) {
     final String groupOrganizerDescription =
-        String.format(context.getString(R.string.group_organizer_prefix), group.getGroupCreator());
+            String.format(context.getString(R.string.group_organizer_prefix), group.getGroupCreator());
     holder.txtGroupname.setText(group.getGroupName());
     holder.txtGroupownername.setText(groupOrganizerDescription);
 
@@ -156,62 +165,74 @@ public class GroupListAdapter extends RecyclerView.Adapter<GroupListAdapter.GHP_
       final String groupDescription = group.getDescription();
       final int visibility = (TextUtils.isEmpty(groupDescription)) ? View.GONE : View.VISIBLE;
       holder.txtGroupdesc.setText(
-          String.format(context.getString(R.string.desc_body_pattern), getChangePrefix(group),
-              groupDescription));
+              String.format(context.getString(R.string.desc_body_pattern), getChangePrefix(group),
+                      groupDescription));
       holder.txtGroupdesc.setVisibility(visibility);
     } else {
       final String tokenCode =
-          context.getString(R.string.join_code_prefix) + group.getJoinCode() + "#";
+              context.getString(R.string.join_code_prefix) + group.getJoinCode() + "#";
       holder.txtGroupdesc.setText(tokenCode);
     }
 
+    holder.datetime.setText(
+            String.format(context.getString(R.string.date_time_pattern), getChangePrefix(group),
+                    outputSDF.format(group.getDate())));
+  }
+
+  private void setUpMemberCount(GHP_ViewHolder holder, final Group group) {
     // todo : check later if there's a more efficient way to do this?
     final int height = holder.profileV1.getDrawable().getIntrinsicWidth();
     final int width = holder.profileV1.getDrawable().getIntrinsicHeight();
 
     RelativeLayout.LayoutParams params =
-        (RelativeLayout.LayoutParams) holder.profileV2.getLayoutParams();
+            (RelativeLayout.LayoutParams) holder.profileV2.getLayoutParams();
     params.height = height;
     params.width = width;
 
     holder.profileV2.setLayoutParams(params);
     holder.profileV2.setText("+" + String.valueOf(group.getGroupMemberCount()));
-    // holder.profileV1.bringToFront();
+  }
 
-    holder.datetime.setText(
-        String.format(context.getString(R.string.date_time_pattern), getChangePrefix(group),
-            outputSDF.format(group.getDate())));
+  private void setUpListeners(GHP_ViewHolder holder, final Group group) {
+    final int position = holder.getAdapterPosition();
+    holder.itemView.setLongClickable(true);
 
     holder.cardView.setOnClickListener(new View.OnClickListener() {
-      @Override public void onClick(View view) {
+      @Override
+      public void onClick(View view) {
         listener.onGroupRowShortClick(group);
       }
     });
 
     holder.cardView.setOnLongClickListener(new View.OnLongClickListener() {
-      @Override public boolean onLongClick(View view) {
+      @Override
+      public boolean onLongClick(View view) {
         listener.onGroupRowLongClick(group);
         return true;
       }
     });
 
     holder.memberIcons.setOnClickListener(new View.OnClickListener() {
-      @Override public void onClick(View view) {
+      @Override
+      public void onClick(View view) {
         listener.onGroupRowMemberClick(group, position);
       }
     });
+
     holder.avatar.setOnClickListener(new View.OnClickListener() {
-      @Override public void onClick(View v) {
+      @Override
+      public void onClick(View v) {
         listener.onGroupRowAvatarClick(group, position);
       }
     });
+  }
 
+  private void setAvatarImage(GHP_ViewHolder holder, final Group group) {
     final String imageUrl = group.getImageUrl();
-
     if (imageUrl != null) {
-      setAvatar(holder.avatar, imageUrl);
+      setAvatar(holder.avatar, imageUrl, group.getDefaultImageRes());
     } else {
-      holder.avatar.setImageResource(defaultAvatar);
+      holder.avatar.setImageResource(group.getDefaultImageRes());
     }
   }
 
@@ -219,10 +240,10 @@ public class GroupListAdapter extends RecyclerView.Adapter<GroupListAdapter.GHP_
     switch (group.getLastChangeType()) {
       case GroupConstants.MEETING_CALLED:
         return (group.getDate().after(new Date()) ? context.getString(
-            R.string.future_meeting_prefix) : context.getString(R.string.past_meeting_prefix));
+                R.string.future_meeting_prefix) : context.getString(R.string.past_meeting_prefix));
       case GroupConstants.VOTE_CALLED:
         return (group.getDate().after(new Date())) ? context.getString(R.string.future_vote_prefix)
-            : context.getString(R.string.past_vote_prefix);
+                : context.getString(R.string.past_vote_prefix);
       case GroupConstants.GROUP_CREATED:
         return context.getString(R.string.group_created_prefix);
       case GroupConstants.MEMBER_ADDED:
@@ -231,7 +252,7 @@ public class GroupListAdapter extends RecyclerView.Adapter<GroupListAdapter.GHP_
         return context.getString(R.string.group_other_prefix);
       default:
         throw new UnsupportedOperationException(
-            "Error! Should only be one of standard change types");
+                "Error! Should only be one of standard change types");
     }
   }
 
@@ -267,25 +288,24 @@ public class GroupListAdapter extends RecyclerView.Adapter<GroupListAdapter.GHP_
     }
   }
 
-  private void setAvatar(final ImageView view, final String imageUrl) {
-    Picasso.with(context)
-        .load(imageUrl)
-        .error(defaultAvatar)
-        .placeholder(defaultAvatar)
-        .networkPolicy(NetworkPolicy.OFFLINE)
-        .transform(new CircularImageTransformer())
-        .into(view, new Callback() {
-          @Override public void onSuccess() {
-          }
+  private void setAvatar(final ImageView view, final String imageUrl, final int fallBackRes) {
+    Picasso.with(context).load(imageUrl)
+            .error(fallBackRes)
+            .placeholder(fallBackRes)
+            .networkPolicy(NetworkPolicy.OFFLINE)
+            .transform(new CircularImageTransformer())
+            .into(view, new Callback() {
+              @Override
+              public void onSuccess() {}
+              @Override
+              public void onError() {
+                Picasso.with(context).load(imageUrl)
+                        .placeholder(fallBackRes)
+                        .transform(new CircularImageTransformer())
+                        .error(fallBackRes)
+                        .into(view);
+              }
+            });
 
-          @Override public void onError() {
-            Picasso.with(context)
-                .load(imageUrl)
-                .placeholder(defaultAvatar)
-                .transform(new CircularImageTransformer())
-                .error(defaultAvatar)
-                .into(view);
-          }
-        });
   }
 }
