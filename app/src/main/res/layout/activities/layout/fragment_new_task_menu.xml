@@ -40,21 +40,20 @@
 
         <Button
             style="@style/NewTaskButton"
-            android:id="@+id/bt_vote"
-            android:text="@string/ga_newVote" />
+            android:id="@+id/bt_meeting"
+            android:text="@string/ga_newMeeting" />
 
         <Button
             style="@style/NewTaskButton"
-            android:id="@+id/bt_meeting"
-            android:text="@string/ga_newMeeting"
-            android:layout_below="@+id/bt_vote" />
-
+            android:id="@+id/bt_vote"
+            android:text="@string/ga_newVote"
+            android:layout_below="@+id/bt_meeting" />
 
         <Button
             style="@style/NewTaskButton"
             android:id="@+id/bt_todo"
             android:text="@string/ga_newToDo"
-            android:layout_below="@+id/bt_meeting" />
+            android:layout_below="@+id/bt_vote" />
 
         <Button
             style="@style/NewTaskButton"

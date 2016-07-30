@@ -301,14 +301,15 @@
         <item name="android:textSize">@dimen/txt_medium</item>
         <item name="android:singleLine">true</item>
         <item name="android:textColor">@color/dark_grey_text</item>
-        <item name="android:layout_marginBottom">15dp
-        </item> <!-- todo: fix this hack for alignment -->
+        <item name="android:paddingTop">@dimen/padding_small</item>
+        <item name="android:paddingBottom">@dimen/padding_small</item>
     </style>
 
     <style name="ReminderSwitch">
         <item name="android:layout_width">wrap_content</item>
         <item name="android:layout_height">wrap_content</item>
         <item name="android:layout_alignParentRight">true</item>
+        <item name="android:layout_marginBottom">@dimen/margin_small</item>
     </style>
 
     <style name="ButtonFlat">

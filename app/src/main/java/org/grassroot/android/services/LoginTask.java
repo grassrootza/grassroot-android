@@ -19,6 +19,7 @@ public class LoginTask extends AsyncTask<Context, Void, Void> {
     @Override
     protected Void doInBackground(Context... params) {
         final Context context = params[0];
+		// note: don't need to call reset sync time here, as realm has been wiped, so last sync time will be 0
         if (NetworkUtils.isOnline(context)) {
             NetworkUtils.fetchEntitiesFromServer(context);
         }

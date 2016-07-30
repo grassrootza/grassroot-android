@@ -12,6 +12,7 @@ import android.view.View;
 import org.grassroot.android.R;
 import org.grassroot.android.activities.GroupSearchActivity;
 import org.grassroot.android.activities.GroupTasksActivity;
+import org.grassroot.android.activities.HomeScreenActivity;
 import org.grassroot.android.activities.StartActivity;
 import org.grassroot.android.activities.ViewTaskActivity;
 import org.grassroot.android.fragments.dialogs.NetworkErrorDialogFragment;
@@ -31,6 +32,10 @@ import retrofit2.Response;
 public class ErrorUtils {
 
     private static final String TAG = ErrorUtils.class.getCanonicalName();
+
+    public static Intent gracefulExitToHome(Activity callingActivity) {
+        return new Intent(callingActivity, HomeScreenActivity.class);
+    }
 
     /**
      * Utility method to intercept and deal with common errors, in particular absence of a network

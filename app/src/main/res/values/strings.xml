@@ -138,7 +138,10 @@
     <string name="role">Your role</string>
     <string name="Default">Clear</string>
 
+    <string name="group_description_prefix">Description: %s</string>
     <string name="group_organizer_prefix">Organizer: %s</string>
+    <string name="group_member_count">%d members</string>
+
     <string name="join_code_prefix">Join code: *134*1994*</string>
     <string name="date_time_pattern">%1$s on %2$s</string>
     <string name="desc_body_pattern">%1$s: %2$s</string>
@@ -168,6 +171,9 @@
     <string name="gs_none_found_text">Sorry, we didn\'t find any groups that match that term. Please
     enter another search word, or a group join code.</string>
     <string name="validate_search_box">Please enter a search word to find public groups</string>
+
+    <string name="pgroup_name_format">Name: %s</string>
+    <string name="pgroup_org_format">Organizer: %s</string>
 
     <string name="gs_dialog_title">Send join request?</string>
     <string name="gs_dialog_message_hint">Enter a message to let the group organizer know who you are</string>
@@ -370,9 +376,9 @@
 
     <!--Select members button & reminder options -->
     <string name="nm_bt_done">Done</string>
-    <string name="one_day"><b>1 day</b> ahead</string>
-    <string name="half_day"><b>Half a day</b> ahead</string>
-    <string name="one_hour"><b>1 hour</b> ahead</string>
+    <string name="one_day">1 day ahead</string>
+    <string name="half_day">Half a day ahead</string>
+    <string name="one_hour">1 hour ahead</string>
 
     <!-- View task strings -->
     <string name="tlist_posted_by_mtg">Called by %s</string>

@@ -1,20 +1,15 @@
 package org.grassroot.android.adapters;
 
 import android.content.Context;
-import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import org.grassroot.android.R;
 import org.grassroot.android.models.Group;
-import org.grassroot.android.services.ApplicationLoader;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -63,16 +58,16 @@ public class GroupPickAdapter extends RecyclerView.Adapter<GroupPickAdapter.Grou
 
         // todo :send actual group description, rename this to lastChange or so on
         if (!TextUtils.isEmpty(group.getDescription())) {
-            holder.groupDescription.setText(group.getDescription());
+            final String description = String.format(containingContext.getString(R.string.group_description_prefix), group.getDescription());
+            holder.groupDescription.setText(description);
         } else {
             final String organizer = String.format(containingContext.getString(R.string.group_organizer_prefix), group.getGroupCreator());
             holder.groupDescription.setText(organizer);
         }
 
-        holder.groupEvent.setText(String.format(containingContext.getString(R.string.desc_body_pattern),
-                group.constructChangeType(containingContext), group.getDescription()));
+        holder.memberCount.setText(String.format(containingContext.getString(R.string.group_member_count), group.getGroupMemberCount()));
 
-        holder.pickButton.setOnClickListener(new View.OnClickListener() {
+        holder.groupRoot.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 listener.onGroupPicked(group);
@@ -87,18 +82,18 @@ public class GroupPickAdapter extends RecyclerView.Adapter<GroupPickAdapter.Grou
 
     public static class GroupPickViewHolder extends RecyclerView.ViewHolder {
 
+        ViewGroup groupRoot;
         TextView groupName;
         TextView groupDescription;
-        TextView groupEvent;
-        Button pickButton;
+        TextView memberCount;
 
         public GroupPickViewHolder(View view) {
             super(view);
 
+            groupRoot = (ViewGroup) view.findViewById(R.id.gpick_item_root);
             groupName = (TextView) view.findViewById(R.id.gpick_group_name);
             groupDescription = (TextView) view.findViewById(R.id.gpick_group_description);
-            groupEvent = (TextView) view.findViewById(R.id.gpick_item_last_event);
-            pickButton = (Button) view.findViewById(R.id.gpick_btn_click);
+            memberCount = (TextView) view.findViewById(R.id.gpick_item_last_event);
         }
     }
 

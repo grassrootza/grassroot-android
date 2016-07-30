@@ -20,6 +20,7 @@ import org.grassroot.android.fragments.ViewTaskFragment;
 import org.grassroot.android.interfaces.GroupConstants;
 import org.grassroot.android.models.Group;
 import org.grassroot.android.utils.Constant;
+import org.grassroot.android.utils.ErrorUtils;
 import org.grassroot.android.utils.MenuUtils;
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
@@ -55,12 +56,18 @@ public class GroupTasksActivity extends PortraitActivity implements NewTaskMenuF
         final Bundle extras = getIntent().getExtras();
 
         if (extras == null) {
-            throw new UnsupportedOperationException("Error! Group tasks activity called without group passed");
+            Log.e(TAG, "Error! Group tasks activity called without group passed");
+            startActivity(ErrorUtils.gracefulExitToHome(this));
+            finish();
+            return;
         }
 
         groupMembership = extras.getParcelable(GroupConstants.OBJECT_FIELD);
         if (groupMembership == null) {
-            throw new UnsupportedOperationException("Error! Group tasks activity called without group passed");
+            Log.e(TAG, "Error! Group tasks activity called without group passed");
+            startActivity(ErrorUtils.gracefulExitToHome(this));
+            finish();
+            return;
         }
 
         newTaskMenuFragment = NewTaskMenuFragment.newInstance(groupMembership, true);

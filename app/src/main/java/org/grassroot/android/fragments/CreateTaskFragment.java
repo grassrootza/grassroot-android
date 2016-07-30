@@ -486,7 +486,7 @@ public class CreateTaskFragment extends Fragment {
     @BindView(R.id.ctsk_cv_description)
     CardView descriptionCard;
     @BindView(R.id.ctsk_rl_desc_body)
-    RelativeLayout descriptionBody;
+    LinearLayout descriptionBody;
     @BindView(R.id.ctsk_til_desc)
     TextInputLayout descriptionInput;
     @BindView(R.id.ctsk_desc_expand)

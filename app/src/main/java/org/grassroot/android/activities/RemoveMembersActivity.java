@@ -3,9 +3,12 @@ package org.grassroot.android.activities;
 import android.app.ProgressDialog;
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.v4.app.NavUtils;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.widget.Button;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
@@ -82,20 +85,23 @@ public class RemoveMembersActivity extends PortraitActivity implements MemberLis
         setUpMemberListFragment();
     }
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // todo: check for permissions
-        MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.menu_group_members, menu);
-        return true;
-    }
-
     private void setUpToolbar() {
         tvHeader.setText(groupName);
         setSupportActionBar(toolbar);
         if (getSupportActionBar() != null) {
             getSupportActionBar().setHomeButtonEnabled(true);
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        }
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case android.R.id.home:
+                navigateUp();
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
         }
     }
 
@@ -110,15 +116,14 @@ public class RemoveMembersActivity extends PortraitActivity implements MemberLis
 
     @OnClick(R.id.rm_bt_cancel)
     public void cancel() {
-        // todo: maybe use proper intent/going up
-        finish();
+        navigateUp();
     }
 
     @OnClick(R.id.rm_bt_save)
     public void saveAndExit() {
         // todo: localize
         if (membersToRemove.isEmpty()) {
-            finish();
+            navigateUp();
         } else {
             final String message = String.format(getString(R.string.rm_confirm_number), membersToRemove.size());
             ConfirmCancelDialogFragment.newInstance(message, new ConfirmCancelDialogFragment.ConfirmDialogListener() {
@@ -128,6 +133,12 @@ public class RemoveMembersActivity extends PortraitActivity implements MemberLis
                 }
             }).show(getSupportFragmentManager(), "confirm");
         }
+    }
+
+    private void navigateUp() {
+        Intent intent = NavUtils.getParentActivityIntent(this);
+        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        NavUtils.navigateUpTo(this, intent);
     }
 
     private void saveRemoval() {

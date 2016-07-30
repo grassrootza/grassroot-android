@@ -41,6 +41,8 @@ public class NetworkUtils {
   public static final String SERVER_ERROR = "server_error";
   public static final String CONNECT_ERROR = "connection_error";
 
+  public static final long minIntervalBetweenSyncs = 15 * 60 * 1000; // 15 minutes, in millis
+
   static boolean sendingLocalQueue = false;
   static boolean fetchingServerEntities = false;
 
@@ -162,7 +164,7 @@ public class NetworkUtils {
     Log.e(TAG, "inside network utils ... about to call sending queued entities ...");
     if (!sendingLocalQueue) {
       sendingLocalQueue = true;
-      if (isOnline(context)) {
+      if (shouldAttemptSync(context)) {
         sendLocalGroups();
         sendLocallyAddedMembers();
         sendNewLocalTasks();
@@ -172,17 +174,48 @@ public class NetworkUtils {
     }
     sendingLocalQueue = false;
     fetchEntitiesFromServer(context);
+    saveSyncTime();
   }
+
   public static void fetchEntitiesFromServer(final Context context) {
     if (!fetchingServerEntities) {
       fetchingServerEntities = true;
-      if (isOnline(context)) {
+      if (shouldAttemptFetch(context)) {
         GroupService.getInstance().fetchGroupListWithoutError();
         GroupService.getInstance().fetchGroupJoinRequests(null);
         TaskService.getInstance().fetchUpcomingTasks(null);
       }
     }
     fetchingServerEntities = false;
+  }
+
+  public static boolean shouldAttemptSync(final Context context) {
+    Log.e(TAG, "checking if we should try sync ...");
+    return isOnline(context) && hasIntervalElapsedSinceSync();
+  }
+
+  public static boolean shouldAttemptFetch(final Context context) {
+    return isOnline(context) && hasIntervalElapsedSinceSync();
+  }
+
+  // for when we log in (as want to enable / allow that within 15 mins)
+  public static void resetSyncTime() {
+    PreferenceObject prefs = RealmUtils.loadPreferencesFromDB();
+    prefs.setLastTimeSyncPerformed(0);
+    RealmUtils.saveDataToRealm(prefs).subscribe();
+  }
+
+  private static void saveSyncTime() {
+    PreferenceObject prefs = RealmUtils.loadPreferencesFromDB();
+    prefs.setLastTimeSyncPerformed(Utilities.getCurrentTimeInMillisAtUTC());
+    RealmUtils.saveDataToRealm(prefs).subscribe();
+  }
+
+  private static boolean hasIntervalElapsedSinceSync() {
+    final long lastTimeSynced = RealmUtils.loadPreferencesFromDB().getLastTimeSyncPerformed();
+    Log.e(TAG, "and ... last time synced = " + lastTimeSynced);
+    final long timeNow = Utilities.getCurrentTimeInMillisAtUTC();
+    return timeNow > (lastTimeSynced + minIntervalBetweenSyncs);
   }
 
   private static void sendLocalGroups() {

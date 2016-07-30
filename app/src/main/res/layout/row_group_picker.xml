@@ -35,15 +35,4 @@
 
     </LinearLayout>
 
-    <Button
-        android:id="@+id/gpick_btn_click"
-        style="@style/ButtonFlat"
-        android:text="@string/btn_group_select"
-        android:textColor="@color/primaryColor"
-        android:layout_alignParentRight="true"
-        android:layout_marginRight="20dp"
-        android:layout_alignTop="@id/gpick_ll_text_holder"
-        android:layout_alignBottom="@id/gpick_ll_text_holder"
-        />
-
 </RelativeLayout>

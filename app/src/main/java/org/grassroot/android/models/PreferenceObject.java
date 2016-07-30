@@ -19,8 +19,11 @@ public class PreferenceObject extends RealmObject {
   private String userName;
   private String mobileNumber;
   private String token;
+
+  private long lastTimeSyncPerformed;
   private long lastTimeGroupsFetched;
   private long lastTimeUpcomingTasksFetched;
+
   private String onlineStatus;
   private boolean showOnlineOfflinePicker = true;
 
@@ -107,6 +110,10 @@ public class PreferenceObject extends RealmObject {
   public void setNotificationCounter(int notificationCounter) {
     this.notificationCounter = notificationCounter;
   }
+
+  public void setLastTimeSyncPerformed(long lastTimeSyncPerformed) { this.lastTimeSyncPerformed = lastTimeSyncPerformed; }
+
+  public long getLastTimeSyncPerformed() { return lastTimeSyncPerformed; }
 
   public void setLastTimeGroupsFetched(long lastTimeGroupsFetched) { this.lastTimeGroupsFetched = lastTimeGroupsFetched; }
 

@@ -44,8 +44,15 @@ public class PublicGroupAdapter extends RecyclerView.Adapter<PublicGroupAdapter.
     @Override
     public void onBindViewHolder(PublicGroupViewHolder holder, int position) {
         PublicGroupModel model = data.get(position);
-        holder.txtGroupname.setText(model.getGroupName());
-        holder.txtGroupownername.setText(model.getGroupCreator());
+
+        final String groupName = String.format(inflater.getContext().getString(R.string.pgroup_name_format),
+            model.getGroupName());
+        holder.txtGroupname.setText(groupName);
+
+        final String groupCreator = String.format(inflater.getContext().getString(R.string.pgroup_org_format),
+            model.getGroupCreator());
+        holder.txtGroupownername.setText(groupCreator);
+
         if (!TextUtils.isEmpty(model.getDescription())) {
             holder.txtGroupdesc.setText(model.getDescription());
         } else {

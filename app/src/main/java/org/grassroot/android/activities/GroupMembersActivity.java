@@ -150,6 +150,14 @@ public class GroupMembersActivity extends PortraitActivity implements NewTaskMen
                 Intent i = MenuUtils.constructIntent(this, AddMembersActivity.class, groupUid, groupName);
                 startActivity(i);
                 return true;
+            case (R.id.mi_remove_members):
+                Intent i2 = MenuUtils.constructIntent(this, RemoveMembersActivity.class, groupUid, groupName);
+                startActivity(i2);
+                return true;
+            case (R.id.mi_group_settings):
+                Intent i3 = MenuUtils.constructIntent(this, GroupSettingsActivity.class, group);
+                startActivity(i3);
+                return true;
             case (android.R.id.home):
                 finish(); // maybe return the selection ... check w user feedback
                 return true;
