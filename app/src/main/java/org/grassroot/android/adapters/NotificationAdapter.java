@@ -27,6 +27,7 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
     private List<TaskNotification> storedNotifications = new ArrayList<>();
     private static final String TAG = "NotificationAdapter";
 
+
     public NotificationAdapter(ArrayList<TaskNotification> dataList) {
         this.notifications = dataList;
     }
@@ -88,6 +89,7 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
 
 
     public void addData(List<TaskNotification> notificationList) {
+        this.notifications.clear();
         this.notifications.addAll(notificationList);
         this.notifyDataSetChanged();
     }

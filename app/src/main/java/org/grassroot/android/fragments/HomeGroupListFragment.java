@@ -427,7 +427,7 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
         groupListRowAdapter.refreshSingleGroup(e.groupUid);
     }
 
-    @Subscribe public void onGroupDeletedEvent(GroupDeletedEvent e) { groupListRowAdapter.refreshGroupsToDB(); } // todo : make more efficient ...
+    @Subscribe public void onGroupDeletedEvent(GroupDeletedEvent e) { groupListRowAdapter.removeSingleGroup(e.groupUid); } // todo : make more efficient ...
 
     @Subscribe
     public void onEvent(UserLoggedOutEvent e) {

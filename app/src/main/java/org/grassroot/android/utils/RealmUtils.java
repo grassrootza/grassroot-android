@@ -1,5 +1,6 @@
 package org.grassroot.android.utils;
 
+import android.app.Notification;
 import android.util.Log;
 
 import org.grassroot.android.models.Group;
@@ -7,6 +8,7 @@ import org.grassroot.android.models.Member;
 import org.grassroot.android.models.PreferenceObject;
 import org.grassroot.android.models.RealmString;
 import org.grassroot.android.models.TaskModel;
+import org.grassroot.android.models.TaskNotification;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -85,6 +87,25 @@ public class RealmUtils {
         realm.copyToRealmOrUpdate(object);
         realm.commitTransaction();
         realm.close();
+    }
+
+    public static Observable saveNotificationsToRealm(final List<TaskNotification> notifications) {
+        return Observable.create(new Observable.OnSubscribe<Boolean>() {
+            @Override
+            public void call(Subscriber<? super Boolean> subscriber) {
+                Realm realm = Realm.getDefaultInstance();
+                realm.beginTransaction();
+                realm.copyToRealmOrUpdate(notifications);
+                realm.commitTransaction();
+                List<TaskNotification> savedNotifications = RealmUtils.loadListFromDB(TaskNotification.class);
+                if(savedNotifications.size()>100){
+
+                }
+                realm.close();
+                subscriber.onNext(true);
+                subscriber.onCompleted();
+            }
+        }).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread());
     }
 
 

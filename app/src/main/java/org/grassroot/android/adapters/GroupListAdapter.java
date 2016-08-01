@@ -5,6 +5,7 @@ import android.os.Build;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -102,9 +103,19 @@ public class GroupListAdapter extends RecyclerView.Adapter<GroupListAdapter.GHP_
                 displayedGroups.remove(i);
                 displayedGroups.add(0, group);
                 notifyItemRangeChanged(0, i + 1);
-                System.out.println("Changed group " + groupUid);
+                Log.d(TAG,"Changed group " + groupUid);
             }
         }
+    }
+
+    public void removeSingleGroup(final String groupUid) {
+        for (int i = 0; i < displayedGroups.size(); i++) {
+            if (displayedGroups.get(i).getGroupUid().equals(groupUid)) {
+                displayedGroups.remove(i);
+                notifyDataSetChanged();
+            }
+        }
+
     }
 
     public void sortByChangedTime() {
@@ -159,9 +170,9 @@ public class GroupListAdapter extends RecyclerView.Adapter<GroupListAdapter.GHP_
         setUpListeners(holder, group);
         setAvatarImage(holder, group);
 
-        if (group.getIsLocal()) {
-            setAlphaForLocal(holder, group);
-        }
+        setAlphaForLocal(holder, group);
+
+
     }
 
     private void setAlphaForLocal(GHP_ViewHolder holder, final Group group) {

@@ -1,5 +1,6 @@
 package org.grassroot.android.fragments;
 
+import android.app.Notification;
 import android.app.ProgressDialog;
 import android.content.Intent;
 import android.os.Bundle;
@@ -30,6 +31,7 @@ import org.grassroot.android.services.NotificationUpdateService;
 import org.grassroot.android.utils.Constant;
 import org.grassroot.android.utils.ErrorUtils;
 import org.grassroot.android.utils.RealmUtils;
+import org.grassroot.android.utils.Utilities;
 import org.greenrobot.eventbus.EventBus;
 
 import java.util.ArrayList;
@@ -37,9 +39,11 @@ import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import io.realm.Realm;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
+import rx.functions.Action1;
 
 public class NotificationCenterFragment extends Fragment {
 
@@ -55,7 +59,7 @@ public class NotificationCenterFragment extends Fragment {
     private LinearLayoutManager mLayoutManager;
     private Integer pageNumber = 0;
     private Integer totalPages = 0;
-    private Integer pageSize = null;
+    private Integer pageSize = 100;
     private NotificationAdapter notificationAdapter;
     private List<TaskNotification> notifications = new ArrayList<>();
     private int firstVisibleItem, totalItemCount, lastVisibileItem;
@@ -145,8 +149,9 @@ public class NotificationCenterFragment extends Fragment {
         final String code = RealmUtils.loadPreferencesFromDB().getToken();
 
         progressDialog.show();
-
-        GrassrootRestService.getInstance().getApi().getUserNotifications(phoneNumber, code, page, size).enqueue(new Callback<NotificationList>() {
+        long lastTimeUpdated = RealmUtils.loadPreferencesFromDB().getLastTimeNotificationsFetched();
+        Call<NotificationList> call = lastTimeUpdated == 0 ? GrassrootRestService.getInstance().getApi().getUserNotifications(phoneNumber, code, page, size) : GrassrootRestService.getInstance().getApi().getUserNotificationsChangedSince(phoneNumber, code,lastTimeUpdated);
+        call.enqueue(new Callback<NotificationList>() {
             @Override
             public void onResponse(Call<NotificationList> call, Response<NotificationList> response) {
                 if (response.isSuccessful()) {
@@ -160,14 +165,20 @@ public class NotificationCenterFragment extends Fragment {
                     } else {
                         notificationAdapter.addData(notifications);
                     }
-                    notificationAdapter.notifyDataSetChanged();
+                    RealmUtils.saveDataToRealm(notifications).subscribe();
+                    PreferenceObject preference = RealmUtils.loadPreferencesFromDB();
+                    preference.setLastTimeNotificationsFetched(Utilities.getCurrentTimeInMillisAtUTC());
+                    RealmUtils.saveDataToRealm(preference).subscribe();
                     isLoading = false;
+                    notificationAdapter.notifyDataSetChanged();
                 }
 
             }
             @Override
             public void onFailure(Call<NotificationList> call, Throwable t) {
                 progressDialog.dismiss();
+                notificationAdapter.addData(RealmUtils.loadListFromDB(TaskNotification.class));
+                rcNc.setVisibility(View.VISIBLE);
                 ErrorUtils.handleNetworkError(getContext(), rlRootNc, t);
             }
         });
@@ -178,6 +189,7 @@ public class NotificationCenterFragment extends Fragment {
             String uid = notification.getUid();
             notification.setIsRead();
             notificationAdapter.notifyDataSetChanged();
+            RealmUtils.saveDataToRealm(notification).subscribe();
             int notificationCount = RealmUtils.loadPreferencesFromDB().getNotificationCounter();
             Log.e(TAG, "notification count " + notificationCount);
             NotificationUpdateService.updateNotificationStatus(getContext(), uid);
