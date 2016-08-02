@@ -67,7 +67,6 @@ public class GroupService {
 
   public interface GroupServiceListener {
     void groupListLoaded();
-
     void groupListLoadingError();
     void groupsAlreadyFetching();
   }
@@ -246,47 +245,6 @@ public class GroupService {
 
       }
     });
-  }
-
-  /*
-  Called when, e.g., some change group event is triggered on event bus or elsewhere
-   */
-  public void refreshSingleGroup(final int position, final String groupUid, final Activity activity,
-      final GroupServiceListener listener) {
-    /*Group groupUpdated = RealmUtils.loadGroupsSorted().get(position);
-    if (groupUpdated.getGroupUid().equals(groupUid)) {
-      String mobileNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
-      String code = RealmUtils.loadPreferencesFromDB().getToken();
-      GrassrootRestService.getInstance()
-          .getApi()
-          .getSingleGroup(mobileNumber, code, groupUid)
-          .enqueue(new Callback<GroupResponse>() {
-            @Override
-            public void onResponse(Call<GroupResponse> call, Response<GroupResponse> response) {
-              // todo : check corner cases of filtered list (current list setup likely fragile)
-              // todo : consider shuffling this group to the top of the list
-              Group group = response.body().getGroups().get(0);
-              Log.e(TAG, "Group updated, has " + group.getGroupMemberCount() + " members");
-              // userGroups.set(position, group);
-              listener.groupListLoaded();
-            }
-
-            @Override public void onFailure(Call<GroupResponse> call, Throwable t) {
-              ErrorUtils.connectivityError(activity, R.string.error_no_network,
-                  new NetworkErrorDialogListener() {
-                    @Override public void retryClicked() {
-                      // refreshSingleGroup(position, groupUid, activity, listener);
-                    }
-
-                    @Override public void offlineClicked() {
-                      listener.groupListLoadingError(); // todo : instead propogate "gone offline"
-                    }
-                  });
-            }
-          });
-    } else {
-      listener.groupListLoadingError();
-    }*/
   }
 
     /*

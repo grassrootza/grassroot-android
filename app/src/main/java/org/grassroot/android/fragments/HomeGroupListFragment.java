@@ -116,23 +116,17 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
         View view = inflater.inflate(R.layout.activity_group__homepage, container, false);
         unbinder = ButterKnife.bind(this, view);
         EventBus.getDefault().register(this);
+
+        setUpRecyclerView();
         toggleProgressIfGroupsShowing();
         return view;
     }
 
     @Override public void onActivityCreated(Bundle savedInstanceState) {
 			super.onCreate(savedInstanceState);
-			setUpRecyclerView();
     }
 
     private void setUpRecyclerView() {
-        glSwipeRefresh.setColorSchemeColors(ContextCompat.getColor(getActivity(), R.color.primaryColor));
-        glSwipeRefresh.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
-            @Override
-            public void onRefresh() {
-                refreshGroupList();
-            }
-        });
         RealmUtils.loadGroupsSorted().subscribe(new Subscriber<List<Group>>() {
             @Override public void onCompleted() {
 
@@ -143,7 +137,7 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
             }
 
             @Override public void onNext(List<Group> groups) {
-                Log.d(TAG, "loaded groups ... setting recycler paramaters");
+                Log.e(TAG, "loaded groups ... setting recycler parameters");
                 groupListRowAdapter = new GroupListAdapter(groups, HomeGroupListFragment.this);
                 rcGroupList.setAdapter(groupListRowAdapter);
                 rcGroupList.setHasFixedSize(true);
@@ -152,7 +146,14 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
                 rcGroupList.setDrawingCacheEnabled(true);
                 rcGroupList.setDrawingCacheQuality(View.DRAWING_CACHE_QUALITY_HIGH);
                 rcGroupList.setVisibility(View.VISIBLE);
-                hideProgress();
+
+                glSwipeRefresh.setColorSchemeColors(ContextCompat.getColor(getActivity(), R.color.primaryColor));
+                glSwipeRefresh.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+                    @Override
+                    public void onRefresh() {
+                        refreshGroupList();
+                    }
+                });
             }
         });
     }
@@ -373,10 +374,10 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
 			Log.d(TAG, "groupListRowAdaper null, showing dialog ...");
 			showProgress();
 		} else if (groupListRowAdapter.getItemCount() == 0) {
-          Log.d(TAG, "groupListAdapter empty, hence showing ...");
+            Log.d(TAG, "groupListAdapter empty, hence showing ...");
 			showProgress();
         } else {
-			Log.e(TAG, "neither of the above, hence hiding");
+            Log.d(TAG, "neither of the above, hence hiding");
 			hideProgress();
         }
     }
