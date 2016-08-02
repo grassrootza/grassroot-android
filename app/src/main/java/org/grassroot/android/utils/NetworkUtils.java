@@ -231,8 +231,6 @@ public class NetworkUtils {
 
   // todo : maybe use a boolean, locallyEdited, to optimize this
   private static void sendLocallyAddedMembers() {
-    final Map<String, Object> queryMap = new HashMap<>();
-    queryMap.put("isLocal", true);
     RealmUtils.loadGroupsSorted().subscribe(new Subscriber<List<Group>>() {
       @Override public void onCompleted() {
 
@@ -244,6 +242,8 @@ public class NetworkUtils {
 
       @Override public void onNext(List<Group> groups) {
         for (final Group g : groups) {
+          final Map<String, Object> queryMap = new HashMap<>();
+          queryMap.put("isLocal", true);
           queryMap.put("groupUid", g.getGroupUid());
           RealmUtils.loadListFromDB(Member.class, queryMap).subscribe(new Action1<List<Member>>() {
             @Override
@@ -313,6 +313,19 @@ public class NetworkUtils {
         for (final TaskModel model : tasks1) {
           TaskService.getInstance()
                   .sendTaskUpdateToServer(model, true); // todo : work out selected member change logic
+        }
+      }
+    });
+  }
+
+  private void sendTaskActions(){
+    Map<String, Object> map1 = new HashMap<>();
+    map1.put("isActionLocal", true);
+    RealmUtils.loadListFromDB(TaskModel.class,map1).subscribe(new Action1<List<TaskModel>>() {
+      @Override
+      public void call(List<TaskModel> tasks) {
+        for(TaskModel taskModel : tasks){
+        //  TaskService.getInstance().
         }
       }
     });

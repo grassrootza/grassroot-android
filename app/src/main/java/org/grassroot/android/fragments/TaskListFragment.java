@@ -207,6 +207,9 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
       hideProgress();
       hasFetchedTasks = true;
       handleNoTasksFound(fetchType);
+    }else{
+      //// TODO: 01/08/16 add logic here 
+      hideProgress();
     }
   }
 

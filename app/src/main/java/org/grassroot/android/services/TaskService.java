@@ -42,6 +42,10 @@ public class TaskService {
     void taskFetchingComplete(String fetchType, Object data);
   }
 
+  public interface TaskActionListener {
+    void taskActionComplete(TaskModel task, String reply);
+  }
+
   public interface TaskCreationListener {
     void taskCreatedLocally(TaskModel task);
 
@@ -383,5 +387,36 @@ public class TaskService {
             }
           });
     }
+  }
+  public void respondToTask(final TaskModel task, final TaskActionListener listener){
+    final String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
+    final String code = RealmUtils.loadPreferencesFromDB().getToken();
+    Call<TaskResponse> call =
+            task.getType().equals(TaskConstants.VOTE) ? voteCall(task.getTaskUid(),phoneNumber,code,TaskConstants.RESPONSE_NO)
+                    : meetingCall(task.getTaskUid(),phoneNumber,code,TaskConstants.RESPONSE_NO);
+    call.enqueue(new Callback<TaskResponse>() {
+      @Override public void onResponse(Call<TaskResponse> call, Response<TaskResponse> response) {
+        if (response.isSuccessful()) {
+          listener.taskActionComplete(response.body().getTasks().first(),TaskConstants.RESPONSE_NO);
+        } else {
+         // handleUnknownError(response);
+        }
+      }
+
+      @Override public void onFailure(Call<TaskResponse> call, Throwable t) {
+        // handleNoNetwork("RESPOND_NO");
+      //  handleSuccessfulOffline(TaskConstants.RESPONSE_NO);
+      }
+    });
+  }
+
+  private Call<TaskResponse> voteCall(String taskUid, String phoneNumber, String code,String response) {
+    return GrassrootRestService.getInstance()
+            .getApi()
+            .castVote(taskUid, phoneNumber, code, response);
+  }
+
+  private Call<TaskResponse> meetingCall(String taskUid, String phoneNumber, String code,String response) {
+    return GrassrootRestService.getInstance().getApi().rsvp(taskUid, phoneNumber, code, response);
   }
 }
