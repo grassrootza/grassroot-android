@@ -178,6 +178,10 @@ public class GrassrootRestService {
         @Nullable @Query("page") Integer page,
         @Nullable @Query("size") Integer size);
 
+    @GET("notification/list/{phoneNumber}/{code}")
+    Call<NotificationList> getUserNotificationsChangedSince(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
+                                                 @Query("changedSince") Long changedSince);
+
     //Profile settings
     @GET("user/profile/settings/{phoneNumber}/{code}")
     Call<ProfileResponse> getUserProfile(@Path("phoneNumber") String phoneNumber,

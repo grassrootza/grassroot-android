@@ -1,5 +1,6 @@
 package org.grassroot.android.utils;
 
+import android.app.Notification;
 import android.util.Log;
 
 import org.grassroot.android.models.Group;
@@ -7,6 +8,7 @@ import org.grassroot.android.models.Member;
 import org.grassroot.android.models.PreferenceObject;
 import org.grassroot.android.models.RealmString;
 import org.grassroot.android.models.TaskModel;
+import org.grassroot.android.models.TaskNotification;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -85,6 +87,45 @@ public class RealmUtils {
         realm.copyToRealmOrUpdate(object);
         realm.commitTransaction();
         realm.close();
+    }
+
+    public static Observable saveNotificationsToRealm(final List<TaskNotification> notifications) {
+        return Observable.create(new Observable.OnSubscribe<Boolean>() {
+            @Override
+            public void call(Subscriber<? super Boolean> subscriber) {
+                Realm realm = Realm.getDefaultInstance();
+                realm.beginTransaction();
+                realm.copyToRealmOrUpdate(notifications);
+                realm.commitTransaction();
+                final List<TaskNotification> savedNotifications = RealmUtils.loadNotificationsSorted();
+                if(savedNotifications.size()>100){
+                    Log.d(TAG,"Saved objects of size " + String.valueOf(savedNotifications.size()));
+
+                    RealmUtils.saveDataToRealm(savedNotifications.subList(0,100)).subscribe(new Action1() {
+                    @Override
+                    public void call(Object o) {
+                        Log.d(TAG,"Deleting objects of size " + String.valueOf(savedNotifications.size() - 100));
+                        for(TaskNotification notification : savedNotifications.subList(100,savedNotifications.size())){
+                            Log.d(TAG,"Deleting objects " + notification.getMessage());
+                            RealmUtils.removeObjectFromDatabase(TaskNotification.class,"uid",notification.getUid());
+                        }
+                    }
+                });
+                }
+                realm.close();
+                subscriber.onNext(true);
+                subscriber.onCompleted();
+            }
+        }).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread());
+    }
+
+    public static List<TaskNotification> loadNotificationsSorted() {
+                        final Realm realm = Realm.getDefaultInstance();
+                        List<TaskNotification> notifications = realm.copyFromRealm(
+                                realm.where(TaskNotification.class).findAllSorted("createdDateTime", Sort.DESCENDING));
+                        realm.close();
+
+        return notifications;
     }
 
 

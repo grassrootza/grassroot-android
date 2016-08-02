@@ -24,6 +24,16 @@ public class PreferenceObject extends RealmObject {
   private long lastTimeGroupsFetched;
   private long lastTimeUpcomingTasksFetched;
 
+  public long getLastTimeNotificationsFetched() {
+    return lastTimeNotificationsFetched;
+  }
+
+  public void setLastTimeNotificationsFetched(long lastTimeNotificationsFetched) {
+    this.lastTimeNotificationsFetched = lastTimeNotificationsFetched;
+  }
+
+  private long lastTimeNotificationsFetched;
+
   private String onlineStatus;
   private boolean showOnlineOfflinePicker = true;
 

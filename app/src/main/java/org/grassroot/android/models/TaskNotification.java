@@ -1,12 +1,14 @@
 package org.grassroot.android.models;
 
 import io.realm.RealmObject;
+import io.realm.annotations.PrimaryKey;
 
 /**
  * Created by paballo on 2016/05/18.
  */
 public class TaskNotification extends RealmObject {
 
+    @PrimaryKey
     private String uid;
     private String entityUid;
 

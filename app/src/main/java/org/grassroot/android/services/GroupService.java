@@ -363,7 +363,7 @@ public class GroupService {
   public void deleteLocallyCreatedGroup(final String groupUid) {
     RealmUtils.removeObjectFromDatabase(Group.class, "groupUid", groupUid);
     RealmUtils.removeObjectFromDatabase(Member.class, "groupUid", groupUid);
-    EventBus.getDefault().post(new GroupDeletedEvent());
+    EventBus.getDefault().post(new GroupDeletedEvent(groupUid));
   }
 
   private void saveCreatedGroupToRealm(Group group) {
