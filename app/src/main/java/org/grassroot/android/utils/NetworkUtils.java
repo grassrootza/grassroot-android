@@ -17,6 +17,7 @@ import org.grassroot.android.models.Group;
 import org.grassroot.android.models.Member;
 import org.grassroot.android.models.PreferenceObject;
 import org.grassroot.android.models.TaskModel;
+import org.grassroot.android.models.TaskResponse;
 import org.grassroot.android.services.ApplicationLoader;
 import org.grassroot.android.services.GrassrootRestService;
 import org.grassroot.android.services.GroupService;
@@ -171,6 +172,7 @@ public class NetworkUtils {
         sendLocallyAddedMembers();
         sendNewLocalTasks();
         sendEditedTasks();
+        sendTaskActions();
         EventBus.getDefault().post(new OfflineActionsSent());
       }
     }
@@ -310,14 +312,28 @@ public class NetworkUtils {
     });
   }
 
-  private void sendTaskActions(){
+  private static void sendTaskActions(){
     Map<String, Object> map1 = new HashMap<>();
     map1.put("isActionLocal", true);
     RealmUtils.loadListFromDB(TaskModel.class,map1).subscribe(new Action1<List<TaskModel>>() {
       @Override
       public void call(List<TaskModel> tasks) {
         for(TaskModel taskModel : tasks){
-        //  TaskService.getInstance().
+          TaskService.getInstance().respondToTask(taskModel, taskModel.getReply(), new TaskService.TaskActionListener() {
+            @Override
+            public void taskActionComplete(TaskModel task, String reply) {
+            }
+
+            @Override
+            public void taskActionError(Response<TaskResponse> response) {
+
+            }
+
+            @Override
+            public void taskActionCompleteOffline(TaskModel task, String reply) {
+
+            }
+          });
         }
       }
     });
