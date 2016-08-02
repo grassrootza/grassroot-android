@@ -3,6 +3,7 @@ package org.grassroot.android.activities;
 import android.app.ProgressDialog;
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.NavUtils;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
@@ -18,7 +19,9 @@ import org.grassroot.android.fragments.MemberListFragment;
 import org.grassroot.android.fragments.dialogs.ConfirmCancelDialogFragment;
 import org.grassroot.android.interfaces.GroupConstants;
 import org.grassroot.android.models.GenericResponse;
+import org.grassroot.android.models.Group;
 import org.grassroot.android.services.GrassrootRestService;
+import org.grassroot.android.services.GroupService;
 import org.grassroot.android.utils.Constant;
 import org.grassroot.android.utils.ErrorUtils;
 
@@ -28,10 +31,13 @@ import java.util.Set;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
+
+import org.grassroot.android.utils.MenuUtils;
 import org.grassroot.android.utils.RealmUtils;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
+import rx.Subscriber;
 
 /**
  * Created by luke on 2016/05/18.
@@ -143,27 +149,27 @@ public class RemoveMembersActivity extends PortraitActivity implements MemberLis
 
     private void saveRemoval() {
         progressDialog.show();
-        final String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
-        final String code = RealmUtils.loadPreferencesFromDB().getToken();
-        GrassrootRestService.getInstance().getApi().removeGroupMembers(phoneNumber, code, groupUid, membersToRemove)
-                .enqueue(new Callback<GenericResponse>() {
-                    @Override
-                    public void onResponse(Call<GenericResponse> call, Response<GenericResponse> response) {
-                        progressDialog.dismiss();
-                        Intent i = new Intent();
-                        i.putExtra(GroupConstants.UID_FIELD, groupUid);
-                        i.putExtra(Constant.INDEX_FIELD, groupPosition);
-                        setResult(RESULT_OK, i);
-                        finish();
-                        // todo: display on next snack bar
-                    }
+        GroupService.getInstance().removeGroupMembers(groupUid, membersToRemove).subscribe(new Subscriber() {
+            @Override
+            public void onCompleted() {
+                progressDialog.dismiss();
+            }
 
-                    @Override
-                    public void onFailure(Call<GenericResponse> call, Throwable t) {
-                        progressDialog.dismiss();
-                        ErrorUtils.handleNetworkError(RemoveMembersActivity.this, root, t);
-                    }
-                });
+            @Override
+            public void onError(Throwable e) {
+                Snackbar.make(root, "Error!", Snackbar.LENGTH_SHORT);
+            }
+
+            @Override
+            public void onNext(Object o) {
+                Intent i = new Intent();
+                i.putExtra(GroupConstants.UID_FIELD, groupUid);
+                i.putExtra(Constant.INDEX_FIELD, groupPosition);
+                setResult(RESULT_OK, i);
+                finish();
+            }
+        });
+
     }
 
     @Override

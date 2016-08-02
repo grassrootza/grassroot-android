@@ -22,7 +22,9 @@ import org.grassroot.android.R;
 import org.grassroot.android.fragments.ContactSelectionFragment;
 import org.grassroot.android.fragments.MemberListFragment;
 import org.grassroot.android.interfaces.GroupConstants;
+import org.grassroot.android.models.ApiCallException;
 import org.grassroot.android.models.Contact;
+import org.grassroot.android.models.Group;
 import org.grassroot.android.models.GroupResponse;
 import org.grassroot.android.models.Member;
 import org.grassroot.android.services.GrassrootRestService;
@@ -43,9 +45,12 @@ import butterknife.OnClick;
 import org.grassroot.android.utils.RealmUtils;
 
 import io.realm.RealmList;
+import io.realm.internal.IOException;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
+import rx.Observer;
+import rx.Subscriber;
 import rx.functions.Action1;
 
 /**
@@ -305,39 +310,44 @@ public class AddMembersActivity extends AppCompatActivity implements
             final List<Member> membersToAdd = newMemberListFragment.getSelectedMembers();
             if (membersToAdd != null && membersToAdd.size() > 0) {
                 progressDialog.show();
-                if(NetworkUtils.isOnline(getApplicationContext())) {
-                   GroupService.getInstance().postNewGroupMembers(membersToAdd, groupUid, new GroupService.MembersAddedListener() {
-                       @Override
-                       public void membersAdded(String saveType) {
-                           Intent i = new Intent();
-                           i.putExtra(GroupConstants.UID_FIELD, groupUid);
-                           i.putExtra(Constant.INDEX_FIELD, groupPosition);
-                           setResult(RESULT_OK, i);
-                           progressDialog.dismiss();
-                           finish();
-                       }
+                GroupService.getInstance().addMembersToGroup(groupUid, membersToAdd).subscribe(new Subscriber<String>() {
+                    @Override
+                    public void onNext(String s) {
+                        Intent i = new Intent();
+                        i.putExtra(GroupConstants.UID_FIELD, groupUid);
+                        i.putExtra(Constant.INDEX_FIELD, groupPosition);
+                        setResult(RESULT_OK, i);
+                    }
 
-                       @Override
-                       public void membersAddedError(String errorType, Object data) {
-                           progressDialog.dismiss();
-                       }
-                   });
-               } else {
-                   GroupService.getInstance().addGroupMembersLocally(groupUid, membersToAdd);
-                   Intent i = new Intent();
-                   i.putExtra(GroupConstants.UID_FIELD, groupUid);
-                   i.putExtra(GroupConstants.NAME_FIELD, groupPosition);
-                   setResult(RESULT_OK, i);
-                   progressDialog.dismiss();
-                   finish();
-               }
+                    @Override
+                    public void onCompleted() {
+                        progressDialog.dismiss();
+                        finish();
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+                        Intent i = new Intent(AddMembersActivity.this, ActionCompleteActivity.class);
+                        if (e instanceof ApiCallException) {
+                            i.putExtra(ActionCompleteActivity.HEADER_FIELD, "Error");
+                            i.putExtra(ActionCompleteActivity.BODY_FIELD, "Something went wrong, check permissions etc");
+                            i.putExtra(ActionCompleteActivity.TASK_BUTTONS, false);
+                        } else if (e instanceof IOException) {
+                            i.putExtra(ActionCompleteActivity.HEADER_FIELD, "Done");
+                            i.putExtra(ActionCompleteActivity.BODY_FIELD, "Done, but saved offline");
+                            i.putExtra(ActionCompleteActivity.TASK_BUTTONS, true);
+                        } else {
+                            i.putExtra(ActionCompleteActivity.HEADER_FIELD, "Error");
+                            i.putExtra(ActionCompleteActivity.BODY_FIELD, "This should not happen");
+                            i.putExtra(ActionCompleteActivity.TASK_BUTTONS, false);
+                        }
+                        startActivity(i); // will that cause leak? maybe place in onComplete, or remove onComplete?
+                    }
+                });
             } else {
-                // todo :show a snack bar or something
+                Log.d(TAG, "Exited with no members to add!");
                 finish();
             }
-        } else {
-            Log.d(TAG, "Exited with no members to add!");
-            finish();
         }
     }
 

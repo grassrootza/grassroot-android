@@ -37,6 +37,7 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 import butterknife.Unbinder;
+import rx.Subscriber;
 
 /**
  * Created by luke on 2016/07/15.
@@ -255,18 +256,23 @@ public class GroupSettingsMainFragment extends Fragment implements GroupService.
 
     private void removeMember(final String memberUid) {
         showProgressDialog();
-        GroupService.getInstance().removeGroupMembers(group, Collections.singleton(memberUid), new GroupService.MembersRemovedListener() {
-            @Override
-            public void membersRemoved(String saveType) {
-                hideProgressDialog();
-                roleAdapter.removeDisplayedMember(memberUid);
-            }
+        GroupService.getInstance().removeGroupMembers(group.getGroupUid(), Collections.singleton(memberUid))
+            .subscribe(new Subscriber() {
+                @Override
+                public void onCompleted() {
+                    hideProgressDialog();
+                }
 
-            @Override
-            public void memberRemovalError(String errorType, Object data) {
-                hideProgressDialog();
-            }
-        });
+                @Override
+                public void onError(Throwable e) {
+
+                }
+
+                @Override
+                public void onNext(Object o) {
+                    roleAdapter.removeDisplayedMember(memberUid);
+                }
+            });
     }
 
     @Subscribe

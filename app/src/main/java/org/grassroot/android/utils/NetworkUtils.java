@@ -38,6 +38,8 @@ public class NetworkUtils {
   public static final String OFFLINE_ON_FAIL = "offline_on_fail";
   // i.e., network calls failed, but user said to keep trying
 
+  public static final String SAVED_SERVER = "saved_server";
+  public static final String SAVED_OFFLINE_MODE = "saved_offline_mode";
   public static final String SERVER_ERROR = "server_error";
   public static final String CONNECT_ERROR = "connection_error";
 
@@ -249,17 +251,7 @@ public class NetworkUtils {
             @Override
             public void call(List<Member> addedMembers) {
               if (addedMembers.size() > 0) {
-                GroupService.getInstance().postNewGroupMembers(addedMembers, g.getGroupUid(), new GroupService.MembersAddedListener() {
-                  @Override
-                  public void membersAdded(String saveType) {
-
-                  }
-
-                  @Override
-                  public void membersAddedError(String errorType, Object data) {
-
-                  }
-                });
+                GroupService.getInstance().addMembersToGroup(g.getGroupUid(), addedMembers).subscribe();
               }
             }
           });

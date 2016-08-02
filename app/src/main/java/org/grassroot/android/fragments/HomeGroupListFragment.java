@@ -118,7 +118,6 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
         EventBus.getDefault().register(this);
 
         setUpRecyclerView();
-        toggleProgressIfGroupsShowing();
         return view;
     }
 
@@ -154,6 +153,8 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
                         refreshGroupList();
                     }
                 });
+
+                toggleProgressIfGroupsShowing();
             }
         });
     }
@@ -368,16 +369,16 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
 
     private void toggleProgressIfGroupsShowing() {
         if (GroupService.isFetchingGroups) {
-			Log.d(TAG, "group service is fetching, hence showing ...");
+			Log.e(TAG, "group service is fetching, hence showing ...");
 			showProgress();
         } else if (groupListRowAdapter == null) {
-			Log.d(TAG, "groupListRowAdaper null, showing dialog ...");
+			Log.e(TAG, "groupListRowAdaper null, showing dialog ...");
 			showProgress();
 		} else if (groupListRowAdapter.getItemCount() == 0) {
-            Log.d(TAG, "groupListAdapter empty, hence showing ...");
+            Log.e(TAG, "groupListAdapter empty, hence showing ...");
 			showProgress();
         } else {
-            Log.d(TAG, "neither of the above, hence hiding");
+            Log.e(TAG, "neither of the above, hence hiding");
 			hideProgress();
         }
     }

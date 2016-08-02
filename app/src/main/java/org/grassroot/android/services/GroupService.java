@@ -7,6 +7,8 @@ import android.view.View;
 import io.realm.Realm;
 import io.realm.RealmList;
 import io.realm.RealmResults;
+
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -22,6 +24,7 @@ import org.grassroot.android.events.JoinRequestReceived;
 import org.grassroot.android.interfaces.GroupConstants;
 import org.grassroot.android.interfaces.NetworkErrorDialogListener;
 import org.grassroot.android.interfaces.TaskConstants;
+import org.grassroot.android.models.ApiCallException;
 import org.grassroot.android.models.GenericResponse;
 import org.grassroot.android.models.Group;
 import org.grassroot.android.models.GroupJoinRequest;
@@ -48,8 +51,11 @@ import okhttp3.RequestBody;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
+import rx.Observable;
 import rx.Subscriber;
+import rx.android.schedulers.AndroidSchedulers;
 import rx.functions.Action1;
+import rx.schedulers.Schedulers;
 
 /**
  * Created by luke on 2016/07/01.
@@ -392,104 +398,92 @@ public class GroupService {
 
   /* METHODS FOR ADDING AND REMOVING MEMBERS */
 
-  public interface MembersAddedListener {
-    void membersAdded(String saveType);
-    void membersAddedError(String errorType, Object data);
-  }
-
-  public interface MembersRemovedListener {
-    void membersRemoved(String saveType);
-
-    void memberRemovalError(String errorType, Object data);
-  }
-
-  public Group addGroupMembersLocally(final String groupUid, final List<Member> membersToAdd) {
-    Group group = RealmUtils.loadGroupFromDB(groupUid);
-    RealmUtils.saveGroupToRealm(group);
-    RealmUtils.saveDataToRealm(membersToAdd).subscribe(new Action1() {
+  public Observable addMembersToGroup(final String groupUid, final List<Member> members) {
+    return Observable.create(new Observable.OnSubscribe<String>() {
       @Override
-      public void call(Object o) {
-        System.out.println("saved " + membersToAdd.size());
+      public void call(Subscriber<? super String> subscriber) {
+        if (!NetworkUtils.isOnline()) {
+          saveAddedMembersLocal(groupUid, members);
+          subscriber.onNext(NetworkUtils.SAVED_OFFLINE_MODE);
+          subscriber.onCompleted();
+        } else {
+          try {
+            final String msisdn = RealmUtils.loadPreferencesFromDB().getMobileNumber();
+            final String code = RealmUtils.loadPreferencesFromDB().getToken();
+            // note : since we are off main thread, calling this synchronously, to avoid excess inner class complication
+            Response<GroupResponse> serverCall = GrassrootRestService.getInstance().getApi()
+                .addGroupMembers(groupUid, msisdn, code, members)
+                .execute();
+            if (serverCall.isSuccessful()) {
+              Map<String, Object> map2 = new HashMap<>();
+              map2.put("isLocal", true);
+              map2.put("groupUid", groupUid);
+              RealmUtils.removeObjectsFromDatabase(Member.class, map2);
+              for (Member m : serverCall.body().getGroups().first().getMembers()) {
+                m.composeMemberGroupUid();
+                RealmUtils.saveDataToRealm(m).subscribe(); // todo : make sure we aren't
+              }
+              subscriber.onNext(NetworkUtils.SAVED_SERVER);
+              subscriber.onCompleted();
+            } else {
+              saveAddedMembersLocal(groupUid, members);
+              throw new ApiCallException(NetworkUtils.SERVER_ERROR); // todo : handle more descriptive ...
+            }
+          } catch (IOException e) {
+			  saveAddedMembersLocal(groupUid, members);
+			  throw new ApiCallException(NetworkUtils.CONNECT_ERROR);
+          } finally {
+			  subscriber.onCompleted();
+		  }
+		}
       }
-    });
-    return group;
+    }).subscribeOn(Schedulers.computation()).observeOn(AndroidSchedulers.mainThread());
   }
 
-  public void postNewGroupMembers(final List<Member> membersToAdd, final String groupUid, final MembersAddedListener listener) {
-    final String mobileNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
-    final String sessionCode = RealmUtils.loadPreferencesFromDB().getToken();
-    GrassrootRestService.getInstance()
-            .getApi()
-            .addGroupMembers(groupUid, mobileNumber, sessionCode, membersToAdd)
-            .enqueue(new Callback<GroupResponse>() {
-              @Override
-              public void onResponse(Call<GroupResponse> call, final Response<GroupResponse> response) {
-                if (response.isSuccessful()) {
-                  Map<String, Object> map2 = new HashMap<>();
-                  map2.put("isLocal", true);
-                  map2.put("groupUid", groupUid);
-                  RealmUtils.removeObjectsFromDatabase(Member.class, map2);
-                  RealmUtils.saveDataToRealm(response.body().getGroups()).subscribe(new Action1() {
-                    @Override
-                    public void call(Object o) {
+	public void saveAddedMembersLocal(final String groupUid, List<Member> members) {
+		RealmUtils.saveDataToRealm(members).subscribe();
+		Group group = RealmUtils.loadGroupFromDB(groupUid);
+		group.setEditedLocal(true);
+		RealmUtils.saveGroupToRealm(group);
+	}
 
-                    }
-                  });
-                  RealmUtils.saveDataToRealm(response.body().getGroups()).subscribe(new Action1() {
-                    @Override
-                    public void call(Object o) {
-                      for (Member m : response.body().getGroups().first().getMembers()) {
-                        m.composeMemberGroupUid();
-                        RealmUtils.saveDataToRealm(m).subscribe(new Action1() {
-                          @Override
-                          public void call(Object o) {
-                            listener.membersAdded(Constant.ONLINE);
-                          }
-                        });
-                      }
-                    }
-                  });
-                } else {
-                  listener.membersAddedError(Constant.ONLINE, response);
-                }
-              }
-
-              @Override
-              public void onFailure(Call<GroupResponse> call, Throwable t) {
-                listener.membersAddedError(Constant.OFFLINE, t);
-              }
-            });
-  }
-
-  public void removeGroupMembers(Group group, final Set<String> membersToRemoveUIDs,
-      final MembersRemovedListener listener) {
-    final String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
-    final String code = RealmUtils.loadPreferencesFromDB().getToken();
-    final String groupUid = group.getGroupUid();
-    if (NetworkUtils.isOnline()) {
-      GrassrootRestService.getInstance()
-          .getApi()
-          .removeGroupMembers(phoneNumber, code, groupUid, membersToRemoveUIDs)
-          .enqueue(new Callback<GenericResponse>() {
-            @Override
-            public void onResponse(Call<GenericResponse> call, Response<GenericResponse> response) {
-              if (response.isSuccessful()) {
-                removeMembersInDB(membersToRemoveUIDs, groupUid);
-                listener.membersRemoved(GroupEditedEvent.CHANGED_ONLINE);
-              } else {
-                listener.memberRemovalError("", response.errorBody());
-              }
+  public Observable removeGroupMembers(final String groupUid, final Set<String> membersToRemoveUIDs) {
+    return Observable.create(new Observable.OnSubscribe<String>() {
+      @Override
+      public void call(Subscriber<? super String> subscriber) {
+        if (!NetworkUtils.isOnline()) {
+          removeMembersInDB(membersToRemoveUIDs, groupUid);
+          subscriber.onNext(NetworkUtils.SAVED_OFFLINE_MODE);
+          subscriber.onCompleted();
+        } else {
+          try {
+            final String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
+            final String code = RealmUtils.loadPreferencesFromDB().getToken();
+            Response response = GrassrootRestService.getInstance().getApi()
+                .removeGroupMembers(phoneNumber, code, groupUid, membersToRemoveUIDs).execute();
+            if (response.isSuccessful()) {
+				removeMembersInDB(membersToRemoveUIDs, groupUid);
+				subscriber.onNext(NetworkUtils.SAVED_SERVER);
+            } else {
+				// note : this may be because of permission denied, so don't remove locally
+				// todo : check for the error type then decide what to do
+				Group group = RealmUtils.loadGroupFromDB(groupUid);
+				group.setEditedLocal(true);
+				RealmUtils.saveDataToRealm(group).subscribe();
+				subscriber.onNext(NetworkUtils.SERVER_ERROR);
             }
-
-            @Override public void onFailure(Call<GenericResponse> call, Throwable t) {
-              listener.memberRemovalError("", t);
-            }
-          });
-    } else {
-      removeMembersInDB(membersToRemoveUIDs, groupUid);
-      listener.membersRemoved(
-          GroupEditedEvent.CHANGED_OFFLINE); // todo : make sure this syncs later
-    }
+          } catch (IOException e) {
+			  removeMembersInDB(membersToRemoveUIDs, groupUid);
+			  Group group = RealmUtils.loadGroupFromDB(groupUid);
+			  group.setEditedLocal(true);
+			  RealmUtils.saveDataToRealm(group).subscribe();
+			  subscriber.onNext(NetworkUtils.CONNECT_ERROR);
+          } finally {
+            subscriber.onCompleted();
+          }
+        }
+      }
+    }).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread());
   }
 
   private void removeMembersInDB(final Set<String> memberUids, final String groupUid) {

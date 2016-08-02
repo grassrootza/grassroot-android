@@ -43,7 +43,8 @@ public class Group extends RealmObject implements Parcelable, Comparable<Group> 
   private String lastChangeType;
   private String description;
 
-  private boolean isLocal;
+  private boolean isLocal; // i.e., is created local but not sent to server yet
+  private boolean isEditedLocal; // i.e., has local changes (members etc) that aren't yet on server
 
   @Ignore private Date date;
   private DateTime dateTime; // used in JSON conversion
@@ -79,6 +80,10 @@ public class Group extends RealmObject implements Parcelable, Comparable<Group> 
   public void setIsLocal(boolean isLocal) {
     this.isLocal = isLocal;
   }
+
+  public boolean isEditedLocal() { return isEditedLocal; }
+
+  public void setEditedLocal(boolean isEditedLocal) { this.isEditedLocal = isEditedLocal; }
 
   public void setDate(Date date) {
     this.date = date;
