@@ -7,6 +7,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+
+import org.grassroot.android.events.TaskUpdatedEvent;
 import org.grassroot.android.events.TasksRefreshedEvent;
 import org.grassroot.android.interfaces.TaskConstants;
 import org.grassroot.android.models.Group;
@@ -44,6 +46,8 @@ public class TaskService {
 
   public interface TaskActionListener {
     void taskActionComplete(TaskModel task, String reply);
+    void taskActionError(Response<TaskResponse> response);
+    void taskActionCompleteOffline(TaskModel task, String reply);
   }
 
   public interface TaskCreationListener {
@@ -388,24 +392,26 @@ public class TaskService {
           });
     }
   }
-  public void respondToTask(final TaskModel task, final TaskActionListener listener){
+  public void respondToTask(final TaskModel task, final String type, final TaskActionListener listener){
     final String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
     final String code = RealmUtils.loadPreferencesFromDB().getToken();
     Call<TaskResponse> call =
-            task.getType().equals(TaskConstants.VOTE) ? voteCall(task.getTaskUid(),phoneNumber,code,TaskConstants.RESPONSE_NO)
-                    : meetingCall(task.getTaskUid(),phoneNumber,code,TaskConstants.RESPONSE_NO);
+            task.getType().equals(TaskConstants.VOTE) ? voteCall(task.getTaskUid(),phoneNumber,code,type)
+                    : meetingCall(task.getTaskUid(),phoneNumber,code,type);
     call.enqueue(new Callback<TaskResponse>() {
       @Override public void onResponse(Call<TaskResponse> call, Response<TaskResponse> response) {
         if (response.isSuccessful()) {
-          listener.taskActionComplete(response.body().getTasks().first(),TaskConstants.RESPONSE_NO);
+          listener.taskActionComplete(response.body().getTasks().first(),type);
+          RealmUtils.saveDataToRealmSync(response.body().getTasks().first());
+          EventBus.getDefault().post(new TaskUpdatedEvent(response.body().getTasks().first()));
         } else {
-         // handleUnknownError(response);
+         listener.taskActionError(response);
         }
       }
 
       @Override public void onFailure(Call<TaskResponse> call, Throwable t) {
-        // handleNoNetwork("RESPOND_NO");
-      //  handleSuccessfulOffline(TaskConstants.RESPONSE_NO);
+      listener.taskActionCompleteOffline(task,type);
+        EventBus.getDefault().post(new TaskUpdatedEvent(task));
       }
     });
   }

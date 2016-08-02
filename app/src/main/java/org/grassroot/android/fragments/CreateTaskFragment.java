@@ -351,7 +351,9 @@ public class CreateTaskFragment extends Fragment {
         model.setLocal(!NetworkUtils.isOnline(getContext()));
         model.setMinutes(minutes);
         model.setCanEdit(true);
+        model.setCanAction(true);
         model.setReply(TaskConstants.TODO_PENDING);
+        model.setHasResponded(false);
 
         model.setMemberUIDS(
                 RealmUtils.convertListOfStringInRealmListOfString(new ArrayList<>(memberUids)));

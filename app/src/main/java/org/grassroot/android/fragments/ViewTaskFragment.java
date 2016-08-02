@@ -45,6 +45,7 @@ import org.grassroot.android.models.RsvpListModel;
 import org.grassroot.android.models.TaskModel;
 import org.grassroot.android.models.TaskResponse;
 import org.grassroot.android.services.GrassrootRestService;
+import org.grassroot.android.services.TaskService;
 import org.grassroot.android.utils.ErrorUtils;
 import org.grassroot.android.utils.NetworkUtils;
 import org.grassroot.android.utils.RealmUtils;
@@ -347,73 +348,68 @@ public class ViewTaskFragment extends Fragment {
   }
 
   @OnClick(R.id.vt_left_response) public void doRespondYes() {
-    Call<TaskResponse> call =
-        taskType.equals(TaskConstants.VOTE) ? voteCall(TaskConstants.RESPONSE_YES)
-            : meetingCall(TaskConstants.RESPONSE_YES);
-    call.enqueue(new Callback<TaskResponse>() {
-      @Override public void onResponse(Call<TaskResponse> call, Response<TaskResponse> response) {
-        if (response.isSuccessful()) {
-          handleSuccessfulReply(response.body().getTasks().first(), TaskConstants.RESPONSE_YES);
-        } else {
-          handleUnknownError(response);
-        }
+    TaskService.getInstance().respondToTask(task, TaskConstants.RESPONSE_YES, new TaskService.TaskActionListener() {
+      @Override
+      public void taskActionComplete(TaskModel taskResponse, String reply) {
+        task = taskResponse;
+        handleSuccessfulReply(task, TaskConstants.RESPONSE_YES);
       }
 
-      @Override public void onFailure(Call<TaskResponse> call, Throwable t) {
-        handleNoNetwork("RESPOND_YES");
+      @Override
+      public void taskActionError(Response<TaskResponse> response) {
+        handleUnknownError(response);
+      }
+
+      @Override
+      public void taskActionCompleteOffline(TaskModel taskResponse, String reply) {
+        task = taskResponse;
+        handleSuccessfulOffline(reply);
       }
     });
   }
 
   @OnClick(R.id.vt_right_response) public void doRespondNo() {
-    Call<TaskResponse> call =
-        taskType.equals(TaskConstants.VOTE) ? voteCall(TaskConstants.RESPONSE_NO)
-            : meetingCall(TaskConstants.RESPONSE_NO);
-    call.enqueue(new Callback<TaskResponse>() {
-      @Override public void onResponse(Call<TaskResponse> call, Response<TaskResponse> response) {
-        if (response.isSuccessful()) {
-          handleSuccessfulReply(response.body().getTasks().first(), TaskConstants.RESPONSE_NO);
-        } else {
+       TaskService.getInstance().respondToTask(task, TaskConstants.RESPONSE_NO, new TaskService.TaskActionListener() {
+          @Override
+          public void taskActionComplete(TaskModel taskResponse, String reply) {
+            task = taskResponse;
+            handleSuccessfulReply(task, TaskConstants.RESPONSE_NO);
+          }
+
+          @Override
+          public void taskActionError(Response<TaskResponse> response) {
           handleUnknownError(response);
-        }
+          }
+
+         @Override
+         public void taskActionCompleteOffline(TaskModel taskResponse, String reply) {
+           task = taskResponse;
+          handleSuccessfulOffline(reply);
+         }
+       });
+  }
+
+  @OnClick(R.id.bt_td_respond) public void completeTodo() {
+    TaskService.getInstance().respondToTask(task, TaskConstants.TODO_DONE, new TaskService.TaskActionListener() {
+      @Override
+      public void taskActionComplete(TaskModel taskResponse, String reply) {
+        task = taskResponse;
+        handleSuccessfulReply(task, TaskConstants.TODO_DONE);
       }
 
-      @Override public void onFailure(Call<TaskResponse> call, Throwable t) {
-       // handleNoNetwork("RESPOND_NO");
-        handleSuccessfulOffline(TaskConstants.RESPONSE_NO);
+      @Override
+      public void taskActionError(Response<TaskResponse> response) {
+      handleUnknownError(response);
+      }
+
+      @Override
+      public void taskActionCompleteOffline(TaskModel taskResponse, String reply) {
+        task = taskResponse;
+        handleSuccessfulOffline(reply);
       }
     });
   }
 
-  @OnClick(R.id.bt_td_respond) public void completeTodo() {
-    GrassrootRestService.getInstance()
-        .getApi()
-        .completeTodo(phoneNumber, code, taskUid)
-        .enqueue(new Callback<TaskResponse>() {
-          @Override
-          public void onResponse(Call<TaskResponse> call, Response<TaskResponse> response) {
-            if (response.isSuccessful()) {
-              handleSuccessfulReply(response.body().getTasks().first(), TaskConstants.TODO_DONE);
-            } else {
-              handleUnknownError(response);
-            }
-          }
-
-          @Override public void onFailure(Call<TaskResponse> call, Throwable t) {
-            handleNoNetwork("COMPLETE_TODO");
-          }
-        });
-  }
-
-  private Call<TaskResponse> voteCall(String response) {
-    return GrassrootRestService.getInstance()
-        .getApi()
-        .castVote(taskUid, phoneNumber, code, response);
-  }
-
-  private Call<TaskResponse> meetingCall(String response) {
-    return GrassrootRestService.getInstance().getApi().rsvp(taskUid, phoneNumber, code, response);
-  }
 
   private void setUpAssignedMembersView() {
 
@@ -699,11 +695,19 @@ if(NetworkUtils.isOnline(getContext())){
     switch (action){
       case TaskConstants.RESPONSE_NO:
         task.setHasResponded(true);
-        task.setReply(TaskConstants.RESPONSE_NO);
+        task.setReply(action);
         task.setActionLocal(true);
         RealmUtils.saveDataToRealmSync(task);
         handleSuccessfulReply(task,TaskConstants.RESPONSE_NO);
         break;
+      case TaskConstants.RESPONSE_YES:
+        task.setHasResponded(true);
+        task.setReply(action);
+        task.setActionLocal(true);
+        RealmUtils.saveDataToRealmSync(task);
+        handleSuccessfulReply(task,TaskConstants.RESPONSE_YES);
+        break;
+
     }
   }
   private void handleNoNetwork(final String retryTag) {
