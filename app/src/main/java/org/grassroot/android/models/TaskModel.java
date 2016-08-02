@@ -56,6 +56,15 @@ public class TaskModel extends RealmObject implements Parcelable, Comparable<Tas
 
   private boolean isLocal;
   private boolean isEdited;
+  private boolean isActionLocal;
+
+  public boolean isActionLocal() {
+    return isActionLocal;
+  }
+
+  public void setActionLocal(boolean actionLocal) {
+    isActionLocal = actionLocal;
+  }
 
   private RealmList<RealmString> memberUIDS;
 

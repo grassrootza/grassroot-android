@@ -353,7 +353,7 @@ public class ViewTaskFragment extends Fragment {
     call.enqueue(new Callback<TaskResponse>() {
       @Override public void onResponse(Call<TaskResponse> call, Response<TaskResponse> response) {
         if (response.isSuccessful()) {
-          handleSuccessfulReply(response, TaskConstants.RESPONSE_YES);
+          handleSuccessfulReply(response.body().getTasks().first(), TaskConstants.RESPONSE_YES);
         } else {
           handleUnknownError(response);
         }
@@ -372,14 +372,15 @@ public class ViewTaskFragment extends Fragment {
     call.enqueue(new Callback<TaskResponse>() {
       @Override public void onResponse(Call<TaskResponse> call, Response<TaskResponse> response) {
         if (response.isSuccessful()) {
-          handleSuccessfulReply(response, TaskConstants.RESPONSE_NO);
+          handleSuccessfulReply(response.body().getTasks().first(), TaskConstants.RESPONSE_NO);
         } else {
           handleUnknownError(response);
         }
       }
 
       @Override public void onFailure(Call<TaskResponse> call, Throwable t) {
-        handleNoNetwork("RESPOND_NO");
+       // handleNoNetwork("RESPOND_NO");
+        handleSuccessfulOffline(TaskConstants.RESPONSE_NO);
       }
     });
   }
@@ -392,7 +393,7 @@ public class ViewTaskFragment extends Fragment {
           @Override
           public void onResponse(Call<TaskResponse> call, Response<TaskResponse> response) {
             if (response.isSuccessful()) {
-              handleSuccessfulReply(response, TaskConstants.TODO_DONE);
+              handleSuccessfulReply(response.body().getTasks().first(), TaskConstants.TODO_DONE);
             } else {
               handleUnknownError(response);
             }
@@ -447,8 +448,7 @@ if(NetworkUtils.isOnline(getContext())){
         });
   }}
 
-  private void handleSuccessfulReply(Response<TaskResponse> response, String reply) {
-    task = response.body().getTasks().get(0);
+  private void handleSuccessfulReply(TaskModel task, String reply) {
     ErrorUtils.showSnackBar(mContainer, snackBarMsg(reply),
         Snackbar.LENGTH_SHORT); // todo: rename error utils)
     switch (reply) {
@@ -695,6 +695,17 @@ if(NetworkUtils.isOnline(getContext())){
     return -1;
   }
 
+  private void handleSuccessfulOffline(String action){
+    switch (action){
+      case TaskConstants.RESPONSE_NO:
+        task.setHasResponded(true);
+        task.setReply(TaskConstants.RESPONSE_NO);
+        task.setActionLocal(true);
+        RealmUtils.saveDataToRealmSync(task);
+        handleSuccessfulReply(task,TaskConstants.RESPONSE_NO);
+        break;
+    }
+  }
   private void handleNoNetwork(final String retryTag) {
     ErrorUtils.connectivityError(getActivity(), R.string.error_no_network,
         new NetworkErrorDialogListener() {

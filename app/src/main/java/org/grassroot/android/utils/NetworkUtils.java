@@ -317,4 +317,17 @@ public class NetworkUtils {
       }
     });
   }
+
+  private void sendTaskActions(){
+    Map<String, Object> map1 = new HashMap<>();
+    map1.put("isActionLocal", true);
+    RealmUtils.loadListFromDB(TaskModel.class,map1).subscribe(new Action1<List<TaskModel>>() {
+      @Override
+      public void call(List<TaskModel> tasks) {
+        for(TaskModel taskModel : tasks){
+        //  TaskService.getInstance().
+        }
+      }
+    });
+  }
 }

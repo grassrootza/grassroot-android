@@ -97,15 +97,35 @@ public class RealmUtils {
                 realm.beginTransaction();
                 realm.copyToRealmOrUpdate(notifications);
                 realm.commitTransaction();
-                List<TaskNotification> savedNotifications = RealmUtils.loadListFromDB(TaskNotification.class);
+                final List<TaskNotification> savedNotifications = RealmUtils.loadNotificationsSorted();
                 if(savedNotifications.size()>100){
+                    Log.d(TAG,"Saved objects of size " + String.valueOf(savedNotifications.size()));
 
+                    RealmUtils.saveDataToRealm(savedNotifications.subList(0,100)).subscribe(new Action1() {
+                    @Override
+                    public void call(Object o) {
+                        Log.d(TAG,"Deleting objects of size " + String.valueOf(savedNotifications.size() - 100));
+                        for(TaskNotification notification : savedNotifications.subList(100,savedNotifications.size())){
+                            Log.d(TAG,"Deleting objects " + notification.getMessage());
+                            RealmUtils.removeObjectFromDatabase(TaskNotification.class,"uid",notification.getUid());
+                        }
+                    }
+                });
                 }
                 realm.close();
                 subscriber.onNext(true);
                 subscriber.onCompleted();
             }
         }).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread());
+    }
+
+    public static List<TaskNotification> loadNotificationsSorted() {
+                        final Realm realm = Realm.getDefaultInstance();
+                        List<TaskNotification> notifications = realm.copyFromRealm(
+                                realm.where(TaskNotification.class).findAllSorted("createdDateTime", Sort.DESCENDING));
+                        realm.close();
+
+        return notifications;
     }
 
 

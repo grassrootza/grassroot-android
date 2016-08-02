@@ -150,7 +150,7 @@ public class NotificationCenterFragment extends Fragment {
 
         progressDialog.show();
         long lastTimeUpdated = RealmUtils.loadPreferencesFromDB().getLastTimeNotificationsFetched();
-        Call<NotificationList> call = lastTimeUpdated == 0 ? GrassrootRestService.getInstance().getApi().getUserNotifications(phoneNumber, code, page, size) : GrassrootRestService.getInstance().getApi().getUserNotificationsChangedSince(phoneNumber, code,lastTimeUpdated);
+        Call<NotificationList> call = (lastTimeUpdated == 0) ? GrassrootRestService.getInstance().getApi().getUserNotifications(phoneNumber, code, page, size) : page!=null && page > 1 ? GrassrootRestService.getInstance().getApi().getUserNotifications(phoneNumber, code, page, size) : GrassrootRestService.getInstance().getApi().getUserNotificationsChangedSince(phoneNumber, code,lastTimeUpdated);
         call.enqueue(new Callback<NotificationList>() {
             @Override
             public void onResponse(Call<NotificationList> call, Response<NotificationList> response) {
@@ -165,7 +165,7 @@ public class NotificationCenterFragment extends Fragment {
                     } else {
                         notificationAdapter.addData(notifications);
                     }
-                    RealmUtils.saveDataToRealm(notifications).subscribe();
+                    RealmUtils.saveNotificationsToRealm(notifications).subscribe();
                     PreferenceObject preference = RealmUtils.loadPreferencesFromDB();
                     preference.setLastTimeNotificationsFetched(Utilities.getCurrentTimeInMillisAtUTC());
                     RealmUtils.saveDataToRealm(preference).subscribe();
@@ -177,7 +177,7 @@ public class NotificationCenterFragment extends Fragment {
             @Override
             public void onFailure(Call<NotificationList> call, Throwable t) {
                 progressDialog.dismiss();
-                notificationAdapter.addData(RealmUtils.loadListFromDB(TaskNotification.class));
+                notificationAdapter.addData(RealmUtils.loadNotificationsSorted());
                 rcNc.setVisibility(View.VISIBLE);
                 ErrorUtils.handleNetworkError(getContext(), rlRootNc, t);
             }
