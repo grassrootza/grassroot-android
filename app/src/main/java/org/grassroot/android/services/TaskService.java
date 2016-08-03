@@ -278,6 +278,24 @@ public class TaskService {
     newTaskApiCall(model).enqueue(new Callback<TaskResponse>() {
       @Override public void onResponse(Call<TaskResponse> call, Response<TaskResponse> response) {
         Log.d(TAG, response.body().getTasks().get(0).toString());
+        if(model.isActionLocal()){
+          respondToTask(response.body().getTasks().first(), model.getReply(), new TaskActionListener() {
+            @Override
+            public void taskActionComplete(TaskModel task, String reply) {
+
+            }
+
+            @Override
+            public void taskActionError(Response<TaskResponse> response) {
+
+            }
+
+            @Override
+            public void taskActionCompleteOffline(TaskModel task, String reply) {
+
+            }
+          });
+        }
         if (listener != null) {
           listener.taskCreatedLocally(response.body().getTasks().get(0));
         }
@@ -397,7 +415,7 @@ public class TaskService {
     final String code = RealmUtils.loadPreferencesFromDB().getToken();
     Call<TaskResponse> call =
             task.getType().equals(TaskConstants.VOTE) ? voteCall(task.getTaskUid(),phoneNumber,code,type)
-                    : meetingCall(task.getTaskUid(),phoneNumber,code,type);
+                    : task.getType().equals(TaskConstants.MEETING) ? meetingCall(task.getTaskUid(),phoneNumber,code,type) : competeTodo(task.getTaskUid(),phoneNumber,code,type);
     call.enqueue(new Callback<TaskResponse>() {
       @Override public void onResponse(Call<TaskResponse> call, Response<TaskResponse> response) {
         if (response.isSuccessful()) {
@@ -424,5 +442,9 @@ public class TaskService {
 
   private Call<TaskResponse> meetingCall(String taskUid, String phoneNumber, String code,String response) {
     return GrassrootRestService.getInstance().getApi().rsvp(taskUid, phoneNumber, code, response);
+  }
+
+  private Call<TaskResponse> competeTodo(String taskUid, String phoneNumber, String code,String response) {
+    return GrassrootRestService.getInstance().getApi().completeTodo(phoneNumber, code,taskUid);
   }
 }

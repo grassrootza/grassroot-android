@@ -394,6 +394,7 @@ public class GroupService {
       m.composeMemberGroupUid();
       RealmUtils.saveDataToRealmWithSubscriber(m);
     }
+    RealmUtils.removeObjectFromDatabase(Group.class,"groupUid",localGroupUid);
   }
 
   /* METHODS FOR ADDING AND REMOVING MEMBERS */
@@ -423,6 +424,8 @@ public class GroupService {
                 m.composeMemberGroupUid();
                 RealmUtils.saveDataToRealm(m).subscribe(); // todo : make sure we aren't
               }
+              RealmUtils.saveGroupToRealm(serverCall.body().getGroups().first());
+              EventBus.getDefault().post(new GroupEditedEvent(null,null,groupUid,null));
               subscriber.onNext(NetworkUtils.SAVED_SERVER);
               subscriber.onCompleted();
             } else {
@@ -444,7 +447,9 @@ public class GroupService {
 		RealmUtils.saveDataToRealm(members).subscribe();
 		Group group = RealmUtils.loadGroupFromDB(groupUid);
 		group.setEditedLocal(true);
-		RealmUtils.saveGroupToRealm(group);
+        group.setGroupMemberCount(group.getGroupMemberCount()+members.size());
+      RealmUtils.saveGroupToRealm(group);
+      EventBus.getDefault().post(new GroupEditedEvent(null,null,groupUid,null));
 	}
 
   public Observable removeGroupMembers(final String groupUid, final Set<String> membersToRemoveUIDs) {
@@ -469,14 +474,14 @@ public class GroupService {
 				// todo : check for the error type then decide what to do
 				Group group = RealmUtils.loadGroupFromDB(groupUid);
 				group.setEditedLocal(true);
-				RealmUtils.saveDataToRealm(group).subscribe();
-				subscriber.onNext(NetworkUtils.SERVER_ERROR);
+              RealmUtils.saveDataToRealm(group).subscribe();
+              subscriber.onNext(NetworkUtils.SERVER_ERROR);
             }
           } catch (IOException e) {
 			  removeMembersInDB(membersToRemoveUIDs, groupUid);
 			  Group group = RealmUtils.loadGroupFromDB(groupUid);
 			  group.setEditedLocal(true);
-			  RealmUtils.saveDataToRealm(group).subscribe();
+              RealmUtils.saveDataToRealm(group).subscribe();
 			  subscriber.onNext(NetworkUtils.CONNECT_ERROR);
           } finally {
             subscriber.onCompleted();
@@ -490,6 +495,10 @@ public class GroupService {
     for (String memberUid : memberUids) {
       final String memberGroupUid = memberUid + groupUid;
       RealmUtils.removeObjectFromDatabase(Member.class, "memberGroupUid", memberGroupUid);
+      Group group = RealmUtils.loadGroupFromDB(groupUid);
+      group.setGroupMemberCount(group.getGroupMemberCount()-memberUids.size());
+      RealmUtils.saveGroupToRealm(group);
+      EventBus.getDefault().post(new GroupEditedEvent(null,null,groupUid,null));
     }
   }
 

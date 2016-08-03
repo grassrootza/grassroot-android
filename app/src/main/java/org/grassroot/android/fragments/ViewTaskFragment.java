@@ -707,6 +707,13 @@ if(NetworkUtils.isOnline(getContext())){
         RealmUtils.saveDataToRealmSync(task);
         handleSuccessfulReply(task,TaskConstants.RESPONSE_YES);
         break;
+      case TaskConstants.TODO_DONE:
+        task.setHasResponded(true);
+        task.setReply(action);
+        task.setActionLocal(true);
+        RealmUtils.saveDataToRealmSync(task);
+        handleSuccessfulReply(task,TaskConstants.TODO_DONE);
+        break;
 
     }
   }
