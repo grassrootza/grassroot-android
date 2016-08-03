@@ -6,7 +6,6 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.os.SystemClock;
 import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -15,41 +14,28 @@ import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
-import io.realm.RealmResults;
-import java.util.Map;
-import java.util.UUID;
 import org.grassroot.android.R;
 import org.grassroot.android.fragments.ContactSelectionFragment;
 import org.grassroot.android.fragments.MemberListFragment;
 import org.grassroot.android.interfaces.GroupConstants;
 import org.grassroot.android.models.ApiCallException;
 import org.grassroot.android.models.Contact;
-import org.grassroot.android.models.Group;
-import org.grassroot.android.models.GroupResponse;
 import org.grassroot.android.models.Member;
-import org.grassroot.android.services.GrassrootRestService;
 import org.grassroot.android.services.GroupService;
 import org.grassroot.android.utils.Constant;
-import org.grassroot.android.utils.ErrorUtils;
 import org.grassroot.android.utils.NetworkUtils;
 import org.grassroot.android.utils.PermissionUtils;
+import org.grassroot.android.utils.RealmUtils;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.UUID;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
-import org.grassroot.android.utils.RealmUtils;
-
-import io.realm.RealmList;
-import io.realm.internal.IOException;
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
-import rx.Observer;
 import rx.Subscriber;
 import rx.functions.Action1;
 
@@ -310,38 +296,49 @@ public class AddMembersActivity extends AppCompatActivity implements
             final List<Member> membersToAdd = newMemberListFragment.getSelectedMembers();
             if (membersToAdd != null && membersToAdd.size() > 0) {
                 progressDialog.show();
-                GroupService.getInstance().addMembersToGroup(groupUid, membersToAdd).subscribe(new Subscriber<String>() {
+                GroupService.getInstance().addMembersToGroup(groupUid, membersToAdd, false).subscribe(new Subscriber<String>() {
                     @Override
                     public void onNext(String s) {
-                        Intent i = new Intent();
-                        i.putExtra(GroupConstants.UID_FIELD, groupUid);
-                        i.putExtra(Constant.INDEX_FIELD, groupPosition);
-                        setResult(RESULT_OK, i);
+                        if (NetworkUtils.SAVED_SERVER.equals(s)) {
+                            Intent i = new Intent();
+                            i.putExtra(GroupConstants.UID_FIELD, groupUid);
+                            i.putExtra(Constant.INDEX_FIELD, groupPosition);
+                            setResult(RESULT_OK, i);
+                            progressDialog.dismiss();
+                            finish();
+                        } else {
+                            Intent i = assembleCompleteMessage(R.string.am_offline_header, getString(R.string.am_offline_body_delib), true, false);
+                            progressDialog.dismiss();
+                            startActivity(i);
+                            finish();
+                        }
                     }
 
                     @Override
                     public void onCompleted() {
-                        progressDialog.dismiss();
-                        finish();
+
                     }
 
                     @Override
                     public void onError(Throwable e) {
-                        Intent i = new Intent(AddMembersActivity.this, ActionCompleteActivity.class);
-                        if (e instanceof ApiCallException) {
-                            i.putExtra(ActionCompleteActivity.HEADER_FIELD, "Error");
-                            i.putExtra(ActionCompleteActivity.BODY_FIELD, "Something went wrong, check permissions etc");
-                            i.putExtra(ActionCompleteActivity.TASK_BUTTONS, false);
-                        } else if (e instanceof IOException) {
-                            i.putExtra(ActionCompleteActivity.HEADER_FIELD, "Done");
-                            i.putExtra(ActionCompleteActivity.BODY_FIELD, "Done, but saved offline");
-                            i.putExtra(ActionCompleteActivity.TASK_BUTTONS, true);
-                        } else {
-                            i.putExtra(ActionCompleteActivity.HEADER_FIELD, "Error");
-                            i.putExtra(ActionCompleteActivity.BODY_FIELD, "This should not happen");
-                            i.putExtra(ActionCompleteActivity.TASK_BUTTONS, false);
+                        Intent i;
+                        switch (e.getMessage()) {
+                            case NetworkUtils.SERVER_ERROR:
+                                ApiCallException error = (ApiCallException) e;
+                                final String body = ApiCallException.PERMISSION_ERROR.equals(error.errorTag) ?
+                                    getString(R.string.am_server_permission) : getString(R.string.am_server_other);
+                                i = assembleCompleteMessage(R.string.am_server_error_header, body, false, false);
+                                break;
+                            case NetworkUtils.CONNECT_ERROR:
+                                i = assembleCompleteMessage(R.string.am_offline_header, getString(R.string.am_offline_body_error), false, true);
+                                break;
+                            default:
+                                Log.e(TAG, "received strange error : " + e.toString());
+                                i = assembleCompleteMessage(R.string.am_server_error_header, getString(R.string.am_server_other), false, true);
                         }
-                        startActivity(i); // will that cause leak? maybe place in onComplete, or remove onComplete?
+                        progressDialog.dismiss();
+                        startActivity(i);
+                        finish();
                     }
                 });
             } else {
@@ -349,6 +346,16 @@ public class AddMembersActivity extends AppCompatActivity implements
                 finish();
             }
         }
+    }
+
+    private Intent assembleCompleteMessage(int header, String body, boolean showTaskButtons, boolean showOfflineOptions) {
+        Intent i = new Intent(AddMembersActivity.this, ActionCompleteActivity.class);
+        i.putExtra(ActionCompleteActivity.HEADER_FIELD, header);
+        i.putExtra(ActionCompleteActivity.BODY_FIELD, body);
+        i.putExtra(ActionCompleteActivity.TASK_BUTTONS, showTaskButtons);
+        i.putExtra(ActionCompleteActivity.OFFLINE_BUTTONS, showOfflineOptions);
+        i.putExtra(ActionCompleteActivity.ACTION_INTENT, ActionCompleteActivity.HOME_SCREEN); // todo : take from whatever triggered this
+        return i;
     }
 
 }

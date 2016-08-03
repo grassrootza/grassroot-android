@@ -1,6 +1,7 @@
 package org.grassroot.android.utils;
 
 import android.content.Context;
+import android.content.Intent;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.util.Log;
@@ -10,8 +11,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.grassroot.android.events.ConnectionFailedEvent;
+import org.grassroot.android.events.NetworkFailureEvent;
 import org.grassroot.android.events.OfflineActionsSent;
 import org.grassroot.android.events.OnlineOfflineToggledEvent;
+import org.grassroot.android.interfaces.NotificationConstants;
 import org.grassroot.android.models.GenericResponse;
 import org.grassroot.android.models.Group;
 import org.grassroot.android.models.Member;
@@ -19,25 +22,28 @@ import org.grassroot.android.models.PreferenceObject;
 import org.grassroot.android.models.TaskModel;
 import org.grassroot.android.models.TaskResponse;
 import org.grassroot.android.services.ApplicationLoader;
+import org.grassroot.android.services.GcmRegistrationService;
 import org.grassroot.android.services.GrassrootRestService;
 import org.grassroot.android.services.GroupService;
+import org.grassroot.android.services.LocationServices;
 import org.grassroot.android.services.TaskService;
 import org.greenrobot.eventbus.EventBus;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
+import rx.Observable;
 import rx.Subscriber;
+import rx.android.schedulers.AndroidSchedulers;
 import rx.functions.Action1;
+import rx.schedulers.Schedulers;
 
 public class NetworkUtils {
 
   private static final String TAG = NetworkUtils.class.getSimpleName();
 
   public static final String ONLINE_DEFAULT = "default";
-  public static final String OFFLINE_SELECTED = "offline_selected";
-  // i.e., user chose to go offline
-  public static final String OFFLINE_ON_FAIL = "offline_on_fail";
-  // i.e., network calls failed, but user said to keep trying
+  public static final String OFFLINE_SELECTED = "offline_selected"; // i.e., user chose to go offline
+  public static final String OFFLINE_ON_FAIL = "offline_on_fail"; // i.e., network calls failed, but user said to keep trying
 
   public static final String SAVED_SERVER = "saved_server";
   public static final String SAVED_OFFLINE_MODE = "saved_offline_mode";
@@ -51,11 +57,8 @@ public class NetworkUtils {
 
   public interface NetworkListener {
     void connectionEstablished();
-
     void networkAvailableButConnectFailed(String failureType);
-
     void networkNotAvailable();
-
     void setOffline();
   }
 
@@ -66,7 +69,7 @@ public class NetworkUtils {
   public static void toggleOnlineOffline(final Context context, final boolean sendQueue,
       final NetworkListener listener) {
     final String currentStatus = RealmUtils.loadPreferencesFromDB().getOnlineStatus();
-    Log.e(TAG, "toggling offline and online, from current status : " + currentStatus);
+    Log.d(TAG, "toggling offline and online, from current status : " + currentStatus);
     if (ONLINE_DEFAULT.equals(currentStatus)) {
       switchToOfflineMode(listener);
     } else {
@@ -78,32 +81,35 @@ public class NetworkUtils {
     PreferenceObject prefs = RealmUtils.loadPreferencesFromDB();
     prefs.setOnlineStatus(ONLINE_DEFAULT);
     RealmUtils.saveDataToRealm(prefs).subscribe(new Action1() {
-      @Override public void call(Object o) {
-        System.out.println("saved preferences");
+      @Override
+      public void call(Object o) {
+        EventBus.getDefault().post(new OnlineOfflineToggledEvent(true));
       }
     });
   }
 
-  public static void switchToOfflineMode(NetworkListener listener) {
+  public static void switchToOfflineMode(final NetworkListener listener) {
     PreferenceObject prefs = RealmUtils.loadPreferencesFromDB();
     prefs.setOnlineStatus(OFFLINE_SELECTED);
+    prefs.setLastTimeSyncPerformed(0L);
     RealmUtils.saveDataToRealm(prefs).subscribe(new Action1() {
-      @Override public void call(Object o) {
-        System.out.println("saved preferences");
+      @Override
+      public void call(Object o) {
+        EventBus.getDefault().post(new OnlineOfflineToggledEvent(false));
+        if (listener != null) {
+          listener.setOffline();
+        }
       }
     });
-    EventBus.getDefault().post(new OnlineOfflineToggledEvent(false));
-    if (listener != null) {
-      listener.setOffline();
-    }
   }
 
   public static void setOnlineFailed() {
     PreferenceObject prefs = RealmUtils.loadPreferencesFromDB();
     prefs.setOnlineStatus(OFFLINE_ON_FAIL);
+    prefs.setLastTimeSyncPerformed(0L);
     RealmUtils.saveDataToRealm(prefs).subscribe(new Action1() {
       @Override public void call(Object o) {
-        System.out.println("saved preferences");
+        EventBus.getDefault().post(new NetworkFailureEvent());
       }
     });
   }
@@ -152,29 +158,58 @@ public class NetworkUtils {
 
   public static boolean isOnline(Context context) {
     final String status = RealmUtils.loadPreferencesFromDB().getOnlineStatus();
-    return (!status.equals(OFFLINE_SELECTED) && isNetworkAvailable(
-        context)); // this means we try to connect every time, unless told not to
+    return (!OFFLINE_SELECTED.equals(status) && isNetworkAvailable(context)); // this means we try to connect every time, unless told not to
   }
 
   public static boolean isNetworkAvailable(Context context) {
-    ConnectivityManager cm =
-        (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+    ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
     NetworkInfo ni = cm.getActiveNetworkInfo();
     return (ni != null && ni.isAvailable() && ni.isConnected());
   }
 
+  public static Observable syncAndStartTasks(final Context context, final boolean checkSyncTime,
+                                             final boolean fetchOnly) {
+    return Observable.create(new Observable.OnSubscribe() {
+      @Override
+      public void call(Object o) {
+        if (!checkSyncTime || shouldAttemptSync(context)) {
+          LocationServices.getInstance().connect();
+          if (!fetchOnly) {
+            syncLocalAndServer(context);
+          } else {
+            fetchEntitiesFromServer(context);
+          }
+        }
+      }
+    }).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread());
+  }
+
+  public static Observable registerForGCM(final Context context) {
+    return Observable.create(new Observable.OnSubscribe() {
+      @Override
+      public void call(Object o) {
+        if (isOnline()) {
+          Intent gcmRegistrationIntent = new Intent(context, GcmRegistrationService.class);
+          gcmRegistrationIntent.putExtra(NotificationConstants.ACTION, NotificationConstants.GCM_REGISTER);
+          final String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
+          gcmRegistrationIntent.putExtra(NotificationConstants.PHONE_NUMBER, phoneNumber);
+          Log.d(TAG, "sending intent to GCM registration ...");
+          context.startService(gcmRegistrationIntent);
+        }
+      }
+    }).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread());
+  }
+
   public static void syncLocalAndServer(Context context) {
     Log.e(TAG, "inside network utils ... about to call sending queued entities ...");
-    if (!sendingLocalQueue) {
+    if (!sendingLocalQueue && isOnline(context)) {
       sendingLocalQueue = true;
-      if (shouldAttemptSync(context)) {
-        sendLocalGroups();
-        sendLocallyAddedMembers();
-        sendNewLocalTasks();
-        sendEditedTasks();
-        sendTaskActions();
-        EventBus.getDefault().post(new OfflineActionsSent());
-      }
+      sendLocalGroups();
+      sendLocallyEditedGroups();
+      sendNewLocalTasks();
+      sendEditedTasks();
+      sendTaskActions();
+      EventBus.getDefault().post(new OfflineActionsSent());
     }
     sendingLocalQueue = false;
     fetchEntitiesFromServer(context);
@@ -184,7 +219,7 @@ public class NetworkUtils {
   public static void fetchEntitiesFromServer(final Context context) {
     if (!fetchingServerEntities) {
       fetchingServerEntities = true;
-      if (shouldAttemptFetch(context)) {
+      if (isOnline(context)) {
         GroupService.getInstance().fetchGroupListWithoutError();
         GroupService.getInstance().fetchGroupJoinRequests(null);
         TaskService.getInstance().fetchUpcomingTasks(null);
@@ -198,17 +233,6 @@ public class NetworkUtils {
     return isOnline(context) && hasIntervalElapsedSinceSync();
   }
 
-  public static boolean shouldAttemptFetch(final Context context) {
-    return isOnline(context) && hasIntervalElapsedSinceSync();
-  }
-
-  // for when we log in (as want to enable / allow that within 15 mins)
-  public static void resetSyncTime() {
-    PreferenceObject prefs = RealmUtils.loadPreferencesFromDB();
-    prefs.setLastTimeSyncPerformed(0);
-    RealmUtils.saveDataToRealm(prefs).subscribe();
-  }
-
   private static void saveSyncTime() {
     PreferenceObject prefs = RealmUtils.loadPreferencesFromDB();
     prefs.setLastTimeSyncPerformed(Utilities.getCurrentTimeInMillisAtUTC());
@@ -217,49 +241,75 @@ public class NetworkUtils {
 
   private static boolean hasIntervalElapsedSinceSync() {
     final long lastTimeSynced = RealmUtils.loadPreferencesFromDB().getLastTimeSyncPerformed();
-    Log.e(TAG, "and ... last time synced = " + lastTimeSynced);
+    Log.d(TAG, "and ... last time synced = " + lastTimeSynced);
     final long timeNow = Utilities.getCurrentTimeInMillisAtUTC();
     return timeNow > (lastTimeSynced + minIntervalBetweenSyncs);
   }
 
   private static void sendLocalGroups() {
-    RealmUtils.loadListFromDB(Group.class, "isLocal", true).subscribe(new Action1<List<Group>>() {
+    RealmUtils.loadListFromDB(Group.class, "isLocal", true, Schedulers.immediate())
+        .subscribe(new Action1<List<Group>>() {
       @Override public void call(List<Group> realmResults) {
         for (final Group g : realmResults) {
-          System.out.println("sending local group");
-          GroupService.getInstance().sendNewGroupToServer(g.getGroupUid(), null);
+          GroupService.getInstance().sendNewGroupToServer(g.getGroupUid(), Schedulers.immediate())
+              .subscribe(new Subscriber<String>() {
+                @Override
+                public void onError(Throwable e) {
+                  setOnlineFailed();
+                }
+
+                @Override
+                public void onCompleted() { }
+
+                @Override
+                public void onNext(String s) { }
+              });
         }
       }
     });
   }
 
-  // todo : maybe use a boolean, locallyEdited, to optimize this
-  private static void sendLocallyAddedMembers() {
-    RealmUtils.loadGroupsSorted().subscribe(new Subscriber<List<Group>>() {
-      @Override public void onCompleted() {
+  private static void sendLocallyEditedGroups() {
 
-      }
-
-      @Override public void onError(Throwable e) {
-
-      }
-
-      @Override public void onNext(List<Group> groups) {
-        for (final Group g : groups) {
+    RealmUtils.loadListFromDB(Group.class, "isEditedLocal", true, Schedulers.immediate())
+        .subscribe(new Action1<List<Group>>() {
+      @Override
+      public void call(List<Group> realmResults) {
+        if (!realmResults.isEmpty()) {
+          Log.e(TAG, "found a locally edited group! this many : " + realmResults.size());
           final Map<String, Object> queryMap = new HashMap<>();
           queryMap.put("isLocal", true);
-          queryMap.put("groupUid", g.getGroupUid());
-          RealmUtils.loadListFromDB(Member.class, queryMap).subscribe(new Action1<List<Member>>() {
-            @Override
-            public void call(List<Member> addedMembers) {
-              if (addedMembers.size() > 0) {
-                GroupService.getInstance().addMembersToGroup(g.getGroupUid(), addedMembers).subscribe();
-              }
+          for (final Group g : realmResults) {
+            queryMap.put("groupUid", g.getGroupUid());
+            long countLocalMembers = RealmUtils.countListInDB(Member.class, queryMap);
+            if (countLocalMembers != 0L) {
+              List<Member> members = RealmUtils.loadListFromDBInline(Member.class, queryMap);
+              processStoredNewMembers(g.getGroupUid(), members);
             }
-          });
+          }
         }
       }
     });
+  }
+
+  private static void processStoredNewMembers(final String groupUid, final List<Member> members) {
+    GroupService.getInstance().addMembersToGroup(groupUid, members, true)
+        .subscribe(new Subscriber() {
+          @Override
+          public void onCompleted() {
+
+          }
+
+          @Override
+          public void onError(Throwable e) {
+            setOnlineFailed(); // todo : interrupt sequence of calls
+          }
+
+          @Override
+          public void onNext(Object o) {
+            Log.e(TAG, "group edited locally returned okay ... sent to server"); // todo : flag as locally edit
+          }
+        });
   }
 
   private static void sendNewLocalTasks() {

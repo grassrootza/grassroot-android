@@ -247,6 +247,17 @@
     <string name="amm_new_done">Add</string>
     <string name="amm_edit_done">Save</string>
 
+    <string name="am_offline_header">Done</string>
+    <string name="am_offline_body_delib">Since you\'re working in offline mode, we\'ve saved the members and will sync them to the
+    server when you connect.</string>
+    <string name="am_offline_body_error">Sorry, something went wrong connecting to the server, but we saved the
+    members and will add them to the group when we can connect.</string>
+
+    <string name="am_server_error_header">Error</string>
+    <string name="am_server_permission">Sorry, but you don\'t have permission to add members to this group
+    anymore.</string>
+    <string name="am_server_other">Sorry, something went wrong adding the members. Please try again later.</string>
+
     <!-- Phone book and other strings -->
     <string name="cs_title">Select contacts</string>
     <string name="cs_loading_contacts">Loading your contacts....</string>
@@ -499,6 +510,8 @@
     <string name="ac_body_group_create_server">%1$s, has been created with %2$d members. What next? </string>
     <string name="ac_body_group_create_local">You are working offline, so the group %1$s has been created
         and stored on your phone, and will be sent to the server next time you connect</string>
+    <string name="ac_body_group_create_connect_error">We couldn\'t connect to the server, but we
+    stored the group and and will create it online the next time you have a connection.</string>
 
     <string name="ac_header_task_create">Sent!</string>
     <string name="ac_header_task_create_local">Done!</string>

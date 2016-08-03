@@ -26,9 +26,9 @@ import org.grassroot.android.models.Token;
 import org.grassroot.android.models.TokenResponse;
 import org.grassroot.android.services.GcmRegistrationService;
 import org.grassroot.android.services.GrassrootRestService;
-import org.grassroot.android.services.LoginTask;
 import org.grassroot.android.utils.Constant;
 import org.grassroot.android.utils.ErrorUtils;
+import org.grassroot.android.utils.NetworkUtils;
 import org.grassroot.android.utils.RealmUtils;
 import org.grassroot.android.utils.Utilities;
 
@@ -327,7 +327,8 @@ public class LoginRegisterActivity extends AppCompatActivity implements LoginScr
 
     private void launchHomeScreen(boolean userHasGroups) {
         if (userHasGroups) {
-            new LoginTask().execute(this);
+            NetworkUtils.syncAndStartTasks(this, false, true).subscribe();
+            NetworkUtils.registerForGCM(this).subscribe();
             Intent homeScreenIntent = new Intent(LoginRegisterActivity.this, HomeScreenActivity.class);
             startActivity(homeScreenIntent);
         } else {

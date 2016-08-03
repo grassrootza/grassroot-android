@@ -1,6 +1,7 @@
 package org.grassroot.android.utils;
 
 import android.app.Notification;
+import android.os.Looper;
 import android.util.Log;
 
 import org.grassroot.android.models.Group;
@@ -22,6 +23,7 @@ import io.realm.RealmQuery;
 import io.realm.RealmResults;
 import io.realm.Sort;
 import rx.Observable;
+import rx.Scheduler;
 import rx.Subscriber;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.functions.Action1;
@@ -192,7 +194,7 @@ public class RealmUtils {
     }
 
     public static <T> Observable loadListFromDB(final Class<? extends RealmObject> model,
-                                                final String pName, final boolean pValue) {
+                                                final String pName, final boolean pValue, Scheduler returnThread) {
         Observable<List<RealmObject>> observable =
                 Observable.create(new Observable.OnSubscribe<List<RealmObject>>() {
                     @Override
@@ -205,7 +207,7 @@ public class RealmUtils {
                         subscriber.onNext(realmResults);
                         subscriber.onCompleted();
                     }
-                }).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread());
+                }).subscribeOn(Schedulers.io()).observeOn(returnThread);
         return observable;
     }
 
@@ -232,6 +234,49 @@ public class RealmUtils {
                     }
                 }).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread());
         return observable;
+    }
+
+    // dislike copy and paste for this, but otherwise have extreme proliferation of boilerplate & thread multiplication in services
+    // todo: check if realm.close necessary to come after subscriber calls above, hence maybe consolidate
+    public static <T extends RealmList> T loadListFromDBInline(final Class<? extends RealmObject> model,
+                                                               final Map<String, Object> map) {
+        if (Looper.myLooper() == Looper.getMainLooper()) {
+            throw new UnsupportedOperationException("Error! Calling inline DB query on main thread");
+        }
+
+        RealmList<RealmObject> objects = new RealmList<>();
+        Realm realm = Realm.getDefaultInstance();
+        RealmQuery<? extends RealmObject> query = realm.where(model);
+        for (Map.Entry<String, Object> entry : map.entrySet()) {
+            if (entry.getValue() instanceof String) {
+                query.equalTo(entry.getKey(), entry.getValue().toString());
+            } else {
+                query.equalTo(entry.getKey(), Boolean.valueOf(entry.getValue().toString()));
+            }
+        }
+        objects.addAll(realm.copyFromRealm(query.findAll()));
+        realm.close();
+        return (T) objects;
+    }
+
+    // only call this from background thread
+    public static long countListInDB(final Class<? extends RealmObject> model, final Map<String, Object> map) {
+        if (Looper.myLooper() == Looper.getMainLooper()) {
+            throw new UnsupportedOperationException("Error! Calling inline DB query on main thread");
+        }
+
+        Realm realm = Realm.getDefaultInstance();
+        RealmQuery<? extends RealmObject> query = realm.where(model);
+        for (Map.Entry<String, Object> entry : map.entrySet()) {
+            if (entry.getValue() instanceof String) {
+                query.equalTo(entry.getKey(), entry.getValue().toString());
+            } else {
+                query.equalTo(entry.getKey(), Boolean.valueOf(entry.getValue().toString()));
+            }
+        }
+        long count = query.count();
+        realm.close();
+        return count;
     }
 
     public static void removeObjectFromDatabase(Class<? extends RealmObject> clazz, String pName,

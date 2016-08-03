@@ -128,7 +128,7 @@ public class HomeScreenActivity extends PortraitActivity implements NavigationDr
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == Constant.activityNetworkSettings) {
-            NetworkUtils.syncLocalAndServer(this);
+            NetworkUtils.syncAndStartTasks(this, true, false);
         } else if (resultCode == RESULT_OK && data != null) {
             // todo : swap these to using eventbus inside the fragment ...
             if (requestCode == Constant.activityAddMembersToGroup || requestCode == Constant.activityRemoveMembers) {

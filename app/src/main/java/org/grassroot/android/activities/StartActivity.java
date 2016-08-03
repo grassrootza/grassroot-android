@@ -1,13 +1,10 @@
 package org.grassroot.android.activities;
 
 import android.content.Intent;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 
-import org.grassroot.android.services.LocationServices;
-import org.grassroot.android.services.StartUpTask;
+import org.grassroot.android.utils.NetworkUtils;
 import org.grassroot.android.utils.RealmUtils;
 
 /**
@@ -31,7 +28,8 @@ public class StartActivity extends AppCompatActivity {
     }
 
     private void userIsLoggedIn() {
-        new StartUpTask().execute(this);
+        NetworkUtils.registerForGCM(this).subscribe();
+        NetworkUtils.syncAndStartTasks(this, false, false).subscribe();
         Intent i  = RealmUtils.loadPreferencesFromDB().isHasGroups() ?
                 new Intent(StartActivity.this, HomeScreenActivity.class) :
                 new Intent(StartActivity.this, NoGroupWelcomeActivity.class);

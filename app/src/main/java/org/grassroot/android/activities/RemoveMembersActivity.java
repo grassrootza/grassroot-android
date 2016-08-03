@@ -152,7 +152,7 @@ public class RemoveMembersActivity extends PortraitActivity implements MemberLis
         GroupService.getInstance().removeGroupMembers(groupUid, membersToRemove).subscribe(new Subscriber() {
             @Override
             public void onCompleted() {
-                progressDialog.dismiss();
+
             }
 
             @Override
@@ -166,6 +166,7 @@ public class RemoveMembersActivity extends PortraitActivity implements MemberLis
                 i.putExtra(GroupConstants.UID_FIELD, groupUid);
                 i.putExtra(Constant.INDEX_FIELD, groupPosition);
                 setResult(RESULT_OK, i);
+                progressDialog.dismiss();
                 finish();
             }
         });

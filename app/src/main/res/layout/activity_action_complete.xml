@@ -60,18 +60,6 @@
             android:text="@string/ac_btn_tasks"
             android:layout_below="@+id/bt_avatar" />
 
-        <!-- <Button
-            style="@style/NewTaskButton"
-            android:id="@+id/bt_meeting"
-            android:text="@string/ac_btn_mtg"
-            android:layout_below="@+id/bt_vote" />
-
-        <Button
-            style="@style/NewTaskButton"
-            android:id="@+id/bt_todo"
-            android:text="@string/ac_btn_todo"
-            android:layout_below="@+id/bt_meeting" /> -->
-
         <Button
             style="@style/NewTaskButton"
             android:id="@+id/bt_home"
@@ -79,5 +67,28 @@
             android:layout_below="@+id/bt_tasks" />
 
     </RelativeLayout>
+
+    <LinearLayout
+        android:id="@+id/ac_btn_offline"
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:paddingLeft="@dimen/padding"
+        android:paddingRight="@dimen/padding"
+        android:visibility="gone"
+        android:layout_marginBottom="@dimen/margin_xxlarge">
+
+        <Button
+            style="@style/NewTaskButton"
+            android:id="@+id/bt_stay_offline"
+            android:text="Work offline"/>
+
+        <Button
+            style="@style/NewTaskButton"
+            android:id="@+id/bt_keep_trying"
+            android:text="Keep trying"/>
+
+    </LinearLayout>
 
 </RelativeLayout>

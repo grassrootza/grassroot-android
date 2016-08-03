@@ -7,6 +7,7 @@ import android.util.Log;
 import android.view.View;
 import android.view.Window;
 import android.widget.Button;
+import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
@@ -36,6 +37,7 @@ public class ActionCompleteActivity extends PortraitActivity implements NewTaskM
     public static final String BODY_FIELD = "body";
     public static final String BTN_FIELD = "button";
     public static final String TASK_BUTTONS = "task_buttons";
+    public static final String OFFLINE_BUTTONS = "offline_buttons";
 
     public static final String ACTION_INTENT = "action_intent";
     public static final String HOME_SCREEN = "home_screen";
@@ -43,6 +45,8 @@ public class ActionCompleteActivity extends PortraitActivity implements NewTaskM
 
     private boolean customValues;
     private boolean showTaskButtons;
+    private boolean showOfflineButtons;
+
     private String actionIntent;
     private Group groupToPass;
 
@@ -51,6 +55,7 @@ public class ActionCompleteActivity extends PortraitActivity implements NewTaskM
     @BindView(R.id.ac_bt_done) Button done;
     @BindView(R.id.bt_avatar) Button pickAvatar;
     @BindView(R.id.ac_btn_tasks) RelativeLayout taskButtons;
+    @BindView(R.id.ac_btn_offline) LinearLayout offlineButtons;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -84,49 +89,47 @@ public class ActionCompleteActivity extends PortraitActivity implements NewTaskM
         if (TextUtils.isEmpty(bodyString)) { // getString with default is restricted
             bodyString = getString(R.string.ac_body_default);
         }
-        final int buttonInt = args.getInt(BTN_FIELD, R.string.ac_btn_done);
-        showTaskButtons = args.getBoolean(TASK_BUTTONS, false);
 
         header.setText(headerInt);
         body.setText(bodyString);
+        setUpButtons(args);
+    }
+
+    private void setUpButtons(Bundle args) {
+        // note : cases: either (a) all is fine and we show task buttons
+        // or : (b) there was a server error or something and need to show options to go offline
+        // or : (c) it's uncertain, and we're showing just the done button
+        showTaskButtons = args.getBoolean(TASK_BUTTONS, false);
+        showOfflineButtons = args.getBoolean(OFFLINE_BUTTONS, false);
+
         if (showTaskButtons) {
             done.setVisibility(View.GONE);
+            offlineButtons.setVisibility(View.GONE);
             taskButtons.setVisibility(View.VISIBLE);
+            if (!NetworkUtils.ONLINE_DEFAULT.equals(RealmUtils.loadPreferencesFromDB().getOnlineStatus())) {
+                pickAvatar.setVisibility(View.GONE);
+            }
+        } else if (showOfflineButtons) {
+            done.setVisibility(View.GONE);
+            taskButtons.setVisibility(View.GONE);
+            offlineButtons.setVisibility(View.VISIBLE);
         } else {
+            final int buttonInt = args.getInt(BTN_FIELD, R.string.ac_btn_done);
             done.setText(buttonInt);
             done.setVisibility(View.VISIBLE);
             taskButtons.setVisibility(View.GONE);
-        }
-
-        if (!NetworkUtils.ONLINE_DEFAULT.equals(RealmUtils.loadPreferencesFromDB().getOnlineStatus())) {
-            pickAvatar.setVisibility(View.GONE);
+            offlineButtons.setVisibility(View.GONE);
         }
     }
 
     @OnClick(R.id.ac_bt_done)
     public void screenOver() {
-        Log.e(TAG, "actionIntent = " + actionIntent);
         if (!customValues) {
             startActivity(homeIntent());
         } else {
-            switch (actionIntent) {
-                case HOME_SCREEN:
-                    startActivity(homeIntent());
-                    finish();
-                    break;
-                case GROUP_SCREEN:
-                    Log.e(TAG, "action intent is group screen ...");
-                    Intent i = new Intent(ActionCompleteActivity.this, GroupTasksActivity.class);
-                    i.putExtra(GroupConstants.OBJECT_FIELD, groupToPass);
-                    i.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                    startActivity(i);
-                    finish();
-                    break;
-                default:
-                    startActivity(homeIntent());
-                    finish();
-            }
+            startActivity(doneIntent());
         }
+        finish();
     }
 
     @OnClick(R.id.bt_avatar)
@@ -149,6 +152,33 @@ public class ActionCompleteActivity extends PortraitActivity implements NewTaskM
     @OnClick(R.id.bt_home)
     public void goHome() {
         startActivity(homeIntent());
+    }
+
+    @OnClick(R.id.bt_stay_offline)
+    public void setOfflineDelib() {
+        NetworkUtils.switchToOfflineMode(null);
+        startActivity(doneIntent());
+        finish();
+    }
+
+    @OnClick(R.id.bt_keep_trying)
+    public void setKeepRetrying() {
+        startActivity(doneIntent());
+        finish();
+    }
+
+    private Intent doneIntent() {
+        switch (actionIntent) {
+            case HOME_SCREEN:
+                return homeIntent();
+            case GROUP_SCREEN:
+                Intent i = new Intent(ActionCompleteActivity.this, GroupTasksActivity.class);
+                i.putExtra(GroupConstants.OBJECT_FIELD, groupToPass);
+                i.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                return i;
+            default:
+                return homeIntent();
+        }
     }
 
     private Intent homeIntent() {

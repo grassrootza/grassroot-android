@@ -21,6 +21,7 @@ import org.grassroot.android.models.Group;
 import org.grassroot.android.models.Member;
 import org.grassroot.android.utils.Constant;
 import org.grassroot.android.utils.MenuUtils;
+import org.grassroot.android.utils.RealmUtils;
 
 import java.util.ArrayList;
 
@@ -73,6 +74,7 @@ public class GroupMembersActivity extends PortraitActivity implements NewTaskMen
         if (group == null) {
             groupUid = getIntent().getStringExtra(GroupConstants.UID_FIELD);
             groupName = getIntent().getStringExtra(GroupConstants.NAME_FIELD);
+            group = RealmUtils.loadGroupFromDB(groupUid);
         } else {
             groupUid = group.getGroupUid();
             groupName = group.getGroupName();
@@ -140,6 +142,9 @@ public class GroupMembersActivity extends PortraitActivity implements NewTaskMen
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu_group_members, menu);
+        menu.findItem(R.id.mi_add_members).setVisible(group != null && group.canAddMembers());
+        menu.findItem(R.id.mi_remove_members).setVisible(group != null && group.canDeleteMembers());
+        menu.findItem(R.id.mi_group_settings).setVisible(group != null && group.canEditGroup());
         return true;
     }
 

@@ -24,6 +24,7 @@ import org.grassroot.android.adapters.NavigationDrawerAdapter;
 import org.grassroot.android.events.ConnectionFailedEvent;
 import org.grassroot.android.events.GroupCreatedEvent;
 import org.grassroot.android.events.GroupsRefreshedEvent;
+import org.grassroot.android.events.NetworkFailureEvent;
 import org.grassroot.android.events.NotificationEvent;
 import org.grassroot.android.events.OfflineActionsSent;
 import org.grassroot.android.events.OnlineOfflineToggledEvent;
@@ -97,6 +98,7 @@ public class NavigationDrawerFragment extends Fragment implements NavigationDraw
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Log.e(TAG, "registering with event bus");
         EventBus.getDefault().register(this);
     }
 
@@ -138,6 +140,7 @@ public class NavigationDrawerFragment extends Fragment implements NavigationDraw
         secondaryItemsView.setHasFixedSize(true);
         secondaryItemsView.setItemViewCacheSize(5);
         secondaryItemsView.setLayoutManager(new LinearLayoutManager(getContext()));
+        secondaryItemsView.setNestedScrollingEnabled(false);
         secondaryItemsView.setAdapter(secondaryAdapter);
 
         return view;
@@ -185,6 +188,7 @@ public class NavigationDrawerFragment extends Fragment implements NavigationDraw
 
     private void setupOnlineSwitch() {
         final String currentStatus = RealmUtils.loadPreferencesFromDB().getOnlineStatus();
+        Log.e(TAG, "setting up online switch ... status = " + currentStatus);
         int labelResource;
         switch (currentStatus) {
             case NetworkUtils.ONLINE_DEFAULT:
@@ -330,6 +334,7 @@ public class NavigationDrawerFragment extends Fragment implements NavigationDraw
     @Override
     public void onDestroy() {
         super.onDestroy();
+        Log.e(TAG, "removing event bus registration ...");
         EventBus.getDefault().unregister(this);
     }
 
@@ -387,5 +392,8 @@ public class NavigationDrawerFragment extends Fragment implements NavigationDraw
     public void onEvent(OnlineOfflineToggledEvent e) {
         setupOnlineSwitch();
     }
+
+    @Subscribe
+    public void onEvent(NetworkFailureEvent e) { setupOnlineSwitch(); }
 
 }

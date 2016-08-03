@@ -33,16 +33,17 @@ import org.grassroot.android.fragments.MemberListFragment;
 import org.grassroot.android.interfaces.GroupConstants;
 import org.grassroot.android.models.Contact;
 import org.grassroot.android.models.Group;
-import org.grassroot.android.models.GroupResponse;
 import org.grassroot.android.models.Member;
 import org.grassroot.android.services.GroupService;
 import org.grassroot.android.utils.Constant;
 import org.grassroot.android.utils.ErrorUtils;
+import org.grassroot.android.utils.NetworkUtils;
 import org.grassroot.android.utils.PermissionUtils;
 import org.grassroot.android.utils.RealmUtils;
 import org.greenrobot.eventbus.EventBus;
 
-import retrofit2.Response;
+import rx.Subscriber;
+import rx.android.schedulers.AndroidSchedulers;
 
 import static butterknife.OnTextChanged.Callback.AFTER_TEXT_CHANGED;
 
@@ -289,28 +290,47 @@ public class CreateGroupActivity extends PortraitActivity implements ContactSele
     cacheWipGroup();
     progressDialog.show();
     progressDialog.setCancelable(false);
-    GroupService.getInstance()
-        .sendNewGroupToServer(groupUid, new GroupService.GroupCreationListener() {
-              @Override public void groupCreatedLocally(Group group) {
-                progressDialog.dismiss();
-                save.setEnabled(true); // just in case
-                handleSuccessfulGroupCreation(group, false); // todo : say, "it's local"
-              }
+    GroupService.getInstance().sendNewGroupToServer(groupUid, AndroidSchedulers.mainThread())
+        .subscribe(new Subscriber<String>() {
 
-              @Override public void groupCreatedOnServer(Group group) {
-                progressDialog.dismiss();
-                handleSuccessfulGroupCreation(group, true);
-              }
-
-              @Override public void groupCreationError(Response<GroupResponse> response) {
-                progressDialog.dismiss();
-                save.setEnabled(true); // again, just in case, but shouldn't happen
+          @Override
+          public void onError(Throwable e) {
+            progressDialog.dismiss();
+            switch (e.getMessage()) {
+              case NetworkUtils.SERVER_ERROR:
+                save.setEnabled(true);
                 ErrorUtils.showSnackBar(rlCgRoot, R.string.error_generic, Snackbar.LENGTH_SHORT);
+                break;
+              case NetworkUtils.CONNECT_ERROR:
+                Group wipGroup = RealmUtils.loadGroupFromDB(groupUid);
+                handleGroupCreationAndExit(wipGroup, true);
+                break;
+              default:
+                break;
+            }
+          }
+
+          @Override
+          public void onNext(String s) {
+            progressDialog.dismiss();
+            Group finalGroup;
+            if (NetworkUtils.SAVED_OFFLINE_MODE.equals(s)) {
+              finalGroup = RealmUtils.loadGroupFromDB(groupUid);
+            } else {
+              finalGroup = RealmUtils.loadGroupFromDB(s);
+              if (finalGroup == null) {
+                finalGroup = RealmUtils.loadGroupFromDB(groupUid);
               }
-            });
+            }
+            handleGroupCreationAndExit(finalGroup, false);
+          }
+
+          @Override
+          public void onCompleted() { }
+        });
   }
 
-  private void handleSuccessfulGroupCreation(Group group, boolean successfullySavedToServer) {
+  private void handleGroupCreationAndExit(Group group, boolean unexpectedConnectionError) {
     EventBus.getDefault().post(new GroupCreatedEvent(group));
     Intent i = new Intent(CreateGroupActivity.this, ActionCompleteActivity.class);
     String completionMessage;
@@ -318,13 +338,17 @@ public class CreateGroupActivity extends PortraitActivity implements ContactSele
       completionMessage =
           String.format(getString(R.string.ac_body_group_create_server), group.getGroupName(),
               group.getGroupMemberCount());
-    } else {
+    } else if (!unexpectedConnectionError) {
       completionMessage =
           String.format(getString(R.string.ac_body_group_create_local), group.getGroupName());
+    } else {
+      completionMessage = getString(R.string.ac_body_group_create_connect_error);
     }
+
     i.putExtra(ActionCompleteActivity.HEADER_FIELD, R.string.ac_header_group_create);
     i.putExtra(ActionCompleteActivity.BODY_FIELD, completionMessage);
-    i.putExtra(ActionCompleteActivity.TASK_BUTTONS, true);
+    i.putExtra(ActionCompleteActivity.TASK_BUTTONS, !unexpectedConnectionError);
+    i.putExtra(ActionCompleteActivity.OFFLINE_BUTTONS, unexpectedConnectionError);
     i.putExtra(ActionCompleteActivity.ACTION_INTENT, ActionCompleteActivity.HOME_SCREEN);
     i.putExtra(GroupConstants.OBJECT_FIELD, group);
     i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
