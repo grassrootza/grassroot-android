@@ -38,7 +38,7 @@ import org.grassroot.android.models.TaskModel;
 import org.grassroot.android.services.TaskService;
 import org.grassroot.android.utils.Constant;
 import org.grassroot.android.utils.ErrorUtils;
-import org.grassroot.android.utils.MenuUtils;
+import org.grassroot.android.utils.IntentUtils;
 import org.grassroot.android.utils.NetworkUtils;
 import org.grassroot.android.utils.RealmUtils;
 import org.grassroot.android.utils.Utilities;
@@ -234,7 +234,7 @@ public class CreateTaskFragment extends Fragment {
     }
 
     private void startPickMemberActivity(ArrayList<Member> preSelectedMembers) {
-        Intent pickMember = MenuUtils.memberSelectionIntent(getActivity(), groupUid, CreateTaskFragment.class.getCanonicalName(), preSelectedMembers);
+        Intent pickMember = IntentUtils.memberSelectionIntent(getActivity(), groupUid, CreateTaskFragment.class.getCanonicalName(), preSelectedMembers);
         startActivityForResult(pickMember, Constant.activitySelectGroupMembers);
     }
 

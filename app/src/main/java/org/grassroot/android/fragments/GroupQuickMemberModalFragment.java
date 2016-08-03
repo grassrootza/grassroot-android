@@ -19,7 +19,7 @@ import org.grassroot.android.activities.RemoveMembersActivity;
 import org.grassroot.android.interfaces.GroupConstants;
 import org.grassroot.android.models.Group;
 import org.grassroot.android.utils.Constant;
-import org.grassroot.android.utils.MenuUtils;
+import org.grassroot.android.utils.IntentUtils;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -98,7 +98,7 @@ public class GroupQuickMemberModalFragment extends android.support.v4.app.Dialog
     @OnClick(R.id.ic_home_add_member_active)
     public void gmAddMemberIconListener() {
         if (addMemberPermitted) {
-            Intent addMember = MenuUtils.constructIntent(getActivity(), AddMembersActivity.class, groupUid, groupName);
+            Intent addMember = IntentUtils.constructIntent(getActivity(), AddMembersActivity.class, groupUid, groupName);
             addMember.putExtra(Constant.INDEX_FIELD, groupPosition);
             // note: inefficiency here in routing back via activity, but getParentFragment is throwing a null error...
             getActivity().startActivityForResult(addMember, Constant.activityAddMembersToGroup);
@@ -111,7 +111,7 @@ public class GroupQuickMemberModalFragment extends android.support.v4.app.Dialog
     @OnClick(R.id.ic_home_view_members_active)
     public  void gmViewMembersIconListener() {
         if (viewMembersPermitted) {
-            Intent viewMembers = MenuUtils.constructIntent(getActivity(), GroupMembersActivity.class, group);
+            Intent viewMembers = IntentUtils.constructIntent(getActivity(), GroupMembersActivity.class, group);
             viewMembers.putExtra(Constant.PARENT_TAG_FIELD, HomeScreenActivity.class.getCanonicalName());
             startActivity(viewMembers);
             getDialog().dismiss();
@@ -123,7 +123,7 @@ public class GroupQuickMemberModalFragment extends android.support.v4.app.Dialog
     @OnClick(R.id.ic_remove_members_active)
     public void gmRemoveMembersIconListener() {
         if (removeMembersPermitted) {
-            Intent removeMembers = MenuUtils.constructIntent(getActivity(), RemoveMembersActivity.class, groupUid, groupName);
+            Intent removeMembers = IntentUtils.constructIntent(getActivity(), RemoveMembersActivity.class, groupUid, groupName);
             removeMembers.putExtra(Constant.INDEX_FIELD, groupPosition);
             getActivity().startActivityForResult(removeMembers, Constant.activityRemoveMembers);
             getDialog().dismiss();

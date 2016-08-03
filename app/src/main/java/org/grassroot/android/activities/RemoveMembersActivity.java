@@ -3,12 +3,9 @@ package org.grassroot.android.activities;
 import android.app.ProgressDialog;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.design.widget.Snackbar;
 import android.support.v4.app.NavUtils;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
-import android.view.Menu;
-import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.widget.Button;
 import android.widget.RelativeLayout;
@@ -18,12 +15,9 @@ import org.grassroot.android.R;
 import org.grassroot.android.fragments.MemberListFragment;
 import org.grassroot.android.fragments.dialogs.ConfirmCancelDialogFragment;
 import org.grassroot.android.interfaces.GroupConstants;
-import org.grassroot.android.models.GenericResponse;
-import org.grassroot.android.models.Group;
-import org.grassroot.android.services.GrassrootRestService;
+import org.grassroot.android.models.ApiCallException;
 import org.grassroot.android.services.GroupService;
 import org.grassroot.android.utils.Constant;
-import org.grassroot.android.utils.ErrorUtils;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -32,11 +26,9 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 
-import org.grassroot.android.utils.MenuUtils;
-import org.grassroot.android.utils.RealmUtils;
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
+import org.grassroot.android.utils.IntentUtils;
+import org.grassroot.android.utils.NetworkUtils;
+
 import rx.Subscriber;
 
 /**
@@ -44,7 +36,7 @@ import rx.Subscriber;
  */
 public class RemoveMembersActivity extends PortraitActivity implements MemberListFragment.MemberClickListener {
 
-    private static final String TAG = RemoveMembersActivity.class.getCanonicalName();
+    private static final String TAG = RemoveMembersActivity.class.getSimpleName();
 
     private String groupUid;
     private String groupName;
@@ -151,13 +143,31 @@ public class RemoveMembersActivity extends PortraitActivity implements MemberLis
         progressDialog.show();
         GroupService.getInstance().removeGroupMembers(groupUid, membersToRemove).subscribe(new Subscriber() {
             @Override
-            public void onCompleted() {
-
-            }
+            public void onCompleted() { }
 
             @Override
             public void onError(Throwable e) {
-                Snackbar.make(root, "Error!", Snackbar.LENGTH_SHORT);
+                Intent i;
+                switch (e.getMessage()) {
+                    case NetworkUtils.SERVER_ERROR:
+                        ApiCallException error = (ApiCallException) e;
+                        final String body = ApiCallException.PERMISSION_ERROR.equals(error.errorTag) ?
+                            getString(R.string.rm_server_permission) : getString(R.string.rm_server_other);
+                        i = IntentUtils.offlineMessageIntent(RemoveMembersActivity.this, R.string.rm_server_error_header,
+                            body, false, false);
+                        break;
+                    case NetworkUtils.CONNECT_ERROR:
+                        i = IntentUtils.offlineMessageIntent(RemoveMembersActivity.this, R.string.rm_offline_header,
+                            getString(R.string.rm_offline_body_error), false, true);
+                        break;
+                    default:
+                        Log.e(TAG, "received strange error : " + e.toString());
+                        i = IntentUtils.offlineMessageIntent(RemoveMembersActivity.this, R.string.rm_server_error_header,
+                            getString(R.string.rm_server_other), false, true);
+                }
+                progressDialog.dismiss();
+                startActivity(i);
+                finish();
             }
 
             @Override
@@ -170,7 +180,6 @@ public class RemoveMembersActivity extends PortraitActivity implements MemberLis
                 finish();
             }
         });
-
     }
 
     @Override

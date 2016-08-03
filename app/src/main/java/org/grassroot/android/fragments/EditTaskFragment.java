@@ -39,7 +39,7 @@ import org.grassroot.android.services.ApplicationLoader;
 import org.grassroot.android.services.GrassrootRestService;
 import org.grassroot.android.utils.Constant;
 import org.grassroot.android.utils.ErrorUtils;
-import org.grassroot.android.utils.MenuUtils;
+import org.grassroot.android.utils.IntentUtils;
 import org.grassroot.android.utils.NetworkUtils;
 import org.grassroot.android.utils.RealmUtils;
 import org.grassroot.android.utils.Utilities;
@@ -317,7 +317,7 @@ public class EditTaskFragment extends Fragment implements DatePickerDialog.OnDat
 
     @OnClick(R.id.etsk_cv_notify)
     public void changeMemberSelection() {
-        Intent i = MenuUtils.memberSelectionIntent(getActivity(), task.getParentUid(), EditTaskFragment.class.getCanonicalName(),
+        Intent i = IntentUtils.memberSelectionIntent(getActivity(), task.getParentUid(), EditTaskFragment.class.getCanonicalName(),
                 new ArrayList<>(selectedMembers));
         startActivityForResult(i, Constant.activitySelectGroupMembers);
     }

@@ -21,7 +21,7 @@ import org.grassroot.android.interfaces.GroupConstants;
 import org.grassroot.android.models.Group;
 import org.grassroot.android.utils.Constant;
 import org.grassroot.android.utils.ErrorUtils;
-import org.grassroot.android.utils.MenuUtils;
+import org.grassroot.android.utils.IntentUtils;
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 
@@ -148,19 +148,19 @@ public class GroupTasksActivity extends PortraitActivity implements NewTaskMenuF
                 setUpJoinCodeFragment();
                 return true;
             case R.id.mi_view_members:
-                Intent viewMembers = MenuUtils.constructIntent(this, GroupMembersActivity.class, groupUid, groupName);
+                Intent viewMembers = IntentUtils.constructIntent(this, GroupMembersActivity.class, groupUid, groupName);
                 viewMembers.putExtra(Constant.PARENT_TAG_FIELD, GroupTasksActivity.class.getCanonicalName());
                 startActivity(viewMembers);
                 return true;
             case R.id.mi_add_members:
-                startActivity(MenuUtils.constructIntent(this, AddMembersActivity.class, groupUid, groupName));
+                startActivity(IntentUtils.constructIntent(this, AddMembersActivity.class, groupUid, groupName));
                 return true;
             case R.id.mi_remove_members:
-                Intent removeMembers = MenuUtils.constructIntent(this, RemoveMembersActivity.class, groupUid, groupName);
+                Intent removeMembers = IntentUtils.constructIntent(this, RemoveMembersActivity.class, groupUid, groupName);
                 startActivity(removeMembers);
                 return true;
             case R.id.mi_group_settings:
-                Intent groupSettings = MenuUtils.constructIntent(this, GroupSettingsActivity.class, groupMembership);
+                Intent groupSettings = IntentUtils.constructIntent(this, GroupSettingsActivity.class, groupMembership);
                 startActivity(groupSettings);
                 return true;
             default:

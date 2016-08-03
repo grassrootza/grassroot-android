@@ -23,6 +23,7 @@ import org.grassroot.android.models.Contact;
 import org.grassroot.android.models.Member;
 import org.grassroot.android.services.GroupService;
 import org.grassroot.android.utils.Constant;
+import org.grassroot.android.utils.IntentUtils;
 import org.grassroot.android.utils.NetworkUtils;
 import org.grassroot.android.utils.PermissionUtils;
 import org.grassroot.android.utils.RealmUtils;
@@ -307,7 +308,7 @@ public class AddMembersActivity extends AppCompatActivity implements
                             progressDialog.dismiss();
                             finish();
                         } else {
-                            Intent i = assembleCompleteMessage(R.string.am_offline_header, getString(R.string.am_offline_body_delib), true, false);
+                            Intent i = IntentUtils.offlineMessageIntent(AddMembersActivity.this, R.string.am_offline_header, getString(R.string.am_offline_body_delib), true, false);
                             progressDialog.dismiss();
                             startActivity(i);
                             finish();
@@ -327,14 +328,14 @@ public class AddMembersActivity extends AppCompatActivity implements
                                 ApiCallException error = (ApiCallException) e;
                                 final String body = ApiCallException.PERMISSION_ERROR.equals(error.errorTag) ?
                                     getString(R.string.am_server_permission) : getString(R.string.am_server_other);
-                                i = assembleCompleteMessage(R.string.am_server_error_header, body, false, false);
+                                i = IntentUtils.offlineMessageIntent(AddMembersActivity.this, R.string.am_server_error_header, body, false, false);
                                 break;
                             case NetworkUtils.CONNECT_ERROR:
-                                i = assembleCompleteMessage(R.string.am_offline_header, getString(R.string.am_offline_body_error), false, true);
+                                i = IntentUtils.offlineMessageIntent(AddMembersActivity.this, R.string.am_offline_header, getString(R.string.am_offline_body_error), false, true);
                                 break;
                             default:
                                 Log.e(TAG, "received strange error : " + e.toString());
-                                i = assembleCompleteMessage(R.string.am_server_error_header, getString(R.string.am_server_other), false, true);
+                                i = IntentUtils.offlineMessageIntent(AddMembersActivity.this, R.string.am_server_error_header, getString(R.string.am_server_other), false, true);
                         }
                         progressDialog.dismiss();
                         startActivity(i);
@@ -346,16 +347,6 @@ public class AddMembersActivity extends AppCompatActivity implements
                 finish();
             }
         }
-    }
-
-    private Intent assembleCompleteMessage(int header, String body, boolean showTaskButtons, boolean showOfflineOptions) {
-        Intent i = new Intent(AddMembersActivity.this, ActionCompleteActivity.class);
-        i.putExtra(ActionCompleteActivity.HEADER_FIELD, header);
-        i.putExtra(ActionCompleteActivity.BODY_FIELD, body);
-        i.putExtra(ActionCompleteActivity.TASK_BUTTONS, showTaskButtons);
-        i.putExtra(ActionCompleteActivity.OFFLINE_BUTTONS, showOfflineOptions);
-        i.putExtra(ActionCompleteActivity.ACTION_INTENT, ActionCompleteActivity.HOME_SCREEN); // todo : take from whatever triggered this
-        return i;
     }
 
 }

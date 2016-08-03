@@ -20,7 +20,7 @@ import org.grassroot.android.interfaces.GroupConstants;
 import org.grassroot.android.models.Group;
 import org.grassroot.android.models.Member;
 import org.grassroot.android.utils.Constant;
-import org.grassroot.android.utils.MenuUtils;
+import org.grassroot.android.utils.IntentUtils;
 import org.grassroot.android.utils.RealmUtils;
 
 import java.util.ArrayList;
@@ -152,15 +152,15 @@ public class GroupMembersActivity extends PortraitActivity implements NewTaskMen
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case (R.id.mi_add_members):
-                Intent i = MenuUtils.constructIntent(this, AddMembersActivity.class, groupUid, groupName);
+                Intent i = IntentUtils.constructIntent(this, AddMembersActivity.class, groupUid, groupName);
                 startActivity(i);
                 return true;
             case (R.id.mi_remove_members):
-                Intent i2 = MenuUtils.constructIntent(this, RemoveMembersActivity.class, groupUid, groupName);
+                Intent i2 = IntentUtils.constructIntent(this, RemoveMembersActivity.class, groupUid, groupName);
                 startActivity(i2);
                 return true;
             case (R.id.mi_group_settings):
-                Intent i3 = MenuUtils.constructIntent(this, GroupSettingsActivity.class, group);
+                Intent i3 = IntentUtils.constructIntent(this, GroupSettingsActivity.class, group);
                 startActivity(i3);
                 return true;
             case (android.R.id.home):
@@ -174,7 +174,7 @@ public class GroupMembersActivity extends PortraitActivity implements NewTaskMen
     @OnClick(R.id.lm_fab_add_members)
     public void launchAddMembers() {
         toggleActionMenu();
-        Intent i = MenuUtils.constructIntent(this, AddMembersActivity.class, groupUid, groupName);
+        Intent i = IntentUtils.constructIntent(this, AddMembersActivity.class, groupUid, groupName);
         startActivity(i);
     }
 
@@ -220,10 +220,10 @@ public class GroupMembersActivity extends PortraitActivity implements NewTaskMen
             i = new Intent(this, HomeScreenActivity.class);
             i.setFlags(flags);
         } else if (parentTag.equals(GroupTasksActivity.class.getCanonicalName())) {
-            i = MenuUtils.constructIntent(this, GroupTasksActivity.class, groupUid, groupName);
+            i = IntentUtils.constructIntent(this, GroupTasksActivity.class, groupUid, groupName);
             i.setFlags(flags);
         } else if (parentTag.equals(CreateMeetingActivity.class.getCanonicalName())) {
-            i = MenuUtils.constructIntent(this, CreateMeetingActivity.class, groupUid, groupName);
+            i = IntentUtils.constructIntent(this, CreateMeetingActivity.class, groupUid, groupName);
             i.setFlags(flags);
         } else if (parentTag.equals(EditTaskFragment.class.getCanonicalName())) {
             // aaah ... need to maybe rethink how handling all of this .. need to go back, without recreating ...

@@ -258,6 +258,17 @@
     anymore.</string>
     <string name="am_server_other">Sorry, something went wrong adding the members. Please try again later.</string>
 
+    <string name="rm_offline_header">Done</string>
+    <string name="rm_offline_body_delib">Since you\'re working in offline mode, we\'ve stored the change and will sync to the
+    server when you connect.</string>
+    <string name="rm_offline_body_error">Sorry, something went wrong connecting to the server, but we saved the
+    changes and will save them to the group when we can connect.</string>
+
+    <string name="rm_server_error_header">Error</string>
+    <string name="rm_server_permission">Sorry, but you don\'t have permission to remove members from this group
+    anymore</string>
+    <string name="rm_server_other">Sorry, something went wrong removing the memebrs. Please try again later.</string>
+
     <!-- Phone book and other strings -->
     <string name="cs_title">Select contacts</string>
     <string name="cs_loading_contacts">Loading your contacts....</string>

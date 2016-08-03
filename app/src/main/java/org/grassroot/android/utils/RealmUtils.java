@@ -175,6 +175,21 @@ public class RealmUtils {
         return observable;
     }
 
+    public static <T> Observable loadListFromDB(final Class<? extends RealmObject> model, Scheduler observingThread) {
+        Observable<List<RealmObject>> observable = Observable.create(new Observable.OnSubscribe<List<RealmObject>>() {
+            @Override
+            public void call(Subscriber<? super List<RealmObject>> subscriber) {
+                RealmList<RealmObject> objects = new RealmList<>();
+                Realm realm = Realm.getDefaultInstance();
+                objects.addAll(realm.copyFromRealm(realm.where(model).findAll()));
+                subscriber.onNext(objects);
+                subscriber.onCompleted();
+                realm.close();
+            }
+        }).subscribeOn(Schedulers.io()).observeOn(observingThread);
+        return observable;
+    }
+
     public static <T> Observable loadListFromDB(final Class<? extends RealmObject> model,
                                                 final String pName, final String pValue) {
         Observable<List<RealmObject>> observable =
@@ -326,14 +341,6 @@ public class RealmUtils {
             });
             realm.close();
         }
-    }
-
-    public static <T extends RealmList> T loadListFromDB(Class<? extends RealmObject> model) {
-        RealmList<RealmObject> groups = new RealmList<>();
-        Realm realm = Realm.getDefaultInstance();
-        groups.addAll(realm.copyFromRealm(realm.where(model).findAll()));
-        realm.close();
-        return (T) groups;
     }
 
     public static PreferenceObject loadPreferencesFromDB() {

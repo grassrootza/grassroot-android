@@ -20,7 +20,7 @@ import org.grassroot.android.models.Group;
 import org.grassroot.android.models.Member;
 import org.grassroot.android.services.GroupService;
 import org.grassroot.android.utils.Constant;
-import org.grassroot.android.utils.MenuUtils;
+import org.grassroot.android.utils.IntentUtils;
 
 import java.util.Collections;
 import java.util.List;
@@ -100,7 +100,7 @@ public class GroupSettingsActivity extends PortraitActivity implements
     @Override
     public void changeGroupPicture() {
         // todo : handle result (and/or make the avatar setting a fragment)
-        startActivityForResult(MenuUtils.constructIntent(this, GroupAvatarActivity.class, group),
+        startActivityForResult(IntentUtils.constructIntent(this, GroupAvatarActivity.class, group),
                 Constant.activityChangeGroupPicture);
     }
 

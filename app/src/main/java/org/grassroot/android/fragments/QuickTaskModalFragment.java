@@ -1,25 +1,17 @@
 package org.grassroot.android.fragments;
 
 
-import android.content.Intent;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.Menu;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.widget.ImageView;
 
 import org.grassroot.android.R;
-import org.grassroot.android.activities.CreateMeetingActivity;
-import org.grassroot.android.activities.CreateTodoActivity;
-import org.grassroot.android.activities.CreateVoteActivity;
 import org.grassroot.android.interfaces.TaskConstants;
 import org.grassroot.android.models.Group;
-import org.grassroot.android.utils.Constant;
-import org.grassroot.android.utils.MenuUtils;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;

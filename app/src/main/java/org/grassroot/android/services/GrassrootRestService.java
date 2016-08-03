@@ -273,6 +273,12 @@ public class GrassrootRestService {
     Call<GenericResponse> removeGroupMembers(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
         @Path("groupUid") String groupUid, @Query("memberUids") Set<String> memberUids);
 
+    // combine several common changes (add calls here, or separate calls, as needed
+    @POST("group/edit/multi/{phoneNumber}/{code}/{groupUid}")
+    Call<GroupResponse> combinedGroupEdits(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
+                                           @Path("groupUid") String groupUid, @Query("name") String newName,
+                                           @Query("membersToRemove") List<String> memberUids);
+
         /*
         SECTION: Fetch tasks, and task details
          */

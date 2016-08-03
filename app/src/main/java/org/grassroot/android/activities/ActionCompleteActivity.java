@@ -3,7 +3,6 @@ package org.grassroot.android.activities;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.View;
 import android.view.Window;
 import android.widget.Button;
@@ -16,7 +15,7 @@ import org.grassroot.android.fragments.NewTaskMenuFragment;
 import org.grassroot.android.interfaces.GroupConstants;
 import org.grassroot.android.models.Group;
 import org.grassroot.android.utils.Constant;
-import org.grassroot.android.utils.MenuUtils;
+import org.grassroot.android.utils.IntentUtils;
 import org.grassroot.android.utils.NetworkUtils;
 import org.grassroot.android.utils.RealmUtils;
 
@@ -134,7 +133,7 @@ public class ActionCompleteActivity extends PortraitActivity implements NewTaskM
 
     @OnClick(R.id.bt_avatar)
     public void setAvatar() {
-        Intent intent = MenuUtils.constructIntent(this, GroupAvatarActivity.class, groupToPass);
+        Intent intent = IntentUtils.constructIntent(this, GroupAvatarActivity.class, groupToPass);
         intent.putExtra(Constant.INDEX_FIELD, 0);
         startActivity(intent);
     }

@@ -17,9 +17,7 @@ import org.grassroot.android.activities.CreateTodoActivity;
 import org.grassroot.android.activities.CreateVoteActivity;
 import org.grassroot.android.interfaces.GroupConstants;
 import org.grassroot.android.models.Group;
-import org.grassroot.android.utils.Constant;
-import org.grassroot.android.utils.MenuUtils;
-import org.greenrobot.eventbus.EventBus;
+import org.grassroot.android.utils.IntentUtils;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -125,19 +123,19 @@ public class NewTaskMenuFragment extends Fragment {
 
     @OnClick(R.id.bt_todo)
     public void onTodoButtonClick() {
-        Intent todo = MenuUtils.constructIntent(getActivity(), CreateTodoActivity.class, groupUid, groupName,isGroupLocal);
+        Intent todo = IntentUtils.constructIntent(getActivity(), CreateTodoActivity.class, groupUid, groupName,isGroupLocal);
         startActivity(todo);
     }
 
     @OnClick(R.id.bt_meeting)
     public void onMeetingButtonClick() {
-        Intent createMeeting = MenuUtils.constructIntent(getActivity(), CreateMeetingActivity.class, groupUid, groupName,isGroupLocal);
+        Intent createMeeting = IntentUtils.constructIntent(getActivity(), CreateMeetingActivity.class, groupUid, groupName,isGroupLocal);
         startActivity(createMeeting);
     }
 
     @OnClick(R.id.bt_vote)
     public void onVoteButtonClick() {
-        Intent createVote = MenuUtils.constructIntent(getActivity(), CreateVoteActivity.class, groupUid, groupName,isGroupLocal);
+        Intent createVote = IntentUtils.constructIntent(getActivity(), CreateVoteActivity.class, groupUid, groupName,isGroupLocal);
         createVote.putExtra("title", "Vote");
         startActivity(createVote);
     }

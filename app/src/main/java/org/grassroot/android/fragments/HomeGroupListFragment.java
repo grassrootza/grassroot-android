@@ -6,7 +6,6 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
-import android.os.Handler;
 import android.os.SystemClock;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
@@ -38,8 +37,6 @@ import org.grassroot.android.events.GroupEditedEvent;
 import org.grassroot.android.events.GroupPictureChangedEvent;
 import org.grassroot.android.events.GroupsRefreshedEvent;
 import org.grassroot.android.events.JoinRequestReceived;
-import org.grassroot.android.events.NetworkActivityResultsEvent;
-import org.grassroot.android.events.OfflineActionsSent;
 import org.grassroot.android.events.TaskAddedEvent;
 import org.grassroot.android.events.UserLoggedOutEvent;
 import org.grassroot.android.interfaces.GroupConstants;
@@ -47,12 +44,10 @@ import org.grassroot.android.interfaces.GroupPickCallbacks;
 import org.grassroot.android.interfaces.SortInterface;
 import org.grassroot.android.interfaces.TaskConstants;
 import org.grassroot.android.models.Group;
-import org.grassroot.android.models.GroupJoinRequest;
 import org.grassroot.android.services.GroupService;
 import org.grassroot.android.utils.Constant;
 import org.grassroot.android.utils.ErrorUtils;
-import org.grassroot.android.utils.MenuUtils;
-import org.grassroot.android.utils.NetworkUtils;
+import org.grassroot.android.utils.IntentUtils;
 import org.grassroot.android.utils.RealmUtils;
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
@@ -64,7 +59,6 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 import butterknife.Unbinder;
-import io.realm.RealmList;
 import rx.Subscriber;
 
 public class HomeGroupListFragment extends android.support.v4.app.Fragment
@@ -211,10 +205,6 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
                     @Override public void groupListLoadingError() {
                         hideProgress();
                     }
-
-                    @Override public void groupsAlreadyFetching() {
-                        hideProgress();
-                    }
                 });
     }
 
@@ -280,7 +270,7 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
     public void onGroupRowShortClick(Group group) {
         if (floatingMenuOpen) closeFloatingMenu();
         if (!group.getIsLocal()) {
-            startActivity(MenuUtils.constructIntent(getActivity(), GroupTasksActivity.class, group));
+            startActivity(IntentUtils.constructIntent(getActivity(), GroupTasksActivity.class, group));
         } else {
             showGroupWipMenu(group);
         }
@@ -294,10 +284,10 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
             public void onClick(DialogInterface dialog, int which) {
                 switch (which) {
                     case 0:
-                        startActivity(MenuUtils.constructIntent(getActivity(), CreateGroupActivity.class, group));
+                        startActivity(IntentUtils.constructIntent(getActivity(), CreateGroupActivity.class, group));
                         break;
                     case 1:
-                        startActivity(MenuUtils.constructIntent(getActivity(), GroupTasksActivity.class, group));
+                        startActivity(IntentUtils.constructIntent(getActivity(), GroupTasksActivity.class, group));
                         break;
                     case 2:
                         GroupService.getInstance().deleteLocallyCreatedGroup(group.getGroupUid());
@@ -323,15 +313,15 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
                         Intent i;
                         switch (taskType) {
                             case TaskConstants.MEETING:
-                                i = MenuUtils.constructIntent(getActivity(), CreateMeetingActivity.class,
+                                i = IntentUtils.constructIntent(getActivity(), CreateMeetingActivity.class,
                                         group.getGroupUid(), group.getGroupName());
                                 break;
                             case TaskConstants.VOTE:
-                                i = MenuUtils.constructIntent(getActivity(), CreateVoteActivity.class,
+                                i = IntentUtils.constructIntent(getActivity(), CreateVoteActivity.class,
                                         group.getGroupUid(), group.getGroupName());
                                 break;
                             case TaskConstants.TODO:
-                                i = MenuUtils.constructIntent(getActivity(), CreateTodoActivity.class,
+                                i = IntentUtils.constructIntent(getActivity(), CreateTodoActivity.class,
                                         group.getGroupUid(), group.getGroupName());
                                 break;
                             default:
@@ -355,7 +345,7 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
 
     @Override
     public void onGroupRowAvatarClick(Group group, int position) {
-        Intent intent = MenuUtils.constructIntent(getActivity(), GroupAvatarActivity.class,
+        Intent intent = IntentUtils.constructIntent(getActivity(), GroupAvatarActivity.class,
                 group);
         intent.putExtra(Constant.INDEX_FIELD, position);
         startActivity(intent);

@@ -13,6 +13,7 @@ public class GroupEditedEvent {
     public static final String JOIN_CODE_CLOSED = "join_closed";
     public static final String ORGANIZER_ADDED = "organizer_added";
     public static final String ROLE_CHANGED = "role_changed";
+    public static final String MULTIPLE_TO_SERVER = "member_to_server";
 
     public static final String CHANGED_ONLINE = "changed_online";
     public static final String CHANGED_OFFLINE = "changed_offline";

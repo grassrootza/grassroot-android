@@ -10,21 +10,18 @@ import io.realm.RealmResults;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import org.grassroot.android.R;
+
 import org.grassroot.android.events.GroupDeletedEvent;
 import org.grassroot.android.events.GroupEditErrorEvent;
 import org.grassroot.android.events.GroupEditedEvent;
 import org.grassroot.android.events.GroupsRefreshedEvent;
 import org.grassroot.android.events.JoinRequestReceived;
-import org.grassroot.android.events.NetworkFailureEvent;
 import org.grassroot.android.interfaces.GroupConstants;
-import org.grassroot.android.interfaces.NetworkErrorDialogListener;
 import org.grassroot.android.interfaces.TaskConstants;
 import org.grassroot.android.models.ApiCallException;
 import org.grassroot.android.models.GenericResponse;
@@ -32,6 +29,7 @@ import org.grassroot.android.models.Group;
 import org.grassroot.android.models.GroupJoinRequest;
 import org.grassroot.android.models.GroupResponse;
 import org.grassroot.android.models.GroupsChangedResponse;
+import org.grassroot.android.models.LocalGroupEdits;
 import org.grassroot.android.models.Member;
 import org.grassroot.android.models.Permission;
 import org.grassroot.android.models.PermissionResponse;
@@ -77,7 +75,6 @@ public class GroupService {
   public interface GroupServiceListener {
     void groupListLoaded();
     void groupListLoadingError();
-    void groupsAlreadyFetching();
   }
 
   protected GroupService() {
@@ -439,7 +436,7 @@ public class GroupService {
       @Override
       public void call(Subscriber<? super String> subscriber) {
         if (!NetworkUtils.isOnline()) {
-          removeMembersInDB(membersToRemoveUIDs, groupUid);
+          removeMembersInDB(membersToRemoveUIDs, groupUid, true);
           subscriber.onNext(NetworkUtils.SAVED_OFFLINE_MODE);
           subscriber.onCompleted();
         } else {
@@ -449,7 +446,7 @@ public class GroupService {
             Response response = GrassrootRestService.getInstance().getApi()
                 .removeGroupMembers(phoneNumber, code, groupUid, membersToRemoveUIDs).execute();
             if (response.isSuccessful()) {
-				removeMembersInDB(membersToRemoveUIDs, groupUid);
+				removeMembersInDB(membersToRemoveUIDs, groupUid, false);
 				subscriber.onNext(NetworkUtils.SAVED_SERVER);
             } else {
 				// note : this may be because of permission denied, so don't remove locally
@@ -457,7 +454,7 @@ public class GroupService {
 				throw new ApiCallException(NetworkUtils.SERVER_ERROR);
             }
           } catch (IOException e) {
-            removeMembersInDB(membersToRemoveUIDs, groupUid);
+            removeMembersInDB(membersToRemoveUIDs, groupUid, true);
             Group group = RealmUtils.loadGroupFromDB(groupUid);
             group.setEditedLocal(true);
             RealmUtils.saveGroupToRealm(group);
@@ -469,7 +466,15 @@ public class GroupService {
     }).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread());
   }
 
-  private void removeMembersInDB(final Set<String> memberUids, final String groupUid) {
+  private void removeMembersInDB(final Set<String> memberUids, final String groupUid, boolean generateLocalEditStore) {
+
+    if (generateLocalEditStore) {
+      LocalGroupEdits edits = generateLocalGroupEditObject(groupUid);
+      RealmList<RealmString> removeUids = RealmUtils.convertListOfStringInRealmListOfString(new ArrayList<>(memberUids));
+      edits.setMembersToRemove(removeUids);
+      RealmUtils.saveDataToRealm(edits).subscribe();
+    }
+
     for (String memberUid : memberUids) {
       final String memberGroupUid = memberUid + groupUid;
       RealmUtils.removeObjectFromDatabase(Member.class, "memberGroupUid", memberGroupUid);
@@ -488,6 +493,49 @@ public class GroupService {
     void apiCallComplete();
 
     void apiCallFailed(String tag, String offOrOnline);
+  }
+
+  private LocalGroupEdits generateLocalGroupEditObject(final String groupUid) {
+    LocalGroupEdits existingEdits = RealmUtils.loadObjectFromDB(LocalGroupEdits.class, "groupUid", groupUid);
+    if (existingEdits == null) {
+      existingEdits = new LocalGroupEdits(groupUid);
+    }
+    return existingEdits;
+  }
+
+  public Observable<String> sendLocalEditsToServer(final LocalGroupEdits existingEdits, Scheduler observingThread) {
+    Observable<String> observable = Observable.create(new Observable.OnSubscribe<String>() {
+      @Override
+      public void call(Subscriber<? super String> subscriber) {
+        if (existingEdits == null || !NetworkUtils.isOnline()) {
+          subscriber.onCompleted();
+        } else {
+          final String groupUid = existingEdits.getGroupUid();
+          final String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
+          final String code = RealmUtils.loadPreferencesFromDB().getToken();
+          Call<GroupResponse> editCall = GrassrootRestService.getInstance().getApi()
+              .combinedGroupEdits(phoneNumber, code, groupUid, existingEdits.getRevisedGroupName(),
+                  RealmUtils.convertListOfRealmStringInListOfString(existingEdits.getMembersToRemove()));
+          try {
+            Response<GroupResponse> response = editCall.execute();
+            if (response.isSuccessful()) {
+              final Group updatedGroup = response.body().getGroups().first();
+              RealmUtils.saveGroupToRealm(updatedGroup);
+              RealmUtils.removeObjectFromDatabase(LocalGroupEdits.class, "groupUid", groupUid);
+              subscriber.onNext(NetworkUtils.SAVED_SERVER);
+              EventBus.getDefault().post(new GroupEditedEvent(GroupEditedEvent.MULTIPLE_TO_SERVER,
+                  GroupEditedEvent.CHANGED_ONLINE, groupUid, ""));
+              subscriber.onCompleted();
+            } else {
+              throw new ApiCallException(NetworkUtils.SERVER_ERROR, response.body().getMessage());
+            }
+          } catch (IOException e) {
+            throw new ApiCallException(NetworkUtils.CONNECT_ERROR);
+          }
+        }
+      }
+    }).subscribeOn(Schedulers.io()).observeOn(observingThread);
+    return observable;
   }
 
   /* FIRST, METHODS FOR ADJUSTING GROUP IMAGE */

@@ -5,8 +5,7 @@ import android.content.Intent;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.util.Log;
-import io.realm.RealmList;
-import io.realm.RealmResults;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -17,6 +16,7 @@ import org.grassroot.android.events.OnlineOfflineToggledEvent;
 import org.grassroot.android.interfaces.NotificationConstants;
 import org.grassroot.android.models.GenericResponse;
 import org.grassroot.android.models.Group;
+import org.grassroot.android.models.LocalGroupEdits;
 import org.grassroot.android.models.Member;
 import org.grassroot.android.models.PreferenceObject;
 import org.grassroot.android.models.TaskModel;
@@ -205,6 +205,7 @@ public class NetworkUtils {
     if (!sendingLocalQueue && isOnline(context)) {
       sendingLocalQueue = true;
       sendLocalGroups();
+      sendLocallyAddedMembers();
       sendLocallyEditedGroups();
       sendNewLocalTasks();
       sendEditedTasks();
@@ -269,8 +270,7 @@ public class NetworkUtils {
     });
   }
 
-  private static void sendLocallyEditedGroups() {
-
+  private static void sendLocallyAddedMembers() {
     RealmUtils.loadListFromDB(Group.class, "isEditedLocal", true, Schedulers.immediate())
         .subscribe(new Action1<List<Group>>() {
       @Override
@@ -310,6 +310,40 @@ public class NetworkUtils {
             Log.e(TAG, "group edited locally returned okay ... sent to server"); // todo : flag as locally edit
           }
         });
+  }
+
+  private static void sendLocallyEditedGroups() {
+    RealmUtils.loadListFromDB(LocalGroupEdits.class, Schedulers.immediate())
+        .subscribe(new Action1<List<LocalGroupEdits>>() {
+          @Override
+          public void call(List<LocalGroupEdits> results) {
+            if (results != null && !results.isEmpty()) {
+              processLocalGroupEdits(results);
+            }
+          }
+        });
+  }
+
+  private static void processLocalGroupEdits(List<LocalGroupEdits> edits) {
+    for (LocalGroupEdits edit : edits) {
+      GroupService.getInstance().sendLocalEditsToServer(edit, Schedulers.immediate())
+          .subscribe(new Subscriber<String>() {
+            @Override
+            public void onError(Throwable e) {
+              if (CONNECT_ERROR.equals(e.getMessage())) {
+                setOnlineFailed();
+              }
+            }
+
+            @Override
+            public void onNext(String s) {
+              Log.d(TAG, "successfully sent edits to server ...");
+            }
+
+            @Override
+            public void onCompleted() { }
+          });
+    }
   }
 
   private static void sendNewLocalTasks() {
