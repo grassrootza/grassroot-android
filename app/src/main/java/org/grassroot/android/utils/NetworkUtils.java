@@ -167,7 +167,7 @@ public class NetworkUtils {
     Log.e(TAG, "inside network utils ... about to call sending queued entities ...");
     if (!sendingLocalQueue) {
       sendingLocalQueue = true;
-      if (shouldAttemptSync(context)) {
+     if (shouldAttemptSync(context)) {
         sendLocalGroups();
         sendLocallyAddedMembers();
         sendNewLocalTasks();
@@ -273,13 +273,12 @@ public class NetworkUtils {
          for (final TaskModel model : tasks) {
            final String localUid = model.getTaskUid();
            TaskService.getInstance().sendNewTaskToServer(model, new TaskService.TaskCreationListener() {
-             @Override public void taskCreatedLocally(TaskModel task) {
+             @Override public void taskCreatedLocally(final TaskModel task) {
                RealmUtils.saveDataToRealm(task).subscribe(new Action1() {
                  @Override public void call(Object o) {
-
+                   RealmUtils.removeObjectFromDatabase(TaskModel.class, "taskUid", localUid);
                  }
                });
-               RealmUtils.removeObjectFromDatabase(TaskModel.class, "taskUid", localUid);
                System.out.println("TASK CREATED" + task.toString());
              }
 
@@ -315,6 +314,7 @@ public class NetworkUtils {
   private static void sendTaskActions(){
     Map<String, Object> map1 = new HashMap<>();
     map1.put("isActionLocal", true);
+    map1.put("isLocal",false);
     RealmUtils.loadListFromDB(TaskModel.class,map1).subscribe(new Action1<List<TaskModel>>() {
       @Override
       public void call(List<TaskModel> tasks) {
