@@ -171,7 +171,7 @@ public class RealmUtils {
                         subscriber.onCompleted();
                         realm.close();
                     }
-                }).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread());
+                }).subscribeOn(Schedulers.computation()).observeOn(AndroidSchedulers.mainThread());
         return observable;
     }
 

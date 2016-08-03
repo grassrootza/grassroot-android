@@ -53,7 +53,7 @@ public class GroupSettingsActivity extends PortraitActivity implements
         Group groupPassed = getIntent().getParcelableExtra(GroupConstants.OBJECT_FIELD);
 
         if (groupPassed == null) {
-            throw new UnsupportedOperationException("Error! Group settings activity called without valid group");
+            throw new UnsupportedOperationException("Error! Group settings activityo called without valid group");
         }
 
         if (!groupPassed.getPermissionsList().contains(GroupConstants.PERM_GROUP_SETTNGS)) {

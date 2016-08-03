@@ -403,6 +403,8 @@ public class GroupService {
                 m.composeMemberGroupUid();
                 RealmUtils.saveDataToRealm(m).subscribe(); // todo : make sure we aren't
               }
+              RealmUtils.saveGroupToRealm(serverCall.body().getGroups().first());
+              EventBus.getDefault().post(new GroupEditedEvent(null,null,groupUid,null));
               subscriber.onNext(NetworkUtils.SAVED_SERVER);
               subscriber.onCompleted();
             } else {
@@ -427,7 +429,9 @@ public class GroupService {
 		RealmUtils.saveDataToRealm(members).subscribe();
 		Group group = RealmUtils.loadGroupFromDB(groupUid);
 		group.setEditedLocal(true);
-		RealmUtils.saveGroupToRealm(group);
+        group.setGroupMemberCount(group.getGroupMemberCount()+members.size());
+      RealmUtils.saveGroupToRealm(group);
+      EventBus.getDefault().post(new GroupEditedEvent(null,null,groupUid,null));
 	}
 
   public Observable removeGroupMembers(final String groupUid, final Set<String> membersToRemoveUIDs) {
@@ -469,6 +473,10 @@ public class GroupService {
     for (String memberUid : memberUids) {
       final String memberGroupUid = memberUid + groupUid;
       RealmUtils.removeObjectFromDatabase(Member.class, "memberGroupUid", memberGroupUid);
+      Group group = RealmUtils.loadGroupFromDB(groupUid);
+      group.setGroupMemberCount(group.getGroupMemberCount()-memberUids.size());
+      RealmUtils.saveGroupToRealm(group);
+      EventBus.getDefault().post(new GroupEditedEvent(null,null,groupUid,null));
     }
   }
 
