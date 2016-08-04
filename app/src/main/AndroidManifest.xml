@@ -2,242 +2,250 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="org.grassroot.android">
 
-  <supports-screens
-      android:anyDensity="true"
-      android:largeScreens="true"
-      android:normalScreens="true"
-      android:resizeable="true"
-      android:smallScreens="true"
-      android:xlargeScreens="true"/>
+    <supports-screens
+        android:anyDensity="true"
+        android:largeScreens="true"
+        android:normalScreens="true"
+        android:resizeable="true"
+        android:smallScreens="true"
+        android:xlargeScreens="true" />
 
-  <uses-permission android:name="android.permission.INTERNET"/>
-  <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
-  <uses-permission android:name="android.permission.READ_CONTACTS"/>
-  <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
-  <uses-permission android:name = "android.permission.READ_EXTERNAL_STORAGE"/>
-  <uses-permission android:name = "android.permission.WRITE_EXTERNAL_STORAGE"/>
-  <uses-permission android:name="android.permission.GET_TASKS"/>
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.READ_CONTACTS" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.GET_TASKS" />
 
-  <!-- todo : narrow down which of these are truly needed -->
-  <uses-permission android:name="android.permission.READ_SMS"/>
-  <uses-permission android:name="android.permission.RECEIVE_SMS"/>
-  <uses-permission android:name="android.permission.GET_ACCOUNTS"/>
-  <uses-permission android:name="android.permission.VIBRATE"/>
+    <!-- todo : narrow down which of these are truly needed -->
+    <uses-permission android:name="android.permission.READ_SMS" />
+    <uses-permission android:name="android.permission.RECEIVE_SMS" />
+    <uses-permission android:name="android.permission.GET_ACCOUNTS" />
+    <uses-permission android:name="android.permission.VIBRATE" />
 
-  <permission
-      android:name="org.grassroot.android.permission.C2D_MESSAGE"
-      android:protectionLevel="signature"/>
+    <permission
+        android:name="org.grassroot.android.permission.C2D_MESSAGE"
+        android:protectionLevel="signature" />
 
-  <uses-permission android:name="com.google.android.c2dm.permission.RECEIVE"/>
-  <uses-permission android:name="org.grassroot.android.permission.C2D_MESSAGE"/>
-  <uses-permission android:name="android.permission.WAKE_LOCK"/>
+    <uses-permission android:name="com.google.android.c2dm.permission.RECEIVE" />
+    <uses-permission android:name="org.grassroot.android.permission.C2D_MESSAGE" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
 
-  <application
-      android:name=".services.ApplicationLoader"
-      android:allowBackup="true"
-      android:icon="@drawable/app_icon"
-      android:label="@string/app_name"
-      android:theme="@style/AppTheme">
-
-    <meta-data
-        android:name="io.fabric.ApiKey"
-        android:value="a7c7f0c500c90b9563ff8801718ab0b391792bc3"/>
-
-    <receiver
-        android:name="com.google.android.gms.gcm.GcmReceiver"
-        android:exported="true"
-        android:permission="com.google.android.c2dm.permission.SEND">
-      <intent-filter>
-        <action android:name="com.google.android.c2dm.intent.RECEIVE"/>
-        <action android:name="com.google.android.c2dm.intent.REGISTRATION"/>
-
-        <category android:name="org.grassroot.android"/>
-      </intent-filter>
-    </receiver>
-
-    <service android:name=".services.GcmRegistrationService"/>
-
-    <service
-        android:name=".services.GcmListenerService"
-        android:enabled="true"
-        android:exported="false"
-        android:stopWithTask="false"
-        >
-      <intent-filter>
-        <action android:name="com.google.android.c2dm.intent.RECEIVE"/>
-      </intent-filter>
-    </service>
-
-    <service
-        android:name=".services.InstanceIDListenerService"
-        android:exported="false">
-      <intent-filter>
-        <action android:name="com.google.android.gms.iid.InstanceID"/>
-      </intent-filter>
-    </service>
-
-    <service
-        android:name=".services.NotificationUpdateService"
-        android:enabled="true"
-        android:exported="true"/>
-
-    <!-- Core activities -->
-
-    <activity
-        android:name=".activities.StartActivity"
-        android:exported="true"
-        android:launchMode="singleTop"
-        android:noHistory="true">
-      <intent-filter>
-        <action android:name="android.intent.action.MAIN"/>
-        <category android:name="android.intent.category.LAUNCHER"/>
-      </intent-filter>
-    </activity>
-
-    <activity
-        android:name=".activities.IntroActivity"
-        android:configChanges="keyboard|keyboardHidden|orientation|screenSize"
-        android:noHistory="true"/>
-
-    <activity
-        android:name=".activities.LoginRegisterActivity"
-        android:windowSoftInputMode="stateVisible|adjustPan"
-        android:configChanges="keyboard|keyboardHidden|orientation|screenSize"/>
-
-    <activity
-        android:name=".activities.NoGroupWelcomeActivity"
-        android:configChanges="keyboardHidden|orientation"
-        android:launchMode="singleTask"
-        android:screenOrientation="portrait"
-        android:label="@string/title_activity_nogroup_welcome"/>
-
-    <activity
-        android:name=".activities.HomeScreenActivity"
-        android:configChanges="keyboardHidden|orientation"
+    <application
+        android:name=".services.ApplicationLoader"
+        android:allowBackup="true"
+        android:icon="@drawable/app_icon"
         android:label="@string/app_name"
-        android:launchMode="singleTask"
-        android:screenOrientation="portrait"/>
-
-    <activity
-        android:name=".activities.GroupTasksActivity"
-        android:label="@string/title_activity_group_tasks"
-        android:parentActivityName=".activities.HomeScreenActivity"
         android:theme="@style/AppTheme">
-      <meta-data
-        android:name="android.support.PARENT_ACTIVITY"
-        android:value=".activities.HomeScreenActivity" />
-    </activity>
 
-    <!-- Group management activities -->
-    <activity
-        android:name=".activities.CreateGroupActivity"
-        android:label="@string/title_activity_create__group"
-        android:windowSoftInputMode="adjustPan"/>
-    <activity
-        android:name=".activities.AddMembersActivity"
-        android:label="@string/title_activity_add_members"
-        android:screenOrientation="portrait"/>
-    <activity
-        android:name=".activities.RemoveMembersActivity"
-        android:label="@string/title_activity_remove_members"
-        android:parentActivityName=".activities.GroupTasksActivity">
-      <!-- todo: reorder to home, possibly -->
-      <meta-data
-          android:name="android.support.PARENT_ACTIVITY"
-          android:value=".activities.GroupTasksActivity" />
-    </activity>
-
-    <activity
-        android:name=".activities.GroupMembersActivity"
-        android:label="@string/title_activity_group_members"
-        android:parentActivityName=".activities.HomeScreenActivity">
         <meta-data
-            android:name="android.support.PARENT_ACTIVITY"
-            android:value=".activities.HomeScreenActivity" />
-    </activity>
+            android:name="io.fabric.ApiKey"
+            android:value="a7c7f0c500c90b9563ff8801718ab0b391792bc3" />
 
-    <activity
-        android:name=".activities.GroupSettingsActivity"
-        android:label="@string/title_activity_group_settings"
-        android:parentActivityName=".activities.GroupTasksActivity">
-        <meta-data
-          android:name="android.support.PARENT_ACTIVITY"
-          android:value=".activities.GroupTasksActivity" />
-    </activity>
+        <receiver
+            android:name="com.google.android.gms.gcm.GcmReceiver"
+            android:exported="true"
+            android:permission="com.google.android.c2dm.permission.SEND">
+            <intent-filter>
+                <action android:name="com.google.android.c2dm.intent.RECEIVE" />
+                <action android:name="com.google.android.c2dm.intent.REGISTRATION" />
 
-    <activity
-        android:name=".activities.GroupSearchActivity"
-        android:label="@string/title_activity_join__request"/>
+                <category android:name="org.grassroot.android" />
+            </intent-filter>
+        </receiver>
 
-    <!-- Contact book and related activities -->
-    <activity
-        android:name=".activities.AddContactManually"
-        android:label="@string/title_activity_add_contact_manually"
-        android:theme="@style/AppTheme"/>
+        <service android:name=".services.GcmRegistrationService" />
 
-    <!-- General task activities -->
-    <activity
-        android:name=".activities.ViewTaskActivity"
-        android:label="@string/title_activity_view_task"
-        android:launchMode="singleTop"
-        android:parentActivityName=".activities.StartActivity"
-        android:theme="@style/AppTheme">
-      <intent-filter>
-        <action android:name="NOTIFICATION"/>
-        <category android:name="android.intent.category.DEFAULT"/>
-      </intent-filter>
-      <meta-data
-          android:name="android.support.PARENT_ACTIVITY"
-          android:value=".activities.StartActivity"/>
-    </activity>
+        <service
+            android:name=".services.GcmListenerService"
+            android:enabled="true"
+            android:exported="false"
+            android:stopWithTask="false">
+            <intent-filter>
+                <action android:name="com.google.android.c2dm.intent.RECEIVE" />
+            </intent-filter>
+        </service>
 
-    <!-- Meeting related activities -->
+        <service
+            android:name=".services.InstanceIDListenerService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.google.android.gms.iid.InstanceID" />
+            </intent-filter>
+        </service>
 
-    <activity
-        android:name=".activities.CreateMeetingActivity"
-        android:label="@string/cmtg_title"
-        android:theme="@style/AppTheme"
-        android:windowSoftInputMode="adjustNothing"/>
+        <service
+            android:name=".services.NotificationUpdateService"
+            android:enabled="true"
+            android:exported="true" />
 
-    <activity
-        android:name=".activities.EditTaskActivity"
-        android:theme="@style/AppTheme"
-        android:windowSoftInputMode="adjustNothing"/>
+        <!-- Core activities -->
 
-    <!-- Vote related activities -->
+        <activity
+            android:name=".activities.StartActivity"
+            android:exported="true"
+            android:launchMode="singleTop"
+            android:noHistory="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
 
-    <activity
-        android:name=".activities.CreateVoteActivity"
-        android:label="@string/title_activity_create_vote"
-        android:theme="@style/AppTheme"
-        android:windowSoftInputMode="adjustNothing"/>
+        <activity
+            android:name=".activities.IntroActivity"
+            android:configChanges="keyboard|keyboardHidden|orientation|screenSize"
+            android:noHistory="true" />
 
-    <!-- Todo related activities -->
-    <activity
-        android:name=".activities.CreateTodoActivity"
-        android:label="@string/ctodo_title"
-        android:theme="@style/AppTheme"
-        android:windowSoftInputMode="adjustNothing"/>
+        <activity
+            android:name=".activities.LoginRegisterActivity"
+            android:configChanges="keyboard|keyboardHidden|orientation|screenSize"
+            android:windowSoftInputMode="stateVisible|adjustPan" />
 
-    <!-- Confirmation / done screen -->
-    <activity
-        android:name=".activities.ActionCompleteActivity"
-        android:label="@string/title_activity_action_completed"
-        android:theme="@style/AppTheme"
-        android:configChanges="orientation|keyboardHidden"/>
+        <activity
+            android:name=".activities.NoGroupWelcomeActivity"
+            android:configChanges="keyboardHidden|orientation"
+            android:label="@string/title_activity_nogroup_welcome"
+            android:launchMode="singleTask"
+            android:screenOrientation="portrait" />
 
-    <!-- Navigation drawer / system activities -->
-    <activity android:name=".activities.FAQActivity"/>
+        <activity
+            android:name=".activities.HomeScreenActivity"
+            android:configChanges="keyboardHidden|orientation"
+            android:label="@string/app_name"
+            android:launchMode="singleTask"
+            android:screenOrientation="portrait" />
 
-    <activity android:name=".activities.ProfileSettingsActivity"/>
-    <activity android:name=".activities.GroupAvatarActivity"/>
+        <activity
+            android:name=".activities.GroupTasksActivity"
+            android:label="@string/title_activity_group_tasks"
+            android:parentActivityName=".activities.HomeScreenActivity"
+            android:theme="@style/AppTheme">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".activities.HomeScreenActivity" />
+        </activity>
 
-    <receiver android:name=".receivers.NetworkConnectivityRecevier">
-      <intent-filter>
-        <action android:name="android.net.conn.CONNECTIVITY_CHANGE"/>
-      </intent-filter>
-    </receiver>
+        <!-- Group management activities -->
+        <activity
+            android:name=".activities.CreateGroupActivity"
+            android:label="@string/title_activity_create__group"
+            android:windowSoftInputMode="adjustPan" />
+        <activity
+            android:name=".activities.AddMembersActivity"
+            android:label="@string/title_activity_add_members"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".activities.RemoveMembersActivity"
+            android:label="@string/title_activity_remove_members"
+            android:parentActivityName=".activities.GroupTasksActivity">
+            <!-- todo: reorder to home, possibly -->
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".activities.GroupTasksActivity" />
+        </activity>
 
-  </application>
+        <activity
+            android:name=".activities.GroupMembersActivity"
+            android:label="@string/title_activity_group_members"
+            android:parentActivityName=".activities.HomeScreenActivity">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".activities.HomeScreenActivity" />
+        </activity>
+
+        <activity
+            android:name=".activities.GroupSettingsActivity"
+            android:label="@string/title_activity_group_settings"
+            android:parentActivityName=".activities.GroupTasksActivity">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".activities.GroupTasksActivity" />
+        </activity>
+
+        <activity
+            android:name=".activities.GroupSearchActivity"
+            android:label="@string/title_activity_join__request" />
+
+        <!-- Contact book and related activities -->
+        <activity
+            android:name=".activities.AddContactManually"
+            android:label="@string/title_activity_add_contact_manually"
+            android:theme="@style/AppTheme" />
+
+        <!-- General task activities -->
+        <activity
+            android:name=".activities.ViewTaskActivity"
+            android:label="@string/title_activity_view_task"
+            android:launchMode="singleTop"
+            android:parentActivityName=".activities.StartActivity"
+            android:theme="@style/AppTheme">
+            <intent-filter>
+                <action android:name="NOTIFICATION" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".activities.StartActivity" />
+        </activity>
+
+        <!-- Meeting related activities -->
+
+        <activity
+            android:name=".activities.CreateMeetingActivity"
+            android:label="@string/cmtg_title"
+            android:theme="@style/AppTheme"
+            android:windowSoftInputMode="adjustNothing" />
+
+        <activity
+            android:name=".activities.EditTaskActivity"
+            android:theme="@style/AppTheme"
+            android:windowSoftInputMode="adjustNothing" />
+
+        <!-- Vote related activities -->
+
+        <activity
+            android:name=".activities.CreateVoteActivity"
+            android:label="@string/title_activity_create_vote"
+            android:theme="@style/AppTheme"
+            android:windowSoftInputMode="adjustNothing" />
+
+        <!-- Todo related activities -->
+        <activity
+            android:name=".activities.CreateTodoActivity"
+            android:label="@string/ctodo_title"
+            android:theme="@style/AppTheme"
+            android:windowSoftInputMode="adjustNothing" />
+
+        <!-- Confirmation / done screen -->
+        <activity
+            android:name=".activities.ActionCompleteActivity"
+            android:configChanges="orientation|keyboardHidden"
+            android:label="@string/title_activity_action_completed"
+            android:theme="@style/AppTheme" />
+
+        <!-- Navigation drawer / system activities -->
+        <activity android:name=".activities.FAQActivity" />
+
+        <activity android:name=".activities.ProfileSettingsActivity" />
+        <activity android:name=".activities.GroupAvatarActivity" />
+
+        <service
+            android:name=".services.SyncService"
+            android:exported="true"
+            android:permission="com.google.android.gms.permission.BIND_NETWORK_TASK_SERVICE">
+            <intent-filter>
+                <action android:name="com.google.android.gms.gcm.ACTION_TASK_READY" />
+            </intent-filter>
+        </service>
+
+        <receiver android:name=".receivers.TaskManagerReceiver">
+            <intent-filter>
+                <action android:name="org.grassroot.android.ACTION_DONE"/>
+                <action android:name="org.grassroot.android.ACTION_START"/>
+            </intent-filter>
+        </receiver>
+    </application>
 
 </manifest>

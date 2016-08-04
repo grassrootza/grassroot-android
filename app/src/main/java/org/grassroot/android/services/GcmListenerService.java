@@ -130,9 +130,9 @@ public class GcmListenerService extends com.google.android.gms.gcm.GcmListenerSe
         });
   }
 
-  public boolean isAppIsInBackground(Context context) {
+  public static boolean isAppIsInBackground(Context context) {
     boolean isInBackground = true;
-    ActivityManager am = (ActivityManager) this.getSystemService(Context.ACTIVITY_SERVICE);
+    ActivityManager am = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
     if (Build.VERSION.SDK_INT > Build.VERSION_CODES.KITKAT_WATCH) {
       List<ActivityManager.RunningAppProcessInfo> runningProcesses = am.getRunningAppProcesses();
       for (ActivityManager.RunningAppProcessInfo processInfo : runningProcesses) {
