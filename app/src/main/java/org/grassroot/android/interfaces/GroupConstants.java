@@ -42,6 +42,7 @@ public interface GroupConstants {
     String JOIN_REQUEST_APPROVE = "APPROVE";
     String JOIN_REQUEST_DENY = "DENY";
 
+    // names of default images
     String SOCIAL_MOVEMENT = "SOCIAL_MOVEMENT";
     String COMMUNITY_GROUP = "COMMUNITY_GROUP";
     String FAITH_GROUP = "FAITH_GROUP";

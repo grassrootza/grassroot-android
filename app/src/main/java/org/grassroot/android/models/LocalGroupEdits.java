@@ -19,6 +19,16 @@ public class LocalGroupEdits extends RealmObject {
 	private String revisedGroupName;
 	private RealmList<RealmString> membersToRemove;
 
+	private boolean changedImage;
+	private String changedImageName;
+
+	public boolean changedPublicPrivate; // was it changed
+	public boolean changedToPublic; // if yes, was it changed to public
+
+	public boolean closedJoinCode; // since opening locally is not possible, if this is true, we call close the code
+
+	private RealmList<RealmString> organizersToAdd;
+
 	public LocalGroupEdits() {
 
 	}
@@ -28,6 +38,11 @@ public class LocalGroupEdits extends RealmObject {
 		this.groupUid = referenceGroupUid;
 		this.membersToRemove = new RealmList<>();
 		this.revisedGroupName = "";
+		this.changedImage = false;
+		this.changedImageName = null;
+		this.changedPublicPrivate = false;
+		this.closedJoinCode = false;
+		this.organizersToAdd = new RealmList<>();
 	}
 
 	public String getGroupEditUid() {
@@ -60,5 +75,57 @@ public class LocalGroupEdits extends RealmObject {
 
 	public void setMembersToRemove(RealmList<RealmString> membersToRemove) {
 		this.membersToRemove = membersToRemove;
+	}
+
+	public boolean isChangedImage() {
+		return changedImage;
+	}
+
+	public void setChangedImage(boolean changedImage) {
+		this.changedImage = changedImage;
+	}
+
+	public String getChangedImageName() {
+		return changedImageName;
+	}
+
+	public void setChangedImageName(String changedImageName) {
+		this.changedImageName = changedImageName;
+	}
+
+	public boolean isChangedPublicPrivate() {
+		return changedPublicPrivate;
+	}
+
+	public void setChangedPublicPrivate(boolean changedPublicPrivate) {
+		this.changedPublicPrivate = changedPublicPrivate;
+	}
+
+	public boolean isChangedToPublic() {
+		return changedToPublic;
+	}
+
+	public void setChangedToPublic(boolean changedToPublic) {
+		this.changedToPublic = changedToPublic;
+	}
+
+	public boolean isClosedJoinCode() {
+		return closedJoinCode;
+	}
+
+	public void setClosedJoinCode(boolean closedJoinCode) {
+		this.closedJoinCode = closedJoinCode;
+	}
+
+	public RealmList<RealmString> getOrganizersToAdd() {
+		return organizersToAdd;
+	}
+
+	public void setOrganizersToAdd(RealmList<RealmString> organizersToAdd) {
+		this.organizersToAdd = organizersToAdd;
+	}
+
+	public void addOrganizer(String memberUid) {
+		organizersToAdd.add(new RealmString(memberUid));
 	}
 }

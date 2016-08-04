@@ -151,7 +151,7 @@ public class Group extends RealmObject implements Parcelable, Comparable<Group> 
   public void setJoinCode(String joinCode) { this.joinCode = joinCode; }
 
   public boolean hasJoinCode() {
-    return !TextUtils.isEmpty(joinCode);
+    return !(TextUtils.isEmpty(joinCode) || GroupConstants.NO_JOIN_CODE.equals(joinCode)) ;
   }
 
   public boolean isHasTasks() {

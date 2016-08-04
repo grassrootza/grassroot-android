@@ -27,18 +27,17 @@ import com.squareup.picasso.NetworkPolicy;
 import com.squareup.picasso.Picasso;
 
 import org.grassroot.android.R;
-import org.grassroot.android.events.GroupPictureChangedEvent;
 import org.grassroot.android.fragments.ImageDetailFragment;
 import org.grassroot.android.interfaces.GroupConstants;
 import org.grassroot.android.models.Group;
 import org.grassroot.android.services.GroupService;
 import org.grassroot.android.utils.CircularImageTransformer;
 import org.grassroot.android.utils.ImageUtils;
-import org.greenrobot.eventbus.EventBus;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
+import rx.Subscriber;
 
 import static android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
 
@@ -262,43 +261,43 @@ public class GroupAvatarActivity extends PortraitActivity {
             final boolean defaultImageChanged = defaultSelectedRes != group.getDefaultImageRes();
             if (defaultImageChanged || group.hasCustomImage()) {
                 progressBar.setVisibility(View.VISIBLE);
-                GroupService.getInstance().changeGroupDefaultImage(group, defaultSelected, defaultSelectedRes, new GroupService.GroupEditingListener() {
+                GroupService.getInstance().changeGroupDefaultImage(group, defaultSelected, defaultSelectedRes, null).
+                    subscribe(new Subscriber<String>() {
+                        @Override
+                        public void onCompleted() { }
+
+                        @Override
+                        public void onError(Throwable e) {
+                            progressBar.setVisibility(View.GONE);
+                            Snackbar.make(rootView, R.string.gp_update_failure, Snackbar.LENGTH_LONG).show();
+                        }
+
+                        @Override
+                        public void onNext(String s) {
+                            progressBar.setVisibility(View.GONE);
+                            finish();
+                        }
+                    });
+            }
+        } else if (customImageChanged) {
+            progressBar.setVisibility(View.VISIBLE);
+            GroupService.getInstance().uploadCustomImage(group.getGroupUid(), compressedFilePath, mimeType, null)
+                .subscribe(new Subscriber<String>() {
                     @Override
-                    public void apiCallComplete() {
-                        progressBar.setVisibility(View.GONE);
-                        EventBus.getDefault().post(new GroupPictureChangedEvent());
-                        finish();
-                    }
+                    public void onCompleted() {}
 
                     @Override
-                    public void apiCallFailed(String tag, String offOrOnline) {
+                    public void onError(Throwable e) {
                         progressBar.setVisibility(View.GONE);
                         Snackbar.make(rootView, R.string.gp_update_failure, Snackbar.LENGTH_LONG).show();
                     }
 
                     @Override
-                    public void joinCodeOpened(String joinCode) { }
+                    public void onNext(String s) {
+                        progressBar.setVisibility(View.GONE);
+                        finish();
+                    }
                 });
-            }
-        } else if (customImageChanged) {
-            progressBar.setVisibility(View.VISIBLE);
-            GroupService.getInstance().uploadCustomImage(group.getGroupUid(), compressedFilePath, mimeType, new GroupService.GroupEditingListener() {
-                @Override
-                public void apiCallComplete() {
-                    progressBar.setVisibility(View.GONE);
-                    EventBus.getDefault().post(new GroupPictureChangedEvent());
-                    finish();
-                }
-
-                @Override
-                public void apiCallFailed(String tag, String offOrOnline) {
-                    progressBar.setVisibility(View.GONE);
-                    Snackbar.make(rootView, R.string.gp_update_failure, Snackbar.LENGTH_LONG).show();
-                }
-
-                @Override
-                public void joinCodeOpened(String joinCode) {}
-            });
         }
     }
 

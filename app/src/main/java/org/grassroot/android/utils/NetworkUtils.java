@@ -128,14 +128,20 @@ public class NetworkUtils {
             @Override
             public void onResponse(Call<GenericResponse> call, Response<GenericResponse> response) {
               if (response.isSuccessful()) {
-                setOnline();
-                EventBus.getDefault().post(new OnlineOfflineToggledEvent(true));
-                if (listener != null) {
-                  listener.connectionEstablished();
-                }
-                if (sendQueue) {
-                  syncLocalAndServer(context);
-                }
+                PreferenceObject prefs = RealmUtils.loadPreferencesFromDB();
+                prefs.setOnlineStatus(ONLINE_DEFAULT);
+                RealmUtils.saveDataToRealm(prefs).subscribe(new Action1() {
+                  @Override
+                  public void call(Object o) {
+                    if (listener != null) {
+                      listener.connectionEstablished();
+                    }
+                    EventBus.getDefault().post(new OnlineOfflineToggledEvent(true));
+                    if (sendQueue) {
+                      syncLocalAndServer(context);
+                    }
+                  }
+                });
               } else {
                 setOnlineFailed();
                 EventBus.getDefault().post(new ConnectionFailedEvent(SERVER_ERROR));

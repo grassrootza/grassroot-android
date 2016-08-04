@@ -277,7 +277,10 @@ public class GrassrootRestService {
     @POST("group/edit/multi/{phoneNumber}/{code}/{groupUid}")
     Call<GroupResponse> combinedGroupEdits(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
                                            @Path("groupUid") String groupUid, @Query("name") String newName,
-                                           @Query("membersToRemove") List<String> memberUids);
+                                           @Query("resetImage") boolean resetGroupImage, @Query("dfltImageName") String imageName,
+                                           @Query("changePublicPrivate") boolean changePubPriv, @Query("isPublic") boolean changeToPublic,
+                                           @Query("closeJoinCode") boolean closeJoinCode, @Query("membersToRemove") List<String> memberUids,
+                                           @Query("organizersToAdd") List<String> newOrganizerUids);
 
         /*
         SECTION: Fetch tasks, and task details

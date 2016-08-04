@@ -19,9 +19,16 @@ public class GroupEditedEvent {
     public static final String CHANGED_OFFLINE = "changed_offline";
 
     public final String editAction;
-    public final String typeOfSave;
+    public String typeOfSave;
     public final String groupUid;
     public final String auxString;
+
+    public GroupEditedEvent(String editAction, String groupUid) {
+        this.editAction = editAction;
+        this.groupUid = groupUid;
+        this.typeOfSave = "";
+        this.auxString = "";
+    }
 
     public GroupEditedEvent(String editAction, String typeOfSave, String groupUid, String auxString) {
         this.editAction = editAction;
@@ -29,6 +36,12 @@ public class GroupEditedEvent {
         this.groupUid = groupUid;
         this.auxString = auxString;
     }
+
+    public void setTypeOfSave(String typeOfSave) {
+        this.typeOfSave = typeOfSave;
+    }
+
+
 
     @Override
     public String toString() {

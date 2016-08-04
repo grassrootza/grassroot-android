@@ -27,12 +27,13 @@ import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import rx.Subscriber;
 
 /**
  * Created by luke on 2016/07/15.
  */
 public class GroupSettingsActivity extends PortraitActivity implements
-        GroupSettingsMainFragment.GroupSettingsListener, GroupService.GroupEditingListener {
+        GroupSettingsMainFragment.GroupSettingsListener {
 
     private static final String TAG = GroupSettingsActivity.class.getSimpleName();
 
@@ -133,10 +134,25 @@ public class GroupSettingsActivity extends PortraitActivity implements
 
     private void addOrganizer(final String memberUid) {
         showProgress();
-        GroupService.getInstance().addOrganizer(group, memberUid, this);
-        getSupportFragmentManager().beginTransaction()
-                .replace(R.id.gsettings_fragment_holder, mainFragment, "main")
-                .commit();
+        GroupService.getInstance().addOrganizer(group.getGroupUid(), memberUid, null)
+            .subscribe(new Subscriber<String>() {
+            @Override
+            public void onCompleted() { }
+
+            @Override
+            public void onError(Throwable e) {
+                dismissProgress();
+                // todo : show a snackbar
+            }
+
+            @Override
+            public void onNext(String s) {
+                dismissProgress();
+                getSupportFragmentManager().beginTransaction()
+                    .replace(R.id.gsettings_fragment_holder, mainFragment, "main")
+                    .commit();
+            }
+        });
     }
 
     // todo : move the dialog into the main fragment?
@@ -187,16 +203,4 @@ public class GroupSettingsActivity extends PortraitActivity implements
         }
     }
 
-    @Override
-    public void apiCallComplete() {
-        dismissProgress();
-    }
-
-    @Override
-    public void apiCallFailed(String tag, String offOrOnline) {
-        dismissProgress();
-    }
-
-    @Override
-    public void joinCodeOpened(String joinCode) { }
 }

@@ -19,6 +19,7 @@ import java.util.Set;
 import org.grassroot.android.events.GroupDeletedEvent;
 import org.grassroot.android.events.GroupEditErrorEvent;
 import org.grassroot.android.events.GroupEditedEvent;
+import org.grassroot.android.events.GroupPictureChangedEvent;
 import org.grassroot.android.events.GroupsRefreshedEvent;
 import org.grassroot.android.events.JoinRequestReceived;
 import org.grassroot.android.interfaces.GroupConstants;
@@ -487,20 +488,19 @@ public class GroupService {
 
   /* METHODS FOR EDITING GROUP */
 
-  public interface GroupEditingListener {
-    void joinCodeOpened(final String joinCode);
-
-    void apiCallComplete();
-
-    void apiCallFailed(String tag, String offOrOnline);
-  }
-
   private LocalGroupEdits generateLocalGroupEditObject(final String groupUid) {
     LocalGroupEdits existingEdits = RealmUtils.loadObjectFromDB(LocalGroupEdits.class, "groupUid", groupUid);
     if (existingEdits == null) {
       existingEdits = new LocalGroupEdits(groupUid);
     }
     return existingEdits;
+  }
+
+  private void removeLocalEditsIfFound(final String groupUid) {
+    LocalGroupEdits existingEdits = RealmUtils.loadObjectFromDB(LocalGroupEdits.class, "groupUid", groupUid);
+    if (existingEdits != null) {
+      RealmUtils.removeObjectFromDatabase(LocalGroupEdits.class, "groupUid", groupUid);
+    }
   }
 
   public Observable<String> sendLocalEditsToServer(final LocalGroupEdits existingEdits, Scheduler observingThread) {
@@ -510,18 +510,13 @@ public class GroupService {
         if (existingEdits == null || !NetworkUtils.isOnline()) {
           subscriber.onCompleted();
         } else {
-          final String groupUid = existingEdits.getGroupUid();
-          final String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
-          final String code = RealmUtils.loadPreferencesFromDB().getToken();
-          Call<GroupResponse> editCall = GrassrootRestService.getInstance().getApi()
-              .combinedGroupEdits(phoneNumber, code, groupUid, existingEdits.getRevisedGroupName(),
-                  RealmUtils.convertListOfRealmStringInListOfString(existingEdits.getMembersToRemove()));
           try {
-            Response<GroupResponse> response = editCall.execute();
+            Response<GroupResponse> response = generateGroupEditSyncCall(existingEdits).execute();
             if (response.isSuccessful()) {
               final Group updatedGroup = response.body().getGroups().first();
+              final String groupUid = existingEdits.getGroupUid();
               RealmUtils.saveGroupToRealm(updatedGroup);
-              RealmUtils.removeObjectFromDatabase(LocalGroupEdits.class, "groupUid", groupUid);
+              removeLocalEditsIfFound(groupUid);
               subscriber.onNext(NetworkUtils.SAVED_SERVER);
               EventBus.getDefault().post(new GroupEditedEvent(GroupEditedEvent.MULTIPLE_TO_SERVER,
                   GroupEditedEvent.CHANGED_ONLINE, groupUid, ""));
@@ -530,6 +525,7 @@ public class GroupService {
               throw new ApiCallException(NetworkUtils.SERVER_ERROR, response.body().getMessage());
             }
           } catch (IOException e) {
+            NetworkUtils.setOnlineFailed();
             throw new ApiCallException(NetworkUtils.CONNECT_ERROR);
           }
         }
@@ -538,247 +534,342 @@ public class GroupService {
     return observable;
   }
 
-  /* FIRST, METHODS FOR ADJUSTING GROUP IMAGE */
-
-  public void changeGroupDefaultImage(final Group group, final String defaultImage, final int defaultImageRes,
-                                      final GroupEditingListener listener) {
-    group.setDefaultImage(defaultImage);
-    group.setDefaultImageRes(defaultImageRes);
-    RealmUtils.saveGroupToRealm(group);
-
-    final String mobile = RealmUtils.loadPreferencesFromDB().getMobileNumber();
-    final String token = RealmUtils.loadPreferencesFromDB().getToken();
-
-    GrassrootRestService.getInstance().getApi().changeDefaultImage(mobile, token, group.getGroupUid(),
-            defaultImage).enqueue(new Callback<GroupResponse>() {
-      @Override
-      public void onResponse(Call<GroupResponse> call, Response<GroupResponse> response) {
-        if (response.isSuccessful()) {
-          RealmUtils.saveGroupToRealm(response.body().getGroups().first()); // todo : reexamine whether we want call above
-          listener.apiCallComplete();
-        } else {
-          listener.apiCallFailed(GroupEditedEvent.IMAGE_TO_DEFAULT, Constant.ONLINE);
-        }
-      }
-
-      @Override
-      public void onFailure(Call<GroupResponse> call, Throwable t) {
-        listener.apiCallFailed(GroupEditedEvent.IMAGE_TO_DEFAULT, Constant.OFFLINE);
-      }
-    });
-  }
-
-  public void uploadCustomImage(final String groupUid, final String compressedFilePath, final String mimeType, final GroupEditingListener listener) {
-    final File file = new File(compressedFilePath);
-    Log.e(TAG, "file size : " + (file.length() / 1024));
-    RequestBody requestFile = RequestBody.create(MediaType.parse(mimeType), file);
-    MultipartBody.Part image = MultipartBody.Part.createFormData("image", file.getName(), requestFile);
-
+  private Call<GroupResponse> generateGroupEditSyncCall(LocalGroupEdits edits) {
+    final String groupUid = edits.getGroupUid();
     final String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
     final String code = RealmUtils.loadPreferencesFromDB().getToken();
+    return GrassrootRestService.getInstance().getApi()
+        .combinedGroupEdits(phoneNumber, code, groupUid,
+            edits.getRevisedGroupName(), edits.isChangedImage(), edits.getChangedImageName(),
+            edits.isChangedPublicPrivate(), edits.isChangedToPublic(), edits.isClosedJoinCode(),
+            RealmUtils.convertListOfRealmStringInListOfString(edits.getMembersToRemove()),
+            RealmUtils.convertListOfRealmStringInListOfString(edits.getOrganizersToAdd()));
+  }
 
-    GrassrootRestService.getInstance().getApi().uploadImage(phoneNumber, code, groupUid, image).enqueue(new Callback<GroupResponse>() {
+  /* FIRST, METHODS FOR ADJUSTING GROUP IMAGE */
+
+	/**
+     * Method to reset a group to one of the custom images
+     * @param group The group being changed
+     * @param defaultImage The standardized name of the image (from GroupConstants)
+     * @param defaultImageRes The R id of the image
+     * @param observingThread The thread observing the operation (passing null defaults to main thread)
+     * @return
+	 */
+  public Observable<String> changeGroupDefaultImage(final Group group, final String defaultImage, final int defaultImageRes, Scheduler observingThread) {
+    observingThread = (observingThread == null) ? AndroidSchedulers.mainThread() : observingThread;
+    return Observable.create(new Observable.OnSubscribe<String>() {
       @Override
-      public void onResponse(Call<GroupResponse> call, Response<GroupResponse> response) {
-        file.delete();
-        if (response.isSuccessful()) {
-          Group updatedGroup = response.body().getGroups().first();
-          RealmUtils.saveGroupToRealm(updatedGroup);
-          listener.apiCallComplete();
+      public void call(Subscriber<? super String> subscriber) {
+        group.setDefaultImage(defaultImage);
+        group.setDefaultImageRes(defaultImageRes);
+        RealmUtils.saveGroupToRealm(group);
+
+        final String groupUid = group.getGroupUid();
+        if (!NetworkUtils.isOnline()) {
+          storeImageChangeLocally(groupUid, defaultImage);
+          EventBus.getDefault().post(new GroupPictureChangedEvent());
+          subscriber.onNext(NetworkUtils.SAVED_OFFLINE_MODE);
+          subscriber.onCompleted();
         } else {
-          listener.apiCallFailed(GroupEditedEvent.IMAGE_UPLOADED, Constant.ONLINE);
+          try {
+            final String mobile = RealmUtils.loadPreferencesFromDB().getMobileNumber();
+            final String token = RealmUtils.loadPreferencesFromDB().getToken();
+            Response<GroupResponse> response = GrassrootRestService.getInstance().getApi()
+                .changeDefaultImage(mobile, token, groupUid, defaultImage)
+                .execute();
+            if (response.isSuccessful()) {
+              RealmUtils.saveDataToRealm(response.body().getGroups().first());
+              removeLocalEditsIfFound(groupUid);
+              EventBus.getDefault().post(new GroupPictureChangedEvent());
+              subscriber.onNext(NetworkUtils.SAVED_SERVER);
+              subscriber.onCompleted();
+            } else {
+              throw new ApiCallException(NetworkUtils.SERVER_ERROR, response.body().getMessage());
+            }
+          } catch (IOException e) {
+            NetworkUtils.setOnlineFailed();
+            storeImageChangeLocally(groupUid, defaultImage);
+            EventBus.getDefault().post(new GroupPictureChangedEvent());
+            throw new ApiCallException(NetworkUtils.CONNECT_ERROR);
+          }
         }
       }
+    }).subscribeOn(Schedulers.io()).observeOn(observingThread);
+  }
 
+  private void storeImageChangeLocally(final String groupUid, final String defaultImage) {
+    LocalGroupEdits editStore = generateLocalGroupEditObject(groupUid);
+    editStore.setChangedImage(true);
+    editStore.setChangedImageName(defaultImage);
+    RealmUtils.saveDataToRealm(editStore).subscribe();
+  }
+
+  public Observable<String> uploadCustomImage(final String groupUid, final String compressedFilePath,
+                                              final String mimeType, Scheduler observingThread) {
+    observingThread = (observingThread == null) ? AndroidSchedulers.mainThread() : observingThread;
+    return Observable.create(new Observable.OnSubscribe<String>() {
       @Override
-      public void onFailure(Call<GroupResponse> call, Throwable t) {
-        file.delete();
-        listener.apiCallFailed(GroupEditedEvent.IMAGE_UPLOADED, Constant.OFFLINE);
+      public void call(Subscriber<? super String> subscriber) {
+        if (!NetworkUtils.isOnline()) {
+          throw new ApiCallException(NetworkUtils.OFFLINE_SELECTED); // require online for this (maybe change later ...)
+        } else {
+
+          final File file = new File(compressedFilePath);
+          Log.d(TAG, "file size : " + (file.length() / 1024));
+          RequestBody requestFile = RequestBody.create(MediaType.parse(mimeType), file);
+          MultipartBody.Part image = MultipartBody.Part.createFormData("image", file.getName(), requestFile);
+
+          try {
+            final String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
+            final String code = RealmUtils.loadPreferencesFromDB().getToken();
+
+            Response<GroupResponse> response = GrassrootRestService.getInstance().getApi()
+                .uploadImage(phoneNumber, code, groupUid, image).execute();
+
+            file.delete();
+            if (response.isSuccessful()) {
+              RealmUtils.saveGroupToRealm(response.body().getGroups().first());
+              EventBus.getDefault().post(new GroupPictureChangedEvent());
+              subscriber.onNext(NetworkUtils.SAVED_SERVER);
+              subscriber.onCompleted();
+            } else {
+              throw new ApiCallException(NetworkUtils.SERVER_ERROR, response.body().getMessage());
+            }
+
+          } catch (IOException e) {
+            file.delete();
+            NetworkUtils.setOnlineFailed();
+            throw new ApiCallException(NetworkUtils.OFFLINE_ON_FAIL);
+          }
+        }
       }
-    });
+    }).subscribeOn(Schedulers.io()).observeOn(observingThread);
   }
 
-  public void renameGroup(final Group group, final String newName) {
-    final String groupUid = group.getGroupUid();
-    if (NetworkUtils.isOnline(ApplicationLoader.applicationContext)) {
-      final String mobileNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
-      final String code = RealmUtils.loadPreferencesFromDB().getToken();
-      GrassrootRestService.getInstance()
-          .getApi()
-          .renameGroup(mobileNumber, code, groupUid, newName)
-          .enqueue(new Callback<GenericResponse>() {
-            @Override
-            public void onResponse(Call<GenericResponse> call, Response<GenericResponse> response) {
-              if (response.isSuccessful()) {
-                saveRenamedGroupToDB(group, newName);
-                EventBus.getDefault()
-                    .post(new GroupEditedEvent(GroupEditedEvent.RENAMED,
-                        GroupEditedEvent.CHANGED_ONLINE, groupUid, newName));
-              } else {
-                EventBus.getDefault().post(new GroupEditErrorEvent(response.errorBody()));
-              }
+  // NB : this means must only ever be atomicity in here, i.e., don't call this method in sequence with others (else local edits deleted, and then ...)
+  public Observable<String> renameGroup(final String groupUid, final String newName, Scheduler observingThread) {
+    observingThread = (observingThread == null) ? AndroidSchedulers.mainThread() : observingThread;
+    return Observable.create(new Observable.OnSubscribe<String>() {
+      @Override
+      public void call(Subscriber<? super String> subscriber) {
+        Group group = RealmUtils.loadGroupFromDB(groupUid);
+        GroupEditedEvent event = new GroupEditedEvent(GroupEditedEvent.RENAMED, groupUid);
+        if (!NetworkUtils.isOnline()) {
+          saveRenamedGroupToDB(group, newName, true);
+          event.setTypeOfSave(NetworkUtils.SAVED_OFFLINE_MODE);
+          EventBus.getDefault().post(event);
+          subscriber.onNext(NetworkUtils.SAVED_OFFLINE_MODE);
+          subscriber.onCompleted();
+        } else {
+          try {
+            final String mobileNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
+            final String code = RealmUtils.loadPreferencesFromDB().getToken();
+            Response<GenericResponse> response = GrassrootRestService.getInstance().getApi()
+                .renameGroup(mobileNumber, code, groupUid, newName).execute();
+            if (response.isSuccessful()) {
+              saveRenamedGroupToDB(group, newName, false);
+              removeLocalEditsIfFound(groupUid);
+              event.setTypeOfSave(NetworkUtils.SAVED_SERVER);
+              EventBus.getDefault().post(event);
+              subscriber.onNext(NetworkUtils.SAVED_SERVER);
+              subscriber.onCompleted();
+            } else {
+              // don't save group, as likely permission error / will decouple from server
+              throw new ApiCallException(NetworkUtils.SERVER_ERROR, response.body().getMessage());
             }
-
-            @Override public void onFailure(Call<GenericResponse> call, Throwable t) {
-              EventBus.getDefault().post(new GroupEditErrorEvent(t));
-            }
-          });
-    } else {
-      // todo : put in a queue for later ...
-      saveRenamedGroupToDB(group, newName);
-      EventBus.getDefault()
-          .post(new GroupEditedEvent(GroupEditedEvent.RENAMED, GroupEditedEvent.CHANGED_OFFLINE,
-              groupUid, newName));
-    }
+          } catch (IOException e) {
+            saveRenamedGroupToDB(group, newName, true);
+            NetworkUtils.setOnlineFailed();
+            event.setTypeOfSave(NetworkUtils.SAVED_OFFLINE_MODE);
+            EventBus.getDefault().post(event);
+            throw new ApiCallException(NetworkUtils.CONNECT_ERROR);
+          }
+        }
+      }
+    }).subscribeOn(Schedulers.io()).observeOn(observingThread);
   }
 
-  private void saveRenamedGroupToDB(Group group, final String newName) {
+  private void saveRenamedGroupToDB(Group group, final String newName, boolean storeEditsForSync) {
     group.setGroupName(newName);
     group.setLastMajorChangeMillis(Utilities.getCurrentTimeInMillisAtUTC());
     group.setLastChangeType(GroupConstants.GROUP_MOD_OTHER);
     group.setDate(new Date());
     RealmUtils.saveGroupToRealm(group);
-  }
 
-  public void switchGroupPublicStatus(final Group group, final boolean isPublic,
-      final GroupEditingListener listener) {
-    final String groupUid = group.getGroupUid();
-    final String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
-    final String token = RealmUtils.loadPreferencesFromDB().getToken();
-    if (NetworkUtils.isOnline(ApplicationLoader.applicationContext)) {
-      GrassrootRestService.getInstance()
-          .getApi()
-          .switchGroupPublicPrivate(phoneNumber, token, groupUid, isPublic)
-          .enqueue(new Callback<GenericResponse>() {
-            @Override
-            public void onResponse(Call<GenericResponse> call, Response<GenericResponse> response) {
-              if (response.isSuccessful()) {
-                listener.apiCallComplete();
-                group.setDiscoverable(isPublic);
-                RealmUtils.saveGroupToRealm(group);
-                EventBus.getDefault()
-                    .post(new GroupEditedEvent(GroupEditedEvent.PUBLIC_STATUS_CHANGED,
-                        GroupEditedEvent.CHANGED_ONLINE, groupUid, String.valueOf(isPublic)));
-              } else {
-                EventBus.getDefault().post(new GroupEditErrorEvent(response.errorBody()));
-                listener.apiCallFailed(GroupEditedEvent.PUBLIC_STATUS_CHANGED, Constant.ONLINE);
-              }
-            }
-
-            @Override public void onFailure(Call<GenericResponse> call, Throwable t) {
-              EventBus.getDefault().post(new GroupEditErrorEvent(t));
-              listener.apiCallFailed(GroupEditedEvent.PUBLIC_STATUS_CHANGED, Constant.OFFLINE);
-            }
-          });
-    } else {
-      // todo : think about whether even want this to be possible offline
-      listener.apiCallFailed(GroupEditedEvent.PUBLIC_STATUS_CHANGED, Constant.OFFLINE);
+    if (storeEditsForSync) {
+      LocalGroupEdits edits = generateLocalGroupEditObject(group.getGroupUid());
+      edits.setRevisedGroupName(newName);
+      RealmUtils.saveDataToRealm(edits).subscribe();
     }
   }
 
-  public void closeJoinCode(final Group group, final GroupEditingListener listener) {
-    final String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
-    final String token = RealmUtils.loadPreferencesFromDB().getToken();
-    if (NetworkUtils.isOnline()) {
-      GrassrootRestService.getInstance()
-          .getApi()
-          .closeJoinCode(phoneNumber, token, group.getGroupUid())
-          .enqueue(new Callback<GenericResponse>() {
-            @Override
-            public void onResponse(Call<GenericResponse> call, Response<GenericResponse> response) {
-              if (response.isSuccessful()) {
-                listener.apiCallComplete();
-                EventBus.getDefault()
-                    .post(new GroupEditedEvent(GroupEditedEvent.JOIN_CODE_CLOSED,
-                        GroupEditedEvent.CHANGED_ONLINE, group.getGroupUid(),
-                        group.getGroupName()));
-              } else {
-                EventBus.getDefault().post(new GroupEditErrorEvent(response.errorBody()));
-                listener.apiCallFailed(GroupEditedEvent.JOIN_CODE_CLOSED, Constant.ONLINE);
-              }
+  public Observable<String> switchGroupPublicPrivate(final String groupUid, final boolean isPublic, Scheduler observingThread) {
+    observingThread = (observingThread == null) ? AndroidSchedulers.mainThread() : observingThread;
+    return Observable.create(new Observable.OnSubscribe<String>() {
+      @Override
+      public void call(Subscriber<? super String> subscriber) {
+        if (!NetworkUtils.isOnline()) {
+          storeSwitchPublicStatus(groupUid, isPublic, true);
+          subscriber.onNext(NetworkUtils.SAVED_OFFLINE_MODE);
+          subscriber.onCompleted();
+        } else {
+          final String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
+          final String token = RealmUtils.loadPreferencesFromDB().getToken();
+          try {
+            Response<GenericResponse> response = GrassrootRestService.getInstance().getApi()
+                .switchGroupPublicPrivate(phoneNumber, token, groupUid, isPublic).execute();
+            if (response.isSuccessful()) {
+              storeSwitchPublicStatus(groupUid, isPublic, false);
+              subscriber.onNext(NetworkUtils.SAVED_SERVER);
+              subscriber.onCompleted();
+            } else {
+              throw new ApiCallException(NetworkUtils.SERVER_ERROR, response.body().getMessage());
             }
+          } catch (IOException e) {
+            storeSwitchPublicStatus(groupUid, isPublic, true);
+            NetworkUtils.setOnlineFailed();
+            throw new ApiCallException(NetworkUtils.CONNECT_ERROR);
+          }
+        }
+      }
+    }).subscribeOn(Schedulers.io()).observeOn(observingThread);
+  }
 
-            @Override public void onFailure(Call<GenericResponse> call, Throwable t) {
-              EventBus.getDefault().post(new GroupEditErrorEvent(t));
-              listener.apiCallFailed(GroupEditedEvent.JOIN_CODE_CLOSED, Constant.OFFLINE);
-            }
-          });
-    } else {
-      listener.apiCallFailed(GroupEditedEvent.JOIN_CODE_CLOSED, Constant.OFFLINE);
+  private void storeSwitchPublicStatus(final String groupUid, final boolean isPublic, boolean storeForSync) {
+    Group group = RealmUtils.loadGroupFromDB(groupUid);
+    group.setDiscoverable(isPublic);
+    RealmUtils.saveGroupToRealm(group);
+
+    if (storeForSync) {
+      LocalGroupEdits edits = generateLocalGroupEditObject(groupUid);
+      edits.setChangedPublicPrivate(true);
+      edits.setChangedToPublic(isPublic);
+      RealmUtils.saveDataToRealm(edits).subscribe();
     }
   }
 
-  public void openJoinCode(final Group group, final GroupEditingListener listener) {
-    final String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
-    final String token = RealmUtils.loadPreferencesFromDB().getToken();
-    if (NetworkUtils.isOnline()) {
-      GrassrootRestService.getInstance()
-          .getApi()
-          .openJoinCode(phoneNumber, token, group.getGroupUid())
-          .enqueue(new Callback<GenericResponse>() {
-            @Override
-            public void onResponse(Call<GenericResponse> call, Response<GenericResponse> response) {
-              if (response.isSuccessful()) {
-                listener.apiCallComplete();
-                final String newJoinCode = (String) response.body().getData();
-                group.setJoinCode(newJoinCode);
-                RealmUtils.saveGroupToRealm(group);
-                EventBus.getDefault()
-                    .post(new GroupEditedEvent(GroupEditedEvent.JOIN_CODE_OPENED,
-                        GroupEditedEvent.CHANGED_ONLINE, group.getGroupUid(), newJoinCode));
-                listener.joinCodeOpened(newJoinCode);
-              } else {
-                listener.apiCallFailed(GroupEditedEvent.JOIN_CODE_OPENED, Constant.ONLINE);
-                EventBus.getDefault().post(new GroupEditErrorEvent(response.errorBody()));
-              }
+  public Observable<String> closeJoinCode(final String groupUid, Scheduler observingThread) {
+    observingThread = (observingThread == null) ? AndroidSchedulers.mainThread() : observingThread;
+    return Observable.create(new Observable.OnSubscribe<String>() {
+      @Override
+      public void call(Subscriber<? super String> subscriber) {
+        GroupEditedEvent event = new GroupEditedEvent(groupUid, GroupEditedEvent.JOIN_CODE_CLOSED);
+        if (!NetworkUtils.isOnline()) {
+          storeJoinCodeClosed(groupUid, true);
+          subscriber.onNext(NetworkUtils.SAVED_OFFLINE_MODE);
+          event.setTypeOfSave(NetworkUtils.SAVED_OFFLINE_MODE);
+          EventBus.getDefault().post(event);
+          subscriber.onCompleted();
+        } else {
+          final String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
+          final String token = RealmUtils.loadPreferencesFromDB().getToken();
+          try {
+            Response<GenericResponse> response = GrassrootRestService.getInstance().getApi()
+                .closeJoinCode(phoneNumber, token, groupUid).execute();
+            if (response.isSuccessful()) {
+              storeJoinCodeClosed(groupUid, false);
+              subscriber.onNext(NetworkUtils.SAVED_SERVER);
+              event.setTypeOfSave(NetworkUtils.SAVED_SERVER);
+              EventBus.getDefault().post(event);
+              subscriber.onCompleted();
+            } else {
+              throw new ApiCallException(NetworkUtils.SERVER_ERROR, response.body().getMessage());
             }
+          } catch (IOException e) {
+            NetworkUtils.setOnlineFailed();
+            storeJoinCodeClosed(groupUid, true);
+            event.setTypeOfSave(NetworkUtils.CONNECT_ERROR);
+            throw new ApiCallException(NetworkUtils.CONNECT_ERROR);
+          }
+        }
+      }
+    }).subscribeOn(Schedulers.io()).observeOn(observingThread);
+  }
 
-            @Override public void onFailure(Call<GenericResponse> call, Throwable t) {
-              EventBus.getDefault().post(new GroupEditErrorEvent(t));
-              listener.apiCallFailed(GroupEditedEvent.JOIN_CODE_OPENED, Constant.OFFLINE);
-            }
-          });
-    } else {
-      // have to just queue it and report back ... can't open locally (uniqueness of token ...)
-      listener.apiCallFailed(GroupEditedEvent.JOIN_CODE_OPENED, Constant.OFFLINE);
+  private void storeJoinCodeClosed(String groupUid, boolean storeForSync) {
+    Group group = RealmUtils.loadGroupFromDB(groupUid);
+    group.setJoinCode(GroupConstants.NO_JOIN_CODE);
+    RealmUtils.saveGroupToRealm(group);
+
+    if (storeForSync) {
+      LocalGroupEdits edits = generateLocalGroupEditObject(groupUid);
+      edits.setClosedJoinCode(true);
+      RealmUtils.saveDataToRealm(edits).subscribe();
     }
   }
 
-  public void addOrganizer(final Group group, final String memberUid,
-      final GroupEditingListener listener) {
-    final String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
-    final String token = RealmUtils.loadPreferencesFromDB().getToken();
-    final String groupUid = group.getGroupUid();
-    if (NetworkUtils.isOnline()) {
-      GrassrootRestService.getInstance()
-          .getApi()
-          .addOrganizer(phoneNumber, token, groupUid, memberUid)
-          .enqueue(new Callback<GenericResponse>() {
-            @Override
-            public void onResponse(Call<GenericResponse> call, Response<GenericResponse> response) {
-              if (response.isSuccessful()) {
-                listener.apiCallComplete();
-                updateMemberRoleInDB(groupUid, memberUid, GroupConstants.ROLE_GROUP_ORGANIZER);
-                EventBus.getDefault()
-                    .post(new GroupEditedEvent(GroupEditedEvent.ORGANIZER_ADDED,
-                        GroupEditedEvent.CHANGED_ONLINE, group.getGroupUid(), memberUid));
-              } else {
-                EventBus.getDefault().post(new GroupEditErrorEvent(response.errorBody()));
-                listener.apiCallFailed(GroupEditedEvent.ORGANIZER_ADDED, Constant.ONLINE);
-              }
+  public Observable<String> openJoinCode(final String groupUid, Scheduler observingThread) {
+    observingThread = (observingThread == null) ? AndroidSchedulers.mainThread() : observingThread;
+    return Observable.create(new Observable.OnSubscribe<String>() {
+      @Override
+      public void call(Subscriber<? super String> subscriber) {
+        if (!NetworkUtils.isOnline()) {
+          throw new ApiCallException(NetworkUtils.OFFLINE_SELECTED);
+        } else {
+          try {
+            final String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
+            final String token = RealmUtils.loadPreferencesFromDB().getToken();
+            Response<GenericResponse> response = GrassrootRestService.getInstance().getApi()
+                  .openJoinCode(phoneNumber, token, groupUid).execute();
+            if (response.isSuccessful()) {
+              final String newJoinCode = (String) response.body().getData();
+              Group group = RealmUtils.loadGroupFromDB(groupUid);
+              group.setJoinCode(newJoinCode);
+              RealmUtils.saveGroupToRealm(group);
+              EventBus.getDefault().post(new GroupEditedEvent(GroupEditedEvent.JOIN_CODE_OPENED,
+                  NetworkUtils.SAVED_SERVER, groupUid, newJoinCode));
+              subscriber.onNext(newJoinCode);
+              subscriber.onCompleted();
+            } else {
+              throw new ApiCallException(NetworkUtils.SERVER_ERROR);
             }
+          } catch (IOException e) {
+            NetworkUtils.setOnlineFailed();
+            throw new ApiCallException(NetworkUtils.CONNECT_ERROR);
+          }
+        }
+      }
+    }).subscribeOn(Schedulers.io()).observeOn(observingThread);
+  }
 
-            @Override public void onFailure(Call<GenericResponse> call, Throwable t) {
-              listener.apiCallFailed(GroupEditedEvent.ORGANIZER_ADDED, Constant.OFFLINE);
-              EventBus.getDefault().post(new GroupEditErrorEvent(t));
+  public Observable<String> addOrganizer(final String groupUid, final String memberUid, Scheduler observingThread) {
+    observingThread = (observingThread == null) ? AndroidSchedulers.mainThread() : observingThread;
+    return Observable.create(new Observable.OnSubscribe<String>() {
+      @Override
+      public void call(Subscriber<? super String> subscriber) {
+        if (!NetworkUtils.isOnline()) {
+          storeAddedOrganizer(groupUid, memberUid, true);
+          subscriber.onNext(NetworkUtils.SAVED_SERVER);
+          subscriber.onCompleted();
+        } else {
+          try {
+            final String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
+            final String token = RealmUtils.loadPreferencesFromDB().getToken();
+            Response<GenericResponse> response = GrassrootRestService.getInstance().getApi()
+                .addOrganizer(phoneNumber, token, groupUid, memberUid).execute();
+            if (response.isSuccessful()) {
+              subscriber.onNext(NetworkUtils.SAVED_SERVER);
+              subscriber.onCompleted();
+            } else {
+              throw new ApiCallException(NetworkUtils.SERVER_ERROR, response.body().getMessage());
             }
-          });
-    } else {
-      updateMemberRoleInDB(groupUid, memberUid, GroupConstants.ROLE_GROUP_ORGANIZER);
-      EventBus.getDefault()
-          .post(new GroupEditedEvent(GroupEditedEvent.ORGANIZER_ADDED,
-              GroupEditedEvent.CHANGED_ONLINE, group.getGroupUid(), memberUid));
-      listener.apiCallComplete();
+          } catch (IOException e) {
+            storeAddedOrganizer(groupUid, memberUid, true);
+            NetworkUtils.setOnlineFailed();
+            throw new ApiCallException(NetworkUtils.CONNECT_ERROR);
+          }
+        }
+      }
+    }).subscribeOn(Schedulers.io()).observeOn(observingThread);
+  }
+
+  private void storeAddedOrganizer(final String groupUid, final String memberUid, boolean storeForSyncLater) {
+    updateMemberRoleInDB(groupUid, memberUid, GroupConstants.ROLE_GROUP_ORGANIZER);
+    if (storeForSyncLater) {
+      LocalGroupEdits edits = generateLocalGroupEditObject(groupUid);
+      edits.addOrganizer(memberUid);
+      RealmUtils.saveDataToRealm(edits).subscribe();
     }
   }
 

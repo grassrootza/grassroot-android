@@ -193,7 +193,7 @@ public class GroupListAdapter extends RecyclerView.Adapter<GroupListAdapter.GHP_
         holder.txtGroupname.setText(group.getGroupName());
         holder.txtGroupownername.setText(groupOrganizerDescription);
 
-        if (GroupConstants.NO_JOIN_CODE.equals(group.getJoinCode())) {
+        if (!group.hasJoinCode()) {
             final String groupDescription = group.getDescription();
             final int visibility = (TextUtils.isEmpty(groupDescription)) ? View.GONE : View.VISIBLE;
             holder.txtGroupdesc.setText(

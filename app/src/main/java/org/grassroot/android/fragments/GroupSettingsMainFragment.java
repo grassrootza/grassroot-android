@@ -42,8 +42,7 @@ import rx.Subscriber;
 /**
  * Created by luke on 2016/07/15.
  */
-public class GroupSettingsMainFragment extends Fragment implements GroupService.GroupEditingListener,
-        MemberRoleAdapter.MemberRoleClickListener {
+public class GroupSettingsMainFragment extends Fragment implements MemberRoleAdapter.MemberRoleClickListener {
 
     private static final String TAG = GroupSettingsMainFragment.class.getSimpleName();
 
@@ -134,7 +133,21 @@ public class GroupSettingsMainFragment extends Fragment implements GroupService.
                     public void confirmClicked(String textEntered) {
                         if (!textEntered.isEmpty()) {
                             showProgressDialog();
-                            GroupService.getInstance().renameGroup(group, textEntered.trim());
+                            GroupService.getInstance().renameGroup(group.getGroupUid(), textEntered.trim(), null)
+                                .subscribe(new Subscriber<String>() {
+                                    @Override
+                                    public void onError(Throwable e) {
+                                        // todo : handle this w/ snackbar
+                                    }
+
+                                    @Override
+                                    public void onNext(String s) {
+                                        // todo : handle this w/ snackbar
+                                    }
+
+                                    @Override
+                                    public void onCompleted() { }
+                                });
                         }
                     }
                 });
@@ -164,7 +177,7 @@ public class GroupSettingsMainFragment extends Fragment implements GroupService.
                 .setPositiveButton(R.string.alert_confirm, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        GroupService.getInstance().switchGroupPublicStatus(group, checkedState, GroupSettingsMainFragment.this);
+                        serviceCallPublicOnOff(checkedState);
                     }
                 })
                 .setNegativeButton(R.string.alert_cancel, new DialogInterface.OnClickListener() {
@@ -176,20 +189,73 @@ public class GroupSettingsMainFragment extends Fragment implements GroupService.
         builder.create().show();
     }
 
+    private void serviceCallPublicOnOff(final boolean isPublic) {
+        GroupService.getInstance().switchGroupPublicPrivate(group.getGroupUid(), isPublic, null)
+            .subscribe(new Subscriber<String>() {
+                @Override
+                public void onCompleted() { }
+
+                @Override
+                public void onError(Throwable e) {
+                    // todo : snackbar
+                }
+
+                @Override
+                public void onNext(String s) {
+                    // todo : snackbar
+                }
+            });
+    }
+
     public void switchJoinCodeOnOff(final boolean checkedState) {
+        // todo : check if online
         int message = group.hasJoinCode() ? R.string.gset_join_code_to_off : R.string.gset_join_code_to_off;
         ConfirmCancelDialogFragment fragment = ConfirmCancelDialogFragment.newInstance(message, new ConfirmCancelDialogFragment.ConfirmDialogListener() {
             @Override
             public void doConfirmClicked() {
                 showProgressDialog();
                 if (checkedState) {
-                    GroupService.getInstance().openJoinCode(group, GroupSettingsMainFragment.this);
+                    serviceCallOpenJoinCode();
                 } else {
-                    GroupService.getInstance().closeJoinCode(group, GroupSettingsMainFragment.this);
+                    serviceCallCloseJoinCode();
                 }
             }
         });
         fragment.show(getFragmentManager(), "SWITCH_JOIN_CODE");
+    }
+
+    private void serviceCallOpenJoinCode() {
+        GroupService.getInstance().openJoinCode(group.getGroupUid(), null).subscribe(new Subscriber<String>() {
+            @Override
+            public void onCompleted() { }
+
+            @Override
+            public void onError(Throwable e) {
+                // todo : snack bar
+            }
+
+            @Override
+            public void onNext(String s) {
+                // todo : snack bar
+            }
+        });
+    }
+
+    private void serviceCallCloseJoinCode() {
+        GroupService.getInstance().closeJoinCode(group.getGroupUid(), null).subscribe(new Subscriber<String>() {
+            @Override
+            public void onCompleted() { }
+
+            @Override
+            public void onError(Throwable e) {
+                // todo : snack bar
+            }
+
+            @Override
+            public void onNext(String s) {
+                // todo : snack bar
+            }
+        });
     }
 
     private void switchWithoutEvent(SwitchCompat switchCompat, boolean state, CompoundButton.OnCheckedChangeListener listener) {
@@ -296,19 +362,17 @@ public class GroupSettingsMainFragment extends Fragment implements GroupService.
         hideProgressDialog();
     }
 
-    @Override
     public void joinCodeOpened(final String joinCode) {
         final String message = String.format(getString(R.string.gset_join_code_done), joinCode);
         Snackbar.make(mainRoot, message, Snackbar.LENGTH_LONG).show();
     }
 
-    @Override
     public void apiCallComplete() {
         hideProgressDialog();
         reloadGroup();
     }
 
-    @Override
+    // todo : move into subscribe (same with above)
     public void apiCallFailed(String tag, String offOrOnline) {
         Log.e(TAG, "API call failed ... revert state and show error message");
         hideProgressDialog();

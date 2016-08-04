@@ -85,7 +85,7 @@ public class GroupTasksActivity extends PortraitActivity implements NewTaskMenuF
 
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
-        menu.findItem(R.id.mi_view_join_code).setVisible(true);
+        menu.findItem(R.id.mi_view_join_code).setVisible(groupMembership.hasJoinCode());
         menu.findItem(R.id.mi_new_task).setVisible(groupMembership.hasCreatePermissions());
         menu.findItem(R.id.mi_add_members).setVisible(groupMembership.canAddMembers());
         menu.findItem(R.id.mi_remove_members).setVisible(groupMembership.canDeleteMembers());
