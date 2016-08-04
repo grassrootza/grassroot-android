@@ -33,7 +33,7 @@ android {
 
   buildTypes {
     release {
-      minifyEnabled false
+      minifyEnabled true
       proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
     }
   }
@@ -89,8 +89,8 @@ dependencies {
   compile 'com.squareup.retrofit2:retrofit:2.1.0'
   compile 'com.squareup.retrofit2:converter-gson:2.0.0'
   compile 'com.squareup.okhttp3:logging-interceptor:3.3.1'
-  compile 'com.google.android.gms:play-services-gcm:8.4.0'
-  compile 'com.google.android.gms:play-services-location:8.4.0'
+  compile 'com.google.android.gms:play-services-gcm:7.5.0'
+  compile 'com.google.android.gms:play-services-location:7.5.0'
   compile 'org.greenrobot:eventbus:3.0.0'
   compile 'com.squareup.picasso:picasso:2.5.2'
   compile 'com.squareup.okio:okio:1.9.0' //requred for image caching
