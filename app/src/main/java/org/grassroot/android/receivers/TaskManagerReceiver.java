@@ -20,7 +20,7 @@ public class TaskManagerReceiver extends BroadcastReceiver {
     public static final String ACTION_START = "org.grassroot.android.ACTION_START";
     public static final String ACTION_DONE = "org.grassroot.android.ACTION_DONE";
     public static final String TASK_TAG_PERIODIC = "TASK_TAG_PERIODIC";
-    private static final long REFRESH_PERIOD = 1*60;
+    private static final long REFRESH_PERIOD = 5*60;
 
     @Override
     public void onReceive(Context context, Intent intent) {

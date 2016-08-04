@@ -3,18 +3,24 @@ package org.grassroot.android.services;
 import android.content.Intent;
 import android.util.Log;
 
+import com.google.android.gms.common.api.Api;
 import com.google.android.gms.gcm.GcmNetworkManager;
 import com.google.android.gms.gcm.GcmTaskService;
 import com.google.android.gms.gcm.TaskParams;
 
+import org.grassroot.android.models.ApiCallException;
 import org.grassroot.android.models.PreferenceObject;
 import org.grassroot.android.receivers.TaskManagerReceiver;
 import org.grassroot.android.utils.NetworkUtils;
 import org.grassroot.android.utils.RealmUtils;
 
-public class SyncService extends GcmTaskService implements NetworkUtils.NetworkListener{
+import rx.Subscriber;
+import rx.schedulers.Schedulers;
 
-   private static final String TAG = SyncService.class.getName();
+public class SyncService extends GcmTaskService {
+
+	private static final String TAG = SyncService.class.getSimpleName();
+
     @Override
     public int onRunTask(TaskParams taskParams) {
         Log.d(TAG, "onRunTask: " + taskParams.getTag());
@@ -35,7 +41,7 @@ public class SyncService extends GcmTaskService implements NetworkUtils.NetworkL
                     result = GcmNetworkManager.RESULT_RESCHEDULE;
                     break;
                 case NetworkUtils.OFFLINE_ON_FAIL:
-                    NetworkUtils.trySwitchToOnline(this, true, this);
+                    tryConnect();
                     result = GcmNetworkManager.RESULT_RESCHEDULE;
                     break;
             }
@@ -49,30 +55,34 @@ public class SyncService extends GcmTaskService implements NetworkUtils.NetworkL
         return result;
     }
 
-    private int doPeriodicTask(){
+	private void tryConnect() {
+		NetworkUtils.trySwitchToOnlineRx(this, true, Schedulers.immediate())
+			.subscribe(new Subscriber<String>() {
+				@Override
+				public void onError(Throwable e) {
+					if (e instanceof ApiCallException) {
+						if (NetworkUtils.NO_NETWORK.equals(e.getMessage())) {
+							Log.d(TAG, "networkNotAvailable");
+						} else {
+							Log.d(TAG, "networkAvailableButConnectFailed");
+						}
+					}
+				}
+
+				@Override
+				public void onNext(String s) {
+					if (NetworkUtils.ONLINE_DEFAULT.equals(s)) {
+						doPeriodicTask();
+					}
+				}
+
+				@Override
+				public void onCompleted() { }
+			});
+	}
+
+    private int doPeriodicTask() {
         NetworkUtils.syncLocalAndServer(this);
         return GcmNetworkManager.RESULT_RESCHEDULE;
-    }
-
-    @Override
-    public void connectionEstablished() {
-        doPeriodicTask();
-    }
-
-    @Override
-    public void networkAvailableButConnectFailed(String failureType) {
-        Log.d(TAG, "networkAvailableButConnectFailed: " + failureType);
-    }
-
-    @Override
-    public void networkNotAvailable() {
-        Log.d(TAG, "networkNotAvailable");
-
-    }
-
-    @Override
-    public void setOffline() {
-        Log.d(TAG, "setOffline");
-
     }
 }

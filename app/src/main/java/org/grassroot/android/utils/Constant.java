@@ -12,7 +12,6 @@ public class Constant {
     public static final String STAGING = "staging";
     public static final String PROD = "production";
 
-    public static long shortDelay = 300L;
     public static long mediumDelay = 500L;
 
     public static final String productionUrl = "https://app.grassroot.org.za/api/";
@@ -22,7 +21,6 @@ public class Constant {
     public static final String restUrl = BuildConfig.BUILD_TYPE.equals("debug") ? localUrl
             : BuildConfig.FLAVOR.equals(PROD) ? productionUrl : stagingUrl;
 
-    public static final String ONLINE = "online";
     public static final String OFFLINE = "offline";
 
     public static final String USER_TOKEN = "user_token";

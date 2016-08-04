@@ -196,7 +196,7 @@ public class RealmUtils {
                 Observable.create(new Observable.OnSubscribe<List<RealmObject>>() {
                     @Override
                     public void call(Subscriber<? super List<RealmObject>> subscriber) {
-                        System.out.println("load list " + Thread.currentThread().getName());
+                        // System.out.println("load list " + Thread.currentThread().getName());
                         final Realm realm = Realm.getDefaultInstance();
                         List<RealmObject> realmResults = (List<RealmObject>) realm.copyFromRealm(
                                 (realm.where(model).equalTo(pName, pValue).findAll()));
@@ -214,7 +214,7 @@ public class RealmUtils {
                 Observable.create(new Observable.OnSubscribe<List<RealmObject>>() {
                     @Override
                     public void call(final Subscriber<? super List<RealmObject>> subscriber) {
-                        System.out.println("load list " + Thread.currentThread().getName());
+                        // System.out.println("load list " + Thread.currentThread().getName());
                         final Realm realm = Realm.getDefaultInstance();
                         List<RealmObject> realmResults = (List<RealmObject>) realm.copyFromRealm(
                                 (realm.where(model).equalTo(pName, pValue).findAll()));
@@ -315,11 +315,11 @@ public class RealmUtils {
                 query.equalTo(entry.getKey(), Boolean.valueOf(entry.getValue().toString()));
             }
         }
-        System.out.println("Remove objects size " + query.findAll().size());
+        // System.out.println("Remove objects size " + query.findAll().size());
         realm.beginTransaction();
         if (query.findAll().size() > 0) query.findAll().deleteAllFromRealm();
         realm.commitTransaction();
-        System.out.println("now  " + query.findAll().size());
+        // System.out.println("now  " + query.findAll().size());
         realm.close();
     }
 

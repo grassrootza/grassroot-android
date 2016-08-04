@@ -34,10 +34,11 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 import butterknife.Unbinder;
-import io.realm.RealmList;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
+import rx.android.schedulers.AndroidSchedulers;
+import rx.functions.Action1;
 
 /**
  * Created by luke on 2016/07/14.
@@ -121,30 +122,26 @@ public class JoinRequestsFragment extends Fragment {
     // todo : differentiate among these
     private void refreshJoinRequests() {
         swipeRefreshLayout.setRefreshing(true);
-        GroupService.getInstance().refreshGroupJoinRequests(new GroupService.GroupJoinRequestListener() {
-            @Override
-            public void groupJoinRequestsOpen(RealmList<GroupJoinRequest> joinRequests) {
-                swipeRefreshOff();
-                adapter.refreshList();
-                selectMessageOrList();
-                hideProgess();
-            }
-
-            @Override
-            public void groupJoinRequestsOffline(RealmList<GroupJoinRequest> openJoinRequests) {
-                swipeRefreshOff();
-                selectMessageOrList();
-                hideProgess();
-            }
-
-            @Override
-            public void groupJoinRequestsEmpty() {
-                swipeRefreshOff();
-                adapter.clearList();
-                switchToEmptyList();
-                hideProgess();
-            }
-        });
+        GroupService.getInstance().fetchGroupJoinRequests(AndroidSchedulers.mainThread())
+			.subscribe(new Action1<String>() {
+				@Override
+				public void call(String s) {
+					switch (s) {
+						case NetworkUtils.FETCHED_SERVER:
+							adapter.refreshList();
+							selectMessageOrList();
+							break;
+						case NetworkUtils.OFFLINE_SELECTED:
+							// todo : show an error message
+							break;
+						case NetworkUtils.CONNECT_ERROR:
+							// todo : show an error message
+							break;
+					}
+					swipeRefreshOff(); // todo : combine these
+					hideProgess();
+				}
+			});
     }
 
     private void swipeRefreshOff() {

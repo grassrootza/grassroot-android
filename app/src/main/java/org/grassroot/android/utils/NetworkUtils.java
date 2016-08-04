@@ -6,14 +6,16 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.util.Log;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import org.grassroot.android.events.ConnectionFailedEvent;
+
 import org.grassroot.android.events.NetworkFailureEvent;
 import org.grassroot.android.events.OfflineActionsSent;
 import org.grassroot.android.events.OnlineOfflineToggledEvent;
 import org.grassroot.android.interfaces.NotificationConstants;
+import org.grassroot.android.models.ApiCallException;
 import org.grassroot.android.models.GenericResponse;
 import org.grassroot.android.models.Group;
 import org.grassroot.android.models.LocalGroupEdits;
@@ -28,10 +30,10 @@ import org.grassroot.android.services.GroupService;
 import org.grassroot.android.services.LocationServices;
 import org.grassroot.android.services.TaskService;
 import org.greenrobot.eventbus.EventBus;
-import retrofit2.Call;
-import retrofit2.Callback;
+
 import retrofit2.Response;
 import rx.Observable;
+import rx.Scheduler;
 import rx.Subscriber;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.functions.Action1;
@@ -49,61 +51,45 @@ public class NetworkUtils {
   public static final String SAVED_OFFLINE_MODE = "saved_offline_mode";
   public static final String SERVER_ERROR = "server_error";
   public static final String CONNECT_ERROR = "connection_error";
+  public static final String NO_NETWORK = "no_network";
+  public static final String FETCHED_SERVER = "fetched_from_server";
 
   public static final long minIntervalBetweenSyncs = 15 * 60 * 1000; // 15 minutes, in millis
 
   static boolean sendingLocalQueue = false;
   static boolean fetchingServerEntities = false;
 
-  public interface NetworkListener {
-    void connectionEstablished();
-    void networkAvailableButConnectFailed(String failureType);
-    void networkNotAvailable();
-    void setOffline();
-  }
-
   public static boolean isOnline() {
     return isOnline(ApplicationLoader.applicationContext);
   }
 
-  public static void toggleOnlineOffline(final Context context, final boolean sendQueue,
-      final NetworkListener listener) {
+  public static Observable<String> toggleOnlineOfflineRx(final Context context, final boolean sendQueue, Scheduler observingThread) {
+    observingThread = (observingThread == null) ? AndroidSchedulers.mainThread() : observingThread;
     final String currentStatus = RealmUtils.loadPreferencesFromDB().getOnlineStatus();
-    Log.d(TAG, "toggling offline and online, from current status : " + currentStatus);
     if (ONLINE_DEFAULT.equals(currentStatus)) {
-      switchToOfflineMode(listener);
+      return switchToOfflineMode(observingThread);
     } else {
-      trySwitchToOnline(context, sendQueue, listener);
+      return trySwitchToOnlineRx(context, sendQueue, observingThread);
     }
   }
 
-  public static void setOnline() {
-    PreferenceObject prefs = RealmUtils.loadPreferencesFromDB();
-    prefs.setOnlineStatus(ONLINE_DEFAULT);
-    RealmUtils.saveDataToRealm(prefs).subscribe(new Action1() {
+  public static Observable<String> switchToOfflineMode(Scheduler observingThread) {
+    observingThread = (observingThread == null) ? AndroidSchedulers.mainThread() : observingThread;
+    return Observable.create(new Observable.OnSubscribe<String>() {
       @Override
-      public void call(Object o) {
-        EventBus.getDefault().post(new OnlineOfflineToggledEvent(true));
-      }
-    });
-  }
-
-  public static void switchToOfflineMode(final NetworkListener listener) {
-    PreferenceObject prefs = RealmUtils.loadPreferencesFromDB();
-    prefs.setOnlineStatus(OFFLINE_SELECTED);
-    prefs.setLastTimeSyncPerformed(0L);
-    RealmUtils.saveDataToRealm(prefs).subscribe(new Action1() {
-      @Override
-      public void call(Object o) {
+      public void call(Subscriber<? super String> subscriber) {
+        PreferenceObject prefs = RealmUtils.loadPreferencesFromDB();
+        prefs.setOnlineStatus(OFFLINE_SELECTED);
+        prefs.setLastTimeSyncPerformed(0L);
+        RealmUtils.saveDataToRealmSync(prefs);
         EventBus.getDefault().post(new OnlineOfflineToggledEvent(false));
-        if (listener != null) {
-          listener.setOffline();
-        }
+        subscriber.onNext(OFFLINE_SELECTED);
+        subscriber.onCompleted();
       }
-    });
+    }).subscribeOn(Schedulers.io()).observeOn(observingThread);
   }
 
-  public static void setOnlineFailed() {
+  public static void setConnectionFailed() {
     PreferenceObject prefs = RealmUtils.loadPreferencesFromDB();
     prefs.setOnlineStatus(OFFLINE_ON_FAIL);
     prefs.setLastTimeSyncPerformed(0L);
@@ -114,52 +100,41 @@ public class NetworkUtils {
     });
   }
 
-  public static void trySwitchToOnline(final Context context, final boolean sendQueue,
-      final NetworkListener listener) {
-    if (!isNetworkAvailable(context)) {
-      listener.networkNotAvailable();
-    } else {
-      final String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
-      final String token = RealmUtils.loadPreferencesFromDB().getToken();
-      GrassrootRestService.getInstance()
-          .getApi()
-          .testConnection(phoneNumber, token)
-          .enqueue(new Callback<GenericResponse>() {
-            @Override
-            public void onResponse(Call<GenericResponse> call, Response<GenericResponse> response) {
-              if (response.isSuccessful()) {
-                PreferenceObject prefs = RealmUtils.loadPreferencesFromDB();
-                prefs.setOnlineStatus(ONLINE_DEFAULT);
-                RealmUtils.saveDataToRealm(prefs).subscribe(new Action1() {
-                  @Override
-                  public void call(Object o) {
-                    if (listener != null) {
-                      listener.connectionEstablished();
-                    }
-                    EventBus.getDefault().post(new OnlineOfflineToggledEvent(true));
-                    if (sendQueue) {
-                      syncLocalAndServer(context);
-                    }
-                  }
-                });
-              } else {
-                setOnlineFailed();
-                EventBus.getDefault().post(new ConnectionFailedEvent(SERVER_ERROR));
-                if (listener != null) {
-                  listener.networkAvailableButConnectFailed(SERVER_ERROR);
-                }
+  public static Observable<String> trySwitchToOnlineRx(final Context context, final boolean sendQueue,
+                                                     Scheduler observingThread) {
+    observingThread = (observingThread == null) ? AndroidSchedulers.mainThread() : observingThread;
+    return Observable.create(new Observable.OnSubscribe<String>() {
+      @Override
+      public void call(Subscriber<? super String> subscriber) {
+        if (!isNetworkAvailable(context)) {
+          setConnectionFailed();
+          throw new ApiCallException(NO_NETWORK);
+        } else {
+          final String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
+          final String token = RealmUtils.loadPreferencesFromDB().getToken();
+          try {
+            Response<GenericResponse> ping = GrassrootRestService.getInstance().getApi()
+                .testConnection(phoneNumber, token).execute();
+            if (ping.isSuccessful()) {
+              PreferenceObject prefs = RealmUtils.loadPreferencesFromDB();
+              prefs.setOnlineStatus(ONLINE_DEFAULT);
+              RealmUtils.saveDataToRealmSync(prefs);
+              EventBus.getDefault().post(new OnlineOfflineToggledEvent(true));
+              subscriber.onNext(ONLINE_DEFAULT);
+              if (sendQueue) {
+                syncLocalAndServer(context);
               }
+              subscriber.onCompleted();
+            } else {
+              throw new ApiCallException(SERVER_ERROR);
             }
-
-            @Override public void onFailure(Call<GenericResponse> call, Throwable t) {
-              setOnlineFailed();
-              EventBus.getDefault().post(new ConnectionFailedEvent(CONNECT_ERROR));
-              if (listener != null) {
-                listener.networkAvailableButConnectFailed(CONNECT_ERROR);
-              }
-            }
-          });
-    }
+          } catch (IOException e) {
+            setConnectionFailed();
+            throw new ApiCallException(CONNECT_ERROR);
+          }
+        }
+      }
+    }).subscribeOn(Schedulers.io()).observeOn(observingThread);
   }
 
   public static boolean isOnline(Context context) {
@@ -227,8 +202,8 @@ public class NetworkUtils {
     if (!fetchingServerEntities) {
       fetchingServerEntities = true;
       if (isOnline(context)) {
-        GroupService.getInstance().fetchGroupListWithoutError();
-        GroupService.getInstance().fetchGroupJoinRequests(null);
+        GroupService.getInstance().fetchGroupListRx(Schedulers.immediate()).subscribe();
+        GroupService.getInstance().fetchGroupJoinRequests(Schedulers.immediate()).subscribe();
         TaskService.getInstance().fetchUpcomingTasks(null);
       }
     }
@@ -262,7 +237,7 @@ public class NetworkUtils {
               .subscribe(new Subscriber<String>() {
                 @Override
                 public void onError(Throwable e) {
-                  setOnlineFailed();
+                  setConnectionFailed();
                 }
 
                 @Override
@@ -308,7 +283,7 @@ public class NetworkUtils {
 
           @Override
           public void onError(Throwable e) {
-            setOnlineFailed(); // todo : interrupt sequence of calls
+            setConnectionFailed(); // todo : interrupt sequence of calls
           }
 
           @Override
@@ -337,7 +312,7 @@ public class NetworkUtils {
             @Override
             public void onError(Throwable e) {
               if (CONNECT_ERROR.equals(e.getMessage())) {
-                setOnlineFailed();
+                setConnectionFailed();
               }
             }
 

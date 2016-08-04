@@ -22,6 +22,7 @@ import org.grassroot.android.utils.RealmUtils;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
+import rx.functions.Action1;
 
 /**
  * Created by luke on 2016/07/12.
@@ -155,9 +156,13 @@ public class ActionCompleteActivity extends PortraitActivity implements NewTaskM
 
     @OnClick(R.id.bt_stay_offline)
     public void setOfflineDelib() {
-        NetworkUtils.switchToOfflineMode(null);
-        startActivity(doneIntent());
-        finish();
+        NetworkUtils.switchToOfflineMode(null).subscribe(new Action1<String>() {
+            @Override
+            public void call(String s) {
+                startActivity(doneIntent());
+                finish();
+            }
+        });
     }
 
     @OnClick(R.id.bt_keep_trying)

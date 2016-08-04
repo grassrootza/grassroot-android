@@ -35,6 +35,7 @@ import org.grassroot.android.events.UserLoggedOutEvent;
 import org.grassroot.android.fragments.dialogs.ConfirmCancelDialogFragment;
 import org.grassroot.android.interfaces.NavigationConstants;
 import org.grassroot.android.interfaces.NotificationConstants;
+import org.grassroot.android.models.ApiCallException;
 import org.grassroot.android.models.Group;
 import org.grassroot.android.models.GroupJoinRequest;
 import org.grassroot.android.models.NavDrawerItem;
@@ -51,8 +52,9 @@ import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import rx.Subscriber;
 
-public class NavigationDrawerFragment extends Fragment implements NavigationDrawerAdapter.NavDrawerItemListener, NetworkUtils.NetworkListener {
+public class NavigationDrawerFragment extends Fragment implements NavigationDrawerAdapter.NavDrawerItemListener {
 
     private static final String TAG = NavigationDrawerFragment.class.getSimpleName();
 
@@ -261,30 +263,43 @@ public class NavigationDrawerFragment extends Fragment implements NavigationDraw
         ConfirmCancelDialogFragment confirmDialog = ConfirmCancelDialogFragment.newInstance(labelResource, new ConfirmCancelDialogFragment.ConfirmDialogListener() {
                     @Override
                     public void doConfirmClicked() {
-                        NetworkUtils.toggleOnlineOffline(getContext(), true, NavigationDrawerFragment.this);
+                        handleOnlineToggle();
                     }
                 });
         confirmDialog.show(getFragmentManager(), "offline_online");
     }
 
-    @Override
-    public void connectionEstablished() {
-        showDoneDialog(R.string.go_online_success);
-    }
+    private void handleOnlineToggle() {
+        NetworkUtils.toggleOnlineOfflineRx(getContext(), true, null).subscribe(new Subscriber<String>() {
+            @Override
+            public void onError(Throwable e) {
+                if (e instanceof ApiCallException) {
+                    switch(e.getMessage()) {
+                        case NetworkUtils.CONNECT_ERROR:
+                            showDoneDialog(R.string.go_online_failure_server);
+                            break;
+                        case NetworkUtils.NO_NETWORK:
+                            showDoneDialog(R.string.go_online_failure_network);
+                            break;
+                    }
+                }
+            }
 
-    @Override
-    public void networkAvailableButConnectFailed(String failureType) {
-        showDoneDialog(R.string.go_online_failure_server);
-    }
+            @Override
+            public void onNext(String s) {
+                switch (s) {
+                    case NetworkUtils.OFFLINE_SELECTED:
+                        showDoneDialog(R.string.gone_offline);
+                        break;
+                    case NetworkUtils.ONLINE_DEFAULT:
+                        showDoneDialog(R.string.go_online_success);
+                        break;
+                }
+            }
 
-    @Override
-    public void networkNotAvailable() {
-        showDoneDialog(R.string.go_online_failure_network);
-    }
-
-    @Override
-    public void setOffline() {
-        showDoneDialog(R.string.gone_offline);
+            @Override
+            public void onCompleted() { }
+        });
     }
 
     private void showDoneDialog(int message) {
