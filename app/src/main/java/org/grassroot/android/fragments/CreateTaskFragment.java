@@ -13,6 +13,7 @@ import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.SwitchCompat;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -32,6 +33,7 @@ import org.grassroot.android.fragments.dialogs.DatePickerFragment;
 import org.grassroot.android.fragments.dialogs.TimePickerFragment;
 import org.grassroot.android.interfaces.GroupConstants;
 import org.grassroot.android.interfaces.TaskConstants;
+import org.grassroot.android.models.ApiCallException;
 import org.grassroot.android.models.Group;
 import org.grassroot.android.models.Member;
 import org.grassroot.android.models.TaskModel;
@@ -58,6 +60,7 @@ import butterknife.ButterKnife;
 import butterknife.OnCheckedChanged;
 import butterknife.OnClick;
 import butterknife.OnTextChanged;
+import rx.Subscriber;
 import rx.functions.Action1;
 
 /**
@@ -92,12 +95,8 @@ public class CreateTaskFragment extends Fragment {
 
     private DatePickerFragment datePicker;
     private TimePickerFragment timePicker;
-    @BindView(R.id.ctsk_cv_datepicker)
-    CardView datePickTrigger;
     @BindView(R.id.ctsk_txt_deadline)
     TextView dateDisplayed;
-    @BindView(R.id.ctsk_cv_timepicker)
-    CardView timePickTrigger;
     @BindView(R.id.ctsk_txt_time)
     TextView timeDisplayed;
 
@@ -132,8 +131,10 @@ public class CreateTaskFragment extends Fragment {
         groupUid = b.getString(GroupConstants.UID_FIELD);
         taskType = b.getString(TaskConstants.TASK_TYPE_FIELD);
         groupLocal = b.getBoolean(Constant.GROUP_LOCAL);
-        selectedDateTimeCal = Calendar.getInstance();
 
+        Log.e(TAG, "create task fragment initiated, with group local set to : " + groupLocal);
+
+        selectedDateTimeCal = Calendar.getInstance();
         includeWholeGroup = true;
     }
 
@@ -280,26 +281,30 @@ public class CreateTaskFragment extends Fragment {
 
     public void createTask() {
         progressDialog.show();
-        TaskModel model = generateTaskObject();
-        TaskService.getInstance().createTask(model, new TaskService.TaskCreationListener() {
+        final TaskModel model = generateTaskObject();
+        TaskService.getInstance().sendTaskToServer(model, null).subscribe(new Subscriber<TaskModel>() {
             @Override
-            public void taskCreatedLocally(TaskModel task) {
+            public void onNext(TaskModel taskModel) {
                 progressDialog.dismiss();
-                generateSuccessTask(task);
+                generateSuccessTask(taskModel);
             }
 
             @Override
-            public void taskCreatedOnServer(TaskModel task) {
-                progressDialog.dismiss();
-                generateSuccessTask(task);
+            public void onError(Throwable e) {
+                if (e instanceof ApiCallException) {
+                    progressDialog.dismiss();
+                    final String type = e.getMessage();
+                    if (NetworkUtils.CONNECT_ERROR.equals(type)) {
+                        generateSuccessTask(model);
+                    } else {
+                        ErrorUtils.showSnackBar(vContainer, "Error! Something went wrong", Snackbar.LENGTH_LONG, "",
+                            null);
+                    }
+                }
             }
 
             @Override
-            public void taskCreationError(TaskModel task) {
-                progressDialog.dismiss();
-                ErrorUtils.showSnackBar(vContainer, "Error! Something went wrong", Snackbar.LENGTH_LONG, "",
-                        null);
-            }
+            public void onCompleted() { }
         });
     }
 
@@ -323,6 +328,8 @@ public class CreateTaskFragment extends Fragment {
     }
 
     private TaskModel generateTaskObject() {
+        Log.e(TAG, "creating task model ... isGroupLocal set to ... " + groupLocal);
+
         final String title = etTitleInput.getText().toString();
         final String description = etDescriptionInput.getText().toString();
         final String dateTimeISO = Constant.isoDateTimeSDF.format(selectedDateTime);
@@ -348,7 +355,7 @@ public class CreateTaskFragment extends Fragment {
         model.setTaskUid(UUID.randomUUID().toString());
         model.setType(taskType);
         model.setParentLocal(groupLocal);
-        model.setLocal(!NetworkUtils.isOnline(getContext()));
+        model.setLocal(true); // true until replaced when received from server ...
         model.setMinutes(minutes);
         model.setCanEdit(true);
         model.setCanAction(true);
@@ -359,7 +366,7 @@ public class CreateTaskFragment extends Fragment {
                 RealmUtils.convertListOfStringInRealmListOfString(new ArrayList<>(memberUids)));
         // todo : work out why doing call below
         RealmUtils.saveDataToRealm(
-                RealmUtils.convertListOfStringInRealmListOfString(new ArrayList<>(memberUids)));
+                RealmUtils.convertListOfStringInRealmListOfString(new ArrayList<>(memberUids)), null);
 
         return model;
     }

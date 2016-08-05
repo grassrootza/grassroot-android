@@ -342,6 +342,7 @@ public class HomeScreenActivity extends PortraitActivity implements NavigationDr
                 switchActionBarOffPicker();
                 Intent i = new Intent(HomeScreenActivity.this, activityToLaunch);
                 i.putExtra(GroupConstants.UID_FIELD, group.getGroupUid());
+                i.putExtra(GroupConstants.LOCAL_FIELD, group.getIsLocal());
                 startActivity(i);
             }
         });

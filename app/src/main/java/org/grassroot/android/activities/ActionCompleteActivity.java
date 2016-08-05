@@ -3,6 +3,7 @@ package org.grassroot.android.activities;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.View;
 import android.view.Window;
 import android.widget.Button;
@@ -174,8 +175,10 @@ public class ActionCompleteActivity extends PortraitActivity implements NewTaskM
     private Intent doneIntent() {
         switch (actionIntent) {
             case HOME_SCREEN:
+                Log.e(TAG, "heading back to home screen ...");
                 return homeIntent();
             case GROUP_SCREEN:
+                Log.e(TAG, "heading to group screen ...");
                 Intent i = new Intent(ActionCompleteActivity.this, GroupTasksActivity.class);
                 i.putExtra(GroupConstants.OBJECT_FIELD, groupToPass);
                 i.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_CLEAR_TOP);

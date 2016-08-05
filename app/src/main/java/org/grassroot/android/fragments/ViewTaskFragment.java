@@ -54,6 +54,7 @@ import org.greenrobot.eventbus.Subscribe;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
+import rx.Subscriber;
 
 public class ViewTaskFragment extends Fragment {
 
@@ -347,67 +348,38 @@ public class ViewTaskFragment extends Fragment {
     }
   }
 
-  @OnClick(R.id.vt_left_response) public void doRespondYes() {
-    TaskService.getInstance().respondToTask(task, TaskConstants.RESPONSE_YES, new TaskService.TaskActionListener() {
+  public void respondRx(final String reply) {
+    TaskService.getInstance().respondToTaskRx(task, reply, null).subscribe(new Subscriber<String>() {
       @Override
-      public void taskActionComplete(TaskModel taskResponse, String reply) {
-        task = taskResponse;
-        handleSuccessfulReply(task, TaskConstants.RESPONSE_YES);
+      public void onNext(String s) {
+        task = RealmUtils.loadObjectFromDB(TaskModel.class, "taskUid", task.getTaskUid());
+        if (NetworkUtils.SAVED_SERVER.equals(s)) {
+          handleSuccessfulReply(task, reply);
+        } else if (NetworkUtils.SAVED_OFFLINE_MODE.equals(s)) {
+          handleSavedOffline(reply);
+        }
       }
 
       @Override
-      public void taskActionError(Response<TaskResponse> response) {
-        handleUnknownError(response);
+      public void onError(Throwable e) {
+        // handleUnknownError(response);
       }
 
       @Override
-      public void taskActionCompleteOffline(TaskModel taskResponse, String reply) {
-        task = taskResponse;
-        handleSuccessfulOffline(reply);
-      }
+      public void onCompleted() { }
     });
+  }
+
+  @OnClick(R.id.vt_left_response) public void doRespondYes() {
+    respondRx(TaskConstants.RESPONSE_YES);
   }
 
   @OnClick(R.id.vt_right_response) public void doRespondNo() {
-       TaskService.getInstance().respondToTask(task, TaskConstants.RESPONSE_NO, new TaskService.TaskActionListener() {
-          @Override
-          public void taskActionComplete(TaskModel taskResponse, String reply) {
-            task = taskResponse;
-            handleSuccessfulReply(task, TaskConstants.RESPONSE_NO);
-          }
-
-          @Override
-          public void taskActionError(Response<TaskResponse> response) {
-          handleUnknownError(response);
-          }
-
-         @Override
-         public void taskActionCompleteOffline(TaskModel taskResponse, String reply) {
-           task = taskResponse;
-          handleSuccessfulOffline(reply);
-         }
-       });
+    respondRx(TaskConstants.RESPONSE_NO);
   }
 
   @OnClick(R.id.bt_td_respond) public void completeTodo() {
-    TaskService.getInstance().respondToTask(task, TaskConstants.TODO_DONE, new TaskService.TaskActionListener() {
-      @Override
-      public void taskActionComplete(TaskModel taskResponse, String reply) {
-        task = taskResponse;
-        handleSuccessfulReply(task, TaskConstants.TODO_DONE);
-      }
-
-      @Override
-      public void taskActionError(Response<TaskResponse> response) {
-      handleUnknownError(response);
-      }
-
-      @Override
-      public void taskActionCompleteOffline(TaskModel taskResponse, String reply) {
-        task = taskResponse;
-        handleSuccessfulOffline(reply);
-      }
-    });
+    respondRx(TaskConstants.TODO_DONE);
   }
 
 
@@ -416,7 +388,8 @@ public class ViewTaskFragment extends Fragment {
     memberListAdapter = new MemberListAdapter(getActivity());
     rcResponseList.setLayoutManager(new LinearLayoutManager(getContext()));
     rcResponseList.setAdapter(memberListAdapter);
-if(NetworkUtils.isOnline(getContext())){
+
+    if(NetworkUtils.isOnline(getContext())){
     GrassrootRestService.getInstance()
         .getApi()
         .getTodoAssigned(phoneNumber, code, taskUid)
@@ -460,6 +433,57 @@ if(NetworkUtils.isOnline(getContext())){
         break;
     }
     tvResponseHeader.setText(snackBarMsg(reply));
+  }
+
+  private void handleSavedOffline(String action){
+    // todo : change message displayed here
+    handleNoNetwork(action);
+  }
+
+  private void handleNoNetwork(final String retryTag) {
+    ErrorUtils.connectivityError(getActivity(), R.string.error_no_network,
+        new NetworkErrorDialogListener() {
+          @Override public void retryClicked() {
+            switch (retryTag) {
+              case "FETCH":
+                retrieveTaskDetails();
+                break;
+              case "RESPOND_YES":
+                doRespondYes();
+                break;
+              case "RESPOND_NO":
+                doRespondNo();
+                break;
+              case "MTG_RSVP":
+                setMeetingRsvpView();
+                break;
+              case "VOTE_TOTALS":
+                setVoteResponseView();
+                break;
+              case "COMPLETE_TODO":
+                completeTodo();
+                break;
+              case "ASSIGNED_MEMBERS":
+                setUpAssignedMembersView();
+              default:
+                retrieveTaskDetails();
+            }
+          }
+        });
+  }
+
+  private void handleUnknownError(Response<TaskResponse> response) {
+    ErrorUtils.showSnackBar(mContainer, R.string.error_generic, Snackbar.LENGTH_LONG);
+  }
+
+  @Override public void onDestroy() {
+    super.onDestroy();
+    EventBus.getDefault().unregister(this);
+  }
+
+  @Subscribe public void onTaskUpdated(TaskUpdatedEvent event) {
+    TaskModel updatedTask = event.getTask();
+    setUpViews(updatedTask);
   }
 
   // todo : consider shifting these into a map? but maybe better to rely on processor than clog memory
@@ -691,75 +715,5 @@ if(NetworkUtils.isOnline(getContext())){
     return -1;
   }
 
-  private void handleSuccessfulOffline(String action){
-    switch (action){
-      case TaskConstants.RESPONSE_NO:
-        task.setHasResponded(true);
-        task.setReply(action);
-        task.setActionLocal(true);
-        RealmUtils.saveDataToRealmSync(task);
-        handleSuccessfulReply(task,TaskConstants.RESPONSE_NO);
-        break;
-      case TaskConstants.RESPONSE_YES:
-        task.setHasResponded(true);
-        task.setReply(action);
-        task.setActionLocal(true);
-        RealmUtils.saveDataToRealmSync(task);
-        handleSuccessfulReply(task,TaskConstants.RESPONSE_YES);
-        break;
-      case TaskConstants.TODO_DONE:
-        task.setHasResponded(true);
-        task.setReply(action);
-        task.setActionLocal(true);
-        RealmUtils.saveDataToRealmSync(task);
-        handleSuccessfulReply(task,TaskConstants.TODO_DONE);
-        break;
 
-    }
-  }
-  private void handleNoNetwork(final String retryTag) {
-    ErrorUtils.connectivityError(getActivity(), R.string.error_no_network,
-        new NetworkErrorDialogListener() {
-          @Override public void retryClicked() {
-            switch (retryTag) {
-              case "FETCH":
-                retrieveTaskDetails();
-                break;
-              case "RESPOND_YES":
-                doRespondYes();
-                break;
-              case "RESPOND_NO":
-                doRespondNo();
-                break;
-              case "MTG_RSVP":
-                setMeetingRsvpView();
-                break;
-              case "VOTE_TOTALS":
-                setVoteResponseView();
-                break;
-              case "COMPLETE_TODO":
-                completeTodo();
-                break;
-              case "ASSIGNED_MEMBERS":
-                setUpAssignedMembersView();
-              default:
-                retrieveTaskDetails();
-            }
-          }
-        });
-  }
-
-  private void handleUnknownError(Response<TaskResponse> response) {
-    ErrorUtils.showSnackBar(mContainer, R.string.error_generic, Snackbar.LENGTH_LONG);
-  }
-
-  @Override public void onDestroy() {
-    super.onDestroy();
-    EventBus.getDefault().unregister(this);
-  }
-
-  @Subscribe public void onTaskUpdated(TaskUpdatedEvent event) {
-    TaskModel updatedTask = event.getTask();
-    setUpViews(updatedTask);
-  }
 }

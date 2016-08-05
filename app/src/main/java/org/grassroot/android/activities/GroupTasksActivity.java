@@ -78,6 +78,18 @@ public class GroupTasksActivity extends PortraitActivity implements NewTaskMenuF
     }
 
     @Override
+    protected void onResume() {
+        super.onResume();
+        Log.e(TAG, "inside group tasks activity ... removing new task menu if showing");
+        if (newTaskMenuFragment != null) {
+            getSupportFragmentManager()
+                .beginTransaction()
+                .remove(newTaskMenuFragment)
+                .commit();
+        }
+    }
+
+    @Override
     protected void onDestroy() {
         super.onDestroy();
         EventBus.getDefault().unregister(this);
@@ -124,10 +136,10 @@ public class GroupTasksActivity extends PortraitActivity implements NewTaskMenuF
     private void openNewTaskMenu(boolean showAddMembers) {
         newTaskMenuFragment.setShowAddMembers(showAddMembers);
         getSupportFragmentManager().beginTransaction()
-                .setCustomAnimations(R.anim.up_from_bottom, R.anim.down_from_top)
-                .replace(R.id.gta_root_layout, newTaskMenuFragment)
-                .addToBackStack(null)
-                .commit();
+            .setCustomAnimations(R.anim.up_from_bottom, R.anim.down_from_top)
+            .replace(R.id.gta_root_layout, newTaskMenuFragment)
+            .addToBackStack(null)
+            .commit();
     }
 
     @Override

@@ -389,5 +389,12 @@
 
     <style name="MyDialog" parent="@android:style/Theme.Dialog" />
 
+    <!-- todo : tint this -->
+    <style name="ProgressBarSmall" parent="@android:style/Widget.ProgressBar.Small">
+        <item name="android:indeterminate">true</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:gravity">center</item>
+    </style>
 
 </resources>

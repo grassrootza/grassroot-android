@@ -1,6 +1,5 @@
 package org.grassroot.android.utils;
 
-import android.app.Notification;
 import android.os.Looper;
 import android.util.Log;
 
@@ -33,6 +32,8 @@ public class RealmUtils {
 
     private static final String TAG = RealmUtils.class.getSimpleName();
 
+    public static final String DB_LOAD_DONE = "db_load_done";
+
     public static List<String> convertListOfRealmStringInListOfString(
             RealmList<RealmString> realmList) {
         if (realmList != null) {
@@ -53,7 +54,8 @@ public class RealmUtils {
         realm.close();
     }
 
-    public static Observable saveDataToRealm(final List<? extends RealmObject> list) {
+    public static Observable saveDataToRealm(final List<? extends RealmObject> list, Scheduler observingThread) {
+        observingThread = (observingThread == null) ? AndroidSchedulers.mainThread() : observingThread;
         return Observable.create(new Observable.OnSubscribe<Boolean>() {
             @Override
             public void call(Subscriber<? super Boolean> subscriber) {
@@ -65,7 +67,7 @@ public class RealmUtils {
                 subscriber.onNext(true);
                 subscriber.onCompleted();
             }
-        }).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread());
+        }).subscribeOn(Schedulers.io()).observeOn(observingThread);
     }
 
     public static Observable saveDataToRealm(final RealmObject object) {
@@ -103,7 +105,7 @@ public class RealmUtils {
                 if(savedNotifications.size()>100){
                     Log.d(TAG,"Saved objects of size " + String.valueOf(savedNotifications.size()));
 
-                    RealmUtils.saveDataToRealm(savedNotifications.subList(0,100)).subscribe(new Action1() {
+                    RealmUtils.saveDataToRealm(savedNotifications.subList(0,100), null).subscribe(new Action1() {
                     @Override
                     public void call(Object o) {
                         Log.d(TAG,"Deleting objects of size " + String.valueOf(savedNotifications.size() - 100));
@@ -381,6 +383,17 @@ public class RealmUtils {
         return tasks;
     }
 
+    public static Observable<List<TaskModel>> loadUpcomingTasks() {
+        return Observable.create(new Observable.OnSubscribe<List<TaskModel>>() {
+            @Override
+            public void call(Subscriber<? super List<TaskModel>> subscriber) {
+                List<TaskModel> tasks = loadUpcomingTasksFromDB();
+                subscriber.onNext(tasks);
+                subscriber.onCompleted();
+            }
+        }).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread());
+    }
+
     public static RealmList<RealmString> convertListOfStringInRealmListOfString(List<String> list) {
         if (list != null) {
             String[] arrayOfStrings = new String[list.size()];
@@ -389,6 +402,24 @@ public class RealmUtils {
             return new RealmList<>(arrayOfRealmStrings);
         }
         return null;
+    }
+
+    public static Observable<List<TaskModel>> loadTasksSorted(final String parentUid) {
+        return Observable.create(new Observable.OnSubscribe<List<TaskModel>>() {
+            @Override
+            public void call(Subscriber<? super List<TaskModel>> subscriber) {
+                RealmList<TaskModel> tasks = new RealmList<>();
+                final Realm realm = Realm.getDefaultInstance();
+                RealmResults<TaskModel> results = realm
+                    .where(TaskModel.class)
+                    .equalTo("parentUid", parentUid)
+                    .findAllSorted("deadlineDate", Sort.DESCENDING);
+                tasks.addAll(realm.copyFromRealm(results));
+                subscriber.onNext(tasks);
+                subscriber.onCompleted();
+                realm.close();
+            }
+        }).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread());
     }
 
     private static RealmString[] createRealmStringArrayFromStringArray(String[] array) {

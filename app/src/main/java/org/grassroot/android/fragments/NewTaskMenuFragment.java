@@ -123,19 +123,19 @@ public class NewTaskMenuFragment extends Fragment {
 
     @OnClick(R.id.bt_todo)
     public void onTodoButtonClick() {
-        Intent todo = IntentUtils.constructIntent(getActivity(), CreateTodoActivity.class, groupUid, groupName,isGroupLocal);
+        Intent todo = IntentUtils.constructIntent(getActivity(), CreateTodoActivity.class, groupUid, groupName, groupMembership.getIsLocal());
         startActivity(todo);
     }
 
     @OnClick(R.id.bt_meeting)
     public void onMeetingButtonClick() {
-        Intent createMeeting = IntentUtils.constructIntent(getActivity(), CreateMeetingActivity.class, groupUid, groupName,isGroupLocal);
+        Intent createMeeting = IntentUtils.constructIntent(getActivity(), CreateMeetingActivity.class, groupUid, groupName, groupMembership.getIsLocal());
         startActivity(createMeeting);
     }
 
     @OnClick(R.id.bt_vote)
     public void onVoteButtonClick() {
-        Intent createVote = IntentUtils.constructIntent(getActivity(), CreateVoteActivity.class, groupUid, groupName,isGroupLocal);
+        Intent createVote = IntentUtils.constructIntent(getActivity(), CreateVoteActivity.class, groupUid, groupName, groupMembership.getIsLocal());
         createVote.putExtra("title", "Vote");
         startActivity(createVote);
     }

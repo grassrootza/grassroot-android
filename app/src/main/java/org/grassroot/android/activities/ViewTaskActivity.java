@@ -73,7 +73,8 @@ public class ViewTaskActivity extends PortraitActivity {
         if (NotificationConstants.TASK_CANCELLED.equals(clickAction)) {
             fragment = createCancelFragment(taskUid);
         } else {
-            TaskService.getInstance().fetchAndStoreTask(taskUid, taskType); // done in background, so have it next time
+            TaskService.getInstance()
+                .fetchAndStoreTask(taskUid, taskType, null).subscribe(); // done in background, so have it next time
             if (NotificationConstants.TASK_CHANGED.equals(clickAction)) {
                 fragment = createChangedFragment();
             } else {

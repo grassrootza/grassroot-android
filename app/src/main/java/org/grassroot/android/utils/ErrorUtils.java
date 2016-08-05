@@ -60,7 +60,6 @@ public class ErrorUtils {
     }
 
     public static void handleServerError(final View holder, final Activity activity, final Response response) {
-
         switch (response.code()) {
             case Constant.UNAUTHORISED:
                 showSnackBar(holder, activity.getString(R.string.INVALID_TOKEN), Snackbar.LENGTH_LONG,
@@ -88,8 +87,6 @@ public class ErrorUtils {
             case Constant.NOT_FOUND:
                 Snackbar.make(holder, R.string.GROUP_NOT_FOUND, Snackbar.LENGTH_LONG).show();
                 break;
-
-
         }
     }
 
