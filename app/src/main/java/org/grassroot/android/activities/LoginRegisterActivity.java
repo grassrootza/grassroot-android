@@ -9,7 +9,6 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
@@ -22,7 +21,6 @@ import org.grassroot.android.fragments.RegisterScreenFragment;
 import org.grassroot.android.interfaces.NotificationConstants;
 import org.grassroot.android.models.GenericResponse;
 import org.grassroot.android.models.PreferenceObject;
-import org.grassroot.android.models.Token;
 import org.grassroot.android.models.TokenResponse;
 import org.grassroot.android.services.GcmRegistrationService;
 import org.grassroot.android.services.GrassrootRestService;
@@ -32,6 +30,7 @@ import org.grassroot.android.utils.NetworkUtils;
 import org.grassroot.android.utils.RealmUtils;
 import org.grassroot.android.utils.Utilities;
 
+import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -91,7 +90,7 @@ public class LoginRegisterActivity extends AppCompatActivity implements LoginScr
     }
 
     @Override
-    public void requestLogin(String mobileNumber) {
+    public void requestLogin(final String mobileNumber) {
         final String passedMobile = Utilities.formatNumberToE164(mobileNumber);
         if (shouldRequestOtp(passedMobile)) {
             progressDialog.show();
@@ -107,13 +106,18 @@ public class LoginRegisterActivity extends AppCompatActivity implements LoginScr
                                 final String otpToPass = BuildConfig.FLAVOR.equals(Constant.STAGING) ? (String) response.body().getData() : "";
                                 switchToOtp(otpToPass, LOGIN);
                             } else {
-                                ErrorUtils.showSnackBar(rootView, getResources().getString(R.string.User_not_registered),
-                                        Snackbar.LENGTH_LONG, "Register", new View.OnClickListener() {
+                                final String restMessage = response.body().getMessage();
+                                final String errorMsg = ErrorUtils.serverErrorText(restMessage, LoginRegisterActivity.this);
+                                if (restMessage.equals(ErrorUtils.USER_DOESNT_EXIST)) {
+                                    ErrorUtils.showSnackBar(rootView, errorMsg, Snackbar.LENGTH_LONG, "Register", new View.OnClickListener() {
                                             @Override
                                             public void onClick(View view) {
                                                 switchFromLoginToRegister(msisdn);
                                             }
                                         });
+                                } else {
+                                    Snackbar.make(rootView, errorMsg, Snackbar.LENGTH_SHORT);
+                                }
                             }
                         }
 
@@ -121,7 +125,14 @@ public class LoginRegisterActivity extends AppCompatActivity implements LoginScr
                         public void onFailure(Call<GenericResponse> call, Throwable t) {
                             otpRequestedTime = -1;
                             progressDialog.dismiss();
-                            ErrorUtils.handleNetworkError(LoginRegisterActivity.this, rootView, t);
+                            final String errorMessage = getString(R.string.connect_error_logreg);
+                            final String actionMsg = getString(R.string.snackbar_try_again);
+                            ErrorUtils.showSnackBar(rootView, errorMessage, Snackbar.LENGTH_LONG, actionMsg, new View.OnClickListener() {
+                                @Override
+                                public void onClick(View v) {
+                                    requestLogin(mobileNumber);
+                                }
+                            });
                         }
                     });
         } else {
@@ -150,14 +161,19 @@ public class LoginRegisterActivity extends AppCompatActivity implements LoginScr
                                         (String) response.body().getData() : "";
                                 switchToOtp(otpToPass, REGISTER);
                             } else {
-                                final String errorMsg = getResources().getString(R.string.error_user_exists);
-                                final String actionBtn = getResources().getString(R.string.bt_login);
-                                ErrorUtils.showSnackBar(rootView, errorMsg, Snackbar.LENGTH_LONG, actionBtn, new View.OnClickListener() {
-                                    @Override
-                                    public void onClick(View view) {
-                                        switchFromRegisterToLogin(msisdn);
-                                    }
-                                });
+                                final String restMessage = response.body().getMessage();
+                                final String errorMsg = ErrorUtils.serverErrorText(restMessage, LoginRegisterActivity.this);
+                                if (restMessage.equals(ErrorUtils.USER_EXISTS)) {
+                                    final String actionBtn = getResources().getString(R.string.bt_login);
+                                    ErrorUtils.showSnackBar(rootView, errorMsg, Snackbar.LENGTH_LONG, actionBtn, new View.OnClickListener() {
+                                        @Override
+                                        public void onClick(View view) {
+                                            switchFromRegisterToLogin(msisdn);
+                                        }
+                                    });
+                                } else {
+                                    Snackbar.make(rootView, errorMsg, Snackbar.LENGTH_SHORT);
+                                }
                             }
                         }
 
@@ -216,15 +232,20 @@ public class LoginRegisterActivity extends AppCompatActivity implements LoginScr
             GrassrootRestService.getInstance().getApi().resendRegOtp(msisdn).enqueue(new Callback<GenericResponse>() {
                 @Override
                 public void onResponse(Call<GenericResponse> call, Response<GenericResponse> response) {
-                    otpRequestedTime = System.currentTimeMillis();
-                    final String otpToPass = BuildConfig.FLAVOR.equals(Constant.STAGING) ?
-                        (String) response.body().getData() : "";
-                    switchToOtp(otpToPass, REGISTER);
+                    if (response.isSuccessful()) {
+                        otpRequestedTime = System.currentTimeMillis();
+                        final String otpToPass = BuildConfig.FLAVOR.equals(Constant.STAGING) ?
+                            (String) response.body().getData() : "";
+                        switchToOtp(otpToPass, REGISTER);
+                    } else {
+                        String errorMsg = ErrorUtils.serverErrorText(response.errorBody(), LoginRegisterActivity.this);
+                        Snackbar.make(rootView, errorMsg, Snackbar.LENGTH_SHORT).show();
+                    }
                 }
 
                 @Override
                 public void onFailure(Call<GenericResponse> call, Throwable t) {
-                    // todo : log / deal with (but shouldn't be possible ...);
+                    Snackbar.make(rootView, R.string.connect_otp_resend_fail, Snackbar.LENGTH_SHORT).show();
                 }
             });
         }
@@ -239,34 +260,28 @@ public class LoginRegisterActivity extends AppCompatActivity implements LoginScr
         }
     }
 
-    private void authenticateLogin(String otp) {
+    private void authenticateLogin(String otpEntered) {
         progressDialog.show();
-        GrassrootRestService.getInstance().getApi().authenticate(msisdn, otp)
+        GrassrootRestService.getInstance().getApi().authenticate(msisdn, otpEntered)
                 .enqueue(new Callback<TokenResponse>() {
                     @Override
                     public void onResponse(Call<TokenResponse> call, final Response<TokenResponse> response) {
                         progressDialog.hide();
                         if (response.isSuccessful()) {
                             progressDialog.dismiss();
-                            Token token = response.body().getToken();
-                            PreferenceObject preference = new PreferenceObject();
-                            preference.setToken(token.getCode());
-                            preference.setMobileNumber(msisdn);
-                            preference.setLoggedIn(true);
+                            PreferenceObject preference = setUpPrefs(response.body());
                             preference.setHasGroups(response.body().getHasGroups());
                             preference.setUserName(response.body().getDisplayName());
                             preference.setMustRefresh(true);
-                            final long startTime = System.currentTimeMillis();
                             RealmUtils.saveDataToRealm(preference).subscribe(new Action1() {
                                 @Override public void call(Object o) {
-                                    Log.e(TAG, "back from realm ... took : " + String.valueOf(System.currentTimeMillis() - startTime));
                                     registerOrRefreshGCM(msisdn);
                                     launchHomeScreen(response.body().getHasGroups());
                                     finish();
                                 }
                             });
                         } else {
-                            ErrorUtils.handleServerError(rootView, LoginRegisterActivity.this, response);
+                            handleAuthServerError(response.errorBody(), LOGIN);
                         }
                     }
 
@@ -278,35 +293,28 @@ public class LoginRegisterActivity extends AppCompatActivity implements LoginScr
                 });
     }
 
-    private void verifyRegistration(final String tokenCode) {
+    private void verifyRegistration(final String otpEntered) {
         progressDialog.show();
         GrassrootRestService.getInstance().getApi()
-                .verify(msisdn, tokenCode)
+                .verify(msisdn, otpEntered)
                 .enqueue(new Callback<TokenResponse>() {
                     @Override
                     public void onResponse(Call<TokenResponse> call, Response<TokenResponse> response) {
                         progressDialog.hide();
                         if (response.isSuccessful()) {
                             progressDialog.dismiss();
-                            Token token = response.body().getToken();
-                            PreferenceObject preference = new PreferenceObject();
-                            preference.setToken(token.getCode());
-                            preference.setMobileNumber(msisdn);
+                            PreferenceObject preference = setUpPrefs(response.body());
                             preference.setUserName(displayName);
-                            preference.setLoggedIn(true);
-
-                            registerOrRefreshGCM(msisdn);
-
                             preference.setHasGroups(false);
                             RealmUtils.saveDataToRealm(preference).subscribe(new Action1() {
                                 @Override public void call(Object o) {
+                                    registerOrRefreshGCM(msisdn);
                                     launchHomeScreen(false); // by definition, registering means no group
                                     finish();
                                 }
                             });
-
                         } else {
-                            ErrorUtils.handleServerError(rootView, LoginRegisterActivity.this, response);
+                            handleAuthServerError(response.errorBody(), REGISTER);
                         }
                     }
 
@@ -316,6 +324,14 @@ public class LoginRegisterActivity extends AppCompatActivity implements LoginScr
                         ErrorUtils.handleNetworkError(LoginRegisterActivity.this, rootView, t);
                     }
                 });
+    }
+
+    private PreferenceObject setUpPrefs(TokenResponse response) {
+        PreferenceObject preference = new PreferenceObject();
+        preference.setToken(response.getToken().getCode());
+        preference.setMobileNumber(msisdn);
+        preference.setLoggedIn(true);
+        return preference;
     }
 
     private void registerOrRefreshGCM(final String phoneNumber) {
@@ -334,6 +350,22 @@ public class LoginRegisterActivity extends AppCompatActivity implements LoginScr
         } else {
             Intent welcomeScreenIntent = new Intent(LoginRegisterActivity.this, NoGroupWelcomeActivity.class);
             startActivity(welcomeScreenIntent);
+        }
+    }
+
+    private void handleAuthServerError(final ResponseBody errorBody, final String purpose) {
+        final String restMessage = ErrorUtils.getRestMessage(errorBody);
+        final String errorMsg = ErrorUtils.serverErrorText(restMessage, LoginRegisterActivity.this);
+        if (ErrorUtils.WRONG_OTP.equals(restMessage)) {
+            final String actionMsg = getString(R.string.resend_otp);
+            ErrorUtils.showSnackBar(rootView, errorMsg, Snackbar.LENGTH_LONG, actionMsg, new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    onTextResendClick(purpose);
+                }
+            });
+        } else {
+        Snackbar.make(rootView, errorMsg, Snackbar.LENGTH_SHORT);
         }
     }
 

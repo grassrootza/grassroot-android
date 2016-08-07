@@ -17,6 +17,7 @@ import org.grassroot.android.models.PreferenceObject;
 import org.grassroot.android.models.TaskChangedResponse;
 import org.grassroot.android.models.TaskModel;
 import org.grassroot.android.models.TaskResponse;
+import org.grassroot.android.utils.ErrorUtils;
 import org.grassroot.android.utils.NetworkUtils;
 import org.grassroot.android.utils.RealmUtils;
 import org.grassroot.android.utils.Utilities;
@@ -41,12 +42,6 @@ public class TaskService {
   private static final String TAG = TaskService.class.getSimpleName();
 
   private static TaskService instance;
-
-  public interface TaskActionListener {
-    void taskActionComplete(TaskModel task, String reply);
-    void taskActionError(Response<TaskResponse> response);
-    void taskActionCompleteOffline(TaskModel task, String reply);
-  }
 
   protected TaskService() { }
 
@@ -79,11 +74,9 @@ public class TaskService {
     return Observable.create(new Observable.OnSubscribe<String>() {
       @Override
       public void call(Subscriber<? super String> subscriber) {
-        if (!NetworkUtils.isOnline()) {
-          subscriber.onNext(NetworkUtils.OFFLINE_SELECTED);
-        } else {
-          final String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
-          final String code = RealmUtils.loadPreferencesFromDB().getToken();
+        final String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
+        final String code = RealmUtils.loadPreferencesFromDB().getToken();
+        if (!NetworkUtils.isOfflineOrLoggedOut(subscriber, phoneNumber, code)) {
           try {
             Response<TaskResponse> tasks = GrassrootRestService.getInstance().getApi()
                 .getUserTasks(phoneNumber, code).execute();
@@ -98,6 +91,9 @@ public class TaskService {
             }
           } catch (IOException e) {
             handleFetchConnectionError(subscriber);
+          } catch (Exception e) {
+            subscriber.onNext(NetworkUtils.CONNECT_ERROR); // in case get strange, "phone number not null"
+            subscriber.onCompleted();
           }
         }
       }
@@ -236,7 +232,7 @@ public class TaskService {
               }
               subscriber.onCompleted();
             } else {
-              throw new ApiCallException(NetworkUtils.CONNECT_ERROR, response.body().getMessage());
+              throw new ApiCallException(NetworkUtils.CONNECT_ERROR, ErrorUtils.getRestMessage(response.errorBody()));
             }
           } catch (IOException e) {
             RealmUtils.saveDataToRealmSync(task);
@@ -396,7 +392,7 @@ public class TaskService {
               RealmUtils.saveDataToRealmSync(response.body().getTasks().first());
               // EventBus.getDefault().post(new TaskUpdatedEvent(response.body().getTasks().first())); // todo : check if need
             } else {
-              throw new ApiCallException(NetworkUtils.SERVER_ERROR, response.body().getMessage());
+              throw new ApiCallException(NetworkUtils.SERVER_ERROR, ErrorUtils.getRestMessage(response.errorBody()));
             }
           } catch (IOException e) {
             storeTaskResponseOffline(task, response);

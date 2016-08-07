@@ -5,8 +5,6 @@ package org.grassroot.android.interfaces;
  */
 public interface GroupConstants {
 
-    // todo : migrate to these from strings in generic Constant class
-
     String OBJECT_FIELD = "groupObject";
     String UID_FIELD = "groupUid";
     String NAME_FIELD = "groupName";

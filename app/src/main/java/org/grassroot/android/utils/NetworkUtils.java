@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.text.TextUtils;
 import android.util.Log;
 
 import java.io.IOException;
@@ -22,7 +23,6 @@ import org.grassroot.android.models.LocalGroupEdits;
 import org.grassroot.android.models.Member;
 import org.grassroot.android.models.PreferenceObject;
 import org.grassroot.android.models.TaskModel;
-import org.grassroot.android.models.TaskResponse;
 import org.grassroot.android.services.ApplicationLoader;
 import org.grassroot.android.services.GcmRegistrationService;
 import org.grassroot.android.services.GrassrootRestService;
@@ -46,6 +46,7 @@ public class NetworkUtils {
   public static final String ONLINE_DEFAULT = "default";
   public static final String OFFLINE_SELECTED = "offline_selected"; // i.e., user chose to go offline
   public static final String OFFLINE_ON_FAIL = "offline_on_fail"; // i.e., network calls failed, but user said to keep trying
+  public static final String DB_EMPTY = "db_empty";
 
   public static final String SAVED_SERVER = "saved_server";
   public static final String SAVED_OFFLINE_MODE = "saved_offline_mode";
@@ -143,6 +144,19 @@ public class NetworkUtils {
     return (!OFFLINE_SELECTED.equals(status) && isNetworkAvailable(context)); // this means we try to connect every time, unless told not to
   }
 
+  public static boolean isOfflineOrLoggedOut(Subscriber<? super String> sub, final String phoneNumber, final String code) {
+    if (!isOnline()) {
+      sub.onNext(OFFLINE_SELECTED);
+      sub.onCompleted();
+      return true;
+    } else if (TextUtils.isEmpty(phoneNumber) || TextUtils.isEmpty(code)) {
+      sub.onNext(DB_EMPTY);
+      sub.onCompleted();
+      return true;
+    } else
+      return false;
+  }
+
   public static boolean isNetworkAvailable(Context context) {
     ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
     NetworkInfo ni = cm.getActiveNetworkInfo();
@@ -203,7 +217,7 @@ public class NetworkUtils {
     if (!fetchingServerEntities) {
       fetchingServerEntities = true;
       if (isOnline(context)) {
-        GroupService.getInstance().fetchGroupListRx(Schedulers.immediate()).subscribe();
+        GroupService.getInstance().fetchGroupList(Schedulers.immediate()).subscribe();
         GroupService.getInstance().fetchGroupJoinRequests(Schedulers.immediate()).subscribe();
         TaskService.getInstance().fetchUpcomingTasks(Schedulers.immediate()).subscribe();
       }

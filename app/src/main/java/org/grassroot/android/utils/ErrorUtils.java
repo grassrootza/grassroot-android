@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.graphics.Color;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.FragmentActivity;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
 
@@ -17,12 +18,19 @@ import org.grassroot.android.activities.StartActivity;
 import org.grassroot.android.activities.ViewTaskActivity;
 import org.grassroot.android.fragments.dialogs.NetworkErrorDialogFragment;
 import org.grassroot.android.interfaces.NetworkErrorDialogListener;
+import org.grassroot.android.models.ApiCallException;
+import org.grassroot.android.models.ServerErrorModel;
+import org.grassroot.android.services.GrassrootRestService;
 import org.grassroot.android.services.NoConnectivityException;
 
 import java.io.IOException;
+import java.lang.annotation.Annotation;
 import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
+import java.util.UUID;
 
+import okhttp3.ResponseBody;
+import retrofit2.Converter;
 import retrofit2.Response;
 
 
@@ -31,10 +39,80 @@ import retrofit2.Response;
  */
 public class ErrorUtils {
 
-    private static final String TAG = ErrorUtils.class.getCanonicalName();
+    private static final String TAG = ErrorUtils.class.getSimpleName();
+
+    // server errors
+    public static final String GENERIC_ERROR = "BAD_REQUEST";
+    public static final String USER_EXISTS = "USER_ALREADY_EXISTS";
+    public static final String USER_DOESNT_EXIST = "USER_DOES_NOT_EXIST";
+    public static final String WRONG_OTP = "INVALID_OTP";
+    public static final String OTP_EARLY_REQ = "OTP_REQ_BEFORE_ADD";
+    public static final String GROUP_CREATE_ERROR = "GROUP_NOT_CREATED";
+    public static final String PERMISSION_DENIED = "PERMISSION_DENIED";
+    public static final String PART_GROUP = "USER_ALREADY_PART_OF_GROUP";
+    public static final String CANT_APPROVE_JOIN = "APPROVER_PERMISSIONS_CHANGED";
+    public static final String INVALID_MSISDN = "GROUP_BAD_PHONE_NUMBER";
+    public static final String IMAGE_ERROR = "BAD_PICTURE_FORMAT";
+    public static final String NO_IMAGE_SENT = "PICTURE_NOT_RECEIVED";
+    public static final String DATE_IN_PAST = "TIME_CANNOT_BE_IN_THE_PAST";
+    public static final String MEETING_CANCELLED = "MEETING_ALREADY_CANCELLED";
+    public static final String ALREADY_FINISHED = "PAST_DUE";
+    public static final String VOTE_DONE = "USER_HAS_ALREADY_VOTED";
+    public static final String VOTE_CLOSED = "VOTE_CLOSED";
+    public static final String VOTE_CANCELLED = "VOTE_ALREADY_CANCELLED";
+    public static final String TODO_DONE = "TODO_ALREADY_COMPLETED";
+    public static final String NOTIFICATIONS_DONE = "NOTIFICATIONS_FINISHED";
 
     public static Intent gracefulExitToHome(Activity callingActivity) {
         return new Intent(callingActivity, HomeScreenActivity.class);
+    }
+
+    public static ServerErrorModel convertErrorBody(ResponseBody errorBody) {
+        Converter<ResponseBody, ServerErrorModel> converter = GrassrootRestService.getInstance()
+            .getRetrofit().responseBodyConverter(ServerErrorModel.class, new Annotation[0]);
+        try {
+            ServerErrorModel errorModel = converter.convert(errorBody);
+            Log.d(TAG, "error model we got back ... " + errorModel.toString());
+            return errorModel;
+        } catch (Exception e) {
+            Log.d(TAG, "something went wrong ... printing stacktrace");
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    public static String getRestMessage(final ResponseBody errorBody) {
+        final ServerErrorModel errorModel = convertErrorBody(errorBody);
+        return errorModel != null ? errorModel.getMessage() : GENERIC_ERROR;
+    }
+
+    public static String serverErrorText(ResponseBody errorBody, final Context context) {
+        return serverErrorText(getRestMessage(errorBody), context);
+    }
+
+    public static String serverErrorText(final String restMessage, final Context context) {
+        if (TextUtils.isEmpty(restMessage)) {
+            return context.getString(R.string.server_error_general);
+        } else {
+            switch (restMessage) {
+                case USER_EXISTS:
+                    return context.getString(R.string.server_error_user_exists);
+                case USER_DOESNT_EXIST:
+                    return context.getString(R.string.server_error_user_not_exist);
+                case WRONG_OTP:
+                    return context.getString(R.string.server_error_otp_wrong);
+                case OTP_EARLY_REQ:
+                    return context.getString(R.string.server_error_otp_early);
+                case GROUP_CREATE_ERROR:
+                    return context.getString(R.string.server_error_group_create);
+                case INVALID_MSISDN:
+                    return context.getString(R.string.server_error_phone_number);
+                case PERMISSION_DENIED:
+                    return context.getString(R.string.server_error_perms_denied);
+                default:
+                    return context.getString(R.string.server_error_general);
+            }
+        }
     }
 
     /**
@@ -90,6 +168,8 @@ public class ErrorUtils {
         }
     }
 
+
+    // todo : double check if we still want / replace
     public static void connectivityError(View holder, NoConnectivityException e) {
         // todo : all sorts of things for persisting, asking to turn on, etc
         final String errorText = "Connectivity error! On calling URL: " + e.getUriAttempted();

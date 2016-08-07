@@ -8,7 +8,7 @@ import java.util.List;
  */
 public class NotificationWrapper {
 
-    //todo I messed up in the backend, this class should not exist
+    // todo I messed up in the backend, this class should not exist
 
     private List<TaskNotification> notifications = new ArrayList<>();
 

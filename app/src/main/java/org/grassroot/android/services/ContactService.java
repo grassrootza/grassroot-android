@@ -72,6 +72,7 @@ public class ContactService {
     contactsLoading = true;
     contactsFinishedLoading = false;
     Log.d(TAG, "starting to sync contact list ...");
+    // todo : switch this to RX
     AsyncTask.execute(new Runnable() {
       @Override public void run() {
         loadContactMap();

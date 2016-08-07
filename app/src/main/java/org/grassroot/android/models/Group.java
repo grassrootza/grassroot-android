@@ -50,8 +50,6 @@ public class Group extends RealmObject implements Parcelable, Comparable<Group> 
   private DateTime dateTime; // used in JSON conversion
   private String dateTimeStringISO;
 
-  private boolean hasTasks; // todo : may be able to remove this
-
   private RealmList<RealmString> permissions = new RealmList<>();
   @Ignore private List<String> permissionsList;
 
@@ -152,14 +150,6 @@ public class Group extends RealmObject implements Parcelable, Comparable<Group> 
 
   public boolean hasJoinCode() {
     return !(TextUtils.isEmpty(joinCode) || GroupConstants.NO_JOIN_CODE.equals(joinCode)) ;
-  }
-
-  public boolean isHasTasks() {
-    return hasTasks;
-  }
-
-  public void setHasTasks(boolean hasTasks) {
-    this.hasTasks = hasTasks;
   }
 
   public String getLastTimeTasksFetched() { return lastTimeTasksFetched; }
@@ -361,7 +351,6 @@ public class Group extends RealmObject implements Parcelable, Comparable<Group> 
     dest.writeString(getDateTimeStringISO());
     dest.writeString(this.lastChangeType);
     dest.writeString(this.joinCode);
-    dest.writeInt(hasTasks ? 1 : 0);
     dest.writeStringList(RealmUtils.convertListOfRealmStringInListOfString(this.permissions));
     dest.writeInt(isLocal ? 1 : 0);
     dest.writeInt(discoverable ? 1 : 0);
@@ -382,7 +371,6 @@ public class Group extends RealmObject implements Parcelable, Comparable<Group> 
     dateTimeStringISO = in.readString();
     lastChangeType = in.readString();
     joinCode = in.readString();
-    hasTasks = in.readInt() != 0;
     permissions = RealmUtils.convertListOfStringInRealmListOfString(in.createStringArrayList());
     isLocal = in.readInt() != 0;
     discoverable = in.readInt() != 0;

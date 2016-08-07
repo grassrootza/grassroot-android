@@ -21,7 +21,7 @@ public final class IntentUtils {
         Intent i = new Intent(callingContext, toActivityClass);
         i.putExtra(GroupConstants.UID_FIELD, groupUid);
         i.putExtra(GroupConstants.NAME_FIELD, groupName);
-        i.putExtra(Constant.GROUP_LOCAL,isLocal);
+        i.putExtra(GroupConstants.LOCAL_FIELD,isLocal);
         return i;
     }
 

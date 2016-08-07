@@ -36,6 +36,7 @@ import org.grassroot.android.interfaces.TaskConstants;
 import org.grassroot.android.models.ApiCallException;
 import org.grassroot.android.models.Group;
 import org.grassroot.android.models.Member;
+import org.grassroot.android.models.RealmString;
 import org.grassroot.android.models.TaskModel;
 import org.grassroot.android.services.TaskService;
 import org.grassroot.android.utils.Constant;
@@ -60,6 +61,7 @@ import butterknife.ButterKnife;
 import butterknife.OnCheckedChanged;
 import butterknife.OnClick;
 import butterknife.OnTextChanged;
+import io.realm.RealmList;
 import rx.Subscriber;
 import rx.functions.Action1;
 
@@ -130,7 +132,7 @@ public class CreateTaskFragment extends Fragment {
         }
         groupUid = b.getString(GroupConstants.UID_FIELD);
         taskType = b.getString(TaskConstants.TASK_TYPE_FIELD);
-        groupLocal = b.getBoolean(Constant.GROUP_LOCAL);
+        groupLocal = b.getBoolean(GroupConstants.LOCAL_FIELD);
 
         Log.e(TAG, "create task fragment initiated, with group local set to : " + groupLocal);
 
@@ -143,12 +145,14 @@ public class CreateTaskFragment extends Fragment {
                              Bundle savedInstanceState) {
         View viewToReturn = inflater.inflate(R.layout.fragment_create_task, container, false);
         ButterKnife.bind(this, viewToReturn);
+
         this.vContainer = container;
         progressDialog = new ProgressDialog(getContext());
         progressDialog.setIndeterminate(true);
         progressDialog.setMessage(getString(R.string.txt_pls_wait));
         shortCharCounter = getString(R.string.generic_35_char_counter);
         longCharCounter = getString(R.string.generic_250_char_conter);
+
         setUpStrings();
         return viewToReturn;
     }
@@ -221,6 +225,11 @@ public class CreateTaskFragment extends Fragment {
         }
     }
 
+    private void startPickMemberActivity(ArrayList<Member> preSelectedMembers) {
+        Intent pickMember = IntentUtils.memberSelectionIntent(getActivity(), groupUid, CreateTaskFragment.class.getCanonicalName(), preSelectedMembers);
+        startActivityForResult(pickMember, Constant.activitySelectGroupMembers);
+    }
+
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -229,25 +238,16 @@ public class CreateTaskFragment extends Fragment {
         }
     }
 
-    @Override
-    public void onResume() {
-        super.onResume();
-    }
-
-    private void startPickMemberActivity(ArrayList<Member> preSelectedMembers) {
-        Intent pickMember = IntentUtils.memberSelectionIntent(getActivity(), groupUid, CreateTaskFragment.class.getCanonicalName(), preSelectedMembers);
-        startActivityForResult(pickMember, Constant.activitySelectGroupMembers);
-    }
-
-    // todo : see if we can structure the calls better so don't have to round trip through activity
     public void setAssignedMembers(Intent data) {
         if (data == null) {
-            throw new UnsupportedOperationException("Error! Need not null data back from activity");
+            Log.e(TAG, "Error! Need not null data back from activity");
+            return;
         }
 
         List<Member> members = data.getParcelableArrayListExtra(Constant.SELECTED_MEMBERS_FIELD);
         if (members == null) {
-            throw new UnsupportedOperationException("Error! Member picker must not return null list");
+            Log.e(TAG, "Error! Member picker must not return null list");
+            return;
         }
 
         assignedMembers = new HashSet<>(members);
@@ -263,17 +263,15 @@ public class CreateTaskFragment extends Fragment {
 
     @OnClick(R.id.ctsk_btn_create_task)
     public void validateFormAndCreateTask() {
-        if (etTitleInput.getText().toString().trim().equals("")) {
+        if (etTitleInput.getText().toString().trim().isEmpty()) {
             ErrorUtils.showSnackBar(vContainer, "Please enter a subject", Snackbar.LENGTH_LONG, "", null);
         } else if (TaskConstants.MEETING.equals(taskType) && etLocationInput.getText()
                 .toString()
                 .trim()
                 .equals("")) {
-            ErrorUtils.showSnackBar(vContainer, "Please enter a location", Snackbar.LENGTH_LONG, "",
-                    null);
+            ErrorUtils.showSnackBar(vContainer, "Please enter a location", Snackbar.LENGTH_LONG, "", null);
         } else if (!datePicked || (!taskType.equals(TaskConstants.TODO) && !timePicked)) {
-            ErrorUtils.showSnackBar(vContainer, "Please enter a date and time for the meeting",
-                    Snackbar.LENGTH_LONG, "", null);
+            ErrorUtils.showSnackBar(vContainer, "Please enter a date and time for the meeting", Snackbar.LENGTH_LONG, "", null);
         } else {
             createTask();
         }
@@ -297,8 +295,8 @@ public class CreateTaskFragment extends Fragment {
                     if (NetworkUtils.CONNECT_ERROR.equals(type)) {
                         generateSuccessTask(model);
                     } else {
-                        ErrorUtils.showSnackBar(vContainer, "Error! Something went wrong", Snackbar.LENGTH_LONG, "",
-                            null);
+                        final String msg = ErrorUtils.serverErrorText(((ApiCallException) e).errorTag, getContext());
+                        Snackbar.make(vContainer, msg, Snackbar.LENGTH_SHORT); // todo : add a "save and try again option"
                     }
                 }
             }
@@ -362,11 +360,9 @@ public class CreateTaskFragment extends Fragment {
         model.setReply(TaskConstants.TODO_PENDING);
         model.setHasResponded(false);
 
-        model.setMemberUIDS(
-                RealmUtils.convertListOfStringInRealmListOfString(new ArrayList<>(memberUids)));
-        // todo : work out why doing call below
-        RealmUtils.saveDataToRealm(
-                RealmUtils.convertListOfStringInRealmListOfString(new ArrayList<>(memberUids)), null);
+        final RealmList<RealmString> realmMemberUids = RealmUtils.convertListOfStringInRealmListOfString(new ArrayList<>(memberUids));
+        model.setMemberUIDS(realmMemberUids);
+        RealmUtils.saveDataToRealm(realmMemberUids, null).subscribe();
 
         return model;
     }

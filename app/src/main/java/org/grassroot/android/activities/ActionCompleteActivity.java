@@ -1,7 +1,9 @@
 package org.grassroot.android.activities;
 
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.v7.app.AlertDialog;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
@@ -168,8 +170,16 @@ public class ActionCompleteActivity extends PortraitActivity implements NewTaskM
 
     @OnClick(R.id.bt_keep_trying)
     public void setKeepRetrying() {
-        startActivity(doneIntent());
-        finish();
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setMessage(R.string.ac_msg_try_again)
+            .setPositiveButton(R.string.pp_OK, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        startActivity(doneIntent());
+                        finish();
+                    }
+                });
+        builder.create().show();
     }
 
     private Intent doneIntent() {

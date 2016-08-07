@@ -27,7 +27,6 @@ import org.grassroot.android.models.RealmString;
 import org.grassroot.android.models.ResponseTotalsModel;
 import org.grassroot.android.models.RsvpListModel;
 import org.grassroot.android.models.TaskChangedResponse;
-import org.grassroot.android.models.TaskModel;
 import org.grassroot.android.models.TaskResponse;
 import org.grassroot.android.models.TokenResponse;
 import org.grassroot.android.utils.Constant;
@@ -60,7 +59,8 @@ import retrofit2.http.Query;
 public class GrassrootRestService {
 
   private static final String GRASSROOT_SERVER_URL = Constant.restUrl;
-  private RestApi mRestApi;
+  private Retrofit retrofit;
+  private RestApi restApi;
 
   private static GrassrootRestService instance = null;
 
@@ -124,16 +124,18 @@ public class GrassrootRestService {
         })
         .create();
 
-    Retrofit retrofit = new Retrofit.Builder()
+    retrofit = new Retrofit.Builder()
         .baseUrl(GRASSROOT_SERVER_URL)
         .addConverterFactory(GsonConverterFactory.create(gson))
         .client(client).build();
 
-    mRestApi = retrofit.create(RestApi.class);
+    restApi = retrofit.create(RestApi.class);
   }
 
+  public Retrofit getRetrofit() { return retrofit; }
+
   public RestApi getApi() {
-    return mRestApi;
+    return restApi;
   }
 
   public interface RestApi {

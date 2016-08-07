@@ -195,7 +195,7 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
     in time, rather than doing a full refresh, and don't need to worry about progress bar, etc
    */
     public void refreshGroupList() {
-        GroupService.getInstance().fetchGroupListRx(null).subscribe(new Subscriber<String>() {
+        GroupService.getInstance().fetchGroupList(null).subscribe(new Subscriber<String>() {
             @Override
             public void onError(Throwable e) {
                 hideProgress();

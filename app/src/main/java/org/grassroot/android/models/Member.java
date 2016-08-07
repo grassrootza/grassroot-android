@@ -9,7 +9,6 @@ import org.grassroot.android.interfaces.GroupConstants;
 
 /**
  * Created by luke on 2016/05/05.
- * todo: probably need to have roles, and various other things, in here too
  */
 public class Member extends RealmObject implements Parcelable {
 

@@ -23,7 +23,9 @@ import org.grassroot.android.models.Permission;
 import org.grassroot.android.models.PermissionResponse;
 import org.grassroot.android.models.PreferenceObject;
 import org.grassroot.android.models.RealmString;
+import org.grassroot.android.models.ServerErrorModel;
 import org.grassroot.android.models.TaskModel;
+import org.grassroot.android.utils.ErrorUtils;
 import org.grassroot.android.utils.NetworkUtils;
 import org.grassroot.android.utils.PermissionUtils;
 import org.grassroot.android.utils.RealmUtils;
@@ -81,17 +83,16 @@ public class GroupService {
     return methodInstance;
   }
 
-  public Observable<String> fetchGroupListRx(Scheduler observingThread) {
+  public Observable<String> fetchGroupList(Scheduler observingThread) {
     observingThread = (observingThread == null) ? AndroidSchedulers.mainThread() : observingThread;
     return Observable.create(new Observable.OnSubscribe<String>() {
       @Override
       public void call(Subscriber<? super String> subscriber) {
-        if (!NetworkUtils.isOnline()) {
-          subscriber.onNext(NetworkUtils.OFFLINE_SELECTED);
-        } else {
+        final String mobileNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
+        final String userCode = RealmUtils.loadPreferencesFromDB().getToken();
+        if (!NetworkUtils.isOfflineOrLoggedOut(subscriber, mobileNumber, userCode)) {
+
           isFetchingGroups = true;
-          final String mobileNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
-          final String userCode = RealmUtils.loadPreferencesFromDB().getToken();
           long lastTimeUpdated = RealmUtils.loadPreferencesFromDB().getLastTimeGroupsFetched();
           Call<GroupsChangedResponse> apiCall = (lastTimeUpdated == 0) ?
               GrassrootRestService.getInstance().getApi().getUserGroups(mobileNumber, userCode) :
@@ -257,7 +258,7 @@ public class GroupService {
               subscriber.onNext(groupFromServer.getGroupUid());
               subscriber.onCompleted();
             } else {
-              throw new ApiCallException(NetworkUtils.SERVER_ERROR, response.body().getMessage());
+              throw new ApiCallException(NetworkUtils.SERVER_ERROR, ErrorUtils.getRestMessage(response.errorBody()));
             }
           } catch (IOException e) {
             NetworkUtils.setConnectionFailed();
@@ -343,10 +344,21 @@ public class GroupService {
               subscriber.onNext(NetworkUtils.SAVED_SERVER);
               subscriber.onCompleted();
             } else {
-              if (!priorSaved) {
-                saveAddedMembersLocal(groupUid, members);
+              // todo : restructure into nested try block, I think ...
+              ServerErrorModel errorModel = ErrorUtils.convertErrorBody(serverCall.errorBody());
+              if (errorModel != null) {
+                Log.e(TAG, "returned an error model ... looks like: " + errorModel);
+                final String error = errorModel.getMessage();
+                if (!ErrorUtils.INVALID_MSISDN.equals(error) && !priorSaved) {
+                  saveAddedMembersLocal(groupUid, members);
+                  throw new ApiCallException(NetworkUtils.SERVER_ERROR, error); // todo : extract MSISDN ...
+                } else {
+                  Log.e(TAG, "throwing error with data ... error message = " + error);
+                  throw new ApiCallException(NetworkUtils.SERVER_ERROR, error, errorModel.getData());
+                }
+              } else {
+                throw new ApiCallException(NetworkUtils.SERVER_ERROR);
               }
-              throw new ApiCallException(NetworkUtils.SERVER_ERROR); // todo : handle more descriptive ...
             }
           } catch (IOException e) {
             if (!priorSaved) {
@@ -459,7 +471,7 @@ public class GroupService {
                   GroupEditedEvent.CHANGED_ONLINE, groupUid, ""));
               subscriber.onCompleted();
             } else {
-              throw new ApiCallException(NetworkUtils.SERVER_ERROR, response.body().getMessage());
+              throw new ApiCallException(NetworkUtils.SERVER_ERROR, ErrorUtils.getRestMessage(response.errorBody()));
             }
           } catch (IOException e) {
             NetworkUtils.setConnectionFailed();
@@ -522,7 +534,7 @@ public class GroupService {
               subscriber.onNext(NetworkUtils.SAVED_SERVER);
               subscriber.onCompleted();
             } else {
-              throw new ApiCallException(NetworkUtils.SERVER_ERROR, response.body().getMessage());
+              throw new ApiCallException(NetworkUtils.SERVER_ERROR, ErrorUtils.getRestMessage(response.errorBody()));
             }
           } catch (IOException e) {
             NetworkUtils.setConnectionFailed();
@@ -571,7 +583,7 @@ public class GroupService {
               subscriber.onNext(NetworkUtils.SAVED_SERVER);
               subscriber.onCompleted();
             } else {
-              throw new ApiCallException(NetworkUtils.SERVER_ERROR, response.body().getMessage());
+              throw new ApiCallException(NetworkUtils.SERVER_ERROR, ErrorUtils.getRestMessage(response.errorBody()));
             }
 
           } catch (IOException e) {
@@ -613,7 +625,7 @@ public class GroupService {
               subscriber.onCompleted();
             } else {
               // don't save group, as likely permission error / will decouple from server
-              throw new ApiCallException(NetworkUtils.SERVER_ERROR, response.body().getMessage());
+              throw new ApiCallException(NetworkUtils.SERVER_ERROR, ErrorUtils.getRestMessage(response.errorBody()));
             }
           } catch (IOException e) {
             saveRenamedGroupToDB(group, newName, true);
@@ -661,7 +673,7 @@ public class GroupService {
               subscriber.onNext(NetworkUtils.SAVED_SERVER);
               subscriber.onCompleted();
             } else {
-              throw new ApiCallException(NetworkUtils.SERVER_ERROR, response.body().getMessage());
+              throw new ApiCallException(NetworkUtils.SERVER_ERROR, ErrorUtils.getRestMessage(response.errorBody()));
             }
           } catch (IOException e) {
             storeSwitchPublicStatus(groupUid, isPublic, true);
@@ -711,7 +723,7 @@ public class GroupService {
               EventBus.getDefault().post(event);
               subscriber.onCompleted();
             } else {
-              throw new ApiCallException(NetworkUtils.SERVER_ERROR, response.body().getMessage());
+              throw new ApiCallException(NetworkUtils.SERVER_ERROR, ErrorUtils.getRestMessage(response.errorBody()));
             }
           } catch (IOException e) {
             NetworkUtils.setConnectionFailed();
@@ -789,7 +801,7 @@ public class GroupService {
               subscriber.onNext(NetworkUtils.SAVED_SERVER);
               subscriber.onCompleted();
             } else {
-              throw new ApiCallException(NetworkUtils.SERVER_ERROR, response.body().getMessage());
+              throw new ApiCallException(NetworkUtils.SERVER_ERROR, ErrorUtils.getRestMessage(response.errorBody()));
             }
           } catch (IOException e) {
             storeAddedOrganizer(groupUid, memberUid, true);
@@ -935,12 +947,9 @@ public class GroupService {
     return Observable.create(new Observable.OnSubscribe<String>() {
       @Override
       public void call(Subscriber<? super String> subscriber) {
-        if (!NetworkUtils.isOnline()) {
-          subscriber.onNext(NetworkUtils.OFFLINE_SELECTED);
-          subscriber.onCompleted();
-        } else {
-          final String mobileNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
-          final String code = RealmUtils.loadPreferencesFromDB().getToken();
+        final String mobileNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
+        final String code = RealmUtils.loadPreferencesFromDB().getToken();
+        if (!NetworkUtils.isOfflineOrLoggedOut(subscriber, mobileNumber, code)) {
           try {
             Response<RealmList<GroupJoinRequest>> response =  GrassrootRestService.getInstance().getApi()
                 .getOpenJoinRequests(mobileNumber, code).execute();
