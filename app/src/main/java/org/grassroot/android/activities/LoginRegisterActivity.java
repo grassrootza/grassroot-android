@@ -9,6 +9,7 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
@@ -335,6 +336,7 @@ public class LoginRegisterActivity extends AppCompatActivity implements LoginScr
     }
 
     private void registerOrRefreshGCM(final String phoneNumber) {
+        Log.d(TAG, "registering for GCM ... sending intent ...");
         Intent gcmRegistrationIntent = new Intent(LoginRegisterActivity.this, GcmRegistrationService.class);
         gcmRegistrationIntent.putExtra(NotificationConstants.ACTION, NotificationConstants.GCM_REGISTER);
         gcmRegistrationIntent.putExtra(NotificationConstants.PHONE_NUMBER, phoneNumber);

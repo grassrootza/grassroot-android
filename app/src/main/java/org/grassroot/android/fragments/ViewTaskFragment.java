@@ -37,6 +37,7 @@ import org.grassroot.android.events.TaskUpdatedEvent;
 import org.grassroot.android.fragments.dialogs.ConfirmCancelDialogFragment;
 import org.grassroot.android.interfaces.NetworkErrorDialogListener;
 import org.grassroot.android.interfaces.TaskConstants;
+import org.grassroot.android.models.ApiCallException;
 import org.grassroot.android.models.GenericResponse;
 import org.grassroot.android.models.Member;
 import org.grassroot.android.models.MemberList;
@@ -188,6 +189,10 @@ public class ViewTaskFragment extends Fragment {
                 task = response.body().getTasks().get(0);
                 Log.e(TAG, task.toString());
                 setUpViews(task);
+              } else {
+                // todo : swap to action complete activity if the error is because cancelled
+                final String errorMsg = ErrorUtils.serverErrorText(response.errorBody(), getContext());
+                Snackbar.make(mContainer, errorMsg, Snackbar.LENGTH_SHORT).show();
               }
             }
 
@@ -362,12 +367,23 @@ public class ViewTaskFragment extends Fragment {
 
       @Override
       public void onError(Throwable e) {
-        // handleUnknownError(response);
+        if (e instanceof ApiCallException) {
+          ApiCallException error = (ApiCallException) e;
+          if (NetworkUtils.SERVER_ERROR.equals(error.getMessage())) {
+            handleServerError(error.errorTag);
+          } else if (NetworkUtils.CONNECT_ERROR.equals(error.getMessage())) {
+            handleSavedOffline(reply);
+          }
+        }
       }
 
       @Override
       public void onCompleted() { }
     });
+  }
+
+  private void handleServerError(final String restMessage) {
+    Snackbar.make(mContainer, ErrorUtils.serverErrorText(restMessage, getContext()), Snackbar.LENGTH_SHORT).show();
   }
 
   @OnClick(R.id.vt_left_response) public void doRespondYes() {
@@ -505,6 +521,7 @@ public class ViewTaskFragment extends Fragment {
 
     /*
     SECTION : HANDLING DETAILS ON RSVP LIST, VOTE TOTALS, ETC.
+    todo : switch these to Rx
      */
 
   private void setMeetingRsvpView() {
@@ -532,7 +549,8 @@ public class ViewTaskFragment extends Fragment {
                   icResponsesExpand.setVisibility(View.GONE);
                 }
               } else {
-                Log.e(TAG, "error! printing: " + response.errorBody());
+                final String errorMsg = ErrorUtils.serverErrorText(response.errorBody(), getContext());
+                Snackbar.make(mContainer, errorMsg, Snackbar.LENGTH_SHORT).show();
               }
             }
 
@@ -558,7 +576,8 @@ public class ViewTaskFragment extends Fragment {
                 displayVoteTotals(totals);
                 canViewResponses = true;
               } else {
-                Log.e(TAG, "error! printing: " + response.errorBody());
+                final String errorMsg = ErrorUtils.serverErrorText(response.errorBody(), getContext());
+                Snackbar.make(mContainer, errorMsg, Snackbar.LENGTH_SHORT).show();
               }
             }
 

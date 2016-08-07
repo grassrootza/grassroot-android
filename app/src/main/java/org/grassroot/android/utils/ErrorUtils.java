@@ -56,39 +56,12 @@ public class ErrorUtils {
     public static final String NO_IMAGE_SENT = "PICTURE_NOT_RECEIVED";
     public static final String DATE_IN_PAST = "TIME_CANNOT_BE_IN_THE_PAST";
     public static final String MEETING_CANCELLED = "MEETING_ALREADY_CANCELLED";
-    public static final String ALREADY_FINISHED = "PAST_DUE";
+    public static final String MEETING_OVER = "PAST_DUE";
     public static final String VOTE_DONE = "USER_HAS_ALREADY_VOTED";
     public static final String VOTE_CLOSED = "VOTE_CLOSED";
     public static final String VOTE_CANCELLED = "VOTE_ALREADY_CANCELLED";
     public static final String TODO_DONE = "TODO_ALREADY_COMPLETED";
     public static final String NOTIFICATIONS_DONE = "NOTIFICATIONS_FINISHED";
-
-    public static Intent gracefulExitToHome(Activity callingActivity) {
-        return new Intent(callingActivity, HomeScreenActivity.class);
-    }
-
-    public static ServerErrorModel convertErrorBody(ResponseBody errorBody) {
-        Converter<ResponseBody, ServerErrorModel> converter = GrassrootRestService.getInstance()
-            .getRetrofit().responseBodyConverter(ServerErrorModel.class, new Annotation[0]);
-        try {
-            ServerErrorModel errorModel = converter.convert(errorBody);
-            Log.d(TAG, "error model we got back ... " + errorModel.toString());
-            return errorModel;
-        } catch (Exception e) {
-            Log.d(TAG, "something went wrong ... printing stacktrace");
-            e.printStackTrace();
-            return null;
-        }
-    }
-
-    public static String getRestMessage(final ResponseBody errorBody) {
-        final ServerErrorModel errorModel = convertErrorBody(errorBody);
-        return errorModel != null ? errorModel.getMessage() : GENERIC_ERROR;
-    }
-
-    public static String serverErrorText(ResponseBody errorBody, final Context context) {
-        return serverErrorText(getRestMessage(errorBody), context);
-    }
 
     public static String serverErrorText(final String restMessage, final Context context) {
         if (TextUtils.isEmpty(restMessage)) {
@@ -109,10 +82,66 @@ public class ErrorUtils {
                     return context.getString(R.string.server_error_phone_number);
                 case PERMISSION_DENIED:
                     return context.getString(R.string.server_error_perms_denied);
+                case IMAGE_ERROR:
+                    return context.getString(R.string.server_error_image_error);
+                case NO_IMAGE_SENT:
+                    return context.getString(R.string.server_error_image_none);
+                case PART_GROUP:
+                    return context.getString(R.string.server_error_part_of_group);
+                case CANT_APPROVE_JOIN:
+                    return context.getString(R.string.server_error_cant_approve_join);
+                case DATE_IN_PAST:
+                    return context.getString(R.string.server_error_date_in_past);
+                case MEETING_CANCELLED:
+                    return context.getString(R.string.server_error_meeting_cancelled);
+                case MEETING_OVER:
+                    return context.getString(R.string.server_error_meeting_over);
+                case VOTE_DONE:
+                    return context.getString(R.string.server_error_already_voted);
+                case VOTE_CLOSED:
+                    return context.getString(R.string.server_error_vote_closed);
+                case VOTE_CANCELLED:
+                    return context.getString(R.string.server_error_vote_cancelled);
+                case TODO_DONE:
+                    return context.getString(R.string.server_error_todo_completed);
+                case NOTIFICATIONS_DONE:
+                    return context.getString(R.string.server_error_notifications_done);
                 default:
                     return context.getString(R.string.server_error_general);
             }
         }
+    }
+
+    // todo : use this in an uncaught exception handler
+    public static Intent gracefulExitToHome(Activity callingActivity) {
+        return new Intent(callingActivity, HomeScreenActivity.class);
+    }
+
+    public static ServerErrorModel convertErrorBody(ResponseBody errorBody) {
+        Converter<ResponseBody, ServerErrorModel> converter = GrassrootRestService.getInstance()
+            .getRetrofit().responseBodyConverter(ServerErrorModel.class, new Annotation[0]);
+        try {
+            ServerErrorModel errorModel = converter.convert(errorBody);
+            return errorModel;
+        } catch (Exception e) {
+            Log.d(TAG, "something went wrong converting error model... printing stacktrace");
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    public static String getRestMessage(final ResponseBody errorBody) {
+        final ServerErrorModel errorModel = convertErrorBody(errorBody);
+        return errorModel != null ? errorModel.getMessage() : GENERIC_ERROR;
+    }
+
+    public static String serverErrorText(ResponseBody errorBody, final Context context) {
+        return serverErrorText(getRestMessage(errorBody), context);
+    }
+
+    public static String serverErrorText(Throwable e, final Context context) {
+        final String restMsg = (e instanceof ApiCallException) ? ((ApiCallException) e).errorTag : GENERIC_ERROR;
+        return serverErrorText(restMsg, context);
     }
 
     /**
@@ -137,37 +166,19 @@ public class ErrorUtils {
         }
     }
 
-    public static void handleServerError(final View holder, final Activity activity, final Response response) {
-        switch (response.code()) {
-            case Constant.UNAUTHORISED:
-                showSnackBar(holder, activity.getString(R.string.INVALID_TOKEN), Snackbar.LENGTH_LONG,
-                        activity.getString(R.string.LOG_OUT), new View.OnClickListener() {
-                            @Override
-                            public void onClick(View v) {
-                                RealmUtils.deleteAllObjects();
-                                Intent open = new Intent(activity, StartActivity.class);
-                                activity.startActivity(open);
-                                activity.finish();
-                            }
-                        });
-                break;
-            case Constant.CONFLICT:
-                 if(activity instanceof ViewTaskActivity || activity instanceof GroupTasksActivity) {
-                     Snackbar.make(holder, R.string.Alert_Already_Responded, Snackbar.LENGTH_LONG).show();
-                 }
-                else if(activity instanceof GroupSearchActivity){
-                     Snackbar.make(holder,activity.getString(R.string.USER_ALREADY_PART),Snackbar.LENGTH_LONG);
-                 }
-                break;
-            case Constant.INTERNAL_SERVER_ERROR:
-                Snackbar.make(holder, R.string.error_generic, Snackbar.LENGTH_LONG).show();
-                break;
-            case Constant.NOT_FOUND:
-                Snackbar.make(holder, R.string.GROUP_NOT_FOUND, Snackbar.LENGTH_LONG).show();
-                break;
-        }
+    // todo : somehow intercept this everywhere ...
+    public static void handleBadAuthToken(final View holder, final Activity activity, final Response response) {
+        showSnackBar(holder, activity.getString(R.string.INVALID_TOKEN), Snackbar.LENGTH_LONG,
+            activity.getString(R.string.LOG_OUT), new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    RealmUtils.deleteAllObjects();
+                    Intent open = new Intent(activity, StartActivity.class);
+                    activity.startActivity(open);
+                    activity.finish();
+                }
+            });
     }
-
 
     // todo : double check if we still want / replace
     public static void connectivityError(View holder, NoConnectivityException e) {
@@ -185,21 +196,18 @@ public class ErrorUtils {
 
     public static void hostError(View holder, UnknownHostException e) {
         final String errorText = "Host error! With message: " + e.getMessage();
-        Snackbar snackBar = Snackbar.make(holder, errorText, Snackbar.LENGTH_LONG);
-        snackBar.show();
+        Snackbar.make(holder, errorText, Snackbar.LENGTH_LONG).show();
     }
 
     public static void otherIOError(View holder, IOException e) {
         final String errorText = "Other IO error! With message: " + e.getMessage();
-        Snackbar snackBar = Snackbar.make(holder, errorText, Snackbar.LENGTH_LONG);
-        snackBar.show();
+        Snackbar.make(holder, errorText, Snackbar.LENGTH_LONG).show();
     }
 
     public static void socketError(View holder, SocketTimeoutException e) {
         final String errorText = "Sorry! Our server may be down: " + e.getMessage();
         try {
-            Snackbar snackBar = Snackbar.make(holder, errorText, Snackbar.LENGTH_LONG);
-            snackBar.show();
+            Snackbar.make(holder, errorText, Snackbar.LENGTH_LONG).show();
         } catch (Exception e1) {
             Log.e(TAG, "Socket error on startup");
         }

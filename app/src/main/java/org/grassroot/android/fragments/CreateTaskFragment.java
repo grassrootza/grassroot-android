@@ -295,7 +295,7 @@ public class CreateTaskFragment extends Fragment {
                     if (NetworkUtils.CONNECT_ERROR.equals(type)) {
                         generateSuccessTask(model);
                     } else {
-                        final String msg = ErrorUtils.serverErrorText(((ApiCallException) e).errorTag, getContext());
+                        final String msg = ErrorUtils.serverErrorText(e, getContext());
                         Snackbar.make(vContainer, msg, Snackbar.LENGTH_SHORT); // todo : add a "save and try again option"
                     }
                 }

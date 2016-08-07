@@ -176,6 +176,7 @@ public class GroupSearchActivity extends PortraitActivity {
         final String mobile = RealmUtils.loadPreferencesFromDB().getMobileNumber();
         final String code = RealmUtils.loadPreferencesFromDB().getToken();
         final String searchTerm = et_searchbox.getText().toString().trim();
+        // todo : switch to Rx
         GrassrootRestService.getInstance().getApi().search(mobile, code, searchTerm)
                 .enqueue(new Callback<GroupSearchResponse>() {
                     @Override
@@ -244,11 +245,8 @@ public class GroupSearchActivity extends PortraitActivity {
                                         }
                                     }).create().show();
                         } else {
-                            if (response.body().getMessage().equals("USER_ALREADY_PART")) {
-                                ErrorUtils.showSnackBar(rlRoot, R.string.USER_ALREADY_PART, Snackbar.LENGTH_LONG);
-                            } else {
-                                ErrorUtils.handleServerError(rlRoot, GroupSearchActivity.this, response);
-                            }
+                            final String errorMsg = ErrorUtils.serverErrorText(response.errorBody(), GroupSearchActivity.this);
+                            Snackbar.make(rlRoot, errorMsg, Snackbar.LENGTH_SHORT).show();
                         }
                     }
 

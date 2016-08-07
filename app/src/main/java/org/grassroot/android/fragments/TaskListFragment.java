@@ -310,7 +310,8 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
                   EventBus.getDefault()
                       .post(new TaskChangedEvent(position, response.body().getTasks().get(0)));
                 } else {
-                  ErrorUtils.handleServerError(container, getActivity(), response);
+                  final String errorMsg = ErrorUtils.serverErrorText(response.errorBody(), getContext());
+                  Snackbar.make(container, errorMsg, Snackbar.LENGTH_LONG).show();
                 }
               }
 
