@@ -198,6 +198,7 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
       RealmUtils.loadTasksSorted(groupUid).subscribe(new Action1<List<TaskModel>>() {
         @Override
         public void call(List<TaskModel> tasks) {
+          Log.e(TAG, "number of tasks from DB = " + tasks.size());
           tasksAdapter.refreshTaskList(tasks);
           Log.e(TAG, "adapter refreshed, now size = " + tasksAdapter.getItemCount());
           if (!startupCall) {

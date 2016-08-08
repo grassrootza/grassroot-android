@@ -70,6 +70,7 @@ public class HomeScreenActivity extends PortraitActivity implements NavigationDr
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         Log.d(TAG, "homeScreenActivity .... timer ... " + SystemClock.currentThreadTimeMillis());
         setContentView(R.layout.activity_home_screen);
         ButterKnife.bind(this);

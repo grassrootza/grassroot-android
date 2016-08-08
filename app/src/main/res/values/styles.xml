@@ -8,6 +8,10 @@
         <item name="colorPrimary">@color/primaryColor</item>
     </style>
 
+    <style name="AppLauncherTheme" parent="AppTheme">
+        <item name="android:windowBackground">@drawable/startup_drawable</item>
+    </style>
+
     <style name="Theme.IntroScreen" parent="AppTheme">
         <item name="android:windowActionBar">false</item>
         <item name="android:windowActionBarOverlay">false</item>

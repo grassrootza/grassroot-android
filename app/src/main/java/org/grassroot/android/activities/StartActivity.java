@@ -5,7 +5,9 @@ import android.os.Bundle;
 import android.os.SystemClock;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.Window;
 
+import org.grassroot.android.R;
 import org.grassroot.android.utils.NetworkUtils;
 import org.grassroot.android.utils.RealmUtils;
 
@@ -17,6 +19,7 @@ public class StartActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle bundle) {
         super.onCreate(bundle);
+
         Log.d("START", "startActivity on create ... timer ... " + SystemClock.currentThreadTimeMillis());
         if (RealmUtils.loadPreferencesFromDB().isLoggedIn()) {
             userIsLoggedIn();
