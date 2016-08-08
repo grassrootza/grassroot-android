@@ -103,6 +103,7 @@ public class GroupTasksActivity extends PortraitActivity implements NewTaskMenuF
         menu.findItem(R.id.mi_remove_members).setVisible(groupMembership.canDeleteMembers());
         menu.findItem(R.id.mi_view_members).setVisible(groupMembership.canViewMembers());
         menu.findItem(R.id.mi_group_settings).setVisible(groupMembership.canEditGroup());
+        menu.findItem(R.id.mi_share_task).setVisible(false);
         this.thisMenu = menu;
         return true;
     }

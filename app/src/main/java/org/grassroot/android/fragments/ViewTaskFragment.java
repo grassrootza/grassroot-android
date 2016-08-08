@@ -15,6 +15,9 @@ import android.text.TextUtils;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
@@ -46,6 +49,7 @@ import org.grassroot.android.models.RsvpListModel;
 import org.grassroot.android.models.TaskModel;
 import org.grassroot.android.models.TaskResponse;
 import org.grassroot.android.services.GrassrootRestService;
+import org.grassroot.android.services.SharingService;
 import org.grassroot.android.services.TaskService;
 import org.grassroot.android.utils.ErrorUtils;
 import org.grassroot.android.utils.NetworkUtils;
@@ -124,6 +128,7 @@ public class ViewTaskFragment extends Fragment {
   @Override public void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     EventBus.getDefault().register(this);
+    setHasOptionsMenu(true);
     if (getArguments() != null) {
       Bundle args = getArguments();
       task = args.getParcelable(TaskConstants.TASK_ENTITY_FIELD);
@@ -163,6 +168,25 @@ public class ViewTaskFragment extends Fragment {
       setUpViews(task);
     }
     return viewToReturn;
+  }
+
+  @Override
+  public void onPrepareOptionsMenu(Menu menu) {
+    super.onPrepareOptionsMenu(menu);
+    if(menu.findItem(R.id.mi_share_task) !=null) menu.findItem(R.id.mi_share_task).setVisible(true);
+  }
+
+
+  @Override
+  public boolean onOptionsItemSelected(MenuItem item) {
+    if(item.getItemId() == R.id.mi_share_task){
+      Intent i = new Intent(getActivity(), SharingService.class);
+      i.putExtra(SharingService.TASK_TAG,task);
+      getActivity().startService(i);
+     return true;
+    }else {
+      return super.onOptionsItemSelected(item);
+    }
   }
 
   @Override public void onDestroyView() {

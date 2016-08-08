@@ -251,6 +251,8 @@
                 <action android:name="org.grassroot.android.ACTION_START"/>
             </intent-filter>
         </receiver>
+
+        <service android:name=".services.SharingService"/>
     </application>
 
 </manifest>

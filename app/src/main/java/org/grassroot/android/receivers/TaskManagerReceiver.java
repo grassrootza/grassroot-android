@@ -47,7 +47,7 @@ public class TaskManagerReceiver extends BroadcastReceiver {
         PeriodicTask task = new PeriodicTask.Builder()
                 .setService(SyncService.class)
                 .setTag(TASK_TAG_PERIODIC)
-                .setPeriod(REFRESH_PERIOD).setUpdateCurrent(true).setRequiredNetwork(Task.NETWORK_STATE_ANY)
+                .setPeriod(REFRESH_PERIOD).setFlex(10).setUpdateCurrent(true).setRequiredNetwork(Task.NETWORK_STATE_ANY)
                 .build();
         return task;
     }
