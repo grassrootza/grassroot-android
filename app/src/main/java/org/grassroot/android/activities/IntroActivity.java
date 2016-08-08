@@ -12,14 +12,15 @@ import android.os.Bundle;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
-import org.grassroot.android.BuildConfig;
 import org.grassroot.android.R;
 import org.grassroot.android.utils.Constant;
 
@@ -36,29 +37,36 @@ public class IntroActivity extends AppCompatActivity {
     private static final String TAG = IntroActivity.class.getSimpleName();
 
     IntroAdapter introAdapter;
-    @BindView(R.id.intro_view_pager)
-    ViewPager viewPager;
 
-    @BindView(R.id.intro_iv_logo)
-    ImageView logoImage;
+    @BindView(R.id.intro_rl_root) RelativeLayout rootLayout;
 
-    @BindView(R.id.intro_ll_buttons)
-    LinearLayout buttonLayout;
+    @BindView(R.id.intro_view_pager) ViewPager viewPager;
+    @BindView(R.id.intro_iv_logo) ImageView logoImage;
+    @BindView(R.id.intro_ll_buttons) LinearLayout buttonLayout;
 
     private int[] titles;
     private int[] messages;
-    private boolean inCreation;
+    private boolean hasCreated;
+    private final int LOGIN_REGISTER = 101;
+
+    private static final String PRIOR_CREATED = "prior_created";
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         setTheme(R.style.Theme_IntroScreen);
         super.onCreate(savedInstanceState);
 
+        if (savedInstanceState != null) {
+            hasCreated = savedInstanceState.getBoolean(PRIOR_CREATED, false);
+        } else {
+            hasCreated = false;
+        }
+
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         setContentView(R.layout.activity_intro);
         ButterKnife.bind(this);
 
-        // todo : add tablet layout / options
+        // at some point may want to add tablet options
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 
         titles = new int[] {
@@ -79,8 +87,12 @@ public class IntroActivity extends AppCompatActivity {
         viewPager.setAdapter(introAdapter);
         viewPager.setPageMargin(0);
         viewPager.setOffscreenPageLimit(1);
+    }
 
-        inCreation = true;
+    @Override
+    public void onSaveInstanceState(Bundle savedInstanceState) {
+        savedInstanceState.putBoolean(PRIOR_CREATED, true);
+        super.onSaveInstanceState(savedInstanceState);
     }
 
     @OnPageChange(value = R.id.intro_view_pager, callback = OnPageChange.Callback.PAGE_SELECTED)
@@ -96,22 +108,31 @@ public class IntroActivity extends AppCompatActivity {
     public void onLoginClicked() {
         Intent i = new Intent(this, LoginRegisterActivity.class);
         i.putExtra("default_to_login", true);
-        startActivity(i);
+        startActivityForResult(i, LOGIN_REGISTER);
     }
 
     @OnClick(R.id.intro_bt_register)
     public void onRegisterClicked() {
         Intent i = new Intent(this, LoginRegisterActivity.class);
         i.putExtra("default_to_login",false);
-        startActivity(i);
+        startActivityForResult(i, LOGIN_REGISTER);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        Log.e(TAG, "onActivityResult called ... requestCode = " + requestCode);
+        if (requestCode == LOGIN_REGISTER && resultCode == RESULT_OK) {
+            finish();
+        }
     }
 
     @Override
     public void onResume() {
         super.onResume();
-        if (inCreation) {
+        if (!hasCreated) {
             animateInto();
-            inCreation = false;
+            hasCreated = true;
         }
     }
 
@@ -125,8 +146,7 @@ public class IntroActivity extends AppCompatActivity {
             PropertyValuesHolder scaleY = PropertyValuesHolder.ofFloat(View.SCALE_Y, 0.7f);
             PropertyValuesHolder pushUp = PropertyValuesHolder.ofFloat(View.TRANSLATION_Y, heightShift);
 
-            // create an animator even though not visible, so it moves with the logo (else lots of layout fiddly errors)
-            // i do not have the faintest clue what's happening with the heights in here, so ...
+            // create an animator even though not visible, so it moves with the logo (else lots of layout fiddly errors
 
             ObjectAnimator pagerAnim = ObjectAnimator.ofFloat(viewPager, "y", heightShift);
             ObjectAnimator logoAnim = ObjectAnimator.ofPropertyValuesHolder(logoImage, scaleX, scaleY, pushUp);
@@ -149,7 +169,19 @@ public class IntroActivity extends AppCompatActivity {
             animatorSet.start();
 
         } else {
-            // todo : move the logo
+
+            RelativeLayout.LayoutParams layoutParams = (RelativeLayout.LayoutParams)
+                logoImage.getLayoutParams();
+
+            layoutParams.addRule(RelativeLayout.CENTER_IN_PARENT, 0);
+            layoutParams.addRule(RelativeLayout.CENTER_HORIZONTAL);
+
+            Log.d(TAG, "API9: layoutParams, current : " + layoutParams.topMargin);
+
+            layoutParams.topMargin = getApplicationContext().getResources().getDisplayMetrics().heightPixels / 6;
+
+            logoImage.setLayoutParams(layoutParams);
+
             buttonLayout.setVisibility(View.VISIBLE);
             viewPager.setVisibility(View.VISIBLE);
             viewPager.setCurrentItem(0);

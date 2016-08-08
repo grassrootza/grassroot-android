@@ -23,6 +23,7 @@ public class PreferenceObject extends RealmObject {
   private long lastTimeSyncPerformed;
   private long lastTimeGroupsFetched;
   private long lastTimeUpcomingTasksFetched;
+  private long lastTimeOtpRequested;
 
   public long getLastTimeNotificationsFetched() {
     return lastTimeNotificationsFetched;
@@ -71,14 +72,6 @@ public class PreferenceObject extends RealmObject {
 
   public void setHasGcmRegistered(boolean hasGcmRegistered) {
     this.hasGcmRegistered = hasGcmRegistered;
-  }
-
-  public boolean isMustRefresh() {
-    return mustRefresh;
-  }
-
-  public void setMustRefresh(boolean mustRefresh) {
-    this.mustRefresh = mustRefresh;
   }
 
   public String getUserName() {
@@ -148,6 +141,14 @@ public class PreferenceObject extends RealmObject {
       onlineStatus = NetworkUtils.ONLINE_DEFAULT;
     }
     return onlineStatus;
+  }
+
+  public long getLastTimeOtpRequested() {
+    return lastTimeOtpRequested;
+  }
+
+  public void setLastTimeOtpRequested(long lastTimeOtpRequested) {
+    this.lastTimeOtpRequested = lastTimeOtpRequested;
   }
 
   public void setShowOnlineOfflinePicker(boolean showOnlineOfflinePicker) { this.showOnlineOfflinePicker = showOnlineOfflinePicker; }

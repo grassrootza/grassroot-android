@@ -23,8 +23,7 @@ import butterknife.OnClick;
  */
 public class LoginScreenFragment extends Fragment {
 
-    @BindView(R.id.et_mobile_login)
-    TextInputEditText etNumberInput;
+    @BindView(R.id.et_mobile_login) TextInputEditText etNumberInput;
 
     String presetNumber;
 

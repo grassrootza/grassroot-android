@@ -52,7 +52,7 @@ public class CreateMeetingActivity extends PortraitActivity {
         toolbar.setNavigationOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                finish(); // todo : uh, fix
+                finish();
             }
         });
     }

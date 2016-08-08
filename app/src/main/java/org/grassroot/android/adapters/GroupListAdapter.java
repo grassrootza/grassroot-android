@@ -261,10 +261,14 @@ public class GroupListAdapter extends RecyclerView.Adapter<GroupListAdapter.GHP_
 
     private void setAvatarImage(GHP_ViewHolder holder, final Group group) {
         final String imageUrl = group.getImageUrl();
-        if (imageUrl != null) {
-            setAvatar(holder.avatar, imageUrl, group.getDefaultImageRes());
-        } else {
-            holder.avatar.setImageResource(group.getDefaultImageRes());
+        try {
+            if (imageUrl != null) {
+                setAvatar(holder.avatar, imageUrl, group.getDefaultImageRes());
+            } else {
+                holder.avatar.setImageResource(group.getDefaultImageRes());
+            }
+        } catch (OutOfMemoryError e) {
+            holder.avatar.setImageResource(R.drawable.ic_groups_default_avatar);
         }
     }
 

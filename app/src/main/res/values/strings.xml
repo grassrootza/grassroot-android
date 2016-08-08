@@ -18,6 +18,7 @@
     <string name="txt_pls_wait">Please wait&#8230;</string>
     <string name="wait_message">Please wait&#8230;</string> <!-- todo : clean redundancy -->
     <string name="bt_login">LOGIN</string>
+    <string name="bt_next">NEXT</string>
     <string name="bt_register">REGISTER</string>
     <string name="bt_submit_otp">SUBMIT</string>
 
@@ -54,6 +55,11 @@
     <string name="server_error_vote_cancelled">Sorry, that vote was already cancelled</string>
     <string name="server_error_todo_completed">You\'ve already marked the action complete</string>
     <string name="server_error_notifications_done">That\'s all the notifications in your list</string>
+
+    <string name="input_error_no_display_name">Please enter whatever name people know you by</string>
+    <string name="input_error_name_regex">Please enter a name without special characters (e.g., !, &amp;)</string>
+    <string name="input_error_phone_empty">Please enter a cellphone number to register</string>
+    <string name="input_error_phone_invalid">Sorry, that\'s not a valid South African number, please check again</string>
 
     <string name="INVALID_TOKEN">Sorry, wrong code. Please check again and re-enter.</string> <!-- todo : refactor this as others -->
 

@@ -7,56 +7,47 @@ import android.os.Bundle;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
+import android.support.v4.app.NavUtils;
 import android.support.v7.app.AppCompatActivity;
-import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
 
-import org.grassroot.android.BuildConfig;
 import org.grassroot.android.R;
 import org.grassroot.android.fragments.LoginScreenFragment;
 import org.grassroot.android.fragments.OtpScreenFragment;
-import org.grassroot.android.fragments.RegisterScreenFragment;
+import org.grassroot.android.fragments.RegisterNameFragment;
+import org.grassroot.android.fragments.RegisterPhoneFragment;
 import org.grassroot.android.interfaces.NotificationConstants;
-import org.grassroot.android.models.GenericResponse;
-import org.grassroot.android.models.PreferenceObject;
-import org.grassroot.android.models.TokenResponse;
+import org.grassroot.android.models.ApiCallException;
 import org.grassroot.android.services.GcmRegistrationService;
-import org.grassroot.android.services.GrassrootRestService;
-import org.grassroot.android.utils.Constant;
 import org.grassroot.android.utils.ErrorUtils;
+import org.grassroot.android.utils.LoginRegUtils;
 import org.grassroot.android.utils.NetworkUtils;
-import org.grassroot.android.utils.RealmUtils;
 import org.grassroot.android.utils.Utilities;
 
-import okhttp3.ResponseBody;
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
-import rx.functions.Action1;
+import rx.Subscriber;
 
 /**
  * Created by luke on 2016/06/15.
  */
 public class LoginRegisterActivity extends AppCompatActivity implements LoginScreenFragment.LoginFragmentListener,
-        OtpScreenFragment.OtpListener, RegisterScreenFragment.RegisterListener {
+        OtpScreenFragment.OtpListener, RegisterNameFragment.RegisterNameListener, RegisterPhoneFragment.RegisterPhoneListener {
 
-    private static final String TAG = LoginRegisterActivity.class.getSimpleName();
+    // private static final String TAG = LoginRegisterActivity.class.getSimpleName();
 
     private static final String LOGIN = "login";
     private static final String REGISTER = "register";
 
-    private boolean onRegisterOrLogin;
+    private int taskDepth;
 
     private ViewGroup rootView;
     private ProgressDialog progressDialog;
 
     private String msisdn;
+    private String enteredNumber;
     private String displayName;
-
-    private long otpRequestedTime;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -73,15 +64,15 @@ public class LoginRegisterActivity extends AppCompatActivity implements LoginScr
         rootView = (ViewGroup) findViewById(R.id.rl_activity_root);
 
         boolean defaultToLogin = getIntent().getBooleanExtra("default_to_login", false);
-        onRegisterOrLogin = true;
-        otpRequestedTime = -1;
-        switchFragments(defaultToLogin ? new LoginScreenFragment() : RegisterScreenFragment.newInstance(), false);
+        taskDepth = 0;
+        switchFragments(defaultToLogin ? new LoginScreenFragment() :
+            RegisterNameFragment.newInstance(this), false);
     }
 
     private void switchFragments(Fragment fragment, boolean addToBackStack) {
         FragmentTransaction transaction =  getSupportFragmentManager().beginTransaction()
-                .setCustomAnimations(R.anim.a_slide_in_right, R.anim.a_slide_out_left, R.anim.a_slide_in_left, R.anim.a_slide_out_right)
-                .replace(R.id.lr_frag_content, fragment, fragment.getClass().getSimpleName());
+            .setCustomAnimations(R.anim.a_slide_in_right, R.anim.a_slide_out_left, R.anim.a_slide_in_left, R.anim.a_slide_out_right)
+            .replace(R.id.lr_frag_content, fragment, fragment.getClass().getSimpleName());
 
         if (addToBackStack) {
             transaction.addToBackStack(fragment.getClass().getName());
@@ -92,111 +83,208 @@ public class LoginRegisterActivity extends AppCompatActivity implements LoginScr
 
     @Override
     public void requestLogin(final String mobileNumber) {
-        final String passedMobile = Utilities.formatNumberToE164(mobileNumber);
-        if (shouldRequestOtp(passedMobile)) {
-            progressDialog.show();
-            msisdn = passedMobile;
-            GrassrootRestService.getInstance().getApi()
-                    .login(msisdn)
-                    .enqueue(new Callback<GenericResponse>() {
-                        @Override
-                        public void onResponse(Call<GenericResponse> call, Response<GenericResponse> response) {
-                            progressDialog.dismiss();
-                            if (response.isSuccessful()) {
-                                otpRequestedTime = System.currentTimeMillis();
-                                final String otpToPass = BuildConfig.FLAVOR.equals(Constant.STAGING) ? (String) response.body().getData() : "";
-                                switchToOtp(otpToPass, LOGIN);
-                            } else {
-                                final String restMessage = response.body().getMessage();
-                                final String errorMsg = ErrorUtils.serverErrorText(restMessage, LoginRegisterActivity.this);
-                                if (restMessage.equals(ErrorUtils.USER_DOESNT_EXIST)) {
-                                    ErrorUtils.showSnackBar(rootView, errorMsg, Snackbar.LENGTH_LONG, "Register", new View.OnClickListener() {
-                                            @Override
-                                            public void onClick(View view) {
-                                                switchFromLoginToRegister(msisdn);
-                                            }
-                                        });
-                                } else {
-                                    Snackbar.make(rootView, errorMsg, Snackbar.LENGTH_SHORT);
-                                }
-                            }
-                        }
+        progressDialog.show();
+        this.enteredNumber = mobileNumber;
+        this.msisdn = Utilities.formatNumberToE164(mobileNumber);
+        LoginRegUtils.reqLogin(msisdn).subscribe(new Subscriber<String>() {
+            @Override
+            public void onNext(String s) {
+                progressDialog.dismiss();
+                final String otpToPass = (LoginRegUtils.OTP_ALREADY_SENT.equals(s) ||
+                    LoginRegUtils.OTP_PROD_SENT.equals(s)) ? "" : s;
+                switchToOtpFragment(otpToPass, LOGIN);
+            }
 
-                        @Override
-                        public void onFailure(Call<GenericResponse> call, Throwable t) {
-                            otpRequestedTime = -1;
-                            progressDialog.dismiss();
-                            final String errorMessage = getString(R.string.connect_error_logreg);
-                            final String actionMsg = getString(R.string.snackbar_try_again);
-                            ErrorUtils.showSnackBar(rootView, errorMessage, Snackbar.LENGTH_LONG, actionMsg, new View.OnClickListener() {
-                                @Override
-                                public void onClick(View v) {
-                                    requestLogin(mobileNumber);
-                                }
-                            });
-                        }
-                    });
-        } else {
-            switchToOtp("", LOGIN);
-        }
+            @Override
+            public void onError(Throwable e) {
+                progressDialog.dismiss();
+                handleError(msisdn, LOGIN, false, e);
+            }
+
+            @Override
+            public void onCompleted() { }
+        });
     }
 
-    // todo : change this to two screens (phone number then name, skip name if already exists, etc)
     @Override
-    public void requestRegistration(String userName, String phoneNumber) {
-        final String passedMobile = Utilities.formatNumberToE164(phoneNumber);
-        displayName = userName;
+    public void nameEntered(String nameEntered) {
+        this.displayName = nameEntered;
+        this.taskDepth = 1;
+        switchFragments(RegisterPhoneFragment.newInstance(this, enteredNumber), true);
+    }
 
-        if (shouldRequestOtp(passedMobile)) {
-            progressDialog.show();
-            msisdn = passedMobile;
-            GrassrootRestService.getInstance().getApi()
-                    .addUser(msisdn, userName)
-                    .enqueue(new Callback<GenericResponse>() {
-                        @Override
-                        public void onResponse(Call<GenericResponse> call, Response<GenericResponse> response) {
-                            progressDialog.dismiss();
-                            if (response.isSuccessful()) {
-                                otpRequestedTime = System.currentTimeMillis();
-                                final String otpToPass = BuildConfig.FLAVOR.equals(Constant.STAGING) ?
-                                        (String) response.body().getData() : "";
-                                switchToOtp(otpToPass, REGISTER);
-                            } else {
-                                final String restMessage = response.body().getMessage();
-                                final String errorMsg = ErrorUtils.serverErrorText(restMessage, LoginRegisterActivity.this);
-                                if (restMessage.equals(ErrorUtils.USER_EXISTS)) {
-                                    final String actionBtn = getResources().getString(R.string.bt_login);
-                                    ErrorUtils.showSnackBar(rootView, errorMsg, Snackbar.LENGTH_LONG, actionBtn, new View.OnClickListener() {
-                                        @Override
-                                        public void onClick(View view) {
-                                            switchFromRegisterToLogin(msisdn);
-                                        }
-                                    });
-                                } else {
-                                    Snackbar.make(rootView, errorMsg, Snackbar.LENGTH_SHORT);
-                                }
-                            }
-                        }
+    @Override
+    public void phoneEntered(String mobileNumber) {
+        requestRegistration(mobileNumber);
+    }
 
-                        @Override
-                        public void onFailure(Call<GenericResponse> call, Throwable t) {
-                            progressDialog.dismiss();
-                            ErrorUtils.handleNetworkError(LoginRegisterActivity.this, rootView, t);
-                        }
-                    });
+    private void requestRegistration(final String mobileNumber) {
+        progressDialog.show();
+        this.enteredNumber = mobileNumber;
+        this.msisdn = Utilities.formatNumberToE164(mobileNumber);
+        LoginRegUtils.reqRegister(msisdn, displayName).subscribe(new Subscriber<String>() {
+            @Override
+            public void onNext(String s) {
+                progressDialog.dismiss();
+                final String otpToPass = (LoginRegUtils.OTP_ALREADY_SENT.equals(s) ||
+                    LoginRegUtils.OTP_PROD_SENT.equals(s)) ? "" : s;
+                switchToOtpFragment(otpToPass, REGISTER);
+            }
+
+            @Override
+            public void onError(Throwable e) {
+                progressDialog.dismiss();
+                handleError(mobileNumber, REGISTER, false, e);
+            }
+
+            @Override
+            public void onCompleted() { }
+        });
+    }
+
+    @Override
+    public void requestNewOtp(final String purpose) {
+        if (LOGIN.equals(purpose)) {
+            LoginRegUtils.resetOtpRequestTime(msisdn);
+            requestLogin(enteredNumber);
         } else {
-            switchToOtp("", LOGIN);
+            progressDialog.show();
+            LoginRegUtils.resendRegistrationOtp(msisdn).subscribe(new Subscriber<String>() {
+                @Override
+                public void onNext(String s) {
+                    progressDialog.dismiss();
+                    final String otpToPass = (LoginRegUtils.OTP_ALREADY_SENT.equals(s) ||
+                        LoginRegUtils.OTP_PROD_SENT.equals(s)) ? "" : s;
+                    switchToOtpFragment(otpToPass, REGISTER);
+                }
+
+                @Override
+                public void onError(Throwable e) {
+                    progressDialog.dismiss();
+                    handleError(msisdn, REGISTER, false, e);
+                }
+
+                @Override
+                public void onCompleted() { }
+            });
         }
     }
 
-    private boolean shouldRequestOtp(final String passedMobile) {
-        final int otpRequestInterval = 5 * 60 * 1000; // i.e., 5 minutes
-        return TextUtils.isEmpty(msisdn) || !msisdn.equals(passedMobile) ||
-                System.currentTimeMillis() > otpRequestedTime + otpRequestInterval;
+    private void authenticateLogin(String otpEntered) {
+        progressDialog.show();
+        LoginRegUtils.authenticateLogin(msisdn, otpEntered).subscribe(new Subscriber<String>() {
+            @Override
+            public void onNext(String s) {
+                progressDialog.dismiss();
+                registerOrRefreshGCM(msisdn);
+                launchHomeScreen(LoginRegUtils.AUTH_HAS_GROUPS.equals(s));
+                setResult(RESULT_OK);
+                finish();
+            }
+
+            @Override
+            public void onError(Throwable e) {
+                progressDialog.dismiss();
+                handleError(msisdn, LOGIN, true, e);
+            }
+
+            @Override
+            public void onCompleted() { }
+        });
     }
 
-    private void switchToOtp(String otpToPass, String purpose) {
-        onRegisterOrLogin = false;
+    private void verifyRegistration(final String otpEntered) {
+        progressDialog.show();
+        LoginRegUtils.authenticateRegister(msisdn, otpEntered).subscribe(new Subscriber<String>() {
+            @Override
+            public void onNext(String s) {
+                progressDialog.dismiss();
+                registerOrRefreshGCM(msisdn);
+                launchHomeScreen(false); // by definition, registering means no group
+                setResult(RESULT_OK);
+                finish();
+            }
+
+            @Override
+            public void onError(Throwable e) {
+                progressDialog.dismiss();
+                handleError(msisdn, REGISTER, true, e);
+            }
+
+            @Override
+            public void onCompleted() { }
+        });
+    }
+
+    private void handleError(final String mobileNumber, final String purpose, boolean onOtpScreen, Throwable e) {
+        if (e instanceof ApiCallException) {
+            if (NetworkUtils.CONNECT_ERROR.equals(e.getMessage())) {
+                handleConnectError(mobileNumber, purpose);
+            } else if (NetworkUtils.SERVER_ERROR.equals(e.getMessage())) {
+                if (!onOtpScreen) {
+                    handleRequestServerError(((ApiCallException) e).errorTag, purpose);
+                } else {
+                    handleAuthServerError(((ApiCallException) e).errorTag, purpose);
+                }
+            }
+        }
+    }
+
+    private void handleConnectError(final String mobileNumber, final String purpose) {
+        final String errorMessage = getString(R.string.connect_error_logreg);
+        final String actionMsg = getString(R.string.snackbar_try_again);
+        ErrorUtils.showSnackBar(rootView, errorMessage, Snackbar.LENGTH_LONG, actionMsg, new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (LOGIN.equals(purpose)) {
+                    requestLogin(mobileNumber);
+                } else {
+                    requestRegistration(mobileNumber);
+                }
+            }
+        });
+    }
+
+    private void handleRequestServerError(final String restMessage, String purpose) {
+        final String errorMsg = ErrorUtils.serverErrorText(restMessage, LoginRegisterActivity.this);
+        if (LOGIN.equals(purpose) && restMessage.equals(ErrorUtils.USER_DOESNT_EXIST)) {
+            final String actionBtn = getString(R.string.bt_register);
+            ErrorUtils.showSnackBar(rootView, errorMsg, Snackbar.LENGTH_LONG, actionBtn, new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    switchFromLoginToRegister();
+                }
+            });
+        } else if (REGISTER.equals(purpose) && restMessage.equals(ErrorUtils.USER_EXISTS)) {
+            final String actionBtn = getString(R.string.bt_login);
+            ErrorUtils.showSnackBar(rootView, errorMsg, Snackbar.LENGTH_LONG, actionBtn, new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    switchFromRegisterToLogin(msisdn);
+                }
+            });
+        } else {
+            Snackbar.make(rootView, errorMsg, Snackbar.LENGTH_SHORT).show();
+        }
+    }
+
+    private void handleAuthServerError(final String restMessage, final String purpose) {
+        final String errorMsg = ErrorUtils.serverErrorText(restMessage, LoginRegisterActivity.this);
+        if (ErrorUtils.WRONG_OTP.equals(restMessage)) {
+            final String actionMsg = getString(R.string.resend_otp);
+            ErrorUtils.showSnackBar(rootView, errorMsg, Snackbar.LENGTH_LONG, actionMsg, new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    requestNewOtp(purpose);
+                }
+            });
+        } else {
+            Snackbar.make(rootView, errorMsg, Snackbar.LENGTH_SHORT);
+        }
+    }
+
+    private void switchToOtpFragment(String otpToPass, String purpose) {
+        taskDepth = (REGISTER.equals(purpose)) ? 2 : 1;
         OtpScreenFragment otpFragment = (OtpScreenFragment) getSupportFragmentManager()
                 .findFragmentByTag(OtpScreenFragment.class.getSimpleName());
         if (otpFragment != null && otpFragment.isVisible()) {
@@ -217,39 +305,12 @@ public class LoginRegisterActivity extends AppCompatActivity implements LoginScr
         requestLogin(userMobile);
     }
 
-    private void switchFromLoginToRegister(final String userMobile) {
-        RegisterScreenFragment fragment = RegisterScreenFragment.newInstance(Utilities.stripPrefixFromNumber(userMobile));
+    private void switchFromLoginToRegister() {
+        RegisterNameFragment fragment = RegisterNameFragment.newInstance(this);
         getSupportFragmentManager().popBackStack(); // make sure login is gone
         getSupportFragmentManager().beginTransaction()
-                .replace(R.id.lr_frag_content, fragment, RegisterScreenFragment.class.getCanonicalName())
+                .replace(R.id.lr_frag_content, fragment, RegisterNameFragment.class.getCanonicalName())
                 .commit();
-    }
-
-    @Override
-    public void onTextResendClick(String purpose) {
-        if (LOGIN.equals(purpose)) {
-            requestLogin(msisdn);
-        } else {
-            GrassrootRestService.getInstance().getApi().resendRegOtp(msisdn).enqueue(new Callback<GenericResponse>() {
-                @Override
-                public void onResponse(Call<GenericResponse> call, Response<GenericResponse> response) {
-                    if (response.isSuccessful()) {
-                        otpRequestedTime = System.currentTimeMillis();
-                        final String otpToPass = BuildConfig.FLAVOR.equals(Constant.STAGING) ?
-                            (String) response.body().getData() : "";
-                        switchToOtp(otpToPass, REGISTER);
-                    } else {
-                        String errorMsg = ErrorUtils.serverErrorText(response.errorBody(), LoginRegisterActivity.this);
-                        Snackbar.make(rootView, errorMsg, Snackbar.LENGTH_SHORT).show();
-                    }
-                }
-
-                @Override
-                public void onFailure(Call<GenericResponse> call, Throwable t) {
-                    Snackbar.make(rootView, R.string.connect_otp_resend_fail, Snackbar.LENGTH_SHORT).show();
-                }
-            });
-        }
     }
 
     @Override
@@ -261,82 +322,7 @@ public class LoginRegisterActivity extends AppCompatActivity implements LoginScr
         }
     }
 
-    private void authenticateLogin(String otpEntered) {
-        progressDialog.show();
-        GrassrootRestService.getInstance().getApi().authenticate(msisdn, otpEntered)
-                .enqueue(new Callback<TokenResponse>() {
-                    @Override
-                    public void onResponse(Call<TokenResponse> call, final Response<TokenResponse> response) {
-                        progressDialog.hide();
-                        if (response.isSuccessful()) {
-                            progressDialog.dismiss();
-                            PreferenceObject preference = setUpPrefs(response.body());
-                            preference.setHasGroups(response.body().getHasGroups());
-                            preference.setUserName(response.body().getDisplayName());
-                            preference.setMustRefresh(true);
-                            RealmUtils.saveDataToRealm(preference).subscribe(new Action1() {
-                                @Override public void call(Object o) {
-                                    registerOrRefreshGCM(msisdn);
-                                    launchHomeScreen(response.body().getHasGroups());
-                                    finish();
-                                }
-                            });
-                        } else {
-                            handleAuthServerError(response.errorBody(), LOGIN);
-                        }
-                    }
-
-                    @Override
-                    public void onFailure(Call<TokenResponse> call, Throwable t) {
-                        progressDialog.hide();
-                        ErrorUtils.handleNetworkError(LoginRegisterActivity.this, rootView, t);
-                    }
-                });
-    }
-
-    private void verifyRegistration(final String otpEntered) {
-        progressDialog.show();
-        GrassrootRestService.getInstance().getApi()
-                .verify(msisdn, otpEntered)
-                .enqueue(new Callback<TokenResponse>() {
-                    @Override
-                    public void onResponse(Call<TokenResponse> call, Response<TokenResponse> response) {
-                        progressDialog.hide();
-                        if (response.isSuccessful()) {
-                            progressDialog.dismiss();
-                            PreferenceObject preference = setUpPrefs(response.body());
-                            preference.setUserName(displayName);
-                            preference.setHasGroups(false);
-                            RealmUtils.saveDataToRealm(preference).subscribe(new Action1() {
-                                @Override public void call(Object o) {
-                                    registerOrRefreshGCM(msisdn);
-                                    launchHomeScreen(false); // by definition, registering means no group
-                                    finish();
-                                }
-                            });
-                        } else {
-                            handleAuthServerError(response.errorBody(), REGISTER);
-                        }
-                    }
-
-                    @Override
-                    public void onFailure(Call<TokenResponse> call, Throwable t) {
-                        progressDialog.dismiss();
-                        ErrorUtils.handleNetworkError(LoginRegisterActivity.this, rootView, t);
-                    }
-                });
-    }
-
-    private PreferenceObject setUpPrefs(TokenResponse response) {
-        PreferenceObject preference = new PreferenceObject();
-        preference.setToken(response.getToken().getCode());
-        preference.setMobileNumber(msisdn);
-        preference.setLoggedIn(true);
-        return preference;
-    }
-
     private void registerOrRefreshGCM(final String phoneNumber) {
-        Log.d(TAG, "registering for GCM ... sending intent ...");
         Intent gcmRegistrationIntent = new Intent(LoginRegisterActivity.this, GcmRegistrationService.class);
         gcmRegistrationIntent.putExtra(NotificationConstants.ACTION, NotificationConstants.GCM_REGISTER);
         gcmRegistrationIntent.putExtra(NotificationConstants.PHONE_NUMBER, phoneNumber);
@@ -348,38 +334,22 @@ public class LoginRegisterActivity extends AppCompatActivity implements LoginScr
             NetworkUtils.syncAndStartTasks(this, false, true).subscribe();
             NetworkUtils.registerForGCM(this).subscribe();
             Intent homeScreenIntent = new Intent(LoginRegisterActivity.this, HomeScreenActivity.class);
+            homeScreenIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
             startActivity(homeScreenIntent);
         } else {
             Intent welcomeScreenIntent = new Intent(LoginRegisterActivity.this, NoGroupWelcomeActivity.class);
+            welcomeScreenIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
             startActivity(welcomeScreenIntent);
-        }
-    }
-
-    private void handleAuthServerError(final ResponseBody errorBody, final String purpose) {
-        final String restMessage = ErrorUtils.getRestMessage(errorBody);
-        final String errorMsg = ErrorUtils.serverErrorText(restMessage, LoginRegisterActivity.this);
-        if (ErrorUtils.WRONG_OTP.equals(restMessage)) {
-            final String actionMsg = getString(R.string.resend_otp);
-            ErrorUtils.showSnackBar(rootView, errorMsg, Snackbar.LENGTH_LONG, actionMsg, new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    onTextResendClick(purpose);
-                }
-            });
-        } else {
-        Snackbar.make(rootView, errorMsg, Snackbar.LENGTH_SHORT);
         }
     }
 
     @Override
     public void onBackPressed() {
-        if (onRegisterOrLogin) {
-            // doing it his way so can preserve keeping IntroActivity off history
-            Intent backToIntro = new Intent(this, IntroActivity.class);
-            startActivity(backToIntro);
-            finish();
+        if (taskDepth == 0) {
+            Intent backToIntro = NavUtils.getParentActivityIntent(this);
+            NavUtils.navigateUpTo(this, backToIntro);
         } else {
-            onRegisterOrLogin = true;
+            taskDepth--;
             super.onBackPressed();
         }
     }

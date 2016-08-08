@@ -96,12 +96,17 @@
         <activity
             android:name=".activities.IntroActivity"
             android:configChanges="keyboard|keyboardHidden|orientation|screenSize"
-            android:noHistory="true" />
+            android:launchMode="singleTop" />
 
         <activity
             android:name=".activities.LoginRegisterActivity"
             android:configChanges="keyboard|keyboardHidden|orientation|screenSize"
-            android:windowSoftInputMode="stateVisible|adjustPan" />
+            android:windowSoftInputMode="stateVisible|adjustPan"
+            android:parentActivityName=".activities.IntroActivity">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".activities.IntroActivity" />
+        </activity>
 
         <activity
             android:name=".activities.NoGroupWelcomeActivity"

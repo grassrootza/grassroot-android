@@ -6,6 +6,7 @@ package org.grassroot.android.utils;
 
 import android.animation.ValueAnimator;
 import android.telephony.PhoneNumberUtils;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
@@ -30,6 +31,8 @@ public class Utilities {
     private static final Pattern zaPhoneE164 = Pattern.compile("27[6,7,8]\\d{8}");
     private static final Pattern zaPhoneE164Plus = Pattern.compile("\\+27[6,7,8]\\d{8}"); // make the "+" more general
     private static final Pattern nationalRegex = Pattern.compile("0[6,7,8]\\d{8}");
+
+    private static final Pattern alphaNumericRegex = Pattern.compile("[^a-z0-9 ]", Pattern.CASE_INSENSITIVE);
 
     public static String timeZone() {
         Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("GMT"), Locale.getDefault());
@@ -84,7 +87,7 @@ public class Utilities {
 
     public static boolean checkIfLocalNumber(String phoneNumber) {
 
-        // todo: might be able to do this much quicker if use Google overall libPhoneNumber, but whole lib for this is heavy
+        // might be able to do this much quicker if use Google overall libPhoneNumber, but whole lib for this is heavy
         final String normalized = PhoneNumberUtils.stripSeparators(phoneNumber);
         Log.d(TAG, "checking number, normalized number : " + normalized);
         if(normalized.length() < 10){
@@ -95,6 +98,10 @@ public class Utilities {
         if (normalized.substring(0,3).equals("+27") || normalized.substring(0,2).equals("27"))
             return true;
         return false;
+    }
+
+    public static boolean checkForSpecialChars(String input) {
+        return alphaNumericRegex.matcher(input).find();
     }
 
     public static Set<String> convertMembersToUids(Set<Member> members) {

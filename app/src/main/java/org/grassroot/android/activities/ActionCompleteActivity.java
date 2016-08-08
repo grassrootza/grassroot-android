@@ -30,7 +30,6 @@ import rx.functions.Action1;
 /**
  * Created by luke on 2016/07/12.
  * Simple class to display a screen notifying user that task has been complete (to be customized & reused in time)
- * todo : switch this to using the GiantMessageFragment, which is based on this
  */
 public class ActionCompleteActivity extends PortraitActivity implements NewTaskMenuFragment.NewTaskMenuListener {
 

@@ -120,6 +120,7 @@ public class TaskService {
               subscriber.onNext(NetworkUtils.FETCHED_SERVER);
               subscriber.onCompleted();
             } else {
+              final String restMessage = ErrorUtils.getRestMessage(response.errorBody());
               subscriber.onNext(NetworkUtils.SERVER_ERROR); // todo : include rest message
               subscriber.onCompleted();
             }

@@ -2,6 +2,7 @@ package org.grassroot.android.activities;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.SystemClock;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.view.MenuItemCompat;
@@ -69,13 +70,14 @@ public class HomeScreenActivity extends PortraitActivity implements NavigationDr
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Log.d(TAG, "homeScreenActivity .... timer ... " + SystemClock.currentThreadTimeMillis());
         setContentView(R.layout.activity_home_screen);
         ButterKnife.bind(this);
         EventBus.getDefault().register(this);
         setUpToolbar();
 
         int openOn = getIntent().getIntExtra(NavigationConstants.HOME_OPEN_ON_NAV, NavigationConstants.HOME_NAV_GROUPS);
-        Log.e(TAG, "in onCreate, intent extra for open on : " + openOn);
+        Log.d(TAG, "in onCreate, intent extra for open on : " + openOn);
         switch (openOn) {
             case NavigationConstants.HOME_NAV_GROUPS:
                 switchToGroupFragment();
@@ -103,22 +105,22 @@ public class HomeScreenActivity extends PortraitActivity implements NavigationDr
 
     @Override
     public void onNewIntent(Intent intent) {
-        Log.e(TAG, "on new intent called ... ");
+        Log.d(TAG, "on new intent called ... timer ... " + SystemClock.currentThreadTimeMillis());
         mainFragmentFromNewIntent = intent.getIntExtra(NavigationConstants.HOME_OPEN_ON_NAV, -1);
     }
 
     @Override
     public void onResume() {
         super.onResume();
+        Log.d(TAG, "homeScreenActivity .... onResume ... timer ... " + SystemClock.currentThreadTimeMillis());
         if (mainFragmentFromNewIntent != -1 && mainFragmentFromNewIntent != currentMainFragment) {
-            Log.e(TAG, "well, we need to switch fragments ...");
             switch(mainFragmentFromNewIntent) {
                 case NavigationConstants.HOME_NAV_TASKS:
                     switchToTasksFragment();
                     setNavBarToItem(NavigationDrawerFragment.ITEM_TASKS);
                     break;
                 default:
-                    // well, expand this so any other fragment / activity can do similar
+                    // expand this if necessary so any other fragment / activity can do similar
                     break;
             }
         }

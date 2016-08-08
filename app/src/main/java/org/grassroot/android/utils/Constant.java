@@ -61,10 +61,4 @@ public class Constant {
 
     public static final int loaderContacts = 1;
 
-    //HTTP Status codes
-
-    public static final int INTERNAL_SERVER_ERROR = 500;
-    public static final int CONFLICT = 409;
-    public static final int UNAUTHORISED = 401;
-    public static final int NOT_FOUND = 404;
 }

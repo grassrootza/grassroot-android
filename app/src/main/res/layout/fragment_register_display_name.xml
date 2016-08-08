@@ -1,0 +1,51 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:paddingLeft="@dimen/padding"
+    android:paddingRight="@dimen/padding"
+    android:background="@color/white"
+    android:layout_centerInParent="true"
+    android:id="@+id/fragment_display_name_root"
+    android:animateLayoutChanges="true">
+
+    <android.support.design.widget.TextInputLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/til_display_name"
+        android:layout_marginBottom="@dimen/margin_large"
+        android:layout_marginTop="@dimen/margin_xxlarge">
+
+        <android.support.design.widget.TextInputEditText
+            android:id="@+id/input_display_name"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="@dimen/padding_card_left"
+            android:layout_marginBottom="@dimen/margin_medium"
+            android:singleLine="true"
+
+            android:hint="@string/et_userName"
+            android:imeOptions="actionNext"
+            android:inputType="textPersonName|textCapWords"
+
+            android:textColorHint="#ccc"
+            android:textColor="@color/black"
+            android:textSize="@dimen/txt_large"
+            android:drawableRight="@drawable/ic_user"
+            android:maxLength="15" />
+
+    </android.support.design.widget.TextInputLayout>
+
+<Button
+        android:id="@+id/bt_next"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textAllCaps="true"
+        android:textColor="#fff"
+        android:background="@drawable/buttonrounded_corner"
+        android:layout_alignParentBottom="true"
+        android:layout_marginBottom="20dp"
+        android:text="@string/bt_next"
+        android:textSize="@dimen/txt_medium" />
+
+</RelativeLayout>
+

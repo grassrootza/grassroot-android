@@ -26,7 +26,7 @@ public class OtpScreenFragment extends Fragment {
     private static final String TAG = OtpScreenFragment.class.getSimpleName();
 
     public interface OtpListener {
-        void onTextResendClick(String purpose);
+        void requestNewOtp(String purpose);
         void onOtpSubmitButtonClick(String otp, String purpose);
     }
 
@@ -93,7 +93,7 @@ public class OtpScreenFragment extends Fragment {
 
     @OnClick(R.id.txt_resend)
     public void textResendClicked(){
-        onOtpScreenFragmentListener.onTextResendClick(purpose);
+        onOtpScreenFragmentListener.requestNewOtp(purpose);
     }
 
 }
