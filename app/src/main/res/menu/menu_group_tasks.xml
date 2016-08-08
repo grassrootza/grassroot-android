@@ -30,7 +30,11 @@
         app:showAsAction="never" />
 
     <item android:id="@+id/mi_group_settings"
-        android:title="Group settings"
+        android:title="@string/group_settings"
+        app:showAsAction="never" />
+
+    <item android:id="@+id/mi_share_task"
+        android:title="@string/share"
         app:showAsAction="never" />
 
 </menu>

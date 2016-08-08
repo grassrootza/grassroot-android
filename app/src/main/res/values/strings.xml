@@ -580,6 +580,8 @@
     <!--FAQ-->
     <string name="fq_txt_toolbar">FAQs</string>
     <string name="gp_dlg_cnfrm">Are you sure you want to remove group picture?</string>
+    <string name="group_settings">Group settings</string>
+    <string name="share">Share</string>
 
 
     <string-array name="fq_Header">

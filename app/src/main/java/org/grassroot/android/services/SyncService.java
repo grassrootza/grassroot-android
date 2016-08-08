@@ -38,11 +38,11 @@ public class SyncService extends GcmTaskService {
                     result = doPeriodicTask();
                     break;
                 case NetworkUtils.OFFLINE_SELECTED:
-                    result = GcmNetworkManager.RESULT_RESCHEDULE;
+                    result = GcmNetworkManager.RESULT_SUCCESS;
                     break;
                 case NetworkUtils.OFFLINE_ON_FAIL:
                     tryConnect();
-                    result = GcmNetworkManager.RESULT_RESCHEDULE;
+                    result = GcmNetworkManager.RESULT_SUCCESS;
                     break;
             }
         }
@@ -83,6 +83,6 @@ public class SyncService extends GcmTaskService {
 
     private int doPeriodicTask() {
         NetworkUtils.syncLocalAndServer(this);
-        return GcmNetworkManager.RESULT_RESCHEDULE;
+        return GcmNetworkManager.RESULT_SUCCESS;
     }
 }
