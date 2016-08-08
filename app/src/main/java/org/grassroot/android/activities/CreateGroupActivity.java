@@ -31,6 +31,7 @@ import org.grassroot.android.events.GroupCreatedEvent;
 import org.grassroot.android.fragments.ContactSelectionFragment;
 import org.grassroot.android.fragments.MemberListFragment;
 import org.grassroot.android.interfaces.GroupConstants;
+import org.grassroot.android.models.ApiCallException;
 import org.grassroot.android.models.Contact;
 import org.grassroot.android.models.Group;
 import org.grassroot.android.models.Member;
@@ -116,7 +117,7 @@ public class CreateGroupActivity extends PortraitActivity implements ContactSele
   }
 
   private void setUpMemberList() {
-    Log.e(TAG, "okay trying new member list setup");
+    Log.d(TAG, "okay trying new member list setup");
     memberListFragment = MemberListFragment.newInstance(cachedGroup, false, null,
             new MemberListFragment.MemberClickListener() {
               @Override
@@ -266,7 +267,7 @@ public class CreateGroupActivity extends PortraitActivity implements ContactSele
         Member revisedMember = data.getParcelableExtra(GroupConstants.MEMBER_OBJECT);
         int position = data.getIntExtra(Constant.INDEX_FIELD, -1);
         memberListFragment.updateMember(position, revisedMember);
-        Log.e(TAG, "at position: " + position + ", member received back : " + revisedMember);
+        Log.d(TAG, "at position: " + position + ", member received back : " + revisedMember);
       }
     }
     cacheWipGroup();
@@ -299,7 +300,7 @@ public class CreateGroupActivity extends PortraitActivity implements ContactSele
             switch (e.getMessage()) {
               case NetworkUtils.SERVER_ERROR:
                 save.setEnabled(true);
-                ErrorUtils.showSnackBar(rlCgRoot, R.string.error_generic, Snackbar.LENGTH_SHORT);
+                handleServerError((ApiCallException) e);
                 break;
               case NetworkUtils.CONNECT_ERROR:
                 Group wipGroup = RealmUtils.loadGroupFromDB(groupUid);
@@ -328,6 +329,11 @@ public class CreateGroupActivity extends PortraitActivity implements ContactSele
           @Override
           public void onCompleted() { }
         });
+  }
+
+  private void handleServerError(ApiCallException e) {
+    final String errorMsg = ErrorUtils.serverErrorText(e.errorTag, CreateGroupActivity.this);
+    Snackbar.make(rlCgRoot, errorMsg, Snackbar.LENGTH_SHORT); // todo : have a "save anyway" button, and/or options to edit number
   }
 
   private void handleGroupCreationAndExit(Group group, boolean unexpectedConnectionError) {

@@ -1,21 +1,7 @@
 package org.grassroot.android.services;
 
-import android.app.Activity;
-import android.content.Context;
 import android.text.TextUtils;
 import android.util.Log;
-import android.view.View;
-import io.realm.Realm;
-import io.realm.RealmList;
-import io.realm.RealmResults;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 import org.grassroot.android.events.GroupDeletedEvent;
 import org.grassroot.android.events.GroupEditErrorEvent;
@@ -37,6 +23,7 @@ import org.grassroot.android.models.Permission;
 import org.grassroot.android.models.PermissionResponse;
 import org.grassroot.android.models.PreferenceObject;
 import org.grassroot.android.models.RealmString;
+import org.grassroot.android.models.ServerErrorModel;
 import org.grassroot.android.models.TaskModel;
 import org.grassroot.android.utils.ErrorUtils;
 import org.grassroot.android.utils.NetworkUtils;
@@ -46,6 +33,17 @@ import org.grassroot.android.utils.Utilities;
 import org.greenrobot.eventbus.EventBus;
 
 import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import io.realm.Realm;
+import io.realm.RealmList;
+import io.realm.RealmResults;
 import okhttp3.MediaType;
 import okhttp3.MultipartBody;
 import okhttp3.RequestBody;
@@ -66,16 +64,10 @@ public class GroupService {
 
   public static final String TAG = GroupService.class.getSimpleName();
 
-  // todo : remove these?
-  public ArrayList<Group> userGroups;
-  public ArrayList<GroupJoinRequest> openJoinRequests;
-
   private static GroupService instance = null;
   public static boolean isFetchingGroups = false;
 
   protected GroupService() {
-    userGroups = new ArrayList<>();
-    openJoinRequests = new ArrayList<>();
   }
 
   public static GroupService getInstance() {
@@ -91,17 +83,16 @@ public class GroupService {
     return methodInstance;
   }
 
-  public Observable<String> fetchGroupListRx(Scheduler observingThread) {
+  public Observable<String> fetchGroupList(Scheduler observingThread) {
     observingThread = (observingThread == null) ? AndroidSchedulers.mainThread() : observingThread;
     return Observable.create(new Observable.OnSubscribe<String>() {
       @Override
       public void call(Subscriber<? super String> subscriber) {
-        if (!NetworkUtils.isOnline()) {
-          subscriber.onNext(NetworkUtils.OFFLINE_SELECTED);
-        } else {
+        final String mobileNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
+        final String userCode = RealmUtils.loadPreferencesFromDB().getToken();
+        if (!NetworkUtils.isOfflineOrLoggedOut(subscriber, mobileNumber, userCode)) {
+
           isFetchingGroups = true;
-          final String mobileNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
-          final String userCode = RealmUtils.loadPreferencesFromDB().getToken();
           long lastTimeUpdated = RealmUtils.loadPreferencesFromDB().getLastTimeGroupsFetched();
           Call<GroupsChangedResponse> apiCall = (lastTimeUpdated == 0) ?
               GrassrootRestService.getInstance().getApi().getUserGroups(mobileNumber, userCode) :
@@ -111,7 +102,6 @@ public class GroupService {
             Response<GroupsChangedResponse> response = apiCall.execute();
             isFetchingGroups = false;
             if (response.isSuccessful()) {
-              userGroups = new ArrayList<>(response.body().getAddedAndUpdated());
               persistGroupsAddedUpdated(response.body());
               subscriber.onNext(NetworkUtils.FETCHED_SERVER);
             } else {
@@ -123,6 +113,7 @@ public class GroupService {
             isFetchingGroups = false;
             NetworkUtils.setConnectionFailed();
             subscriber.onNext(NetworkUtils.CONNECT_ERROR);
+            subscriber.onCompleted();
           }
         }
 
@@ -133,7 +124,7 @@ public class GroupService {
   private void persistGroupsAddedUpdated(GroupsChangedResponse responseBody) {
     updateGroupsFetchedTime(); // in case another call comes in (see above re threads)
     // todo : switch to inline?
-    RealmUtils.saveDataToRealm(responseBody.getAddedAndUpdated()).subscribe(new Action1() {
+    RealmUtils.saveDataToRealm(responseBody.getAddedAndUpdated(), null).subscribe(new Action1() {
       @Override public void call(Object o) {
         // System.out.println("saved groups");
         EventBus.getDefault().post(new GroupsRefreshedEvent());
@@ -267,7 +258,7 @@ public class GroupService {
               subscriber.onNext(groupFromServer.getGroupUid());
               subscriber.onCompleted();
             } else {
-              throw new ApiCallException(NetworkUtils.SERVER_ERROR, response.body().getMessage());
+              throw new ApiCallException(NetworkUtils.SERVER_ERROR, ErrorUtils.getRestMessage(response.errorBody()));
             }
           } catch (IOException e) {
             NetworkUtils.setConnectionFailed();
@@ -292,15 +283,25 @@ public class GroupService {
   }
 
   private void cleanUpLocalGroup(final String localGroupUid, final Group groupFromServer) {
-    RealmUtils.loadListFromDB(TaskModel.class, "parentUid", localGroupUid)
-        .subscribe(new Action1<List<TaskModel>>() {
-          @Override public void call(List<TaskModel> models) {
-            for (int i = 0; i < models.size(); i++) {
-              (models.get(i)).setParentUid(groupFromServer.getGroupUid());
-              TaskService.getInstance().sendNewTaskToServer(models.get(i), null);
-            }
-          }
-        });
+    Map<String, Object> findTasks = new HashMap<>();
+    findTasks.put("parentUid", localGroupUid);
+    List<TaskModel> models = RealmUtils.loadListFromDBInline(TaskModel.class, findTasks);
+    for (int i = 0; i < models.size(); i++) {
+      (models.get(i)).setParentUid(groupFromServer.getGroupUid());
+      TaskService.getInstance().sendTaskToServer(models.get(i), Schedulers.immediate()).subscribe(new Subscriber<TaskModel>() {
+        @Override
+        public void onCompleted() { }
+
+        @Override
+        public void onError(Throwable e) {
+          Log.e(TAG, "task didn't send ... error in server or connection : ");
+          e.printStackTrace();
+        }
+
+        @Override
+        public void onNext(TaskModel taskModel) { }
+      });
+    }
     RealmUtils.removeObjectFromDatabase(Member.class,"groupUid", localGroupUid);
     for(Member m : groupFromServer.getMembers()){
       m.composeMemberGroupUid();
@@ -343,10 +344,21 @@ public class GroupService {
               subscriber.onNext(NetworkUtils.SAVED_SERVER);
               subscriber.onCompleted();
             } else {
-              if (!priorSaved) {
-                saveAddedMembersLocal(groupUid, members);
+              // todo : restructure into nested try block, I think ...
+              ServerErrorModel errorModel = ErrorUtils.convertErrorBody(serverCall.errorBody());
+              if (errorModel != null) {
+                Log.e(TAG, "returned an error model ... looks like: " + errorModel);
+                final String error = errorModel.getMessage();
+                if (!ErrorUtils.INVALID_MSISDN.equals(error) && !priorSaved) {
+                  saveAddedMembersLocal(groupUid, members);
+                  throw new ApiCallException(NetworkUtils.SERVER_ERROR, error); // todo : extract MSISDN ...
+                } else {
+                  Log.e(TAG, "throwing error with data ... error message = " + error);
+                  throw new ApiCallException(NetworkUtils.SERVER_ERROR, error, errorModel.getData());
+                }
+              } else {
+                throw new ApiCallException(NetworkUtils.SERVER_ERROR);
               }
-              throw new ApiCallException(NetworkUtils.SERVER_ERROR); // todo : handle more descriptive ...
             }
           } catch (IOException e) {
             if (!priorSaved) {
@@ -361,7 +373,7 @@ public class GroupService {
   }
 
 	public void saveAddedMembersLocal(final String groupUid, List<Member> members) {
-		RealmUtils.saveDataToRealm(members).subscribe();
+		RealmUtils.saveDataToRealm(members, null).subscribe();
 		Group group = RealmUtils.loadGroupFromDB(groupUid);
 		group.setEditedLocal(true);
         group.setGroupMemberCount(group.getGroupMemberCount()+members.size());
@@ -459,7 +471,7 @@ public class GroupService {
                   GroupEditedEvent.CHANGED_ONLINE, groupUid, ""));
               subscriber.onCompleted();
             } else {
-              throw new ApiCallException(NetworkUtils.SERVER_ERROR, response.body().getMessage());
+              throw new ApiCallException(NetworkUtils.SERVER_ERROR, ErrorUtils.getRestMessage(response.errorBody()));
             }
           } catch (IOException e) {
             NetworkUtils.setConnectionFailed();
@@ -522,7 +534,7 @@ public class GroupService {
               subscriber.onNext(NetworkUtils.SAVED_SERVER);
               subscriber.onCompleted();
             } else {
-              throw new ApiCallException(NetworkUtils.SERVER_ERROR, response.body().getMessage());
+              throw new ApiCallException(NetworkUtils.SERVER_ERROR, ErrorUtils.getRestMessage(response.errorBody()));
             }
           } catch (IOException e) {
             NetworkUtils.setConnectionFailed();
@@ -571,7 +583,7 @@ public class GroupService {
               subscriber.onNext(NetworkUtils.SAVED_SERVER);
               subscriber.onCompleted();
             } else {
-              throw new ApiCallException(NetworkUtils.SERVER_ERROR, response.body().getMessage());
+              throw new ApiCallException(NetworkUtils.SERVER_ERROR, ErrorUtils.getRestMessage(response.errorBody()));
             }
 
           } catch (IOException e) {
@@ -613,7 +625,7 @@ public class GroupService {
               subscriber.onCompleted();
             } else {
               // don't save group, as likely permission error / will decouple from server
-              throw new ApiCallException(NetworkUtils.SERVER_ERROR, response.body().getMessage());
+              throw new ApiCallException(NetworkUtils.SERVER_ERROR, ErrorUtils.getRestMessage(response.errorBody()));
             }
           } catch (IOException e) {
             saveRenamedGroupToDB(group, newName, true);
@@ -661,7 +673,7 @@ public class GroupService {
               subscriber.onNext(NetworkUtils.SAVED_SERVER);
               subscriber.onCompleted();
             } else {
-              throw new ApiCallException(NetworkUtils.SERVER_ERROR, response.body().getMessage());
+              throw new ApiCallException(NetworkUtils.SERVER_ERROR, ErrorUtils.getRestMessage(response.errorBody()));
             }
           } catch (IOException e) {
             storeSwitchPublicStatus(groupUid, isPublic, true);
@@ -711,7 +723,7 @@ public class GroupService {
               EventBus.getDefault().post(event);
               subscriber.onCompleted();
             } else {
-              throw new ApiCallException(NetworkUtils.SERVER_ERROR, response.body().getMessage());
+              throw new ApiCallException(NetworkUtils.SERVER_ERROR, ErrorUtils.getRestMessage(response.errorBody()));
             }
           } catch (IOException e) {
             NetworkUtils.setConnectionFailed();
@@ -789,7 +801,7 @@ public class GroupService {
               subscriber.onNext(NetworkUtils.SAVED_SERVER);
               subscriber.onCompleted();
             } else {
-              throw new ApiCallException(NetworkUtils.SERVER_ERROR, response.body().getMessage());
+              throw new ApiCallException(NetworkUtils.SERVER_ERROR, ErrorUtils.getRestMessage(response.errorBody()));
             }
           } catch (IOException e) {
             storeAddedOrganizer(groupUid, memberUid, true);
@@ -935,12 +947,9 @@ public class GroupService {
     return Observable.create(new Observable.OnSubscribe<String>() {
       @Override
       public void call(Subscriber<? super String> subscriber) {
-        if (!NetworkUtils.isOnline()) {
-          subscriber.onNext(NetworkUtils.OFFLINE_SELECTED);
-          subscriber.onCompleted();
-        } else {
-          final String mobileNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
-          final String code = RealmUtils.loadPreferencesFromDB().getToken();
+        final String mobileNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
+        final String code = RealmUtils.loadPreferencesFromDB().getToken();
+        if (!NetworkUtils.isOfflineOrLoggedOut(subscriber, mobileNumber, code)) {
           try {
             Response<RealmList<GroupJoinRequest>> response =  GrassrootRestService.getInstance().getApi()
                 .getOpenJoinRequests(mobileNumber, code).execute();
@@ -980,7 +989,6 @@ public class GroupService {
       RealmResults<GroupJoinRequest> results = realm.where(GroupJoinRequest.class).findAll();
       requests.addAll(realm.copyFromRealm(results));
     }
-    openJoinRequests = new ArrayList<>(requests);
     realm.close();
     return requests;
   }

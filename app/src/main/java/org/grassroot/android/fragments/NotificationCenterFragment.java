@@ -4,6 +4,7 @@ import android.app.Notification;
 import android.app.ProgressDialog;
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
@@ -150,7 +151,12 @@ public class NotificationCenterFragment extends Fragment {
 
         progressDialog.show();
         long lastTimeUpdated = RealmUtils.loadPreferencesFromDB().getLastTimeNotificationsFetched();
-        Call<NotificationList> call = (lastTimeUpdated == 0) ? GrassrootRestService.getInstance().getApi().getUserNotifications(phoneNumber, code, page, size) : page!=null && page > 1 ? GrassrootRestService.getInstance().getApi().getUserNotifications(phoneNumber, code, page, size) : GrassrootRestService.getInstance().getApi().getUserNotificationsChangedSince(phoneNumber, code,lastTimeUpdated);
+        Call<NotificationList> call = (lastTimeUpdated == 0) ?
+            GrassrootRestService.getInstance().getApi().getUserNotifications(phoneNumber, code, page, size) :
+            page!=null && page > 1 ?
+                GrassrootRestService.getInstance().getApi().getUserNotifications(phoneNumber, code, page, size) :
+                GrassrootRestService.getInstance().getApi().getUserNotificationsChangedSince(phoneNumber, code,lastTimeUpdated);
+
         call.enqueue(new Callback<NotificationList>() {
             @Override
             public void onResponse(Call<NotificationList> call, Response<NotificationList> response) {
@@ -171,8 +177,11 @@ public class NotificationCenterFragment extends Fragment {
                     RealmUtils.saveDataToRealm(preference).subscribe();
                     isLoading = false;
                     notificationAdapter.notifyDataSetChanged();
+                } else {
+                    progressDialog.dismiss();
+                    final String errorMessage = ErrorUtils.serverErrorText(response.errorBody(), getContext());
+                    Snackbar.make(rcNc, errorMessage, Snackbar.LENGTH_SHORT).show();
                 }
-
             }
             @Override
             public void onFailure(Call<NotificationList> call, Throwable t) {

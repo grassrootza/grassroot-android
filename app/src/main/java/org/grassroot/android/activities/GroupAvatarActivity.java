@@ -29,10 +29,13 @@ import com.squareup.picasso.Picasso;
 import org.grassroot.android.R;
 import org.grassroot.android.fragments.ImageDetailFragment;
 import org.grassroot.android.interfaces.GroupConstants;
+import org.grassroot.android.models.ApiCallException;
 import org.grassroot.android.models.Group;
 import org.grassroot.android.services.GroupService;
 import org.grassroot.android.utils.CircularImageTransformer;
+import org.grassroot.android.utils.ErrorUtils;
 import org.grassroot.android.utils.ImageUtils;
+import org.grassroot.android.utils.NetworkUtils;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -253,6 +256,7 @@ public class GroupAvatarActivity extends PortraitActivity {
         setViewToAvatars();
     }
 
+    // todo : switch this to Rx and handle offline
     @OnClick(R.id.gp_bt_save)
     public void saveChanges() {
         if (!customImage) {
@@ -269,7 +273,8 @@ public class GroupAvatarActivity extends PortraitActivity {
                         @Override
                         public void onError(Throwable e) {
                             progressBar.setVisibility(View.GONE);
-                            Snackbar.make(rootView, R.string.gp_update_failure, Snackbar.LENGTH_LONG).show();
+                            final String errorMsg = ErrorUtils.serverErrorText(e, GroupAvatarActivity.this);
+                            Snackbar.make(rootView, errorMsg, Snackbar.LENGTH_LONG).show();
                         }
 
                         @Override
@@ -289,7 +294,17 @@ public class GroupAvatarActivity extends PortraitActivity {
                     @Override
                     public void onError(Throwable e) {
                         progressBar.setVisibility(View.GONE);
-                        Snackbar.make(rootView, R.string.gp_update_failure, Snackbar.LENGTH_LONG).show();
+                        if (e instanceof ApiCallException) {
+                            ApiCallException apiCallException = (ApiCallException) e;
+                            if (NetworkUtils.SERVER_ERROR.equals(apiCallException.errorTag)) {
+                                final String errorMsg = ErrorUtils.serverErrorText(apiCallException.errorTag, GroupAvatarActivity.this);
+                                Snackbar.make(rootView, errorMsg, Snackbar.LENGTH_LONG).show();
+                            } else if (NetworkUtils.CONNECT_ERROR.equals(apiCallException.errorTag)) {
+                                // todo : save offline, show a better message, and so forth ..
+                                Snackbar.make(rootView, ErrorUtils.serverErrorText(ErrorUtils.GENERIC_ERROR, GroupAvatarActivity.this), Snackbar.LENGTH_SHORT)
+                                    .show();
+                            }
+                        }
                     }
 
                     @Override

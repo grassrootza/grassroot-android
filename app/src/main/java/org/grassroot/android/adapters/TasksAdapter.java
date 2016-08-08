@@ -5,7 +5,6 @@ import android.os.SystemClock;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
-import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -27,7 +26,10 @@ import java.util.Map;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import rx.Observable;
+import rx.android.schedulers.AndroidSchedulers;
 import rx.functions.Action1;
+import rx.schedulers.Schedulers;
 
 /**
  * Created by ravi on 15/4/16.
@@ -37,9 +39,10 @@ public class TasksAdapter extends RecyclerView.Adapter<TasksAdapter.TaskViewHold
   private static final String TAG = TasksAdapter.class.getCanonicalName();
 
   private final TaskListListener listener;
-  private final String parentUid;
 
-  private List<TaskModel> viewedTasks=new ArrayList<>();
+  private List<TaskModel> viewedTasks = new ArrayList<>();
+  private Map<String, Integer> uidPositionMap = new HashMap<>();
+
   private List<TaskModel> fullTaskList;
   private Map<String, List<TaskModel>> decomposedList;
 
@@ -48,14 +51,12 @@ public class TasksAdapter extends RecyclerView.Adapter<TasksAdapter.TaskViewHold
   private final Context mContext;
 
   public interface TaskListListener {
-    void tasksLoaded(String fetchType);
     void respondToTask(String taskUid, String taskType, String response, int position);
     void onCardClick(int position, String taskUid, String taskType, String taskTitle);
   }
 
   // note : pass in parentUid as null if the task list is for all of a user's groups / entities
   public TasksAdapter(TaskListListener listListener, Context context, String parentUid) {
-    this.parentUid = parentUid;
     this.listener = listListener;
     this.mContext = context;
     this.primaryColor = ContextCompat.getColor(context, R.color.primaryColor);
@@ -63,24 +64,40 @@ public class TasksAdapter extends RecyclerView.Adapter<TasksAdapter.TaskViewHold
     this.secondaryColor = ContextCompat.getColor(context, R.color.text_grey);
   }
 
-  public void refreshTaskListToDB(final String fetchType) {
-    if (parentUid == null) {
-      viewedTasks = RealmUtils.loadUpcomingTasksFromDB();
-      notifyDataSetChanged();
-      if (!TextUtils.isEmpty(fetchType)) {
-        listener.tasksLoaded(fetchType);
-      }
+  public void refreshTaskList(List<TaskModel> allTasks) {
+    viewedTasks = allTasks;
+    notifyDataSetChanged();
+    resetUidPositionMap().subscribe();
+  }
+
+  public void addTaskToList(TaskModel task, int position) {
+    viewedTasks.add(position, task);
+    notifyDataSetChanged(); // otherwise it only changes the view on the first item, so it looks like a replace
+    resetUidPositionMap().subscribe(); // since positions will be updated throughout ...
+  }
+
+  public void removeTaskFromList(final String taskUid) {
+    Integer position = uidPositionMap.get(taskUid);
+    if (position != null) {
+      viewedTasks.remove((int) position);
+      notifyItemRemoved(position);
+      resetUidPositionMap().subscribe();
     } else {
-      RealmUtils.loadListFromDB(TaskModel.class, "parentUid", parentUid).subscribe(new Action1<List<TaskModel>>() {
-        @Override public void call(List<TaskModel> taskModels) {
-          viewedTasks = taskModels;
-          notifyDataSetChanged();
-          if (!TextUtils.isEmpty(fetchType)) {
-            listener.tasksLoaded(fetchType);
-          }
-        }
-      });
+      Log.e(TAG, "error! no such task found ...");
     }
+  }
+
+  private Observable resetUidPositionMap() {
+    return Observable.create(new Observable.OnSubscribe() {
+      @Override
+      public void call(Object o) {
+        uidPositionMap.clear();
+        final int count = viewedTasks.size();
+        for (int i = 0; i < count; i++) {
+          uidPositionMap.put(viewedTasks.get(i).getTaskUid(), i);
+        }
+      }
+    }).subscribeOn(Schedulers.computation()).observeOn(AndroidSchedulers.mainThread());
   }
 
   @Override public TaskViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {

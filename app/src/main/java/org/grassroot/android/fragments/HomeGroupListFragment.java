@@ -195,7 +195,7 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
     in time, rather than doing a full refresh, and don't need to worry about progress bar, etc
    */
     public void refreshGroupList() {
-        GroupService.getInstance().fetchGroupListRx(null).subscribe(new Subscriber<String>() {
+        GroupService.getInstance().fetchGroupList(null).subscribe(new Subscriber<String>() {
             @Override
             public void onError(Throwable e) {
                 hideProgress();
@@ -321,15 +321,15 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
                         switch (taskType) {
                             case TaskConstants.MEETING:
                                 i = IntentUtils.constructIntent(getActivity(), CreateMeetingActivity.class,
-                                        group.getGroupUid(), group.getGroupName());
+                                        group.getGroupUid(), group.getGroupName(), group.getIsLocal());
                                 break;
                             case TaskConstants.VOTE:
                                 i = IntentUtils.constructIntent(getActivity(), CreateVoteActivity.class,
-                                        group.getGroupUid(), group.getGroupName());
+                                        group.getGroupUid(), group.getGroupName(), group.getIsLocal());
                                 break;
                             case TaskConstants.TODO:
                                 i = IntentUtils.constructIntent(getActivity(), CreateTodoActivity.class,
-                                        group.getGroupUid(), group.getGroupName());
+                                        group.getGroupUid(), group.getGroupName(), group.getIsLocal());
                                 break;
                             default:
                                 throw new UnsupportedOperationException("Error! Unknown task type");

@@ -66,5 +66,4 @@ public class ApplicationLoader extends Application {
     sendBroadcast(i);
   }
 
-  // todo : turn location utils into a service started here
 }

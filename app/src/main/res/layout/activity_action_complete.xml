@@ -82,12 +82,12 @@
         <Button
             style="@style/NewTaskButton"
             android:id="@+id/bt_stay_offline"
-            android:text="Work offline"/>
+            android:text="@string/ac_btn_offline"/>
 
         <Button
             style="@style/NewTaskButton"
             android:id="@+id/bt_keep_trying"
-            android:text="Keep trying"/>
+            android:text="@string/ac_btn_try_again"/>
 
     </LinearLayout>
 

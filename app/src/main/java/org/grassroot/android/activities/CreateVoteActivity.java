@@ -58,7 +58,7 @@ public class CreateVoteActivity extends PortraitActivity {
         Bundle args = new Bundle();
         args.putString(TaskConstants.TASK_TYPE_FIELD, TaskConstants.VOTE);
         args.putString(GroupConstants.UID_FIELD, groupUid);
-        args.putBoolean(Constant.GROUP_LOCAL,isGroupLocal);
+        args.putBoolean(GroupConstants.LOCAL_FIELD, isGroupLocal);
         ctskFragment.setArguments(args);
 
         getSupportFragmentManager().beginTransaction()

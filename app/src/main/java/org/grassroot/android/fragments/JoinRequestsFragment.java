@@ -159,15 +159,16 @@ public class JoinRequestsFragment extends Fragment {
                 public void onResponse(Call<GenericResponse> call, Response<GenericResponse> response) {
                     if (response.isSuccessful()) {
                         Log.e(TAG, "sucess! hide this, and do the remainder");
-                        hideProgess();
                         adapter.clearRequest(position);
                         RealmUtils.removeObjectFromDatabase(GroupJoinRequest.class, "requestUid", requestUid);
                         int snackMsg = approvedOrDenied.equals(GroupConstants.JOIN_REQUEST_APPROVE) ?
                                 R.string.jreq_approved : R.string.jreq_denied;
                         ErrorUtils.showSnackBar(frameLayout, snackMsg, Snackbar.LENGTH_SHORT);
                         selectMessageOrList();
+                        hideProgess();
                     } else {
-                        // ignore for now, later show error (e.g., if permissions/role changed)
+                        final String errorMessage = ErrorUtils.serverErrorText(response.errorBody(), getContext());
+                        Snackbar.make(frameLayout, errorMessage, Snackbar.LENGTH_SHORT).show();
                         hideProgess();
                     }
                 }

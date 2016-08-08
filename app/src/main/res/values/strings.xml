@@ -15,8 +15,8 @@
     <string name="title_activity_group_settings">GroupSettings</string>
 
     <!-- Welcome, register, OTP screens -->
-    <string name="txt_pls_wait">Please wait...</string>
-    <string name="wait_message">Please wait...</string> <!-- todo : clean redundancy -->
+    <string name="txt_pls_wait">Please wait&#8230;</string>
+    <string name="wait_message">Please wait&#8230;</string> <!-- todo : clean redundancy -->
     <string name="bt_login">LOGIN</string>
     <string name="bt_register">REGISTER</string>
     <string name="bt_submit_otp">SUBMIT</string>
@@ -25,31 +25,60 @@
     <string name="et_userName">Name</string>
     <string name="et_mobile_register">Cellphone number</string>
 
+    <string name="resend_otp">Resend</string>
+
     <!-- todo : fix redundancy in next three sections ... -->
+
+    <!--Error descriptions -->
+
+    <string name="connect_error_general">Sorry, we couldn\'t connect to the server. Please try again later.</string>
+    <string name="server_error_general">Sorry, something went wrong with the request.</string> <!-- note : should never actually use this -->
+    <string name="connect_error_logreg">Hmm, we can\'t connect to the server right now. Check connection and try again?</string>
+    <string name="server_error_user_exists">That number is already registered, you can just login</string>
+    <string name="server_error_user_not_exist">Sorry, that number isn\'t registered, please sign up</string>
+    <string name="server_error_otp_wrong">Sorry, incorrect pin entered. Please try again or resend</string>
+    <string name="connect_otp_resend_fail">Sorry, we could not contact the server. Please try again later.</string>
+    <string name="server_error_otp_early">Sorry, can\'t resend the code before clicking register</string>
+    <string name="server_error_group_create">Sorry, there was an error creating the group. You can save it and try later.</string>
+    <string name="server_error_phone_number">Sorry, one of the member\'s phone numbers was incorrect. Save and try later?</string>
+    <string name="server_error_perms_denied">Sorry, you don\'t have permission for that on this group</string>
+    <string name="server_error_image_error">Sorry, the photo format isn\'t supported. Please try again later or pick another</string>
+    <string name="server_error_image_none">Sorry, the photo wasn\t uploaded. Please try again later</string>
+    <string name="server_error_part_of_group">You\'re already part of that group</string>
+    <string name="server_error_cant_approve_join">Sorry, you don\'t have permission to approve join requests anymore</string>
+    <string name="server_error_date_in_past">Sorry, date can\'t be in the past. Please change and submit again</string>
+    <string name="server_error_meeting_cancelled">This meeting has been cancelled by the person who called it</string>
+    <string name="server_error_meeting_over">This meeting has already finished</string>
+    <string name="server_error_already_voted">Your vote has already been recorded</string>
+    <string name="server_error_vote_closed">Sorry, the vote is already closed</string>
+    <string name="server_error_vote_cancelled">Sorry, that vote was already cancelled</string>
+    <string name="server_error_todo_completed">You\'ve already marked the action complete</string>
+    <string name="server_error_notifications_done">That\'s all the notifications in your list</string>
+
+    <string name="INVALID_TOKEN">Sorry, wrong code. Please check again and re-enter.</string> <!-- todo : refactor this as others -->
+
+    <string name="snackbar_try_again">Retry</string>
+
     <!-- Error messages -->
     <string name="error_generic">Sorry! Something went wrong in the request.</string>
     <string name="error_no_network">You don\'t seem to have a working data connection.</string>
-    <string name="error_user_exists">User already exists, please login</string>
     <string name="error_wrong_number">Sorry! Error creating group, please check numbers</string>
 
-    <!--Error dialogs --><!--bs-->
+    <!--Error dialogs -->
     <string name="alert_confirm">Confirm</string>
     <string name="alert_cancel">Cancel</string>
     <string name="Network_Settings">Check Network Settings</string>
     <string name="Alert_Retry">Retry</string>
     <string name="work_offline">Offline mode</string>
-    <string name="Alert_Already_Responded">You have already responded to the event.</string>
     <string name="LOG_OUT">Logout</string>
-    <string name="GROUP_NOT_FOUND">No groups matching your key were found</string>
 
     <!-- Error : validation messages -->
     <string name="Either_field_empty">Please enter all fields to proceed</string>
     <string name="Cellphone_number_invalid">Please enter a valid cellphone number</string>
     <string name="Cellphone_number_empty">Please enter cellphone number to proceed</string>
-    <string name="User_not_registered">Sorry, that number isn\'t registered yet.</string>
     <string name="otp_hint">Enter code sent by SMS</string>
     <string name="OTP_empty">Please enter the code sent by SMS</string>
-    <string name="INVALID_TOKEN">Sorry, wrong code. Please check again and re-enter.</string>
+
 
     <!-- Navigation drawer items -->
     <string name="drawer_group_list">Your groups</string>
@@ -182,7 +211,6 @@
     <string name="gs_dialog_cancel">CANCEL</string>
 
     <string name="Title_Join_Request_Sent">Join request sent!</string>
-    <string name="USER_ALREADY_PART">User already part of group</string>
     <string name="none">NONE</string>
 
     <string name="jreq_notice">You have requests to join one of your groups</string>
@@ -254,8 +282,7 @@
     members and will add them to the group when we can connect.</string>
 
     <string name="am_server_error_header">Error</string>
-    <string name="am_server_permission">Sorry, but you don\'t have permission to add members to this group
-    anymore.</string>
+    <string name="am_server_permission">Sorry, but you don\'t have permission to add members to this group.</string>
     <string name="am_server_other">Sorry, something went wrong adding the members. Please try again later.</string>
 
     <string name="rm_offline_header">Done</string>
@@ -538,6 +565,12 @@
     <string name="ac_btn_avatar">CHOOSE PICTURE</string>
     <string name="ac_btn_tasks">MEETING, VOTE OR ACTION</string>
 
+    <string name="ac_btn_try_again">STAY ONLINE</string>
+    <string name="ac_btn_offline">WORK OFFLINE</string>
+
+    <string name="ac_msg_try_again">Okay, we\'ll try reconnect every 15 minutes, or you can select
+    Try Again from the navigation bar</string>
+
     <!--Profile-->
     <string name="pp_txt_toolbar">Profile Settings</string>
     <string name="pp_bt_update">Update</string>
@@ -571,11 +604,7 @@
 
     <string name="gp_txt_title">Group picture</string>
     <string name="gp_update_success">Group photo updated</string>
-    <string name="gp_update_failure">Sorry, we couldn\'t upload the photo. Please try again later.</string>
-
     <string name="gp_image_load_error">Sorry, something went wrong loading picture. Defaulting to icons.</string>
-
-    <!--Notification Center-->
 
     <!--FAQ-->
     <string name="fq_txt_toolbar">FAQs</string>

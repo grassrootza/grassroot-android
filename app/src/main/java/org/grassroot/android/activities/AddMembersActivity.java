@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.os.SystemClock;
 import android.support.design.widget.FloatingActionButton;
+import android.support.design.widget.Snackbar;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -23,6 +24,7 @@ import org.grassroot.android.models.Contact;
 import org.grassroot.android.models.Member;
 import org.grassroot.android.services.GroupService;
 import org.grassroot.android.utils.Constant;
+import org.grassroot.android.utils.ErrorUtils;
 import org.grassroot.android.utils.IntentUtils;
 import org.grassroot.android.utils.NetworkUtils;
 import org.grassroot.android.utils.PermissionUtils;
@@ -251,7 +253,7 @@ public class AddMembersActivity extends AppCompatActivity implements
                 Member newMember = new Member(newUid, groupUid, data.getStringExtra("selectedNumber"), data.getStringExtra("name"),
                         GroupConstants.ROLE_ORDINARY_MEMBER, -1, true);
                 newMember.setLocal(true);
-                RealmUtils.saveDataToRealmWithSubscriber(newMember);
+                // RealmUtils.saveDataToRealmWithSubscriber(newMember); // todo : figure out safe place to do this
                 manuallyAddedMembers.add(newMember);
                 newMemberListFragment.addMembers(Collections.singletonList(newMember));
                 setNewMembersVisible();
@@ -322,13 +324,15 @@ public class AddMembersActivity extends AppCompatActivity implements
 
                     @Override
                     public void onError(Throwable e) {
-                        Intent i;
+                        Intent i = null;
                         switch (e.getMessage()) {
                             case NetworkUtils.SERVER_ERROR:
-                                ApiCallException error = (ApiCallException) e;
-                                final String body = ApiCallException.PERMISSION_ERROR.equals(error.errorTag) ?
-                                    getString(R.string.am_server_permission) : getString(R.string.am_server_other);
-                                i = IntentUtils.offlineMessageIntent(AddMembersActivity.this, R.string.am_server_error_header, body, false, false);
+                                if (e instanceof ApiCallException) {
+                                    handleServerError((ApiCallException) e);
+                                } else {
+                                    final String body = getString(R.string.am_server_other);
+                                    i = IntentUtils.offlineMessageIntent(AddMembersActivity.this, R.string.am_server_error_header, body, false, false);
+                                }
                                 break;
                             case NetworkUtils.CONNECT_ERROR:
                                 i = IntentUtils.offlineMessageIntent(AddMembersActivity.this, R.string.am_offline_header, getString(R.string.am_offline_body_error), false, true);
@@ -338,8 +342,10 @@ public class AddMembersActivity extends AppCompatActivity implements
                                 i = IntentUtils.offlineMessageIntent(AddMembersActivity.this, R.string.am_server_error_header, getString(R.string.am_server_other), false, true);
                         }
                         progressDialog.dismiss();
-                        startActivity(i);
-                        finish();
+                        if (i != null) {
+                            startActivity(i);
+                            finish();
+                        }
                     }
                 });
             } else {
@@ -347,6 +353,13 @@ public class AddMembersActivity extends AppCompatActivity implements
                 finish();
             }
         }
+    }
+
+    private void handleServerError(ApiCallException e) {
+        // todo : add a "try again to save" message (make this an error dialog ...)
+        final String errorMsg = ErrorUtils.serverErrorText(e.errorTag, this);
+        Log.e(TAG, "got the string back : " + errorMsg);
+        Snackbar.make(amRlRoot, errorMsg, Snackbar.LENGTH_LONG).show();
     }
 
 }

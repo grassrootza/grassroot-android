@@ -13,6 +13,7 @@ import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.SwitchCompat;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -32,8 +33,10 @@ import org.grassroot.android.fragments.dialogs.DatePickerFragment;
 import org.grassroot.android.fragments.dialogs.TimePickerFragment;
 import org.grassroot.android.interfaces.GroupConstants;
 import org.grassroot.android.interfaces.TaskConstants;
+import org.grassroot.android.models.ApiCallException;
 import org.grassroot.android.models.Group;
 import org.grassroot.android.models.Member;
+import org.grassroot.android.models.RealmString;
 import org.grassroot.android.models.TaskModel;
 import org.grassroot.android.services.TaskService;
 import org.grassroot.android.utils.Constant;
@@ -58,6 +61,8 @@ import butterknife.ButterKnife;
 import butterknife.OnCheckedChanged;
 import butterknife.OnClick;
 import butterknife.OnTextChanged;
+import io.realm.RealmList;
+import rx.Subscriber;
 import rx.functions.Action1;
 
 /**
@@ -92,12 +97,8 @@ public class CreateTaskFragment extends Fragment {
 
     private DatePickerFragment datePicker;
     private TimePickerFragment timePicker;
-    @BindView(R.id.ctsk_cv_datepicker)
-    CardView datePickTrigger;
     @BindView(R.id.ctsk_txt_deadline)
     TextView dateDisplayed;
-    @BindView(R.id.ctsk_cv_timepicker)
-    CardView timePickTrigger;
     @BindView(R.id.ctsk_txt_time)
     TextView timeDisplayed;
 
@@ -131,9 +132,11 @@ public class CreateTaskFragment extends Fragment {
         }
         groupUid = b.getString(GroupConstants.UID_FIELD);
         taskType = b.getString(TaskConstants.TASK_TYPE_FIELD);
-        groupLocal = b.getBoolean(Constant.GROUP_LOCAL);
-        selectedDateTimeCal = Calendar.getInstance();
+        groupLocal = b.getBoolean(GroupConstants.LOCAL_FIELD);
 
+        Log.e(TAG, "create task fragment initiated, with group local set to : " + groupLocal);
+
+        selectedDateTimeCal = Calendar.getInstance();
         includeWholeGroup = true;
     }
 
@@ -142,12 +145,14 @@ public class CreateTaskFragment extends Fragment {
                              Bundle savedInstanceState) {
         View viewToReturn = inflater.inflate(R.layout.fragment_create_task, container, false);
         ButterKnife.bind(this, viewToReturn);
+
         this.vContainer = container;
         progressDialog = new ProgressDialog(getContext());
         progressDialog.setIndeterminate(true);
         progressDialog.setMessage(getString(R.string.txt_pls_wait));
         shortCharCounter = getString(R.string.generic_35_char_counter);
         longCharCounter = getString(R.string.generic_250_char_conter);
+
         setUpStrings();
         return viewToReturn;
     }
@@ -220,6 +225,11 @@ public class CreateTaskFragment extends Fragment {
         }
     }
 
+    private void startPickMemberActivity(ArrayList<Member> preSelectedMembers) {
+        Intent pickMember = IntentUtils.memberSelectionIntent(getActivity(), groupUid, CreateTaskFragment.class.getCanonicalName(), preSelectedMembers);
+        startActivityForResult(pickMember, Constant.activitySelectGroupMembers);
+    }
+
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -228,25 +238,16 @@ public class CreateTaskFragment extends Fragment {
         }
     }
 
-    @Override
-    public void onResume() {
-        super.onResume();
-    }
-
-    private void startPickMemberActivity(ArrayList<Member> preSelectedMembers) {
-        Intent pickMember = IntentUtils.memberSelectionIntent(getActivity(), groupUid, CreateTaskFragment.class.getCanonicalName(), preSelectedMembers);
-        startActivityForResult(pickMember, Constant.activitySelectGroupMembers);
-    }
-
-    // todo : see if we can structure the calls better so don't have to round trip through activity
     public void setAssignedMembers(Intent data) {
         if (data == null) {
-            throw new UnsupportedOperationException("Error! Need not null data back from activity");
+            Log.e(TAG, "Error! Need not null data back from activity");
+            return;
         }
 
         List<Member> members = data.getParcelableArrayListExtra(Constant.SELECTED_MEMBERS_FIELD);
         if (members == null) {
-            throw new UnsupportedOperationException("Error! Member picker must not return null list");
+            Log.e(TAG, "Error! Member picker must not return null list");
+            return;
         }
 
         assignedMembers = new HashSet<>(members);
@@ -262,17 +263,15 @@ public class CreateTaskFragment extends Fragment {
 
     @OnClick(R.id.ctsk_btn_create_task)
     public void validateFormAndCreateTask() {
-        if (etTitleInput.getText().toString().trim().equals("")) {
+        if (etTitleInput.getText().toString().trim().isEmpty()) {
             ErrorUtils.showSnackBar(vContainer, "Please enter a subject", Snackbar.LENGTH_LONG, "", null);
         } else if (TaskConstants.MEETING.equals(taskType) && etLocationInput.getText()
                 .toString()
                 .trim()
                 .equals("")) {
-            ErrorUtils.showSnackBar(vContainer, "Please enter a location", Snackbar.LENGTH_LONG, "",
-                    null);
+            ErrorUtils.showSnackBar(vContainer, "Please enter a location", Snackbar.LENGTH_LONG, "", null);
         } else if (!datePicked || (!taskType.equals(TaskConstants.TODO) && !timePicked)) {
-            ErrorUtils.showSnackBar(vContainer, "Please enter a date and time for the meeting",
-                    Snackbar.LENGTH_LONG, "", null);
+            ErrorUtils.showSnackBar(vContainer, "Please enter a date and time for the meeting", Snackbar.LENGTH_LONG, "", null);
         } else {
             createTask();
         }
@@ -280,26 +279,30 @@ public class CreateTaskFragment extends Fragment {
 
     public void createTask() {
         progressDialog.show();
-        TaskModel model = generateTaskObject();
-        TaskService.getInstance().createTask(model, new TaskService.TaskCreationListener() {
+        final TaskModel model = generateTaskObject();
+        TaskService.getInstance().sendTaskToServer(model, null).subscribe(new Subscriber<TaskModel>() {
             @Override
-            public void taskCreatedLocally(TaskModel task) {
+            public void onNext(TaskModel taskModel) {
                 progressDialog.dismiss();
-                generateSuccessTask(task);
+                generateSuccessTask(taskModel);
             }
 
             @Override
-            public void taskCreatedOnServer(TaskModel task) {
-                progressDialog.dismiss();
-                generateSuccessTask(task);
+            public void onError(Throwable e) {
+                if (e instanceof ApiCallException) {
+                    progressDialog.dismiss();
+                    final String type = e.getMessage();
+                    if (NetworkUtils.CONNECT_ERROR.equals(type)) {
+                        generateSuccessTask(model);
+                    } else {
+                        final String msg = ErrorUtils.serverErrorText(e, getContext());
+                        Snackbar.make(vContainer, msg, Snackbar.LENGTH_SHORT); // todo : add a "save and try again option"
+                    }
+                }
             }
 
             @Override
-            public void taskCreationError(TaskModel task) {
-                progressDialog.dismiss();
-                ErrorUtils.showSnackBar(vContainer, "Error! Something went wrong", Snackbar.LENGTH_LONG, "",
-                        null);
-            }
+            public void onCompleted() { }
         });
     }
 
@@ -323,6 +326,8 @@ public class CreateTaskFragment extends Fragment {
     }
 
     private TaskModel generateTaskObject() {
+        Log.e(TAG, "creating task model ... isGroupLocal set to ... " + groupLocal);
+
         final String title = etTitleInput.getText().toString();
         final String description = etDescriptionInput.getText().toString();
         final String dateTimeISO = Constant.isoDateTimeSDF.format(selectedDateTime);
@@ -348,18 +353,16 @@ public class CreateTaskFragment extends Fragment {
         model.setTaskUid(UUID.randomUUID().toString());
         model.setType(taskType);
         model.setParentLocal(groupLocal);
-        model.setLocal(!NetworkUtils.isOnline(getContext()));
+        model.setLocal(true); // true until replaced when received from server ...
         model.setMinutes(minutes);
         model.setCanEdit(true);
         model.setCanAction(true);
         model.setReply(TaskConstants.TODO_PENDING);
         model.setHasResponded(false);
 
-        model.setMemberUIDS(
-                RealmUtils.convertListOfStringInRealmListOfString(new ArrayList<>(memberUids)));
-        // todo : work out why doing call below
-        RealmUtils.saveDataToRealm(
-                RealmUtils.convertListOfStringInRealmListOfString(new ArrayList<>(memberUids)));
+        final RealmList<RealmString> realmMemberUids = RealmUtils.convertListOfStringInRealmListOfString(new ArrayList<>(memberUids));
+        model.setMemberUIDS(realmMemberUids);
+        RealmUtils.saveDataToRealm(realmMemberUids, null).subscribe();
 
         return model;
     }

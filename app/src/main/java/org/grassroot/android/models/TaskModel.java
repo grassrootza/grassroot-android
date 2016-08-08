@@ -256,6 +256,12 @@ public class TaskModel extends RealmObject implements Parcelable, Comparable<Tas
     return type;
   }
 
+  public void calcDeadlineDate() {
+    if (deadlineDate == null) {
+      deadlineDate = parseDateFromIsoString();
+    }
+  }
+
   public Date getDeadlineDate() {
     if (deadlineDate == null) {
       deadlineDate = parseDateFromIsoString();

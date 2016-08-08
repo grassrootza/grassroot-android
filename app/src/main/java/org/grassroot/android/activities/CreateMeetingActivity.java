@@ -41,6 +41,7 @@ public class CreateMeetingActivity extends PortraitActivity {
 
         groupUid = b.getString(GroupConstants.UID_FIELD);
         isGroupLocal = b.getBoolean(GroupConstants.LOCAL_FIELD);
+
         setUpToolbar();
         launchFragment();
     }

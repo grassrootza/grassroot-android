@@ -64,4 +64,11 @@
         app:rippleColor="#D99200"
         app:elevation="6dp" />
 
+    <ProgressBar
+        android:id="@+id/progressBar"
+        style="@style/ProgressBarSmall"
+        android:visibility="gone"
+        android:layout_centerVertical="true"
+        android:layout_centerHorizontal="true" />
+
 </RelativeLayout>

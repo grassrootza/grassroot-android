@@ -17,11 +17,11 @@ import java.util.ArrayList;
  */
 public final class IntentUtils {
 
-    public static Intent constructIntent(Context callingContext, Class toActivityClass, String groupUid, String groupName,boolean isLocal) {
+    public static Intent constructIntent(Context callingContext, Class toActivityClass, String groupUid, String groupName, boolean isLocal) {
         Intent i = new Intent(callingContext, toActivityClass);
         i.putExtra(GroupConstants.UID_FIELD, groupUid);
         i.putExtra(GroupConstants.NAME_FIELD, groupName);
-        i.putExtra(Constant.GROUP_LOCAL,isLocal);
+        i.putExtra(GroupConstants.LOCAL_FIELD,isLocal);
         return i;
     }
 

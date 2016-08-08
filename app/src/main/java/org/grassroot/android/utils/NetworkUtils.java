@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.text.TextUtils;
 import android.util.Log;
 
 import java.io.IOException;
@@ -22,7 +23,6 @@ import org.grassroot.android.models.LocalGroupEdits;
 import org.grassroot.android.models.Member;
 import org.grassroot.android.models.PreferenceObject;
 import org.grassroot.android.models.TaskModel;
-import org.grassroot.android.models.TaskResponse;
 import org.grassroot.android.services.ApplicationLoader;
 import org.grassroot.android.services.GcmRegistrationService;
 import org.grassroot.android.services.GrassrootRestService;
@@ -46,6 +46,7 @@ public class NetworkUtils {
   public static final String ONLINE_DEFAULT = "default";
   public static final String OFFLINE_SELECTED = "offline_selected"; // i.e., user chose to go offline
   public static final String OFFLINE_ON_FAIL = "offline_on_fail"; // i.e., network calls failed, but user said to keep trying
+  public static final String DB_EMPTY = "db_empty";
 
   public static final String SAVED_SERVER = "saved_server";
   public static final String SAVED_OFFLINE_MODE = "saved_offline_mode";
@@ -53,6 +54,7 @@ public class NetworkUtils {
   public static final String CONNECT_ERROR = "connection_error";
   public static final String NO_NETWORK = "no_network";
   public static final String FETCHED_SERVER = "fetched_from_server";
+  public static final String FETCHED_CACHE = "fetched_local";
 
   public static final long minIntervalBetweenSyncs = 15 * 60 * 1000; // 15 minutes, in millis
 
@@ -142,6 +144,19 @@ public class NetworkUtils {
     return (!OFFLINE_SELECTED.equals(status) && isNetworkAvailable(context)); // this means we try to connect every time, unless told not to
   }
 
+  public static boolean isOfflineOrLoggedOut(Subscriber<? super String> sub, final String phoneNumber, final String code) {
+    if (!isOnline()) {
+      sub.onNext(OFFLINE_SELECTED);
+      sub.onCompleted();
+      return true;
+    } else if (TextUtils.isEmpty(phoneNumber) || TextUtils.isEmpty(code)) {
+      sub.onNext(DB_EMPTY);
+      sub.onCompleted();
+      return true;
+    } else
+      return false;
+  }
+
   public static boolean isNetworkAvailable(Context context) {
     ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
     NetworkInfo ni = cm.getActiveNetworkInfo();
@@ -202,9 +217,9 @@ public class NetworkUtils {
     if (!fetchingServerEntities) {
       fetchingServerEntities = true;
       if (isOnline(context)) {
-        GroupService.getInstance().fetchGroupListRx(Schedulers.immediate()).subscribe();
+        GroupService.getInstance().fetchGroupList(Schedulers.immediate()).subscribe();
         GroupService.getInstance().fetchGroupJoinRequests(Schedulers.immediate()).subscribe();
-        TaskService.getInstance().fetchUpcomingTasks(null);
+        TaskService.getInstance().fetchUpcomingTasks(Schedulers.immediate()).subscribe();
       }
     }
     fetchingServerEntities = false;
@@ -337,23 +352,21 @@ public class NetworkUtils {
        public void call(List<TaskModel> tasks) {
          for (final TaskModel model : tasks) {
            final String localUid = model.getTaskUid();
-           TaskService.getInstance().sendNewTaskToServer(model, new TaskService.TaskCreationListener() {
-             @Override public void taskCreatedLocally(final TaskModel task) {
-               RealmUtils.saveDataToRealm(task).subscribe(new Action1() {
-                 @Override public void call(Object o) {
-                   RealmUtils.removeObjectFromDatabase(TaskModel.class, "taskUid", localUid);
-                 }
-               });
-               System.out.println("TASK CREATED" + task.toString());
+           TaskService.getInstance().sendTaskToServer(model, Schedulers.immediate()).subscribe(new Subscriber<TaskModel>() {
+             @Override
+             public void onError(Throwable e) {
+               if (e instanceof ApiCallException && NetworkUtils.CONNECT_ERROR.equals(e.getMessage())) {
+                 setConnectionFailed();
+               }
              }
 
-             @Override public void taskCreatedOnServer(TaskModel task) {
-
+             @Override
+             public void onNext(TaskModel taskModel) {
+               RealmUtils.removeObjectFromDatabase(TaskModel.class, "taskUid", localUid);
              }
 
-             @Override public void taskCreationError(TaskModel task) {
-
-             }
+             @Override
+             public void onCompleted() { }
            });
          }
        }
@@ -369,8 +382,8 @@ public class NetworkUtils {
       @Override
       public void call(List<TaskModel> tasks1) {
         for (final TaskModel model : tasks1) {
-          TaskService.getInstance()
-                  .sendTaskUpdateToServer(model, true); // todo : work out selected member change logic
+          TaskService.getInstance().sendTaskUpdateToServer(model, true, Schedulers.immediate())
+              .subscribe(); // todo : work out selected member change logic
         }
       }
     });
@@ -383,22 +396,22 @@ public class NetworkUtils {
     RealmUtils.loadListFromDB(TaskModel.class,map1).subscribe(new Action1<List<TaskModel>>() {
       @Override
       public void call(List<TaskModel> tasks) {
-        for(TaskModel taskModel : tasks){
-          TaskService.getInstance().respondToTask(taskModel, taskModel.getReply(), new TaskService.TaskActionListener() {
-            @Override
-            public void taskActionComplete(TaskModel task, String reply) {
-            }
+        for(TaskModel taskModel : tasks) {
+          TaskService.getInstance().respondToTaskRx(taskModel, taskModel.getReply(), Schedulers.immediate())
+              .subscribe(new Subscriber<String>() {
+                @Override
+                public void onCompleted() { }
 
-            @Override
-            public void taskActionError(Response<TaskResponse> response) {
+                @Override
+                public void onError(Throwable e) {
+                  if (NetworkUtils.CONNECT_ERROR.equals(e.getMessage())) {
+                    setConnectionFailed();
+                  }
+                }
 
-            }
-
-            @Override
-            public void taskActionCompleteOffline(TaskModel task, String reply) {
-
-            }
-          });
+                @Override
+                public void onNext(String s) { }
+              });
         }
       }
     });

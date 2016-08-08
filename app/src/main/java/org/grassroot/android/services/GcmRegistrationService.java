@@ -58,10 +58,11 @@ public class GcmRegistrationService extends IntentService {
                 getString(R.string.prod_project_id) : getString(R.string.staging_project_id);
 
         try {
-            Log.d(TAG, "Registering user for push messages");
 
             String gcmToken = InstanceID.getInstance(this)
                     .getToken(projectId, GoogleCloudMessaging.INSTANCE_ID_SCOPE, null);
+
+            Log.d(TAG, "got a GCM token : " + gcmToken);
 
             final String phoneNumber = intent.getStringExtra(NotificationConstants.PHONE_NUMBER);
             final String code = RealmUtils.loadPreferencesFromDB().getToken();

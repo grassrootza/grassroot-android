@@ -4,7 +4,6 @@ import io.realm.RealmObject;
 
 /**
  * Created by luke on 2016/07/18.
- * todo : decide if we do want to store this in DB
  */
 public class Permission extends RealmObject {
 

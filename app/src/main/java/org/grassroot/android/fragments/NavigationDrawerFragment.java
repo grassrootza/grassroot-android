@@ -389,8 +389,10 @@ public class NavigationDrawerFragment extends Fragment implements NavigationDraw
 
     @Subscribe
     public void onTasksRefreshedEvent(TasksRefreshedEvent e) {
-        tasks.setItemCount(RealmUtils.loadUpcomingTasksFromDB().size());
-        primaryAdapter.notifyItemChanged(NavigationConstants.HOME_NAV_TASKS);
+        if (!TextUtils.isEmpty(e.parentUid)) {
+            tasks.setItemCount(RealmUtils.loadUpcomingTasksFromDB().size());
+            primaryAdapter.notifyItemChanged(NavigationConstants.HOME_NAV_TASKS);
+        }
     }
 
     @Subscribe
