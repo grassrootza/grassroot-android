@@ -83,12 +83,9 @@ public class GcmListenerService extends com.google.android.gms.gcm.GcmListenerSe
           .setGroup(STACK_KEY)
           .setGroupSummary(true)
           .build();
-      if (isAppIsInBackground(this)) {
-        startForeground(entityReferencedUid.hashCode(), notification);
-      } else {
         mNotificationManager.notify(entityReferencedUid, (int) System.currentTimeMillis(),
             notification);
-      }
+
     } else {
       Log.e(TAG, "notification received, following KitKat branch");
       NotificationCompat.Builder mNotifyBuilder = new NotificationCompat.Builder(this);
@@ -102,12 +99,9 @@ public class GcmListenerService extends com.google.android.gms.gcm.GcmListenerSe
           .setSound(RingtoneManager.getActualDefaultRingtoneUri(getApplicationContext(),
               RingtoneManager.TYPE_NOTIFICATION))
           .build();
-      if (isAppIsInBackground(this)) {
-        startForeground(entityReferencedUid.hashCode(), notification);
-      } else {
         mNotificationManager.notify(entityReferencedUid, (int) System.currentTimeMillis(),
             notification);
-      }
+
     }
 
     GrassrootRestService.getInstance()
