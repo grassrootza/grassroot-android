@@ -144,12 +144,14 @@ public class MemberListFragment extends Fragment {
     // could do this more elegantly with lambdas / Java 8, but two quick in-memory for loops should be okay ... keep an eye out though
     public List<Member> getMembersFromNumbers(List<String> phoneNumbers) {
         List<Member> foundMembers = new ArrayList<>();
-        if (phoneNumbers != null && !foundMembers.isEmpty() && memberListAdapter != null) {
+        if (phoneNumbers != null && memberListAdapter != null) {
             List<Member> members = memberListAdapter.getMembers();
             for (String phoneNum : phoneNumbers) {
                 final String msisdn = Utilities.formatNumberToE164(phoneNum);
+                Log.e(TAG, "and now for this ... " + msisdn);
                 for (Member m : members) {
                     if (m.getPhoneNumber().equals(msisdn) || m.getPhoneNumber().equals(phoneNum)) {
+                        Log.e(TAG, "found one ... " + m.toString());
                         foundMembers.add(m);
                         break;
                     }

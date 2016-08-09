@@ -1,6 +1,7 @@
 package org.grassroot.android.models.exceptions;
 
-import android.util.Log;
+import org.grassroot.android.utils.ErrorUtils;
+import org.grassroot.android.utils.NetworkUtils;
 
 /**
  * Created by luke on 2016/08/09.
@@ -12,8 +13,7 @@ public class InvalidNumberException extends ApiCallException {
 	enriched info from exceptions, hence have to do this ...
 	 */
 	public InvalidNumberException(final String incorrectNumbers) {
-		super(incorrectNumbers);
-		Log.e("INVALID", incorrectNumbers);
+		super(NetworkUtils.SERVER_ERROR, ErrorUtils.INVALID_MSISDN, incorrectNumbers);
 	}
 
 }

@@ -9,8 +9,10 @@ import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
+import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
@@ -18,6 +20,7 @@ import android.widget.TextView;
 import org.grassroot.android.R;
 import org.grassroot.android.fragments.ContactSelectionFragment;
 import org.grassroot.android.fragments.MemberListFragment;
+import org.grassroot.android.fragments.dialogs.FixMemberPhoneDialog;
 import org.grassroot.android.interfaces.GroupConstants;
 import org.grassroot.android.models.exceptions.ApiCallException;
 import org.grassroot.android.models.Contact;
@@ -32,6 +35,7 @@ import org.grassroot.android.utils.PermissionUtils;
 import org.grassroot.android.utils.RealmUtils;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -40,6 +44,7 @@ import java.util.UUID;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
+import rx.Observable;
 import rx.Subscriber;
 import rx.functions.Action1;
 
@@ -328,7 +333,9 @@ public class AddMembersActivity extends AppCompatActivity implements
                         Intent i = null;
                         switch (e.getMessage()) {
                             case NetworkUtils.SERVER_ERROR:
-                                if (e instanceof ApiCallException) {
+                                if (e instanceof InvalidNumberException) {
+                                    handleServerError((ApiCallException) e);
+                                } else if (e instanceof ApiCallException) {
                                     handleServerError((ApiCallException) e);
                                 } else {
                                     final String body = getString(R.string.am_server_other);
@@ -358,24 +365,82 @@ public class AddMembersActivity extends AppCompatActivity implements
 
     private void handleServerError(ApiCallException e) {
         // todo : add a "try again to save" message (make this an error dialog ...)
-        Log.e(TAG, "handling server error in add members ... here is the exception message : " + e.getMessage());
         if (e instanceof InvalidNumberException) {
-            Log.e(TAG, "got back an error with this wrong number : " + e.getMessage());
-            final String errorNum = e.getMessage();
-            List<Member> errorMembers = newMemberListFragment.
-                getMembersFromNumbers(Collections.singletonList(errorNum));
-            if (errorMembers != null && !errorMembers.isEmpty()) {
-                final Member errorMember = errorMembers.get(0);
-                final String message = String.format(getString(R.string.input_error_member_phone),
-                    errorMember.getDisplayName(), errorMember.getPhoneNumber());
-                AlertDialog.Builder builder = new AlertDialog.Builder(this);
-                builder.setMessage(message);
-                builder.create().show();
-            }
+            handleInvalidNumbers((InvalidNumberException) e);
+            /* final String errorNums = (String) e.data;
+            if (!TextUtils.isEmpty(errorNums)) {
+                List<String> errorNumbers = Arrays.asList(errorNums.split("\\s+"));
+                Log.e(TAG, "here are the split numbers : " + errorNumbers);
+                List<Member> errorMembers = newMemberListFragment.getMembersFromNumbers(errorNumbers);
+                Log.e(TAG, "got this many members with those numbers: " + errorMembers);
+                if (errorMembers != null && !errorMembers.isEmpty()) {
+                    final Member errorMember = errorMembers.get(0);
+                    final String message = String.format(getString(R.string.input_error_member_phone),
+                        errorMember.getDisplayName(), errorMember.getPhoneNumber());
+                    AlertDialog.Builder builder = new AlertDialog.Builder(this);
+                    builder.setMessage(message);
+                    builder.create().show();
+                } else {
+
+                }
+            } else {
+
+            }*/
         } else {
             final String errorMsg = ErrorUtils.serverErrorText(e.errorTag, this);
             Snackbar.make(amRlRoot, errorMsg, Snackbar.LENGTH_LONG).show();
         }
     }
+
+    private void handleInvalidNumbers(InvalidNumberException e) {
+        final String errorNums = (String) e.data;
+        if (!TextUtils.isEmpty(errorNums)) {
+            List<String> errorNumbers = Arrays.asList(errorNums.split("\\s+"));
+            List<Member> errorMembers = newMemberListFragment.getMembersFromNumbers(errorNumbers);
+            int numberError = errorMembers.size();
+            if (numberError == 1) {
+                Log.e(TAG, "one member is wrong, showing the dialog box ...");
+                fixSingleMemberDialog(errorMembers.get(0));
+            } else {
+                int numberOkay = newMemberListFragment.getSelectedMembers().size() - numberError;
+
+            }
+        }
+    }
+
+    private void fixSingleMemberDialog(final Member errorMember) {
+        Log.e(TAG, "okay let's try this ...");
+        FixMemberPhoneDialog.newInstance(groupUid, errorMember)
+            .show(getSupportFragmentManager(), null);
+    }
+        /*AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        final EditText textInput = new EditText(this);
+        textInput.setHint(errorMember.getPhoneNumber());
+        final String message = String.format(getString(R.string.input_error_member_phone_single),
+            errorMember.getDisplayName());
+
+        builder.setMessage(R.string.input_error_member_phone_single)
+            .setView(textInput)
+            .setPositiveButton(R.string.pp_OK, new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    final String txt = textInput.getText().toString();
+                    Log.e(TAG, "dialog confirmed ... with text = " + txt);
+                    fixSingleMemberDo(errorMember, textInput.getText().toString());
+                }
+            });
+        builder.create().show();
+    }
+
+    private void fixSingleMemberDo(Member member, final String newNumber) {
+        member.setPhoneNumber(newNumber);
+        GroupService.getInstance().addMembersToGroup(groupUid, Collections.singletonList(member), false)
+            .subscribe(new Observable.OnSubscribe() {
+                @Override
+                public void call(Object o) {
+                    Log.e(TAG, "okay, it is done ...");
+                }
+            });
+    }*/
 
 }

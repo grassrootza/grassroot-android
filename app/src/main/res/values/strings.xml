@@ -61,7 +61,8 @@
     <string name="input_error_phone_empty">Please enter a cellphone number to register</string>
     <string name="input_error_phone_invalid">Sorry, that\'s not a valid South African number, please check again</string>
 
-    <string name="input_error_member_phone">Error in member with name %1$s, phone number %2$s</string>
+    <string name="input_error_member_phone_single">Sorry, one of the members has an invalid phone number. Please enter again the
+        number for %1$s:</string>
 
     <string name="INVALID_TOKEN">Sorry, wrong code. Please check again and re-enter.</string> <!-- todo : refactor this as others -->
 

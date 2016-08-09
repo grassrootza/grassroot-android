@@ -365,7 +365,7 @@ public class GroupService {
               if (ErrorUtils.INVALID_MSISDN.equals(restMessage)) {
                 Log.e(TAG, "here's the invalid msisdn : " + errorModel.getData());
                 final String invalidMsisdn = (String) errorModel.getData(); // todo : use list of strings ?
-                throw new ApiCallException(invalidMsisdn, restMessage, invalidMsisdn);
+                throw new InvalidNumberException(invalidMsisdn);
               }
             }
           } catch (IOException e) {
