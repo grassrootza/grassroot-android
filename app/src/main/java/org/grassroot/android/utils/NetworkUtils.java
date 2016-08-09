@@ -16,7 +16,7 @@ import org.grassroot.android.events.NetworkFailureEvent;
 import org.grassroot.android.events.OfflineActionsSent;
 import org.grassroot.android.events.OnlineOfflineToggledEvent;
 import org.grassroot.android.interfaces.NotificationConstants;
-import org.grassroot.android.models.ApiCallException;
+import org.grassroot.android.models.exceptions.ApiCallException;
 import org.grassroot.android.models.GenericResponse;
 import org.grassroot.android.models.Group;
 import org.grassroot.android.models.LocalGroupEdits;
@@ -99,6 +99,21 @@ public class NetworkUtils {
       @Override public void call(Object o) {
         EventBus.getDefault().post(new NetworkFailureEvent());
       }
+    });
+  }
+
+  public static void trySwitchToOnlineQuiet(final Context context, final boolean sendQueue,
+                                            Scheduler observingThread) {
+    Log.d(TAG, "trying to switch to online, swallowing errors etc ...");
+    trySwitchToOnlineRx(context, sendQueue, observingThread).subscribe(new Subscriber<String>() {
+      @Override
+      public void onCompleted() { }
+
+      @Override
+      public void onError(Throwable e) { Log.d(TAG, "failed quietly in background ..."); }
+
+      @Override
+      public void onNext(String s) { Log.d(TAG, "quietly suceeded in going online ..."); }
     });
   }
 

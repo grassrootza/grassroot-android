@@ -3,7 +3,7 @@ package org.grassroot.android.utils;
 import android.text.TextUtils;
 
 import org.grassroot.android.BuildConfig;
-import org.grassroot.android.models.ApiCallException;
+import org.grassroot.android.models.exceptions.ApiCallException;
 import org.grassroot.android.models.GenericResponse;
 import org.grassroot.android.models.PreferenceObject;
 import org.grassroot.android.models.TokenResponse;

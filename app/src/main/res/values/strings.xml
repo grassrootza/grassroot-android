@@ -61,6 +61,8 @@
     <string name="input_error_phone_empty">Please enter a cellphone number to register</string>
     <string name="input_error_phone_invalid">Sorry, that\'s not a valid South African number, please check again</string>
 
+    <string name="input_error_member_phone">Error in member with name %1$s, phone number %2$s</string>
+
     <string name="INVALID_TOKEN">Sorry, wrong code. Please check again and re-enter.</string> <!-- todo : refactor this as others -->
 
     <string name="snackbar_try_again">Retry</string>
@@ -266,10 +268,14 @@
 
     <string name="cg_wip_message">Offline group</string>
     <string-array name="cg_offline_group">
+        <item>Try reconnect</item>
         <item>Continue creating</item>
         <item>Call an event</item>
         <item>Delete group</item>
     </string-array>
+
+    <string name="cg_sent_server">Done! The group is now created online</string>
+    <string name="cg_sending_failed_connect">Sorry, we couldn\'t connect, please try again later</string>
 
     <!-- Add & remove members -->
     <string name="am_title">Add members to group</string>
@@ -552,10 +558,10 @@
 
     <string name="ac_header_group_create">Created!</string>
     <string name="ac_body_group_create_server">%1$s, has been created with %2$d members. What next? </string>
-    <string name="ac_body_group_create_local">You are working offline, so the group %1$s has been created
-        and stored on your phone, and will be sent to the server next time you connect</string>
-    <string name="ac_body_group_create_connect_error">We couldn\'t connect to the server, but we
-    stored the group and and will create it online the next time you have a connection.</string>
+    <string name="ac_body_group_create_local">You are offline. Your group %1$s will go live the next
+        time you go online.</string>
+    <string name="ac_body_group_create_connect_error">You don\'t have a connection at the moment, but we
+    saved the group and it will go live the next time you have a connection.</string>
 
     <string name="ac_header_task_create">Sent!</string>
     <string name="ac_header_task_create_local">Done!</string>
@@ -574,8 +580,8 @@
     <string name="ac_btn_try_again">STAY ONLINE</string>
     <string name="ac_btn_offline">WORK OFFLINE</string>
 
-    <string name="ac_msg_try_again">Okay, we\'ll try reconnect every 15 minutes, or you can select
-    Try Again from the navigation bar</string>
+    <string name="ac_msg_try_again">Okay, we\'ll try reconnect every 15 minutes. You can also select
+    Try Reconnect from the navigation bar</string>
 
     <!--Profile-->
     <string name="pp_txt_toolbar">Profile Settings</string>

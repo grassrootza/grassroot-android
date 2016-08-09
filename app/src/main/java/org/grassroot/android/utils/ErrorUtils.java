@@ -11,14 +11,11 @@ import android.util.Log;
 import android.view.View;
 
 import org.grassroot.android.R;
-import org.grassroot.android.activities.GroupSearchActivity;
-import org.grassroot.android.activities.GroupTasksActivity;
 import org.grassroot.android.activities.HomeScreenActivity;
 import org.grassroot.android.activities.StartActivity;
-import org.grassroot.android.activities.ViewTaskActivity;
 import org.grassroot.android.fragments.dialogs.NetworkErrorDialogFragment;
 import org.grassroot.android.interfaces.NetworkErrorDialogListener;
-import org.grassroot.android.models.ApiCallException;
+import org.grassroot.android.models.exceptions.ApiCallException;
 import org.grassroot.android.models.ServerErrorModel;
 import org.grassroot.android.services.GrassrootRestService;
 import org.grassroot.android.services.NoConnectivityException;
@@ -27,7 +24,6 @@ import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
-import java.util.UUID;
 
 import okhttp3.ResponseBody;
 import retrofit2.Converter;
@@ -117,6 +113,7 @@ public class ErrorUtils {
         return new Intent(callingActivity, HomeScreenActivity.class);
     }
 
+    // remember : conversion will consume the JSON, so can call this at most once in a given flow
     public static ServerErrorModel convertErrorBody(ResponseBody errorBody) {
         Converter<ResponseBody, ServerErrorModel> converter = GrassrootRestService.getInstance()
             .getRetrofit().responseBodyConverter(ServerErrorModel.class, new Annotation[0]);

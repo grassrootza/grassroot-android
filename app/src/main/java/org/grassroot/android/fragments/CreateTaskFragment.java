@@ -33,7 +33,7 @@ import org.grassroot.android.fragments.dialogs.DatePickerFragment;
 import org.grassroot.android.fragments.dialogs.TimePickerFragment;
 import org.grassroot.android.interfaces.GroupConstants;
 import org.grassroot.android.interfaces.TaskConstants;
-import org.grassroot.android.models.ApiCallException;
+import org.grassroot.android.models.exceptions.ApiCallException;
 import org.grassroot.android.models.Group;
 import org.grassroot.android.models.Member;
 import org.grassroot.android.models.RealmString;

@@ -112,10 +112,27 @@ public class GroupListAdapter extends RecyclerView.Adapter<GroupListAdapter.GHP_
         for (int i = 0; i < displayedGroups.size(); i++) {
             if (displayedGroups.get(i).getGroupUid().equals(groupUid)) {
                 displayedGroups.remove(i);
-                notifyDataSetChanged();
+                notifyDataSetChanged(); // not efficient, but calling just item remove doesn't refresh enough
             }
         }
+    }
 
+    public void replaceGroup(final String originalGroupUid, final String replacementGroupUid) {
+        final int size = displayedGroups.size();
+        int i = 0;
+        Group replacementGroup = RealmUtils.loadGroupFromDB(replacementGroupUid);
+        boolean groupFound = false; // using this instead of for loop to avoid concurrent list modification
+        if (replacementGroup != null) {
+            while (!groupFound && i < size) {
+                if (displayedGroups.get(i).getGroupUid().equals(originalGroupUid)) {
+                    groupFound = true;
+                    displayedGroups.remove(i);
+                    displayedGroups.add(i, replacementGroup);
+                    notifyItemChanged(i);
+                }
+                i++;
+            }
+        }
     }
 
     public void sortByChangedTime() {
@@ -171,8 +188,6 @@ public class GroupListAdapter extends RecyclerView.Adapter<GroupListAdapter.GHP_
         setAvatarImage(holder, group);
 
         setAlphaForLocal(holder, group);
-
-
     }
 
     private void setAlphaForLocal(GHP_ViewHolder holder, final Group group) {

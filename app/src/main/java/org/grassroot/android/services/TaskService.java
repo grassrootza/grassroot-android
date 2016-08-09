@@ -1,17 +1,15 @@
 package org.grassroot.android.services;
 
 import android.text.TextUtils;
-import android.util.Log;
 
 import java.io.IOException;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 
-import org.grassroot.android.events.TaskUpdatedEvent;
 import org.grassroot.android.events.TasksRefreshedEvent;
 import org.grassroot.android.interfaces.TaskConstants;
-import org.grassroot.android.models.ApiCallException;
+import org.grassroot.android.models.exceptions.ApiCallException;
 import org.grassroot.android.models.Group;
 import org.grassroot.android.models.PreferenceObject;
 import org.grassroot.android.models.TaskChangedResponse;
@@ -25,13 +23,11 @@ import org.greenrobot.eventbus.EventBus;
 
 import io.realm.RealmList;
 import retrofit2.Call;
-import retrofit2.Callback;
 import retrofit2.Response;
 import rx.Observable;
 import rx.Scheduler;
 import rx.Subscriber;
 import rx.android.schedulers.AndroidSchedulers;
-import rx.functions.Action1;
 import rx.schedulers.Schedulers;
 
 /**

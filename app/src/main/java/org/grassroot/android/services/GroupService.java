@@ -11,7 +11,7 @@ import org.grassroot.android.events.GroupsRefreshedEvent;
 import org.grassroot.android.events.JoinRequestReceived;
 import org.grassroot.android.interfaces.GroupConstants;
 import org.grassroot.android.interfaces.TaskConstants;
-import org.grassroot.android.models.ApiCallException;
+import org.grassroot.android.models.exceptions.ApiCallException;
 import org.grassroot.android.models.GenericResponse;
 import org.grassroot.android.models.Group;
 import org.grassroot.android.models.GroupJoinRequest;
@@ -25,6 +25,7 @@ import org.grassroot.android.models.PreferenceObject;
 import org.grassroot.android.models.RealmString;
 import org.grassroot.android.models.ServerErrorModel;
 import org.grassroot.android.models.TaskModel;
+import org.grassroot.android.models.exceptions.InvalidNumberException;
 import org.grassroot.android.utils.ErrorUtils;
 import org.grassroot.android.utils.NetworkUtils;
 import org.grassroot.android.utils.PermissionUtils;
@@ -235,6 +236,7 @@ public class GroupService {
   }
 
   public Observable<String> sendNewGroupToServer(final String localGroupUid, Scheduler observingThread) {
+    observingThread = (observingThread == null) ? AndroidSchedulers.mainThread() : observingThread;
     return Observable.create(new Observable.OnSubscribe<String>() {
       @Override
       public void call(Subscriber<? super String> subscriber) {
@@ -326,10 +328,10 @@ public class GroupService {
           try {
             final String msisdn = RealmUtils.loadPreferencesFromDB().getMobileNumber();
             final String code = RealmUtils.loadPreferencesFromDB().getToken();
-            // note : since we are off main thread, calling this synchronously, to avoid excess inner class complication
+            Log.e(TAG, "sending group members ...");
             Response<GroupResponse> serverCall = GrassrootRestService.getInstance().getApi()
-                .addGroupMembers(groupUid, msisdn, code, members)
-                .execute();
+                .addGroupMembers(groupUid, msisdn, code, members).execute();
+
             if (serverCall.isSuccessful()) {
               Map<String, Object> map2 = new HashMap<>();
               map2.put("isLocal", true);
@@ -340,24 +342,30 @@ public class GroupService {
                 RealmUtils.saveDataToRealm(m).subscribe(); // todo : make sure we aren't
               }
               RealmUtils.saveGroupToRealm(serverCall.body().getGroups().first());
-              EventBus.getDefault().post(new GroupEditedEvent(null,null,groupUid,null));
+              EventBus.getDefault().post(new GroupEditedEvent(GroupEditedEvent.MEMBERS_ADDED,
+                  NetworkUtils.SAVED_SERVER, groupUid, null));
               subscriber.onNext(NetworkUtils.SAVED_SERVER);
               subscriber.onCompleted();
             } else {
-              // todo : restructure into nested try block, I think ...
+
               ServerErrorModel errorModel = ErrorUtils.convertErrorBody(serverCall.errorBody());
-              if (errorModel != null) {
-                Log.e(TAG, "returned an error model ... looks like: " + errorModel);
-                final String error = errorModel.getMessage();
-                if (!ErrorUtils.INVALID_MSISDN.equals(error) && !priorSaved) {
-                  saveAddedMembersLocal(groupUid, members);
-                  throw new ApiCallException(NetworkUtils.SERVER_ERROR, error); // todo : extract MSISDN ...
-                } else {
-                  Log.e(TAG, "throwing error with data ... error message = " + error);
-                  throw new ApiCallException(NetworkUtils.SERVER_ERROR, error, errorModel.getData());
-                }
-              } else {
+
+              if (errorModel == null) {
                 throw new ApiCallException(NetworkUtils.SERVER_ERROR);
+              }
+
+              final String restMessage = errorModel.getMessage();
+
+              Log.e(TAG, "got back this error model : " + errorModel.toString());
+
+              if (!priorSaved && !ErrorUtils.PERMISSION_DENIED.equals(restMessage)) {
+                saveAddedMembersLocal(groupUid, members);
+              }
+
+              if (ErrorUtils.INVALID_MSISDN.equals(restMessage)) {
+                Log.e(TAG, "here's the invalid msisdn : " + errorModel.getData());
+                final String invalidMsisdn = (String) errorModel.getData(); // todo : use list of strings ?
+                throw new ApiCallException(invalidMsisdn, restMessage, invalidMsisdn);
               }
             }
           } catch (IOException e) {
@@ -373,12 +381,13 @@ public class GroupService {
   }
 
 	public void saveAddedMembersLocal(final String groupUid, List<Member> members) {
-		RealmUtils.saveDataToRealm(members, null).subscribe();
-		Group group = RealmUtils.loadGroupFromDB(groupUid);
-		group.setEditedLocal(true);
-        group.setGroupMemberCount(group.getGroupMemberCount()+members.size());
+      RealmUtils.saveDataToRealm(members, null).subscribe();
+      Group group = RealmUtils.loadGroupFromDB(groupUid);
+      group.setEditedLocal(true);
+      group.setGroupMemberCount(group.getGroupMemberCount()+members.size());
       RealmUtils.saveGroupToRealm(group);
-      EventBus.getDefault().post(new GroupEditedEvent(null,null,groupUid,null));
+      EventBus.getDefault().post(new GroupEditedEvent(GroupEditedEvent.MEMBERS_ADDED,
+          NetworkUtils.SAVED_OFFLINE_MODE, groupUid, null));
 	}
 
   public Observable removeGroupMembers(final String groupUid, final Set<String> membersToRemoveUIDs) {
@@ -388,6 +397,8 @@ public class GroupService {
         if (!NetworkUtils.isOnline()) {
           removeMembersInDB(membersToRemoveUIDs, groupUid, true);
           subscriber.onNext(NetworkUtils.SAVED_OFFLINE_MODE);
+          EventBus.getDefault().post(new GroupEditedEvent(GroupEditedEvent.MEMBERS_REMOVED,
+              NetworkUtils.SAVED_OFFLINE_MODE, groupUid, null));
           subscriber.onCompleted();
         } else {
           try {
@@ -396,19 +407,20 @@ public class GroupService {
             Response response = GrassrootRestService.getInstance().getApi()
                 .removeGroupMembers(phoneNumber, code, groupUid, membersToRemoveUIDs).execute();
             if (response.isSuccessful()) {
-				removeMembersInDB(membersToRemoveUIDs, groupUid, false);
-				subscriber.onNext(NetworkUtils.SAVED_SERVER);
+              removeMembersInDB(membersToRemoveUIDs, groupUid, false);
+              subscriber.onNext(NetworkUtils.SAVED_SERVER);
+              EventBus.getDefault().post(new GroupEditedEvent(GroupEditedEvent.MEMBERS_REMOVED,
+                  NetworkUtils.SAVED_SERVER, groupUid, null));
+              subscriber.onCompleted();
             } else {
-				// note : this may be because of permission denied, so don't remove locally
-				// todo : check for the error type then decide what to do
-				throw new ApiCallException(NetworkUtils.SERVER_ERROR);
+              // note : this may be because of permission denied, so don't remove locally
+              throw new ApiCallException(NetworkUtils.SERVER_ERROR, ErrorUtils.getRestMessage(response.errorBody()));
             }
           } catch (IOException e) {
             removeMembersInDB(membersToRemoveUIDs, groupUid, true);
-            Group group = RealmUtils.loadGroupFromDB(groupUid);
-            group.setEditedLocal(true);
-            RealmUtils.saveGroupToRealm(group);
             NetworkUtils.setConnectionFailed();
+            EventBus.getDefault().post(new GroupEditedEvent(GroupEditedEvent.MEMBERS_REMOVED,
+                NetworkUtils.SAVED_OFFLINE_MODE, groupUid, null));
             throw new ApiCallException(NetworkUtils.CONNECT_ERROR);
           }
         }
@@ -431,7 +443,6 @@ public class GroupService {
       Group group = RealmUtils.loadGroupFromDB(groupUid);
       group.setGroupMemberCount(group.getGroupMemberCount()-memberUids.size());
       RealmUtils.saveGroupToRealm(group);
-      EventBus.getDefault().post(new GroupEditedEvent(null,null,groupUid,null));
     }
   }
 
@@ -468,7 +479,7 @@ public class GroupService {
               removeLocalEditsIfFound(groupUid);
               subscriber.onNext(NetworkUtils.SAVED_SERVER);
               EventBus.getDefault().post(new GroupEditedEvent(GroupEditedEvent.MULTIPLE_TO_SERVER,
-                  GroupEditedEvent.CHANGED_ONLINE, groupUid, ""));
+                  NetworkUtils.SAVED_SERVER, groupUid, ""));
               subscriber.onCompleted();
             } else {
               throw new ApiCallException(NetworkUtils.SERVER_ERROR, ErrorUtils.getRestMessage(response.errorBody()));
@@ -912,7 +923,7 @@ public class GroupService {
                 updateMemberRoleInDB(groupUid, memberUid, newRole);
                 EventBus.getDefault()
                     .post(new GroupEditedEvent(GroupEditedEvent.ROLE_CHANGED,
-                        GroupEditedEvent.CHANGED_ONLINE, groupUid, memberUid));
+                        NetworkUtils.SAVED_SERVER, groupUid, memberUid));
               } else {
                 EventBus.getDefault().post(new GroupEditErrorEvent(response.errorBody()));
               }
@@ -926,8 +937,7 @@ public class GroupService {
       // queue ? probably shouldn't allow
       updateMemberRoleInDB(groupUid, memberUid, newRole);
       EventBus.getDefault()
-          .post(
-              new GroupEditedEvent(GroupEditedEvent.ROLE_CHANGED, GroupEditedEvent.CHANGED_OFFLINE,
+          .post(new GroupEditedEvent(GroupEditedEvent.ROLE_CHANGED, NetworkUtils.SAVED_OFFLINE_MODE,
                   groupUid, memberUid));
     }
   }

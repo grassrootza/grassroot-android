@@ -1,4 +1,6 @@
-package org.grassroot.android.models;
+package org.grassroot.android.models.exceptions;
+
+import android.util.Log;
 
 /**
  * Created by luke on 2016/08/02.
@@ -24,6 +26,7 @@ public class ApiCallException extends RuntimeException {
 
 	public ApiCallException(String message, String errorTag, Object data) {
 		super(message);
+		Log.e("ApiCallException", "exception, with errorTag = " + errorTag);
 		this.errorTag = errorTag;
 		this.data = data;
 	}

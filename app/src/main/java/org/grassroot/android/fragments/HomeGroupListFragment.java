@@ -43,11 +43,12 @@ import org.grassroot.android.interfaces.GroupConstants;
 import org.grassroot.android.interfaces.GroupPickCallbacks;
 import org.grassroot.android.interfaces.SortInterface;
 import org.grassroot.android.interfaces.TaskConstants;
+import org.grassroot.android.models.exceptions.ApiCallException;
 import org.grassroot.android.models.Group;
 import org.grassroot.android.services.GroupService;
 import org.grassroot.android.utils.Constant;
-import org.grassroot.android.utils.ErrorUtils;
 import org.grassroot.android.utils.IntentUtils;
+import org.grassroot.android.utils.NetworkUtils;
 import org.grassroot.android.utils.RealmUtils;
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
@@ -60,6 +61,8 @@ import butterknife.ButterKnife;
 import butterknife.OnClick;
 import butterknife.Unbinder;
 import rx.Subscriber;
+import rx.android.schedulers.AndroidSchedulers;
+import rx.schedulers.Schedulers;
 
 public class HomeGroupListFragment extends android.support.v4.app.Fragment
         implements GroupListAdapter.GroupRowListener {
@@ -108,7 +111,7 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
 
     @Override public View onCreateView(LayoutInflater inflater, ViewGroup container,
                                        Bundle savedInstanceState) {
-        Log.e(TAG, "home group list fragment ... onCreateView ... timer ... " + SystemClock.currentThreadTimeMillis());
+
         View view = inflater.inflate(R.layout.activity_group__homepage, container, false);
         unbinder = ButterKnife.bind(this, view);
         EventBus.getDefault().register(this);
@@ -119,9 +122,7 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
 
     private void setUpRecyclerView() {
         RealmUtils.loadGroupsSorted().subscribe(new Subscriber<List<Group>>() {
-            @Override public void onCompleted() {
-
-            }
+            @Override public void onCompleted() { }
 
             @Override public void onError(Throwable e) {
 
@@ -154,14 +155,14 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
     @Override
     public void onStart() {
         super.onStart();
-		Log.e(TAG, "inside on start ... toggling progress indicator");
+		Log.d(TAG, "inside on start ... toggling progress indicator");
 		toggleProgressIfGroupsShowing();
     }
 
     @Override public void onResume() {
         super.onResume();
         fabOpenMenu.setVisibility(View.VISIBLE);
-        Log.e(TAG, "inside on resume ... toggling progress indicator");
+        Log.d(TAG, "inside on resume ... toggling progress indicator");
         toggleProgressIfGroupsShowing();
     }
 
@@ -173,9 +174,10 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
         unbinder.unbind();
     }
 
-    public void showSuccessMessage(Intent data) {
-        String message = data.getStringExtra(Constant.SUCCESS_MESSAGE);
-        ErrorUtils.showSnackBar(rlGhpRoot, message, Snackbar.LENGTH_LONG, "", null);
+    @Override
+    public void onDetach() {
+        super.onDetach();
+        mCallbacks = null;
     }
 
     /**
@@ -185,7 +187,7 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
 
     @Subscribe
     public void onGroupJoinRequestsLoaded(JoinRequestReceived e) {
-        ErrorUtils.showSnackBar(rlGhpRoot, R.string.jreq_notice, Snackbar.LENGTH_LONG);
+        Snackbar.make(rlGhpRoot, R.string.jreq_notice, Snackbar.LENGTH_LONG).show();
     }
 
     /*
@@ -211,37 +213,6 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
 
             }
         });
-    }
-
-    public void updateSingleGroup(final int position, final String groupUid) {
-        if (position == -1) {
-            throw new UnsupportedOperationException("ERROR! This should not be called without a valid position");
-        }
-    }
-
-    @OnClick(R.id.fab_menu_open)
-    public void toggleFloatingMenu() {
-        if (!floatingMenuOpen) {
-            openFloatingMenu();
-        } else {
-            closeFloatingMenu();
-        }
-    }
-
-    private void openFloatingMenu() {
-        floatingMenuOpen = true;
-        fabOpenMenu.setImageResource(R.drawable.ic_add_45d);
-        fabNewTask.setVisibility(View.VISIBLE);
-        fabFindGroup.setVisibility(View.VISIBLE);
-        fabStartGroup.setVisibility(View.VISIBLE);
-    }
-
-    private void closeFloatingMenu() {
-        floatingMenuOpen = false;
-        fabOpenMenu.setImageResource(R.drawable.ic_add);
-        fabNewTask.setVisibility(View.GONE);
-        fabFindGroup.setVisibility(View.GONE);
-        fabStartGroup.setVisibility(View.GONE);
     }
 
     @OnClick(R.id.ic_fab_new_task)
@@ -289,12 +260,15 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
             public void onClick(DialogInterface dialog, int which) {
                 switch (which) {
                     case 0:
-                        startActivity(IntentUtils.constructIntent(getActivity(), CreateGroupActivity.class, group));
+                        trySendOfflineGroup(group);
                         break;
                     case 1:
-                        startActivity(IntentUtils.constructIntent(getActivity(), GroupTasksActivity.class, group));
+                        startActivity(IntentUtils.constructIntent(getActivity(), CreateGroupActivity.class, group));
                         break;
                     case 2:
+                        startActivity(IntentUtils.constructIntent(getActivity(), GroupTasksActivity.class, group));
+                        break;
+                    case 3:
                         GroupService.getInstance().deleteLocallyCreatedGroup(group.getGroupUid());
                         break;
                     default:
@@ -303,6 +277,36 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
             }
         });
         builder.create().show();
+    }
+
+    private void trySendOfflineGroup(final Group group) {
+        showProgress();
+        GroupService.getInstance().sendNewGroupToServer(group.getGroupUid(), AndroidSchedulers.mainThread())
+            .subscribe(new Subscriber<String>() {
+                @Override
+                public void onNext(String s) {
+                    groupListRowAdapter.replaceGroup(group.getGroupUid(), s);
+                    hideProgress();
+                    Snackbar.make(rlGhpRoot, R.string.cg_sent_server, Snackbar.LENGTH_SHORT).show();
+                    NetworkUtils.trySwitchToOnlineQuiet(getContext(), true, Schedulers.computation());
+                }
+
+                @Override
+                public void onError(Throwable e) {
+                    hideProgress();
+                    if (e instanceof ApiCallException) {
+                        if (NetworkUtils.CONNECT_ERROR.equals(e.getMessage())) {
+                            Snackbar.make(rlGhpRoot, R.string.cg_sending_failed_connect, Snackbar.LENGTH_SHORT).show();
+                        } else if (NetworkUtils.SERVER_ERROR.equals(e.getMessage())) {
+                            final String restMessage = ((ApiCallException) e).errorTag;
+                            Snackbar.make(rlGhpRoot, restMessage, Snackbar.LENGTH_LONG).show();
+                        }
+                    }
+                }
+
+                @Override
+                public void onCompleted() { }
+        });
     }
 
     @Override
@@ -356,10 +360,49 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
         startActivity(intent);
     }
 
-    @Override
-    public void onDetach() {
-        super.onDetach();
-        mCallbacks = null;
+    public void sortGroups() {
+        SortFragment sortFragment = new SortFragment();
+        Bundle b = new Bundle();
+        b.putBoolean("Date", date_click);
+        b.putBoolean("Role", role_click);
+        b.putBoolean("Default", defaults_click);
+        sortFragment.setArguments(b);
+        sortFragment.show(getFragmentManager(), "SortFragment");
+        sortFragment.setListener(new SortInterface() {
+
+            @Override
+            public void tvDateClick(boolean date, boolean role, boolean defaults) {
+                date_click = true;
+                role_click = false;
+                Long start = SystemClock.currentThreadTimeMillis();
+                groupListRowAdapter.sortByDate();
+                Log.d(TAG, String.format("sorting group list took %d msecs",
+                    SystemClock.currentThreadTimeMillis() - start));
+            }
+
+            @Override
+            public void roleClick(boolean date, boolean role, boolean defaults) {
+                date_click = false;
+                role_click = true;
+                Long start = SystemClock.currentThreadTimeMillis();
+                groupListRowAdapter.sortByRole();
+                Log.d(TAG, String.format("sorting group list took %d msecs",
+                    SystemClock.currentThreadTimeMillis() - start));
+            }
+
+            @Override
+            public void defaultsClick(boolean date, boolean role, boolean defaults) {
+                // todo : restore whatever was here
+            }
+        });
+    }
+
+    public void searchStringChanged(String query) {
+        if (TextUtils.isEmpty(query)) {
+            groupListRowAdapter.refreshGroupsToDB();
+        } else {
+            groupListRowAdapter.simpleSearchByName(query);
+        }
     }
 
     private void toggleProgressIfGroupsShowing() {
@@ -411,7 +454,11 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
 
     @Subscribe
     public void onTaskCreatedEvent(TaskAddedEvent e) {
-        groupListRowAdapter.refreshGroupsToDB();
+        if (e.getTaskCreated() != null) {
+            groupListRowAdapter.refreshSingleGroup(e.getTaskCreated().getParentUid());
+        } else {
+            groupListRowAdapter.refreshGroupsToDB();
+        }
     }
 
     @Subscribe
@@ -421,10 +468,16 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
 
     @Subscribe
     public void onGroupEditedEvent(GroupEditedEvent e) {
-        groupListRowAdapter.refreshSingleGroup(e.groupUid);
+        if (!TextUtils.isEmpty(e.groupUid)) {
+            groupListRowAdapter.refreshSingleGroup(e.groupUid);
+        } else {
+            groupListRowAdapter.refreshGroupsToDB();
+        }
     }
 
-    @Subscribe public void onGroupDeletedEvent(GroupDeletedEvent e) { groupListRowAdapter.removeSingleGroup(e.groupUid); } // todo : make more efficient ...
+    @Subscribe public void onGroupDeletedEvent(GroupDeletedEvent e) {
+        groupListRowAdapter.removeSingleGroup(e.groupUid);
+    }
 
     @Subscribe
     public void onEvent(UserLoggedOutEvent e) {
@@ -432,48 +485,29 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
         groupListRowAdapter.setGroupList(new ArrayList<Group>());
     }
 
-    public void sortGroups() {
-        SortFragment sortFragment = new SortFragment();
-        Bundle b = new Bundle();
-        b.putBoolean("Date", date_click);
-        b.putBoolean("Role", role_click);
-        b.putBoolean("Default", defaults_click);
-        sortFragment.setArguments(b);
-        sortFragment.show(getFragmentManager(), "SortFragment");
-        sortFragment.setListener(new SortInterface() {
-
-            @Override
-            public void tvDateClick(boolean date, boolean role, boolean defaults) {
-                date_click = true;
-                role_click = false;
-                Long start = SystemClock.currentThreadTimeMillis();
-                groupListRowAdapter.sortByDate();
-                Log.d(TAG, String.format("sorting group list took %d msecs",
-                        SystemClock.currentThreadTimeMillis() - start));
-            }
-
-            @Override
-            public void roleClick(boolean date, boolean role, boolean defaults) {
-                date_click = false;
-                role_click = true;
-                Long start = SystemClock.currentThreadTimeMillis();
-                groupListRowAdapter.sortByRole();
-                Log.d(TAG, String.format("sorting group list took %d msecs",
-                        SystemClock.currentThreadTimeMillis() - start));
-            }
-
-            @Override
-            public void defaultsClick(boolean date, boolean role, boolean defaults) {
-                // todo : restore whatever was here
-            }
-        });
-    }
-
-    public void searchStringChanged(String query) {
-        if (TextUtils.isEmpty(query)) {
-            groupListRowAdapter.refreshGroupsToDB();
+    @OnClick(R.id.fab_menu_open)
+    public void toggleFloatingMenu() {
+        if (!floatingMenuOpen) {
+            openFloatingMenu();
         } else {
-            groupListRowAdapter.simpleSearchByName(query);
+            closeFloatingMenu();
         }
     }
+
+    private void openFloatingMenu() {
+        floatingMenuOpen = true;
+        fabOpenMenu.setImageResource(R.drawable.ic_add_45d);
+        fabNewTask.setVisibility(View.VISIBLE);
+        fabFindGroup.setVisibility(View.VISIBLE);
+        fabStartGroup.setVisibility(View.VISIBLE);
+    }
+
+    private void closeFloatingMenu() {
+        floatingMenuOpen = false;
+        fabOpenMenu.setImageResource(R.drawable.ic_add);
+        fabNewTask.setVisibility(View.GONE);
+        fabFindGroup.setVisibility(View.GONE);
+        fabStartGroup.setVisibility(View.GONE);
+    }
+
 }

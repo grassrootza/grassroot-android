@@ -101,7 +101,7 @@ public class GroupQuickMemberModalFragment extends android.support.v4.app.Dialog
             Intent addMember = IntentUtils.constructIntent(getActivity(), AddMembersActivity.class, groupUid, groupName);
             addMember.putExtra(Constant.INDEX_FIELD, groupPosition);
             // note: inefficiency here in routing back via activity, but getParentFragment is throwing a null error...
-            getActivity().startActivityForResult(addMember, Constant.activityAddMembersToGroup);
+            getActivity().startActivity(addMember);
             getDialog().dismiss();
         } else {
             getDialog().dismiss();
@@ -125,7 +125,7 @@ public class GroupQuickMemberModalFragment extends android.support.v4.app.Dialog
         if (removeMembersPermitted) {
             Intent removeMembers = IntentUtils.constructIntent(getActivity(), RemoveMembersActivity.class, groupUid, groupName);
             removeMembers.putExtra(Constant.INDEX_FIELD, groupPosition);
-            getActivity().startActivityForResult(removeMembers, Constant.activityRemoveMembers);
+            getActivity().startActivity(removeMembers);
             getDialog().dismiss();
         } else {
             getDialog().dismiss();

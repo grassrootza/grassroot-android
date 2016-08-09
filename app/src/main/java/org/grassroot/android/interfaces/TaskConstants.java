@@ -15,8 +15,6 @@ public interface TaskConstants {
     String TASK_UID_FIELD = "taskUid";
     String TASK_ENTITY_FIELD = "taskEntity";
 
-    String NO_TASKS_FOUND = "NO_GROUP_ACTIVITIES"; // todo: change literal on server nad here
-
     String TODO_PENDING = "pending";
     String TODO_DONE = "completed";
     String TODO_OVERDUE = "overdue";

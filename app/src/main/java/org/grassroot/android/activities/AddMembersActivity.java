@@ -19,9 +19,10 @@ import org.grassroot.android.R;
 import org.grassroot.android.fragments.ContactSelectionFragment;
 import org.grassroot.android.fragments.MemberListFragment;
 import org.grassroot.android.interfaces.GroupConstants;
-import org.grassroot.android.models.ApiCallException;
+import org.grassroot.android.models.exceptions.ApiCallException;
 import org.grassroot.android.models.Contact;
 import org.grassroot.android.models.Member;
+import org.grassroot.android.models.exceptions.InvalidNumberException;
 import org.grassroot.android.services.GroupService;
 import org.grassroot.android.utils.Constant;
 import org.grassroot.android.utils.ErrorUtils;
@@ -357,9 +358,24 @@ public class AddMembersActivity extends AppCompatActivity implements
 
     private void handleServerError(ApiCallException e) {
         // todo : add a "try again to save" message (make this an error dialog ...)
-        final String errorMsg = ErrorUtils.serverErrorText(e.errorTag, this);
-        Log.e(TAG, "got the string back : " + errorMsg);
-        Snackbar.make(amRlRoot, errorMsg, Snackbar.LENGTH_LONG).show();
+        Log.e(TAG, "handling server error in add members ... here is the exception message : " + e.getMessage());
+        if (e instanceof InvalidNumberException) {
+            Log.e(TAG, "got back an error with this wrong number : " + e.getMessage());
+            final String errorNum = e.getMessage();
+            List<Member> errorMembers = newMemberListFragment.
+                getMembersFromNumbers(Collections.singletonList(errorNum));
+            if (errorMembers != null && !errorMembers.isEmpty()) {
+                final Member errorMember = errorMembers.get(0);
+                final String message = String.format(getString(R.string.input_error_member_phone),
+                    errorMember.getDisplayName(), errorMember.getPhoneNumber());
+                AlertDialog.Builder builder = new AlertDialog.Builder(this);
+                builder.setMessage(message);
+                builder.create().show();
+            }
+        } else {
+            final String errorMsg = ErrorUtils.serverErrorText(e.errorTag, this);
+            Snackbar.make(amRlRoot, errorMsg, Snackbar.LENGTH_LONG).show();
+        }
     }
 
 }

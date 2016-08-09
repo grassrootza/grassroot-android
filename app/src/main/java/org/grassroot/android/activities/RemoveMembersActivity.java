@@ -15,7 +15,7 @@ import org.grassroot.android.R;
 import org.grassroot.android.fragments.MemberListFragment;
 import org.grassroot.android.fragments.dialogs.ConfirmCancelDialogFragment;
 import org.grassroot.android.interfaces.GroupConstants;
-import org.grassroot.android.models.ApiCallException;
+import org.grassroot.android.models.exceptions.ApiCallException;
 import org.grassroot.android.services.GroupService;
 import org.grassroot.android.utils.Constant;
 

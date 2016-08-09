@@ -19,6 +19,7 @@ import org.grassroot.android.interfaces.ClickListener;
 import org.grassroot.android.models.Group;
 import org.grassroot.android.models.Member;
 import org.grassroot.android.utils.RealmUtils;
+import org.grassroot.android.utils.Utilities;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -138,6 +139,24 @@ public class MemberListFragment extends Fragment {
             }
             return membersToReturn;
         }
+    }
+
+    // could do this more elegantly with lambdas / Java 8, but two quick in-memory for loops should be okay ... keep an eye out though
+    public List<Member> getMembersFromNumbers(List<String> phoneNumbers) {
+        List<Member> foundMembers = new ArrayList<>();
+        if (phoneNumbers != null && !foundMembers.isEmpty() && memberListAdapter != null) {
+            List<Member> members = memberListAdapter.getMembers();
+            for (String phoneNum : phoneNumbers) {
+                final String msisdn = Utilities.formatNumberToE164(phoneNum);
+                for (Member m : members) {
+                    if (m.getPhoneNumber().equals(msisdn) || m.getPhoneNumber().equals(phoneNum)) {
+                        foundMembers.add(m);
+                        break;
+                    }
+                }
+            }
+        }
+        return foundMembers;
     }
 
     public void selectAllMembers() {

@@ -5,6 +5,8 @@ package org.grassroot.android.events;
  */
 public class GroupEditedEvent {
 
+    public static final String MEMBERS_ADDED = "members_added";
+    public static final String MEMBERS_REMOVED = "members_removed";
     public static final String RENAMED = "renamed";
     public static final String IMAGE_UPLOADED = "image_uploaded";
     public static final String IMAGE_TO_DEFAULT = "image_removed";
@@ -14,9 +16,6 @@ public class GroupEditedEvent {
     public static final String ORGANIZER_ADDED = "organizer_added";
     public static final String ROLE_CHANGED = "role_changed";
     public static final String MULTIPLE_TO_SERVER = "member_to_server";
-
-    public static final String CHANGED_ONLINE = "changed_online";
-    public static final String CHANGED_OFFLINE = "changed_offline";
 
     public final String editAction;
     public String typeOfSave;
@@ -40,8 +39,6 @@ public class GroupEditedEvent {
     public void setTypeOfSave(String typeOfSave) {
         this.typeOfSave = typeOfSave;
     }
-
-
 
     @Override
     public String toString() {

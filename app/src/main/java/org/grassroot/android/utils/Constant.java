@@ -13,6 +13,7 @@ public class Constant {
     public static final String PROD = "production";
 
     public static long mediumDelay = 500L;
+    public static final SimpleDateFormat isoDateTimeSDF = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
 
     public static final String productionUrl = "https://app.grassroot.org.za/api/";
     public static final String stagingUrl = "https://staging.grassroot.org.za/api/";
@@ -21,10 +22,11 @@ public class Constant {
     public static final String restUrl = BuildConfig.BUILD_TYPE.equals("debug") ? localUrl
             : BuildConfig.FLAVOR.equals(PROD) ? productionUrl : stagingUrl;
 
-    public static final String OFFLINE = "offline";
+	/**
+	 * CONSTANTS FOR INTENT PASSING
+     */
 
     public static final String USER_TOKEN = "user_token";
-
     public static final String INDEX_FIELD = "index";
     public static final String PARENT_TAG_FIELD = "parentTag";
     public static final String SELECTED_MEMBERS_FIELD = "selectedMembers";
@@ -32,19 +34,15 @@ public class Constant {
     public static final String SHOW_HEADER_FLAG = "show_header";
     public static final String SHOW_ACTION_BUTTON_FLAG = "show_action_button";
     public static final String SUCCESS_MESSAGE = "success_message";
-
     public static final String TITLE = "title";
     public static final String BODY = "body";
 
-    public static final SimpleDateFormat isoDateTimeSDF = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
 
     /**
      * RESULT CODES FOR ACTIVITIES
      * todo : make an enum with to/from int, or do bitmasking etc
      */
     public static final int activityManualMemberEntry = 2;
-    public static final int activityAddMembersToGroup = 4;
-    public static final int activityRemoveMembers = 5;
     public static final int activityCreateGroup = 6;
     public static final int activitySelectGroupMembers = 7;
     public static final int activityManualMemberEdit = 8;
@@ -56,9 +54,5 @@ public class Constant {
 
     public static final double testLatitude = 31.215263;
     public static final double testLongitude = 121.476291;
-
-    /* LOADER CODES */
-
-    public static final int loaderContacts = 1;
 
 }

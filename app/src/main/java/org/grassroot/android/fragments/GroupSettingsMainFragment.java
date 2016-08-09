@@ -27,6 +27,7 @@ import org.grassroot.android.interfaces.GroupConstants;
 import org.grassroot.android.models.Group;
 import org.grassroot.android.services.GroupService;
 import org.grassroot.android.utils.Constant;
+import org.grassroot.android.utils.NetworkUtils;
 import org.grassroot.android.utils.RealmUtils;
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
@@ -373,18 +374,19 @@ public class GroupSettingsMainFragment extends Fragment implements MemberRoleAda
     }
 
     // todo : move into subscribe (same with above)
+    // todo : clean this up w/ new error handling logic
     public void apiCallFailed(String tag, String offOrOnline) {
         Log.e(TAG, "API call failed ... revert state and show error message");
         hideProgressDialog();
         switch (tag) {
             case GroupEditedEvent.JOIN_CODE_CLOSED:
                 switchWithoutEvent(switchJoinCode, true, joinCodeListener);
-                Snackbar.make(mainRoot, Constant.OFFLINE.equals(offOrOnline) ? R.string.gset_error_join_code_create_offline :
+                Snackbar.make(mainRoot, !NetworkUtils.isOnline(getContext()) ? R.string.gset_error_join_code_create_offline :
                         R.string.gset_error_join_code_create_offline, Snackbar.LENGTH_SHORT).show();
                 break;
             case GroupEditedEvent.JOIN_CODE_OPENED:
                 switchWithoutEvent(switchJoinCode, false, joinCodeListener);
-                Snackbar.make(mainRoot, Constant.OFFLINE.equals(offOrOnline) ? R.string.gset_error_join_code_create_offline :
+                Snackbar.make(mainRoot, !NetworkUtils.isOnline(getContext()) ? R.string.gset_error_join_code_create_offline :
                         R.string.gset_error_join_code_close_online, Snackbar.LENGTH_SHORT).show();
                 break;
             case GroupEditedEvent.PUBLIC_STATUS_CHANGED:

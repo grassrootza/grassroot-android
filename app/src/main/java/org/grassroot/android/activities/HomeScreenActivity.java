@@ -132,15 +132,6 @@ public class HomeScreenActivity extends PortraitActivity implements NavigationDr
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == Constant.activityNetworkSettings) {
             NetworkUtils.syncAndStartTasks(this, true, false);
-        } else if (resultCode == RESULT_OK && data != null) {
-            // todo : swap these to using eventbus inside the fragment ...
-            if (requestCode == Constant.activityAddMembersToGroup || requestCode == Constant.activityRemoveMembers) {
-                int groupPosition = data.getIntExtra(Constant.INDEX_FIELD, -1);
-                String groupUid = data.getStringExtra(GroupConstants.UID_FIELD);
-                groupListFragment.updateSingleGroup(groupPosition, groupUid);
-            } else if (requestCode == Constant.activityCreateTask) {
-                groupListFragment.showSuccessMessage(data);
-            }
         }
     }
 

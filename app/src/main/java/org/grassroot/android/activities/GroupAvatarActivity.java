@@ -29,7 +29,7 @@ import com.squareup.picasso.Picasso;
 import org.grassroot.android.R;
 import org.grassroot.android.fragments.ImageDetailFragment;
 import org.grassroot.android.interfaces.GroupConstants;
-import org.grassroot.android.models.ApiCallException;
+import org.grassroot.android.models.exceptions.ApiCallException;
 import org.grassroot.android.models.Group;
 import org.grassroot.android.services.GroupService;
 import org.grassroot.android.utils.CircularImageTransformer;
