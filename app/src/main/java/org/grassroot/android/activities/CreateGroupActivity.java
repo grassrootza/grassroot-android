@@ -21,6 +21,7 @@ import butterknife.ButterKnife;
 import butterknife.OnClick;
 import butterknife.OnTextChanged;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -35,6 +36,7 @@ import org.grassroot.android.models.exceptions.ApiCallException;
 import org.grassroot.android.models.Contact;
 import org.grassroot.android.models.Group;
 import org.grassroot.android.models.Member;
+import org.grassroot.android.models.exceptions.InvalidNumberException;
 import org.grassroot.android.services.GroupService;
 import org.grassroot.android.utils.Constant;
 import org.grassroot.android.utils.ErrorUtils;
@@ -43,8 +45,10 @@ import org.grassroot.android.utils.PermissionUtils;
 import org.grassroot.android.utils.RealmUtils;
 import org.greenrobot.eventbus.EventBus;
 
+import rx.Observable;
 import rx.Subscriber;
 import rx.android.schedulers.AndroidSchedulers;
+import rx.functions.Action1;
 
 import static butterknife.OnTextChanged.Callback.AFTER_TEXT_CHANGED;
 
@@ -117,16 +121,12 @@ public class CreateGroupActivity extends PortraitActivity implements ContactSele
   }
 
   private void setUpMemberList() {
-    Log.d(TAG, "okay trying new member list setup");
     memberListFragment = MemberListFragment.newInstance(cachedGroup, false, null,
             new MemberListFragment.MemberClickListener() {
               @Override
               public void onMemberClicked(int position, String memberUid) {
                 memberContextMenu(position, memberUid);
               }
-
-              @Override
-              public void onMemberDismissed(int position, String memberUid) { }
             });
 
     getSupportFragmentManager().beginTransaction()
@@ -313,17 +313,29 @@ public class CreateGroupActivity extends PortraitActivity implements ContactSele
 
           @Override
           public void onNext(String s) {
+            Log.e(TAG, "string received : " + s);
             progressDialog.dismiss();
             Group finalGroup;
             if (NetworkUtils.SAVED_OFFLINE_MODE.equals(s)) {
               finalGroup = RealmUtils.loadGroupFromDB(groupUid);
+              handleGroupCreationAndExit(finalGroup, false);
             } else {
+              final String serverUid = s.substring(3);
+              Log.e(TAG, "serverUid = " + serverUid);
               finalGroup = RealmUtils.loadGroupFromDB(s);
+              // todo : remove this when get thread handling all inline / in sync
               if (finalGroup == null) {
                 finalGroup = RealmUtils.loadGroupFromDB(groupUid);
               }
+
+              if ("OK".equals(s.substring(0, 1))) {
+                Log.e(TAG, "string found as okay ... ");
+                handleGroupCreationAndExit(finalGroup, false);
+              } else {
+                Log.e(TAG, "string found as not okay ...");
+                handleSavedButSomeInvalid(serverUid);
+              }
             }
-            handleGroupCreationAndExit(finalGroup, false);
           }
 
           @Override
@@ -331,9 +343,53 @@ public class CreateGroupActivity extends PortraitActivity implements ContactSele
         });
   }
 
+  private void handleSavedButSomeInvalid(final String serverUid) {
+    Log.e(TAG, "looking for members with invalid number set ...");
+    Map<String, Object> errorMap = new HashMap<>();
+    errorMap.put("groupUid", serverUid);
+    errorMap.put("isNumberInvalid", true);
+    RealmUtils.loadListFromDB(Member.class, errorMap).subscribe(new Subscriber() {
+      @Override
+      public void onCompleted() {
+
+      }
+
+      @Override
+      public void onError(Throwable e) {
+        e.printStackTrace();
+      }
+
+      @Override
+      public void onNext(Object o) {
+        try {
+          List<Member> errorMembers = (List<Member>) o;
+          Log.e(TAG, "just loaded from DB ...");
+          Log.e(TAG, "found these members in error : " + (errorMembers != null ? errorMembers.toString() : "null"));
+          AlertDialog.Builder builder = new AlertDialog.Builder(CreateGroupActivity.this);
+          builder.setMessage(R.string.input_error_member_phone_saved)
+              .setCancelable(true)
+              .create()
+              .show();
+        } catch (ClassCastException e) {
+          Log.e(TAG, "wtf");
+        }
+      }
+    });
+  }
+
   private void handleServerError(ApiCallException e) {
-    final String errorMsg = ErrorUtils.serverErrorText(e.errorTag, CreateGroupActivity.this);
-    Snackbar.make(rlCgRoot, errorMsg, Snackbar.LENGTH_SHORT); // todo : have a "save anyway" button, and/or options to edit number
+    if (e instanceof InvalidNumberException) {
+      save.setText(R.string.input_error_try_again);
+      AlertDialog.Builder builder = new AlertDialog.Builder(this);
+      builder.setMessage(R.string.input_error_member_phone_all)
+          .setCancelable(true)
+          .create()
+          .show();
+      handleMembersWithInvalidNumbers((String) e.data);
+    } else {
+      final String errorMsg = ErrorUtils.serverErrorText(e.errorTag, CreateGroupActivity.this);
+      Snackbar.make(rlCgRoot, errorMsg, Snackbar.LENGTH_SHORT); // todo : have a "save anyway" button, and/or options to edit number
+    }
   }
 
   private void handleGroupCreationAndExit(Group group, boolean unexpectedConnectionError) {
@@ -362,6 +418,17 @@ public class CreateGroupActivity extends PortraitActivity implements ContactSele
     finish();
   }
 
+  private void handleMembersWithInvalidNumbers(final String listOfNumbers) {
+    List<String> memberNos = Arrays.asList(listOfNumbers.split(","));
+    List<Member> invalidMembers = ErrorUtils.findMembersFromListOfNumbers(memberNos,
+        memberListFragment.getSelectedMembers());
+    for (Member m : invalidMembers) {
+      m.setNumberInvalid(true);
+    }
+    memberListFragment.transitionToMemberList(invalidMembers);
+    // todo : also update the buttons, if group saved
+  }
+
   @Override public void onBackPressed() {
     super.onBackPressed();
     deleteLocalCreatedGroup();
@@ -369,7 +436,13 @@ public class CreateGroupActivity extends PortraitActivity implements ContactSele
 
   private void deleteLocalCreatedGroup(){
     if (cachedGroup != null && !editingOfflineGroup) {
-      GroupService.getInstance().deleteLocallyCreatedGroup(groupUid);
+      GroupService.getInstance().cleanInvalidNumbersOnExit(groupUid, null).subscribe(new Action1<String>() {
+        @Override
+        public void call(String s) {
+          Log.e(TAG, "finished cleaning invalid numbers ... removing group ... ");
+          GroupService.getInstance().deleteLocallyCreatedGroup(groupUid);
+        }
+      });
     }
   }
 

@@ -32,10 +32,12 @@ import org.grassroot.android.utils.PermissionUtils;
 import org.grassroot.android.utils.RealmUtils;
 import org.grassroot.android.utils.Utilities;
 import org.greenrobot.eventbus.EventBus;
+import org.w3c.dom.Text;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -257,10 +259,30 @@ public class GroupService {
               final Group groupFromServer = response.body().getGroups().first();
               saveCreatedGroupToRealm(groupFromServer);
               cleanUpLocalGroup(localGroupUid, groupFromServer);
-              subscriber.onNext(groupFromServer.getGroupUid());
+              if (groupFromServer.getInvalidNumbers() == null || groupFromServer.getInvalidNumbers().isEmpty()) {
+                subscriber.onNext("OK-" + groupFromServer.getGroupUid());
+              } else {
+                // note : clean up local group will have converted the group UIDs to that from server, hence ...
+                setMemberNumbersInvalidIfInDB(groupFromServer.getGroupUid(), groupFromServer.getInvalidNumbers());
+                subscriber.onNext("ER-" + groupFromServer.getGroupUid());
+              }
               subscriber.onCompleted();
             } else {
-              throw new ApiCallException(NetworkUtils.SERVER_ERROR, ErrorUtils.getRestMessage(response.errorBody()));
+              ServerErrorModel errorModel = ErrorUtils.convertErrorBody(response.errorBody());
+              if (errorModel == null) {
+                throw new ApiCallException(NetworkUtils.SERVER_ERROR);
+              }
+
+              if (ErrorUtils.INVALID_MSISDN.equals(errorModel.getMessage())) {
+                final String invalidString = (String) errorModel.getData();
+                List<String> invalidNumbers = TextUtils.isEmpty(invalidString) ? null :
+                    Arrays.asList(invalidString.split(","));
+                Log.e(TAG, "here's the split list: " + invalidNumbers);
+                setMemberNumbersInvalidIfInDB(localGroupUid, invalidNumbers);
+                throw new InvalidNumberException(invalidString);
+              } else {
+                throw new ApiCallException(NetworkUtils.SERVER_ERROR, errorModel.getMessage());
+              }
             }
           } catch (IOException e) {
             NetworkUtils.setConnectionFailed();
@@ -328,45 +350,59 @@ public class GroupService {
           try {
             final String msisdn = RealmUtils.loadPreferencesFromDB().getMobileNumber();
             final String code = RealmUtils.loadPreferencesFromDB().getToken();
-            Log.e(TAG, "sending group members ...");
             Response<GroupResponse> serverCall = GrassrootRestService.getInstance().getApi()
                 .addGroupMembers(groupUid, msisdn, code, members).execute();
 
             if (serverCall.isSuccessful()) {
+              // remove members which were added fine
               Map<String, Object> map2 = new HashMap<>();
               map2.put("isLocal", true);
               map2.put("groupUid", groupUid);
+              map2.put("isNumberInvalid", false);
               RealmUtils.removeObjectsFromDatabase(Member.class, map2);
-              for (Member m : serverCall.body().getGroups().first().getMembers()) {
+
+              // update the group locally (included members added fine)
+              final Group updatedGroup = serverCall.body().getGroups().first();
+              for (Member m : updatedGroup.getMembers()) {
                 m.composeMemberGroupUid();
-                RealmUtils.saveDataToRealm(m).subscribe(); // todo : make sure we aren't
+                if (!m.isNumberInvalid()) {
+                  RealmUtils.saveDataToRealm(m).subscribe();
+                }
               }
               RealmUtils.saveGroupToRealm(serverCall.body().getGroups().first());
+
+              // if there were no error numbers, report back all okay; if there were, report that
+              if (updatedGroup.getInvalidNumbers() == null || updatedGroup.getInvalidNumbers().isEmpty()) {
+                subscriber.onNext(NetworkUtils.SAVED_SERVER);
+              } else {
+                final String invalidMsisdns = TextUtils.join(" ", updatedGroup.getInvalidNumbers());
+                subscriber.onNext(invalidMsisdns);
+              }
               EventBus.getDefault().post(new GroupEditedEvent(GroupEditedEvent.MEMBERS_ADDED,
                   NetworkUtils.SAVED_SERVER, groupUid, null));
-              subscriber.onNext(NetworkUtils.SAVED_SERVER);
               subscriber.onCompleted();
             } else {
-
               ServerErrorModel errorModel = ErrorUtils.convertErrorBody(serverCall.errorBody());
-
               if (errorModel == null) {
                 throw new ApiCallException(NetworkUtils.SERVER_ERROR);
               }
 
               final String restMessage = errorModel.getMessage();
 
-              Log.e(TAG, "got back this error model : " + errorModel.toString());
-
-              if (!priorSaved && !ErrorUtils.PERMISSION_DENIED.equals(restMessage)) {
-                saveAddedMembersLocal(groupUid, members);
-              }
-
               if (ErrorUtils.INVALID_MSISDN.equals(restMessage)) {
                 Log.e(TAG, "here's the invalid msisdn : " + errorModel.getData());
-                final String invalidMsisdn = (String) errorModel.getData(); // todo : use list of strings ?
-                throw new InvalidNumberException(invalidMsisdn);
+                final String concatInvalidMsisdns = (String) errorModel.getData(); // todo : use list of strings ?
+                List<String> invalidNumbers = TextUtils.isEmpty(concatInvalidMsisdns) ? null :
+                    Arrays.asList(concatInvalidMsisdns.split("\\s+"));
+                setMemberNumbersInvalidIfInDB(groupUid, invalidNumbers);
+                throw new InvalidNumberException(concatInvalidMsisdns);
+              } else {
+                if (!priorSaved && !ErrorUtils.PERMISSION_DENIED.equals(restMessage)) {
+                  saveAddedMembersLocal(groupUid, members);
+                }
+                throw new ApiCallException(NetworkUtils.SERVER_ERROR, restMessage);
               }
+
             }
           } catch (IOException e) {
             if (!priorSaved) {
@@ -380,15 +416,44 @@ public class GroupService {
     }).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread());
   }
 
-	public void saveAddedMembersLocal(final String groupUid, List<Member> members) {
-      RealmUtils.saveDataToRealm(members, null).subscribe();
-      Group group = RealmUtils.loadGroupFromDB(groupUid);
-      group.setEditedLocal(true);
-      group.setGroupMemberCount(group.getGroupMemberCount()+members.size());
-      RealmUtils.saveGroupToRealm(group);
-      EventBus.getDefault().post(new GroupEditedEvent(GroupEditedEvent.MEMBERS_ADDED,
-          NetworkUtils.SAVED_OFFLINE_MODE, groupUid, null));
-	}
+  public void saveAddedMembersLocal(final String groupUid, List<Member> members) {
+    RealmUtils.saveDataToRealm(members, null).subscribe();
+    Group group = RealmUtils.loadGroupFromDB(groupUid);
+    group.setEditedLocal(true);
+    group.setGroupMemberCount(group.getGroupMemberCount()+members.size());
+    RealmUtils.saveGroupToRealm(group);
+    EventBus.getDefault().post(new GroupEditedEvent(GroupEditedEvent.MEMBERS_ADDED,
+        NetworkUtils.SAVED_OFFLINE_MODE, groupUid, null));
+  }
+
+  public void setMemberNumbersInvalidIfInDB(final String groupUid, final List<String> invalidNumbers) {
+    // note : only sets them invalid _if_ stored in DB, but should not be stored if this is first call
+    Map<String, Object> map2 = new HashMap<>();
+    map2.put("isLocal", true);
+    map2.put("groupUid", groupUid);
+    List<Member> errorMembers = ErrorUtils.findMembersFromListOfNumbers(invalidNumbers,
+        RealmUtils.loadListFromDBInline(Member.class, map2));
+    for (Member m : errorMembers) {
+      Log.e(TAG, "setting member number invalid!");
+      m.setNumberInvalid(true);
+      RealmUtils.saveDataToRealmSync(m);
+    }
+  }
+
+  public Observable<String> cleanInvalidNumbersOnExit(final String groupUid, Scheduler observingThread) {
+    observingThread = (observingThread == null) ? AndroidSchedulers.mainThread() : observingThread;
+    return Observable.create(new Observable.OnSubscribe<String>() {
+      @Override
+      public void call(Subscriber<? super String> subscriber) {
+        Map<String, Object> removalMap = new HashMap<>();
+        removalMap.put("groupUid", groupUid);
+        removalMap.put("isNumberInvalid", true);
+        Log.e(TAG, "about to try remove members ... count is : " + RealmUtils.countListInDB(Member.class, removalMap));
+        RealmUtils.removeObjectsFromDatabase(Member.class, removalMap);
+        subscriber.onNext("DONE");
+      }
+    }).subscribeOn(Schedulers.io()).observeOn(observingThread);
+  }
 
   public Observable removeGroupMembers(final String groupUid, final Set<String> membersToRemoveUIDs) {
     return Observable.create(new Observable.OnSubscribe<String>() {

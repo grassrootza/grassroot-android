@@ -189,7 +189,6 @@ public class NavigationDrawerFragment extends Fragment implements NavigationDraw
 
     private void setupOnlineSwitch() {
         final String currentStatus = RealmUtils.loadPreferencesFromDB().getOnlineStatus();
-        Log.e(TAG, "setting up online switch ... status = " + currentStatus);
         int labelResource;
         switch (currentStatus) {
             case NetworkUtils.ONLINE_DEFAULT:
@@ -205,11 +204,15 @@ public class NavigationDrawerFragment extends Fragment implements NavigationDraw
                 return;
         }
 
-        if (secondaryItems.isEmpty()) {
-            secondaryItems.add(new NavDrawerItem(ITEM_OFFLINE, getString(labelResource), R.drawable.ic_configure));
-        } else {
-            secondaryItems.get(0).setItemLabel(getString(labelResource));
-            secondaryAdapter.notifyItemChanged(0);
+        if (secondaryItems != null) {
+            if (secondaryItems.isEmpty()) {
+                secondaryItems.add(new NavDrawerItem(ITEM_OFFLINE, getString(labelResource), R.drawable.ic_configure));
+            } else {
+                secondaryItems.get(0).setItemLabel(getString(labelResource));
+                if (secondaryAdapter != null) { // check because this sometimes gets thrown at the start
+                    secondaryAdapter.notifyItemChanged(0);
+                }
+            }
         }
     }
 
