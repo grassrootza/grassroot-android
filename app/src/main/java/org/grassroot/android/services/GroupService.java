@@ -262,9 +262,11 @@ public class GroupService {
               if (groupFromServer.getInvalidNumbers() == null || groupFromServer.getInvalidNumbers().isEmpty()) {
                 subscriber.onNext("OK-" + groupFromServer.getGroupUid());
               } else {
-                // note : clean up local group will have converted the group UIDs to that from server, hence ...
-                setMemberNumbersInvalidIfInDB(groupFromServer.getGroupUid(), groupFromServer.getInvalidNumbers());
-                subscriber.onNext("ER-" + groupFromServer.getGroupUid());
+                // so that activity can retrieve them & sort them
+                saveInvalidMembersForNewlyCreatedGroup(members, groupFromServer.getGroupUid(),
+                    groupFromServer.getInvalidNumbers());
+                final String returnMessage = "ER-" + groupFromServer.getGroupUid();
+                subscriber.onNext(returnMessage);
               }
               subscriber.onCompleted();
             } else {
@@ -309,6 +311,11 @@ public class GroupService {
   private void cleanUpLocalGroup(final String localGroupUid, final Group groupFromServer) {
     Map<String, Object> findTasks = new HashMap<>();
     findTasks.put("parentUid", localGroupUid);
+    RealmUtils.removeObjectFromDatabase(Member.class,"groupUid", localGroupUid);
+    for(Member m : groupFromServer.getMembers()){
+      m.composeMemberGroupUid();
+      RealmUtils.saveDataToRealmSync(m);
+    }
     List<TaskModel> models = RealmUtils.loadListFromDBInline(TaskModel.class, findTasks);
     for (int i = 0; i < models.size(); i++) {
       (models.get(i)).setParentUid(groupFromServer.getGroupUid());
@@ -325,11 +332,6 @@ public class GroupService {
         @Override
         public void onNext(TaskModel taskModel) { }
       });
-    }
-    RealmUtils.removeObjectFromDatabase(Member.class,"groupUid", localGroupUid);
-    for(Member m : groupFromServer.getMembers()){
-      m.composeMemberGroupUid();
-      RealmUtils.saveDataToRealmWithSubscriber(m);
     }
     RealmUtils.removeObjectFromDatabase(Group.class, "groupUid", localGroupUid);
   }
@@ -426,6 +428,17 @@ public class GroupService {
         NetworkUtils.SAVED_OFFLINE_MODE, groupUid, null));
   }
 
+  public void saveInvalidMembersForNewlyCreatedGroup(List<Member> originalMembers, String serverGroupUid,
+                                                     List<String> errorNumbers) {
+    List<Member> errorMembers = ErrorUtils.findMembersFromListOfNumbers(errorNumbers, originalMembers);
+    for (Member m : errorMembers) {
+      m.setNumberInvalid(true);
+      m.setGroupUid(serverGroupUid);
+      m.composeMemberGroupUid();
+      RealmUtils.saveDataToRealmSync(m);
+    }
+  }
+
   public void setMemberNumbersInvalidIfInDB(final String groupUid, final List<String> invalidNumbers) {
     // note : only sets them invalid _if_ stored in DB, but should not be stored if this is first call
     Map<String, Object> map2 = new HashMap<>();
@@ -451,6 +464,7 @@ public class GroupService {
         Log.e(TAG, "about to try remove members ... count is : " + RealmUtils.countListInDB(Member.class, removalMap));
         RealmUtils.removeObjectsFromDatabase(Member.class, removalMap);
         subscriber.onNext("DONE");
+        subscriber.onCompleted();
       }
     }).subscribeOn(Schedulers.io()).observeOn(observingThread);
   }

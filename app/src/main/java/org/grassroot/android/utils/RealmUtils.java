@@ -441,7 +441,30 @@ public class RealmUtils {
         return count;
     }
 
-    public static Observable loadGroupMembers(final String groupUid) {
+    public static Observable loadGroupMembers(final String groupUid, boolean excludeUser) {
+        // todo : instead use something like below if exclude user is true
         return loadListFromDB(Member.class, "groupUid", groupUid);
+    }
+
+    public static Observable<List<Member>> loadMembersSortedInvalid(final String groupUid) {
+        return Observable.create(new Observable.OnSubscribe<List<Member>>() {
+            @Override
+            public void call(Subscriber<? super List<Member>> subscriber) {
+                RealmList<Member> members = new RealmList<>();
+                final Realm realm = Realm.getDefaultInstance();
+                List<PreferenceObject> preferences = realm
+                    .where(PreferenceObject.class).findAll();
+                final String userMsisdn = preferences.get(0).getMobileNumber();
+                RealmResults<Member> results = realm
+                    .where(Member.class)
+                    .equalTo("groupUid", groupUid)
+                    .notEqualTo("phoneNumber", userMsisdn)
+                    .findAllSorted("isNumberInvalid", Sort.DESCENDING);
+                members.addAll(realm.copyFromRealm(results));
+                subscriber.onNext(members);
+                subscriber.onCompleted();
+                realm.close();
+            }
+        }).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread());
     }
 }

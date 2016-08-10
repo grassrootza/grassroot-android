@@ -68,6 +68,8 @@
         Please edit them and try again</string>
     <string name="input_error_member_phone_saved">The group is created, but some members (in red) do not have valid SA cell numbers.
     Please edit them or remove them and try again</string>
+    <string name="input_error_still_invalid">Sorry, something is still going wrong with those members. But the group is created
+    and you can try adding them again later at any time.</string>
     <string name="input_error_try_again">Try again</string>
 
     <string name="INVALID_TOKEN">Sorry, wrong code. Please check again and re-enter.</string> <!-- todo : refactor this as others -->
@@ -564,6 +566,7 @@
     <string name="ac_body_default">The action is finished</string>
 
     <string name="ac_header_group_create">Created!</string>
+    <string name="ac_header_group_create_but">Done</string>
     <string name="ac_body_group_create_server">%1$s, has been created with %2$d members. What next? </string>
     <string name="ac_body_group_create_local">You are offline. Your group %1$s will go live the next
         time you go online.</string>

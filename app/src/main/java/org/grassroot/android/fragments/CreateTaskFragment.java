@@ -212,7 +212,7 @@ public class CreateTaskFragment extends Fragment {
     public void selectAssignedMembers() {
         final ArrayList<Member> preSelectedMembers = new ArrayList<>();
         if (assignedMembers == null) {
-            RealmUtils.loadGroupMembers(groupUid).subscribe(new Action1<List<Member>>() {
+            RealmUtils.loadGroupMembers(groupUid, true).subscribe(new Action1<List<Member>>() {
                 @Override
                 public void call(List<Member> members) {
                     preSelectedMembers.addAll(members);
