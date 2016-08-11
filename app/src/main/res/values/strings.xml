@@ -209,6 +209,8 @@
     <string name="gm_remove_members">REMOVE MEMBERS</string>
 
     <!--Group search and join -->
+    <string name="find_group_title">Find groups</string>
+
     <string name="search">Search</string>
     <string name="search_box">Enter group name</string>
     <string name="gs_describe_activity">Please enter the name or part of a name to search for groups.
