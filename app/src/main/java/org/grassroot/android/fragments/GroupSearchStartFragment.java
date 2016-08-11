@@ -1,72 +1,45 @@
 package org.grassroot.android.fragments;
 
-import android.app.ProgressDialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.os.Bundle;
 import android.support.design.widget.Snackbar;
 import android.support.design.widget.TextInputEditText;
 import android.support.v4.app.Fragment;
-import android.support.v7.app.AlertDialog;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
-import android.support.v7.widget.Toolbar;
-import android.text.TextUtils;
+import android.support.v7.widget.SwitchCompat;
 import android.util.Log;
-import android.view.KeyEvent;
 import android.view.LayoutInflater;
-import android.view.MotionEvent;
 import android.view.View;
-import android.view.View.OnClickListener;
 import android.view.ViewGroup;
-import android.view.inputmethod.EditorInfo;
-import android.view.inputmethod.InputMethodManager;
-import android.widget.EditText;
-import android.widget.ImageView;
-import android.widget.TextView;
+import android.widget.RadioButton;
+import android.widget.RadioGroup;
 
 import org.grassroot.android.R;
-import org.grassroot.android.activities.PortraitActivity;
-import org.grassroot.android.adapters.PublicGroupAdapter;
-import org.grassroot.android.adapters.RecyclerTouchListener;
-import org.grassroot.android.fragments.dialogs.SendJoinRequestFragment;
-import org.grassroot.android.interfaces.ClickListener;
-import org.grassroot.android.interfaces.GroupConstants;
-import org.grassroot.android.interfaces.NetworkErrorDialogListener;
-import org.grassroot.android.models.GenericResponse;
-import org.grassroot.android.models.GroupSearchResponse;
-import org.grassroot.android.models.PublicGroupModel;
-import org.grassroot.android.services.GrassrootRestService;
 import org.grassroot.android.utils.ErrorUtils;
-import org.grassroot.android.utils.RealmUtils;
-
-import java.util.ArrayList;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
-import butterknife.OnEditorAction;
-import butterknife.OnTextChanged;
-import butterknife.OnTouch;
+import butterknife.OnCheckedChanged;
+import butterknife.OnClick;
 import butterknife.Unbinder;
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
 
+// todo : make sure all soft input focus, scrolling etc., works
 public class GroupSearchStartFragment extends Fragment {
 
     private static final String TAG = GroupSearchStartFragment.class.getSimpleName();
 
     Unbinder unbinder;
 
-    @BindView(R.id.ags_rl_root) ViewGroup rlRoot;
-    @BindView(R.id.et_searchbox) TextInputEditText searchTerm;
+    @BindView(R.id.gsearch_term) TextInputEditText searchTerm;
+    @BindView(R.id.gsearch_radio_name_subject) RadioButton searchNameAndSubject;
+
+    @BindView(R.id.gsearch_geo_switch) SwitchCompat restrictByGeo;
+    @BindView(R.id.gsearch_geo_options) RadioGroup geoOptionsGroup;
+    private int geoRadius;
 
     private GroupSearchInputListener listener;
-    private PublicGroupAdapter groupAdapter;
 
     public interface GroupSearchInputListener {
-        void searchTriggered(String searchOption, boolean geoFilter, int geoRadius,
-                             boolean includeTopics);
+        void searchTriggered(String searchOption, boolean includeTopics, boolean geoFilter, int geoRadius);
     }
 
     @Override
@@ -93,176 +66,42 @@ public class GroupSearchStartFragment extends Fragment {
         unbinder.unbind();
     }
 
-    private void switchToOpeningText() {
-
+    @OnCheckedChanged(R.id.gsearch_geo_switch)
+    public void toggleGeoRestriction(boolean checked) {
+        geoOptionsGroup.setVisibility(checked ? View.VISIBLE : View.GONE);
+        if (checked && geoRadius == 0) {
+            geoRadius = 10; // i.e., default
+        }
     }
 
+    @OnClick({ R.id.gs_geo_five, R.id.gs_geo_ten, R.id.gs_geo_fifty, R.id.gs_geo_100 })
+    public void onGeoRadioButtonClicked(View view) {
+        switch (view.getId()) {
+            case R.id.gs_geo_five:
+                geoRadius = 5;
+                break;
+            case R.id.gs_geo_ten:
+                geoRadius = 10;
+                break;
+            case R.id.gs_geo_fifty:
+                geoRadius = 50;
+                break;
+            case R.id.gs_geo_100:
+                geoRadius = 100;
+        }
+    }
+
+    @OnClick(R.id.gsearch_submit)
     public void triggerSearch() {
-        listener.searchTriggered("", true, 0, true);
-    }
-
-    /*
-
-    private void switchToOpeningText() {
-        jrRecyclerView.setVisibility(View.GONE);
-        // rlIconText.setVisibility(View.VISIBLE);
-        imDisplayIcon.setVisibility(View.GONE);
-        tvDisplayText.setVisibility(View.VISIBLE);
-        tvDisplayText.setText(R.string.gs_describe_activity);
-    }
-
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_group_search);
-        ButterKnife.bind(this);
-
-        setUpToolbar();
-        switchToOpeningText();
-        setUpRecyclerView();
-    }
-
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-        progressDialog.dismiss();
-    }
-
-    private void setUpToolbar() {
-        toolbar.setNavigationIcon(R.drawable.btn_back_wt);
-        toolbar.setNavigationOnClickListener(new OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                finish();
-            }
-        });
-    }
-
-    private void setUpDescription() {
-        tvDisplayText.setText(R.string.gs_describe_activity);
-        imDisplayIcon.setVisibility(View.GONE);
-    }
-
-    private void setUpRecyclerView() {
-        jrRecyclerView.setHasFixedSize(true);
-        jrRecyclerView.setLayoutManager(new LinearLayoutManager(this));
-
-        groupAdapter = new PublicGroupAdapter(getApplicationContext(), new ArrayList<PublicGroupModel>());
-        jrRecyclerView.setAdapter(groupAdapter);
-
-        jrRecyclerView.addOnItemTouchListener(new RecyclerTouchListener(getApplicationContext(), jrRecyclerView, new ClickListener() {
-            @Override
-            public void onClick(View view, int position) {
-                PublicGroupModel group = groupAdapter.getPublicGroup(position);
-                SendJoinRequestFragment.newInstance(group, new SendJoinRequestFragment.SendJoinRequestListener() {
-                    @Override
-                    public void requestConfirmed(PublicGroupModel groupModel) {
-                        Log.e(TAG, "send message! with this message: " + groupModel.getDescription());
-                        sendJoinRequest(groupModel);
-                    }
-                }).show(getSupportFragmentManager(), "send_message");
-            }
-
-            @Override
-            public void onLongClick(View view, int position) {
-                // todo: add a modal with group description
-            }
-        }));
-    }
-
-    @OnTextChanged(R.id.et_searchbox)
-    public void setSearchCross(CharSequence s) {
-        if (s.length() > 0) {
-            et_searchbox.setCompoundDrawablesWithIntrinsicBounds(0, 0, R.drawable.btn_close, 0);
-            btn_close = true;
+        if (searchTerm.getText().toString().isEmpty()) {
+            Snackbar.make((searchTerm), R.string.find_group_no_term,
+                Snackbar.LENGTH_SHORT).show();
+            searchTerm.setError(getString(R.string.find_group_til_error));
         } else {
-            et_searchbox.setCompoundDrawablesWithIntrinsicBounds(0, 0, R.drawable.btn_search_gray, 0);
-            btn_close = false;
+            listener.searchTriggered(searchTerm.getText().toString(), searchNameAndSubject.isChecked(),
+                restrictByGeo.isChecked(), restrictByGeo.isChecked() ? geoRadius : 0);
         }
     }
 
-    @OnTouch(R.id.et_searchbox)
-    public boolean setTextBlank(View v, MotionEvent event) {
-        if (event.getAction() == MotionEvent.ACTION_UP) {
-            if (event.getRawX() >= (et_searchbox.getRight() - et_searchbox.getTotalPaddingRight())) {
-                if (btn_close) {
-                    et_searchbox.setText("");
-                }
-                return true;
-            }
-        }
-        return false;
-    }
 
-    @OnEditorAction(R.id.et_searchbox)
-    public boolean searchForGroup(TextView v, int actionId, KeyEvent event) {
-        if (actionId == EditorInfo.IME_ACTION_SEARCH || event.getKeyCode() == KeyEvent.KEYCODE_ENTER) {
-            InputMethodManager imm = (InputMethodManager) getApplicationContext().getSystemService(Context.INPUT_METHOD_SERVICE);
-            imm.hideSoftInputFromWindow(getCurrentFocus().getWindowToken(), 0);
-
-            if (TextUtils.isEmpty(et_searchbox.getText())) {
-                ErrorUtils.showSnackBar(rlRoot, R.string.validate_search_box, Snackbar.LENGTH_SHORT);
-            } else {
-                search();
-            }
-            return true;
-        } else {
-            return false;
-        }
-    }
-
-    private void search() {
-
-    }
-
-    private void switchToResultsList() {
-        // rlIconText.setVisibility(View.GONE);
-        jrRecyclerView.setVisibility(View.VISIBLE);
-    }
-
-
-    private void switchToNoResults() {
-        jrRecyclerView.setVisibility(View.GONE);
-        // rlIconText.setVisibility(View.VISIBLE);
-        imDisplayIcon.setVisibility(View.VISIBLE);
-        tvDisplayText.setVisibility(View.VISIBLE);
-        tvDisplayText.setText(R.string.gs_none_found_text);
-    }
-
-    private void sendJoinRequest(final PublicGroupModel groupModel) {
-        progressDialog.show();
-        final String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
-        final String code = RealmUtils.loadPreferencesFromDB().getToken();
-        GrassrootRestService.getInstance().getApi().sendGroupJoinRequest(phoneNumber, code,
-                groupModel.getId(), groupModel.getDescription()).enqueue(new Callback<GenericResponse>() {
-                    @Override
-                    public void onResponse(Call<GenericResponse> call, Response<GenericResponse> response) {
-                        progressDialog.dismiss();
-                        if (response.isSuccessful()) {
-                            AlertDialog.Builder builder = new AlertDialog.Builder(GroupSearchStartFragment.this);
-                            builder.setMessage(R.string.Title_Join_Request_Sent)
-                                    .setPositiveButton(R.string.pp_OK, new DialogInterface.OnClickListener() {
-                                        @Override
-                                        public void onClick(DialogInterface dialogInterface, int i) {
-                                            finish();
-                                        }
-                                    }).create().show();
-                        } else {
-                            final String errorMsg = ErrorUtils.serverErrorText(response.errorBody(), GroupSearchStartFragment.this);
-                            Snackbar.make(rlRoot, errorMsg, Snackbar.LENGTH_SHORT).show();
-                        }
-                    }
-
-                    @Override
-                    public void onFailure(Call<GenericResponse> call, Throwable t) {
-                        progressDialog.dismiss();
-                        ErrorUtils.connectivityError(GroupSearchStartFragment.this, R.string.error_no_network, new NetworkErrorDialogListener() {
-                            @Override
-                            public void retryClicked() {
-                                sendJoinRequest(groupModel);
-                            }
-                        });
-                    }
-                });
-    }*/
 }

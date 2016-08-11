@@ -1,9 +1,8 @@
-<android.support.v4.widget.DrawerLayout
+<android.support.design.widget.CoordinatorLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/ags_dl_root">
 
     <LinearLayout
@@ -15,7 +14,9 @@
             android:id="@+id/find_group_toolbar"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
-            android:background="@color/primaryColor" />
+            android:background="@color/primaryColor"
+            android:elevation="@dimen/toolbar_elevation"
+            android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar" />
 
         <FrameLayout
             android:id="@+id/find_group_fragment_container"
@@ -25,13 +26,4 @@
 
     </LinearLayout>
 
-    <fragment
-        android:id="@+id/navigation_drawer"
-        android:layout_width="@dimen/nav_bar_width"
-        android:layout_height="match_parent"
-        android:layout_gravity="start"
-        class="org.grassroot.android.fragments.NavigationDrawerFragment"
-        android:tag="navigation_drawer"
-        tools:layout="@layout/fragment_navigation_drawer" />
-
-</android.support.v4.widget.DrawerLayout>
+</android.support.design.widget.CoordinatorLayout>

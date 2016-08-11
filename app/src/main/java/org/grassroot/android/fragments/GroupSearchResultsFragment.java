@@ -13,6 +13,7 @@ import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.KeyEvent;
+import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -34,6 +35,7 @@ import org.grassroot.android.models.GenericResponse;
 import org.grassroot.android.models.GroupSearchResponse;
 import org.grassroot.android.models.PublicGroupModel;
 import org.grassroot.android.services.GrassrootRestService;
+import org.grassroot.android.services.GroupSearchService;
 import org.grassroot.android.utils.ErrorUtils;
 import org.grassroot.android.utils.RealmUtils;
 
@@ -44,6 +46,7 @@ import butterknife.ButterKnife;
 import butterknife.OnEditorAction;
 import butterknife.OnTextChanged;
 import butterknife.OnTouch;
+import butterknife.Unbinder;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -51,6 +54,34 @@ import retrofit2.Response;
 public class GroupSearchResultsFragment extends Fragment {
 
     private static final String TAG = GroupSearchResultsFragment.class.getSimpleName();
+
+	Unbinder unbinder;
+
+	@BindView(R.id.find_group_results_display) RecyclerView resultsDisplay;
+	private PublicGroupAdapter groupAdapter;
+
+	@Override
+	public void onAttach(Context context) {
+		if (GroupSearchService.getInstance().foundByGroupName != null) {
+			groupAdapter = new PublicGroupAdapter(context, GroupSearchService.getInstance().foundByGroupName);
+		} else {
+			groupAdapter = new PublicGroupAdapter(context, new ArrayList<PublicGroupModel>());
+		}
+	}
+
+	@Override
+	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+		View viewToReturn = inflater.inflate(R.layout.fragment_group_search_results, container, false);
+		unbinder = ButterKnife.bind(this, viewToReturn);
+
+		resultsDisplay.setAdapter(groupAdapter);
+		resultsDisplay.setLayoutManager(new LinearLayoutManager(getContext()));
+
+		return viewToReturn;
+	}
+
+
+	/*private static final String TAG = GroupSearchResultsFragment.class.getSimpleName();
 
     @BindView(R.id.ags_rl_root) ViewGroup rlRoot;
 
@@ -261,5 +292,5 @@ public class GroupSearchResultsFragment extends Fragment {
                         });
                     }
                 });
-    }
+    }*/
 }

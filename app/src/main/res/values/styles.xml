@@ -20,6 +20,12 @@
         <item name="android:windowBackground">@android:color/white</item>
     </style>
 
+    <style name="SearchSwitch" parent="Theme.AppCompat.Light">
+        <item name="colorControlActivated">@color/primaryColor</item>
+        <item name="colorSwitchThumbNormal">@color/black</item>
+        <item name="android:colorForeground">@color/grey</item>
+    </style>
+
     <style name="TextLabel" parent="TextAppearance.AppCompat">
         <item name="android:textColorHint">@color/white</item>
         <item name="android:textSize">20sp</item>

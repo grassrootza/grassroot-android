@@ -1,78 +1,109 @@
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:id="@+id/ags_rl_root">
+    android:animateLayoutChanges="true">
 
-    <android.support.v7.widget.Toolbar
-                android:id="@+id/toolbar"
-                android:layout_width="match_parent"
-                android:layout_height="?attr/actionBarSize"
-                android:background="@color/primaryColor" />
-
-    <FrameLayout
+    <android.support.design.widget.TextInputLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        app:layout_behavior="@string/appbar_scrolling_view_behavior">
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/margin_large"
+        android:padding="@dimen/padding">
 
-        <RelativeLayout
-            android:id="@+id/ags_main_body"
+        <android.support.design.widget.TextInputEditText
+            android:id="@+id/gsearch_term"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@color/primaryColor"
-            android:layout_below="@+id/toolbar"
-            android:paddingLeft="12dp"
-            android:paddingRight="12dp"
-            android:paddingBottom="10dp">
+            android:hint="@string/search_box"
+            android:drawableRight="@drawable/btn_search_gray"
+            android:textSize="@dimen/txt_xlarge"/>
 
-            <EditText
-                android:id="@+id/et_searchbox"
-                android:layout_width="match_parent"
-                android:layout_alignParentTop="true"
-                android:layout_height="wrap_content"
-                android:hint="@string/search_box"
-                android:drawableRight="@drawable/btn_search_gray"
-                android:drawablePadding="3dp"
-                android:background="#d2f2e0"
-                android:padding="10dp"
-                android:textSize="@dimen/txt_medium"
-                android:singleLine="true"
-                android:imeOptions="actionSearch" />
+    </android.support.design.widget.TextInputLayout>
 
-            <ImageView
-                android:id="@+id/gs_im_icon"
-                android:layout_width="@dimen/group_avatar_large"
-                android:layout_height="@dimen/group_avatar_large"
-                android:layout_centerHorizontal="true"
-                android:src="@drawable/im_no_groups"
-                android:layout_above="@+id/gs_text_body" />
+    <android.support.v7.widget.SwitchCompat
+        style="@style/SearchSwitch"
+        android:id="@+id/gsearch_geo_switch"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:checked="false"
+        android:layout_marginTop="@dimen/margin_small"
+        android:paddingLeft="@dimen/padding"
+        android:paddingRight="@dimen/padding"
+        android:text="@string/find_group_geography_toggle"/>
 
-            <TextView
-                android:id="@+id/gs_text_body"
-                style="@style/TextCentral"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/gs_describe_activity"
-                android:layout_centerInParent="true"/>
+    <RadioGroup
+        android:id="@+id/gsearch_geo_options"
+        android:layout_height="wrap_content"
+        android:layout_width="match_parent"
+        android:orientation="vertical"
+        android:visibility="gone"
+        android:paddingLeft="@dimen/padding"
+        android:paddingRight="@dimen/padding">
 
-            <android.support.v7.widget.RecyclerView
-                android:id="@+id/jr_RecyclerView"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_below="@+id/et_searchbox"
-                android:visibility="gone"
+        <RadioButton
+            android:id="@+id/gs_geo_five"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/fgroup_five"/>
 
-                android:scrollbars="none"
-                android:background="@color/light_background"
-                android:paddingLeft="@dimen/padding_half"
-                android:paddingRight="@dimen/padding_half"
-                android:paddingTop="@dimen/padding_half"
-                android:clipToPadding="false" />
+        <RadioButton
+            android:id="@+id/gs_geo_ten"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:checked="true"
+            android:text="@string/fgroup_ten"/>
 
-        </RelativeLayout>
+        <RadioButton
+            android:id="@+id/gs_geo_fifty"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/fgroup_fifty"/>
 
-    </FrameLayout>
+        <RadioButton
+            android:id="@+id/gs_geo_100"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/fgroup_100"/>
+
+    </RadioGroup>
+
+    <RadioGroup
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/margin_large"
+        android:orientation="vertical"
+        android:paddingLeft="@dimen/padding"
+        android:paddingRight="@dimen/padding">
+
+        <RadioButton
+            android:id="@+id/gsearch_radio_name_subject"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/find_group_name_subject"
+            android:layout_marginBottom="@dimen/margin_medium"
+            android:checked="true"/>
+
+        <RadioButton
+            android:id="@+id/gsearch_radio_name_only"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/find_group_name_only"/>
+
+    </RadioGroup>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1.0" />
+
+    <Button
+        style="@style/LargeButtonGreen"
+        android:id="@+id/gsearch_submit"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="@dimen/margin_xxlarge"
+        android:textAllCaps="true"
+        android:text="@string/search"/>
 
 </LinearLayout>
