@@ -9,6 +9,12 @@
         app:showAsAction="ifRoom" />
 
     <item
+        android:id="@+id/mi_share_default"
+        android:title="Share"
+        android:icon="@drawable/ic_share_green"
+        app:showAsAction="always" />
+
+    <item
         android:id="@+id/mi_new_task"
         android:title="@string/gta_menu_add_task"
         app:showAsAction="never" />
@@ -33,8 +39,16 @@
         android:title="@string/group_settings"
         app:showAsAction="never" />
 
+    <item android:id="@+id/mi_share_wapp"
+        android:title="@string/share_wapp"
+        app:showAsAction="never" />
+
+    <item android:id="@+id/mi_share_fb"
+        android:title="@string/share_fb"
+        app:showAsAction="never" />
+
     <item android:id="@+id/mi_share_task"
-        android:title="@string/share"
+        android:title="@string/share_other"
         app:showAsAction="never" />
 
 </menu>

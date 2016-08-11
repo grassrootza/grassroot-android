@@ -22,6 +22,7 @@ import okhttp3.Response;
 import org.grassroot.android.BuildConfig;
 import org.grassroot.android.models.PreferenceObject;
 import org.grassroot.android.receivers.TaskManagerReceiver;
+import org.grassroot.android.utils.ShareUtils;
 
 /**
  * Created by luke on 2016/06/17.

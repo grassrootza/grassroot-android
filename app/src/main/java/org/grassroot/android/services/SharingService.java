@@ -1,20 +1,19 @@
 package org.grassroot.android.services;
 
 import android.app.IntentService;
-import android.content.ComponentName;
 import android.content.Intent;
-import android.content.pm.ResolveInfo;
-import android.os.Parcelable;
-import android.util.Log;
 
 import org.grassroot.android.models.TaskModel;
-
-import java.util.ArrayList;
-import java.util.List;
+import org.grassroot.android.utils.ShareUtils;
 
 public class SharingService extends IntentService {
 
     public static final String TASK_TAG = "TASK_TAG";
+    public static final String APP_SHARE_TAG = "APP_SHARE_TAG";
+    public static final String FB_PACKAGE_NAME = "com.facebook.orca";
+    public static final String WAPP_PACKAGE_NAME = "com.whatsapp";
+    public static final String OTHER = "OTHER";
+
 
     private static final String TAG = SharingService.class.getName();
 
@@ -24,42 +23,21 @@ public class SharingService extends IntentService {
 
     @Override
     protected void onHandleIntent(Intent intent1) {
-        Intent i = findClients((TaskModel) intent1.getExtras().get(TASK_TAG));
-        if (i != null) {
+        String appToShare = intent1.getExtras().getString(APP_SHARE_TAG);
+        TaskModel task = (TaskModel) intent1.getExtras().get(TASK_TAG);
+        Intent i = appToShare.equals(OTHER) ? ShareUtils.findOtherClients(getApplicationContext(), task) : share(task, appToShare);
+        if(i!=null) {
+            i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             startActivity(i);
-        }else{
-
         }
     }
 
-    private Intent findClients(TaskModel task) {
-        List<Intent> targetShareIntents = new ArrayList<>();
+    private Intent share(TaskModel task, String appToShare) {
         Intent shareIntent = new Intent();
         shareIntent.setAction(Intent.ACTION_SEND);
         shareIntent.setType("text/plain");
-        List<ResolveInfo> resInfos = getPackageManager().queryIntentActivities(shareIntent, 0);
-        if (!resInfos.isEmpty()) {
-            for (ResolveInfo resInfo : resInfos) {
-                String packageName = resInfo.activityInfo.packageName;
-                if (packageName.contains("com.facebook.orca") || packageName.contains("com.whatsapp")) {
-                    Intent intent = new Intent();
-                    intent.setComponent(new ComponentName(packageName, resInfo.activityInfo.name));
-                    intent.setAction(Intent.ACTION_SEND);
-                    intent.setType("text/plain");
-                    intent.putExtra(Intent.EXTRA_TEXT, task.getTitle());
-                    intent.setPackage(packageName);
-                    targetShareIntents.add(intent);
-                }
-            }
-            if (!targetShareIntents.isEmpty()) {
-                Intent chooserIntent = Intent.createChooser(targetShareIntents.remove(0), "Choose app to share");
-                chooserIntent.putExtra(Intent.EXTRA_INITIAL_INTENTS, targetShareIntents.toArray(new Parcelable[]{}));
-                chooserIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                return chooserIntent;
-            } else {
-                Log.d(TAG, "No apps to share");
-            }
-        }
-        return null;
+        shareIntent.putExtra(Intent.EXTRA_TEXT, task.getTitle());
+        shareIntent.setPackage(appToShare);
+        return shareIntent;
     }
 }

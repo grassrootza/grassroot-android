@@ -51,54 +51,54 @@ public class GcmRegistrationService extends IntentService {
     }
 
     private void register(Intent intent) {
-
-        final String senderId = BuildConfig.FLAVOR.equals(Constant.PROD) ?
-                getString(R.string.prod_sender_id) : getString(R.string.staging_sender_id);
-        final String projectId = BuildConfig.FLAVOR.equals(Constant.PROD) ?
-                getString(R.string.prod_project_id) : getString(R.string.staging_project_id);
-
-        try {
-
-            String gcmToken = InstanceID.getInstance(this)
-                    .getToken(projectId, GoogleCloudMessaging.INSTANCE_ID_SCOPE, null);
-
-            Log.d(TAG, "got a GCM token : " + gcmToken);
-
-            final String phoneNumber = intent.getStringExtra(NotificationConstants.PHONE_NUMBER);
-            final String code = RealmUtils.loadPreferencesFromDB().getToken();
-            final String messageId = generateMessageId(phoneNumber);
-
-            GrassrootRestService.getInstance().getApi()
-                    .pushRegistration(phoneNumber, code, gcmToken)
-                    .enqueue(new Callback<GenericResponse>() {
-                        @Override
-                        public void onResponse(Call<GenericResponse> call, Response<GenericResponse> response) {
-                            if (response.isSuccessful()) {
-                                PreferenceObject preferenceObject = RealmUtils.loadPreferencesFromDB();
-                                preferenceObject.setHasGcmRegistered(true);
-                            } else {
-                                try {
-                                    final Bundle data = new Bundle();
-                                    data.putString(NotificationConstants.PHONE_NUMBER, phoneNumber);
-                                    data.putString(NotificationConstants.ACTION, NotificationConstants.REGISTER);
-                                    GoogleCloudMessaging.getInstance(GcmRegistrationService.this)
-                                            .send(senderId, messageId, data);
-                                } catch (IOException e1) {
-                                    e1.printStackTrace();
-                                }
-                            }
-                        }
-
-                        @Override
-                        public void onFailure(Call<GenericResponse> call, Throwable t) {
-                            Log.e(TAG, "Error! Got a network error in service, and can't do anything with it");
-                        }
-                    });
-        } catch (IOException e) {
-            Log.e(TAG, "Push registration failed, for project ID: " + projectId + ", and scope: "
-                    + GoogleCloudMessaging.INSTANCE_ID_SCOPE);
-            e.printStackTrace();
-        }
+//
+//        final String senderId = BuildConfig.FLAVOR.equals(Constant.PROD) ?
+//                getString(R.string.prod_sender_id) : getString(R.string.staging_sender_id);
+//        final String projectId = BuildConfig.FLAVOR.equals(Constant.PROD) ?
+//                getString(R.string.prod_project_id) : getString(R.string.staging_project_id);
+//
+//        try {
+//
+//            String gcmToken = InstanceID.getInstance(this)
+//                    .getToken(projectId, GoogleCloudMessaging.INSTANCE_ID_SCOPE, null);
+//
+//            Log.d(TAG, "got a GCM token : " + gcmToken);
+//
+//            final String phoneNumber = intent.getStringExtra(NotificationConstants.PHONE_NUMBER);
+//            final String code = RealmUtils.loadPreferencesFromDB().getToken();
+//            final String messageId = generateMessageId(phoneNumber);
+//
+//            GrassrootRestService.getInstance().getApi()
+//                    .pushRegistration(phoneNumber, code, gcmToken)
+//                    .enqueue(new Callback<GenericResponse>() {
+//                        @Override
+//                        public void onResponse(Call<GenericResponse> call, Response<GenericResponse> response) {
+//                            if (response.isSuccessful()) {
+//                                PreferenceObject preferenceObject = RealmUtils.loadPreferencesFromDB();
+//                                preferenceObject.setHasGcmRegistered(true);
+//                            } else {
+//                                try {
+//                                    final Bundle data = new Bundle();
+//                                    data.putString(NotificationConstants.PHONE_NUMBER, phoneNumber);
+//                                    data.putString(NotificationConstants.ACTION, NotificationConstants.REGISTER);
+//                                    GoogleCloudMessaging.getInstance(GcmRegistrationService.this)
+//                                            .send(senderId, messageId, data);
+//                                } catch (IOException e1) {
+//                                    e1.printStackTrace();
+//                                }
+//                            }
+//                        }
+//
+//                        @Override
+//                        public void onFailure(Call<GenericResponse> call, Throwable t) {
+//                            Log.e(TAG, "Error! Got a network error in service, and can't do anything with it");
+//                        }
+//                    });
+//        } catch (IOException e) {
+//            Log.e(TAG, "Push registration failed, for project ID: " + projectId + ", and scope: "
+//                    + GoogleCloudMessaging.INSTANCE_ID_SCOPE);
+//            e.printStackTrace();
+//        }
     }
 
     private void unRegister(final String phoneNumber, final String code) {

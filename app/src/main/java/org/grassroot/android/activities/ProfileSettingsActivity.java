@@ -23,8 +23,16 @@ import org.grassroot.android.interfaces.ClickListener;
 import org.grassroot.android.models.GenericResponse;
 import org.grassroot.android.models.PreferenceObject;
 import org.grassroot.android.models.ProfileResponse;
+import org.grassroot.android.models.RealmString;
+import org.grassroot.android.models.ShareModel;
 import org.grassroot.android.services.GrassrootRestService;
 import org.grassroot.android.utils.RealmUtils;
+import org.grassroot.android.utils.ShareUtils;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import io.realm.RealmList;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -152,18 +160,25 @@ public class ProfileSettingsActivity extends PortraitActivity
 
               case 1://language : todo : add "confirm" button
                 RadioSelectDialogFragment.newInstance(R.string.pp_language_dialog_title,
-                    R.array.language, 0, ProfileSettingsActivity.this)
+                    R.array.language, null,0, ProfileSettingsActivity.this)
                     .show(getSupportFragmentManager(), "language");
                 break;
 
               case 2://notifications
                 RadioSelectDialogFragment.newInstance(R.string.pp_notifications_dialog_title,
-                    R.array.Notifications, 0, ProfileSettingsActivity.this)
+                    R.array.Notifications, null,0, ProfileSettingsActivity.this)
                     .show(getSupportFragmentManager(), "notifications");
                 break;
 
               case 3://Settings
-
+                PreferenceObject object = RealmUtils.loadPreferencesFromDB();
+                RealmList<ShareModel> arr = object.getAppsToShare();
+                List<String> apps = new ArrayList<>();
+                for(int i = 0; i < arr.size(); i++) apps.add(arr.get(i).getAppName());
+                String[] array = apps.toArray(new String[apps.size()]);
+                RadioSelectDialogFragment.newInstance(R.string.default_share,
+                        R.array.SharingApps, array,0, ProfileSettingsActivity.this)
+                        .show(getSupportFragmentManager(), "share");
                 break;
             }
           }
@@ -175,8 +190,19 @@ public class ProfileSettingsActivity extends PortraitActivity
   }
 
   @Override public void radioButtonPicked(int position, String identifier) {
-    language =
-        getResources().getStringArray(R.array.languagekey)[position]; // uh : actually set this
+    switch (identifier){
+      case "share":
+        PreferenceObject preferenceObject = RealmUtils.loadPreferencesFromDB();
+        RealmList<ShareModel> arr = preferenceObject.getAppsToShare();
+        preferenceObject.setDefaultSharePackage(arr.get(position).getPackageName());
+        preferenceObject.setHasSelectedDefaultPackage(true);
+        RealmUtils.saveDataToRealmSync(preferenceObject);
+        break;
+      case  "language":
+        language =
+                getResources().getStringArray(R.array.languagekey)[position]; // uh : actually set this
+        break;
+    }
   }
 
   @Override public void confirmClicked(String textEntered) {

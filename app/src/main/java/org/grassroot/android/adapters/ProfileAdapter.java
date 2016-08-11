@@ -53,8 +53,8 @@ public class ProfileAdapter extends RecyclerView.Adapter<ProfileAdapter.ProfileH
             break;
 
             case  3 ://Settings
-                holder.ivPpTitleIcon.setImageResource(R.drawable.ic_security);
-                holder.txtPpTitle.setText(R.string.pp_txt_settings);
+                holder.ivPpTitleIcon.setImageResource(R.drawable.ic_share);
+                holder.txtPpTitle.setText(R.string.default_share);
              break;
 
 
@@ -63,7 +63,7 @@ public class ProfileAdapter extends RecyclerView.Adapter<ProfileAdapter.ProfileH
 
     @Override
     public int getItemCount() {
-        return 3;
+        return 4;
     }
 
     public class ProfileHolder extends RecyclerView.ViewHolder
