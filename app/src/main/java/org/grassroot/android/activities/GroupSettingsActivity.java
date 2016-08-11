@@ -120,11 +120,6 @@ public class GroupSettingsActivity extends PortraitActivity implements
                             }
                         }).show(getSupportFragmentManager(), null);
                     }
-
-                    @Override
-                    public void onMemberDismissed(int position, String memberUid) {
-
-                    }
                 });
         getSupportFragmentManager().beginTransaction()
                 .replace(R.id.gsettings_fragment_holder, memberListFragment, "member_pick")

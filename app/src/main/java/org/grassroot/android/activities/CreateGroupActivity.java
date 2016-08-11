@@ -21,6 +21,7 @@ import butterknife.ButterKnife;
 import butterknife.OnClick;
 import butterknife.OnTextChanged;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -35,6 +36,7 @@ import org.grassroot.android.models.exceptions.ApiCallException;
 import org.grassroot.android.models.Contact;
 import org.grassroot.android.models.Group;
 import org.grassroot.android.models.Member;
+import org.grassroot.android.models.exceptions.InvalidNumberException;
 import org.grassroot.android.services.GroupService;
 import org.grassroot.android.utils.Constant;
 import org.grassroot.android.utils.ErrorUtils;
@@ -45,6 +47,7 @@ import org.greenrobot.eventbus.EventBus;
 
 import rx.Subscriber;
 import rx.android.schedulers.AndroidSchedulers;
+import rx.functions.Action1;
 
 import static butterknife.OnTextChanged.Callback.AFTER_TEXT_CHANGED;
 
@@ -75,6 +78,7 @@ public class CreateGroupActivity extends PortraitActivity implements ContactSele
   private String groupUid = UUID.randomUUID().toString();;
   private Group cachedGroup;
   private boolean editingOfflineGroup = false;
+  private String serverGroupUid;
 
   private String descCharCounter;
 
@@ -117,16 +121,12 @@ public class CreateGroupActivity extends PortraitActivity implements ContactSele
   }
 
   private void setUpMemberList() {
-    Log.d(TAG, "okay trying new member list setup");
     memberListFragment = MemberListFragment.newInstance(cachedGroup, false, null,
             new MemberListFragment.MemberClickListener() {
               @Override
               public void onMemberClicked(int position, String memberUid) {
                 memberContextMenu(position, memberUid);
               }
-
-              @Override
-              public void onMemberDismissed(int position, String memberUid) { }
             });
 
     getSupportFragmentManager().beginTransaction()
@@ -161,7 +161,7 @@ public class CreateGroupActivity extends PortraitActivity implements ContactSele
       onMainScreen = true;
     } else {
       progressDialog.dismiss();
-      deleteLocalCreatedGroup();
+      cleanUpLocalEntities();
       finish();
     }
   }
@@ -313,17 +313,21 @@ public class CreateGroupActivity extends PortraitActivity implements ContactSele
 
           @Override
           public void onNext(String s) {
+            Log.e(TAG, "string received : " + s);
             progressDialog.dismiss();
             Group finalGroup;
             if (NetworkUtils.SAVED_OFFLINE_MODE.equals(s)) {
               finalGroup = RealmUtils.loadGroupFromDB(groupUid);
+              handleGroupCreationAndExit(finalGroup, false);
             } else {
-              finalGroup = RealmUtils.loadGroupFromDB(s);
-              if (finalGroup == null) {
-                finalGroup = RealmUtils.loadGroupFromDB(groupUid);
+              final String serverUid = s.substring("OK-".length());
+              finalGroup = RealmUtils.loadGroupFromDB(serverUid);
+              if ("OK".equals(s.substring(0, 1))) {
+                handleGroupCreationAndExit(finalGroup, false);
+              } else {
+                handleSavedButSomeInvalid(serverUid);
               }
             }
-            handleGroupCreationAndExit(finalGroup, false);
           }
 
           @Override
@@ -332,8 +336,18 @@ public class CreateGroupActivity extends PortraitActivity implements ContactSele
   }
 
   private void handleServerError(ApiCallException e) {
-    final String errorMsg = ErrorUtils.serverErrorText(e.errorTag, CreateGroupActivity.this);
-    Snackbar.make(rlCgRoot, errorMsg, Snackbar.LENGTH_SHORT); // todo : have a "save anyway" button, and/or options to edit number
+    if (e instanceof InvalidNumberException) {
+      save.setText(R.string.input_error_try_again);
+      AlertDialog.Builder builder = new AlertDialog.Builder(this);
+      builder.setMessage(R.string.input_error_member_phone_all)
+          .setCancelable(true)
+          .create()
+          .show();
+      handleMembersWithInvalidNumbers((String) e.data);
+    } else {
+      final String errorMsg = ErrorUtils.serverErrorText(e.errorTag, CreateGroupActivity.this);
+      Snackbar.make(rlCgRoot, errorMsg, Snackbar.LENGTH_SHORT); // todo : have a "save anyway" button, and/or options to edit number
+    }
   }
 
   private void handleGroupCreationAndExit(Group group, boolean unexpectedConnectionError) {
@@ -358,18 +372,109 @@ public class CreateGroupActivity extends PortraitActivity implements ContactSele
     i.putExtra(ActionCompleteActivity.ACTION_INTENT, ActionCompleteActivity.HOME_SCREEN);
     i.putExtra(GroupConstants.OBJECT_FIELD, group);
     i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+    cleanUpLocalEntities();
     startActivity(i);
     finish();
   }
 
-  @Override public void onBackPressed() {
-    super.onBackPressed();
-    deleteLocalCreatedGroup();
+  private void handleMembersWithInvalidNumbers(final String listOfNumbers) {
+    List<String> memberNos = Arrays.asList(listOfNumbers.split(","));
+    List<Member> invalidMembers = ErrorUtils.findMembersFromListOfNumbers(memberNos,
+        memberListFragment.getSelectedMembers());
+    for (Member m : invalidMembers) {
+      m.setNumberInvalid(true);
+    }
+    memberListFragment.transitionToMemberList(invalidMembers);
   }
 
-  private void deleteLocalCreatedGroup(){
+  private void handleSavedButSomeInvalid(final String serverUid) {
+    save.setText(R.string.input_error_try_again);
+    save.setEnabled(true);
+    serverGroupUid = serverUid;
+    RealmUtils.loadMembersSortedInvalid(serverUid).subscribe(new Action1<List<Member>>() {
+      @Override
+      public void call(List<Member> members) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(CreateGroupActivity.this);
+        builder.setMessage(R.string.input_error_member_phone_saved)
+            .setCancelable(true)
+            .create()
+            .show();
+        memberListFragment.transitionToMemberList(members);
+        save.setOnClickListener(new View.OnClickListener() {
+          @Override
+          public void onClick(View v) {
+            retryInvalidNumbers(serverUid);
+          }
+        });
+      }
+    });
+  }
+
+  private void retryInvalidNumbers(final String serverUid) {
+    progressDialog.show();
+    GroupService.getInstance().addMembersToGroup(serverUid, memberListFragment.getSelectedMembers(), true)
+        .subscribe(new Subscriber<String>() {
+          @Override
+          public void onNext(String s) {
+            progressDialog.dismiss();
+            Group finalGroup = RealmUtils.loadGroupFromDB(serverUid);
+            if (NetworkUtils.SAVED_SERVER.equals(s)) {
+              handleGroupCreationAndExit(finalGroup, false);
+            } else {
+              giveUpOnInvalidNumbersAndExit(finalGroup);
+            }
+          }
+
+          @Override
+          public void onError(Throwable e) {
+            // note : may in future want to make this differentiate, but to evaluate after user feedback
+            Group finalGroup = RealmUtils.loadGroupFromDB(serverUid);
+            giveUpOnInvalidNumbersAndExit(finalGroup);
+          }
+
+          @Override
+          public void onCompleted() { }
+        });
+  }
+
+  private void giveUpOnInvalidNumbersAndExit(final Group group) {
+    GroupService.getInstance().cleanInvalidNumbersOnExit(group.getGroupUid(),
+        AndroidSchedulers.mainThread()).subscribe(new Action1<String>() {
+      @Override
+      public void call(String s) {
+        EventBus.getDefault().post(new GroupCreatedEvent(group));
+        Intent i = new Intent(CreateGroupActivity.this, ActionCompleteActivity.class);
+        String completionMessage = getString(R.string.input_error_still_invalid);
+        i.putExtra(ActionCompleteActivity.HEADER_FIELD, R.string.ac_header_group_create_but);
+        i.putExtra(ActionCompleteActivity.BODY_FIELD, completionMessage);
+        i.putExtra(ActionCompleteActivity.TASK_BUTTONS, true);
+        i.putExtra(ActionCompleteActivity.OFFLINE_BUTTONS, false);
+        i.putExtra(ActionCompleteActivity.ACTION_INTENT, ActionCompleteActivity.HOME_SCREEN);
+        i.putExtra(GroupConstants.OBJECT_FIELD, group);
+        i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        cleanUpLocalEntities();
+        startActivity(i);
+        finish();
+      }
+    });
+  }
+
+  @Override public void onBackPressed() {
+    super.onBackPressed();
+    cleanUpLocalEntities();
+  }
+
+  private void cleanUpLocalEntities(){
     if (cachedGroup != null && !editingOfflineGroup) {
-      GroupService.getInstance().deleteLocallyCreatedGroup(groupUid);
+      GroupService.getInstance().cleanInvalidNumbersOnExit(groupUid, null).subscribe(new Action1<String>() {
+        @Override
+        public void call(String s) {
+          GroupService.getInstance().deleteLocallyCreatedGroup(groupUid);
+        }
+      });
+    }
+    if (!TextUtils.isEmpty(serverGroupUid)) {
+      GroupService.getInstance().cleanInvalidNumbersOnExit(serverGroupUid, null).subscribe();
     }
   }
 

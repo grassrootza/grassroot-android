@@ -55,6 +55,8 @@ public class Group extends RealmObject implements Parcelable, Comparable<Group> 
 
   @Ignore private RealmList<Member> members = new RealmList<>();
 
+  @Ignore private List<String> invalidNumbers; // only used on group create or add member, no need to cache/persist
+
   public Group() {
   }
 
@@ -257,6 +259,10 @@ public class Group extends RealmObject implements Parcelable, Comparable<Group> 
       return date;
     }
   }
+
+  public List<String> getInvalidNumbers() { return invalidNumbers; }
+
+  public void setInvalidNumbers(List<String> invalidNumbers) { this.invalidNumbers = invalidNumbers; }
 
   public RealmList<RealmString> getPermissions() {
     return permissions;

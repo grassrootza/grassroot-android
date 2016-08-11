@@ -39,7 +39,6 @@ public class MemberListFragment extends Fragment {
     private Group group;
 
     private boolean canClickItems;
-    private boolean canDismissItems;
     private boolean showSelected;
     private boolean selectedByDefault;
 
@@ -52,13 +51,13 @@ public class MemberListFragment extends Fragment {
     RecyclerView memberListRecyclerView;
 
     public interface MemberClickListener {
-        void onMemberDismissed(int position, String memberUid);
         void onMemberClicked(int position, String memberUid);
     }
 
     // note : groupUid can be set null, in which case we are adding members generated locally
     public static MemberListFragment newInstance(String parentUid, boolean clickEnabled, boolean showSelected,
-                                                 boolean canDismissItems, List<Member> selectedMembers, MemberClickListener clickListener) {
+                                                 List<Member> selectedMembers, MemberClickListener clickListener) {
+
         MemberListFragment fragment = new MemberListFragment();
         if (parentUid != null) {
             fragment.group = RealmUtils.loadGroupFromDB(parentUid);
@@ -67,7 +66,6 @@ public class MemberListFragment extends Fragment {
         }
         fragment.canClickItems = clickEnabled;
         fragment.showSelected = showSelected;
-        fragment.canDismissItems = canDismissItems;
         fragment.clickListener = clickListener;
         fragment.preSelectedMembers = selectedMembers;
         return fragment;
@@ -141,26 +139,6 @@ public class MemberListFragment extends Fragment {
         }
     }
 
-    // could do this more elegantly with lambdas / Java 8, but two quick in-memory for loops should be okay ... keep an eye out though
-    public List<Member> getMembersFromNumbers(List<String> phoneNumbers) {
-        List<Member> foundMembers = new ArrayList<>();
-        if (phoneNumbers != null && memberListAdapter != null) {
-            List<Member> members = memberListAdapter.getMembers();
-            for (String phoneNum : phoneNumbers) {
-                final String msisdn = Utilities.formatNumberToE164(phoneNum);
-                Log.e(TAG, "and now for this ... " + msisdn);
-                for (Member m : members) {
-                    if (m.getPhoneNumber().equals(msisdn) || m.getPhoneNumber().equals(phoneNum)) {
-                        Log.e(TAG, "found one ... " + m.toString());
-                        foundMembers.add(m);
-                        break;
-                    }
-                }
-            }
-        }
-        return foundMembers;
-    }
-
     public void selectAllMembers() {
         for (Member m : memberListAdapter.getMembers()) {
             m.setSelected(true);
@@ -182,35 +160,10 @@ public class MemberListFragment extends Fragment {
 
         if (group != null)
             fetchGroupMembers();
-        if (canDismissItems)
-            setUpDismissal();
         if (canClickItems)
             setUpSelectionListener();
 
         memberListRecyclerView.setVisibility(View.VISIBLE);
-    }
-
-    private void setUpDismissal() {
-        ItemTouchHelper.SimpleCallback simpleCallback = new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT) {
-
-            @Override
-            public boolean onMove(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder, RecyclerView.ViewHolder target) {
-                return false;
-            }
-
-            @Override
-            public void onSwiped(RecyclerView.ViewHolder viewHolder, int direction) {
-                int swipedPosition = viewHolder.getAdapterPosition();
-                // todo: revisit whether we really need this
-                if (clickListener != null) {
-                    clickListener.onMemberDismissed(swipedPosition, memberListAdapter.getMemberUid(swipedPosition));
-                }
-                memberListAdapter.removeMembers(new int[]{swipedPosition});
-            }
-        };
-
-        ItemTouchHelper itemTouchHelper = new ItemTouchHelper(simpleCallback);
-        itemTouchHelper.attachToRecyclerView(memberListRecyclerView);
     }
 
     private void setUpSelectionListener() {
@@ -243,7 +196,6 @@ public class MemberListFragment extends Fragment {
                     membersToRemove.addAll(filteredMembers);
                 }
                 realmResults.removeAll(membersToRemove);
-                System.out.println("size of list is " + realmResults.size());
                 memberListAdapter.addMembers(realmResults);
 
                 if (preSelectedMembers != null && !selectedByDefault) {

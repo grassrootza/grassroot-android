@@ -1,6 +1,7 @@
 package org.grassroot.android.adapters;
 
 import android.content.Context;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -11,6 +12,7 @@ import android.widget.TextView;
 
 import org.grassroot.android.R;
 import org.grassroot.android.models.Member;
+import org.grassroot.android.services.ApplicationLoader;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -114,12 +116,19 @@ public class MemberListAdapter extends RecyclerView.Adapter<MemberListAdapter.Vi
     @Override
     public void onBindViewHolder(ViewHolder viewHolder, int position) {
         Member thisMember = members.get(position);
+
         viewHolder.tvMemberName.setText(thisMember.getDisplayName());
+
+        if (thisMember.isNumberInvalid()) {
+            viewHolder.tvMemberName.setTextColor(ContextCompat.getColor(ApplicationLoader.applicationContext,
+                R.color.red));
+            viewHolder.ivSelectedIcon.setImageResource(R.drawable.ic_exclamation_black);
+        }
+
         if (showSelected) {
             viewHolder.ivSelectedIcon.setImageResource(thisMember.isSelected() ?
                     R.drawable.btn_checked : R.drawable.btn_unchecked);
         }
-        // Log.e(TAG, "userListAdaptor! binding view holder!");
     }
 
 }

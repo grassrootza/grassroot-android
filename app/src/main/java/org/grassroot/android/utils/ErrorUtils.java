@@ -15,6 +15,7 @@ import org.grassroot.android.activities.HomeScreenActivity;
 import org.grassroot.android.activities.StartActivity;
 import org.grassroot.android.fragments.dialogs.NetworkErrorDialogFragment;
 import org.grassroot.android.interfaces.NetworkErrorDialogListener;
+import org.grassroot.android.models.Member;
 import org.grassroot.android.models.exceptions.ApiCallException;
 import org.grassroot.android.models.ServerErrorModel;
 import org.grassroot.android.services.GrassrootRestService;
@@ -24,6 +25,9 @@ import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 import okhttp3.ResponseBody;
 import retrofit2.Converter;
@@ -139,6 +143,33 @@ public class ErrorUtils {
     public static String serverErrorText(Throwable e, final Context context) {
         final String restMsg = (e instanceof ApiCallException) ? ((ApiCallException) e).errorTag : GENERIC_ERROR;
         return serverErrorText(restMsg, context);
+    }
+
+    /*
+    Utility method to retrieve a list of members from a string of bad phone numbers
+     */
+    public static List<Member> findMembersFromListOfNumbers(final String listOfInvalidNumbers,
+                                                            final List<Member> referenceList) {
+        List<String> invalidNumbers = TextUtils.isEmpty(listOfInvalidNumbers) ? null :
+            Arrays.asList(listOfInvalidNumbers.split("\\s+"));
+        return findMembersFromListOfNumbers(invalidNumbers, referenceList);
+    }
+
+    public static List<Member> findMembersFromListOfNumbers(final List<String> listOfInvalidNumbers,
+                                                            final List<Member> referenceList) {
+        List<Member> foundMembers = new ArrayList<>();
+        if (listOfInvalidNumbers != null && referenceList != null) {
+            for (String phoneNum : listOfInvalidNumbers) {
+                final String msisdn = Utilities.formatNumberToE164(phoneNum);
+                for (Member m : referenceList) {
+                    if (m.getPhoneNumber().equals(msisdn) || m.getPhoneNumber().equals(phoneNum)) {
+                        foundMembers.add(m);
+                        break;
+                    }
+                }
+            }
+        }
+        return foundMembers;
     }
 
     /**

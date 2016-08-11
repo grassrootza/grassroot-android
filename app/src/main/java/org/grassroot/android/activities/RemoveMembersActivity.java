@@ -104,7 +104,7 @@ public class RemoveMembersActivity extends PortraitActivity implements MemberLis
     }
 
     private void setUpMemberListFragment() {
-        memberListFragment = MemberListFragment.newInstance(groupUid, true, true, true, null, this);
+        memberListFragment = MemberListFragment.newInstance(groupUid, true, true, null, this);
         memberListFragment.setSelectedByDefault(true);
 
         getSupportFragmentManager().beginTransaction()
@@ -180,11 +180,6 @@ public class RemoveMembersActivity extends PortraitActivity implements MemberLis
                 finish();
             }
         });
-    }
-
-    @Override
-    public void onMemberDismissed(int position, String memberUid) {
-        membersToRemove.add(memberUid);
     }
 
     @Override

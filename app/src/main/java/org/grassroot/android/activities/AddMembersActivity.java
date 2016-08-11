@@ -9,10 +9,8 @@ import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
-import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
-import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
@@ -20,11 +18,10 @@ import android.widget.TextView;
 import org.grassroot.android.R;
 import org.grassroot.android.fragments.ContactSelectionFragment;
 import org.grassroot.android.fragments.MemberListFragment;
-import org.grassroot.android.fragments.dialogs.FixMemberPhoneDialog;
 import org.grassroot.android.interfaces.GroupConstants;
-import org.grassroot.android.models.exceptions.ApiCallException;
 import org.grassroot.android.models.Contact;
 import org.grassroot.android.models.Member;
+import org.grassroot.android.models.exceptions.ApiCallException;
 import org.grassroot.android.models.exceptions.InvalidNumberException;
 import org.grassroot.android.services.GroupService;
 import org.grassroot.android.utils.Constant;
@@ -35,16 +32,15 @@ import org.grassroot.android.utils.PermissionUtils;
 import org.grassroot.android.utils.RealmUtils;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
-import rx.Observable;
 import rx.Subscriber;
 import rx.functions.Action1;
 
@@ -94,13 +90,13 @@ public class AddMembersActivity extends AppCompatActivity implements
 
         Bundle extras = getIntent().getExtras();
         if (extras == null) {
-            Log.d(TAG, "ERROR! Null extras passed to add members activity, cannot execute, aborting");
+            // cannot proceed, so abort
             finish();
         } else {
-            Log.d(TAG, "inside addMembersActivity ... passed extras bundle = " + extras.toString());
             init(extras);
-            groupNameView.setText(groupName); // todo: handle long group names
-            setupExistingMemberRecyclerView();
+            groupNameView.setText(groupName);
+            existingMemberListFragment = MemberListFragment.newInstance(groupUid, false, false, null, null);
+            loadMembersIntoExistingMemberFragment(true);
             setupNewMemberRecyclerView();
         }
     }
@@ -128,29 +124,31 @@ public class AddMembersActivity extends AppCompatActivity implements
         menuOpen = !menuOpen;
     }
 
-    private void setupExistingMemberRecyclerView() {
-        existingMemberListFragment = MemberListFragment.newInstance(groupUid, false, false, false, null, null);
-        RealmUtils.loadListFromDB(Member.class,"groupUid", groupUid).subscribe(
+    private void loadMembersIntoExistingMemberFragment(final boolean addFragment) {
+        Map<String, Object> validMemberMap = new HashMap<>();
+        validMemberMap.put("groupUid", groupUid);
+        validMemberMap.put("isNumberInvalid", false);
+
+        RealmUtils.loadListFromDB(Member.class, validMemberMap).subscribe(
             new Action1<List<Member>>() {
                 @Override public void call(List<Member> members) {
                     contactSelectionFragment = ContactSelectionFragment.newInstance(Contact.convertFromMembers(members), false);
-                    getSupportFragmentManager().beginTransaction()
-                        .add(R.id.am_existing_member_list_container, existingMemberListFragment)
-                        .commit();
+                    if (addFragment) {
+                        getSupportFragmentManager().beginTransaction()
+                            .add(R.id.am_existing_member_list_container, existingMemberListFragment)
+                            .commit();
+                    } else {
+                        existingMemberListFragment.transitionToMemberList(members);
+                    }
                 }
-            }); // todo : make sure this doesn't cause reference overwrite issues
+            });
     }
 
     private void setupNewMemberRecyclerView() {
-        newMemberListFragment = MemberListFragment.newInstance(null, true, false, false, null, new MemberListFragment.MemberClickListener() {
+        newMemberListFragment = MemberListFragment.newInstance(null, true, false, null, new MemberListFragment.MemberClickListener() {
             @Override
             public void onMemberClicked(int position, String memberUid) {
                 newMemberContextMenu(position, memberUid);
-            }
-
-            @Override
-            public void onMemberDismissed(int position, String memberUid) {
-
             }
         });
         getSupportFragmentManager().beginTransaction()
@@ -175,6 +173,10 @@ public class AddMembersActivity extends AppCompatActivity implements
 
     private void editNewMember(final int position, final String memberUid) {
         Member member = RealmUtils.loadObjectFromDB(Member.class, "memberUid", memberUid);
+        // don't fully trust Android callbacks, so adding a check on position to avoid uncaught exception
+        if (member == null && position < newMemberListFragment.getSelectedMembers().size()) {
+            member = newMemberListFragment.getSelectedMembers().get(position);
+        }
         Intent i = new Intent(AddMembersActivity.this, AddContactManually.class);
         i.putExtra(GroupConstants.MEMBER_OBJECT, member);
         i.putExtra(Constant.INDEX_FIELD, position);
@@ -230,7 +232,6 @@ public class AddMembersActivity extends AppCompatActivity implements
     @Override
     public void onContactSelectionComplete(List<Contact> contactsSelected) {
         Long start = SystemClock.currentThreadTimeMillis();
-
         List<Member> selectedMembers = new ArrayList<>(manuallyAddedMembers);
         for (Contact c : contactsSelected) {
             if (membersFromContacts.containsKey(c.id)) {
@@ -245,7 +246,6 @@ public class AddMembersActivity extends AppCompatActivity implements
             }
         }
         newMemberListFragment.transitionToMemberList(selectedMembers);
-
         Log.d(TAG, String.format("added contacts to fragment, in all took %d msecs", SystemClock.currentThreadTimeMillis() - start));
         closeContactSelectionFragment();
     }
@@ -256,10 +256,9 @@ public class AddMembersActivity extends AppCompatActivity implements
         if (resultCode == RESULT_OK) {
             if (requestCode == Constant.activityManualMemberEntry) {
                 final String newUid = UUID.randomUUID().toString();
-                Member newMember = new Member(newUid, groupUid, data.getStringExtra("selectedNumber"), data.getStringExtra("name"),
-                        GroupConstants.ROLE_ORDINARY_MEMBER, -1, true);
+                Member newMember = new Member(newUid, groupUid, data.getStringExtra("selectedNumber"),
+                    data.getStringExtra("name"), GroupConstants.ROLE_ORDINARY_MEMBER, -1, true);
                 newMember.setLocal(true);
-                // RealmUtils.saveDataToRealmWithSubscriber(newMember); // todo : figure out safe place to do this
                 manuallyAddedMembers.add(newMember);
                 newMemberListFragment.addMembers(Collections.singletonList(newMember));
                 setNewMembersVisible();
@@ -280,14 +279,6 @@ public class AddMembersActivity extends AppCompatActivity implements
         }
     }
 
-    private void setNewMembersInvisible() {
-        if (newMemberListStarted) {
-            newMembersTitle.setVisibility(View.GONE);
-            newMemberContainer.setVisibility(View.GONE);
-            newMemberListStarted = false;
-        }
-    }
-
     @OnClick(R.id.am_iv_crossimage)
     public void closeMenu() {
         if (onMainScreen) {
@@ -305,57 +296,63 @@ public class AddMembersActivity extends AppCompatActivity implements
             final List<Member> membersToAdd = newMemberListFragment.getSelectedMembers();
             if (membersToAdd != null && membersToAdd.size() > 0) {
                 progressDialog.show();
-                GroupService.getInstance().addMembersToGroup(groupUid, membersToAdd, false).subscribe(new Subscriber<String>() {
-                    @Override
-                    public void onNext(String s) {
-                        if (NetworkUtils.SAVED_SERVER.equals(s)) {
-                            Intent i = new Intent();
-                            i.putExtra(GroupConstants.UID_FIELD, groupUid);
-                            i.putExtra(Constant.INDEX_FIELD, groupPosition);
-                            setResult(RESULT_OK, i);
+                GroupService.getInstance().addMembersToGroup(groupUid, membersToAdd, false).subscribe(
+                    new Subscriber<String>() {
+                        @Override
+                        public void onNext(String s) {
+                            if (NetworkUtils.SAVED_SERVER.equals(s)) {
+                                Intent i = new Intent();
+                                i.putExtra(GroupConstants.UID_FIELD, groupUid);
+                                i.putExtra(Constant.INDEX_FIELD, groupPosition);
+                                setResult(RESULT_OK, i);
+                                progressDialog.dismiss();
+                                finish();
+                            } else if (NetworkUtils.SAVED_OFFLINE_MODE.equals(s)) {
+                                Intent i = IntentUtils.offlineMessageIntent(AddMembersActivity.this, R.string.am_offline_header, getString(R.string.am_offline_body_delib), true, false);
+                                progressDialog.dismiss();
+                                startActivity(i);
+                                finish();
+                            } else {
+                                // means some numbers were returned as incorrect
+                                handleInvalidNumbers(s);
+                                loadMembersIntoExistingMemberFragment(false);
+                                progressDialog.dismiss();
+                            }
+                        }
+
+                        @Override
+                        public void onError(Throwable e) {
+                            Intent i = null;
+                            switch (e.getMessage()) {
+                                case NetworkUtils.SERVER_ERROR:
+                                    if (e instanceof InvalidNumberException) {
+                                        handleInvalidNumbers((String) ((InvalidNumberException) e).data);
+                                    } else if (e instanceof ApiCallException) {
+                                        final String errorMsg = ErrorUtils.serverErrorText(((ApiCallException) e).errorTag, AddMembersActivity.this);
+                                        Snackbar.make(amRlRoot, errorMsg, Snackbar.LENGTH_LONG).show();
+                                    } else {
+                                        final String body = getString(R.string.am_server_other);
+                                        i = IntentUtils.offlineMessageIntent(AddMembersActivity.this, R.string.am_server_error_header, body, false, false);
+                                    }
+                                    break;
+                                case NetworkUtils.CONNECT_ERROR:
+                                    i = IntentUtils.offlineMessageIntent(AddMembersActivity.this, R.string.am_offline_header, getString(R.string.am_offline_body_error), false, true);
+                                    break;
+                                default:
+                                    Log.e(TAG, "received strange error : " + e.toString());
+                                    i = IntentUtils.offlineMessageIntent(AddMembersActivity.this, R.string.am_server_error_header, getString(R.string.am_server_other), false, true);
+                            }
                             progressDialog.dismiss();
-                            finish();
-                        } else {
-                            Intent i = IntentUtils.offlineMessageIntent(AddMembersActivity.this, R.string.am_offline_header, getString(R.string.am_offline_body_delib), true, false);
-                            progressDialog.dismiss();
-                            startActivity(i);
-                            finish();
+                            if (i != null) {
+                                startActivity(i);
+                                finish();
+                            }
                         }
-                    }
 
-                    @Override
-                    public void onCompleted() {
+                        @Override
+                        public void onCompleted() { }
 
-                    }
-
-                    @Override
-                    public void onError(Throwable e) {
-                        Intent i = null;
-                        switch (e.getMessage()) {
-                            case NetworkUtils.SERVER_ERROR:
-                                if (e instanceof InvalidNumberException) {
-                                    handleServerError((ApiCallException) e);
-                                } else if (e instanceof ApiCallException) {
-                                    handleServerError((ApiCallException) e);
-                                } else {
-                                    final String body = getString(R.string.am_server_other);
-                                    i = IntentUtils.offlineMessageIntent(AddMembersActivity.this, R.string.am_server_error_header, body, false, false);
-                                }
-                                break;
-                            case NetworkUtils.CONNECT_ERROR:
-                                i = IntentUtils.offlineMessageIntent(AddMembersActivity.this, R.string.am_offline_header, getString(R.string.am_offline_body_error), false, true);
-                                break;
-                            default:
-                                Log.e(TAG, "received strange error : " + e.toString());
-                                i = IntentUtils.offlineMessageIntent(AddMembersActivity.this, R.string.am_server_error_header, getString(R.string.am_server_other), false, true);
-                        }
-                        progressDialog.dismiss();
-                        if (i != null) {
-                            startActivity(i);
-                            finish();
-                        }
-                    }
-                });
+                    });
             } else {
                 Log.d(TAG, "Exited with no members to add!");
                 finish();
@@ -363,84 +360,25 @@ public class AddMembersActivity extends AppCompatActivity implements
         }
     }
 
-    private void handleServerError(ApiCallException e) {
-        // todo : add a "try again to save" message (make this an error dialog ...)
-        if (e instanceof InvalidNumberException) {
-            handleInvalidNumbers((InvalidNumberException) e);
-            /* final String errorNums = (String) e.data;
-            if (!TextUtils.isEmpty(errorNums)) {
-                List<String> errorNumbers = Arrays.asList(errorNums.split("\\s+"));
-                Log.e(TAG, "here are the split numbers : " + errorNumbers);
-                List<Member> errorMembers = newMemberListFragment.getMembersFromNumbers(errorNumbers);
-                Log.e(TAG, "got this many members with those numbers: " + errorMembers);
-                if (errorMembers != null && !errorMembers.isEmpty()) {
-                    final Member errorMember = errorMembers.get(0);
-                    final String message = String.format(getString(R.string.input_error_member_phone),
-                        errorMember.getDisplayName(), errorMember.getPhoneNumber());
-                    AlertDialog.Builder builder = new AlertDialog.Builder(this);
-                    builder.setMessage(message);
-                    builder.create().show();
-                } else {
-
-                }
-            } else {
-
-            }*/
-        } else {
-            final String errorMsg = ErrorUtils.serverErrorText(e.errorTag, this);
-            Snackbar.make(amRlRoot, errorMsg, Snackbar.LENGTH_LONG).show();
+    private void handleInvalidNumbers(String listOfNumbers) {
+        List<Member> invalidMembers = ErrorUtils.findMembersFromListOfNumbers(listOfNumbers,
+            newMemberListFragment.getSelectedMembers());
+        for (Member m : invalidMembers) {
+            m.setNumberInvalid(true);
         }
+        newMemberListFragment.transitionToMemberList(invalidMembers);
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle(R.string.input_error_phone_title)
+            .setMessage(R.string.input_error_member_phone_some)
+            .setCancelable(true)
+            .create()
+            .show();
     }
 
-    private void handleInvalidNumbers(InvalidNumberException e) {
-        final String errorNums = (String) e.data;
-        if (!TextUtils.isEmpty(errorNums)) {
-            List<String> errorNumbers = Arrays.asList(errorNums.split("\\s+"));
-            List<Member> errorMembers = newMemberListFragment.getMembersFromNumbers(errorNumbers);
-            int numberError = errorMembers.size();
-            if (numberError == 1) {
-                Log.e(TAG, "one member is wrong, showing the dialog box ...");
-                fixSingleMemberDialog(errorMembers.get(0));
-            } else {
-                int numberOkay = newMemberListFragment.getSelectedMembers().size() - numberError;
-
-            }
-        }
+    @Override
+    public void onDestroy() {
+        GroupService.getInstance().cleanInvalidNumbersOnExit(groupUid, null).subscribe();
+        super.onDestroy();
     }
-
-    private void fixSingleMemberDialog(final Member errorMember) {
-        Log.e(TAG, "okay let's try this ...");
-        FixMemberPhoneDialog.newInstance(groupUid, errorMember)
-            .show(getSupportFragmentManager(), null);
-    }
-        /*AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        final EditText textInput = new EditText(this);
-        textInput.setHint(errorMember.getPhoneNumber());
-        final String message = String.format(getString(R.string.input_error_member_phone_single),
-            errorMember.getDisplayName());
-
-        builder.setMessage(R.string.input_error_member_phone_single)
-            .setView(textInput)
-            .setPositiveButton(R.string.pp_OK, new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    final String txt = textInput.getText().toString();
-                    Log.e(TAG, "dialog confirmed ... with text = " + txt);
-                    fixSingleMemberDo(errorMember, textInput.getText().toString());
-                }
-            });
-        builder.create().show();
-    }
-
-    private void fixSingleMemberDo(Member member, final String newNumber) {
-        member.setPhoneNumber(newNumber);
-        GroupService.getInstance().addMembersToGroup(groupUid, Collections.singletonList(member), false)
-            .subscribe(new Observable.OnSubscribe() {
-                @Override
-                public void call(Object o) {
-                    Log.e(TAG, "okay, it is done ...");
-                }
-            });
-    }*/
 
 }

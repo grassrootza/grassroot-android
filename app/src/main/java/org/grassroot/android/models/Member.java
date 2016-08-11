@@ -30,6 +30,8 @@ public class Member extends RealmObject implements Parcelable {
   private boolean selected;
   private boolean isLocal;
 
+  private boolean isNumberInvalid;
+
   public Member() {
   }
 
@@ -47,6 +49,7 @@ public class Member extends RealmObject implements Parcelable {
     dest.writeInt(this.selected ? 1 : 0);
     dest.writeInt(this.isLocal ? 1 : 0);
     dest.writeInt(this.contactId);
+    dest.writeInt(this.isNumberInvalid ? 1 : 0);
   }
 
   protected Member(Parcel incoming) {
@@ -59,6 +62,7 @@ public class Member extends RealmObject implements Parcelable {
     selected = incoming.readInt() != 0;
     isLocal = incoming.readInt() != 0;
     contactId = incoming.readInt();
+    isNumberInvalid = incoming.readInt() != 0;
   }
 
   public Member(String memberUid, String parentUid, String phoneNumber, String displayName,
@@ -71,6 +75,7 @@ public class Member extends RealmObject implements Parcelable {
     this.roleName = (roleName != null) ? roleName : GroupConstants.ROLE_ORDINARY_MEMBER;
     this.contactId = contactId;
     this.selected = selected;
+    this.isNumberInvalid = false;
     Log.e(TAG, "created member, with groupUid : " + this.groupUid);
   }
 
@@ -92,7 +97,6 @@ public class Member extends RealmObject implements Parcelable {
 
   public void composeMemberGroupUid() {
     this.memberGroupUid = this.memberUid + this.groupUid;
-    // Log.d(TAG, "primary key set, for member : " + this.displayName + ", as: " + memberGroupUid);
   }
 
   public String getMemberUid() {
@@ -151,6 +155,14 @@ public class Member extends RealmObject implements Parcelable {
 
   public void setLocal(boolean local) {
     this.isLocal = local;
+  }
+
+  public boolean isNumberInvalid() {
+    return isNumberInvalid;
+  }
+
+  public void setNumberInvalid(boolean numberInvalid) {
+    isNumberInvalid = numberInvalid;
   }
 
   // toString etc
