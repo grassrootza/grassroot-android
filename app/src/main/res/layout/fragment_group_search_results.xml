@@ -33,7 +33,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:padding="@dimen/padding"
-        android:text="@string/find_group_subject_header"
+        android:text="@string/find_group_subject_header_short"
         android:textColor="@color/dark_grey_text"
         android:textSize="@dimen/txt_medium"/>
 
@@ -46,7 +46,8 @@
         android:layout_weight="1.0" />
 
     <Button
-        style="@style/LargeButtonGreen"
+        style="@style/LargeButtonGreen.Wide"
+        android:id="@+id/fgroup_btn_search"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="@dimen/margin_large"
@@ -55,7 +56,8 @@
         android:text="@string/find_group_change_search" />
 
     <Button
-        style="@style/LargeButtonGreen"
+        style="@style/LargeButtonGreen.Wide"
+        android:id="@+id/fgroup_btn_exit"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginBottom="@dimen/margin_xlarge"

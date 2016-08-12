@@ -98,7 +98,7 @@
         android:layout_weight="1.0" />
 
     <Button
-        style="@style/LargeButtonGreen"
+        style="@style/LargeButtonGreen.Wide"
         android:id="@+id/gsearch_submit"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

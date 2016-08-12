@@ -5,13 +5,17 @@ import android.support.annotation.NonNull;
 import java.util.UUID;
 
 import io.realm.RealmObject;
+import io.realm.annotations.PrimaryKey;
 
 /**
  * Created by paballo on 2016/05/05.
  */
 public class PublicGroupModel extends RealmObject {
 
-    @NonNull private String id;
+    @NonNull
+    @PrimaryKey
+    private String id;
+
     private String groupName;
     private String description;
     private String groupCreator;

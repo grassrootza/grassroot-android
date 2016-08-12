@@ -66,6 +66,10 @@ public class GroupSearchStartFragment extends Fragment {
         unbinder.unbind();
     }
 
+    public void setSearchText(final String searchString) {
+        searchTerm.setText(searchString);
+    }
+
     @OnCheckedChanged(R.id.gsearch_geo_switch)
     public void toggleGeoRestriction(boolean checked) {
         geoOptionsGroup.setVisibility(checked ? View.VISIBLE : View.GONE);

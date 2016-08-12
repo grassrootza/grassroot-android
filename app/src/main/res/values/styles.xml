@@ -187,6 +187,11 @@
         <item name="android:layout_marginRight">@dimen/margin_largest</item>
     </style>
 
+    <style name="LargeButtonGreen.Wide" parent="LargeButtonGreen">
+        <item name="android:layout_marginLeft">@dimen/margin_xxlarge</item>
+        <item name="android:layout_marginRight">@dimen/margin_xxlarge</item>
+    </style>
+
     <style name="TaskListCard" parent="CardView">
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">wrap_content</item>

@@ -23,6 +23,7 @@ import java.util.ArrayList;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import butterknife.OnClick;
 import butterknife.Unbinder;
 
 public class GroupSearchResultsFragment extends Fragment {
@@ -46,6 +47,8 @@ public class GroupSearchResultsFragment extends Fragment {
 
 	public interface SearchResultsListener {
 		void sendJoinRequest(PublicGroupModel groupModel);
+		void returnToSearchStart();
+		void exitUp();
 	}
 
 	@Override
@@ -79,6 +82,15 @@ public class GroupSearchResultsFragment extends Fragment {
 		setUpSubjectResultsDisplay();
 		setUpTextsAndSeparator();
 		return viewToReturn;
+	}
+
+	public void refreshResultsList() {
+		if (byNameAdapter != null) {
+			byNameAdapter.resetResults(GroupSearchService.getInstance().foundByGroupName);
+		}
+		if (bySubjectAdapter != null) {
+			bySubjectAdapter.resetResults(GroupSearchService.getInstance().foundByTaskName);
+		}
 	}
 
 	private void setUpNameResultsDisplay() {
@@ -150,5 +162,14 @@ public class GroupSearchResultsFragment extends Fragment {
 		}).show(getFragmentManager(), "dialog");
 	}
 
+	@OnClick(R.id.fgroup_btn_exit)
+	public void exitToHome() {
+		listener.exitUp();
+	}
+
+	@OnClick(R.id.fgroup_btn_search)
+	public void searchAgain() {
+		listener.returnToSearchStart();
+	}
 
 }

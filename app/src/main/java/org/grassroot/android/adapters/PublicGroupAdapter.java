@@ -12,6 +12,7 @@ import org.grassroot.android.R;
 import org.grassroot.android.models.PublicGroupModel;
 
 
+import java.util.ArrayList;
 import java.util.List;
 
 import butterknife.BindView;
@@ -21,7 +22,7 @@ import butterknife.ButterKnife;
  */
 public class PublicGroupAdapter extends RecyclerView.Adapter<PublicGroupAdapter.PublicGroupViewHolder> {
 
-    private final List<PublicGroupModel> data;
+    private List<PublicGroupModel> data;
     LayoutInflater inflater;
 
     public PublicGroupAdapter(Context context, List<PublicGroupModel> joinrequestList) {
@@ -32,6 +33,11 @@ public class PublicGroupAdapter extends RecyclerView.Adapter<PublicGroupAdapter.
     public void addResults(List<PublicGroupModel> groups) {
         this.data.addAll(groups);
         this.notifyItemRangeInserted(0, groups.size() - 1);
+    }
+
+    public void resetResults(List<PublicGroupModel> groups) {
+        this.data = (groups != null) ? groups : new ArrayList<PublicGroupModel>();
+        notifyDataSetChanged();
     }
 
     @Override
@@ -70,16 +76,6 @@ public class PublicGroupAdapter extends RecyclerView.Adapter<PublicGroupAdapter.
             throw new UnsupportedOperationException("Error! Asked for public group not in search results");
         } else {
             return data.get(position);
-        }
-    }
-
-    public void clearApplications() {
-        int size = this.data.size();
-        if (size > 0) {
-            for (int i = 0; i < size; i++) {
-                data.remove(0);
-            }
-            this.notifyItemRangeRemoved(0, size);
         }
     }
 
