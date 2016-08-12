@@ -35,10 +35,10 @@ import org.grassroot.android.interfaces.GroupPickCallbacks;
 import org.grassroot.android.interfaces.NavigationConstants;
 import org.grassroot.android.interfaces.TaskConstants;
 import org.grassroot.android.models.Group;
+import org.grassroot.android.services.SharingService;
 import org.grassroot.android.utils.Constant;
 import org.grassroot.android.utils.NetworkUtils;
 import org.grassroot.android.utils.PermissionUtils;
-import org.grassroot.android.utils.ShareUtils;
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 
@@ -92,7 +92,9 @@ public class HomeScreenActivity extends PortraitActivity implements NavigationDr
                 switchToGroupFragment();
                 break;
         }
-        ShareUtils.findClients(this);
+        Intent i = new Intent(this, SharingService.class);
+        i.putExtra(SharingService.ACTION_TYPE,SharingService.SEARCH_TYPE);
+        startService(i);
     }
 
     private void setUpToolbar() {

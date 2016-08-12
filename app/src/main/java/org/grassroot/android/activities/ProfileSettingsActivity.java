@@ -23,11 +23,9 @@ import org.grassroot.android.interfaces.ClickListener;
 import org.grassroot.android.models.GenericResponse;
 import org.grassroot.android.models.PreferenceObject;
 import org.grassroot.android.models.ProfileResponse;
-import org.grassroot.android.models.RealmString;
 import org.grassroot.android.models.ShareModel;
 import org.grassroot.android.services.GrassrootRestService;
 import org.grassroot.android.utils.RealmUtils;
-import org.grassroot.android.utils.ShareUtils;
 
 import java.util.ArrayList;
 import java.util.List;

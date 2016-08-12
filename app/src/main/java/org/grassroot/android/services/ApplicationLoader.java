@@ -3,13 +3,7 @@ package org.grassroot.android.services;
 import android.app.Application;
 import android.content.Context;
 import android.content.Intent;
-import android.content.pm.PackageInfo;
-import android.content.pm.PackageManager;
-import android.support.v4.content.LocalBroadcastManager;
 
-import com.google.android.gms.gcm.GcmNetworkManager;
-import com.google.android.gms.gcm.PeriodicTask;
-import com.google.android.gms.gcm.Task;
 import com.jakewharton.picasso.OkHttp3Downloader;
 import com.squareup.picasso.Picasso;
 import io.realm.Realm;
@@ -20,9 +14,7 @@ import okhttp3.Interceptor;
 import okhttp3.OkHttpClient;
 import okhttp3.Response;
 import org.grassroot.android.BuildConfig;
-import org.grassroot.android.models.PreferenceObject;
 import org.grassroot.android.receivers.TaskManagerReceiver;
-import org.grassroot.android.utils.ShareUtils;
 
 /**
  * Created by luke on 2016/06/17.

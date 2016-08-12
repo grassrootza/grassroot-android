@@ -246,6 +246,7 @@ private void generateShareIntent(String packageName){
     Intent i = new Intent(getActivity(), SharingService.class);
     i.putExtra(SharingService.TASK_TAG, task);
     i.putExtra(SharingService.APP_SHARE_TAG, packageName);
+    i.putExtra(SharingService.ACTION_TYPE,SharingService.SHARE_TYPE);
     getActivity().startService(i);
 }
     private void retrieveTaskDetails() {

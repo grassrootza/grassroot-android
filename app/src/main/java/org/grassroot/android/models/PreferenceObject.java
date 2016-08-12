@@ -56,7 +56,7 @@ public class PreferenceObject extends RealmObject {
     this.hasSelectedDefaultPackage = hasSelectedDefaultPackage;
   }
 
-  private RealmList<ShareModel> appsToShare;
+  private RealmList<ShareModel> appsToShare = new RealmList<>();
 
   public RealmList<ShareModel> getAppsToShare() {
     return appsToShare;
