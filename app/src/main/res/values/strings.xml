@@ -666,7 +666,10 @@
     <string name="fq_txt_toolbar">FAQs</string>
     <string name="gp_dlg_cnfrm">Are you sure you want to remove group picture?</string>
     <string name="group_settings">Group settings</string>
-    <string name="share">Share</string>
+    <string name="share_other">Share with other</string>
+    <string name="share_fb">Share with Facebook</string>
+    <string name="share_wapp">Share with WhatsApp</string>
+    <string name="default_share">Default app to share</string>
 
 
     <string-array name="fq_Header">
@@ -715,6 +718,9 @@
         <item>Notify on all events</item>
         <item>Notify on just new events</item>
         <item>Notify on new  events and changes to groups</item>
+    </string-array>
+    <!--Sharing apps-->
+    <string-array name="SharingApps">
     </string-array>
 
 </resources>

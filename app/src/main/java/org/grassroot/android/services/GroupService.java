@@ -164,7 +164,6 @@ public class GroupService {
     preferenceObject.setLastTimeGroupsFetched(Utilities.getCurrentTimeInMillisAtUTC());
     RealmUtils.saveDataToRealm(preferenceObject).subscribe(new Subscriber() {
       @Override public void onCompleted() {
-        System.out.println("saved preference");
       }
 
       @Override public void onError(Throwable e) {

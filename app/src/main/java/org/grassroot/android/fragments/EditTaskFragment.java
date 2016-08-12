@@ -389,7 +389,6 @@ public class EditTaskFragment extends Fragment implements DatePickerDialog.OnDat
         RealmUtils.saveDataToRealm(model).subscribe(new Action1() {
             @Override public void call(Object o) {
                 EventBus.getDefault().post(new TaskUpdatedEvent(model));
-                System.out.println("Updated task");
                 getActivity().finish();
             }
         });

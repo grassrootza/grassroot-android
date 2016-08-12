@@ -17,13 +17,14 @@ public class RadioSelectDialogFragment extends DialogFragment {
 
     private RadioChoiceListener listener;
 
-    public static RadioSelectDialogFragment newInstance(int message, int optionArrayReference,
+    public static RadioSelectDialogFragment newInstance(int message, int optionArrayReference, String[] optionArray,
                                                         int defaultPosition, RadioChoiceListener listener) {
         RadioSelectDialogFragment frag = new RadioSelectDialogFragment();
         Bundle args = new Bundle();
         args.putInt("message", message);
         args.putInt("options", optionArrayReference);
         args.putInt("default_position", defaultPosition);
+        args.putStringArray("options_array",optionArray);
         frag.setArguments(args);
         frag.setListener(listener);
         return frag;
@@ -39,15 +40,27 @@ public class RadioSelectDialogFragment extends DialogFragment {
         int message = getArguments().getInt("message");
         int options = getArguments().getInt("options");
         int default_pos = getArguments().getInt("default_position");
+        String[] optionsArray = getArguments().getStringArray("options_array");
 
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
         builder.setTitle(message);
-        builder.setSingleChoiceItems(options, default_pos, new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialogInterface, int i) {
-                listener.radioButtonPicked(i, getTag());
-            }
-        });
+        if(optionsArray!=null) {
+            builder.setSingleChoiceItems(optionsArray, default_pos, new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialogInterface, int i) {
+                    listener.radioButtonPicked(i, getTag());
+                    dialogInterface.dismiss();
+                }
+            });
+        }else{
+            builder.setSingleChoiceItems(options, default_pos, new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialogInterface, int i) {
+                    listener.radioButtonPicked(i, getTag());
+                    dialogInterface.dismiss();
+                }
+            });
+        }
 
         return builder.create();
     }

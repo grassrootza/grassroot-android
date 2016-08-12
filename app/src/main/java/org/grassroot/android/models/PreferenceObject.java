@@ -4,6 +4,7 @@ import android.text.TextUtils;
 
 import org.grassroot.android.utils.NetworkUtils;
 
+import io.realm.RealmList;
 import io.realm.RealmObject;
 import io.realm.annotations.PrimaryKey;
 
@@ -41,6 +42,53 @@ public class PreferenceObject extends RealmObject {
   private String alert;
   private String languagePreference;
   private int notificationCounter;
+
+  private boolean hasFbInstalled;
+  private boolean hasWappInstalled;
+  private String defaultSharePackage;
+  private boolean hasSelectedDefaultPackage;
+
+  public boolean isHasSelectedDefaultPackage() {
+    return hasSelectedDefaultPackage;
+  }
+
+  public void setHasSelectedDefaultPackage(boolean hasSelectedDefaultPackage) {
+    this.hasSelectedDefaultPackage = hasSelectedDefaultPackage;
+  }
+
+  private RealmList<ShareModel> appsToShare = new RealmList<>();
+
+  public RealmList<ShareModel> getAppsToShare() {
+    return appsToShare;
+  }
+
+  public void setAppsToShare(RealmList<ShareModel> appsToShare) {
+    this.appsToShare = appsToShare;
+  }
+
+  public String getDefaultSharePackage() {
+    return defaultSharePackage;
+  }
+
+  public void setDefaultSharePackage(String defaultSharePackage) {
+    this.defaultSharePackage = defaultSharePackage;
+  }
+
+  public boolean isHasFbInstalled() {
+    return hasFbInstalled;
+  }
+
+  public void setHasFbInstalled(boolean hasFbInstalled) {
+    this.hasFbInstalled = hasFbInstalled;
+  }
+
+  public boolean isHasWappInstalled() {
+    return hasWappInstalled;
+  }
+
+  public void setHasWappInstalled(boolean hasWappInstalled) {
+    this.hasWappInstalled = hasWappInstalled;
+  }
 
   public boolean isLoggedIn() {
     return isLoggedIn;
