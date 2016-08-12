@@ -209,6 +209,40 @@
     <string name="gm_remove_members">REMOVE MEMBERS</string>
 
     <!--Group search and join -->
+    <string name="find_group_title">Find groups</string>
+    <string name="find_group_results_title">Results</string>
+    <string name="find_group_name_only">Search by group name only</string>
+    <string name="find_group_name_subject">Search by group name and actions</string>
+    <string name="find_group_geography_toggle">Find groups near me only</string>
+    <string name="find_group_no_term">Please enter a group name or subject to search</string>
+    <string name="find_group_til_error">Please enter term</string>
+
+    <string name="fgroup_five">5km</string>
+    <string name="fgroup_ten">10km</string>
+    <string name="fgroup_fifty">50km</string>
+    <string name="fgroup_100">100km</string>
+
+    <string name="find_group_none_found">Sorry, we didn\'t find any groups that match that term. Please
+    enter another search word, or enter a group join code.</string>
+    <string name="find_group_connect_error">Sorry, we couldn\'t go online to search. Please check your
+    connection and try again, or try later</string>
+    <string name="find_group_connect_negative">Try again</string>
+    <string name="find_group_connect_positive">Home</string>
+
+    <string name="find_group_byname_header">Groups with names matching your search (click to send join request):</string>
+    <string name="find_group_subject_header_long">Groups that have dealt with your search term (click to send join request):</string>
+    <string name="find_group_subject_header_short">Groups that have dealt with your search term:</string>
+
+    <string name="find_group_change_search">Change search</string>
+    <string name="find_group_search_again">Search again</string>
+
+    <string name="fgroup_jreq_sent_title_online">Sent!</string>
+    <string name="fgroup_jreq_sent_body_online">We\'ve sent your request to join %s to the organizer.
+    You\'ll be notified when they respond.</string>
+    <string name="fgroup_jreq_sent_title_offline">Saved</string>
+    <string name="fgroup_jreq_sent_body_offline">We couldn\'t connect, but we have saved the request
+    and will send it to %s when you are online again.</string>
+
     <string name="search">Search</string>
     <string name="search_box">Enter group name</string>
     <string name="gs_describe_activity">Please enter the name or part of a name to search for groups.
@@ -227,9 +261,9 @@
     <string name="gs_dialog_send">SEND</string>
     <string name="gs_dialog_cancel">CANCEL</string>
 
-    <string name="Title_Join_Request_Sent">Join request sent!</string>
-    <string name="none">NONE</string>
+        <string name="none">NONE</string>
 
+    <!-- SECTION: Viewing and responding to join requests -->
     <string name="jreq_notice">You have requests to join one of your groups</string>
     <string name="jreq_notice_button">View</string>
 

@@ -29,6 +29,7 @@
     <dimen name="fab_margin">16dp</dimen>
     <dimen name="fab_elevation">6dp</dimen>
     <dimen name="fab_label_corner">5dp</dimen>
+    <dimen name="toolbar_elevation">4dp</dimen>
 
     <dimen name="flat_button_width">88dp</dimen>
     <dimen name="flat_button_height">36dp</dimen>

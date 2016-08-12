@@ -43,7 +43,7 @@ public class GiantMessageFragment extends Fragment {
 	private View.OnClickListener btnTwoListener;
 
 	public static GiantMessageFragment newInstance(final int headerString, final String bodyText,
-																								 boolean btnOneVisible, boolean btnTwoVisible) {
+												   boolean btnOneVisible, boolean btnTwoVisible) {
 		GiantMessageFragment fragment = new GiantMessageFragment();
 		fragment.headerRes = headerString;
 		fragment.bodyText = bodyText;

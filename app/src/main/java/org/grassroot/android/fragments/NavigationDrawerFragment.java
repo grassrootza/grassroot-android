@@ -21,7 +21,6 @@ import org.grassroot.android.activities.FAQActivity;
 import org.grassroot.android.activities.ProfileSettingsActivity;
 import org.grassroot.android.activities.StartActivity;
 import org.grassroot.android.adapters.NavigationDrawerAdapter;
-import org.grassroot.android.events.ConnectionFailedEvent;
 import org.grassroot.android.events.GroupCreatedEvent;
 import org.grassroot.android.events.GroupsRefreshedEvent;
 import org.grassroot.android.events.NetworkFailureEvent;
@@ -35,10 +34,10 @@ import org.grassroot.android.events.UserLoggedOutEvent;
 import org.grassroot.android.fragments.dialogs.ConfirmCancelDialogFragment;
 import org.grassroot.android.interfaces.NavigationConstants;
 import org.grassroot.android.interfaces.NotificationConstants;
-import org.grassroot.android.models.exceptions.ApiCallException;
 import org.grassroot.android.models.Group;
 import org.grassroot.android.models.GroupJoinRequest;
 import org.grassroot.android.models.NavDrawerItem;
+import org.grassroot.android.models.exceptions.ApiCallException;
 import org.grassroot.android.services.GcmRegistrationService;
 import org.grassroot.android.utils.Constant;
 import org.grassroot.android.utils.NetworkUtils;
@@ -395,11 +394,6 @@ public class NavigationDrawerFragment extends Fragment implements NavigationDraw
             tasks.setItemCount(RealmUtils.loadUpcomingTasksFromDB().size());
             primaryAdapter.notifyItemChanged(NavigationConstants.HOME_NAV_TASKS);
         }
-    }
-
-    @Subscribe
-    public void onEvent(ConnectionFailedEvent e) {
-        setupOnlineSwitch();
     }
 
     @Subscribe

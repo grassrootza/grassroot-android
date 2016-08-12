@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:orientation="vertical"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent"
+              android:background="@color/light_background">
+
+    <TextView
+        android:id="@+id/fgroup_byname_header"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:padding="@dimen/padding"
+        android:text="@string/find_group_byname_header"
+        android:textColor="@color/dark_grey_text"
+        android:textSize="@dimen/txt_medium"/>
+
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/find_group_results_display"
+        android:layout_width="match_parent"
+        android:paddingLeft="@dimen/padding"
+        android:paddingRight="@dimen/padding"
+        android:layout_height="0dp"
+        android:layout_weight="1.0" />
+    
+    <View
+        android:id="@+id/fgroup_divider"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/grey_divider" />
+
+    <TextView
+        android:id="@+id/fgroup_bysubject_header"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:padding="@dimen/padding"
+        android:text="@string/find_group_subject_header_short"
+        android:textColor="@color/dark_grey_text"
+        android:textSize="@dimen/txt_medium"/>
+
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/find_group_subject_display"
+        android:layout_width="match_parent"
+        android:paddingLeft="@dimen/padding"
+        android:paddingRight="@dimen/padding"
+        android:layout_height="0dp"
+        android:layout_weight="1.0" />
+
+    <Button
+        style="@style/LargeButtonGreen.Wide"
+        android:id="@+id/fgroup_btn_search"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/margin_large"
+        android:layout_marginBottom="@dimen/margin_large"
+        android:textAllCaps="true"
+        android:text="@string/find_group_change_search" />
+
+    <Button
+        style="@style/LargeButtonGreen.Wide"
+        android:id="@+id/fgroup_btn_exit"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="@dimen/margin_xlarge"
+        android:textAllCaps="true"
+        android:text="Exit"/>
+
+</LinearLayout>

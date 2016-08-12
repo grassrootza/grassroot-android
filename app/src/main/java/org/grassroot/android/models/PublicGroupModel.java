@@ -1,56 +1,92 @@
 package org.grassroot.android.models;
 
+import android.support.annotation.NonNull;
+
+import java.util.UUID;
+
 import io.realm.RealmObject;
+import io.realm.annotations.PrimaryKey;
 
 /**
  * Created by paballo on 2016/05/05.
  */
-public class PublicGroupModel extends RealmObject{
+public class PublicGroupModel extends RealmObject {
 
-        private String id;
-        private String groupName;
-        private String description;
-        private String groupCreator;
-        private Integer count;
+    @NonNull
+    @PrimaryKey
+    private String id;
 
-        public String getId() {
-            return id;
-        }
+    private String groupName;
+    private String description;
+    private String groupCreator;
+    private Integer count;
+    private boolean isJoinReqLocal;
 
-        public void setId(String id) {
-            this.id = id;
-        }
+    public PublicGroupModel() {
+        id = UUID.randomUUID().toString(); // to enforce non-null behaviour, but this should be sent from server
+    }
 
-        public String getGroupName() {
-            return groupName;
-        }
+    @NonNull public String getId() {
+        return id;
+    }
 
-        public void setGroupName(String groupName) {
-            this.groupName = groupName;
-        }
+    public void setId(@NonNull String id) {
+        this.id = id;
+    }
 
-        public String getDescription() {
-            return description;
-        }
+    public String getGroupName() {
+        return groupName;
+    }
 
-        public void setDescription(String description) {
-            this.description = description;
-        }
+    public void setGroupName(String groupName) {
+        this.groupName = groupName;
+    }
 
-        public String getGroupCreator() {
-            return groupCreator;
-        }
+    public String getDescription() {
+        return description;
+    }
 
-        public void setGroupCreator(String groupCreator) {
-            this.groupCreator = groupCreator;
-        }
+    public void setDescription(String description) {
+        this.description = description;
+    }
 
-        public Integer getCount() {
-            return count;
-        }
+    public String getGroupCreator() {
+        return groupCreator;
+    }
 
-        public void setCount(Integer count) {
-            this.count = count;
-        }
+    public void setGroupCreator(String groupCreator) {
+        this.groupCreator = groupCreator;
+    }
 
+    public Integer getCount() {
+        return count;
+    }
+
+    public void setCount(Integer count) {
+        this.count = count;
+    }
+
+    public boolean isJoinReqLocal() {
+        return isJoinReqLocal;
+    }
+
+    public void setJoinReqLocal(boolean joinReqLocal) {
+        isJoinReqLocal = joinReqLocal;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        PublicGroupModel that = (PublicGroupModel) o;
+
+        return id.equals(that.id);
+
+    }
+
+    @Override
+    public int hashCode() {
+        return id.hashCode();
+    }
 }
