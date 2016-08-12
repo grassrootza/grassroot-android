@@ -222,7 +222,18 @@
     <string name="fgroup_fifty">50km</string>
     <string name="fgroup_100">100km</string>
 
+    <string name="find_group_byname_header">Groups with names matching your search (click to send join request):</string>
+    <string name="find_group_subject_header_long">Groups that have dealt with your search term (click to send join request):</string>
+    <string name="find_group_subject_header_short">Groups that have dealt with your search term:</string>
+
     <string name="find_group_change_search">Change search</string>
+
+    <string name="fgroup_jreq_sent_title_online">Sent!</string>
+    <string name="fgroup_jreq_sent_body_online">We\'ve sent your request to join %s to the organizer.
+    You\'ll be notified when they respond.</string>
+    <string name="fgroup_jreq_sent_title_offline">Saved</string>
+    <string name="fgroup_jreq_sent_body_offline">We couldn\'t connect, but we have saved the request
+    and will send it to %s when you are online again.</string>
 
     <string name="search">Search</string>
     <string name="search_box">Enter group name</string>
@@ -245,6 +256,7 @@
     <string name="Title_Join_Request_Sent">Join request sent!</string>
     <string name="none">NONE</string>
 
+    <!-- SECTION: Viewing and responding to join requests -->
     <string name="jreq_notice">You have requests to join one of your groups</string>
     <string name="jreq_notice_button">View</string>
 
