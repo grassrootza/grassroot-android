@@ -91,7 +91,6 @@ public class GroupListAdapter extends RecyclerView.Adapter<GroupListAdapter.GHP_
                 displayedGroups.clear();
                 displayedGroups.addAll(groups);
                 notifyDataSetChanged();
-                System.out.println("loaded groups " + groups.size());
             }
         });
     }
