@@ -20,6 +20,9 @@ public class PublicGroupModel extends RealmObject {
     private String description;
     private String groupCreator;
     private Integer count;
+
+    private boolean termInName;
+    private boolean hasOpenRequest;
     private boolean isJoinReqLocal;
 
     public PublicGroupModel() {
@@ -72,6 +75,22 @@ public class PublicGroupModel extends RealmObject {
 
     public void setJoinReqLocal(boolean joinReqLocal) {
         isJoinReqLocal = joinReqLocal;
+    }
+
+    public boolean isTermInName() {
+        return termInName;
+    }
+
+    public void setTermInName(boolean termInName) {
+        this.termInName = termInName;
+    }
+
+    public boolean isHasOpenRequest() {
+        return hasOpenRequest;
+    }
+
+    public void setHasOpenRequest(boolean hasOpenRequest) {
+        this.hasOpenRequest = hasOpenRequest;
     }
 
     @Override

@@ -7,6 +7,11 @@ public interface NavigationConstants {
 
     String HOME_OPEN_ON_NAV = "nav_index";
 
+    public static final String ITEM_SHOW_GROUPS = "show_groups";
+    public static final String ITEM_TASKS = "upcoming_tasks";
+    public static final String ITEM_NOTIFICATIONS = "notifications";
+    public static final String ITEM_JOIN_REQS = "join_requests";
+
     // note : the ints correspond to 0-indexed place in nav drawer, i.e., change values if change order
     int HOME_NAV_GROUPS = 0;
     int HOME_NAV_TASKS = 1;

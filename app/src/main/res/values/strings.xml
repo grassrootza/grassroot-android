@@ -223,7 +223,11 @@
     <string name="fgroup_100">100km</string>
 
     <string name="find_group_none_found">Sorry, we didn\'t find any groups that match that term. Please
-    enter another search word, or enter a group join code.</string>
+    enter another search word, or enter a group join code</string>
+    <string name="find_group_none_location_on">Sorry, we didn\'t find any groups. Try switching off
+    \'find near me\' and try again</string>
+    <string name="find_group_none_name_only">Sorry, we didn\'t find any groups. Try searching by
+    name and actions</string>
     <string name="find_group_connect_error">Sorry, we couldn\'t go online to search. Please check your
     connection and try again, or try later</string>
     <string name="find_group_connect_negative">Try again</string>
@@ -232,6 +236,7 @@
     <string name="find_group_byname_header">Groups with names matching your search (click to send join request):</string>
     <string name="find_group_subject_header_long">Groups that have dealt with your search term (click to send join request):</string>
     <string name="find_group_subject_header_short">Groups that have dealt with your search term:</string>
+    <string name="find_group_header_default">Other groups</string>
 
     <string name="find_group_change_search">Change search</string>
     <string name="find_group_search_again">Search again</string>
@@ -245,11 +250,6 @@
 
     <string name="search">Search</string>
     <string name="search_box">Enter group name</string>
-    <string name="gs_describe_activity">Please enter the name or part of a name to search for groups.
-    Only groups that are set to public will be found. To join private groups, ask the organizer for
-    the join code and enter it in the search box.</string>
-    <string name="gs_none_found_text">Sorry, we didn\'t find any groups that match that term. Please
-    enter another search word, or a group join code.</string>
     <string name="validate_search_box">Please enter a search word to find public groups</string>
 
     <string name="pgroup_name_format">Name: %s</string>
@@ -261,7 +261,18 @@
     <string name="gs_dialog_send">SEND</string>
     <string name="gs_dialog_cancel">CANCEL</string>
 
-        <string name="none">NONE</string>
+    <string name="gs_req_open_dialog">You\'ve sent a join request to this group already. The group organizer
+    has not responded yet. Remind them, or cancel the request?</string>
+
+    <string name="gs_req_open_cancel">Cancel request</string>
+    <string name="gs_req_open_remind">Remind group</string>
+
+    <string name="gs_req_cancelled">Done, the request is cancelled</string>
+    <string name="gs_req_remind">Done, we\'ve sent a reminder</string>
+    <string name="gs_req_remind_cancelled_connect_error">Sorry, you\'re connection isn\'t working. Please
+    try again later</string>
+
+    <string name="none">NONE</string>
 
     <!-- SECTION: Viewing and responding to join requests -->
     <string name="jreq_notice">You have requests to join one of your groups</string>

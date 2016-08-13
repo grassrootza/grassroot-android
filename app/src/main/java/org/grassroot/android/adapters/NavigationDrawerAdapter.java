@@ -34,7 +34,6 @@ public class NavigationDrawerAdapter extends RecyclerView.Adapter<NavigationDraw
 
     private final boolean showCounters;
     private final boolean showSelected;
-    private int selectedItem;
 
     final int textSelectedColor;
     final int rowSelectedBgColor;
@@ -47,7 +46,6 @@ public class NavigationDrawerAdapter extends RecyclerView.Adapter<NavigationDraw
         this.listener = listener;
         this.showCounters = showCounters;
         this.showSelected = showSelected;
-        this.selectedItem = 0;
 
         textSelectedColor = ContextCompat.getColor(context, R.color.primaryColor);
         rowSelectedBgColor = ContextCompat.getColor(context, R.color.text_beige);
@@ -90,20 +88,9 @@ public class NavigationDrawerAdapter extends RecyclerView.Adapter<NavigationDraw
         holder.rlDrawerRow.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                switchSelectionToPosition(holder);
                 listener.onItemClicked(drawerItem.getTag());
             }
         });
-    }
-
-    private void switchSelectionToPosition(MyViewHolder holder) {
-        if (showSelected) {
-            final int position = holder.getAdapterPosition();
-            data.get(selectedItem).setIsChecked(false);
-            data.get(position).setIsChecked(true);
-            selectedItem = position;
-            notifyDataSetChanged();
-        }
     }
 
     @Override
@@ -127,6 +114,4 @@ public class NavigationDrawerAdapter extends RecyclerView.Adapter<NavigationDraw
             txtTitleCounter = (TextView) itemView.findViewById(R.id.txt_title_counter);
         }
     }
-
-
 }

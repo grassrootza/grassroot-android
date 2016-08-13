@@ -2,9 +2,9 @@ package org.grassroot.android.activities;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.os.SystemClock;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
+import android.support.v4.view.GravityCompat;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
@@ -72,26 +72,25 @@ public class HomeScreenActivity extends PortraitActivity implements NavigationDr
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        Log.d(TAG, "homeScreenActivity .... timer ... " + SystemClock.currentThreadTimeMillis());
         setContentView(R.layout.activity_home_screen);
         ButterKnife.bind(this);
         EventBus.getDefault().register(this);
         setUpToolbar();
 
         int openOn = getIntent().getIntExtra(NavigationConstants.HOME_OPEN_ON_NAV, NavigationConstants.HOME_NAV_GROUPS);
-        Log.d(TAG, "in onCreate, intent extra for open on : " + openOn);
         switch (openOn) {
             case NavigationConstants.HOME_NAV_GROUPS:
                 switchToGroupFragment();
                 break;
             case NavigationConstants.HOME_NAV_TASKS:
                 switchToTasksFragment();
-                setNavBarToItem(NavigationDrawerFragment.ITEM_TASKS);
+                setNavBarToItem(NavigationConstants.ITEM_TASKS);
                 break;
             default:
                 switchToGroupFragment();
                 break;
         }
+
         Intent i = new Intent(this, SharingService.class);
         i.putExtra(SharingService.ACTION_TYPE,SharingService.SEARCH_TYPE);
         startService(i);
@@ -110,19 +109,17 @@ public class HomeScreenActivity extends PortraitActivity implements NavigationDr
 
     @Override
     public void onNewIntent(Intent intent) {
-        Log.d(TAG, "on new intent called ... timer ... " + SystemClock.currentThreadTimeMillis());
         mainFragmentFromNewIntent = intent.getIntExtra(NavigationConstants.HOME_OPEN_ON_NAV, -1);
     }
 
     @Override
     public void onResume() {
         super.onResume();
-        Log.d(TAG, "homeScreenActivity .... onResume ... timer ... " + SystemClock.currentThreadTimeMillis());
         if (mainFragmentFromNewIntent != -1 && mainFragmentFromNewIntent != currentMainFragment) {
             switch(mainFragmentFromNewIntent) {
                 case NavigationConstants.HOME_NAV_TASKS:
                     switchToTasksFragment();
-                    setNavBarToItem(NavigationDrawerFragment.ITEM_TASKS);
+                    setNavBarToItem(NavigationConstants.ITEM_TASKS);
                     break;
                 default:
                     // expand this if necessary so any other fragment / activity can do similar
@@ -184,6 +181,16 @@ public class HomeScreenActivity extends PortraitActivity implements NavigationDr
         super.onDestroy();
     }
 
+    @Override
+    public void onBackPressed() {
+        if (drawer.isDrawerOpen(GravityCompat.START)) {
+            drawer.closeDrawer(GravityCompat.START);
+        } else {
+            super.onBackPressed();
+            setTitleAndNavDrawerSelection(getCurrentFragmentTag(), true);
+        }
+    }
+
     private void setNavBarToItem(String tag) {
         NavigationDrawerFragment navDrawer = (NavigationDrawerFragment) getSupportFragmentManager().findFragmentById(R.id.navigation_drawer);
         if (navDrawer != null) {
@@ -198,16 +205,16 @@ public class HomeScreenActivity extends PortraitActivity implements NavigationDr
         }
 
         switch (tag) {
-            case NavigationDrawerFragment.ITEM_SHOW_GROUPS:
+            case NavigationConstants.ITEM_SHOW_GROUPS:
                 switchToGroupFragment();
                 break;
-            case NavigationDrawerFragment.ITEM_TASKS:
+            case NavigationConstants.ITEM_TASKS:
                 switchToTasksFragment();
                 break;
-            case NavigationDrawerFragment.ITEM_NOTIFICATIONS:
+            case NavigationConstants.ITEM_NOTIFICATIONS:
                 switchToNotificationFragment();
                 break;
-            case NavigationDrawerFragment.ITEM_JOIN_REQS:
+            case NavigationConstants.ITEM_JOIN_REQS:
                 switchToJoinRequestsFragment();
                 break;
             default:
@@ -215,78 +222,99 @@ public class HomeScreenActivity extends PortraitActivity implements NavigationDr
         }
     }
 
-    // todo : fix lifecycle management so it doesn't call this all the time
     private void switchToGroupFragment() {
-        Log.d(TAG, "switching to group fragment");
-        setTitle(R.string.ghp_toolbar_title);
+        setTitleAndNavDrawerSelection(NavigationConstants.ITEM_SHOW_GROUPS, false);
+
         if (groupListFragment == null) {
-            Log.e(TAG, "group list fragment is null ..");
             groupListFragment = new HomeGroupListFragment();
         }
-        showOrReplaceFragment(groupListFragment);
+        showOrReplaceFragment(groupListFragment, NavigationConstants.ITEM_SHOW_GROUPS);
         currentMainFragment = NavigationConstants.HOME_NAV_GROUPS;
         invalidateOptionsMenu();
     }
 
     private void switchToTasksFragment() {
-        setTitle(R.string.tasks_toolbar_title);
+        setTitleAndNavDrawerSelection(NavigationConstants.ITEM_TASKS, false);
 
         if (taskListFragment == null) {
             taskListFragment = TaskListFragment.newInstance(null, this, this, true);
         }
-        showOrReplaceFragment(taskListFragment);
+        showOrReplaceFragment(taskListFragment, NavigationConstants.ITEM_TASKS);
         currentMainFragment = NavigationConstants.HOME_NAV_TASKS;
         invalidateOptionsMenu();
     }
 
     private void switchToNotificationFragment() {
-        setTitle(R.string.drawer_notis);
+        setTitleAndNavDrawerSelection(NavigationConstants.ITEM_NOTIFICATIONS, false);
         if (notificationCenterFragment == null) {
             notificationCenterFragment = new NotificationCenterFragment();
         }
-        showOrReplaceFragment(notificationCenterFragment);
+        showOrReplaceFragment(notificationCenterFragment, NavigationConstants.ITEM_NOTIFICATIONS);
         currentMainFragment = NavigationConstants.HOME_NAV_NOTIFICATIONS;
         invalidateOptionsMenu();
     }
 
     private void switchToJoinRequestsFragment() {
-        setTitle(R.string.jreq_frag_title);
+        setTitleAndNavDrawerSelection(NavigationConstants.ITEM_JOIN_REQS, false);
         if (joinRequestsFragment == null) {
             joinRequestsFragment = new JoinRequestsFragment();
         }
-        showOrReplaceFragment(joinRequestsFragment);
+        showOrReplaceFragment(joinRequestsFragment, NavigationConstants.ITEM_JOIN_REQS);
         currentMainFragment = NavigationConstants.HOME_NAV_JOIN_REQUESTS;
         invalidateOptionsMenu();
     }
 
-    private void showOrReplaceFragment(Fragment fragment) {
+    private void showOrReplaceFragment(Fragment fragment, String backStackTag) {
         if (fragment == null) {
             throw new UnsupportedOperationException("Error! Null fragment passed to swap");
         }
 
-        Fragment currentMain = getSupportFragmentManager().findFragmentByTag("CURRENT_MAIN");
+        Fragment currentMain = getSupportFragmentManager().findFragmentById(R.id.home_fragment_container);
         FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
 
         if (currentMain != null && currentMain != groupListFragment) {
-            Log.d(TAG, "removing fragment, name : " + currentMain.toString());
             transaction.remove(currentMain);
         }
 
         if (fragment.isAdded()) {
-            Log.d(TAG, "fragment is already added : " + fragment.toString());
             transaction.show(fragment);
         } else {
-            Log.d(TAG, "fragment is not considered added ... " + fragment.toString());
-            transaction.add(R.id.home_fragment_container, fragment, "CURRENT_MAIN");
+            transaction.add(R.id.home_fragment_container, fragment, backStackTag);
         }
 
         if (!isFirstFragmentSwap) {
-            transaction.addToBackStack(null);
+            transaction.addToBackStack(backStackTag);
         } else {
             isFirstFragmentSwap = false;
         }
 
         transaction.commit();
+    }
+
+    private String getCurrentFragmentTag() {
+        Fragment fragment = getSupportFragmentManager().findFragmentById(R.id.home_fragment_container);
+        return (fragment != null) ? fragment.getTag() : NavigationConstants.ITEM_SHOW_GROUPS; // default fall back ... maybe use "home"?
+    }
+
+    private void setTitleAndNavDrawerSelection(String currentNavTag, boolean changeNavDrawerSelection) {
+        switch (currentNavTag) {
+            case NavigationConstants.ITEM_SHOW_GROUPS:
+                setTitle(R.string.ghp_toolbar_title);
+                break;
+            case NavigationConstants.ITEM_TASKS:
+                setTitle(R.string.tasks_toolbar_title);
+                break;
+            case NavigationConstants.ITEM_NOTIFICATIONS:
+                setTitle(R.string.drawer_notis);
+                break;
+            case NavigationConstants.ITEM_JOIN_REQS:
+                setTitle(R.string.jreq_frag_title);
+                break;
+        }
+
+        if (changeNavDrawerSelection) {
+            setNavBarToItem(currentNavTag); // todo : harmonize constants to avoid later fragility
+        }
     }
 
     @Override

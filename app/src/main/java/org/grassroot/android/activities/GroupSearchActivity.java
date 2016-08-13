@@ -81,6 +81,9 @@ public class GroupSearchActivity extends PortraitActivity implements GroupSearch
                         break;
                     case RESULTS:
                         getSupportFragmentManager().popBackStack();
+                        switchToolbar(SEARCH);
+                        currentFragment = startFragment;
+                        currentFragmentTag = SEARCH;
                         break;
                     case DONE:
                         if (GroupSearchService.getInstance().hasResults()) {
@@ -143,57 +146,60 @@ public class GroupSearchActivity extends PortraitActivity implements GroupSearch
     }
 
     @Override
-    public void searchTriggered(String searchOption, boolean includeTopics, boolean geoFilter, int geoRadius) {
+    public void searchTriggered(String searchOption, final boolean includeTopics, final boolean geoFilter, int geoRadius) {
         Log.e(TAG, "search for group triggered, includeTopics = " + includeTopics + ", geoFilter = "
             + geoFilter + ", geoRadius = " + geoRadius);
 
         progressDialog.show();
-        GroupSearchService.getInstance().searchForGroups(searchOption, true).subscribe(new Subscriber<String>() {
-            @Override
-            public void onNext(String s) {
-                progressDialog.dismiss();
-                if (GroupSearchService.getInstance().hasResults()) {
-                    switchToFragment(RESULTS, false, true);
-                    switchToolbar(RESULTS);
-                } else {
-                    AlertDialog.Builder builder = new AlertDialog.Builder(GroupSearchActivity.this);
-                    builder.setMessage(R.string.find_group_none_found)
-                        .setCancelable(true)
-                        .create()
-                        .show();
-                }
-            }
-
-            @Override
-            public void onError(Throwable e) {
-                progressDialog.dismiss();
-                if (e instanceof ApiCallException) {
-                    if (NetworkUtils.CONNECT_ERROR.equals(e.getMessage())) {
+        GroupSearchService.getInstance().searchForGroups(searchOption, includeTopics, geoFilter, geoRadius)
+            .subscribe(new Subscriber<String>() {
+                @Override
+                public void onNext(String s) {
+                    progressDialog.dismiss();
+                    if (GroupSearchService.getInstance().hasResults()) {
+                        switchToFragment(RESULTS, false, true);
+                        switchToolbar(RESULTS);
+                    } else {
                         AlertDialog.Builder builder = new AlertDialog.Builder(GroupSearchActivity.this);
-                        builder.setMessage(R.string.find_group_connect_error)
-                            .setPositiveButton(R.string.find_group_connect_positive, new DialogInterface.OnClickListener() {
-                                @Override
-                                public void onClick(DialogInterface dialog, int which) {
-                                    exitUp();
-                                }
-                            })
-                            .setNegativeButton(R.string.find_group_connect_negative, new DialogInterface.OnClickListener() {
-                                @Override
-                                public void onClick(DialogInterface dialog, int which) {
-                                    dialog.cancel();
-                                }
-                            });
-                        builder.create().show();
-                    } else if (NetworkUtils.SERVER_ERROR.equals(e.getMessage())) {
-                        Snackbar.make(fragmentContainer, ErrorUtils.serverErrorText(((ApiCallException) e).errorTag,
-                            GroupSearchActivity.this), Snackbar.LENGTH_SHORT).show();
+                        int message = geoFilter ? R.string.find_group_none_location_on
+                            : !includeTopics ? R.string.find_group_none_name_only : R.string.find_group_none_found;
+                        builder.setMessage(message)
+                            .setCancelable(true)
+                            .create()
+                            .show();
                     }
                 }
-            }
 
-            @Override
-            public void onCompleted() { }
-        });
+                @Override
+                public void onError(Throwable e) {
+                    progressDialog.dismiss();
+                    if (e instanceof ApiCallException) {
+                        if (NetworkUtils.CONNECT_ERROR.equals(e.getMessage())) {
+                            AlertDialog.Builder builder = new AlertDialog.Builder(GroupSearchActivity.this);
+                            builder.setMessage(R.string.find_group_connect_error)
+                                .setPositiveButton(R.string.find_group_connect_positive, new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialog, int which) {
+                                        exitToHomeScreen();
+                                    }
+                                })
+                                .setNegativeButton(R.string.find_group_connect_negative, new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialog, int which) {
+                                        dialog.cancel();
+                                    }
+                                });
+                            builder.create().show();
+                        } else if (NetworkUtils.SERVER_ERROR.equals(e.getMessage())) {
+                            Snackbar.make(fragmentContainer, ErrorUtils.serverErrorText(((ApiCallException) e).errorTag,
+                                GroupSearchActivity.this), Snackbar.LENGTH_SHORT).show();
+                        }
+                    }
+                }
+
+                @Override
+                public void onCompleted() { }
+            });
     }
 
     @Override
@@ -211,10 +217,9 @@ public class GroupSearchActivity extends PortraitActivity implements GroupSearch
                 @Override
                 public void onError(Throwable e) {
                     progressDialog.dismiss();
-                    Log.e(TAG, "send join request error thown, of type ... " + e.getMessage());
+                    Log.d(TAG, "send join request error thrown, with message ... " + e.getMessage());
                     if (e instanceof ApiCallException) {
                         if (e.getMessage().equals(NetworkUtils.CONNECT_ERROR)) {
-                            Log.e(TAG, "okay, it's a network connection error ...");
                             showDoneMessage(groupName, false);
                         } else {
                             final String errorMessage = ErrorUtils.serverErrorText(e, GroupSearchActivity.this);
@@ -229,14 +234,65 @@ public class GroupSearchActivity extends PortraitActivity implements GroupSearch
     }
 
     @Override
-    public void returnToSearchStart() {
-        switchToFragment(SEARCH, false, true);
-        switchToolbar(SEARCH);
+    public void cancelJoinRequest(PublicGroupModel groupModel) {
+        progressDialog.show(); // should really switch to just a prog bar
+        GroupSearchService.getInstance().cancelJoinRequest(groupModel, AndroidSchedulers.mainThread())
+            .subscribe(new Subscriber<String>() {
+                @Override
+                public void onNext(String s) {
+                    progressDialog.dismiss();
+                    Snackbar.make(fragmentContainer, R.string.gs_req_cancelled, Snackbar.LENGTH_SHORT).show();
+                }
+
+                @Override
+                public void onError(Throwable e) {
+                    progressDialog.dismiss();
+                    if (NetworkUtils.CONNECT_ERROR.equals(e.getMessage())) {
+                        final String errorMsg = getString(R.string.gs_req_remind_cancelled_connect_error);
+                        Snackbar.make(fragmentContainer, errorMsg, Snackbar.LENGTH_SHORT).show();
+                    } else {
+                        Snackbar.make(fragmentContainer, ErrorUtils.serverErrorText(e, GroupSearchActivity.this),
+                            Snackbar.LENGTH_LONG).show();
+                    }
+                }
+
+                @Override
+                public void onCompleted() { }
+            });
     }
 
     @Override
-    public void exitUp() {
-        exitToHomeScreen();
+    public void remindJoinRequest(PublicGroupModel groupModel) {
+        progressDialog.show();
+        GroupSearchService.getInstance().remindJoinRequest(groupModel, AndroidSchedulers.mainThread())
+            .subscribe(new Subscriber<String>() {
+                @Override
+                public void onNext(String s) {
+                    progressDialog.dismiss();
+                    Snackbar.make(fragmentContainer, R.string.gs_req_remind, Snackbar.LENGTH_SHORT).show();
+                }
+
+                @Override
+                public void onError(Throwable e) {
+                    progressDialog.dismiss();
+                    if (NetworkUtils.CONNECT_ERROR.equals(e.getMessage())) {
+                        final String errorMsg = getString(R.string.gs_req_remind_cancelled_connect_error);
+                        Snackbar.make(fragmentContainer, errorMsg, Snackbar.LENGTH_SHORT).show();
+                    } else {
+                        Snackbar.make(fragmentContainer, ErrorUtils.serverErrorText(e, GroupSearchActivity.this),
+                            Snackbar.LENGTH_LONG).show();
+                    }
+                }
+
+                @Override
+                public void onCompleted() { }
+            });
+    }
+
+    @Override
+    public void returnToSearchStart() {
+        switchToFragment(SEARCH, false, true);
+        switchToolbar(SEARCH);
     }
 
     private void showDoneMessage(final String groupName, boolean onLineSent) {

@@ -1,7 +1,5 @@
 package org.grassroot.android.services;
 
-import android.util.Log;
-
 import org.grassroot.android.models.GenericResponse;
 import org.grassroot.android.models.GroupSearchResponse;
 import org.grassroot.android.models.PublicGroupModel;
@@ -56,7 +54,16 @@ public class GroupSearchService {
 			(foundByTaskName != null && !foundByTaskName.isEmpty()));
 	}
 
-	public Observable<String> searchForGroups(final String searchTerm, boolean searchNamesAndTerms) {
+	public boolean hasNameResults() {
+		return foundByGroupName != null && !foundByGroupName.isEmpty();
+	}
+
+	public boolean hasSubjectResults() {
+		return foundByTaskName != null && !foundByTaskName.isEmpty();
+	}
+
+	public Observable<String> searchForGroups(final String searchTerm, final boolean searchNamesAndTerms,
+											  final boolean restrictByLocation, final int searchRadius) {
 		return Observable.create(new Observable.OnSubscribe<String>() {
 			@Override
 			public void call(Subscriber<? super String> subscriber) {
@@ -66,9 +73,10 @@ public class GroupSearchService {
 						final String code = RealmUtils.loadPreferencesFromDB().getToken();
 						final String trimmedTerm = searchTerm.trim();
 						Response<GroupSearchResponse> searchResponse = GrassrootRestService.getInstance()
-							.getApi().search(mobileNumber, code, trimmedTerm).execute();
+							.getApi().search(mobileNumber, code, trimmedTerm, !searchNamesAndTerms,
+								restrictByLocation, searchRadius).execute();
 						if (searchResponse.isSuccessful()) {
-							foundByGroupName = new ArrayList<>(searchResponse.body().getGroups());
+							separatePublicGroupResults(searchResponse.body().getGroups());
 							subscriber.onNext(NetworkUtils.FETCHED_SERVER);
 							subscriber.onCompleted();
 						} else {
@@ -84,6 +92,19 @@ public class GroupSearchService {
 				}
 			}
 		}).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread());
+	}
+
+	private void separatePublicGroupResults(List<PublicGroupModel> results) {
+		foundByGroupName = new ArrayList<>();
+		foundByTaskName = new ArrayList<>();
+
+		for (PublicGroupModel model : results) {
+			if (model.isTermInName()) {
+				foundByGroupName.add(model);
+			} else {
+				foundByTaskName.add(model);
+			}
+		}
 	}
 
 	public Observable<String> sendJoinRequest(final PublicGroupModel groupModel, Scheduler observingThread) {
@@ -107,6 +128,56 @@ public class GroupSearchService {
 					}
 				} catch (IOException e) {
 					storeJoinRequest(groupModel);
+					NetworkUtils.setConnectionFailed();
+					throw new ApiCallException(NetworkUtils.CONNECT_ERROR);
+				}
+			}
+		}).subscribeOn(Schedulers.io()).observeOn(observingThread);
+	}
+
+	public Observable<String> cancelJoinRequest(final PublicGroupModel groupModel, Scheduler observingThread) {
+		observingThread = (observingThread == null) ? AndroidSchedulers.mainThread() : observingThread;
+		return Observable.create(new Observable.OnSubscribe<String>() {
+			@Override
+			public void call(Subscriber<? super String> subscriber) {
+				try {
+					final String mobileNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
+					final String code = RealmUtils.loadPreferencesFromDB().getToken();
+					Response<GenericResponse> response = GrassrootRestService.getInstance().getApi()
+						.cancelJoinRequest(mobileNumber, code, groupModel.getId()).execute();
+					if (response.isSuccessful()) {
+						subscriber.onNext(NetworkUtils.SAVED_SERVER);
+						subscriber.onCompleted();
+					} else {
+						throw new ApiCallException(NetworkUtils.SERVER_ERROR,
+							ErrorUtils.getRestMessage(response.errorBody()));
+					}
+				} catch (IOException e) {
+					NetworkUtils.setConnectionFailed();
+					throw new ApiCallException(NetworkUtils.CONNECT_ERROR);
+				}
+			}
+		}).subscribeOn(Schedulers.io()).observeOn(observingThread);
+	}
+
+	public Observable<String> remindJoinRequest(final PublicGroupModel groupModel, Scheduler observingThread) {
+		observingThread = (observingThread == null) ? AndroidSchedulers.mainThread() : observingThread;
+		return Observable.create(new Observable.OnSubscribe<String>() {
+			@Override
+			public void call(Subscriber<? super String> subscriber) {
+				try {
+					final String mobileNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
+					final String code = RealmUtils.loadPreferencesFromDB().getToken();
+					Response<GenericResponse> response = GrassrootRestService.getInstance().getApi()
+						.remindJoinRequest(mobileNumber, code, groupModel.getId()).execute();
+					if (response.isSuccessful()) {
+						subscriber.onNext(NetworkUtils.SAVED_SERVER);
+						subscriber.onCompleted();
+					} else {
+						throw new ApiCallException(NetworkUtils.SERVER_ERROR,
+							ErrorUtils.getRestMessage(response.errorBody()));
+					}
+				} catch (IOException e) {
 					NetworkUtils.setConnectionFailed();
 					throw new ApiCallException(NetworkUtils.CONNECT_ERROR);
 				}

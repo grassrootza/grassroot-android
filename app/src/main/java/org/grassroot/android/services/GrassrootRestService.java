@@ -174,6 +174,9 @@ public class GrassrootRestService {
         @Path("code") String code,
         @Query("registration_id") String regId);
 
+    @GET("user/logout/{phoneNumber}/{code}")
+    Call<GenericResponse> logoutUser(@Path("phoneNumber") String phoneNumber, @Path("code") String code);
+
     //retrieve notifications
     @GET("notification/list/{phoneNumber}/{code}")
     Call<NotificationList> getUserNotifications(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
@@ -244,7 +247,10 @@ public class GrassrootRestService {
     @GET("group/search/{phoneNumber}/{code}")
     Call<GroupSearchResponse> search(@Path("phoneNumber") String phoneNumber,
                                      @Path("code") String code,
-                                     @Query("searchTerm") String searchTerm);
+                                     @Query("searchTerm") String searchTerm,
+                                     @Query("onlySearchNames") boolean searchNamesOnly,
+                                     @Query("searchByLocation") boolean searchByLocation,
+                                     @Query("searchRadius") Integer searchRadius);
 
     //group join request
     @POST("group/join/request/{phoneNumber}/{code}")
@@ -263,6 +269,21 @@ public class GrassrootRestService {
                                                @Path("code") String code,
                                                @Query("requestUid") String requestUid,
                                                @Query("response") String response);
+
+    // for both of these, maintaining local requestUid in theory cleaner, but requires maintaining
+    // them locally, and sending back with group search, both of which add too much complexity (since requests are unique to requestor-group pair)
+
+    // cancel a join request previously sent
+    @POST("group/join/request/cancel/{phoneNumber}/{code}")
+    Call<GenericResponse> cancelJoinRequest(@Path("phoneNumber") String phoneNumber,
+                                            @Path("code") String code,
+                                            @Query("groupUid") String groupUid);
+
+    // request to send a reminder for a previously sent join request
+    @POST("group/join/request/remind/{phoneNumber}/{code}")
+    Call<GenericResponse> remindJoinRequest(@Path("phoneNumber") String phoneNumber,
+                                            @Path("code") String code,
+                                            @Query("groupUid") String groupUid);
 
     // add members to a group
     @Headers("Content-Type: application/json")

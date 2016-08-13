@@ -7,23 +7,18 @@ import android.net.NetworkInfo;
 import android.text.TextUtils;
 import android.util.Log;
 
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import org.grassroot.android.events.NetworkFailureEvent;
 import org.grassroot.android.events.OfflineActionsSent;
 import org.grassroot.android.events.OnlineOfflineToggledEvent;
 import org.grassroot.android.interfaces.NotificationConstants;
-import org.grassroot.android.models.PublicGroupModel;
-import org.grassroot.android.models.exceptions.ApiCallException;
 import org.grassroot.android.models.GenericResponse;
 import org.grassroot.android.models.Group;
 import org.grassroot.android.models.LocalGroupEdits;
 import org.grassroot.android.models.Member;
 import org.grassroot.android.models.PreferenceObject;
+import org.grassroot.android.models.PublicGroupModel;
 import org.grassroot.android.models.TaskModel;
+import org.grassroot.android.models.exceptions.ApiCallException;
 import org.grassroot.android.services.ApplicationLoader;
 import org.grassroot.android.services.GcmRegistrationService;
 import org.grassroot.android.services.GrassrootRestService;
@@ -32,6 +27,11 @@ import org.grassroot.android.services.GroupService;
 import org.grassroot.android.services.LocationServices;
 import org.grassroot.android.services.TaskService;
 import org.greenrobot.eventbus.EventBus;
+
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import retrofit2.Response;
 import rx.Observable;
@@ -438,9 +438,9 @@ public class NetworkUtils {
   private static void sendStoredJoinRequests() {
     Map<String, Object> map1 = new HashMap<>();
     map1.put("isJoinReqLocal", true);
-    Log.e(TAG, "checking for join requests ...");
+    Log.d(TAG, "checking for join requests ...");
     if (RealmUtils.countListInDB(PublicGroupModel.class, map1) > 0) {
-      Log.e(TAG, "found join requests stored locally ... sending ...");
+      Log.d(TAG, "found join requests stored locally ... sending ...");
       GroupSearchService.getInstance().sendStoredJoinRequests(Schedulers.immediate()).subscribe();
     }
   }

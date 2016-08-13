@@ -40,6 +40,7 @@ import org.grassroot.android.models.NavDrawerItem;
 import org.grassroot.android.models.exceptions.ApiCallException;
 import org.grassroot.android.services.GcmRegistrationService;
 import org.grassroot.android.utils.Constant;
+import org.grassroot.android.utils.LoginRegUtils;
 import org.grassroot.android.utils.NetworkUtils;
 import org.grassroot.android.utils.RealmUtils;
 import org.greenrobot.eventbus.EventBus;
@@ -56,10 +57,10 @@ public class NavigationDrawerFragment extends Fragment implements NavigationDraw
 
     private static final String TAG = NavigationDrawerFragment.class.getSimpleName();
 
-    public static final String ITEM_SHOW_GROUPS = "show_groups";
-    public static final String ITEM_TASKS = "upcoming_tasks";
-    public static final String ITEM_NOTIFICATIONS = "notifications";
-    public static final String ITEM_JOIN_REQS = "join_requests";
+    private static final String ITEM_SHOW_GROUPS = NavigationConstants.ITEM_SHOW_GROUPS;
+    private static final String ITEM_TASKS = NavigationConstants.ITEM_TASKS;
+    private static final String ITEM_NOTIFICATIONS = NavigationConstants.ITEM_NOTIFICATIONS;
+    private static final String ITEM_JOIN_REQS = NavigationConstants.ITEM_JOIN_REQS;
 
     public static final String ITEM_OFFLINE = "offline_online";
     public static final String ITEM_PROFILE = "profile_settings";
@@ -98,7 +99,6 @@ public class NavigationDrawerFragment extends Fragment implements NavigationDraw
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Log.e(TAG, "registering with event bus");
         EventBus.getDefault().register(this);
     }
 
@@ -217,12 +217,12 @@ public class NavigationDrawerFragment extends Fragment implements NavigationDraw
 
     @Override
     public void onItemClicked(final String tag) {
-        // handle common & reusable things here, pass back more complex or context-dependent to activity
         switch (tag) {
             case ITEM_SHOW_GROUPS:
             case ITEM_TASKS:
             case ITEM_NOTIFICATIONS:
             case ITEM_JOIN_REQS:
+                setSelectedItem(tag);
                 break;
             case ITEM_OFFLINE:
                 offlineSwitch();
@@ -240,7 +240,7 @@ public class NavigationDrawerFragment extends Fragment implements NavigationDraw
                 logout();
                 break;
             default:
-                // todo : put in handling non-standard items
+                Log.e(TAG, "error! non-standard tag passed in navigation drawer callback");
         }
         mCallbacks.onNavigationDrawerItemSelected(tag);
     }
@@ -326,7 +326,12 @@ public class NavigationDrawerFragment extends Fragment implements NavigationDraw
         ConfirmCancelDialogFragment confirmDialog = ConfirmCancelDialogFragment.newInstance(R.string.logout_message, new ConfirmCancelDialogFragment.ConfirmDialogListener() {
                     @Override
                     public void doConfirmClicked() {
-                        unregisterGcm();
+
+                        final String mobileNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
+                        final String code = RealmUtils.loadPreferencesFromDB().getToken();
+
+                        unregisterGcm(); // maybe do preference switch off in log out?
+                        LoginRegUtils.logOutUser(mobileNumber, code).subscribe();
                         EventBus.getDefault().post(new UserLoggedOutEvent());
                         RealmUtils.deleteAllObjects();
                         Intent open = new Intent(getActivity(), StartActivity.class);
@@ -350,14 +355,12 @@ public class NavigationDrawerFragment extends Fragment implements NavigationDraw
     @Override
     public void onDestroy() {
         super.onDestroy();
-        Log.e(TAG, "removing event bus registration ...");
         EventBus.getDefault().unregister(this);
     }
 
     public void refreshGroupCount() {
         groups.setItemCount((int) RealmUtils.countObjectsInDB(Group.class));
         primaryAdapter.notifyDataSetChanged();
-        Log.d(TAG, "group count refreshed ... now : " + groups.getItemCount());
     }
 
     @Subscribe
