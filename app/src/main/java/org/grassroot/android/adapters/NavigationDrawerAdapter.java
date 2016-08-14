@@ -1,51 +1,65 @@
 package org.grassroot.android.adapters;
 
 /**
- * Created by Ravi on 29/07/15.
+ * Recreated by Luke on 14/08/16
  */
 
 import android.content.Context;
 import android.graphics.Typeface;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import org.grassroot.android.R;
 import org.grassroot.android.models.NavDrawerItem;
 
 import java.util.List;
+import java.util.Map;
 
 
-public class NavigationDrawerAdapter extends RecyclerView.Adapter<NavigationDrawerAdapter.MyViewHolder> {
+public class NavigationDrawerAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
     private static final String TAG = NavigationDrawerAdapter.class.getCanonicalName();
 
     private List<NavDrawerItem> data;
     private NavDrawerItemListener listener;
 
+    public static final int SEPARATOR = 0; // separates sections
+    public static final int PRIMARY = 1; // has a counter and can be selected
+    public static final int SECONDARY = 2; // neither counter nor selected
+
+    private Map<Integer, Integer> positionTypeMap;
+
     public interface NavDrawerItemListener {
         void onItemClicked(final String tag);
     }
-
-    private final boolean showCounters;
-    private final boolean showSelected;
 
     final int textSelectedColor;
     final int rowSelectedBgColor;
     final int textNormalColor;
     final int rowNormalColor;
 
+    public NavigationDrawerAdapter(Context context, List<NavDrawerItem> items, Map<Integer, Integer> positionTypeMap,
+                                   NavDrawerItemListener listener) {
+        this.data = items;
+        this.positionTypeMap = positionTypeMap;
+        this.listener = listener;
+
+        textSelectedColor = ContextCompat.getColor(context, R.color.primaryColor);
+        rowSelectedBgColor = ContextCompat.getColor(context, R.color.text_beige);
+        textNormalColor = ContextCompat.getColor(context, R.color.black);
+        rowNormalColor = ContextCompat.getColor(context, R.color.white);
+    }
+
     public NavigationDrawerAdapter(Context context, List<NavDrawerItem> data, boolean showCounters,
                                    boolean showSelected, NavDrawerItemListener listener) {
         this.data = data;
         this.listener = listener;
-        this.showCounters = showCounters;
-        this.showSelected = showSelected;
 
         textSelectedColor = ContextCompat.getColor(context, R.color.primaryColor);
         rowSelectedBgColor = ContextCompat.getColor(context, R.color.text_beige);
@@ -54,38 +68,88 @@ public class NavigationDrawerAdapter extends RecyclerView.Adapter<NavigationDraw
     }
 
     @Override
-    public MyViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.listview_row_navigationdrawer, parent, false);
-        return new MyViewHolder(view);
+    public int getItemViewType(int position) {
+        return positionTypeMap.get(position);
     }
 
     @Override
-    public void onBindViewHolder(final MyViewHolder holder, int position) {
+    public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+        View view;
+        RecyclerView.ViewHolder viewHolder;
+        switch (viewType) {
+            case PRIMARY:
+                view = LayoutInflater.from(parent.getContext()).inflate(R.layout.row_navdrawer_primary, parent, false);
+                viewHolder = new PrimaryViewHolder(view);
+                break;
+            case SECONDARY:
+                view = LayoutInflater.from(parent.getContext()).inflate(R.layout.row_navdrawer_secondary, parent, false);
+                viewHolder = new SecondaryViewHolder(view);
+                break;
+            case SEPARATOR:
+            default:
+                view = LayoutInflater.from(parent.getContext()).inflate(R.layout.row_navdrawer_separator, parent, false);
+                viewHolder = new SeparatorViewHolder(view);
+                break;
+        }
 
+        return viewHolder;
+    }
+
+    @Override
+    public void onBindViewHolder(final RecyclerView.ViewHolder holder, int position) {
         final NavDrawerItem drawerItem = data.get(position);
+        final int itemType = positionTypeMap.get(position);
 
-        holder.title.setText(drawerItem.getItemLabel());
+        switch (itemType) {
+            case PRIMARY:
+                bindPrimaryItem((PrimaryViewHolder) holder, drawerItem);
+                break;
+            case SECONDARY:
+                bindSecondaryItem((SecondaryViewHolder) holder, drawerItem);
+                break;
+            case SEPARATOR:
+            default:
+                break;
+        }
+    }
 
-        if (showSelected && drawerItem.isChecked()) {
-            holder.rlDrawerRow.setBackgroundColor(rowSelectedBgColor);
-            holder.title.setTextColor(textSelectedColor);
-            holder.title.setTypeface(Typeface.DEFAULT_BOLD);
-            holder.titleicon.setBackgroundResource(drawerItem.getSelectedIcon());
+    public void bindPrimaryItem(PrimaryViewHolder holder, final NavDrawerItem drawerItem) {
+        holder.label.setText(drawerItem.getItemLabel());
+        if (drawerItem.isChecked()) {
+            holder.rootView.setBackgroundColor(rowSelectedBgColor);
+            holder.label.setTextColor(textSelectedColor);
+            holder.label.setTypeface(Typeface.DEFAULT_BOLD);
+            holder.icon.setBackgroundResource(drawerItem.getSelectedIcon());
         } else {
-            holder.rlDrawerRow.setBackgroundColor(rowNormalColor);
-            holder.title.setTextColor(textNormalColor);
-            holder.title.setTypeface(Typeface.DEFAULT);
-            holder.titleicon.setBackgroundResource(drawerItem.getDefaultIcon());
+            holder.rootView.setBackgroundColor(rowNormalColor);
+            holder.label.setTextColor(textNormalColor);
+            holder.label.setTypeface(Typeface.DEFAULT);
+            holder.icon.setBackgroundResource(drawerItem.getDefaultIcon());
         }
 
-        if (showCounters && drawerItem.isShowItemCount()) {
-            holder.txtTitleCounter.setVisibility(View.VISIBLE);
-            holder.txtTitleCounter.setText(String.valueOf(drawerItem.getItemCount()));
+        if (drawerItem.isShowItemCount()) {
+            holder.counter.setVisibility(View.VISIBLE);
+            holder.counter.setText(String.valueOf(drawerItem.getItemCount()));
         } else {
-            holder.txtTitleCounter.setVisibility(View.GONE);
+            Log.e(TAG, "error ... by definition primary items should have counter ...");
+            holder.counter.setVisibility(View.GONE);
         }
 
-        holder.rlDrawerRow.setOnClickListener(new View.OnClickListener() {
+        holder.rootView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                listener.onItemClicked(drawerItem.getTag());
+            }
+        });
+    }
+
+    public void bindSecondaryItem(SecondaryViewHolder holder, final NavDrawerItem drawerItem) {
+        holder.label.setText(drawerItem.getItemLabel());
+        holder.label.setTextColor(textNormalColor);
+        holder.label.setTypeface(Typeface.DEFAULT);
+        holder.icon.setBackgroundResource(drawerItem.getDefaultIcon());
+
+        holder.rootView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 listener.onItemClicked(drawerItem.getTag());
@@ -98,20 +162,42 @@ public class NavigationDrawerAdapter extends RecyclerView.Adapter<NavigationDraw
         return data.size();
     }
 
-    public static class MyViewHolder extends RecyclerView.ViewHolder {
+    public static class PrimaryViewHolder extends RecyclerView.ViewHolder {
+        ViewGroup rootView;
+        TextView label;
+        TextView counter;
+        ImageView icon;
 
-        RelativeLayout rlDrawerRow;
-
-        TextView title;
-        TextView txtTitleCounter;
-        ImageView titleicon;
-
-        public MyViewHolder(View itemView) {
+        public PrimaryViewHolder(View itemView) {
             super(itemView);
-            rlDrawerRow = (RelativeLayout) itemView.findViewById(R.id.rl_drawer_row);
-            title = (TextView) itemView.findViewById(R.id.txt_title);
-            titleicon = (ImageView) itemView.findViewById(R.id.iv_titleicon);
-            txtTitleCounter = (TextView) itemView.findViewById(R.id.txt_title_counter);
+            rootView = (ViewGroup) itemView.findViewById(R.id.item_root_view);
+            label = (TextView) itemView.findViewById(R.id.item_label);
+            icon = (ImageView) itemView.findViewById(R.id.item_icon);
+            counter = (TextView) itemView.findViewById(R.id.item_counter);
+        }
+    }
+
+    public static class SecondaryViewHolder extends RecyclerView.ViewHolder {
+        ViewGroup rootView;
+        TextView label;
+        ImageView icon;
+
+        public SecondaryViewHolder(View itemView) {
+            super(itemView);
+            rootView = (ViewGroup) itemView.findViewById(R.id.item_root_view);
+            label = (TextView) itemView.findViewById(R.id.item_label);
+            icon = (ImageView) itemView.findViewById(R.id.item_icon);
+        }
+    }
+
+    public static class SeparatorViewHolder extends RecyclerView.ViewHolder {
+        // just make the separator isn't clickable
+        View separator;
+
+        public SeparatorViewHolder(View view) {
+            super(view);
+            separator = view.findViewById(R.id.nav_separator);
+            separator.setClickable(false);
         }
     }
 }

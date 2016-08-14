@@ -1,6 +1,5 @@
 package org.grassroot.android.fragments;
 
-import android.app.ProgressDialog;
 import android.content.Context;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
@@ -50,6 +49,7 @@ import butterknife.Unbinder;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
+import rx.android.schedulers.AndroidSchedulers;
 import rx.functions.Action1;
 
 /**
@@ -70,6 +70,8 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
 
   private boolean isInNoTaskMessageView;
   private boolean hasFetchedFromServer;
+
+  private boolean hasLoadedTasks;
 
   private boolean displayFAB; // todo : just show it always (move FAB from GT-Activity to here)
   private ViewGroup container;
@@ -112,6 +114,14 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
   @Override public void onAttach(Context context) {
     super.onAttach(context);
     EventBus.getDefault().register(this);
+
+    TaskService.getInstance().fetchTasks(groupUid, AndroidSchedulers.mainThread())
+        .subscribe(new Action1<String>() {
+          @Override
+          public void call(String s) {
+            loadTasks(s, true);
+          }
+        });
   }
 
   @Override
@@ -128,6 +138,10 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
     unbinder = ButterKnife.bind(this, viewToReturn);
     this.container = container;
 
+    if (!hasLoadedTasks) {
+      taskView.setVisibility(View.GONE);
+    }
+
     floatingActionButton.setVisibility(displayFAB ? View.VISIBLE : View.GONE);
     return viewToReturn;
   }
@@ -136,19 +150,9 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
   public void onActivityCreated(Bundle savedInstanceState) {
     super.onActivityCreated(savedInstanceState);
 
-    tasksAdapter = new TasksAdapter(this, getActivity(), groupUid);
-    taskView.setLayoutManager(new LinearLayoutManager(getActivity()));
-    taskView.setAdapter(tasksAdapter);
-    taskView.setHasFixedSize(true);
-    taskView.setDrawingCacheEnabled(true);
-
-    reloadTasksFromDB(NetworkUtils.FETCHED_CACHE, true);
-    fetchTasksFromServer();
-
     swipeRefreshLayout.setColorSchemeColors(ContextCompat.getColor(getActivity(), R.color.primaryColor));
     swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
       @Override public void onRefresh() {
-        Log.e(TAG, "calling fetch task list from swipe refresh");
         fetchTasksFromServer();
       }
     });
@@ -169,28 +173,34 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
    */
 
   // a null or empty groupUid passed through, tells the service to fetch all upcoming tasks, across groups
-  // todo : show snackbar on connection errors
   private void fetchTasksFromServer() {
     showProgressIfAdapterLoading();
-    TaskService.getInstance().fetchTasksRx(groupUid, null).subscribe(new Action1<String>() {
+    TaskService.getInstance().fetchTasks(groupUid, null).subscribe(new Action1<String>() {
       @Override
       public void call(String s) {
-        reloadTasksFromDB(s, false);
+        loadTasks(s, false);
       }
     });
   }
 
-  private void reloadTasksFromDB(final String latestFetchType, final boolean startupCall) {
+  private void loadTasks(final String latestFetchType, final boolean startupCall) {
     boolean fetchedFromServer = NetworkUtils.FETCHED_SERVER.equals(latestFetchType);
     hasFetchedFromServer = fetchedFromServer || hasFetchedFromServer;
+
     if (groupUid == null) {
       RealmUtils.loadUpcomingTasks().subscribe(new Action1<List<TaskModel>>() {
         @Override
         public void call(List<TaskModel> taskModels) {
-          tasksAdapter.refreshTaskList(taskModels);
           if (!startupCall) {
+            tasksAdapter.refreshTaskList(taskModels);
             toggleNoTaskView(latestFetchType);
             hideProgress();
+          } else {
+            if (tasksAdapter == null) {
+              tasksAdapter = new TasksAdapter(getContext(), taskModels, TaskListFragment.this);
+            } else {
+              tasksAdapter.refreshTaskList(taskModels);
+            }
           }
         }
       });
@@ -198,19 +208,35 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
       RealmUtils.loadTasksSorted(groupUid).subscribe(new Action1<List<TaskModel>>() {
         @Override
         public void call(List<TaskModel> tasks) {
-          Log.e(TAG, "number of tasks from DB = " + tasks.size());
-          tasksAdapter.refreshTaskList(tasks);
-          Log.e(TAG, "adapter refreshed, now size = " + tasksAdapter.getItemCount());
-          if (!startupCall) {
+          hideProgress();
+          if (tasks.isEmpty() && startupCall) {
+            Log.e(TAG, "no tasks");
             toggleNoTaskView(latestFetchType);
-            hideProgress();
+          } else {
+            if (tasksAdapter == null) {
+              Log.e(TAG, "setting up adapter");
+              tasksAdapter = new TasksAdapter(getContext(), tasks, TaskListFragment.this);
+            } else {
+              tasksAdapter.refreshTaskList(tasks);
+            }
+            if (!hasLoadedTasks) {
+              Log.e(TAG, "tasks not loaded, loading them");
+              taskView.setLayoutManager(new LinearLayoutManager(getActivity()));
+              taskView.setAdapter(tasksAdapter);
+              taskView.setHasFixedSize(true);
+              taskView.setDrawingCacheEnabled(true);
+              taskView.setVisibility(View.VISIBLE);
+              tasksAdapter.notifyDataSetChanged();
+              hasLoadedTasks = true;
+            }
           }
         }
       });
     }
   }
+
   private void toggleNoTaskView(final String latestFetchType) {
-    if (tasksAdapter.getItemCount() != 0) {
+    if (tasksAdapter != null && tasksAdapter.getItemCount() != 0) {
       Log.e(TAG, "item count large ... not switching off task view");
       switchOffNoTasks();
     } else {
@@ -345,7 +371,7 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
   }
 
   @Subscribe public void onTaskUpdated(TaskUpdatedEvent event){
-    reloadTasksFromDB(NetworkUtils.FETCHED_CACHE, false);
+    loadTasks(NetworkUtils.FETCHED_CACHE, false);
   }
 
   @Subscribe public void onTaskCancelledEvent(TaskCancelledEvent e) {

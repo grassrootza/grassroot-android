@@ -77,19 +77,29 @@ public class HomeScreenActivity extends PortraitActivity implements NavigationDr
         EventBus.getDefault().register(this);
         setUpToolbar();
 
-        int openOn = getIntent().getIntExtra(NavigationConstants.HOME_OPEN_ON_NAV, NavigationConstants.HOME_NAV_GROUPS);
+        String openOn = getIntent().getStringExtra(NavigationConstants.HOME_OPEN_ON_NAV);
+        if (openOn == null) {
+            openOn = NavigationConstants.ITEM_SHOW_GROUPS;
+        }
+
         switch (openOn) {
-            case NavigationConstants.HOME_NAV_GROUPS:
+            case NavigationConstants.ITEM_SHOW_GROUPS:
                 switchToGroupFragment();
                 break;
-            case NavigationConstants.HOME_NAV_TASKS:
+            case NavigationConstants.ITEM_TASKS:
                 switchToTasksFragment();
-                setNavBarToItem(NavigationConstants.ITEM_TASKS);
+                break;
+            case NavigationConstants.ITEM_NOTIFICATIONS:
+                switchToNotificationFragment();
+                break;
+            case NavigationConstants.ITEM_JOIN_REQS:
+                switchToJoinRequestsFragment();
                 break;
             default:
                 switchToGroupFragment();
                 break;
         }
+        setNavBarToItem(openOn);
 
         Intent i = new Intent(this, SharingService.class);
         i.putExtra(SharingService.ACTION_TYPE,SharingService.SEARCH_TYPE);
@@ -109,7 +119,26 @@ public class HomeScreenActivity extends PortraitActivity implements NavigationDr
 
     @Override
     public void onNewIntent(Intent intent) {
-        mainFragmentFromNewIntent = intent.getIntExtra(NavigationConstants.HOME_OPEN_ON_NAV, -1);
+        // note : using string constant for interchange btw activities & nav drawer, slightly more efficient
+        // ints for within-activity tracking ... may revisit in future if creates fragility
+        final String fragmentTag = intent.getStringExtra(NavigationConstants.HOME_OPEN_ON_NAV);
+        if (fragmentTag == null) {
+            mainFragmentFromNewIntent = -1;
+        } else {
+            switch (fragmentTag) {
+                case NavigationConstants.ITEM_TASKS:
+                    mainFragmentFromNewIntent = NavigationConstants.HOME_NAV_TASKS;
+                    break;
+                case NavigationConstants.ITEM_NOTIFICATIONS:
+                    mainFragmentFromNewIntent = NavigationConstants.HOME_NAV_NOTIFICATIONS;
+                    break;
+                case NavigationConstants.ITEM_JOIN_REQS:
+                    mainFragmentFromNewIntent = NavigationConstants.HOME_NAV_JOIN_REQUESTS;
+                    break;
+                default:
+                    mainFragmentFromNewIntent = NavigationConstants.HOME_NAV_GROUPS;
+            }
+        }
     }
 
     @Override

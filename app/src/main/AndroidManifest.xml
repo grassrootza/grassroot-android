@@ -167,7 +167,8 @@
 
         <activity
             android:name=".activities.GroupSearchActivity"
-            android:label="@string/title_activity_join__request" />
+            android:label="@string/title_activity_join__request"
+            android:windowSoftInputMode="adjustPan"/>
 
         <!-- Contact book and related activities -->
         <activity

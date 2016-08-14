@@ -115,7 +115,7 @@ public class ViewTaskActivity extends PortraitActivity {
             @Override
             public void onClick(View v) {
                 Intent viewTasks = new Intent(ViewTaskActivity.this, HomeScreenActivity.class);
-                viewTasks.putExtra(NavigationConstants.HOME_OPEN_ON_NAV, NavigationConstants.HOME_NAV_TASKS);
+                viewTasks.putExtra(NavigationConstants.HOME_OPEN_ON_NAV, NavigationConstants.ITEM_TASKS);
                 startActivity(viewTasks);
                 finish();
             }

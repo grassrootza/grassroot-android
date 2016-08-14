@@ -18,6 +18,7 @@ import org.grassroot.android.R;
 import org.grassroot.android.fragments.GiantMessageFragment;
 import org.grassroot.android.fragments.GroupSearchResultsFragment;
 import org.grassroot.android.fragments.GroupSearchStartFragment;
+import org.grassroot.android.interfaces.NavigationConstants;
 import org.grassroot.android.models.PublicGroupModel;
 import org.grassroot.android.models.exceptions.ApiCallException;
 import org.grassroot.android.services.GroupSearchService;
@@ -41,6 +42,8 @@ public class GroupSearchActivity extends PortraitActivity implements GroupSearch
     private static final String RESULTS = "on_results_screen";
     private static final String DONE = "on_done_message";
 
+    private String homeActivityFragmentTag;
+
     @BindView(R.id.find_group_toolbar) Toolbar toolbar;
     @BindView(R.id.find_group_fragment_container) ViewGroup fragmentContainer;
 
@@ -63,6 +66,9 @@ public class GroupSearchActivity extends PortraitActivity implements GroupSearch
             getSupportActionBar().setHomeButtonEnabled(true);
             getSupportActionBar().setHomeAsUpIndicator(R.drawable.btn_close_white);
         }
+
+        homeActivityFragmentTag = getIntent().getStringExtra(NavigationConstants.HOME_OPEN_ON_NAV);
+        Log.e(TAG, homeActivityFragmentTag == null ? "no navigation constant" : "nav constant = " + homeActivityFragmentTag);
 
         progressDialog = new ProgressDialog(this);
         progressDialog.setMessage(getString(R.string.txt_pls_wait));
@@ -327,7 +333,9 @@ public class GroupSearchActivity extends PortraitActivity implements GroupSearch
         Intent upIntent;
         if (RealmUtils.loadPreferencesFromDB().isHasGroups()) { // todo : may want to just check DB count ...
             upIntent = new Intent(this, HomeScreenActivity.class);
-            // todo : include bundle about where they were ...
+            if (homeActivityFragmentTag != null) {
+                upIntent.putExtra(NavigationConstants.HOME_OPEN_ON_NAV, homeActivityFragmentTag);
+            }
         } else {
             upIntent = new Intent(this, NoGroupWelcomeActivity.class);
         }

@@ -54,7 +54,7 @@ public class TaskService {
     return methodInstance;
   }
 
-  public Observable<String> fetchTasksRx(final String parentUid, Scheduler observingThread) {
+  public Observable<String> fetchTasks(final String parentUid, Scheduler observingThread) {
     return TextUtils.isEmpty(parentUid) ? fetchUpcomingTasks(observingThread) :
         fetchGroupTasks(parentUid, observingThread);
   }

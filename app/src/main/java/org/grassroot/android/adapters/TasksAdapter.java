@@ -64,6 +64,11 @@ public class TasksAdapter extends RecyclerView.Adapter<TasksAdapter.TaskViewHold
     this.secondaryColor = ContextCompat.getColor(context, R.color.text_grey);
   }
 
+  public TasksAdapter(Context context, List<TaskModel> tasks, TaskListListener listener) {
+    this(listener, context, null);
+    this.viewedTasks = tasks;
+  }
+
   public void refreshTaskList(List<TaskModel> allTasks) {
     viewedTasks = allTasks;
     notifyDataSetChanged();

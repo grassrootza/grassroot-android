@@ -18,6 +18,7 @@ import android.widget.TextView;
 import org.grassroot.android.BuildConfig;
 import org.grassroot.android.R;
 import org.grassroot.android.activities.FAQActivity;
+import org.grassroot.android.activities.GroupSearchActivity;
 import org.grassroot.android.activities.ProfileSettingsActivity;
 import org.grassroot.android.activities.StartActivity;
 import org.grassroot.android.adapters.NavigationDrawerAdapter;
@@ -47,7 +48,9 @@ import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -62,30 +65,31 @@ public class NavigationDrawerFragment extends Fragment implements NavigationDraw
     private static final String ITEM_NOTIFICATIONS = NavigationConstants.ITEM_NOTIFICATIONS;
     private static final String ITEM_JOIN_REQS = NavigationConstants.ITEM_JOIN_REQS;
 
+    public static final String ITEM_FIND_GROUPS = "find_groups";
     public static final String ITEM_OFFLINE = "offline_online";
     public static final String ITEM_PROFILE = "profile_settings";
     public static final String ITEM_SHARE = "item_share";
-    public static final String ITEM_FAQ = "item_faq";
 
+    public static final String ITEM_FAQ = "item_faq";
     public static final String ITEM_LOGOUT = "item_logout";
 
     private NavigationDrawerCallbacks mCallbacks;
 
-    List<NavDrawerItem> primaryItems;
-    private NavigationDrawerAdapter primaryAdapter;
-
-    List<NavDrawerItem> secondaryItems;
-    private NavigationDrawerAdapter secondaryAdapter;
+    List<NavDrawerItem> itemList;
+    private NavigationDrawerAdapter itemAdapter;
+    Map<Integer, Integer> positionMap;
 
     private String defaultSelectedItemTag;
+    private String currentlySelectedItemTag;
+
     private NavDrawerItem groups;
     private NavDrawerItem tasks;
     private NavDrawerItem notifications;
     private NavDrawerItem joinRequests;
+    private NavDrawerItem onlineOffineSwitch;
 
     @BindView(R.id.displayName) TextView displayName;
     @BindView(R.id.nav_items_primary) RecyclerView primaryItemsView;
-    @BindView(R.id.nav_items_secondary) RecyclerView secondaryItemsView;
     @BindView(R.id.nav_tv_footer) TextView txtVersion;
 
     public interface NavigationDrawerCallbacks {
@@ -107,15 +111,18 @@ public class NavigationDrawerFragment extends Fragment implements NavigationDraw
         super.onAttach(context);
         try {
             mCallbacks = (NavigationDrawerCallbacks) context;
+            setUpPrimaryItems();
+            itemAdapter = new NavigationDrawerAdapter(getActivity(), itemList, positionMap, this);
         } catch (ClassCastException e) {
             throw new UnsupportedOperationException("Error! Activity must implement listener");
         }
     }
 
     public void setSelectedItem(String itemTag) {
-        if (primaryAdapter == null || primaryAdapter.getItemCount() == 0) {
+        if (itemAdapter == null || itemAdapter.getItemCount() == 0) {
             defaultSelectedItemTag = itemTag;
         } else {
+            currentlySelectedItemTag = itemTag;
             switchPrimarySelected(itemTag);
         }
     }
@@ -130,60 +137,73 @@ public class NavigationDrawerFragment extends Fragment implements NavigationDraw
         displayName.setText(RealmUtils.loadPreferencesFromDB().getUserName());
         txtVersion.setText(String.format(getString(R.string.nav_bar_footer), BuildConfig.VERSION_NAME));
 
-        primaryAdapter = new NavigationDrawerAdapter(getActivity(), setUpPrimaryItems(), true, true, this);
         primaryItemsView.setHasFixedSize(true);
-        primaryItemsView.setItemViewCacheSize(4);
+        primaryItemsView.setItemViewCacheSize(10);
         primaryItemsView.setLayoutManager(new LinearLayoutManager(getContext()));
-        primaryItemsView.setAdapter(primaryAdapter);
-
-        secondaryAdapter = new NavigationDrawerAdapter(getActivity(), setUpSecondaryItems(), false, false, this);
-        secondaryItemsView.setHasFixedSize(true);
-        secondaryItemsView.setItemViewCacheSize(5);
-        secondaryItemsView.setLayoutManager(new LinearLayoutManager(getContext()));
-        secondaryItemsView.setNestedScrollingEnabled(false);
-        secondaryItemsView.setAdapter(secondaryAdapter);
+        primaryItemsView.setAdapter(itemAdapter);
 
         return view;
     }
 
     public List<NavDrawerItem> setUpPrimaryItems() {
-        primaryItems = new ArrayList<>();
+
+        itemList = new ArrayList<>();
+        positionMap = new HashMap<>();
+        int pos = 0;
 
         final String defltItem = TextUtils.isEmpty(defaultSelectedItemTag) ? ITEM_SHOW_GROUPS : defaultSelectedItemTag;
 
         groups = new NavDrawerItem(ITEM_SHOW_GROUPS, getString(R.string.drawer_group_list), R.drawable.ic_groups_black, R.drawable.ic_groups_green,
             ITEM_SHOW_GROUPS.equals(defltItem), true);
         groups.setItemCount((int) RealmUtils.countObjectsInDB(Group.class));
-        primaryItems.add(groups);
+        pos = addItemAndIncrement(pos, NavigationDrawerAdapter.PRIMARY, groups);
 
         tasks = new NavDrawerItem(ITEM_TASKS, getString(R.string.drawer_open_tasks), R.drawable.ic_tasks_black, R.drawable.ic_tasks_green,
             ITEM_TASKS.equals(defltItem), true);
         tasks.setItemCount(RealmUtils.loadUpcomingTasksFromDB().size());
-        primaryItems.add(tasks);
+        pos = addItemAndIncrement(pos, NavigationDrawerAdapter.PRIMARY, tasks);
 
         notifications = new NavDrawerItem(ITEM_NOTIFICATIONS, getString(R.string.drawer_notis), R.drawable.ic_exclamation_black, R.drawable.ic_excl_green,
             ITEM_NOTIFICATIONS.equals(defltItem), true);
         notifications.setItemCount(RealmUtils.loadPreferencesFromDB().getNotificationCounter());
-        primaryItems.add(notifications);
+        pos = addItemAndIncrement(pos, NavigationDrawerAdapter.PRIMARY, notifications);
 
         joinRequests = new NavDrawerItem(ITEM_JOIN_REQS, getString(R.string.drawer_join_request), R.drawable.ic_join_black, R.drawable.ic_join_green,
             ITEM_JOIN_REQS.equals(defltItem), true);
         joinRequests.setItemCount((int) RealmUtils.countObjectsInDB(GroupJoinRequest.class));
-        primaryItems.add(joinRequests);
+        pos = addItemAndIncrement(pos, NavigationDrawerAdapter.PRIMARY, joinRequests);
 
-        return primaryItems;
-    }
+        pos = addItemAndIncrement(pos, NavigationDrawerAdapter.SEPARATOR, new NavDrawerItem());
 
-    public List<NavDrawerItem> setUpSecondaryItems() {
-        secondaryItems = new ArrayList<>();
+        pos = addItemAndIncrement(pos, NavigationDrawerAdapter.SECONDARY,
+            new NavDrawerItem(ITEM_SHARE, getString(R.string.drawer_share), R.drawable.ic_share));
+
+        pos = addItemAndIncrement(pos, NavigationDrawerAdapter.SECONDARY,
+            new NavDrawerItem(ITEM_FIND_GROUPS, "Find groups", R.drawable.ic_find_group_nav));
+
+        pos = addItemAndIncrement(pos, NavigationDrawerAdapter.SECONDARY,
+            new NavDrawerItem(ITEM_PROFILE, getString(R.string.drawer_profile),R.drawable.ic_profile));
 
         setupOnlineSwitch();
-        secondaryItems.add(new NavDrawerItem(ITEM_SHARE, getString(R.string.drawer_share), R.drawable.ic_share));
-        secondaryItems.add(new NavDrawerItem(ITEM_PROFILE, getString(R.string.drawer_profile),R.drawable.ic_profile));
-        secondaryItems.add(new NavDrawerItem(ITEM_FAQ, getString(R.string.drawer_faqs),R.drawable.ic_faq));
-        secondaryItems.add(new NavDrawerItem(ITEM_LOGOUT, getString(R.string.drawer_logout),R.drawable.ic_logout));
+        pos = addItemAndIncrement(pos, NavigationDrawerAdapter.SECONDARY, onlineOffineSwitch);
 
-        return secondaryItems;
+        pos = addItemAndIncrement(pos, NavigationDrawerAdapter.SEPARATOR, new NavDrawerItem());
+
+        // setupOnlineSwitch();
+
+        pos = addItemAndIncrement(pos, NavigationDrawerAdapter.SECONDARY,
+            new NavDrawerItem(ITEM_FAQ, getString(R.string.drawer_faqs),R.drawable.ic_faq));
+
+        addItemAndIncrement(pos, NavigationDrawerAdapter.SECONDARY,
+            new NavDrawerItem(ITEM_LOGOUT, getString(R.string.drawer_logout),R.drawable.ic_logout));
+
+        return itemList;
+    }
+
+    private int addItemAndIncrement(int currentPosition, int viewType, NavDrawerItem item) {
+        itemList.add(item);
+        positionMap.put(currentPosition, viewType);
+        return currentPosition + 1;
     }
 
     private void setupOnlineSwitch() {
@@ -203,15 +223,11 @@ public class NavigationDrawerFragment extends Fragment implements NavigationDraw
                 return;
         }
 
-        if (secondaryItems != null) {
-            if (secondaryItems.isEmpty()) {
-                secondaryItems.add(new NavDrawerItem(ITEM_OFFLINE, getString(labelResource), R.drawable.ic_configure));
-            } else {
-                secondaryItems.get(0).setItemLabel(getString(labelResource));
-                if (secondaryAdapter != null) { // check because this sometimes gets thrown at the start
-                    secondaryAdapter.notifyItemChanged(0);
-                }
-            }
+        if (onlineOffineSwitch == null) {
+            onlineOffineSwitch = new NavDrawerItem(ITEM_OFFLINE, getString(labelResource), R.drawable.ic_configure);
+        } else {
+            onlineOffineSwitch.setItemLabel(getString(labelResource));
+            itemAdapter.notifyDataSetChanged();
         }
     }
 
@@ -226,6 +242,9 @@ public class NavigationDrawerFragment extends Fragment implements NavigationDraw
                 break;
             case ITEM_OFFLINE:
                 offlineSwitch();
+                break;
+            case ITEM_FIND_GROUPS:
+                findGroups();
                 break;
             case ITEM_SHARE:
                 shareApp();
@@ -251,7 +270,7 @@ public class NavigationDrawerFragment extends Fragment implements NavigationDraw
             tasks.setIsChecked(ITEM_TASKS.equals(item));
             notifications.setIsChecked(ITEM_NOTIFICATIONS.equals(item));
             joinRequests.setIsChecked(ITEM_JOIN_REQS.equals(item));
-            primaryAdapter.notifyDataSetChanged();
+            itemAdapter.notifyDataSetChanged();
         } catch (Exception e) {
             e.printStackTrace(); // means some weirdness with null pointers somewhere above
         }
@@ -315,6 +334,13 @@ public class NavigationDrawerFragment extends Fragment implements NavigationDraw
         builder.create().show();
     }
 
+    private void findGroups() {
+        Intent i = new Intent(getActivity(), GroupSearchActivity.class);
+        i.putExtra(NavigationConstants.HOME_OPEN_ON_NAV, currentlySelectedItemTag);
+        Log.e(TAG, "starting activity with tag string = " + currentlySelectedItemTag);
+        startActivity(i);
+    }
+
     private void shareApp() {
         Intent shareIntent = new Intent(Intent.ACTION_SEND);
         shareIntent.setType("text/plain");
@@ -360,7 +386,7 @@ public class NavigationDrawerFragment extends Fragment implements NavigationDraw
 
     public void refreshGroupCount() {
         groups.setItemCount((int) RealmUtils.countObjectsInDB(Group.class));
-        primaryAdapter.notifyDataSetChanged();
+        itemAdapter.notifyDataSetChanged();
     }
 
     @Subscribe
@@ -376,26 +402,26 @@ public class NavigationDrawerFragment extends Fragment implements NavigationDraw
     @Subscribe
     public void onNewNotificationEvent(NotificationEvent event) {
         int notificationCount = event.getNotificationCount();
-        primaryAdapter.notifyDataSetChanged();
+        itemAdapter.notifyDataSetChanged();
     }
 
     @Subscribe
     public void onTaskCreatedEvent(TaskAddedEvent e) {
         tasks.incrementItemCount();
-        primaryAdapter.notifyItemChanged(NavigationConstants.HOME_NAV_TASKS);
+        safeItemChange(NavigationConstants.HOME_NAV_TASKS);
     }
 
     @Subscribe
     public void onTaskCancelledEvent(TaskCancelledEvent e) {
         tasks.decrementItemCount();
-        primaryAdapter.notifyItemChanged(NavigationConstants.HOME_NAV_TASKS);
+        safeItemChange(NavigationConstants.HOME_NAV_TASKS);
     }
 
     @Subscribe
     public void onTasksRefreshedEvent(TasksRefreshedEvent e) {
         if (!TextUtils.isEmpty(e.parentUid)) {
             tasks.setItemCount(RealmUtils.loadUpcomingTasksFromDB().size());
-            primaryAdapter.notifyItemChanged(NavigationConstants.HOME_NAV_TASKS);
+            safeItemChange(NavigationConstants.HOME_NAV_TASKS);
         }
     }
 
@@ -411,5 +437,15 @@ public class NavigationDrawerFragment extends Fragment implements NavigationDraw
 
     @Subscribe
     public void onEvent(NetworkFailureEvent e) { setupOnlineSwitch(); }
+
+    private void safeItemChange(final int itemPosition) {
+        if (itemAdapter != null) {
+            try {
+                itemAdapter.notifyItemChanged(itemPosition);
+            } catch (IllegalStateException e) {
+                Log.d(TAG, "recycler view called while animating");
+            }
+        }
+    }
 
 }

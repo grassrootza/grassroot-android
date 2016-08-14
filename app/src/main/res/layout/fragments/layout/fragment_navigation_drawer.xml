@@ -32,26 +32,11 @@
             <android.support.v7.widget.RecyclerView
                 android:id="@+id/nav_items_primary"
                 android:layout_below="@+id/displayName"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                tools:context=".NavigationDrawerFragment" />
-            
-            <ImageView
-                android:id="@+id/nav_separator"
-                android:background="@color/md_grey_200"
-                android:layout_width="match_parent"
-                android:layout_height="@dimen/thin_separator_height"
-                android:layout_below="@+id/nav_items_primary"
-                android:layout_marginTop="8dp" />
-
-            <android.support.v7.widget.RecyclerView
-                android:id="@+id/nav_items_secondary"
-                android:layout_below="@+id/nav_separator"
                 android:layout_above="@+id/nav_tv_footer"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 tools:context=".NavigationDrawerFragment" />
-
+            
             <TextView
                 android:id="@+id/nav_tv_footer"
                 android:layout_width="match_parent"

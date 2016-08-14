@@ -32,7 +32,7 @@ public class NavDrawerItem {
 
 
     public NavDrawerItem() {
-
+        // used just for the separator
     }
 
     public int getDefaultIcon() {
