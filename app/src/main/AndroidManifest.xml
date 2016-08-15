@@ -168,7 +168,7 @@
         <activity
             android:name=".activities.GroupSearchActivity"
             android:label="@string/title_activity_join__request"
-            android:windowSoftInputMode="adjustPan"/>
+            android:windowSoftInputMode="stateVisible|adjustPan"/>
 
         <!-- Contact book and related activities -->
         <activity
@@ -181,7 +181,7 @@
             android:name=".activities.ViewTaskActivity"
             android:label="@string/title_activity_view_task"
             android:launchMode="singleTop"
-            android:parentActivityName=".activities.StartActivity"
+            android:parentActivityName=".activities.HomeScreenActivity"
             android:theme="@style/AppTheme">
             <intent-filter>
                 <action android:name="NOTIFICATION" />
@@ -189,7 +189,7 @@
             </intent-filter>
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value=".activities.StartActivity" />
+                android:value=".activities.HomeScreenActivity" />
         </activity>
 
         <!-- Meeting related activities -->
@@ -213,7 +213,6 @@
             android:theme="@style/AppTheme"
             android:windowSoftInputMode="adjustNothing" />
 
-        <!-- Todo related activities -->
         <activity
             android:name=".activities.CreateTodoActivity"
             android:label="@string/ctodo_title"

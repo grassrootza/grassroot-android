@@ -30,6 +30,7 @@ import org.grassroot.android.interfaces.GroupPickCallbacks;
 import org.grassroot.android.interfaces.TaskConstants;
 import org.grassroot.android.models.TaskModel;
 import org.grassroot.android.models.TaskResponse;
+import org.grassroot.android.services.ApplicationLoader;
 import org.grassroot.android.services.GrassrootRestService;
 import org.grassroot.android.services.TaskService;
 import org.grassroot.android.utils.ErrorUtils;
@@ -49,6 +50,7 @@ import butterknife.Unbinder;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
+import rx.Observable;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.functions.Action1;
 
@@ -70,8 +72,6 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
 
   private boolean isInNoTaskMessageView;
   private boolean hasFetchedFromServer;
-
-  private boolean hasLoadedTasks;
 
   private boolean displayFAB; // todo : just show it always (move FAB from GT-Activity to here)
   private ViewGroup container;
@@ -108,20 +108,11 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
     fragment.displayFAB = showFAB;
 
     return fragment;
-
   }
 
   @Override public void onAttach(Context context) {
     super.onAttach(context);
     EventBus.getDefault().register(this);
-
-    TaskService.getInstance().fetchTasks(groupUid, AndroidSchedulers.mainThread())
-        .subscribe(new Action1<String>() {
-          @Override
-          public void call(String s) {
-            loadTasks(s, true);
-          }
-        });
   }
 
   @Override
@@ -134,26 +125,61 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
 
   @Override public View onCreateView(LayoutInflater inflater, ViewGroup container,
       Bundle savedInstanceState) {
+
     View viewToReturn = inflater.inflate(R.layout.fragment_task_list, container, false);
     unbinder = ButterKnife.bind(this, viewToReturn);
     this.container = container;
-
-    if (!hasLoadedTasks) {
-      taskView.setVisibility(View.GONE);
-    }
-
     floatingActionButton.setVisibility(displayFAB ? View.VISIBLE : View.GONE);
+
+    loadTasksOnCreateView();
     return viewToReturn;
+  }
+
+  private void loadTasksOnCreateView() {
+    taskView.setVisibility(View.GONE);
+    if (hasTasksInDB()) {
+      loadTasksFromDB(NetworkUtils.FETCHED_CACHE);
+      refreshTasksFromServer();
+    } else {
+      showProgress();
+      TaskService.getInstance().fetchTasks(groupUid, AndroidSchedulers.mainThread()).subscribe(new Action1<String>() {
+        @Override
+        public void call(String s) {
+          Log.e(TAG, "returned from fetch tasks ... with fetch type = " + s);
+          hasFetchedFromServer = NetworkUtils.FETCHED_SERVER.equals(s);
+          loadTasksFromDB(s);
+        }
+      });
+    }
+  }
+
+  private boolean hasTasksInDB() {
+    if (TextUtils.isEmpty(groupUid)) {
+      return RealmUtils.countUpcomingTasksInDB() > 0;
+    } else {
+      return RealmUtils.countGroupTasksInDB(groupUid) > 0;
+    }
+  }
+
+  private void setUpAdapterAndRecyclerView(List<TaskModel> taskModels) {
+    tasksAdapter = new TasksAdapter(taskModels, TextUtils.isEmpty(groupUid), TaskListFragment.this);
+    // since call may return after user has navigated away from fragment, do this to avoid null pointer errors
+    if (taskView != null) {
+      taskView.setLayoutManager(new LinearLayoutManager(getActivity()));
+      taskView.setAdapter(tasksAdapter);
+      taskView.setHasFixedSize(true);
+      taskView.setDrawingCacheEnabled(true);
+      taskView.setVisibility(View.VISIBLE);
+    }
   }
 
   @Override
   public void onActivityCreated(Bundle savedInstanceState) {
     super.onActivityCreated(savedInstanceState);
-
     swipeRefreshLayout.setColorSchemeColors(ContextCompat.getColor(getActivity(), R.color.primaryColor));
     swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
       @Override public void onRefresh() {
-        fetchTasksFromServer();
+        refreshTasksFromServer();
       }
     });
   }
@@ -173,79 +199,41 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
    */
 
   // a null or empty groupUid passed through, tells the service to fetch all upcoming tasks, across groups
-  private void fetchTasksFromServer() {
-    showProgressIfAdapterLoading();
+  private void refreshTasksFromServer() {
     TaskService.getInstance().fetchTasks(groupUid, null).subscribe(new Action1<String>() {
       @Override
       public void call(String s) {
-        loadTasks(s, false);
+        loadTasksFromDB(s);
       }
     });
   }
 
-  private void loadTasks(final String latestFetchType, final boolean startupCall) {
+  private void loadTasksFromDB(final String latestFetchType) {
     boolean fetchedFromServer = NetworkUtils.FETCHED_SERVER.equals(latestFetchType);
     hasFetchedFromServer = fetchedFromServer || hasFetchedFromServer;
-
-    if (groupUid == null) {
-      RealmUtils.loadUpcomingTasks().subscribe(new Action1<List<TaskModel>>() {
-        @Override
-        public void call(List<TaskModel> taskModels) {
-          if (!startupCall) {
+    Observable<List<TaskModel>> loadTasks = TextUtils.isEmpty(groupUid) ?
+        RealmUtils.loadUpcomingTasks() : RealmUtils.loadTasksSorted(groupUid);
+    loadTasks.subscribe(new Action1<List<TaskModel>>() {
+      @Override
+      public void call(List<TaskModel> taskModels) {
+        if (taskModels.isEmpty()) {
+          handleNoTasksFound(latestFetchType);
+        } else if (taskView != null) {
+          if (tasksAdapter == null) {
+            setUpAdapterAndRecyclerView(taskModels);
+          } else {
+            switchOffNoTasks();
+            taskView.setVisibility(View.VISIBLE);
             tasksAdapter.refreshTaskList(taskModels);
-            toggleNoTaskView(latestFetchType);
-            hideProgress();
-          } else {
-            if (tasksAdapter == null) {
-              tasksAdapter = new TasksAdapter(getContext(), taskModels, TaskListFragment.this);
-            } else {
-              tasksAdapter.refreshTaskList(taskModels);
-            }
           }
         }
-      });
-    } else {
-      RealmUtils.loadTasksSorted(groupUid).subscribe(new Action1<List<TaskModel>>() {
-        @Override
-        public void call(List<TaskModel> tasks) {
-          hideProgress();
-          if (tasks.isEmpty() && startupCall) {
-            Log.e(TAG, "no tasks");
-            toggleNoTaskView(latestFetchType);
-          } else {
-            if (tasksAdapter == null) {
-              Log.e(TAG, "setting up adapter");
-              tasksAdapter = new TasksAdapter(getContext(), tasks, TaskListFragment.this);
-            } else {
-              tasksAdapter.refreshTaskList(tasks);
-            }
-            if (!hasLoadedTasks) {
-              Log.e(TAG, "tasks not loaded, loading them");
-              taskView.setLayoutManager(new LinearLayoutManager(getActivity()));
-              taskView.setAdapter(tasksAdapter);
-              taskView.setHasFixedSize(true);
-              taskView.setDrawingCacheEnabled(true);
-              taskView.setVisibility(View.VISIBLE);
-              tasksAdapter.notifyDataSetChanged();
-              hasLoadedTasks = true;
-            }
-          }
-        }
-      });
-    }
-  }
-
-  private void toggleNoTaskView(final String latestFetchType) {
-    if (tasksAdapter != null && tasksAdapter.getItemCount() != 0) {
-      Log.e(TAG, "item count large ... not switching off task view");
-      switchOffNoTasks();
-    } else {
-      handleNoTasksFound(latestFetchType);
-    }
+        hideProgress();
+      }
+    });
   }
 
   private void switchOffNoTasks() {
-    if (noTaskMessageLayout != null) {
+    if (noTaskMessageLayout != null && noTaskMessageLayout.getVisibility() == View.VISIBLE) {
       noTaskMessageLayout.setVisibility(View.GONE);
     }
     isInNoTaskMessageView = false;
@@ -262,6 +250,7 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
     if (noTaskMessageLayout != null) {
       noTaskMessageLayout.setVisibility(View.VISIBLE);
     }
+    taskView.setVisibility(View.GONE);
     isInNoTaskMessageView = true;
   }
 
@@ -371,7 +360,8 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
   }
 
   @Subscribe public void onTaskUpdated(TaskUpdatedEvent event){
-    loadTasks(NetworkUtils.FETCHED_CACHE, false);
+    // todo : do this better ...
+    loadTasksFromDB(NetworkUtils.FETCHED_CACHE);
   }
 
   @Subscribe public void onTaskCancelledEvent(TaskCancelledEvent e) {
@@ -383,18 +373,6 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
           .commit();
     }
     tasksAdapter.removeTaskFromList(e.getTask().getTaskUid()); // todo : just pass the uid in Event, not whole task model
-  }
-
-  private void showProgressIfAdapterLoading() {
-    if (!isInNoTaskMessageView && !hasFetchedFromServer) {
-      if (tasksAdapter == null) {
-        showProgress();
-      } else if (tasksAdapter.getItemCount() == 0) {
-        showProgress();
-      } else {
-        hideProgress();
-      }
-    }
   }
 
   private void showProgress() {

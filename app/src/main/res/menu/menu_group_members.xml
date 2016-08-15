@@ -14,7 +14,6 @@
         android:icon="@drawable/btn_search"
         app:showAsAction="ifRoom" />
 
-    <!-- todo : permissions -->
     <item android:id="@+id/mi_add_members"
         android:title="Add members"
         app:showAsAction="never" />

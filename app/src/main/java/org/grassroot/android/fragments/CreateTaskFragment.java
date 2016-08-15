@@ -315,10 +315,14 @@ public class CreateTaskFragment extends Fragment {
             i.putExtra(ActionCompleteActivity.HEADER_FIELD, R.string.ac_header_task_create);
             i.putExtra(ActionCompleteActivity.BODY_FIELD, generateSuccessString());
         }
+        i.putExtra(ActionCompleteActivity.SHARE_BUTTON, true);
         i.putExtra(ActionCompleteActivity.TASK_BUTTONS, false);
         i.putExtra(ActionCompleteActivity.ACTION_INTENT, ActionCompleteActivity.GROUP_SCREEN);
+
+        i.putExtra(TaskConstants.TASK_ENTITY_FIELD, model);
         Group taskGroup = RealmUtils.loadObjectFromDB(Group.class, "groupUid", model.getParentUid());
-        i.putExtra(GroupConstants.OBJECT_FIELD, taskGroup);
+        i.putExtra(GroupConstants.OBJECT_FIELD, taskGroup); // note : this seems heavy ... likely better to send UID and load in activity .. to optimize in future
+
         i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
         EventBus.getDefault().post(new TaskAddedEvent(model, generateSuccessString()));
         startActivity(i);

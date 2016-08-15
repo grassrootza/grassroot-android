@@ -16,11 +16,17 @@ import android.widget.TextView;
 import org.grassroot.android.R;
 import org.grassroot.android.fragments.NewTaskMenuFragment;
 import org.grassroot.android.interfaces.GroupConstants;
+import org.grassroot.android.interfaces.TaskConstants;
 import org.grassroot.android.models.Group;
+import org.grassroot.android.models.PreferenceObject;
+import org.grassroot.android.models.TaskModel;
+import org.grassroot.android.services.SharingService;
 import org.grassroot.android.utils.Constant;
 import org.grassroot.android.utils.IntentUtils;
 import org.grassroot.android.utils.NetworkUtils;
 import org.grassroot.android.utils.RealmUtils;
+
+import java.util.ArrayList;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -38,8 +44,10 @@ public class ActionCompleteActivity extends PortraitActivity implements NewTaskM
     public static final String HEADER_FIELD = "header";
     public static final String BODY_FIELD = "body";
     public static final String BTN_FIELD = "button";
+
     public static final String TASK_BUTTONS = "task_buttons";
     public static final String OFFLINE_BUTTONS = "offline_buttons";
+    public static final String SHARE_BUTTON = "share_button";
 
     public static final String ACTION_INTENT = "action_intent";
     public static final String HOME_SCREEN = "home_screen";
@@ -47,15 +55,16 @@ public class ActionCompleteActivity extends PortraitActivity implements NewTaskM
 
     private boolean customValues;
     private boolean showTaskButtons;
-    private boolean showOfflineButtons;
 
     private String actionIntent;
     private Group groupToPass;
+    private TaskModel taskToPass;
 
     @BindView(R.id.ac_header) TextView header;
     @BindView(R.id.ac_body) TextView body;
     @BindView(R.id.ac_bt_done) Button done;
     @BindView(R.id.bt_avatar) Button pickAvatar;
+    @BindView(R.id.ac_bt_share) Button share;
     @BindView(R.id.ac_btn_tasks) RelativeLayout taskButtons;
     @BindView(R.id.ac_btn_offline) LinearLayout offlineButtons;
 
@@ -85,6 +94,7 @@ public class ActionCompleteActivity extends PortraitActivity implements NewTaskM
     private void setToArguments(Bundle args) {
         actionIntent = args.getString(ACTION_INTENT);
         groupToPass = args.getParcelable(GroupConstants.OBJECT_FIELD);
+        taskToPass = args.getParcelable(TaskConstants.TASK_ENTITY_FIELD);
 
         final int headerInt = args.getInt(HEADER_FIELD, R.string.ac_header_default);
         String bodyString = args.getString(BODY_FIELD);
@@ -102,7 +112,8 @@ public class ActionCompleteActivity extends PortraitActivity implements NewTaskM
         // or : (b) there was a server error or something and need to show options to go offline
         // or : (c) it's uncertain, and we're showing just the done button
         showTaskButtons = args.getBoolean(TASK_BUTTONS, false);
-        showOfflineButtons = args.getBoolean(OFFLINE_BUTTONS, false);
+        final boolean showOfflineButtons = args.getBoolean(OFFLINE_BUTTONS, false);
+        final boolean showShareButton = args.getBoolean(SHARE_BUTTON, false);
 
         if (showTaskButtons) {
             done.setVisibility(View.GONE);
@@ -116,6 +127,8 @@ public class ActionCompleteActivity extends PortraitActivity implements NewTaskM
             taskButtons.setVisibility(View.GONE);
             offlineButtons.setVisibility(View.VISIBLE);
         } else {
+            share.setVisibility(showShareButton && taskToPass != null ?
+                View.VISIBLE : View.GONE);
             final int buttonInt = args.getInt(BTN_FIELD, R.string.ac_btn_done);
             done.setText(buttonInt);
             done.setVisibility(View.VISIBLE);
@@ -179,6 +192,65 @@ public class ActionCompleteActivity extends PortraitActivity implements NewTaskM
                     }
                 });
         builder.create().show();
+    }
+
+    @OnClick(R.id.ac_bt_share)
+    public void shareOptions() {
+        PreferenceObject preferenceObject = RealmUtils.loadPreferencesFromDB();
+        final boolean hasWApp = preferenceObject.isHasWappInstalled();
+        final boolean hasFB = preferenceObject.isHasWappInstalled();
+        if (!hasFB && !hasWApp) {
+            Intent i = new Intent(this, SharingService.class);
+            i.putExtra(SharingService.TASK_TAG, taskToPass);
+            i.putExtra(SharingService.APP_SHARE_TAG, SharingService.OTHER);
+            i.putExtra(SharingService.ACTION_TYPE,SharingService.SHARE_TYPE);
+            startService(i);
+        } else {
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            final int labelSize = 1 + (hasWApp ? 1 : 0) + (hasFB ? 1 : 0);
+            CharSequence[] itemLabels = new CharSequence[ labelSize ];
+            if (hasWApp)
+                itemLabels[0] = getString(R.string.wapp_short);
+            if (hasFB)
+                itemLabels[hasWApp ? 1 : 0] = getString(R.string.fbm_short);
+            itemLabels[labelSize - 1] = getString(R.string.other_short);
+
+            builder.setItems(itemLabels, new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    handleShareSelection(which, hasWApp, hasFB);
+                }
+            });
+
+            builder.create().show();
+        }
+    }
+
+    private void handleShareSelection(int optionSelected, boolean hasWApp, boolean hasFBM) {
+        String sharePackage;
+        if (optionSelected == 0) {
+            if (hasWApp) {
+                sharePackage = SharingService.WAPP_PACKAGE_NAME;
+            } else if (hasFBM) {
+                sharePackage = SharingService.FB_PACKAGE_NAME;
+            } else {
+                sharePackage = SharingService.OTHER;
+            }
+        } else if (optionSelected == 1){
+            if (hasFBM) {
+                sharePackage = SharingService.FB_PACKAGE_NAME;
+            } else {
+                sharePackage = SharingService.OTHER;
+            }
+        } else {
+            sharePackage = SharingService.OTHER;
+        }
+
+        Intent i = new Intent(this, SharingService.class);
+        i.putExtra(SharingService.TASK_TAG, taskToPass);
+        i.putExtra(SharingService.APP_SHARE_TAG, sharePackage);
+        i.putExtra(SharingService.ACTION_TYPE, SharingService.SHARE_TYPE);
+        startService(i);
     }
 
     private Intent doneIntent() {

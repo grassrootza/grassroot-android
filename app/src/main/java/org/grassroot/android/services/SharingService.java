@@ -11,6 +11,8 @@ import android.content.pm.ResolveInfo;
 import android.os.Parcelable;
 import android.util.Log;
 
+import org.grassroot.android.R;
+import org.grassroot.android.interfaces.TaskConstants;
 import org.grassroot.android.models.PreferenceObject;
 import org.grassroot.android.models.ShareModel;
 import org.grassroot.android.models.TaskModel;
@@ -37,7 +39,6 @@ public class SharingService extends IntentService {
     public static final String SHARE_TYPE = "SHARE";
     public static final String ACTION_TYPE = "ACTION_TYPE";
 
-
     private static final String TAG = SharingService.class.getName();
 
     public SharingService() {
@@ -46,10 +47,11 @@ public class SharingService extends IntentService {
 
     @Override
     protected void onHandleIntent(Intent intent1) {
-        if (intent1.getExtras().getString(ACTION_TYPE).equals(SHARE_TYPE)) {
+        if (SHARE_TYPE.equals(intent1.getExtras().getString(ACTION_TYPE))) {
             String appToShare = intent1.getExtras().getString(APP_SHARE_TAG);
             TaskModel task = (TaskModel) intent1.getExtras().get(TASK_TAG);
-            Intent i = appToShare.equals(OTHER) ? findOtherClients(getApplicationContext(), task) : share(task, appToShare);
+            Intent i = OTHER.equals(appToShare) ?
+                findOtherClients(getApplicationContext(), task) : share(task, appToShare);
             if (i != null) {
                 i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 startActivity(i);
@@ -70,9 +72,34 @@ public class SharingService extends IntentService {
         Intent shareIntent = new Intent();
         shareIntent.setAction(Intent.ACTION_SEND);
         shareIntent.setType("text/plain");
-        shareIntent.putExtra(Intent.EXTRA_TEXT, task.getTitle());
+        shareIntent.putExtra(Intent.EXTRA_TEXT, assembleShareMessage(task));
         shareIntent.setPackage(appToShare);
         return shareIntent;
+    }
+
+    private String assembleShareMessage(final TaskModel task) {
+        String message;
+        switch (task.getType()) {
+            case TaskConstants.MEETING:
+                final String mtgFormat = getString(R.string.share_meeting_format);
+                final String mtgDate = TaskConstants.dateDisplayWithDayName.format(task.getDeadlineDate());
+                message = String.format(mtgFormat, task.getTitle(), mtgDate, task.getLocation());
+                break;
+            case TaskConstants.VOTE:
+                final String voteFormat = getString(R.string.share_vote_format);
+                final String voteDate = TaskConstants.dateDisplayFormatWithHours.format(task.getDeadlineDate());
+                message = String.format(voteFormat, task.getTitle(), voteDate);
+                break;
+            case TaskConstants.TODO:
+                final String todoFormat = getString(R.string.share_todo_format);
+                final String todoDate = TaskConstants.dateDisplayWithoutHours.format(task.getDeadlineDate());
+                message = String.format(todoFormat, task.getTitle(), todoDate);
+                break;
+            default:
+                Log.e(TAG, "error, invalid task type in share!");
+                message = null;
+        }
+        return message;
     }
 
     private void findClients(final Context context) {
@@ -181,7 +208,7 @@ public class SharingService extends IntentService {
                     intent.setComponent(new ComponentName(packageName, resInfo.activityInfo.name));
                     intent.setAction(Intent.ACTION_SEND);
                     intent.setType("text/plain");
-                    intent.putExtra(Intent.EXTRA_TEXT, task.getTitle());
+                    intent.putExtra(Intent.EXTRA_TEXT, assembleShareMessage(task));
                     intent.setPackage(packageName);
                     targetShareIntents.add(intent);
                 }

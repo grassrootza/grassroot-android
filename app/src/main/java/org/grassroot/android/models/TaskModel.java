@@ -31,6 +31,7 @@ public class TaskModel extends RealmObject implements Parcelable, Comparable<Tas
 
   private boolean isParentLocal;
   private String parentUid;
+  private String parentName;
 
   private long updateTime;
   private String deadline;
@@ -126,6 +127,7 @@ public class TaskModel extends RealmObject implements Parcelable, Comparable<Tas
     dest.writeString(this.description);
     dest.writeString(this.location);
     dest.writeString(this.parentUid);
+    dest.writeString(this.parentName);
     dest.writeString(this.createdByUserName);
     dest.writeString(this.type);
     dest.writeString(this.deadline);
@@ -151,6 +153,7 @@ public class TaskModel extends RealmObject implements Parcelable, Comparable<Tas
     this.description = in.readString();
     this.location = in.readString();
     this.parentUid = in.readString();
+    this.parentName = in.readString();
     this.createdByUserName = in.readString();
     this.type = in.readString();
     this.deadline = in.readString();
@@ -251,6 +254,8 @@ public class TaskModel extends RealmObject implements Parcelable, Comparable<Tas
   public String getParentUid() {
     return parentUid;
   }
+
+  public String getParentName() { return parentName; }
 
   public String getType() {
     return type;
@@ -362,6 +367,8 @@ public class TaskModel extends RealmObject implements Parcelable, Comparable<Tas
   public void setParentUid(String parentUid) {
     this.parentUid = parentUid;
   }
+
+  public void setParentName(String parentName) { this.parentName = parentName; }
 
   public void setDeadline(String deadline) {
     this.deadline = deadline;

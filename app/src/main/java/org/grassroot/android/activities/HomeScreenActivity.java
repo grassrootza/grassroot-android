@@ -182,15 +182,28 @@ public class HomeScreenActivity extends PortraitActivity implements NavigationDr
         if (!showMenuOptions) {
             return false;
         } else {
-            if (currentMainFragment != NavigationConstants.HOME_NAV_GROUPS) {
-                final MenuItem sort = menu.findItem(R.id.mi_icon_sort);
-                if (sort != null) {
-                    sort.setVisible(false);
-                    sort.setEnabled(false);
-                }
-            }
+            switchOnMainMenu(menu, currentMainFragment != NavigationConstants.HOME_NAV_GROUPS);
             return true;
         }
+    }
+
+    private void switchOnMainMenu(Menu menu, boolean includingSort) {
+        if (menu.findItem(R.id.mi_icon_filter) != null)
+            menu.findItem(R.id.mi_icon_filter).setVisible(true);
+        if (menu.findItem(R.id.action_search) != null)
+            menu.findItem(R.id.action_search).setVisible(true);
+        if (menu.findItem(R.id.mi_icon_sort) != null && includingSort)
+            menu.findItem(R.id.mi_icon_sort).setVisible(true);
+
+        // disable sharing items ...
+        if (menu.findItem(R.id.mi_share_default) != null)
+            menu.findItem(R.id.mi_share_default).setVisible(false);
+        if (menu.findItem(R.id.mi_share_wapp) != null)
+            menu.findItem(R.id.mi_share_wapp).setVisible(false);
+        if (menu.findItem(R.id.mi_share_fb) != null)
+            menu.findItem(R.id.mi_share_fb).setVisible(false);
+        if (menu.findItem(R.id.mi_share_task) != null)
+            menu.findItem(R.id.mi_share_task).setVisible(false);
     }
 
     @Override
@@ -494,7 +507,7 @@ public class HomeScreenActivity extends PortraitActivity implements NavigationDr
     public void onTaskLoaded(String taskName) {
         setTitle(taskName);
         toggleClickableTitle(false);
-        switchOffMenu();
+        // switchOffMenu();
         drawerToggle.setDrawerIndicatorEnabled(false);
         drawerToggle.setHomeAsUpIndicator(R.drawable.btn_close_white);
         drawerToggle.setToolbarNavigationClickListener(new View.OnClickListener() {
@@ -504,7 +517,7 @@ public class HomeScreenActivity extends PortraitActivity implements NavigationDr
                 drawerToggle.setDrawerIndicatorEnabled(true);
                 toggleClickableTitle(true);
                 setTitle(R.string.tasks_toolbar_title);
-                switchOnMenu();
+                invalidateOptionsMenu();
             }
         });
     }

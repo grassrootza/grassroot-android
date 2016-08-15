@@ -35,6 +35,7 @@ import java.util.Locale;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import rx.Subscriber;
+import rx.functions.Action1;
 
 /**
  * P
@@ -75,19 +76,9 @@ public class GroupListAdapter extends RecyclerView.Adapter<GroupListAdapter.GHP_
     }
 
     public void refreshGroupsToDB() {
-        RealmUtils.loadGroupsSorted().subscribe(new Subscriber<List<Group>>() {
+        RealmUtils.loadGroupsSorted().subscribe(new Action1<List<Group>>() {
             @Override
-            public void onCompleted() {
-
-            }
-
-            @Override
-            public void onError(Throwable e) {
-
-            }
-
-            @Override
-            public void onNext(List<Group> groups) {
+            public void call(List<Group> groups) {
                 displayedGroups.clear();
                 displayedGroups.addAll(groups);
                 notifyDataSetChanged();

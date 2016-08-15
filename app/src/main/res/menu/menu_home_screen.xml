@@ -2,6 +2,7 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
+    <!-- these two items are for lists -->
     <item
         android:id="@+id/action_search"
         android:title="@string/search"
@@ -13,5 +14,24 @@
         android:title="@string/sort"
         android:icon="@drawable/btn_sort"
         app:showAsAction="ifRoom" />
+
+    <!-- these two items are for viewing tasks -->
+    <item
+        android:id="@+id/mi_share_default"
+        android:title="Share"
+        android:icon="@drawable/ic_share_white"
+        app:showAsAction="always" />
+
+    <item android:id="@+id/mi_share_wapp"
+          android:title="@string/share_wapp"
+          app:showAsAction="never" />
+
+    <item android:id="@+id/mi_share_fb"
+          android:title="@string/share_fb"
+          app:showAsAction="never" />
+
+    <item android:id="@+id/mi_share_task"
+          android:title="@string/share_other"
+          app:showAsAction="never" />
 
 </menu>

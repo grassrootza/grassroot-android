@@ -80,49 +80,29 @@ public class ViewTaskFragment extends Fragment {
     private ViewGroup mContainer;
     private Unbinder unbinder;
 
-    @BindView(R.id.vt_title)
-    TextView tvTitle;
-    @BindView(R.id.vt_header)
-    TextView tvHeader;
-    @BindView(R.id.vt_location)
-    TextView tvLocation;
-    @BindView(R.id.vt_posted_by)
-    TextView tvPostedBy;
-    @BindView(R.id.vt_date_time)
-    TextView tvDateTime;
-    @BindView(R.id.vt_description)
-    TextView tvDescription;
+    @BindView(R.id.vt_title) TextView tvTitle;
+    @BindView(R.id.vt_header) TextView tvHeader;
+    @BindView(R.id.vt_location) TextView tvLocation;
+    @BindView(R.id.vt_posted_by) TextView tvPostedBy;
+    @BindView(R.id.vt_date_time) TextView tvDateTime;
+    @BindView(R.id.vt_description) TextView tvDescription;
 
-    @BindView(R.id.vt_cv_respond)
-    CardView respondCard;
-    @BindView(R.id.vt_response_header)
-    TextView tvResponseHeader;
-    @BindView(R.id.vt_ll_response_icons)
-    LinearLayout llResponseIcons;
-    @BindView(R.id.vt_left_response)
-    ImageView icRespondPositive;
-    @BindView(R.id.vt_right_response)
-    ImageView icRespondNegative;
+    @BindView(R.id.vt_cv_respond) CardView respondCard;
+    @BindView(R.id.vt_response_header) TextView tvResponseHeader;
+    @BindView(R.id.vt_ll_response_icons) LinearLayout llResponseIcons;
+    @BindView(R.id.vt_left_response) ImageView icRespondPositive;
+    @BindView(R.id.vt_right_response) ImageView icRespondNegative;
 
-    @BindView(R.id.vt_cv_response_list)
-    CardView cvResponseList;
-    @BindView(R.id.vt_responses_count)
-    TextView tvResponsesCount;
-    @BindView(R.id.vt_ic_responses_expand)
-    ImageView icResponsesExpand;
-    @BindView(R.id.vt_mtg_response_list)
-    RecyclerView rcResponseList;
-    @BindView(R.id.vt_vote_response_details)
-    LinearLayout llVoteResponseDetails;
-    @BindView(R.id.td_rl_response_icon)
-    RelativeLayout rlResponse;
-    @BindView(R.id.bt_td_respond)
-    ImageView btTodoRespond;
+    @BindView(R.id.vt_cv_response_list) CardView cvResponseList;
+    @BindView(R.id.vt_responses_count) TextView tvResponsesCount;
+    @BindView(R.id.vt_ic_responses_expand) ImageView icResponsesExpand;
+    @BindView(R.id.vt_mtg_response_list) RecyclerView rcResponseList;
+    @BindView(R.id.vt_vote_response_details) LinearLayout llVoteResponseDetails;
+    @BindView(R.id.td_rl_response_icon) RelativeLayout rlResponse;
+    @BindView(R.id.bt_td_respond) ImageView btTodoRespond;
 
-    @BindView(R.id.vt_bt_modify)
-    Button btModifyTask;
-    @BindView(R.id.vt_bt_cancel)
-    Button btCancelTask;
+    @BindView(R.id.vt_bt_modify) Button btModifyTask;
+    @BindView(R.id.vt_bt_cancel) Button btCancelTask;
 
     ProgressDialog progressDialog;
 
@@ -163,9 +143,13 @@ public class ViewTaskFragment extends Fragment {
                 taskType = task.getType();
                 taskUid = task.getTaskUid();
             }
+
             if (taskType == null || taskUid == null) {
-                throw new UnsupportedOperationException(
-                        "Error! View task fragment with type or UID missing");
+                throw new UnsupportedOperationException("Error! View task fragment with type or UID missing");
+            }
+
+            if (task == null) {
+                task = RealmUtils.loadObjectFromDB(TaskModel.class, "taskUid", taskUid);
             }
 
             phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
@@ -199,6 +183,21 @@ public class ViewTaskFragment extends Fragment {
     public void onPrepareOptionsMenu(Menu menu) {
         super.onPrepareOptionsMenu(menu);
         PreferenceObject preferenceObject = RealmUtils.loadPreferencesFromDB();
+        boolean taskInFuture = (task == null || task.isInFuture());
+        Log.e(TAG, "setting up options menu ... taskInFuture = " + taskInFuture);
+        if (menu.findItem(R.id.mi_icon_filter) != null)
+            menu.findItem(R.id.mi_icon_filter).setVisible(false);
+        if (menu.findItem(R.id.mi_icon_sort) != null)
+            menu.findItem(R.id.mi_icon_sort).setVisible(false);
+        if (menu.findItem(R.id.mi_view_members) != null)
+            menu.findItem(R.id.mi_view_members).setVisible(false);
+        if (menu.findItem(R.id.mi_group_settings) != null)
+            menu.findItem(R.id.mi_group_settings).setVisible(false);
+        if (menu.findItem(R.id.action_search) != null)
+            menu.findItem(R.id.action_search).setVisible(false);
+
+        if (menu.findItem(R.id.mi_share_default) != null)
+            menu.findItem(R.id.mi_share_default).setVisible(taskInFuture);
         if (menu.findItem(R.id.mi_share_task) != null)
             menu.findItem(R.id.mi_share_task).setVisible(true);
         if (menu.findItem(R.id.mi_share_fb) != null)
@@ -207,15 +206,8 @@ public class ViewTaskFragment extends Fragment {
             menu.findItem(R.id.mi_share_fb).setVisible(preferenceObject.isHasFbInstalled());
         if (menu.findItem(R.id.mi_view_join_code) != null)
             menu.findItem(R.id.mi_view_join_code).setVisible(false);
-        if (menu.findItem(R.id.mi_view_members) != null)
-            menu.findItem(R.id.mi_view_members).setVisible(false);
-        if (menu.findItem(R.id.mi_group_settings) != null)
-            menu.findItem(R.id.mi_group_settings).setVisible(false);
-        if (menu.findItem(R.id.mi_share_default) != null)
-            menu.findItem(R.id.mi_share_default).setVisible(true);
 
     }
-
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
@@ -242,13 +234,15 @@ public class ViewTaskFragment extends Fragment {
         super.onDestroyView();
         unbinder.unbind();
     }
-private void generateShareIntent(String packageName){
-    Intent i = new Intent(getActivity(), SharingService.class);
-    i.putExtra(SharingService.TASK_TAG, task);
-    i.putExtra(SharingService.APP_SHARE_TAG, packageName);
-    i.putExtra(SharingService.ACTION_TYPE,SharingService.SHARE_TYPE);
-    getActivity().startService(i);
-}
+
+    private void generateShareIntent(String packageName){
+        Intent i = new Intent(getActivity(), SharingService.class);
+        i.putExtra(SharingService.TASK_TAG, task);
+        i.putExtra(SharingService.APP_SHARE_TAG, packageName);
+        i.putExtra(SharingService.ACTION_TYPE,SharingService.SHARE_TYPE);
+        getActivity().startService(i);
+    }
+
     private void retrieveTaskDetails() {
         if (!NetworkUtils.isOnline(getContext())) {
             task = RealmUtils.loadObjectFromDB(TaskModel.class, "taskUid", taskUid);

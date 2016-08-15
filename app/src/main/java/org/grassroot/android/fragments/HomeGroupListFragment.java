@@ -47,11 +47,13 @@ import org.grassroot.android.models.exceptions.ApiCallException;
 import org.grassroot.android.models.Group;
 import org.grassroot.android.services.GroupService;
 import org.grassroot.android.utils.Constant;
+import org.grassroot.android.utils.ErrorUtils;
 import org.grassroot.android.utils.IntentUtils;
 import org.grassroot.android.utils.NetworkUtils;
 import org.grassroot.android.utils.RealmUtils;
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
+import org.greenrobot.eventbus.ThreadMode;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -62,6 +64,7 @@ import butterknife.OnClick;
 import butterknife.Unbinder;
 import rx.Subscriber;
 import rx.android.schedulers.AndroidSchedulers;
+import rx.functions.Action1;
 import rx.schedulers.Schedulers;
 
 public class HomeGroupListFragment extends android.support.v4.app.Fragment
@@ -80,6 +83,7 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
     SwipeRefreshLayout glSwipeRefresh;
     @BindView(R.id.recycler_view)
     RecyclerView rcGroupList;
+    private boolean triggeredGroupRefresh;
 
     private boolean floatingMenuOpen = false;
     @BindView(R.id.fab_menu_open)
@@ -100,16 +104,17 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
-        Log.e(TAG, "home group list fragment ... on attach ... timer ... " + SystemClock.currentThreadTimeMillis());
-        Activity activity = (Activity) context;
+        Log.d(TAG, "home group list fragment ... on attach ... timer ... " + SystemClock.currentThreadTimeMillis());
+
         try {
-            mCallbacks = (GroupPickCallbacks) activity;
+            mCallbacks = (GroupPickCallbacks) context;
         } catch (ClassCastException e) {
             throw new ClassCastException("Activity must implement group pick callbacks");
         }
     }
 
-    @Override public View onCreateView(LayoutInflater inflater, ViewGroup container,
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container,
                                        Bundle savedInstanceState) {
 
         View view = inflater.inflate(R.layout.activity_group__homepage, container, false);
@@ -120,50 +125,10 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
         return view;
     }
 
-    private void setUpRecyclerView() {
-        RealmUtils.loadGroupsSorted().subscribe(new Subscriber<List<Group>>() {
-            @Override public void onCompleted() { }
-
-            @Override public void onError(Throwable e) {
-
-            }
-
-            @Override public void onNext(List<Group> groups) {
-                Log.e(TAG, "loaded groups ... setting recycler parameters ... timer ... " + SystemClock.currentThreadTimeMillis());
-                groupListRowAdapter = new GroupListAdapter(groups, HomeGroupListFragment.this);
-                rcGroupList.setAdapter(groupListRowAdapter);
-                rcGroupList.setHasFixedSize(true);
-                rcGroupList.setLayoutManager(new LinearLayoutManager(getActivity()));
-                rcGroupList.setItemViewCacheSize(20);
-                rcGroupList.setDrawingCacheEnabled(true);
-                rcGroupList.setDrawingCacheQuality(View.DRAWING_CACHE_QUALITY_HIGH);
-                rcGroupList.setVisibility(View.VISIBLE);
-
-                glSwipeRefresh.setColorSchemeColors(ContextCompat.getColor(getActivity(), R.color.primaryColor));
-                glSwipeRefresh.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
-                    @Override
-                    public void onRefresh() {
-                        refreshGroupList();
-                    }
-                });
-
-                toggleProgressIfGroupsShowing();
-            }
-        });
-    }
-
     @Override
-    public void onStart() {
-        super.onStart();
-		Log.d(TAG, "inside on start ... toggling progress indicator");
-		toggleProgressIfGroupsShowing();
-    }
-
-    @Override public void onResume() {
+    public void onResume() {
         super.onResume();
         fabOpenMenu.setVisibility(View.VISIBLE);
-        Log.d(TAG, "inside on resume ... toggling progress indicator");
-        toggleProgressIfGroupsShowing();
     }
 
     @Override
@@ -180,14 +145,69 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
         mCallbacks = null;
     }
 
-    /**
-     * Method executed to retrieve and populate list of groups.
-     * todo : set some preference or flag as "offline" if error, and show a dialog box
-     */
+    private void setUpRecyclerView() {
+        triggeredGroupRefresh = true;
+        if (RealmUtils.countGroupsInDB() > 0) {
+            loadGroupsFromDB(false);
+            GroupService.getInstance().fetchGroupList(AndroidSchedulers.mainThread())
+                .subscribe(new Action1<String>() {
+                    @Override
+                    public void call(String s) {
+                        if (groupListRowAdapter != null) {
+                            groupListRowAdapter.refreshGroupsToDB();
+                        }
+                        triggeredGroupRefresh = false;
+                    }
+            });
+        } else {
+            showProgress();
+            GroupService.getInstance().fetchGroupList(AndroidSchedulers.mainThread())
+                .subscribe(new Action1<String>() {
+                @Override
+                public void call(String s) {
+                    loadGroupsFromDB(true);
+                    triggeredGroupRefresh = false;
+                }
+            });
+        }
 
-    @Subscribe
-    public void onGroupJoinRequestsLoaded(JoinRequestReceived e) {
-        Snackbar.make(rlGhpRoot, R.string.jreq_notice, Snackbar.LENGTH_LONG).show();
+        glSwipeRefresh.setColorSchemeColors(ContextCompat.getColor(getActivity(), R.color.primaryColor));
+        glSwipeRefresh.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                refreshGroupList();
+            }
+        });
+    }
+
+    private void loadGroupsFromDB(final boolean toggleProgress) {
+        RealmUtils.loadGroupsSorted().subscribe(new Action1<List<Group>>() {
+            @Override
+            public void call(List<Group> groups) {
+                Log.e(TAG, "loaded groups ... setting recycler parameters ... timer ... " + SystemClock.currentThreadTimeMillis());
+                if (groupListRowAdapter == null) {
+                    setUpAdapterAndView(groups);
+                } else {
+                    groupListRowAdapter.setGroupList(groups);
+                }
+                if (toggleProgress) {
+                    hideProgress();
+                }
+            }
+        });
+    }
+
+    private void setUpAdapterAndView(List<Group> groups) {
+        groupListRowAdapter = new GroupListAdapter(groups, HomeGroupListFragment.this);
+        if (rcGroupList != null) {
+            rcGroupList.setAdapter(groupListRowAdapter);
+            rcGroupList.setHasFixedSize(true);
+            rcGroupList.setLayoutManager(new LinearLayoutManager(getActivity()));
+            rcGroupList.setItemViewCacheSize(20);
+            rcGroupList.setDrawingCacheEnabled(true);
+            rcGroupList.setDrawingCacheQuality(View.DRAWING_CACHE_QUALITY_HIGH);
+            rcGroupList.setVisibility(View.VISIBLE);
+        }
     }
 
     /*
@@ -195,24 +215,47 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
     in time, rather than doing a full refresh, and don't need to worry about progress bar, etc
    */
     public void refreshGroupList() {
+        triggeredGroupRefresh = true;
         GroupService.getInstance().fetchGroupList(null).subscribe(new Subscriber<String>() {
+            @Override
+            public void onNext(String s) {
+                Log.e(TAG, "came back from group list with string : " + s);
+                switch (s) {
+                    case NetworkUtils.FETCHED_SERVER:
+                        groupListRowAdapter.refreshGroupsToDB();
+                        break;
+                    case NetworkUtils.CONNECT_ERROR:
+                        Snackbar.make(rlGhpRoot, R.string.connect_error_homescreen, Snackbar.LENGTH_SHORT).show();
+                        break;
+                    case NetworkUtils.OFFLINE_SELECTED:
+                        Snackbar.make(rlGhpRoot, R.string.connect_error_offline_home, Snackbar.LENGTH_SHORT).show();
+                        break;
+                    default:
+                        final String errorMsg = ErrorUtils.serverErrorText(s, getContext());
+                        Snackbar.make(rlGhpRoot, errorMsg, Snackbar.LENGTH_SHORT).show();
+                }
+                hideProgress();
+                triggeredGroupRefresh = false;
+            }
+
             @Override
             public void onError(Throwable e) {
                 hideProgress();
-                // ErrorUtils.handleServerError(errorViewHolder, activity, response); // todo : handle this ...
+                triggeredGroupRefresh = false;
+                e.printStackTrace(); // means something else went wrong, so just fail gracefully
             }
 
             @Override
-            public void onNext(String s) {
-                groupListRowAdapter.refreshGroupsToDB();
-                hideProgress();
-            }
-
-            @Override
-            public void onCompleted() {
-
-            }
+            public void onCompleted() { }
         });
+    }
+
+    // fragment only handles this if it isn't in the middle of a sequence the fragment initiated
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onEvent(GroupsRefreshedEvent e) {
+        if (!triggeredGroupRefresh && groupListRowAdapter != null) {
+            groupListRowAdapter.refreshGroupsToDB();
+        }
     }
 
     @OnClick(R.id.ic_fab_new_task)
@@ -405,22 +448,6 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
         }
     }
 
-    private void toggleProgressIfGroupsShowing() {
-        if (GroupService.isFetchingGroups) {
-			Log.e(TAG, "group service is fetching, hence showing ...");
-			showProgress();
-        } else if (groupListRowAdapter == null) {
-			Log.e(TAG, "groupListRowAdaper null, showing dialog ...");
-			showProgress();
-		} else if (groupListRowAdapter.getItemCount() == 0) {
-            Log.e(TAG, "groupListAdapter empty, hence showing ...");
-			showProgress();
-        } else {
-            Log.e(TAG, "neither of the above, hence hiding");
-			hideProgress();
-        }
-    }
-
     private void showProgress() {
         if (progressDialog == null) {
             progressDialog = new ProgressDialog(getContext());
@@ -439,12 +466,9 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
         }
     }
 
-    @Subscribe
-    public void onEvent(GroupsRefreshedEvent e) {
-        if (groupListRowAdapter != null) {
-            groupListRowAdapter.refreshGroupsToDB();
-        }
-        hideProgress();
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onGroupJoinRequestsLoaded(JoinRequestReceived e) {
+        Snackbar.make(rlGhpRoot, R.string.jreq_notice, Snackbar.LENGTH_LONG).show();
     }
 
     @Subscribe

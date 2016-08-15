@@ -1,11 +1,14 @@
 package org.grassroot.android.services;
 
 import android.text.TextUtils;
+import android.util.Log;
 
 import java.io.IOException;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 
 import org.grassroot.android.events.TasksRefreshedEvent;
 import org.grassroot.android.interfaces.TaskConstants;
@@ -28,6 +31,7 @@ import rx.Observable;
 import rx.Scheduler;
 import rx.Subscriber;
 import rx.android.schedulers.AndroidSchedulers;
+import rx.functions.Action1;
 import rx.schedulers.Schedulers;
 
 /**
@@ -117,7 +121,7 @@ public class TaskService {
               subscriber.onCompleted();
             } else {
               final String restMessage = ErrorUtils.getRestMessage(response.errorBody());
-              subscriber.onNext(NetworkUtils.SERVER_ERROR); // todo : include rest message
+              subscriber.onNext(restMessage); // todo : include rest message
               subscriber.onCompleted();
             }
           } catch (IOException e) {
@@ -133,31 +137,29 @@ public class TaskService {
     return Observable.create(new Observable.OnSubscribe<String>() {
       @Override
       public void call(Subscriber<? super String> subscriber) {
-        final String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
-        final String code = RealmUtils.loadPreferencesFromDB().getToken();
-        Group group = RealmUtils.loadObjectFromDB(Group.class, "groupUid", groupUid);
-        Call<TaskChangedResponse> apiCall;
-        if (group == null || group.getLastTimeTasksFetched() == null) {
-          apiCall = GrassrootRestService.getInstance().getApi().getGroupTasks(phoneNumber, code, groupUid);
+        if (!NetworkUtils.isOnline()) {
+          subscriber.onNext(NetworkUtils.OFFLINE_SELECTED);
         } else {
-          apiCall = GrassrootRestService.getInstance().getApi().getGroupTasksChangedSince(phoneNumber, code, groupUid,
-                  Long.valueOf(group.getLastTimeTasksFetched()));
-        }
+          final String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
+          final String code = RealmUtils.loadPreferencesFromDB().getToken();
+          try {
+            Response<TaskChangedResponse> response = GrassrootRestService.getInstance().getApi()
+                .getGroupTasks(phoneNumber, code, groupUid).execute();
+            if (response.isSuccessful()) {
+              Log.e(TAG, "got response, now persisting tasks");
+              updateAndRemoveTasks(response.body(), groupUid);
+              Log.e(TAG, "calling subscriber on next ...");
+              subscriber.onNext(NetworkUtils.FETCHED_SERVER);
+              subscriber.onCompleted();
+            } else {
+              final String restMessage = ErrorUtils.getRestMessage(response.errorBody());
+              subscriber.onNext(restMessage);
+              subscriber.onCompleted();
+            }
 
-        try {
-          Response<TaskChangedResponse> response = apiCall.execute();
-          if (response.isSuccessful()) {
-            updateTasksFetchedTime(groupUid);
-            updateAndRemoveTasks(response.body(), groupUid);
-            subscriber.onNext(NetworkUtils.FETCHED_SERVER);
-            subscriber.onCompleted();
-          } else {
-            subscriber.onNext(NetworkUtils.SERVER_ERROR); // todo : add a get message
-            subscriber.onCompleted();
+          } catch (IOException e) {
+            handleFetchConnectionError(subscriber);
           }
-
-        } catch (IOException e) {
-          handleFetchConnectionError(subscriber);
         }
       }
     }).subscribeOn(Schedulers.io()).observeOn(observingThread);
@@ -178,13 +180,15 @@ public class TaskService {
   }
 
   private void updateAndRemoveTasks(final TaskChangedResponse responseBody, final String groupUid) {
+    Log.e(TAG, "inside update and remove tasks ...");
     List<TaskModel> addedUpdated = responseBody.getAddedAndUpdated();
     for (TaskModel task : addedUpdated) {
       task.calcDeadlineDate();
     }
-    RealmUtils.saveDataToRealm(addedUpdated, null).subscribe();
-    RealmUtils.removeObjectsByUid(TaskModel.class, "taskUid", responseBody.getRemovedUids());
+    Log.e(TAG, "about to save tasks to DB ... for groupUid = " + groupUid);
+    RealmUtils.saveDataToRealmSync(addedUpdated);
     EventBus.getDefault().post(new TasksRefreshedEvent(groupUid));
+    Log.e(TAG," exiting update and remove tasks");
   }
 
   private void updateTasksFetchedTime(String parentUid) {

@@ -56,6 +56,9 @@
     <string name="server_error_todo_completed">You\'ve already marked the action complete</string>
     <string name="server_error_notifications_done">That\'s all the notifications in your list</string>
 
+    <string name="connect_error_homescreen">Sorry, we couldn\'t refresh right now because the connection isn\'t working</string>
+    <string name="connect_error_offline_home">You\'re working in offline mode. Please go online and try refreshing again</string>
+
     <string name="input_error_no_display_name">Please enter whatever name people know you by</string>
     <string name="input_error_name_regex">Please enter a name without special characters (e.g., !, &amp;)</string>
     <string name="input_error_phone_empty">Please enter a cellphone number to register</string>
@@ -209,6 +212,7 @@
     <string name="gm_remove_members">REMOVE MEMBERS</string>
 
     <!--Group search and join -->
+    <string name="find_group_nav">Find other groups</string>
     <string name="find_group_title">Find groups</string>
     <string name="find_group_results_title">Results</string>
     <string name="find_group_name_only">Search by group name only</string>
@@ -502,6 +506,7 @@
     <string name="tlist_posted_by_vote_past">Prior vote (called by %s)</string>
     <string name="tlist_posted_by_todo">Recorded by %s</string>
     <string name="tlist_posted_by_todo_past">Past action (posted by %s)</string>
+    <string name="tlist_posted_in_group">Group: %s</string>
 
     <string name="vt_mtg_title">Meeting subject:</string>
     <string name="vt_mtg_title_past">Past meeting about:</string>
@@ -623,6 +628,7 @@
     <string name="ac_body_task_create_local">You are working offline, so we have created the %1$s
     and will send it next time you connect</string>
 
+    <string name="ac_btn_share">SHARE</string>
     <string name="ac_btn_done">DONE</string>
     <string name="ac_btn_home">HOME</string>
     <string name="ac_btn_mtg">CALL MEETING</string>
@@ -655,8 +661,6 @@
     <string name="pp_OK">OK</string>
 
     <!--Group picture -->
-    <string name="gp_custom_description"></string>
-
     <string name="gp_social_move">Social movement</string>
     <string name="gp_savings_group">Burial society, stokvel</string>
     <string name="gp_faith_group">Faith group, church, mosque</string>
@@ -672,17 +676,27 @@
     <string name="gp_txt_title">Group picture</string>
     <string name="gp_update_success">Group photo updated</string>
     <string name="gp_image_load_error">Sorry, something went wrong loading picture. Defaulting to icons.</string>
-
-    <!--FAQ-->
-    <string name="fq_txt_toolbar">FAQs</string>
-    <string name="gp_dlg_cnfrm">Are you sure you want to remove group picture?</string>
     <string name="group_settings">Group settings</string>
+
+    <!-- Sharing strings -->
     <string name="share_other">Share with other</string>
     <string name="share_fb">Share with Facebook</string>
     <string name="share_wapp">Share with WhatsApp</string>
     <string name="default_share">Default app to share</string>
 
+    <string name="wapp_short">WhatsApp</string>
+    <string name="fbm_short">Facebook Messenger</string>
+    <string name="other_short">Other</string>
 
+    <string name="share_meeting_format">Meeting notice! About \'%1$s\' on %2$s at %3$s. Go to Grassroot
+    to confirm attendance (*134*1994# or use the app)</string>
+    <string name="share_vote_format">Vote called! Subject: %1$s, vote closes at %2$s. Go to Grassroot
+    to vote (*134*1994# or use the app)</string>
+    <string name="share_todo_format">Action recorded! \'%1$s\' must be completed by %2$s. Go to Grassroot
+    to see more details (*134*1994# or use the app)</string>
+
+    <!--FAQ-->
+    <string name="fq_txt_toolbar">FAQs</string>
     <string-array name="fq_Header">
         <item>How do I get started?</item>
         <item>Okay, I\'ve part of some groups. What next?</item>

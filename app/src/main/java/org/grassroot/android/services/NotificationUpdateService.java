@@ -41,7 +41,7 @@ public class NotificationUpdateService extends IntentService {
                     @Override
                     public void onResponse(Call<GenericResponse> call, Response<GenericResponse> response) {
                         if (response.isSuccessful()) {
-                            Log.e(TAG, "updated notification with uid " + notificationUid + "to read status");
+                            Log.d(TAG, "updated notification with uid " + notificationUid + "to read status");
                         }
 
                     }

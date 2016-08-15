@@ -46,6 +46,7 @@ import org.grassroot.android.utils.NetworkUtils;
 import org.grassroot.android.utils.RealmUtils;
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
+import org.greenrobot.eventbus.ThreadMode;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -160,7 +161,7 @@ public class NavigationDrawerFragment extends Fragment implements NavigationDraw
 
         tasks = new NavDrawerItem(ITEM_TASKS, getString(R.string.drawer_open_tasks), R.drawable.ic_tasks_black, R.drawable.ic_tasks_green,
             ITEM_TASKS.equals(defltItem), true);
-        tasks.setItemCount(RealmUtils.loadUpcomingTasksFromDB().size());
+        tasks.setItemCount((int) RealmUtils.countUpcomingTasksInDB());
         pos = addItemAndIncrement(pos, NavigationDrawerAdapter.PRIMARY, tasks);
 
         notifications = new NavDrawerItem(ITEM_NOTIFICATIONS, getString(R.string.drawer_notis), R.drawable.ic_exclamation_black, R.drawable.ic_excl_green,
@@ -179,7 +180,7 @@ public class NavigationDrawerFragment extends Fragment implements NavigationDraw
             new NavDrawerItem(ITEM_SHARE, getString(R.string.drawer_share), R.drawable.ic_share));
 
         pos = addItemAndIncrement(pos, NavigationDrawerAdapter.SECONDARY,
-            new NavDrawerItem(ITEM_FIND_GROUPS, "Find groups", R.drawable.ic_find_group_nav));
+            new NavDrawerItem(ITEM_FIND_GROUPS, getString(R.string.find_group_nav), R.drawable.ic_find_group_nav));
 
         pos = addItemAndIncrement(pos, NavigationDrawerAdapter.SECONDARY,
             new NavDrawerItem(ITEM_PROFILE, getString(R.string.drawer_profile),R.drawable.ic_profile));
@@ -389,53 +390,53 @@ public class NavigationDrawerFragment extends Fragment implements NavigationDraw
         itemAdapter.notifyDataSetChanged();
     }
 
-    @Subscribe
+    @Subscribe(threadMode = ThreadMode.MAIN)
     public void onGroupsRefreshedEvent(GroupsRefreshedEvent e) {
         refreshGroupCount();
     }
 
-    @Subscribe
+    @Subscribe(threadMode = ThreadMode.MAIN)
     public void onGroupAdded(GroupCreatedEvent e) {
         refreshGroupCount();
     }
 
-    @Subscribe
+    @Subscribe(threadMode = ThreadMode.MAIN)
     public void onNewNotificationEvent(NotificationEvent event) {
         int notificationCount = event.getNotificationCount();
         itemAdapter.notifyDataSetChanged();
     }
 
-    @Subscribe
+    @Subscribe(threadMode = ThreadMode.MAIN)
     public void onTaskCreatedEvent(TaskAddedEvent e) {
         tasks.incrementItemCount();
         safeItemChange(NavigationConstants.HOME_NAV_TASKS);
     }
 
-    @Subscribe
+    @Subscribe(threadMode = ThreadMode.MAIN)
     public void onTaskCancelledEvent(TaskCancelledEvent e) {
         tasks.decrementItemCount();
         safeItemChange(NavigationConstants.HOME_NAV_TASKS);
     }
 
-    @Subscribe
+    @Subscribe(threadMode = ThreadMode.MAIN)
     public void onTasksRefreshedEvent(TasksRefreshedEvent e) {
         if (!TextUtils.isEmpty(e.parentUid)) {
-            tasks.setItemCount(RealmUtils.loadUpcomingTasksFromDB().size());
+            tasks.setItemCount((int) RealmUtils.countUpcomingTasksInDB());
             safeItemChange(NavigationConstants.HOME_NAV_TASKS);
         }
     }
 
-    @Subscribe
+    @Subscribe(threadMode = ThreadMode.MAIN)
     public void onEvent(OfflineActionsSent e) {
         setupOnlineSwitch();
     }
 
-    @Subscribe
+    @Subscribe(threadMode = ThreadMode.MAIN)
     public void onEvent(OnlineOfflineToggledEvent e) {
         setupOnlineSwitch();
     }
 
-    @Subscribe
+    @Subscribe(threadMode = ThreadMode.MAIN)
     public void onEvent(NetworkFailureEvent e) { setupOnlineSwitch(); }
 
     private void safeItemChange(final int itemPosition) {

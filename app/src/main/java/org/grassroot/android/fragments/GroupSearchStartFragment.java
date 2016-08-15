@@ -57,6 +57,7 @@ public class GroupSearchStartFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View viewToReturn = inflater.inflate(R.layout.fragment_group_search_open, container, false);
         unbinder = ButterKnife.bind(this, viewToReturn);
+        searchTerm.requestFocus();
         return viewToReturn;
     }
 

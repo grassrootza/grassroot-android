@@ -28,6 +28,17 @@
         android:textSize="@dimen/txt_large" />
 
     <Button
+        android:id="@+id/ac_bt_share"
+        style="@style/NewTaskButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="@dimen/margin_xlarge"
+        android:layout_marginRight="@dimen/margin_xlarge"
+        android:layout_marginBottom="@dimen/margin_large"
+        android:layout_above="@+id/ac_bt_done"
+        android:text="@string/ac_btn_share"/>
+
+    <Button
         android:id="@+id/ac_bt_done"
         style="@style/NewTaskButton"
         android:layout_alignParentBottom="true"

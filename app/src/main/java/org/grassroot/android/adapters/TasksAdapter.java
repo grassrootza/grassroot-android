@@ -5,6 +5,7 @@ import android.os.SystemClock;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -15,7 +16,8 @@ import android.widget.TextView;
 import org.grassroot.android.R;
 import org.grassroot.android.interfaces.TaskConstants;
 import org.grassroot.android.models.TaskModel;
-import org.grassroot.android.utils.RealmUtils;
+import org.grassroot.android.services.ApplicationLoader;
+import org.w3c.dom.Text;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -28,7 +30,6 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import rx.Observable;
 import rx.android.schedulers.AndroidSchedulers;
-import rx.functions.Action1;
 import rx.schedulers.Schedulers;
 
 /**
@@ -39,6 +40,7 @@ public class TasksAdapter extends RecyclerView.Adapter<TasksAdapter.TaskViewHold
   private static final String TAG = TasksAdapter.class.getCanonicalName();
 
   private final TaskListListener listener;
+  private final boolean showGroupNames;
 
   private List<TaskModel> viewedTasks = new ArrayList<>();
   private Map<String, Integer> uidPositionMap = new HashMap<>();
@@ -48,24 +50,17 @@ public class TasksAdapter extends RecyclerView.Adapter<TasksAdapter.TaskViewHold
 
   private final int primaryColor, textColor, secondaryColor;
 
-  private final Context mContext;
-
   public interface TaskListListener {
     void respondToTask(String taskUid, String taskType, String response, int position);
     void onCardClick(int position, String taskUid, String taskType, String taskTitle);
   }
 
-  // note : pass in parentUid as null if the task list is for all of a user's groups / entities
-  public TasksAdapter(TaskListListener listListener, Context context, String parentUid) {
-    this.listener = listListener;
-    this.mContext = context;
-    this.primaryColor = ContextCompat.getColor(context, R.color.primaryColor);
-    this.textColor = ContextCompat.getColor(context, R.color.black);
-    this.secondaryColor = ContextCompat.getColor(context, R.color.text_grey);
-  }
-
-  public TasksAdapter(Context context, List<TaskModel> tasks, TaskListListener listener) {
-    this(listener, context, null);
+  public TasksAdapter(List<TaskModel> tasks, boolean showGroupNames, TaskListListener listener) {
+    this.listener = listener;
+    this.showGroupNames = showGroupNames;
+    this.primaryColor = ContextCompat.getColor(ApplicationLoader.applicationContext, R.color.primaryColor);
+    this.textColor = ContextCompat.getColor(ApplicationLoader.applicationContext, R.color.black);
+    this.secondaryColor = ContextCompat.getColor(ApplicationLoader.applicationContext, R.color.text_grey);
     this.viewedTasks = tasks;
   }
 
@@ -130,7 +125,6 @@ public class TasksAdapter extends RecyclerView.Adapter<TasksAdapter.TaskViewHold
       final int position) {
     icon.setOnClickListener(new View.OnClickListener() {
       @Override public void onClick(View v) {
-        Log.e(TAG, "icon clicked!");
         listener.respondToTask(task.getTaskUid(), task.getType(), response, position);
       }
     });
@@ -140,8 +134,15 @@ public class TasksAdapter extends RecyclerView.Adapter<TasksAdapter.TaskViewHold
       final int position) {
 
     holder.txtTitle.setText(task.getTitle());
-    int postedByFormat = getPostedByString(task);
-    holder.txtTaskCallerName.setText(String.format(mContext.getString(postedByFormat), task.getName()));
+
+    if (showGroupNames && !TextUtils.isEmpty(task.getParentName())) {
+      final String grpName = String.format(ApplicationLoader.applicationContext.
+          getString(R.string.tlist_posted_in_group), task.getParentName());
+      holder.txtTaskCallerName.setText(grpName);
+    } else {
+      final String postedFormat = ApplicationLoader.applicationContext.getString(getPostedByString(task));
+      holder.txtTaskCallerName.setText(String.format(postedFormat, task.getName()));
+    }
 
     if (task.getDescription() == null || task.getDescription().trim().equals("")) {
       holder.txtTaskDesc.setVisibility(View.GONE);

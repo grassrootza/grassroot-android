@@ -1,5 +1,6 @@
 package org.grassroot.android.services;
 
+import android.os.Looper;
 import android.text.TextUtils;
 import android.util.Log;
 
@@ -94,15 +95,14 @@ public class GroupService {
         final String mobileNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
         final String userCode = RealmUtils.loadPreferencesFromDB().getToken();
         if (!NetworkUtils.isOfflineOrLoggedOut(subscriber, mobileNumber, userCode)) {
-
           isFetchingGroups = true;
           long lastTimeUpdated = RealmUtils.loadPreferencesFromDB().getLastTimeGroupsFetched();
           Call<GroupsChangedResponse> apiCall = (lastTimeUpdated == 0) ?
               GrassrootRestService.getInstance().getApi().getUserGroups(mobileNumber, userCode) :
               GrassrootRestService.getInstance().getApi().getUserGroupsChangedSince(mobileNumber, userCode, lastTimeUpdated);
-
           try {
             Response<GroupsChangedResponse> response = apiCall.execute();
+            updateGroupsFetchedTime();
             isFetchingGroups = false;
             if (response.isSuccessful()) {
               persistGroupsAddedUpdated(response.body());
@@ -111,6 +111,7 @@ public class GroupService {
               Log.e(TAG, response.message());
               subscriber.onNext(NetworkUtils.SERVER_ERROR); // use these so calling class can decide whether to handle errors or just subscribe
             }
+            EventBus.getDefault().post(new GroupsRefreshedEvent());
             subscriber.onCompleted();
           } catch (IOException e) {
             isFetchingGroups = false;
@@ -118,6 +119,9 @@ public class GroupService {
             subscriber.onNext(NetworkUtils.CONNECT_ERROR);
             subscriber.onCompleted();
           }
+        } else {
+          subscriber.onNext(NetworkUtils.OFFLINE_SELECTED);
+          subscriber.onCompleted();
         }
 
       }
@@ -125,36 +129,21 @@ public class GroupService {
   }
 
   private void persistGroupsAddedUpdated(GroupsChangedResponse responseBody) {
-    updateGroupsFetchedTime(); // in case another call comes in (see above re threads)
-    // todo : switch to inline?
-    RealmUtils.saveDataToRealm(responseBody.getAddedAndUpdated(), null).subscribe(new Action1() {
-      @Override public void call(Object o) {
-        // System.out.println("saved groups");
-        EventBus.getDefault().post(new GroupsRefreshedEvent());
-      }
-    });
+    if (Looper.myLooper() == Looper.getMainLooper()) {
+      throw new IllegalStateException("Must not persist group list on main thread");
+    }
+
+    RealmUtils.saveDataToRealmSync(responseBody.getAddedAndUpdated());
     if (!responseBody.getRemovedUids().isEmpty()) {
       RealmUtils.removeObjectsByUid(Group.class, "groupUid",
           RealmUtils.convertListOfRealmStringInListOfString(
-              responseBody.getRemovedUids())); // todo : just switch this to List<String> in object
+              responseBody.getRemovedUids()));
     }
-    // note: put this on a background thread, and do it in refresh too (if we keep refresh method)
+
     for (Group g : responseBody.getAddedAndUpdated()) {
       for (Member m : g.getMembers()) {
         m.composeMemberGroupUid();;
-        RealmUtils.saveDataToRealm(m).subscribe(new Subscriber() {
-          @Override public void onCompleted() {
-            // System.out.println("saved");
-          }
-
-          @Override public void onError(Throwable e) {
-            e.printStackTrace();
-          }
-
-          @Override public void onNext(Object o) {
-
-          }
-        });
+        RealmUtils.saveDataToRealm(m).subscribe();
       }
     }
   }
@@ -162,18 +151,7 @@ public class GroupService {
   private void updateGroupsFetchedTime() {
     PreferenceObject preferenceObject = RealmUtils.loadPreferencesFromDB();
     preferenceObject.setLastTimeGroupsFetched(Utilities.getCurrentTimeInMillisAtUTC());
-    RealmUtils.saveDataToRealm(preferenceObject).subscribe(new Subscriber() {
-      @Override public void onCompleted() {
-      }
-
-      @Override public void onError(Throwable e) {
-
-      }
-
-      @Override public void onNext(Object o) {
-
-      }
-    });
+    RealmUtils.saveDataToRealm(preferenceObject).subscribe();
   }
 
     /*

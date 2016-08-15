@@ -93,6 +93,16 @@ public class RealmUtils {
         realm.close();
     }
 
+    public static void saveDataToRealmSync(final List<? extends RealmObject> list) {
+        Log.e(TAG, "saving list to DB ...");
+        Realm realm = Realm.getDefaultInstance();
+        realm.beginTransaction();
+        realm.copyToRealmOrUpdate(list);
+        realm.commitTransaction();
+        realm.close();
+        Log.e(TAG, "finished saving list to DB ...");
+    }
+
     public static Observable saveNotificationsToRealm(final List<TaskNotification> notifications) {
         return Observable.create(new Observable.OnSubscribe<Boolean>() {
             @Override
@@ -131,7 +141,6 @@ public class RealmUtils {
 
         return notifications;
     }
-
 
     public static void saveDataToRealmWithSubscriber(final RealmObject object) {
         Observable.create(new Observable.OnSubscribe<Boolean>() {
@@ -296,6 +305,35 @@ public class RealmUtils {
         return count;
     }
 
+    public static long countGroupsInDB() {
+        Realm realm = Realm.getDefaultInstance();
+        long count = realm
+            .where(Group.class)
+            .count();
+        realm.close();
+        return count;
+    }
+
+    public static long countUpcomingTasksInDB() {
+        Realm realm = Realm.getDefaultInstance();
+        long count = realm
+            .where(TaskModel.class)
+            .greaterThan("deadlineDate", new Date())
+            .count();
+        realm.close();
+        return count;
+    }
+
+    public static long countGroupTasksInDB(final String parentUid) {
+        Realm realm = Realm.getDefaultInstance();
+        long count = realm
+            .where(TaskModel.class)
+            .equalTo("parentUid", parentUid)
+            .count();
+        realm.close();
+        return count;
+    }
+
     public static void removeObjectFromDatabase(Class<? extends RealmObject> clazz, String pName,
                                                 String pValue) {
         Realm realm = Realm.getDefaultInstance();
@@ -317,11 +355,9 @@ public class RealmUtils {
                 query.equalTo(entry.getKey(), Boolean.valueOf(entry.getValue().toString()));
             }
         }
-        // System.out.println("Remove objects size " + query.findAll().size());
         realm.beginTransaction();
         if (query.findAll().size() > 0) query.findAll().deleteAllFromRealm();
         realm.commitTransaction();
-        // System.out.println("now  " + query.findAll().size());
         realm.close();
     }
 
@@ -370,44 +406,30 @@ public class RealmUtils {
         return loadObjectFromDB(Group.class, "groupUid", groupUid);
     }
 
-    public static List<TaskModel> loadUpcomingTasksFromDB() {
-        RealmList<TaskModel> tasks = new RealmList<>();
-        Realm realm = Realm.getDefaultInstance();
-        RealmResults<TaskModel> results = realm
-                .where(TaskModel.class)
-                .greaterThan("deadlineDate", new Date())
-                .findAll()
-                .sort("deadlineDate", Sort.DESCENDING);
-        tasks.addAll(realm.copyFromRealm(results));
-        realm.close();
-        return tasks;
-    }
-
     public static Observable<List<TaskModel>> loadUpcomingTasks() {
         return Observable.create(new Observable.OnSubscribe<List<TaskModel>>() {
             @Override
             public void call(Subscriber<? super List<TaskModel>> subscriber) {
-                List<TaskModel> tasks = loadUpcomingTasksFromDB();
+                RealmList<TaskModel> tasks = new RealmList<>();
+                Realm realm = Realm.getDefaultInstance();
+                RealmResults<TaskModel> results = realm
+                    .where(TaskModel.class)
+                    .greaterThan("deadlineDate", new Date())
+                    .findAll()
+                    .sort("deadlineDate", Sort.DESCENDING);
+                tasks.addAll(realm.copyFromRealm(results));
+                realm.close();
                 subscriber.onNext(tasks);
                 subscriber.onCompleted();
             }
         }).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread());
     }
 
-    public static RealmList<RealmString> convertListOfStringInRealmListOfString(List<String> list) {
-        if (list != null) {
-            String[] arrayOfStrings = new String[list.size()];
-            list.toArray(arrayOfStrings);
-            RealmString[] arrayOfRealmStrings = createRealmStringArrayFromStringArray(arrayOfStrings);
-            return new RealmList<>(arrayOfRealmStrings);
-        }
-        return null;
-    }
-
     public static Observable<List<TaskModel>> loadTasksSorted(final String parentUid) {
         return Observable.create(new Observable.OnSubscribe<List<TaskModel>>() {
             @Override
             public void call(Subscriber<? super List<TaskModel>> subscriber) {
+                Log.e(TAG, "retrieving tasks from DB for parentUID = " + parentUid);
                 RealmList<TaskModel> tasks = new RealmList<>();
                 final Realm realm = Realm.getDefaultInstance();
                 RealmResults<TaskModel> results = realm
@@ -420,17 +442,6 @@ public class RealmUtils {
                 realm.close();
             }
         }).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread());
-    }
-
-    private static RealmString[] createRealmStringArrayFromStringArray(String[] array) {
-        RealmString[] realmStrings = null;
-        if (array != null) {
-            realmStrings = new RealmString[array.length];
-            for (int i = 0; i < array.length; i++) {
-                realmStrings[i] = new RealmString(array[i]);
-            }
-        }
-        return realmStrings;
     }
 
     public static long countObjectsInDB(Class<? extends RealmObject> clazz) {
@@ -466,5 +477,30 @@ public class RealmUtils {
                 realm.close();
             }
         }).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread());
+    }
+
+    /*
+    HELPER METHODS TO DEAL WITH & HANDLE STRINGS
+     */
+
+    private static RealmString[] createRealmStringArrayFromStringArray(String[] array) {
+        RealmString[] realmStrings = null;
+        if (array != null) {
+            realmStrings = new RealmString[array.length];
+            for (int i = 0; i < array.length; i++) {
+                realmStrings[i] = new RealmString(array[i]);
+            }
+        }
+        return realmStrings;
+    }
+
+    public static RealmList<RealmString> convertListOfStringInRealmListOfString(List<String> list) {
+        if (list != null) {
+            String[] arrayOfStrings = new String[list.size()];
+            list.toArray(arrayOfStrings);
+            RealmString[] arrayOfRealmStrings = createRealmStringArrayFromStringArray(arrayOfStrings);
+            return new RealmList<>(arrayOfRealmStrings);
+        }
+        return null;
     }
 }

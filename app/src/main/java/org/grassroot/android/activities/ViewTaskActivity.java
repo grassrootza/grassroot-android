@@ -63,7 +63,7 @@ public class ViewTaskActivity extends PortraitActivity {
         clickAction = getIntent().getStringExtra(NotificationConstants.CLICK_ACTION);
         messageBody = getIntent().getStringExtra(NotificationConstants.BODY);
 
-        Log.e(TAG, "click action received : " + clickAction);
+        Log.d(TAG, "click action received : " + clickAction);
 
         if (TextUtils.isEmpty(taskUid) || TextUtils.isEmpty(taskType)) {
             throw new UnsupportedOperationException("Error! View task activity started with empty type or UID");
@@ -189,7 +189,7 @@ public class ViewTaskActivity extends PortraitActivity {
     private void processNotification() {
         PreferenceObject preferenceObject = RealmUtils.loadPreferencesFromDB();
         int notificationCount = preferenceObject.getNotificationCounter();
-        Log.e(TAG, "notification count currently: " + notificationCount);
+        Log.d(TAG, "notification count currently: " + notificationCount);
         NotificationUpdateService.updateNotificationStatus(this, notificationUid);
         if (notificationCount > 0) {
             preferenceObject.setNotificationCounter(--notificationCount);
