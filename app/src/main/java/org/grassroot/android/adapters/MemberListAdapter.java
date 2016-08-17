@@ -13,6 +13,7 @@ import android.widget.TextView;
 import org.grassroot.android.R;
 import org.grassroot.android.models.Member;
 import org.grassroot.android.services.ApplicationLoader;
+import org.grassroot.android.utils.RealmUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,28 +25,18 @@ public class MemberListAdapter extends RecyclerView.Adapter<MemberListAdapter.Vi
 
     private static final String TAG = MemberListAdapter.class.getCanonicalName();
 
+    private final boolean canIncludeCurrentUser;
+    private final String thisUserPhoneNumber;
+
     private List<Member> members;
     private boolean showSelected;
     private LayoutInflater layoutInflater;
 
-    /**
-     * Internal class that constructs the shell of the view for an element in the data list
-     */
-    public static class ViewHolder extends RecyclerView.ViewHolder {
-
-        public TextView tvMemberName;
-        public ImageView ivSelectedIcon;
-
-        public ViewHolder(View itemLayoutView) {
-            super(itemLayoutView);
-            tvMemberName = (TextView) itemLayoutView.findViewById(R.id.mlist_tv_member_name);
-            ivSelectedIcon = (ImageView) itemLayoutView.findViewById(R.id.mlist_iv_selected);
-        }
-    }
-
-    public MemberListAdapter(Context context) {
+    public MemberListAdapter(Context context, boolean canIncludeCurrentMember) {
         this.members = new ArrayList<>();
         this.layoutInflater = LayoutInflater.from(context);
+        this.canIncludeCurrentUser = canIncludeCurrentMember;
+        this.thisUserPhoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
     }
 
     public void setShowSelected(boolean showSelected) {
@@ -58,8 +49,14 @@ public class MemberListAdapter extends RecyclerView.Adapter<MemberListAdapter.Vi
     }
 
     public void addMembers(List<Member> memberList) {
+        final int priorSize = members.size();
         members.addAll(memberList);
-        this.notifyDataSetChanged(); // todo : as everywhere, optimize this, later
+        this.notifyItemRangeChanged(priorSize, memberList.size());
+    }
+
+    public void setMembers(List<Member> memberList) {
+        members = new ArrayList<>(memberList);
+        notifyDataSetChanged();
     }
 
     public List<Member> getMembers() {
@@ -74,23 +71,18 @@ public class MemberListAdapter extends RecyclerView.Adapter<MemberListAdapter.Vi
         for (int i = 0; i < positions.length; i++) {
             members.remove(positions[i]);
             notifyItemRemoved(positions[i]);
-            Log.e(TAG, "removed member! at position : " + positions[i] + ", remaining members : " + members.toString());
+            Log.d(TAG, "removed member! at position : " + positions[i] + ", remaining members : " + members.toString());
         }
-    }
-
-    public void resetMembers(List<Member> memberList) {
-        members = new ArrayList<>(memberList);
-        this.notifyDataSetChanged();
     }
 
     public void toggleMemberSelected(int position) {
         members.get(position).toggleSelected();
-        notifyDataSetChanged();
+        notifyItemChanged(position);
     }
 
     public void updateMember(int position, Member member) {
         members.set(position, member);
-        notifyDataSetChanged();
+        notifyItemChanged(position);
     }
 
     /**
@@ -115,19 +107,46 @@ public class MemberListAdapter extends RecyclerView.Adapter<MemberListAdapter.Vi
      */
     @Override
     public void onBindViewHolder(ViewHolder viewHolder, int position) {
-        Member thisMember = members.get(position);
+        final Member member = members.get(position);
 
-        viewHolder.tvMemberName.setText(thisMember.getDisplayName());
+        final boolean isPhoneUser;
 
-        if (thisMember.isNumberInvalid()) {
+        if (!canIncludeCurrentUser || !member.getPhoneNumber().equals(thisUserPhoneNumber)) {
+            viewHolder.tvMemberName.setText(member.getDisplayName());
+            isPhoneUser = false;
+        } else {
+            viewHolder.tvMemberName.setTextColor(ContextCompat.getColor(ApplicationLoader.applicationContext,
+                R.color.primaryColor));
+            viewHolder.tvMemberName.setText(R.string.member_list_you);
+            viewHolder.itemView.setClickable(false);
+            isPhoneUser = true;
+        }
+
+        if (member.isNumberInvalid()) {
             viewHolder.tvMemberName.setTextColor(ContextCompat.getColor(ApplicationLoader.applicationContext,
                 R.color.red));
             viewHolder.ivSelectedIcon.setImageResource(R.drawable.ic_exclamation_black);
         }
 
         if (showSelected) {
-            viewHolder.ivSelectedIcon.setImageResource(thisMember.isSelected() ?
+            if (isPhoneUser) {
+                viewHolder.ivSelectedIcon.setVisibility(View.GONE);
+            } else {
+                viewHolder.ivSelectedIcon.setImageResource(member.isSelected() ?
                     R.drawable.btn_checked : R.drawable.btn_unchecked);
+            }
+        }
+    }
+
+    public static class ViewHolder extends RecyclerView.ViewHolder {
+
+        public TextView tvMemberName;
+        public ImageView ivSelectedIcon;
+
+        public ViewHolder(View itemLayoutView) {
+            super(itemLayoutView);
+            tvMemberName = (TextView) itemLayoutView.findViewById(R.id.mlist_tv_member_name);
+            ivSelectedIcon = (ImageView) itemLayoutView.findViewById(R.id.mlist_iv_selected);
         }
     }
 

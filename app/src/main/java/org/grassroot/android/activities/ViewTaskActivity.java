@@ -2,16 +2,17 @@ package org.grassroot.android.activities;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.View;
-import android.widget.RelativeLayout;
+import android.view.ViewGroup;
 
 import org.grassroot.android.R;
-import org.grassroot.android.events.NotificationEvent;
+import org.grassroot.android.events.NotificationCountChangedEvent;
 import org.grassroot.android.events.TaskCancelledEvent;
 import org.grassroot.android.fragments.GiantMessageFragment;
 import org.grassroot.android.fragments.ViewTaskFragment;
@@ -43,8 +44,9 @@ public class ViewTaskActivity extends PortraitActivity {
     private String messageBody;
 
     private Fragment fragment;
+    private boolean showShareMenu;
 
-    @BindView(R.id.vta_root_layout) RelativeLayout rootView; // todo : switch to coordinator layout at some point maybe
+    @BindView(R.id.vta_root_layout) ViewGroup rootView;
     @BindView(R.id.vta_toolbar) Toolbar toolbar;
 
     @Override
@@ -70,25 +72,41 @@ public class ViewTaskActivity extends PortraitActivity {
         }
 
         setUpToolbar();
+
         if (NotificationConstants.TASK_CANCELLED.equals(clickAction)) {
             fragment = createCancelFragment(taskUid);
         } else {
-            TaskService.getInstance()
-                .fetchAndStoreTask(taskUid, taskType, null).subscribe(); // done in background, so have it next time
+            TaskService.getInstance().fetchAndStoreTask(taskUid, taskType, null).subscribe(); // done in background, so have it next time
             if (NotificationConstants.TASK_CHANGED.equals(clickAction)) {
                 fragment = createChangedFragment();
             } else {
                 fragment = ViewTaskFragment.newInstance(taskType, taskUid);
-                showSnackBar();
+                showShareMenu = true;
             }
         }
 
         getSupportFragmentManager().beginTransaction()
                 .add(R.id.vta_fragment_holder, fragment)
-                .commitAllowingStateLoss();
+                .commit();
 
         if (!TextUtils.isEmpty(notificationUid)) {
             processNotification();
+        }
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // note : watch & debug all this, as sequence of onCreate and this method is unpredictable ...
+        if (clickAction == null) {
+            clickAction = getIntent().getStringExtra(NotificationConstants.CLICK_ACTION);
+        }
+
+        if (showShareMenu || NotificationConstants.VIEW_TASK.equals(clickAction)) {
+            MenuInflater inflater = getMenuInflater();
+            inflater.inflate(R.menu.menu_share_task, menu);
+            return true;
+        } else {
+            return super.onCreateOptionsMenu(menu);
         }
     }
 
@@ -168,15 +186,6 @@ public class ViewTaskActivity extends PortraitActivity {
         return (task != null) ? RealmUtils.loadGroupFromDB(task.getParentUid()) : null;
     }
 
-    private void showSnackBar() {
-        if (!TextUtils.isEmpty(messageBody)) {
-            final int colon = messageBody.indexOf(':');
-            final int startPoint = colon == -1 ? 0 : colon;
-            final String message = messageBody.substring(startPoint);
-            Snackbar.make(rootView, message, Snackbar.LENGTH_SHORT);
-        }
-    }
-
     private void setUpToolbar() {
         setTitle(taskType);
         setSupportActionBar(toolbar);
@@ -188,14 +197,13 @@ public class ViewTaskActivity extends PortraitActivity {
 
     private void processNotification() {
         PreferenceObject preferenceObject = RealmUtils.loadPreferencesFromDB();
-        int notificationCount = preferenceObject.getNotificationCounter();
-        Log.d(TAG, "notification count currently: " + notificationCount);
-        NotificationUpdateService.updateNotificationStatus(this, notificationUid);
-        if (notificationCount > 0) {
-            preferenceObject.setNotificationCounter(--notificationCount);
-            RealmUtils.saveDataToRealmWithSubscriber(preferenceObject);
-        }
-        EventBus.getDefault().post(new NotificationEvent(--notificationCount));
+        preferenceObject.decrementNotificationCounter();
+        EventBus.getDefault().post(new NotificationCountChangedEvent(preferenceObject.getNotificationCounter()));
+        RealmUtils.saveDataToRealmWithSubscriber(preferenceObject);
+
+        Intent intent = new Intent(this, NotificationUpdateService.class);
+        intent.putExtra(NotificationConstants.NOTIFICATION_UID, notificationUid);
+        startService(intent);
     }
 
 }

@@ -1,7 +1,5 @@
 package org.grassroot.android.fragments;
 
-import android.app.Notification;
-import android.app.ProgressDialog;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.Snackbar;
@@ -14,13 +12,13 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.RelativeLayout;
+import android.widget.ProgressBar;
 
 import org.grassroot.android.R;
 import org.grassroot.android.activities.ViewTaskActivity;
 import org.grassroot.android.adapters.NotificationAdapter;
 import org.grassroot.android.adapters.RecyclerTouchListener;
-import org.grassroot.android.events.NotificationEvent;
+import org.grassroot.android.events.NotificationCountChangedEvent;
 import org.grassroot.android.interfaces.ClickListener;
 import org.grassroot.android.interfaces.NotificationConstants;
 import org.grassroot.android.models.NotificationList;
@@ -29,131 +27,211 @@ import org.grassroot.android.models.TaskNotification;
 import org.grassroot.android.services.GcmListenerService;
 import org.grassroot.android.services.GrassrootRestService;
 import org.grassroot.android.services.NotificationUpdateService;
-import org.grassroot.android.utils.Constant;
 import org.grassroot.android.utils.ErrorUtils;
 import org.grassroot.android.utils.RealmUtils;
 import org.grassroot.android.utils.Utilities;
 import org.greenrobot.eventbus.EventBus;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
-import io.realm.Realm;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
+import rx.Observable;
+import rx.Subscriber;
+import rx.android.schedulers.AndroidSchedulers;
 import rx.functions.Action1;
+import rx.schedulers.Schedulers;
 
 public class NotificationCenterFragment extends Fragment {
 
     private static final String TAG = NotificationCenterFragment.class.getSimpleName();
 
-    @BindView(R.id.rc_nc)
-    RecyclerView rcNc;
-    @BindView(R.id.rl_root_nc)
-    RelativeLayout rlRootNc;
+    @BindView(R.id.notifications_root_view) ViewGroup rootView;
 
-    private ProgressDialog progressDialog;
-
-    private LinearLayoutManager mLayoutManager;
-    private Integer pageNumber = 0;
-    private Integer totalPages = 0;
-    private Integer pageSize = 100;
+    @BindView(R.id.notification_recycler_view) RecyclerView recyclerView;
     private NotificationAdapter notificationAdapter;
+    private LinearLayoutManager viewLayoutManager;
+
+    @BindView(R.id.progressBar) ProgressBar progressBar;
+
+    private int currentPage = 0;
+    private int totalPages = 10; // just to init to a non-zero value while get screens
+    final private int pageSize = 100;
+
     private List<TaskNotification> notifications = new ArrayList<>();
-    private int firstVisibleItem, totalItemCount, lastVisibileItem;
+
+    private Set<String> notificationsToUpdate;
+    private Set<Integer> positionsRead;
+
+    private int itemsLaidOutSoFar, lastVisibileItem;
+    private int cacheStoredFirstVisible, cacheStoredLastVisible;
     private boolean isLoading;
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                                Bundle savedInstanceState) {
-        View viewToReturn = inflater.inflate(R.layout.activity_notification_center, container, false);
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+
+        View viewToReturn = inflater.inflate(R.layout.fragment_notification_center, container, false);
         ButterKnife.bind(this, viewToReturn);
-        GcmListenerService.clearNotifications(getContext());
-        setRecylerview();
-        init();
+        GcmListenerService.clearNotifications(getContext()); // clears notifications in tray
+        setUpRecyclerView();
         return viewToReturn;
     }
 
-    private void init() {
+    private void setUpRecyclerView() {
+
         notificationAdapter = new NotificationAdapter();
-        rcNc.setAdapter(notificationAdapter);
-        progressDialog = new ProgressDialog(getActivity());
-        progressDialog.setMessage(getString(R.string.txt_pls_wait));
-        progressDialog.setIndeterminate(true);
+        recyclerView.setAdapter(notificationAdapter);
+        recyclerView.setHasFixedSize(false);
+        viewLayoutManager = new LinearLayoutManager(getActivity());
+        recyclerView.setLayoutManager(viewLayoutManager);
+        recyclerView.setItemAnimator(new DefaultItemAnimator());
+
+        cacheStoredFirstVisible = -1;
+        cacheStoredLastVisible = -1;
+
+        notificationsToUpdate = new HashSet<>();
+        positionsRead = new HashSet<>();
+
         getNotifications(null, null);
-    }
 
-    private void setRecylerview() {
+        recyclerView.addOnItemTouchListener(new RecyclerTouchListener(getContext(), recyclerView,
+            new ClickListener() {
+                @Override
+                public void onClick(View view, int position) {
+                    TaskNotification notification = notificationAdapter.getNotifications().get(position);
+                    updateNotificationStatus(notification);
+                    Log.d(TAG, "clicked on item" + position + ", with message: " + notification.getMessage());
 
-        rcNc.setHasFixedSize(false);
-        mLayoutManager = new LinearLayoutManager(getActivity());
-        rcNc.setLayoutManager(mLayoutManager);
-        rcNc.setItemAnimator(new DefaultItemAnimator());
+                    Intent openactivity = new Intent(getActivity(), ViewTaskActivity.class);
+                    openactivity.putExtra(NotificationConstants.ENTITY_UID, notification.getEntityUid());
+                    openactivity.putExtra(NotificationConstants.ENTITY_TYPE, notification.getEntityType());
+                    openactivity.putExtra(NotificationConstants.NOTIFICATION_UID, notification.getUid());
+                    startActivity(openactivity);
+                }
 
-        rcNc.addOnItemTouchListener(new RecyclerTouchListener(getContext(), rcNc, new ClickListener() {
-                    @Override
-                    public void onClick(View view, int position) {
-                        TaskNotification notification = notificationAdapter.getNotifications().get(position);
-                        updateNotificationStatus(notification);
-                        Log.d(TAG, "clicked on item" + position + ", with message: " + notification.getMessage());
-
-                        Intent openactivity = new Intent(getActivity(), ViewTaskActivity.class);
-                        openactivity.putExtra(NotificationConstants.ENTITY_UID, notification.getEntityUid());
-                        openactivity.putExtra(NotificationConstants.ENTITY_TYPE, notification.getEntityType());
-                        openactivity.putExtra(NotificationConstants.NOTIFICATION_UID, notification.getUid());
-                        startActivity(openactivity);
-                    }
-
-                    @Override
-                    public void onLongClick(View view, int position) {
-
-                    }
-                })
-
+                @Override
+                public void onLongClick(View view, int position) { }
+            })
         );
 
-        rcNc.addOnScrollListener(new RecyclerView.OnScrollListener() {
+        recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
 
             @Override
             public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
                 super.onScrolled(recyclerView, dx, dy);
-                totalItemCount = mLayoutManager.getItemCount();
-                firstVisibleItem = mLayoutManager.findFirstVisibleItemPosition();
-                lastVisibileItem = mLayoutManager.findLastVisibleItemPosition();
 
-                Log.e(TAG, "firstVisibleItem is " + firstVisibleItem);
-                Log.e(TAG, "Remaining is " + (totalItemCount - firstVisibleItem));
-                Log.e(TAG, "isLoading is " + isLoading);
-                Log.e(TAG, "totalPages" + totalPages);
-                Log.e(TAG, "pageNumber" + pageNumber);
-                Log.e(TAG, "totalItemCount"+totalItemCount);
+                itemsLaidOutSoFar = viewLayoutManager.getItemCount();
+                lastVisibileItem = viewLayoutManager.findLastVisibleItemPosition();
 
-                if (pageNumber <totalPages &&  totalItemCount <= (lastVisibileItem + 10) && !isLoading) {
-                    progressDialog.show();
-                    if(pageNumber ==1 ){
-                      pageNumber++;
-                    }
+                int firstCompletelyVisitbleItem = viewLayoutManager.findFirstCompletelyVisibleItemPosition();
+                int lastCompletelyVisibleItem = viewLayoutManager.findLastCompletelyVisibleItemPosition();
+
+                handleNotificationUpdating(firstCompletelyVisitbleItem, lastCompletelyVisibleItem);
+
+                if (currentPage < totalPages && itemsLaidOutSoFar <= (lastVisibileItem + 10) && !isLoading) {
+                    Log.e(TAG, "fetching more notifications ... current page = " + currentPage);
+                    progressBar.setVisibility(View.VISIBLE);
+                    currentPage++;
                     isLoading = true;
-                    getNotifications(pageNumber, pageSize);
-
+                    getNotifications(currentPage, pageSize);
                 }
-
             }
         });
+    }
+
+    // note : these following two we do on the main thread because changes can be very fast and might end
+    // up with conflicts on background, plus they are _very_ simple / fast int & boolean operations
+    // as soon as we are starting to process, though, we shift to background thread ...
+    private void handleNotificationUpdating(final int firstCompletelyVisibleItem, final int lastCompletelyVisibleItem) {
+        // Log.d(TAG, String.format("handling notification updating : %d to %d", firstCompletelyVisibleItem, lastCompletelyVisibleItem));
+
+        final boolean firstItemChanged = firstCompletelyVisibleItem != cacheStoredFirstVisible;
+        final boolean lastItemChanged = lastCompletelyVisibleItem != cacheStoredLastVisible;
+
+        if (firstItemChanged || lastItemChanged) {
+            if (firstItemChanged && lastItemChanged) {
+                handleAddingNotificationToBatchForUpdate(firstCompletelyVisibleItem, lastCompletelyVisibleItem);
+                cacheStoredFirstVisible = firstCompletelyVisibleItem;
+                cacheStoredLastVisible = lastCompletelyVisibleItem;
+            } else if (firstItemChanged) {
+                handleAddingNotificationToBatchForUpdate(firstCompletelyVisibleItem, firstCompletelyVisibleItem);
+                cacheStoredFirstVisible = firstCompletelyVisibleItem;
+            } else { // i.e., last item changed only
+                handleAddingNotificationToBatchForUpdate(lastCompletelyVisibleItem, lastCompletelyVisibleItem);
+                cacheStoredLastVisible = lastCompletelyVisibleItem;
+            }
+        }
+    }
+
+    private void handleAddingNotificationToBatchForUpdate(final int positionStart, final int positionEnd) {
+        updateNotificationToRead(positionStart, positionEnd).subscribe(new Action1<Integer>() {
+            @Override
+            public void call(Integer count) {
+                PreferenceObject prefs = RealmUtils.loadPreferencesFromDB();
+                int revisedCounter = Math.max(0, prefs.getNotificationCounter() - count);
+                prefs.setNotificationCounter(revisedCounter);
+                EventBus.getDefault().post(new NotificationCountChangedEvent(revisedCounter));
+                RealmUtils.saveDataToRealm(prefs).subscribe();
+            }
+        });
+    }
+
+    // returns how many were changed from not-viewed to viewed
+    private Observable<Integer> updateNotificationToRead(final int positionStart, final int positionEnd) {
+        return Observable.create(new Observable.OnSubscribe<Integer>() {
+            @Override
+            public void call(Subscriber<? super Integer> subscriber) {
+                int changedToViewCounter = 0;
+                for (int i = positionStart; i <= positionEnd; i++) {
+                    if (!positionsRead.contains(i)) {
+                        positionsRead.add(i);
+                        TaskNotification notification = notificationAdapter.getItem(i);
+                        notificationsToUpdate.add(notification.getUid());
+                        if (!notification.isViewedAndroid()) {
+                            Log.d(TAG, "setting notification viewed ...");
+                            changedToViewCounter++;
+                            notification.setRead(true);
+                            notification.setViewedAndroid(true); // don't call update on adapter, because don't want change to be instant (on next scroll / view)
+                            notification.setToChangeOnServer(true);
+                            RealmUtils.saveDataToRealm(notification).subscribe();
+                        }
+                    }
+                }
+                subscriber.onNext(changedToViewCounter);
+                subscriber.onCompleted();
+            }
+        }).subscribeOn(Schedulers.computation()).observeOn(AndroidSchedulers.mainThread());
+    }
+
+    // note : since we are using a hash set there is not duplication issue here, and little
+    // performance hit on server, but with reliability on background server http call in doubt, etc.
+    // we don't clear the set (in case user comes back, something went wrong in backend, so we still
+    // have state of the notifications being view, but to reconsider this trade-off in future
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        Intent intent = new Intent(getActivity(), NotificationUpdateService.class);
+        intent.putExtra(NotificationUpdateService.ACTION_FIELD, NotificationUpdateService.UPDATE_BATCH);
+        intent.putExtra(NotificationUpdateService.UIDS_SET, new ArrayList<>(notificationsToUpdate));
+        getActivity().startService(intent);
     }
 
     private void getNotifications(Integer page, Integer size) {
         final String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
         final String code = RealmUtils.loadPreferencesFromDB().getToken();
 
-        progressDialog.show();
+        progressBar.setVisibility(View.VISIBLE);
         long lastTimeUpdated = RealmUtils.loadPreferencesFromDB().getLastTimeNotificationsFetched();
         Call<NotificationList> call = (lastTimeUpdated == 0) ?
             GrassrootRestService.getInstance().getApi().getUserNotifications(phoneNumber, code, page, size) :
-            page!=null && page > 1 ?
+            page != null && page > 1 ?
                 GrassrootRestService.getInstance().getApi().getUserNotifications(phoneNumber, code, page, size) :
                 GrassrootRestService.getInstance().getApi().getUserNotificationsChangedSince(phoneNumber, code,lastTimeUpdated);
 
@@ -161,16 +239,19 @@ public class NotificationCenterFragment extends Fragment {
             @Override
             public void onResponse(Call<NotificationList> call, Response<NotificationList> response) {
                 if (response.isSuccessful()) {
-                    progressDialog.dismiss();
+                    progressBar.setVisibility(View.GONE);
                     notifications = response.body().getNotificationWrapper().getNotifications();
-                    pageNumber = response.body().getNotificationWrapper().getPageNumber();
+                    currentPage = response.body().getNotificationWrapper().getPageNumber();
                     totalPages = response.body().getNotificationWrapper().getTotalPages();
-                    rcNc.setVisibility(View.VISIBLE);
-                    if (pageNumber > 1) {
-                        notificationAdapter.updateData(notifications);
+
+                    Log.e(TAG, "fetched the lists, total pages = " + totalPages);
+                    recyclerView.setVisibility(View.VISIBLE);
+                    if (currentPage > 1) {
+                        notificationAdapter.addNotifications(notifications);
                     } else {
-                        notificationAdapter.addData(notifications);
+                        notificationAdapter.setToNotifications(notifications);
                     }
+
                     RealmUtils.saveNotificationsToRealm(notifications).subscribe();
                     PreferenceObject preference = RealmUtils.loadPreferencesFromDB();
                     preference.setLastTimeNotificationsFetched(Utilities.getCurrentTimeInMillisAtUTC());
@@ -178,17 +259,17 @@ public class NotificationCenterFragment extends Fragment {
                     isLoading = false;
                     notificationAdapter.notifyDataSetChanged();
                 } else {
-                    progressDialog.dismiss();
+                    progressBar.setVisibility(View.GONE);
                     final String errorMessage = ErrorUtils.serverErrorText(response.errorBody(), getContext());
-                    Snackbar.make(rcNc, errorMessage, Snackbar.LENGTH_SHORT).show();
+                    Snackbar.make(recyclerView, errorMessage, Snackbar.LENGTH_SHORT).show();
                 }
             }
             @Override
             public void onFailure(Call<NotificationList> call, Throwable t) {
-                progressDialog.dismiss();
-                notificationAdapter.addData(RealmUtils.loadNotificationsSorted());
-                rcNc.setVisibility(View.VISIBLE);
-                ErrorUtils.handleNetworkError(getContext(), rlRootNc, t);
+                progressBar.setVisibility(View.GONE);
+                notificationAdapter.setToNotifications(RealmUtils.loadNotificationsSorted());
+                recyclerView.setVisibility(View.VISIBLE);
+                ErrorUtils.handleNetworkError(getContext(), rootView, t);
             }
         });
     }
@@ -200,13 +281,12 @@ public class NotificationCenterFragment extends Fragment {
             notificationAdapter.notifyDataSetChanged();
             RealmUtils.saveDataToRealm(notification).subscribe();
             int notificationCount = RealmUtils.loadPreferencesFromDB().getNotificationCounter();
-            Log.e(TAG, "notification count " + notificationCount);
             NotificationUpdateService.updateNotificationStatus(getContext(), uid);
             if(notificationCount >0){
                 PreferenceObject object = RealmUtils.loadPreferencesFromDB();
             object.setNotificationCounter(--notificationCount);
                 RealmUtils.saveDataToRealm(object);
-            EventBus.getDefault().post(new NotificationEvent(--notificationCount));
+            EventBus.getDefault().post(new NotificationCountChangedEvent(--notificationCount));
         }}
     }
 

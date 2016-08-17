@@ -339,8 +339,9 @@
     <string name="am_title">Add members to group</string>
     <string name="gm_add_members_lc">Add members</string>
     <string name="gm_new_task_lc">Call new event</string>
-    <string name="error_group_name_blank">Please enter Group name</string>
+    <string name="error_group_name_blank">Please enter a name for the group</string>
     <string name="rm_confirm_number">You are about to remove %d members. Are you sure?</string>
+    <string name="member_list_you">You</string>
 
     <string name="amm_new_done">Add</string>
     <string name="amm_edit_done">Save</string>
@@ -431,7 +432,11 @@
     <string name="gset_error_join_code_close_online">Sorry, something went wrong closing the code. Please try again later.</string>
     <string name="gset_error_public_online">Sorry, something went wrong. Please try again later.</string>
 
-    <!--GroupTasksActivity :: mostly response strings -->
+    <!-- Notification Strings -->
+    <string name="notification_title_format_event">%1$s of %2$s</string>
+    <string name="notification_title_format_todo">%1$s for %2$s</string>
+
+    <!--Task List :: mostly response strings -->
     <string name="RESPOND_YES">You have clicked on \'Yes\'. Do you want to proceed with the vote?</string>
     <string name="RESPOND_NO">You have clicked on \'No\'. Do you want to proceed with the vote?</string>
     <string name="RSVP_YES">You have marked yourself as attending the meeting. Proceed?</string>

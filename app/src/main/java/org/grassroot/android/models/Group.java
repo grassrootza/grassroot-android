@@ -17,6 +17,7 @@ import java.util.List;
 import org.grassroot.android.R;
 import org.grassroot.android.interfaces.GroupConstants;
 import org.grassroot.android.utils.Constant;
+import org.grassroot.android.utils.ImageUtils;
 import org.grassroot.android.utils.RealmUtils;
 
 /**
@@ -189,27 +190,7 @@ public class Group extends RealmObject implements Parcelable, Comparable<Group> 
   }
 
   private void updateDefaultImageRes() {
-    if (TextUtils.isEmpty(defaultImage)) {
-      defaultImageRes = R.drawable.ic_groups_default_avatar;
-    } else {
-      switch (defaultImage) {
-        case GroupConstants.SOCIAL_MOVEMENT:
-          defaultImageRes = R.drawable.ic_groups_default_avatar;
-          break;
-        case GroupConstants.COMMUNITY_GROUP:
-          defaultImageRes = R.drawable.ic_group_avatar_hands;
-          break;
-        case GroupConstants.EDUCATION_GROUP:
-          defaultImageRes = R.drawable.ic_group_avatar_school;
-          break;
-        case GroupConstants.FAITH_GROUP:
-          defaultImageRes = R.drawable.ic_group_avatar_reli;
-          break;
-        case GroupConstants.SAVINGS_GROUP:
-          defaultImageRes = R.drawable.ic_group_avatar_money;
-          break;
-      }
-    }
+    defaultImageRes = ImageUtils.convertDefaultImageTypeToResource(defaultImage);
   }
 
   public void setDefaultImageRes(int defaultImageRes) { this.defaultImageRes = defaultImageRes; }

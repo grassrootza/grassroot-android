@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
+<FrameLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/mlist_fragment"
     android:layout_width="match_parent"
@@ -9,10 +9,17 @@
     <android.support.v7.widget.RecyclerView
         style="@style/MemberListRecyclerView"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
+        android:layout_height="wrap_content"
         android:id="@+id/mlist_frag_recycler_view">
 
     </android.support.v7.widget.RecyclerView>
 
-</LinearLayout>
+    <ProgressBar
+        android:id="@+id/progressBar"
+        style="@style/ProgressBarMedium"
+        android:visibility="gone"
+        android:layout_gravity="center"
+        android:layout_centerVertical="true"
+        android:layout_centerHorizontal="true" />
+
+</FrameLayout>

@@ -11,63 +11,40 @@ public class TokenResponse extends RealmObject {
   @SerializedName("data") private Token token;
   private Boolean hasGroups;
   private String displayName;
+  private int unreadNotificationCount;
 
   public TokenResponse() {
 
   }
 
-  /**
-   * @return The status
-   */
   public String getStatus() {
     return status;
   }
 
-  /**
-   * @param status The status
-   */
   public void setStatus(String status) {
     this.status = status;
   }
 
-  /**
-   * @return The code
-   */
   public Integer getCode() {
     return code;
   }
 
-  /**
-   * @param code The code
-   */
   public void setCode(Integer code) {
     this.code = code;
   }
 
-  /**
-   * @return The message
-   */
   public String getMessage() {
     return message;
   }
 
-  /**
-   * @param message The message
-   */
   public void setMessage(String message) {
     this.message = message;
   }
 
-  /**
-   * @return The token
-   */
   public Token getToken() {
     return token;
   }
 
-  /**
-   * @param token The token
-   */
   public void setToken(Token token) {
     this.token = token;
   }
@@ -86,6 +63,14 @@ public class TokenResponse extends RealmObject {
 
   public void setDisplayName(String displayName) {
     this.displayName = displayName;
+  }
+
+  public int getUnreadNotificationCount() {
+    return unreadNotificationCount;
+  }
+
+  public void setUnreadNotificationCount(int unreadNotificationCount) {
+    this.unreadNotificationCount = unreadNotificationCount;
   }
 }
 

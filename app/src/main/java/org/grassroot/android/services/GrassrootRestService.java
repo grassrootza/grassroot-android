@@ -12,6 +12,7 @@ import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 
+import org.grassroot.android.BuildConfig;
 import org.grassroot.android.models.GenericResponse;
 import org.grassroot.android.models.GroupJoinRequest;
 import org.grassroot.android.models.GroupResponse;
@@ -83,7 +84,8 @@ public class GrassrootRestService {
 
   private GrassrootRestService(Context context) {
     HttpLoggingInterceptor logging = new HttpLoggingInterceptor();
-    logging.setLevel(HttpLoggingInterceptor.Level.BODY);
+    logging.setLevel(BuildConfig.BUILD_TYPE.equals("debug") ?
+        HttpLoggingInterceptor.Level.BODY : HttpLoggingInterceptor.Level.HEADERS);
 
     OkHttpClient client = new OkHttpClient.Builder()
         .addInterceptor(logging)
@@ -95,15 +97,15 @@ public class GrassrootRestService {
 
     Gson gson = new GsonBuilder()
         .setExclusionStrategies(new ExclusionStrategy() {
-          @Override
-          public boolean shouldSkipField(FieldAttributes f) {
-            return f.getDeclaringClass().equals(RealmObject.class);
-          }
+            @Override
+            public boolean shouldSkipField(FieldAttributes f) {
+              return f.getDeclaringClass().equals(RealmObject.class);
+            }
 
-          @Override
-          public boolean shouldSkipClass(Class<?> clazz) {
-            return false;
-          }
+            @Override
+            public boolean shouldSkipClass(Class<?> clazz) {
+              return false;
+            }
         }).registerTypeAdapter(token, new TypeAdapter<RealmList<RealmString>>() {
 
           @Override
@@ -179,9 +181,10 @@ public class GrassrootRestService {
 
     //retrieve notifications
     @GET("notification/list/{phoneNumber}/{code}")
-    Call<NotificationList> getUserNotifications(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
-        @Nullable @Query("page") Integer page,
-        @Nullable @Query("size") Integer size);
+    Call<NotificationList> getUserNotifications(@Path("phoneNumber") String phoneNumber,
+                                                @Path("code") String code,
+                                                @Nullable @Query("page") Integer page,
+                                                @Nullable @Query("size") Integer size);
 
     @GET("notification/list/{phoneNumber}/{code}")
     Call<NotificationList> getUserNotificationsChangedSince(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
@@ -202,11 +205,18 @@ public class GrassrootRestService {
     Call<GenericResponse> pushUnregister(@Path("phoneNumber") String phoneNumber,
         @Path("code") String code);
 
-    //update notification read status
+    // update notification read status (for single notification, on open & view via click)
     @POST("notification/update/read/{phoneNumber}/{code}")
     Call<GenericResponse> updateRead(@Path("phoneNumber") String phoneNumber,
                                      @Path("code") String code,
                                      @Query("uid") String uid);
+
+    // update notifications in a batch, e.g., after scrolling through a list of them
+    @POST("notification/update/read/batch/{phoneNumber}/{code}")
+    Call<GenericResponse> updateReadBatch(@Path("phoneNumber") String phoneNumber,
+                                          @Path("code") String code,
+                                          @Query("read") boolean read,
+                                          @Query("notificationUids") List<String> notificationUids);
 
     //check if server connection is working (for online/offline switching)
     @GET("user/connect/{phoneNumber}/{code}")

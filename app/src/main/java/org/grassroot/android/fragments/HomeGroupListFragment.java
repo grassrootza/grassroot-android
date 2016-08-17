@@ -184,7 +184,7 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
         RealmUtils.loadGroupsSorted().subscribe(new Action1<List<Group>>() {
             @Override
             public void call(List<Group> groups) {
-                Log.e(TAG, "loaded groups ... setting recycler parameters ... timer ... " + SystemClock.currentThreadTimeMillis());
+                Log.d(TAG, "loaded groups ... setting recycler parameters ... timer ... " + SystemClock.currentThreadTimeMillis());
                 if (groupListRowAdapter == null) {
                     setUpAdapterAndView(groups);
                 } else {

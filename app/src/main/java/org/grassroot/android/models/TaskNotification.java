@@ -10,12 +10,16 @@ public class TaskNotification extends RealmObject {
 
     @PrimaryKey
     private String uid;
-    private String entityUid;
 
+    private String entityUid;
     private String title;
     private String message;
 
-    private String createdDateTime; //todo change to iso datetime server side
+    private String groupUid;
+    private String defaultImage;
+    private String imageUrl;
+
+    private String createdDateTime;
     private String notificationType;
     private String entityType;
 
@@ -24,6 +28,9 @@ public class TaskNotification extends RealmObject {
 
     private boolean read;
     private boolean delivered;
+    private boolean viewedAndroid;
+
+    private boolean toChangeOnServer;
 
 
     public String getUid() {
@@ -41,6 +48,8 @@ public class TaskNotification extends RealmObject {
     public String getMessage() {
         return message;
     }
+
+    public String getGroupUid() { return groupUid; }
 
     public String getCreatedDateTime() {
         return createdDateTime;
@@ -66,9 +75,30 @@ public class TaskNotification extends RealmObject {
         return delivered;
     }
 
-    // to update the model locally
+    public void setRead(boolean read) { this.read = read; }
+
     public void setIsRead(){
         read =true;
+    }
+
+    public boolean isViewedAndroid() {
+        return viewedAndroid;
+    }
+
+    public void setViewedAndroid(boolean viewedAndroid) {
+        this.viewedAndroid = viewedAndroid;
+    }
+
+    public void setToChangeOnServer(boolean toChangeOnServer) { this.toChangeOnServer = toChangeOnServer; }
+
+    public boolean isToChangeOnServer() { return toChangeOnServer; }
+
+    public String getImageUrl() {
+        return imageUrl;
+    }
+
+    public String getDefaultImage() {
+        return defaultImage;
     }
 
 }

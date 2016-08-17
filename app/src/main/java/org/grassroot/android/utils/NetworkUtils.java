@@ -140,6 +140,7 @@ public class NetworkUtils {
               RealmUtils.saveDataToRealmSync(prefs);
               EventBus.getDefault().post(new OnlineOfflineToggledEvent(true));
               subscriber.onNext(ONLINE_DEFAULT);
+              Log.d(TAG, "okay now sending the queue");
               if (sendQueue) {
                 syncLocalAndServer(context);
               }
@@ -158,7 +159,7 @@ public class NetworkUtils {
 
   public static boolean isOnline(Context context) {
     final String status = RealmUtils.loadPreferencesFromDB().getOnlineStatus();
-    return (!OFFLINE_SELECTED.equals(status) && isNetworkAvailable(context)); // this means we try to connect every time, unless told not to
+    return (!OFFLINE_SELECTED.equals(status)); // this means we try to connect every time, unless told not to (i.e., we trigger an error even if data turned off
   }
 
   public static boolean isOfflineOrLoggedOut(Subscriber<? super String> sub, final String phoneNumber, final String code) {
@@ -214,9 +215,10 @@ public class NetworkUtils {
   }
 
   public static void syncLocalAndServer(Context context) {
-    Log.e(TAG, "inside network utils ... about to call sending queued entities ...");
+    Log.d(TAG, "inside network utils ... about to call sending queued entities ...");
     if (!sendingLocalQueue && isOnline(context)) {
       sendingLocalQueue = true;
+      Log.d(TAG, "now actually sending them ...");
       sendLocalGroups();
       sendLocallyAddedMembers();
       sendLocallyEditedGroups();
@@ -256,7 +258,6 @@ public class NetworkUtils {
 
   private static boolean hasIntervalElapsedSinceSync() {
     final long lastTimeSynced = RealmUtils.loadPreferencesFromDB().getLastTimeSyncPerformed();
-    Log.d(TAG, "and ... last time synced = " + lastTimeSynced);
     final long timeNow = Utilities.getCurrentTimeInMillisAtUTC();
     return timeNow > (lastTimeSynced + minIntervalBetweenSyncs);
   }
@@ -265,6 +266,7 @@ public class NetworkUtils {
     RealmUtils.loadListFromDB(Group.class, "isLocal", true, Schedulers.immediate())
         .subscribe(new Action1<List<Group>>() {
       @Override public void call(List<Group> realmResults) {
+        Log.e(TAG, "found this many groups ... " + realmResults.size());
         for (final Group g : realmResults) {
           GroupService.getInstance().sendNewGroupToServer(g.getGroupUid(), Schedulers.immediate())
               .subscribe(new Subscriber<String>() {

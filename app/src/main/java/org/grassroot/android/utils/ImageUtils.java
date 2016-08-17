@@ -9,8 +9,18 @@ import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.net.Uri;
 import android.os.Environment;
+import android.text.TextUtils;
 import android.util.Log;
 import android.webkit.MimeTypeMap;
+import android.widget.ImageView;
+
+import com.squareup.picasso.Callback;
+import com.squareup.picasso.NetworkPolicy;
+import com.squareup.picasso.Picasso;
+
+import org.grassroot.android.R;
+import org.grassroot.android.interfaces.GroupConstants;
+import org.grassroot.android.services.ApplicationLoader;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -25,6 +35,51 @@ public class ImageUtils {
 
     public static int JPEG_QUALITY = 70;
     public static int MAX_DIMEN = 640;
+
+    public static int convertDefaultImageTypeToResource(final String defaultImage) {
+        if (TextUtils.isEmpty(defaultImage)) {
+            return R.drawable.ic_groups_default_avatar;
+        } else {
+            switch (defaultImage) {
+                case GroupConstants.SOCIAL_MOVEMENT:
+                    return R.drawable.ic_groups_default_avatar;
+                case GroupConstants.COMMUNITY_GROUP:
+                    return R.drawable.ic_group_avatar_hands;
+                case GroupConstants.EDUCATION_GROUP:
+                    return R.drawable.ic_group_avatar_school;
+                case GroupConstants.FAITH_GROUP:
+                    return R.drawable.ic_group_avatar_reli;
+                case GroupConstants.SAVINGS_GROUP:
+                    return R.drawable.ic_group_avatar_money;
+                default:
+                    return R.drawable.ic_groups_default_avatar;
+            }
+        }
+    }
+
+    public static void setAvatarImage(final ImageView image, final String imageUrl, final int fallBackRes) {
+        // at some point soon should revisit and optimize this
+        Picasso.with(ApplicationLoader.applicationContext)
+            .load(imageUrl)
+            .error(fallBackRes)
+            .placeholder(fallBackRes)
+            .networkPolicy(NetworkPolicy.OFFLINE)
+            .transform(new CircularImageTransformer())
+            .into(image, new Callback() {
+                @Override
+                public void onSuccess() {
+                }
+
+                @Override
+                public void onError() {
+                    Picasso.with(ApplicationLoader.applicationContext).load(imageUrl)
+                        .placeholder(fallBackRes)
+                        .transform(new CircularImageTransformer())
+                        .error(fallBackRes)
+                        .into(image);
+                }
+            });
+    }
 
     public static String getCompressedFileFromImage(String path) {
         String strMyImagePath = null;

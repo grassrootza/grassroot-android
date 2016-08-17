@@ -117,6 +117,7 @@ public class ActionCompleteActivity extends PortraitActivity implements NewTaskM
 
         if (showTaskButtons) {
             done.setVisibility(View.GONE);
+            share.setVisibility(View.GONE);
             offlineButtons.setVisibility(View.GONE);
             taskButtons.setVisibility(View.VISIBLE);
             if (!NetworkUtils.ONLINE_DEFAULT.equals(RealmUtils.loadPreferencesFromDB().getOnlineStatus())) {
@@ -124,6 +125,7 @@ public class ActionCompleteActivity extends PortraitActivity implements NewTaskM
             }
         } else if (showOfflineButtons) {
             done.setVisibility(View.GONE);
+            share.setVisibility(View.GONE);
             taskButtons.setVisibility(View.GONE);
             offlineButtons.setVisibility(View.VISIBLE);
         } else {
@@ -256,10 +258,10 @@ public class ActionCompleteActivity extends PortraitActivity implements NewTaskM
     private Intent doneIntent() {
         switch (actionIntent) {
             case HOME_SCREEN:
-                Log.e(TAG, "heading back to home screen ...");
+                Log.d(TAG, "heading back to home screen ...");
                 return homeIntent();
             case GROUP_SCREEN:
-                Log.e(TAG, "heading to group screen ...");
+                Log.d(TAG, "heading to group screen ...");
                 Intent i = new Intent(ActionCompleteActivity.this, GroupTasksActivity.class);
                 i.putExtra(GroupConstants.OBJECT_FIELD, groupToPass);
                 i.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_CLEAR_TOP);

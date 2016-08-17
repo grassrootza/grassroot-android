@@ -38,7 +38,9 @@ import org.grassroot.android.utils.NetworkUtils;
 import org.grassroot.android.utils.RealmUtils;
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
+import org.greenrobot.eventbus.ThreadMode;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -131,13 +133,19 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
     this.container = container;
     floatingActionButton.setVisibility(displayFAB ? View.VISIBLE : View.GONE);
 
+    tasksAdapter = new TasksAdapter(new ArrayList<TaskModel>(), TextUtils.isEmpty(groupUid), this);
+    taskView.setAdapter(tasksAdapter);
+    taskView.setLayoutManager(new LinearLayoutManager(getActivity()));
+    taskView.setHasFixedSize(true);
+    taskView.setDrawingCacheEnabled(true);
+
     loadTasksOnCreateView();
     return viewToReturn;
   }
 
   private void loadTasksOnCreateView() {
-    taskView.setVisibility(View.GONE);
     if (hasTasksInDB()) {
+      Log.d(TAG, "tasks exist, loading from DB");
       loadTasksFromDB(NetworkUtils.FETCHED_CACHE);
       refreshTasksFromServer();
     } else {
@@ -145,7 +153,7 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
       TaskService.getInstance().fetchTasks(groupUid, AndroidSchedulers.mainThread()).subscribe(new Action1<String>() {
         @Override
         public void call(String s) {
-          Log.e(TAG, "returned from fetch tasks ... with fetch type = " + s);
+          Log.d(TAG, "returned from fetch tasks ... with fetch type = " + s);
           hasFetchedFromServer = NetworkUtils.FETCHED_SERVER.equals(s);
           loadTasksFromDB(s);
         }
@@ -158,18 +166,6 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
       return RealmUtils.countUpcomingTasksInDB() > 0;
     } else {
       return RealmUtils.countGroupTasksInDB(groupUid) > 0;
-    }
-  }
-
-  private void setUpAdapterAndRecyclerView(List<TaskModel> taskModels) {
-    tasksAdapter = new TasksAdapter(taskModels, TextUtils.isEmpty(groupUid), TaskListFragment.this);
-    // since call may return after user has navigated away from fragment, do this to avoid null pointer errors
-    if (taskView != null) {
-      taskView.setLayoutManager(new LinearLayoutManager(getActivity()));
-      taskView.setAdapter(tasksAdapter);
-      taskView.setHasFixedSize(true);
-      taskView.setDrawingCacheEnabled(true);
-      taskView.setVisibility(View.VISIBLE);
     }
   }
 
@@ -218,14 +214,13 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
       public void call(List<TaskModel> taskModels) {
         if (taskModels.isEmpty()) {
           handleNoTasksFound(latestFetchType);
-        } else if (taskView != null) {
-          if (tasksAdapter == null) {
-            setUpAdapterAndRecyclerView(taskModels);
-          } else {
+        } else if (taskView != null) { // to catch delayed call backs when user has left fragment
+          if (isInNoTaskMessageView) {
             switchOffNoTasks();
-            taskView.setVisibility(View.VISIBLE);
-            tasksAdapter.refreshTaskList(taskModels);
           }
+          tasksAdapter.refreshTaskList(taskModels);
+          tasksAdapter.notifyDataSetChanged();
+          taskView.setVisibility(View.VISIBLE);
         }
         hideProgress();
       }
@@ -240,6 +235,7 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
   }
 
   private void handleNoTasksFound(final String fetchType) {
+    taskView.setVisibility(View.GONE);
     if (noTaskMessageText != null) { // since the call may time out / return when the user is on a different fragment
       if (fetchType.equals(NetworkUtils.FETCHED_SERVER)) {
         noTaskMessageText.setText(groupUid == null ? R.string.txt_no_task_upcoming : R.string.txt_no_task_group);
@@ -250,7 +246,6 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
     if (noTaskMessageLayout != null) {
       noTaskMessageLayout.setVisibility(View.VISIBLE);
     }
-    taskView.setVisibility(View.GONE);
     isInNoTaskMessageView = true;
   }
 
@@ -351,7 +346,8 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
         .commit();
   }
 
-  @Subscribe public void onEvent(TaskAddedEvent event) {
+  @Subscribe(threadMode = ThreadMode.MAIN)
+  public void onEvent(TaskAddedEvent event) {
     if (isInNoTaskMessageView) {
       noTaskMessageLayout.setVisibility(View.GONE);
       isInNoTaskMessageView = false;
@@ -359,12 +355,13 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
     tasksAdapter.addTaskToList(event.getTaskCreated(), 0);
   }
 
-  @Subscribe public void onTaskUpdated(TaskUpdatedEvent event){
-    // todo : do this better ...
-    loadTasksFromDB(NetworkUtils.FETCHED_CACHE);
+  @Subscribe(threadMode = ThreadMode.MAIN)
+  public void onTaskUpdated(TaskUpdatedEvent event){
+    tasksAdapter.refreshTask(event.getTask().getTaskUid(), event.getTask());
   }
 
-  @Subscribe public void onTaskCancelledEvent(TaskCancelledEvent e) {
+  @Subscribe(threadMode = ThreadMode.MAIN)
+  public void onTaskCancelledEvent(TaskCancelledEvent e) {
     Fragment frag = getFragmentManager().findFragmentByTag(ViewTaskFragment.class.getCanonicalName());
     if (frag != null && frag.isVisible()) {
       getFragmentManager().beginTransaction()

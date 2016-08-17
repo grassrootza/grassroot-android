@@ -479,7 +479,7 @@ public class ViewTaskFragment extends Fragment {
 
     private void setUpAssignedMembersView() {
 
-        memberListAdapter = new MemberListAdapter(getActivity());
+        memberListAdapter = new MemberListAdapter(getActivity(), true);
         rcResponseList.setLayoutManager(new LinearLayoutManager(getContext()));
         rcResponseList.setAdapter(memberListAdapter);
 

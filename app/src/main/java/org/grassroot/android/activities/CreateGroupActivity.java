@@ -121,7 +121,7 @@ public class CreateGroupActivity extends PortraitActivity implements ContactSele
   }
 
   private void setUpMemberList() {
-    memberListFragment = MemberListFragment.newInstance(cachedGroup, false, null,
+    memberListFragment = MemberListFragment.newInstance(cachedGroup, false, false, null,
             new MemberListFragment.MemberClickListener() {
               @Override
               public void onMemberClicked(int position, String memberUid) {
@@ -154,14 +154,15 @@ public class CreateGroupActivity extends PortraitActivity implements ContactSele
     }
   }
 
-  @OnClick(R.id.cg_iv_crossimage) public void ivCrossimage() {
+  @OnClick(R.id.cg_iv_crossimage)
+  public void ivCrossimage() {
     if (!onMainScreen) {
       // note : this means we do not saveGroupIfNamed / return the contacts on cross clicked
       getSupportFragmentManager().popBackStack();
       onMainScreen = true;
     } else {
       progressDialog.dismiss();
-      cleanUpLocalEntities();
+      cleanUpLocalEntities(!editingOfflineGroup); // i.e., delete anything cached unless editing a prior cached group
       finish();
     }
   }
@@ -304,6 +305,7 @@ public class CreateGroupActivity extends PortraitActivity implements ContactSele
                 break;
               case NetworkUtils.CONNECT_ERROR:
                 Group wipGroup = RealmUtils.loadGroupFromDB(groupUid);
+                Log.d(TAG, "here is the saved group = " + wipGroup.toString());
                 handleGroupCreationAndExit(wipGroup, true);
                 break;
               default:
@@ -313,7 +315,7 @@ public class CreateGroupActivity extends PortraitActivity implements ContactSele
 
           @Override
           public void onNext(String s) {
-            Log.e(TAG, "string received : " + s);
+            Log.d(TAG, "string received : " + s);
             progressDialog.dismiss();
             Group finalGroup;
             if (NetworkUtils.SAVED_OFFLINE_MODE.equals(s)) {
@@ -322,7 +324,8 @@ public class CreateGroupActivity extends PortraitActivity implements ContactSele
             } else {
               final String serverUid = s.substring("OK-".length());
               finalGroup = RealmUtils.loadGroupFromDB(serverUid);
-              if ("OK".equals(s.substring(0, 1))) {
+              Log.d(TAG, "here is the saved group = " + finalGroup.toString());
+              if ("OK".equals(s.substring(0, 2))) {
                 handleGroupCreationAndExit(finalGroup, false);
               } else {
                 handleSavedButSomeInvalid(serverUid);
@@ -359,8 +362,7 @@ public class CreateGroupActivity extends PortraitActivity implements ContactSele
           String.format(getString(R.string.ac_body_group_create_server), group.getGroupName(),
               group.getGroupMemberCount());
     } else if (!unexpectedConnectionError) {
-      completionMessage =
-          String.format(getString(R.string.ac_body_group_create_local), group.getGroupName());
+      completionMessage = String.format(getString(R.string.ac_body_group_create_local), group.getGroupName());
     } else {
       completionMessage = getString(R.string.ac_body_group_create_connect_error);
     }
@@ -372,7 +374,7 @@ public class CreateGroupActivity extends PortraitActivity implements ContactSele
     i.putExtra(ActionCompleteActivity.ACTION_INTENT, ActionCompleteActivity.HOME_SCREEN);
     i.putExtra(GroupConstants.OBJECT_FIELD, group);
     i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
-    cleanUpLocalEntities();
+    cleanUpLocalEntities(!group.getIsLocal()); // i.e., delete locally cached group if this method has been passed one from server
     startActivity(i);
     finish();
   }
@@ -452,7 +454,7 @@ public class CreateGroupActivity extends PortraitActivity implements ContactSele
         i.putExtra(ActionCompleteActivity.ACTION_INTENT, ActionCompleteActivity.HOME_SCREEN);
         i.putExtra(GroupConstants.OBJECT_FIELD, group);
         i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
-        cleanUpLocalEntities();
+        cleanUpLocalEntities(!TextUtils.isEmpty(serverGroupUid)); // i.e., only delete if we managed to get one saved before
         startActivity(i);
         finish();
       }
@@ -461,18 +463,21 @@ public class CreateGroupActivity extends PortraitActivity implements ContactSele
 
   @Override public void onBackPressed() {
     super.onBackPressed();
-    cleanUpLocalEntities();
+    cleanUpLocalEntities(!editingOfflineGroup); // i.e., delete everything cached unless editing a locally created group
   }
 
-  private void cleanUpLocalEntities(){
+  private void cleanUpLocalEntities(final boolean deleteLocalGroup){
     if (cachedGroup != null && !editingOfflineGroup) {
       GroupService.getInstance().cleanInvalidNumbersOnExit(groupUid, null).subscribe(new Action1<String>() {
         @Override
         public void call(String s) {
-          GroupService.getInstance().deleteLocallyCreatedGroup(groupUid);
+          if (deleteLocalGroup) {
+            GroupService.getInstance().deleteLocallyCreatedGroup(groupUid);
+          }
         }
       });
     }
+
     if (!TextUtils.isEmpty(serverGroupUid)) {
       GroupService.getInstance().cleanInvalidNumbersOnExit(serverGroupUid, null).subscribe();
     }

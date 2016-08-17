@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <item
+        android:id="@+id/mi_share_default"
+        android:title="Share"
+        android:icon="@drawable/ic_share_white"
+        app:showAsAction="always" />
+
+    <item android:id="@+id/mi_share_wapp"
+          android:title="@string/share_wapp"
+          app:showAsAction="never" />
+
+    <item android:id="@+id/mi_share_fb"
+          android:title="@string/share_fb"
+          app:showAsAction="never" />
+
+    <item android:id="@+id/mi_share_task"
+          android:title="@string/share_other"
+          app:showAsAction="never" />
+
+</menu>

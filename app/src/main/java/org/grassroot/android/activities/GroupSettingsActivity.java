@@ -108,7 +108,7 @@ public class GroupSettingsActivity extends PortraitActivity implements
     @Override
     public void addOrganizer() {
         List<Member> existingOrganizers = Collections.emptyList(); // todo : get organizers
-        MemberListFragment memberListFragment = MemberListFragment.newInstance(group, false, existingOrganizers,
+        MemberListFragment memberListFragment = MemberListFragment.newInstance(group, false, false, existingOrganizers,
                 new MemberListFragment.MemberClickListener() {
                     @Override
                     public void onMemberClicked(int position, final String memberUid) {

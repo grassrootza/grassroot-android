@@ -146,9 +146,7 @@ public class TaskService {
             Response<TaskChangedResponse> response = GrassrootRestService.getInstance().getApi()
                 .getGroupTasks(phoneNumber, code, groupUid).execute();
             if (response.isSuccessful()) {
-              Log.e(TAG, "got response, now persisting tasks");
               updateAndRemoveTasks(response.body(), groupUid);
-              Log.e(TAG, "calling subscriber on next ...");
               subscriber.onNext(NetworkUtils.FETCHED_SERVER);
               subscriber.onCompleted();
             } else {
@@ -175,20 +173,22 @@ public class TaskService {
     for (TaskModel task : tasks) {
       task.calcDeadlineDate(); // triggers processing & store of Date object (maybe move into a JSON converter)
     }
-    RealmUtils.saveDataToRealm(tasks, Schedulers.immediate()).subscribe();
-    EventBus.getDefault().post(new TasksRefreshedEvent());
+    RealmUtils.saveDataToRealm(tasks, Schedulers.immediate()).subscribe(new Action1() {
+      @Override
+      public void call(Object o) {
+        // post in here to make sure count updates etc refresh to correct count
+        EventBus.getDefault().post(new TasksRefreshedEvent());
+      }
+    });
   }
 
   private void updateAndRemoveTasks(final TaskChangedResponse responseBody, final String groupUid) {
-    Log.e(TAG, "inside update and remove tasks ...");
     List<TaskModel> addedUpdated = responseBody.getAddedAndUpdated();
     for (TaskModel task : addedUpdated) {
       task.calcDeadlineDate();
     }
-    Log.e(TAG, "about to save tasks to DB ... for groupUid = " + groupUid);
     RealmUtils.saveDataToRealmSync(addedUpdated);
     EventBus.getDefault().post(new TasksRefreshedEvent(groupUid));
-    Log.e(TAG," exiting update and remove tasks");
   }
 
   private void updateTasksFetchedTime(String parentUid) {
@@ -256,8 +256,7 @@ public class TaskService {
             .getApi()
             .createMeeting(phoneNumber, code, task.getParentUid(), task.getTitle(),
                 task.getDescription(), task.getDeadlineISO(), task.getMinutes(), location,
-                new HashSet<>(
-                    RealmUtils.convertListOfRealmStringInListOfString(task.getMemberUIDS())));
+                new HashSet<>(RealmUtils.convertListOfRealmStringInListOfString(task.getMemberUIDS())));
       case TaskConstants.VOTE:
         return GrassrootRestService.getInstance()
             .getApi()

@@ -145,7 +145,6 @@ public class LoginRegisterActivity extends AppCompatActivity implements LoginScr
     @Override
     public void requestNewOtp(final String purpose) {
         if (LOGIN.equals(purpose)) {
-            LoginRegUtils.resetOtpRequestTime(msisdn);
             requestLogin(enteredNumber);
         } else {
             progressDialog.show();
@@ -172,11 +171,9 @@ public class LoginRegisterActivity extends AppCompatActivity implements LoginScr
 
     private void authenticateLogin(String otpEntered) {
         progressDialog.show();
-        Log.e("LOGIN", "sending the otp to server ...");
         LoginRegUtils.authenticateLogin(msisdn, otpEntered).subscribe(new Subscriber<String>() {
             @Override
             public void onNext(String s) {
-                Log.e("LOGIN", "got back from server ...");
                 progressDialog.dismiss();
                 registerOrRefreshGCM(msisdn);
                 launchHomeScreen(LoginRegUtils.AUTH_HAS_GROUPS.equals(s));
@@ -186,7 +183,6 @@ public class LoginRegisterActivity extends AppCompatActivity implements LoginScr
 
             @Override
             public void onError(Throwable e) {
-                Log.e("LOGIN", "error!" + e.getMessage());
                 e.printStackTrace();
                 progressDialog.dismiss();
                 handleError(msisdn, LOGIN, true, e);
@@ -335,7 +331,6 @@ public class LoginRegisterActivity extends AppCompatActivity implements LoginScr
 
     private void launchHomeScreen(boolean userHasGroups) {
         if (userHasGroups) {
-            Log.e("LOGIN", "launching activity");
             NetworkUtils.syncAndStartTasks(this, false, true).subscribe();
             NetworkUtils.registerForGCM(this).subscribe();
             Intent homeScreenIntent = new Intent(LoginRegisterActivity.this, HomeScreenActivity.class);

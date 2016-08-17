@@ -95,7 +95,7 @@ public class AddMembersActivity extends AppCompatActivity implements
         } else {
             init(extras);
             groupNameView.setText(groupName);
-            existingMemberListFragment = MemberListFragment.newInstance(groupUid, false, false, null, null);
+            existingMemberListFragment = MemberListFragment.newInstance(groupUid, false, false, null, true, null);
             loadMembersIntoExistingMemberFragment(true);
             setupNewMemberRecyclerView();
         }
@@ -145,7 +145,7 @@ public class AddMembersActivity extends AppCompatActivity implements
     }
 
     private void setupNewMemberRecyclerView() {
-        newMemberListFragment = MemberListFragment.newInstance(null, true, false, null, new MemberListFragment.MemberClickListener() {
+        newMemberListFragment = MemberListFragment.newInstance(null, true, false, null, false, new MemberListFragment.MemberClickListener() {
             @Override
             public void onMemberClicked(int position, String memberUid) {
                 newMemberContextMenu(position, memberUid);

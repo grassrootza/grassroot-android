@@ -23,6 +23,7 @@ import org.grassroot.android.fragments.HomeGroupListFragment;
 import org.grassroot.android.interfaces.GroupConstants;
 import org.grassroot.android.models.Group;
 import org.grassroot.android.utils.CircularImageTransformer;
+import org.grassroot.android.utils.ImageUtils;
 import org.grassroot.android.utils.RealmUtils;
 
 import java.text.SimpleDateFormat;
@@ -268,7 +269,7 @@ public class GroupListAdapter extends RecyclerView.Adapter<GroupListAdapter.GHP_
         final String imageUrl = group.getImageUrl();
         try {
             if (imageUrl != null) {
-                setAvatar(holder.avatar, imageUrl, group.getDefaultImageRes());
+                ImageUtils.setAvatarImage(holder.avatar, imageUrl, group.getDefaultImageRes());
             } else {
                 holder.avatar.setImageResource(group.getDefaultImageRes());
             }
@@ -338,28 +339,5 @@ public class GroupListAdapter extends RecyclerView.Adapter<GroupListAdapter.GHP_
             super(view);
             ButterKnife.bind(this, view);
         }
-    }
-
-    private void setAvatar(final ImageView view, final String imageUrl, final int fallBackRes) {
-        Picasso.with(context).load(imageUrl)
-                .error(fallBackRes)
-                .placeholder(fallBackRes)
-                .networkPolicy(NetworkPolicy.OFFLINE)
-                .transform(new CircularImageTransformer())
-                .into(view, new Callback() {
-                    @Override
-                    public void onSuccess() {
-                    }
-
-                    @Override
-                    public void onError() {
-                        Picasso.with(context).load(imageUrl)
-                                .placeholder(fallBackRes)
-                                .transform(new CircularImageTransformer())
-                                .error(fallBackRes)
-                                .into(view);
-                    }
-                });
-
     }
 }

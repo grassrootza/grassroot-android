@@ -1,16 +1,24 @@
 package org.grassroot.android.adapters;
 
-import android.graphics.Color;
-import android.support.v7.widget.CardView;
+import android.graphics.Typeface;
 import android.support.v7.widget.RecyclerView;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.squareup.picasso.NetworkPolicy;
+import com.squareup.picasso.Picasso;
+
 import org.grassroot.android.R;
+import org.grassroot.android.interfaces.TaskConstants;
 import org.grassroot.android.models.TaskNotification;
+import org.grassroot.android.services.ApplicationLoader;
+import org.grassroot.android.utils.CircularImageTransformer;
+import org.grassroot.android.utils.ImageUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -23,40 +31,30 @@ import butterknife.ButterKnife;
  */
 public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapter.ViewHolder> {
 
+    private static final String TAG = NotificationAdapter.class.getSimpleName();
+
     private List<TaskNotification> notifications = new ArrayList<>();
     private List<TaskNotification> storedNotifications = new ArrayList<>();
-    private static final String TAG = "NotificationAdapter";
 
-
-    public NotificationAdapter(ArrayList<TaskNotification> dataList) {
-        this.notifications = dataList;
-    }
+    private final String titleFormatEvent;
+    private final String titleFormatTodo;
 
     public NotificationAdapter() {
-
+        notifications = new ArrayList<>();
+        storedNotifications = new ArrayList<>();
+        titleFormatEvent = ApplicationLoader.applicationContext.getString(R.string.notification_title_format_event);
+        titleFormatTodo = ApplicationLoader.applicationContext.getString(R.string.notification_title_format_todo);
     }
 
-    @Override
-    public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.row_notification, parent, false);
-        ViewHolder vh = new ViewHolder(view);
-        return vh;
+    public void setToNotifications(List<TaskNotification> notificationList) {
+        this.notifications.clear();
+        this.notifications.addAll(notificationList);
+        this.notifyDataSetChanged();
     }
 
-    @Override
-    public void onBindViewHolder(ViewHolder holder, int position) {
-        TaskNotification notification = notifications.get(position);
-        holder.txtNcMessage.setText(notification.getMessage());
-        holder.txtDate.setText(notification.getCreatedDateTime());
-
-        //had to set this so that cards that should not be colored are not
-        holder.setIsRecyclable(false);
-        if(notification.isRead()){
-            Log.d(TAG, "notification was read, default color");
-        }else{
-            Log.d(TAG, "notification not read, change color");
-            holder.mainView.setCardBackgroundColor(Color.LTGRAY);
-        }
+    public void addNotifications(List<TaskNotification> notifications) {
+        this.notifications.addAll(notifications);
+        this.notifyDataSetChanged();
     }
 
     @Override
@@ -64,41 +62,71 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
         return notifications.size();
     }
 
+    public TaskNotification getItem(final int position) {
+        return notifications.get(position);
+    }
+
+    @Override
+    public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.row_notification, parent, false);
+        return new ViewHolder(view);
+    }
+
+    @Override
+    public void onBindViewHolder(ViewHolder holder, int position) {
+        TaskNotification notification = notifications.get(position);
+
+        holder.title.setText(assembleTitle(notification));
+        holder.message.setText(notification.getMessage());
+
+        if (notification.isViewedAndroid()) {
+            setIcon(notification, holder.icon);
+            holder.title.setTypeface(null, Typeface.NORMAL);
+        } else {
+            holder.icon.setImageResource(R.drawable.ic_excl_green);
+            holder.title.setTypeface(null, Typeface.BOLD);
+        }
+    }
+
+    // notification.getTitle holds group name (if have different in future, will need to add checks)
+    private String assembleTitle(TaskNotification notification) {
+        switch (notification.getEntityType()) {
+            case TaskConstants.MEETING:
+                return String.format(titleFormatEvent, "Meeting", notification.getTitle());
+            case TaskConstants.VOTE:
+                return String.format(titleFormatEvent, "Vote", notification.getTitle());
+            case TaskConstants.TODO:
+                return String.format(titleFormatTodo, "Todo", notification.getTitle());
+            default:
+                return notification.getTitle();
+        }
+    }
+
+    private void setIcon(TaskNotification notification, ImageView icon) {
+        int defaultImage = ImageUtils.convertDefaultImageTypeToResource(notification.getDefaultImage());
+        if (TextUtils.isEmpty(notification.getImageUrl())) {
+            icon.setImageResource(defaultImage);
+        } else {
+            try {
+                // monitor performance of this too, likely want to pre-fetch & load
+                ImageUtils.setAvatarImage(icon, notification.getImageUrl(), defaultImage);
+            } catch (OutOfMemoryError e) {
+                icon.setImageResource(defaultImage);
+            }
+        }
+    }
+
     class ViewHolder extends RecyclerView.ViewHolder {
 
-        @BindView(R.id.main_view)
-        CardView mainView;
-        @BindView(R.id.txt_nc_message)
-        TextView txtNcMessage;
-        @BindView(R.id.txt_date)
-        TextView txtDate;
+        @BindView(R.id.main_view) ViewGroup mainView;
+        @BindView(R.id.notification_text_title) TextView title;
+        @BindView(R.id.notification_text_message) TextView message;
+        @BindView(R.id.notification_icon) ImageView icon;
 
         public ViewHolder(View view) {
             super(view);
             ButterKnife.bind(this, view);
         }
-    }
-
-    private void setCardBackground(ViewHolder holder, TaskNotification notification){
-        Log.e(TAG, String.valueOf(notification.isRead()));
-        if(!notification.isRead()){
-            Log.e(TAG, "notification not read, changing color");
-            holder.mainView.setCardBackgroundColor(Color.LTGRAY);
-        }
-    }
-
-
-    public void addData(List<TaskNotification> notificationList) {
-        this.notifications.clear();
-        this.notifications.addAll(notificationList);
-        this.notifyDataSetChanged();
-    }
-
-    public void updateData(List<TaskNotification> notifications) {
-        int size = this.notifications.size() + 1;
-        this.notifications.addAll(notifications);
-        Log.e(TAG, "size of list" + this.notifications.size());;
-        this.notifyDataSetChanged();
     }
 
     public void filter(String queryText) {

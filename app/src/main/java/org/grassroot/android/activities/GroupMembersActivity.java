@@ -123,7 +123,7 @@ public class GroupMembersActivity extends PortraitActivity implements NewTaskMen
     }
 
     private void setUpMemberListFragment() {
-        memberListFragment = MemberListFragment.newInstance(groupUid, selectMembers, selectMembers, membersSelected, null);
+        memberListFragment = MemberListFragment.newInstance(groupUid, selectMembers, selectMembers, membersSelected, true, null);
         getSupportFragmentManager().beginTransaction()
                 .add(R.id.lm_member_list_container, memberListFragment)
                 .commit();

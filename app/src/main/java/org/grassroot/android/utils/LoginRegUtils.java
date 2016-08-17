@@ -1,12 +1,10 @@
 package org.grassroot.android.utils;
 
-import android.text.TextUtils;
-
 import org.grassroot.android.BuildConfig;
-import org.grassroot.android.models.exceptions.ApiCallException;
 import org.grassroot.android.models.GenericResponse;
 import org.grassroot.android.models.PreferenceObject;
 import org.grassroot.android.models.TokenResponse;
+import org.grassroot.android.models.exceptions.ApiCallException;
 import org.grassroot.android.services.GrassrootRestService;
 
 import java.io.IOException;
@@ -36,19 +34,16 @@ public class LoginRegUtils {
 					Response<GenericResponse> response = GrassrootRestService.getInstance().getApi()
 						.login(msisdn).execute();
 					if (response.isSuccessful()) {
-						storeOtpRequestTime(msisdn);
 						final String returnTag = BuildConfig.FLAVOR.equals(Constant.STAGING) ? (String) response.body().getData() :
 							OTP_PROD_SENT;
 						subscriber.onNext(returnTag);
 						subscriber.onCompleted();
 					} else {
 						// to be safe, make sure the OTP is sent again next time (unless server overrides)
-						resetOtpRequestTime(msisdn);
 						throw new ApiCallException(NetworkUtils.SERVER_ERROR, ErrorUtils.getRestMessage(response.errorBody()));
 					}
 				} catch (IOException e) {
 					// if there was an interruption in the call, rather make sure a new one is sent
-					resetOtpRequestTime(msisdn);
 					throw new ApiCallException(NetworkUtils.CONNECT_ERROR);
 				}
 			}
@@ -64,17 +59,14 @@ public class LoginRegUtils {
 					Response<GenericResponse> response = GrassrootRestService.getInstance().getApi()
 						.addUser(msisdn, displayName).execute();
 					if (response.isSuccessful()) {
-						storeOtpRequestTime(msisdn);
 						final String returnTag = BuildConfig.FLAVOR.equals(Constant.STAGING) ?
 							(String) response.body().getData() : OTP_PROD_SENT;
 						subscriber.onNext(returnTag);
 						subscriber.onCompleted();
 					} else {
-						resetOtpRequestTime(msisdn);
 						throw new ApiCallException(NetworkUtils.SERVER_ERROR, ErrorUtils.getRestMessage(response.errorBody()));
 					}
 				} catch (IOException e) {
-					resetOtpRequestTime(msisdn);
 					throw new ApiCallException(NetworkUtils.CONNECT_ERROR);
 				}
 			}
@@ -90,7 +82,6 @@ public class LoginRegUtils {
 					Response<GenericResponse> resend = GrassrootRestService.getInstance().getApi()
 						.resendRegOtp(msisdn).execute();
 					if (resend.isSuccessful()) {
-						storeOtpRequestTime(msisdn);
 						final String returnTag = BuildConfig.FLAVOR.equals(Constant.STAGING) ?
 							(String) resend.body().getData() : OTP_PROD_SENT;
 						subscriber.onNext(returnTag);
@@ -176,24 +167,6 @@ public class LoginRegUtils {
 		}).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread());
 	}
 
-	private static void storeOtpRequestTime(final String msisdn) {
-		PreferenceObject prefs = RealmUtils.loadPreferencesFromDB();
-		if (prefs == null) {
-			prefs = new PreferenceObject();
-		}
-		prefs.setLastTimeOtpRequested(System.currentTimeMillis());
-		prefs.setMobileNumber(msisdn);
-		RealmUtils.saveDataToRealmSync(prefs);
-	}
-
-	public static void resetOtpRequestTime(final String msisdn) {
-		PreferenceObject prefs = RealmUtils.loadPreferencesFromDB();
-		if (prefs != null) {
-			prefs.setLastTimeOtpRequested(0);
-			RealmUtils.saveDataToRealmSync(prefs);
-		}
-	}
-
 	private static PreferenceObject setupPreferences(final String msisdn, final TokenResponse response) {
 		PreferenceObject preferences = new PreferenceObject();
 		preferences.setToken(response.getToken().getCode());
@@ -201,6 +174,7 @@ public class LoginRegUtils {
 		preferences.setLoggedIn(true);
 		preferences.setHasGroups(response.getHasGroups());
 		preferences.setUserName(response.getDisplayName());
+		preferences.setNotificationCounter(response.getUnreadNotificationCount());
 		return preferences;
 	}
 

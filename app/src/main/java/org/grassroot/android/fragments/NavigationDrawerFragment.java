@@ -25,7 +25,7 @@ import org.grassroot.android.adapters.NavigationDrawerAdapter;
 import org.grassroot.android.events.GroupCreatedEvent;
 import org.grassroot.android.events.GroupsRefreshedEvent;
 import org.grassroot.android.events.NetworkFailureEvent;
-import org.grassroot.android.events.NotificationEvent;
+import org.grassroot.android.events.NotificationCountChangedEvent;
 import org.grassroot.android.events.OfflineActionsSent;
 import org.grassroot.android.events.OnlineOfflineToggledEvent;
 import org.grassroot.android.events.TaskAddedEvent;
@@ -369,9 +369,7 @@ public class NavigationDrawerFragment extends Fragment implements NavigationDraw
         confirmDialog.show(getFragmentManager(), "logout");
     }
 
-    // todo : move this onto a background thread?
     private void unregisterGcm() {
-        Log.d(TAG, "unregistering from GCM ...");
         Intent gcmUnregister = new Intent(getActivity(), GcmRegistrationService.class);
         gcmUnregister.putExtra(NotificationConstants.ACTION, NotificationConstants.GCM_UNREGISTER);
         gcmUnregister.putExtra(NotificationConstants.PHONE_NUMBER, RealmUtils.loadPreferencesFromDB().getMobileNumber());
@@ -401,9 +399,9 @@ public class NavigationDrawerFragment extends Fragment implements NavigationDraw
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
-    public void onNewNotificationEvent(NotificationEvent event) {
-        int notificationCount = event.getNotificationCount();
-        itemAdapter.notifyDataSetChanged();
+    public void onNewNotificationEvent(NotificationCountChangedEvent event) {
+        notifications.setItemCount(event.getNotificationCount());
+        safeItemChange(NavigationConstants.HOME_NAV_NOTIFICATIONS);
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
@@ -420,7 +418,7 @@ public class NavigationDrawerFragment extends Fragment implements NavigationDraw
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onTasksRefreshedEvent(TasksRefreshedEvent e) {
-        if (!TextUtils.isEmpty(e.parentUid)) {
+        if (TextUtils.isEmpty(e.parentUid)) {
             tasks.setItemCount((int) RealmUtils.countUpcomingTasksInDB());
             safeItemChange(NavigationConstants.HOME_NAV_TASKS);
         }

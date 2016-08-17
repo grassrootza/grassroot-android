@@ -13,12 +13,11 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v4.app.NotificationCompat;
-import android.text.TextUtils;
 import android.util.Log;
 import java.util.List;
 import org.grassroot.android.R;
 import org.grassroot.android.activities.ViewTaskActivity;
-import org.grassroot.android.events.NotificationEvent;
+import org.grassroot.android.events.NotificationCountChangedEvent;
 import org.grassroot.android.interfaces.NotificationConstants;
 import org.grassroot.android.models.GenericResponse;
 import org.grassroot.android.models.PreferenceObject;
@@ -155,7 +154,7 @@ public class GcmListenerService extends com.google.android.gms.gcm.GcmListenerSe
     final int currentCount = preferenceObject.getNotificationCounter();
     new Handler(getMainLooper()).post(new Runnable() {
       @Override public void run() {
-        EventBus.getDefault().post(new NotificationEvent(currentCount + 1));
+        EventBus.getDefault().post(new NotificationCountChangedEvent(currentCount + 1));
       }
     });
     preferenceObject.setNotificationCounter(currentCount + 1);

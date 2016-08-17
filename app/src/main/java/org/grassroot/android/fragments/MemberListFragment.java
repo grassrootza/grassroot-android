@@ -10,6 +10,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ProgressBar;
 
 import io.realm.RealmResults;
 import org.grassroot.android.R;
@@ -41,6 +42,7 @@ public class MemberListFragment extends Fragment {
     private boolean canClickItems;
     private boolean showSelected;
     private boolean selectedByDefault;
+    private boolean includeThisUser;
 
     private List<Member> preSelectedMembers;
     private List<Member> filteredMembers;
@@ -49,6 +51,7 @@ public class MemberListFragment extends Fragment {
     private MemberListAdapter memberListAdapter;
 
     RecyclerView memberListRecyclerView;
+    ProgressBar progressBar;
 
     public interface MemberClickListener {
         void onMemberClicked(int position, String memberUid);
@@ -56,7 +59,7 @@ public class MemberListFragment extends Fragment {
 
     // note : groupUid can be set null, in which case we are adding members generated locally
     public static MemberListFragment newInstance(String parentUid, boolean clickEnabled, boolean showSelected,
-                                                 List<Member> selectedMembers, MemberClickListener clickListener) {
+                                                 List<Member> selectedMembers, boolean includeThisUser, MemberClickListener clickListener) {
 
         MemberListFragment fragment = new MemberListFragment();
         if (parentUid != null) {
@@ -68,10 +71,11 @@ public class MemberListFragment extends Fragment {
         fragment.showSelected = showSelected;
         fragment.clickListener = clickListener;
         fragment.preSelectedMembers = selectedMembers;
+        fragment.includeThisUser = includeThisUser;
         return fragment;
     }
 
-    public static MemberListFragment newInstance(Group group, boolean showSelected, List<Member> filteredMembers,
+    public static MemberListFragment newInstance(Group group, boolean includeThisUser, boolean showSelected, List<Member> filteredMembers,
                                                  MemberClickListener clickListener) {
         MemberListFragment fragment = new MemberListFragment();
         fragment.group = group;
@@ -79,6 +83,7 @@ public class MemberListFragment extends Fragment {
         fragment.showSelected = showSelected;
         fragment.clickListener = clickListener;
         fragment.filteredMembers = filteredMembers;
+        fragment.includeThisUser = includeThisUser;
         return fragment;
     }
 
@@ -90,7 +95,7 @@ public class MemberListFragment extends Fragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (memberListAdapter == null) {
-            memberListAdapter = new MemberListAdapter(this.getContext());
+            memberListAdapter = new MemberListAdapter(this.getContext(), includeThisUser);
         };
     }
 
@@ -98,6 +103,7 @@ public class MemberListFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View viewToReturn = inflater.inflate(R.layout.fragment_member_list, container, false);
         memberListRecyclerView = (RecyclerView) viewToReturn.findViewById(R.id.mlist_frag_recycler_view);
+        progressBar = (ProgressBar) viewToReturn.findViewById(R.id.progressBar);
         setUpRecyclerView();
         return viewToReturn;
     }
@@ -105,7 +111,7 @@ public class MemberListFragment extends Fragment {
     public void transitionToMemberList(List<Member> members) {
         // todo : optimize this (get difference), maybe
         if (memberListAdapter != null) {
-            memberListAdapter.resetMembers(members);
+            memberListAdapter.setMembers(members);
         }
     }
 
@@ -154,8 +160,8 @@ public class MemberListFragment extends Fragment {
     }
 
     private void setUpRecyclerView() {
-        memberListRecyclerView.setLayoutManager(new LinearLayoutManager(this.getContext()));
         memberListRecyclerView.setAdapter(memberListAdapter);
+        memberListRecyclerView.setLayoutManager(new LinearLayoutManager(this.getContext()));
         memberListAdapter.setShowSelected(showSelected);
 
         if (group != null)
@@ -173,6 +179,7 @@ public class MemberListFragment extends Fragment {
                     public void onClick(View view, int position) {
                         memberListAdapter.toggleMemberSelected(position);
                         if (clickListener != null) {
+                            Log.e(TAG, "member clicked at position ... " + position);
                             clickListener.onMemberClicked(position, memberListAdapter.getMemberUid(position));
                         }
                     }
@@ -189,21 +196,25 @@ public class MemberListFragment extends Fragment {
 
     private void fetchGroupMembers() {
         Log.d(TAG, "inside MemberListFragment, retrieving group members for uid = " + group.getGroupUid());
-        RealmUtils.loadListFromDB(Member.class,"groupUid", group.getGroupUid()).subscribe(new Action1<List<Member>>() {
-            @Override public void call(List<Member> realmResults) {
-                List<Member> membersToRemove = new ArrayList<>(memberListAdapter.getMembers());
+
+        if (group.getGroupMemberCount() > 20) {
+            progressBar.setVisibility(View.VISIBLE);
+        }
+
+        RealmUtils.loadGroupMembers(group.getGroupUid(), includeThisUser).subscribe(new Action1<List<Member>>() {
+            @Override
+            public void call(List<Member> members) {
                 if (filteredMembers != null) {
-                    membersToRemove.addAll(filteredMembers);
+                    members.removeAll(filteredMembers);
                 }
-                realmResults.removeAll(membersToRemove);
-                memberListAdapter.addMembers(realmResults);
+                memberListAdapter.setMembers(members);
 
                 if (preSelectedMembers != null && !selectedByDefault) {
                     // todo : consider using list.contains on members when can trust hashing/equals
                     final Map<String, Integer> positionMap = new HashMap<>();
                     final int listSize = preSelectedMembers.size();
                     for (int i = 0; i < listSize; i++) {
-                        positionMap.put((realmResults.get(i)).getMemberUid(),i);
+                        positionMap.put((members.get(i)).getMemberUid(),i);
                     }
                     for (Member m : preSelectedMembers) {
                         if (positionMap.containsKey(m.getMemberUid())) {
@@ -211,6 +222,8 @@ public class MemberListFragment extends Fragment {
                         }
                     }
                 }
+
+                progressBar.setVisibility(View.INVISIBLE);
             }
         });
 

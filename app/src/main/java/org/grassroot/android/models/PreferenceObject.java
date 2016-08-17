@@ -16,15 +16,15 @@ public class PreferenceObject extends RealmObject {
   private boolean hasRatedUs;
   private boolean hasGroups;
   private boolean hasGcmRegistered;
-  private boolean mustRefresh;
+
   private String userName;
   private String mobileNumber;
   private String token;
+  private String userUid;
 
   private long lastTimeSyncPerformed;
   private long lastTimeGroupsFetched;
   private long lastTimeUpcomingTasksFetched;
-  private long lastTimeOtpRequested;
 
   public long getLastTimeNotificationsFetched() {
     return lastTimeNotificationsFetched;
@@ -162,6 +162,12 @@ public class PreferenceObject extends RealmObject {
     this.notificationCounter = notificationCounter;
   }
 
+  public void decrementNotificationCounter() {
+    if (notificationCounter > 0) {
+      notificationCounter--;
+    }
+  }
+
   public void setLastTimeSyncPerformed(long lastTimeSyncPerformed) { this.lastTimeSyncPerformed = lastTimeSyncPerformed; }
 
   public long getLastTimeSyncPerformed() { return lastTimeSyncPerformed; }
@@ -189,14 +195,6 @@ public class PreferenceObject extends RealmObject {
       onlineStatus = NetworkUtils.ONLINE_DEFAULT;
     }
     return onlineStatus;
-  }
-
-  public long getLastTimeOtpRequested() {
-    return lastTimeOtpRequested;
-  }
-
-  public void setLastTimeOtpRequested(long lastTimeOtpRequested) {
-    this.lastTimeOtpRequested = lastTimeOtpRequested;
   }
 
   public void setShowOnlineOfflinePicker(boolean showOnlineOfflinePicker) { this.showOnlineOfflinePicker = showOnlineOfflinePicker; }

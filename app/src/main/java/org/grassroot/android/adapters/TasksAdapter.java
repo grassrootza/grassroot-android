@@ -37,7 +37,7 @@ import rx.schedulers.Schedulers;
  */
 public class TasksAdapter extends RecyclerView.Adapter<TasksAdapter.TaskViewHolder> {
 
-  private static final String TAG = TasksAdapter.class.getCanonicalName();
+  private static final String TAG = TasksAdapter.class.getSimpleName();
 
   private final TaskListListener listener;
   private final boolean showGroupNames;
@@ -87,6 +87,14 @@ public class TasksAdapter extends RecyclerView.Adapter<TasksAdapter.TaskViewHold
     }
   }
 
+  public void refreshTask(final String taskUid, TaskModel taskModel) {
+    Integer position = uidPositionMap.get(taskUid);
+    if (position != null) {
+      viewedTasks.set(position, taskModel);
+      notifyItemChanged(position); // by definition, don't need to reset UID/pos map
+    }
+  }
+
   private Observable resetUidPositionMap() {
     return Observable.create(new Observable.OnSubscribe() {
       @Override
@@ -100,17 +108,20 @@ public class TasksAdapter extends RecyclerView.Adapter<TasksAdapter.TaskViewHold
     }).subscribeOn(Schedulers.computation()).observeOn(AndroidSchedulers.mainThread());
   }
 
-  @Override public TaskViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+  @Override
+  public TaskViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
     View view = LayoutInflater.from(parent.getContext())
         .inflate(R.layout.row_group_activities, parent, false);
     return new TaskViewHolder(view);
   }
 
-  @Override public void onBindViewHolder(TaskViewHolder holder, final int position) {
+  @Override
+  public void onBindViewHolder(TaskViewHolder holder, final int position) {
     final TaskModel taskModel = viewedTasks.get(position);
     taskModel.resetResponseFlags(); // since we can't trust Android's construction mechanism (todo : revisit)
     setCardListener(holder.cardView, taskModel, position);
     setUpCardImagesAndView(taskModel, holder, position);
+
   }
 
   private void setCardListener(CardView view, final TaskModel task, final int position) {

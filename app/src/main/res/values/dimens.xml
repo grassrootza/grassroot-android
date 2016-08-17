@@ -40,6 +40,7 @@
     <dimen name="dialog_padding_horizontal">24dp</dimen>
 
     <dimen name="group_icon_medium">24dp</dimen>
+    <dimen name="group_icon_large">36dp</dimen>
     <dimen name="group_avatar_small">50dp</dimen>
     <dimen name="group_avatar_large">72dp</dimen>
     <dimen name="group_card_elevation">4dp</dimen>

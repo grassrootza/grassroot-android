@@ -32,8 +32,6 @@ public class RealmUtils {
 
     private static final String TAG = RealmUtils.class.getSimpleName();
 
-    public static final String DB_LOAD_DONE = "db_load_done";
-
     public static List<String> convertListOfRealmStringInListOfString(
             RealmList<RealmString> realmList) {
         if (realmList != null) {
@@ -94,52 +92,11 @@ public class RealmUtils {
     }
 
     public static void saveDataToRealmSync(final List<? extends RealmObject> list) {
-        Log.e(TAG, "saving list to DB ...");
         Realm realm = Realm.getDefaultInstance();
         realm.beginTransaction();
         realm.copyToRealmOrUpdate(list);
         realm.commitTransaction();
         realm.close();
-        Log.e(TAG, "finished saving list to DB ...");
-    }
-
-    public static Observable saveNotificationsToRealm(final List<TaskNotification> notifications) {
-        return Observable.create(new Observable.OnSubscribe<Boolean>() {
-            @Override
-            public void call(Subscriber<? super Boolean> subscriber) {
-                Realm realm = Realm.getDefaultInstance();
-                realm.beginTransaction();
-                realm.copyToRealmOrUpdate(notifications);
-                realm.commitTransaction();
-                final List<TaskNotification> savedNotifications = RealmUtils.loadNotificationsSorted();
-                if(savedNotifications.size()>100){
-                    Log.d(TAG,"Saved objects of size " + String.valueOf(savedNotifications.size()));
-
-                    RealmUtils.saveDataToRealm(savedNotifications.subList(0,100), null).subscribe(new Action1() {
-                    @Override
-                    public void call(Object o) {
-                        Log.d(TAG,"Deleting objects of size " + String.valueOf(savedNotifications.size() - 100));
-                        for(TaskNotification notification : savedNotifications.subList(100,savedNotifications.size())){
-                            Log.d(TAG,"Deleting objects " + notification.getMessage());
-                            RealmUtils.removeObjectFromDatabase(TaskNotification.class,"uid",notification.getUid());
-                        }
-                    }
-                });
-                }
-                realm.close();
-                subscriber.onNext(true);
-                subscriber.onCompleted();
-            }
-        }).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread());
-    }
-
-    public static List<TaskNotification> loadNotificationsSorted() {
-                        final Realm realm = Realm.getDefaultInstance();
-                        List<TaskNotification> notifications = realm.copyFromRealm(
-                                realm.where(TaskNotification.class).findAllSorted("createdDateTime", Sort.DESCENDING));
-                        realm.close();
-
-        return notifications;
     }
 
     public static void saveDataToRealmWithSubscriber(final RealmObject object) {
@@ -285,55 +242,6 @@ public class RealmUtils {
         return (T) objects;
     }
 
-    // only call this from background thread
-    public static long countListInDB(final Class<? extends RealmObject> model, final Map<String, Object> map) {
-        if (Looper.myLooper() == Looper.getMainLooper()) {
-            throw new UnsupportedOperationException("Error! Calling inline DB query on main thread");
-        }
-
-        Realm realm = Realm.getDefaultInstance();
-        RealmQuery<? extends RealmObject> query = realm.where(model);
-        for (Map.Entry<String, Object> entry : map.entrySet()) {
-            if (entry.getValue() instanceof String) {
-                query.equalTo(entry.getKey(), entry.getValue().toString());
-            } else {
-                query.equalTo(entry.getKey(), Boolean.valueOf(entry.getValue().toString()));
-            }
-        }
-        long count = query.count();
-        realm.close();
-        return count;
-    }
-
-    public static long countGroupsInDB() {
-        Realm realm = Realm.getDefaultInstance();
-        long count = realm
-            .where(Group.class)
-            .count();
-        realm.close();
-        return count;
-    }
-
-    public static long countUpcomingTasksInDB() {
-        Realm realm = Realm.getDefaultInstance();
-        long count = realm
-            .where(TaskModel.class)
-            .greaterThan("deadlineDate", new Date())
-            .count();
-        realm.close();
-        return count;
-    }
-
-    public static long countGroupTasksInDB(final String parentUid) {
-        Realm realm = Realm.getDefaultInstance();
-        long count = realm
-            .where(TaskModel.class)
-            .equalTo("parentUid", parentUid)
-            .count();
-        realm.close();
-        return count;
-    }
-
     public static void removeObjectFromDatabase(Class<? extends RealmObject> clazz, String pName,
                                                 String pValue) {
         Realm realm = Realm.getDefaultInstance();
@@ -381,14 +289,6 @@ public class RealmUtils {
         }
     }
 
-    public static PreferenceObject loadPreferencesFromDB() {
-        Realm realm = Realm.getDefaultInstance();
-        List<PreferenceObject> object =
-                realm.copyFromRealm(realm.where(PreferenceObject.class).findAll());
-        realm.close();
-        return object.size() > 0 ? object.get(0) : new PreferenceObject();
-    }
-
     public static <T extends RealmObject> T loadObjectFromDB(Class<? extends RealmObject> model,
                                                              String pName, String pValue) {
         RealmList<RealmObject> objects = new RealmList<>();
@@ -402,8 +302,111 @@ public class RealmUtils {
         }
     }
 
+    // only call this from background thread
+    public static long countListInDB(final Class<? extends RealmObject> model, final Map<String, Object> map) {
+        if (Looper.myLooper() == Looper.getMainLooper()) {
+            throw new UnsupportedOperationException("Error! Calling inline DB query on main thread");
+        }
+
+        Realm realm = Realm.getDefaultInstance();
+        RealmQuery<? extends RealmObject> query = realm.where(model);
+        for (Map.Entry<String, Object> entry : map.entrySet()) {
+            if (entry.getValue() instanceof String) {
+                query.equalTo(entry.getKey(), entry.getValue().toString());
+            } else {
+                query.equalTo(entry.getKey(), Boolean.valueOf(entry.getValue().toString()));
+            }
+        }
+        long count = query.count();
+        realm.close();
+        return count;
+    }
+
+    /*
+    SECTION : methods for specific entity fetch, count, removal
+     */
+
+    public static PreferenceObject loadPreferencesFromDB() {
+        Realm realm = Realm.getDefaultInstance();
+        List<PreferenceObject> object =
+            realm.copyFromRealm(realm.where(PreferenceObject.class).findAll());
+        realm.close();
+        return object.size() > 0 ? object.get(0) : new PreferenceObject();
+    }
+
     public static Group loadGroupFromDB(final String groupUid) {
         return loadObjectFromDB(Group.class, "groupUid", groupUid);
+    }
+
+    public static long countGroupsInDB() {
+        Realm realm = Realm.getDefaultInstance();
+        long count = realm
+            .where(Group.class)
+            .count();
+        realm.close();
+        return count;
+    }
+
+    public static long countGroupMembers(final String groupUid) {
+        Realm realm = Realm.getDefaultInstance();
+        long count = realm
+            .where(Member.class)
+            .equalTo("groupUid", groupUid)
+            .count();
+        realm.close();
+        return count;
+    }
+
+    public static Observable<List<Member>> loadGroupMembers(final String groupUid, final boolean includeUser) {
+        return Observable.create(new Observable.OnSubscribe<List<Member>>() {
+            @Override
+            public void call(Subscriber<? super List<Member>> subscriber) {
+                RealmList<Member> members = new RealmList<>();
+                final Realm realm = Realm.getDefaultInstance();
+                final String userMsisdn = realm.where(PreferenceObject.class)
+                    .findAll().get(0).getMobileNumber();
+
+                RealmQuery<Member> query;
+                if (includeUser) {
+                    query = realm
+                        .where(Member.class)
+                        .equalTo("groupUid", groupUid)
+                        .equalTo("phoneNumber", userMsisdn);
+                    members.add(realm.copyFromRealm(query.findAll().first()));
+                }
+
+                query = realm
+                    .where(Member.class)
+                    .equalTo("groupUid", groupUid)
+                    .notEqualTo("phoneNumber", userMsisdn);
+                members.addAll(realm.copyFromRealm(query.findAllSorted("displayName")));
+
+                Log.e(TAG, "returning this many members : " + members.size());
+                subscriber.onNext(members);
+                subscriber.onCompleted();
+                realm.close();
+            }
+        }).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread());
+    }
+
+    public static long countUpcomingTasksInDB() {
+        Realm realm = Realm.getDefaultInstance();
+        long count = realm
+            .where(TaskModel.class)
+            .greaterThan("deadlineDate", new Date())
+            .count();
+        realm.close();
+        return count;
+    }
+
+    public static long countGroupTasksInDB(final String parentUid) {
+        Realm realm = Realm.getDefaultInstance();
+        long count = realm
+            .where(TaskModel.class)
+            .equalTo("parentUid", parentUid)
+            .count();
+        realm.close();
+        return count;
     }
 
     public static Observable<List<TaskModel>> loadUpcomingTasks() {
@@ -452,11 +455,6 @@ public class RealmUtils {
         return count;
     }
 
-    public static Observable loadGroupMembers(final String groupUid, boolean excludeUser) {
-        // todo : instead use something like below if exclude user is true
-        return loadListFromDB(Member.class, "groupUid", groupUid);
-    }
-
     public static Observable<List<Member>> loadMembersSortedInvalid(final String groupUid) {
         return Observable.create(new Observable.OnSubscribe<List<Member>>() {
             @Override
@@ -477,6 +475,45 @@ public class RealmUtils {
                 realm.close();
             }
         }).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread());
+    }
+
+    public static Observable saveNotificationsToRealm(final List<TaskNotification> notifications) {
+        return Observable.create(new Observable.OnSubscribe<Boolean>() {
+            @Override
+            public void call(Subscriber<? super Boolean> subscriber) {
+                Realm realm = Realm.getDefaultInstance();
+                realm.beginTransaction();
+                realm.copyToRealmOrUpdate(notifications);
+                realm.commitTransaction();
+                final List<TaskNotification> savedNotifications = RealmUtils.loadNotificationsSorted();
+                if(savedNotifications.size()>100){
+                    Log.d(TAG,"Saved objects of size " + String.valueOf(savedNotifications.size()));
+
+                    RealmUtils.saveDataToRealm(savedNotifications.subList(0,100), null).subscribe(new Action1() {
+                        @Override
+                        public void call(Object o) {
+                            Log.d(TAG,"Deleting objects of size " + String.valueOf(savedNotifications.size() - 100));
+                            for(TaskNotification notification : savedNotifications.subList(100,savedNotifications.size())){
+                                Log.d(TAG,"Deleting objects " + notification.getMessage());
+                                RealmUtils.removeObjectFromDatabase(TaskNotification.class,"uid",notification.getUid());
+                            }
+                        }
+                    });
+                }
+                realm.close();
+                subscriber.onNext(true);
+                subscriber.onCompleted();
+            }
+        }).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread());
+    }
+
+    public static List<TaskNotification> loadNotificationsSorted() {
+        final Realm realm = Realm.getDefaultInstance();
+        List<TaskNotification> notifications = realm.copyFromRealm(
+            realm.where(TaskNotification.class).findAllSorted("createdDateTime", Sort.DESCENDING));
+        realm.close();
+
+        return notifications;
     }
 
     /*
