@@ -134,6 +134,9 @@ public class LoginRegUtils {
 						RealmUtils.saveDataToRealmSync(preferenceObject);
 						subscriber.onNext(AUTH_NO_GROUPS);
 						subscriber.onCompleted();
+					} else {
+						throw new ApiCallException(NetworkUtils.SERVER_ERROR,
+							ErrorUtils.getRestMessage(response.errorBody()));
 					}
 				} catch (IOException e) {
 					throw new ApiCallException(NetworkUtils.CONNECT_ERROR);

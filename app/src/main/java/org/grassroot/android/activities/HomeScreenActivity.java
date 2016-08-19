@@ -102,7 +102,7 @@ public class HomeScreenActivity extends PortraitActivity implements NavigationDr
         setNavBarToItem(openOn);
 
         Intent i = new Intent(this, SharingService.class);
-        i.putExtra(SharingService.ACTION_TYPE,SharingService.SEARCH_TYPE);
+        i.putExtra(SharingService.ACTION_TYPE,SharingService.TYPE_SEARCH);
         startService(i);
     }
 
@@ -160,7 +160,7 @@ public class HomeScreenActivity extends PortraitActivity implements NavigationDr
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == Constant.activityNetworkSettings) {
+        if (requestCode == NavigationConstants.NETWORK_SETTINGS_DIALOG) {
             NetworkUtils.syncAndStartTasks(this, true, false);
         }
     }
@@ -198,12 +198,6 @@ public class HomeScreenActivity extends PortraitActivity implements NavigationDr
         // disable sharing items ...
         if (menu.findItem(R.id.mi_share_default) != null)
             menu.findItem(R.id.mi_share_default).setVisible(false);
-        if (menu.findItem(R.id.mi_share_wapp) != null)
-            menu.findItem(R.id.mi_share_wapp).setVisible(false);
-        if (menu.findItem(R.id.mi_share_fb) != null)
-            menu.findItem(R.id.mi_share_fb).setVisible(false);
-        if (menu.findItem(R.id.mi_share_task) != null)
-            menu.findItem(R.id.mi_share_task).setVisible(false);
     }
 
     @Override

@@ -324,7 +324,7 @@ public class GroupSettingsMainFragment extends Fragment implements MemberRoleAda
     private void removeMember(final String memberUid) {
         showProgressDialog();
         GroupService.getInstance().removeGroupMembers(group.getGroupUid(), Collections.singleton(memberUid))
-            .subscribe(new Subscriber() {
+            .subscribe(new Subscriber<String>() {
                 @Override
                 public void onCompleted() {
                     hideProgressDialog();
@@ -336,7 +336,7 @@ public class GroupSettingsMainFragment extends Fragment implements MemberRoleAda
                 }
 
                 @Override
-                public void onNext(Object o) {
+                public void onNext(String s) {
                     roleAdapter.removeDisplayedMember(memberUid);
                 }
             });

@@ -19,6 +19,7 @@ import org.grassroot.android.R;
 import org.grassroot.android.fragments.ContactSelectionFragment;
 import org.grassroot.android.fragments.MemberListFragment;
 import org.grassroot.android.interfaces.GroupConstants;
+import org.grassroot.android.interfaces.NavigationConstants;
 import org.grassroot.android.models.Contact;
 import org.grassroot.android.models.Member;
 import org.grassroot.android.models.exceptions.ApiCallException;
@@ -145,12 +146,14 @@ public class AddMembersActivity extends AppCompatActivity implements
     }
 
     private void setupNewMemberRecyclerView() {
-        newMemberListFragment = MemberListFragment.newInstance(null, true, false, null, false, new MemberListFragment.MemberClickListener() {
+        newMemberListFragment = MemberListFragment.newInstance(null, true, false, null, false,
+            new MemberListFragment.MemberClickListener() {
             @Override
             public void onMemberClicked(int position, String memberUid) {
                 newMemberContextMenu(position, memberUid);
             }
         });
+
         getSupportFragmentManager().beginTransaction()
                 .add(R.id.am_new_member_list_container, newMemberListFragment)
                 .commit();
@@ -173,14 +176,16 @@ public class AddMembersActivity extends AppCompatActivity implements
 
     private void editNewMember(final int position, final String memberUid) {
         Member member = RealmUtils.loadObjectFromDB(Member.class, "memberUid", memberUid);
+
         // don't fully trust Android callbacks, so adding a check on position to avoid uncaught exception
         if (member == null && position < newMemberListFragment.getSelectedMembers().size()) {
             member = newMemberListFragment.getSelectedMembers().get(position);
         }
+
         Intent i = new Intent(AddMembersActivity.this, AddContactManually.class);
         i.putExtra(GroupConstants.MEMBER_OBJECT, member);
         i.putExtra(Constant.INDEX_FIELD, position);
-        startActivityForResult(i, Constant.activityManualMemberEdit);
+        startActivityForResult(i, NavigationConstants.MANUAL_MEMBER_EDIT);
     }
 
     @OnClick(R.id.ll_add_member_contacts)
@@ -226,7 +231,7 @@ public class AddMembersActivity extends AppCompatActivity implements
     public void addMemberManually() {
         toggleAddMenu();
         Intent intent = new Intent(this, AddContactManually.class);
-        startActivityForResult(intent, Constant.activityManualMemberEntry); // todo: filter so can't add existing member
+        startActivityForResult(intent, NavigationConstants.MANUAL_MEMBER_ENTRY); // todo: filter so can't add existing member
     }
 
     @Override
@@ -254,7 +259,7 @@ public class AddMembersActivity extends AppCompatActivity implements
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (resultCode == RESULT_OK) {
-            if (requestCode == Constant.activityManualMemberEntry) {
+            if (requestCode == NavigationConstants.MANUAL_MEMBER_ENTRY) {
                 final String newUid = UUID.randomUUID().toString();
                 Member newMember = new Member(newUid, groupUid, data.getStringExtra("selectedNumber"),
                     data.getStringExtra("name"), GroupConstants.ROLE_ORDINARY_MEMBER, -1, true);
@@ -262,7 +267,7 @@ public class AddMembersActivity extends AppCompatActivity implements
                 manuallyAddedMembers.add(newMember);
                 newMemberListFragment.addMembers(Collections.singletonList(newMember));
                 setNewMembersVisible();
-            } else if (requestCode == Constant.activityManualMemberEdit) {
+            } else if (requestCode == NavigationConstants.MANUAL_MEMBER_EDIT) {
                 Member revisedMember = data.getParcelableExtra(GroupConstants.MEMBER_OBJECT);
                 int position = data.getIntExtra(Constant.INDEX_FIELD, -1);
                 newMemberListFragment.updateMember(position, revisedMember);
@@ -328,7 +333,7 @@ public class AddMembersActivity extends AppCompatActivity implements
                                     if (e instanceof InvalidNumberException) {
                                         handleInvalidNumbers((String) ((InvalidNumberException) e).data);
                                     } else if (e instanceof ApiCallException) {
-                                        final String errorMsg = ErrorUtils.serverErrorText(((ApiCallException) e).errorTag, AddMembersActivity.this);
+                                        final String errorMsg = ErrorUtils.serverErrorText(((ApiCallException) e).errorTag);
                                         Snackbar.make(amRlRoot, errorMsg, Snackbar.LENGTH_LONG).show();
                                     } else {
                                         final String body = getString(R.string.am_server_other);
@@ -363,9 +368,11 @@ public class AddMembersActivity extends AppCompatActivity implements
     private void handleInvalidNumbers(String listOfNumbers) {
         List<Member> invalidMembers = ErrorUtils.findMembersFromListOfNumbers(listOfNumbers,
             newMemberListFragment.getSelectedMembers());
+
         for (Member m : invalidMembers) {
             m.setNumberInvalid(true);
         }
+
         newMemberListFragment.transitionToMemberList(invalidMembers);
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle(R.string.input_error_phone_title)

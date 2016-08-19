@@ -77,7 +77,6 @@ public class RemoveMembersActivity extends PortraitActivity implements MemberLis
         progressDialog = new ProgressDialog(this);
         progressDialog.setIndeterminate(true);
         progressDialog.setMessage(getString(R.string.txt_pls_wait));
-        // todo: permissions, of course
 
         setUpToolbar();
         setUpMemberListFragment();
@@ -141,7 +140,7 @@ public class RemoveMembersActivity extends PortraitActivity implements MemberLis
 
     private void saveRemoval() {
         progressDialog.show();
-        GroupService.getInstance().removeGroupMembers(groupUid, membersToRemove).subscribe(new Subscriber() {
+        GroupService.getInstance().removeGroupMembers(groupUid, membersToRemove).subscribe(new Subscriber<String>() {
             @Override
             public void onCompleted() { }
 
@@ -171,7 +170,7 @@ public class RemoveMembersActivity extends PortraitActivity implements MemberLis
             }
 
             @Override
-            public void onNext(Object o) {
+            public void onNext(String s) {
                 Intent i = new Intent();
                 i.putExtra(GroupConstants.UID_FIELD, groupUid);
                 i.putExtra(Constant.INDEX_FIELD, groupPosition);

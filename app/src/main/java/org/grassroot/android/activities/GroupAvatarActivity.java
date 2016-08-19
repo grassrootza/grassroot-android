@@ -273,7 +273,7 @@ public class GroupAvatarActivity extends PortraitActivity {
                         @Override
                         public void onError(Throwable e) {
                             progressBar.setVisibility(View.GONE);
-                            final String errorMsg = ErrorUtils.serverErrorText(e, GroupAvatarActivity.this);
+                            final String errorMsg = ErrorUtils.serverErrorText(e);
                             Snackbar.make(rootView, errorMsg, Snackbar.LENGTH_LONG).show();
                         }
 
@@ -297,11 +297,11 @@ public class GroupAvatarActivity extends PortraitActivity {
                         if (e instanceof ApiCallException) {
                             ApiCallException apiCallException = (ApiCallException) e;
                             if (NetworkUtils.SERVER_ERROR.equals(apiCallException.errorTag)) {
-                                final String errorMsg = ErrorUtils.serverErrorText(apiCallException.errorTag, GroupAvatarActivity.this);
+                                final String errorMsg = ErrorUtils.serverErrorText(apiCallException.errorTag);
                                 Snackbar.make(rootView, errorMsg, Snackbar.LENGTH_LONG).show();
                             } else if (NetworkUtils.CONNECT_ERROR.equals(apiCallException.errorTag)) {
                                 // todo : save offline, show a better message, and so forth ..
-                                Snackbar.make(rootView, ErrorUtils.serverErrorText(ErrorUtils.GENERIC_ERROR, GroupAvatarActivity.this), Snackbar.LENGTH_SHORT)
+                                Snackbar.make(rootView, ErrorUtils.serverErrorText(ErrorUtils.GENERIC_ERROR), Snackbar.LENGTH_SHORT)
                                     .show();
                             }
                         }

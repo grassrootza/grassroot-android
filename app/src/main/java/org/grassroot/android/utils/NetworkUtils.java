@@ -106,16 +106,20 @@ public class NetworkUtils {
 
   public static void trySwitchToOnlineQuiet(final Context context, final boolean sendQueue,
                                             Scheduler observingThread) {
-    Log.d(TAG, "trying to switch to online, swallowing errors etc ...");
     trySwitchToOnlineRx(context, sendQueue, observingThread).subscribe(new Subscriber<String>() {
       @Override
+      public void onError(Throwable e) {
+        NetworkUtils.setConnectionFailed();
+      }
+
+      @Override
+      public void onNext(String s) {
+        Log.e(TAG, "switching to online finished, all looks fine");
+        EventBus.getDefault().post(new OnlineOfflineToggledEvent(true));
+      }
+
+      @Override
       public void onCompleted() { }
-
-      @Override
-      public void onError(Throwable e) { Log.d(TAG, "failed quietly in background ..."); }
-
-      @Override
-      public void onNext(String s) { Log.d(TAG, "quietly suceeded in going online ..."); }
     });
   }
 
@@ -142,6 +146,7 @@ public class NetworkUtils {
               subscriber.onNext(ONLINE_DEFAULT);
               Log.d(TAG, "okay now sending the queue");
               if (sendQueue) {
+                Log.e(TAG, "really sending the queue ...");
                 syncLocalAndServer(context);
               }
               subscriber.onCompleted();
@@ -266,7 +271,7 @@ public class NetworkUtils {
     RealmUtils.loadListFromDB(Group.class, "isLocal", true, Schedulers.immediate())
         .subscribe(new Action1<List<Group>>() {
       @Override public void call(List<Group> realmResults) {
-        Log.e(TAG, "found this many groups ... " + realmResults.size());
+        Log.e(TAG, "sendLocalGroups ... found this many groups ... " + realmResults.size());
         for (final Group g : realmResults) {
           GroupService.getInstance().sendNewGroupToServer(g.getGroupUid(), Schedulers.immediate())
               .subscribe(new Subscriber<String>() {
@@ -279,7 +284,8 @@ public class NetworkUtils {
                 public void onCompleted() { }
 
                 @Override
-                public void onNext(String s) { }
+                public void onNext(String s) {
+                }
               });
         }
       }

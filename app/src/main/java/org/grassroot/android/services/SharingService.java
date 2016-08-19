@@ -9,6 +9,7 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.os.Parcelable;
+import android.text.TextUtils;
 import android.util.Log;
 
 import org.grassroot.android.R;
@@ -30,14 +31,17 @@ import rx.schedulers.Schedulers;
 
 public class SharingService extends IntentService {
 
-    public static final String TASK_TAG = "TASK_TAG";
     public static final String APP_SHARE_TAG = "APP_SHARE_TAG";
     public static final String FB_PACKAGE_NAME = "com.facebook.orca";
     public static final String WAPP_PACKAGE_NAME = "com.whatsapp";
     public static final String OTHER = "OTHER";
-    public static final String SEARCH_TYPE = "SEARCH";
-    public static final String SHARE_TYPE = "SHARE";
+
+    public static final String TASK_TAG = "TASK_TAG"; // if passed, the service assembles default message
+    public static final String MESSAGE = "MESSAGE"; // if passed, the share is just the message
+
     public static final String ACTION_TYPE = "ACTION_TYPE";
+    public static final String TYPE_SEARCH = "SEARCH";
+    public static final String TYPE_SHARE = "SHARE";
 
     private static final String TAG = SharingService.class.getName();
 
@@ -47,15 +51,16 @@ public class SharingService extends IntentService {
 
     @Override
     protected void onHandleIntent(Intent intent1) {
-        if (SHARE_TYPE.equals(intent1.getExtras().getString(ACTION_TYPE))) {
-            String appToShare = intent1.getExtras().getString(APP_SHARE_TAG);
-            TaskModel task = (TaskModel) intent1.getExtras().get(TASK_TAG);
-            Intent i = OTHER.equals(appToShare) ?
-                findOtherClients(getApplicationContext(), task) : share(task, appToShare);
-            if (i != null) {
-                i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                startActivity(i);
-            }
+
+        if (TYPE_SHARE.equals(intent1.getExtras().getString(ACTION_TYPE))) {
+            final String appToShare = intent1.getExtras().getString(APP_SHARE_TAG);
+            final String explicitMessage = intent1.getExtras().getString(MESSAGE);
+            final TaskModel task = (TaskModel) intent1.getExtras().get(TASK_TAG);
+            if (!TextUtils.isEmpty(explicitMessage)) {
+                assembleAndLaunchIntent(appToShare, explicitMessage);
+            } else if (task != null) {
+                assembleAndLaunchIntent(appToShare, assembleShareMessage(task));
+            }  // else do nothing
         } else {
             PreferenceObject preference = RealmUtils.loadPreferencesFromDB();
             if (preference.getAppsToShare().size() == 3) {
@@ -68,13 +73,68 @@ public class SharingService extends IntentService {
         }
     }
 
-    private Intent share(TaskModel task, String appToShare) {
+    private void assembleAndLaunchIntent(final String appToShare, final String message) {
+        if (!OTHER.equals(appToShare)) {
+            shareByStandardApp(appToShare, message);
+        } else {
+            Intent i = findOtherClients(getApplicationContext(), message);
+            if (i != null) {
+                i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                startActivity(i);
+            }
+        }
+    }
+
+    public static boolean jumpStraightToOtherIntent() {
+        return !RealmUtils.loadPreferencesFromDB().isHasWappInstalled()
+            && !RealmUtils.loadPreferencesFromDB().isHasFbInstalled();
+    }
+
+    public static CharSequence[] itemsForMultiChoice() {
+        final boolean hasWApp = RealmUtils.loadPreferencesFromDB().isHasWappInstalled();
+        final boolean hasFB = RealmUtils.loadPreferencesFromDB().isHasWappInstalled();
+        final int labelSize = 1 + (hasWApp ? 1 : 0) + (hasFB ? 1 : 0);
+        CharSequence[] itemLabels = new CharSequence[ labelSize ];
+        if (hasWApp)
+            itemLabels[0] = ApplicationLoader.applicationContext.getString(R.string.wapp_short);
+        if (hasFB)
+            itemLabels[hasWApp ? 1 : 0] = ApplicationLoader.applicationContext.getString(R.string.fbm_short);
+        itemLabels[labelSize - 1] = ApplicationLoader.applicationContext.getString(R.string.other_short);
+        return itemLabels;
+    }
+
+    public static String sharePackageFromItemSelected(int optionSelected) {
+
+        final boolean hasWApp = RealmUtils.loadPreferencesFromDB().isHasWappInstalled();
+        final boolean hasFBM = RealmUtils.loadPreferencesFromDB().isHasWappInstalled();
+
+        if (optionSelected == 0) {
+            if (hasWApp) {
+                return WAPP_PACKAGE_NAME;
+            } else if (hasFBM) {
+                return FB_PACKAGE_NAME;
+            } else {
+                return OTHER;
+            }
+        } else if (optionSelected == 1){
+            if (hasFBM) {
+                return FB_PACKAGE_NAME;
+            } else {
+                return OTHER;
+            }
+        } else {
+            return OTHER;
+        }
+    }
+
+    private void shareByStandardApp(final String appToShare, final String message) {
         Intent shareIntent = new Intent();
         shareIntent.setAction(Intent.ACTION_SEND);
         shareIntent.setType("text/plain");
-        shareIntent.putExtra(Intent.EXTRA_TEXT, assembleShareMessage(task));
+        shareIntent.putExtra(Intent.EXTRA_TEXT, message);
+        shareIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         shareIntent.setPackage(appToShare);
-        return shareIntent;
+        startActivity(shareIntent);
     }
 
     private String assembleShareMessage(final TaskModel task) {
@@ -194,7 +254,7 @@ public class SharingService extends IntentService {
         RealmUtils.saveDataToRealm(preferenceObject).subscribe();
     }
 
-    private Intent findOtherClients(Context context, TaskModel task) {
+    private Intent findOtherClients(Context context, final String message) {
         List<Intent> targetShareIntents = new ArrayList<>();
         Intent shareIntent = new Intent();
         shareIntent.setAction(Intent.ACTION_SEND);
@@ -208,7 +268,7 @@ public class SharingService extends IntentService {
                     intent.setComponent(new ComponentName(packageName, resInfo.activityInfo.name));
                     intent.setAction(Intent.ACTION_SEND);
                     intent.setType("text/plain");
-                    intent.putExtra(Intent.EXTRA_TEXT, assembleShareMessage(task));
+                    intent.putExtra(Intent.EXTRA_TEXT, message);
                     intent.setPackage(packageName);
                     targetShareIntents.add(intent);
                 }

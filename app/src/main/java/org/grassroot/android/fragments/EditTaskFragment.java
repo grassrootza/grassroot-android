@@ -30,6 +30,7 @@ import android.widget.TimePicker;
 import org.grassroot.android.R;
 import org.grassroot.android.events.TaskUpdatedEvent;
 import org.grassroot.android.fragments.dialogs.ConfirmCancelDialogFragment;
+import org.grassroot.android.interfaces.NavigationConstants;
 import org.grassroot.android.interfaces.NetworkErrorDialogListener;
 import org.grassroot.android.interfaces.TaskConstants;
 import org.grassroot.android.models.Member;
@@ -319,13 +320,13 @@ public class EditTaskFragment extends Fragment implements DatePickerDialog.OnDat
     public void changeMemberSelection() {
         Intent i = IntentUtils.memberSelectionIntent(getActivity(), task.getParentUid(), EditTaskFragment.class.getCanonicalName(),
                 new ArrayList<>(selectedMembers));
-        startActivityForResult(i, Constant.activitySelectGroupMembers);
+        startActivityForResult(i, NavigationConstants.SELECT_MEMBERS);
     }
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (resultCode == Activity.RESULT_OK && requestCode == Constant.activitySelectGroupMembers) {
+        if (resultCode == Activity.RESULT_OK && requestCode == NavigationConstants.SELECT_MEMBERS) {
             if (data == null) {
                 throw new UnsupportedOperationException("Error! Null data from select members activity");
             }

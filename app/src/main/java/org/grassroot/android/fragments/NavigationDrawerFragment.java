@@ -159,15 +159,15 @@ public class NavigationDrawerFragment extends Fragment implements NavigationDraw
         groups.setItemCount((int) RealmUtils.countObjectsInDB(Group.class));
         pos = addItemAndIncrement(pos, NavigationDrawerAdapter.PRIMARY, groups);
 
-        tasks = new NavDrawerItem(ITEM_TASKS, getString(R.string.drawer_open_tasks), R.drawable.ic_tasks_black, R.drawable.ic_tasks_green,
-            ITEM_TASKS.equals(defltItem), true);
-        tasks.setItemCount((int) RealmUtils.countUpcomingTasksInDB());
-        pos = addItemAndIncrement(pos, NavigationDrawerAdapter.PRIMARY, tasks);
-
         notifications = new NavDrawerItem(ITEM_NOTIFICATIONS, getString(R.string.drawer_notis), R.drawable.ic_exclamation_black, R.drawable.ic_excl_green,
             ITEM_NOTIFICATIONS.equals(defltItem), true);
         notifications.setItemCount(RealmUtils.loadPreferencesFromDB().getNotificationCounter());
         pos = addItemAndIncrement(pos, NavigationDrawerAdapter.PRIMARY, notifications);
+
+        tasks = new NavDrawerItem(ITEM_TASKS, getString(R.string.drawer_open_tasks), R.drawable.ic_tasks_black, R.drawable.ic_tasks_green,
+            ITEM_TASKS.equals(defltItem), true);
+        tasks.setItemCount((int) RealmUtils.countUpcomingTasksInDB());
+        pos = addItemAndIncrement(pos, NavigationDrawerAdapter.PRIMARY, tasks);
 
         joinRequests = new NavDrawerItem(ITEM_JOIN_REQS, getString(R.string.drawer_join_request), R.drawable.ic_join_black, R.drawable.ic_join_green,
             ITEM_JOIN_REQS.equals(defltItem), true);
@@ -383,11 +383,6 @@ public class NavigationDrawerFragment extends Fragment implements NavigationDraw
         EventBus.getDefault().unregister(this);
     }
 
-    public void refreshGroupCount() {
-        groups.setItemCount((int) RealmUtils.countObjectsInDB(Group.class));
-        itemAdapter.notifyDataSetChanged();
-    }
-
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onGroupsRefreshedEvent(GroupsRefreshedEvent e) {
         refreshGroupCount();
@@ -396,6 +391,11 @@ public class NavigationDrawerFragment extends Fragment implements NavigationDraw
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onGroupAdded(GroupCreatedEvent e) {
         refreshGroupCount();
+    }
+
+    public void refreshGroupCount() {
+        groups.setItemCount((int) RealmUtils.countObjectsInDB(Group.class));
+        safeItemChange(NavigationConstants.HOME_NAV_GROUPS);
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)

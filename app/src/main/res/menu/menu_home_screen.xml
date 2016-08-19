@@ -18,20 +18,8 @@
     <!-- these two items are for viewing tasks -->
     <item
         android:id="@+id/mi_share_default"
-        android:title="Share"
+        android:title="@string/share_ic_title"
         android:icon="@drawable/ic_share_white"
         app:showAsAction="always" />
-
-    <item android:id="@+id/mi_share_wapp"
-          android:title="@string/share_wapp"
-          app:showAsAction="never" />
-
-    <item android:id="@+id/mi_share_fb"
-          android:title="@string/share_fb"
-          app:showAsAction="never" />
-
-    <item android:id="@+id/mi_share_task"
-          android:title="@string/share_other"
-          app:showAsAction="never" />
 
 </menu>

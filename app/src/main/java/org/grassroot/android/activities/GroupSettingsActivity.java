@@ -100,9 +100,8 @@ public class GroupSettingsActivity extends PortraitActivity implements
 
     @Override
     public void changeGroupPicture() {
-        // todo : handle result (and/or make the avatar setting a fragment)
-        startActivityForResult(IntentUtils.constructIntent(this, GroupAvatarActivity.class, group),
-                Constant.activityChangeGroupPicture);
+        // todo : use event bus to switch picture
+        startActivity(IntentUtils.constructIntent(this, GroupAvatarActivity.class, group));
     }
 
     @Override

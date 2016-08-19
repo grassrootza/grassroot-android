@@ -35,6 +35,7 @@
     <string name="connect_error_general">Sorry, we couldn\'t connect to the server. Please try again later.</string>
     <string name="server_error_general">Sorry, something went wrong with the request.</string> <!-- note : should never actually use this -->
     <string name="connect_error_logreg">Hmm, we can\'t connect to the server right now. Check connection and try again?</string>
+    <string name="server_error_invalid_msisdn">Sorry, that isn\'t a valid South African phone number. Please check and try again</string>
     <string name="server_error_user_exists">That number is already registered, you can just login</string>
     <string name="server_error_user_not_exist">Sorry, that number isn\'t registered, please sign up</string>
     <string name="server_error_otp_wrong">Sorry, incorrect pin entered. Please try again or resend</string>
@@ -58,6 +59,9 @@
 
     <string name="connect_error_homescreen">Sorry, we couldn\'t refresh right now because the connection isn\'t working</string>
     <string name="connect_error_offline_home">You\'re working in offline mode. Please go online and try refreshing again</string>
+
+    <string name="server_error_background_group_numbers">The group is created, but some numbers were invalid, please check the group and
+    add them</string>
 
     <string name="input_error_no_display_name">Please enter whatever name people know you by</string>
     <string name="input_error_name_regex">Please enter a name without special characters (e.g., !, &amp;)</string>
@@ -193,6 +197,7 @@
 
     <string name="join_code_prefix">Join code: *134*1994*</string>
     <string name="date_time_pattern">%1$s on %2$s</string>
+    <string name="member_count_pattern">+%d</string>
     <string name="desc_body_pattern">%1$s: %2$s</string>
     <string name="past_meeting_prefix">Last meeting</string>
     <string name="future_meeting_prefix">Next meeting</string>
@@ -326,7 +331,7 @@
 
     <string name="cg_wip_message">Offline group</string>
     <string-array name="cg_offline_group">
-        <item>Try reconnect</item>
+        <item>Try connect</item>
         <item>Continue creating</item>
         <item>Call an event</item>
         <item>Delete group</item>
@@ -684,14 +689,16 @@
     <string name="group_settings">Group settings</string>
 
     <!-- Sharing strings -->
+    <string name="share_ic_title">Share</string>
     <string name="share_other">Share with other</string>
     <string name="share_fb">Share with Facebook</string>
     <string name="share_wapp">Share with WhatsApp</string>
     <string name="default_share">Default app to share</string>
 
+    <string name="share_title">Share with &#8230;</string>
     <string name="wapp_short">WhatsApp</string>
     <string name="fbm_short">Facebook Messenger</string>
-    <string name="other_short">Other</string>
+    <string name="other_short">Other app</string>
 
     <string name="share_meeting_format">Meeting notice! About \'%1$s\' on %2$s at %3$s. Go to Grassroot
     to confirm attendance (*134*1994# or use the app)</string>
@@ -699,6 +706,8 @@
     to vote (*134*1994# or use the app)</string>
     <string name="share_todo_format">Action recorded! \'%1$s\' must be completed by %2$s. Go to Grassroot
     to see more details (*134*1994# or use the app)</string>
+
+    <string name="share_notification_format">%1$s: %2$s</string>
 
     <!--FAQ-->
     <string name="fq_txt_toolbar">FAQs</string>

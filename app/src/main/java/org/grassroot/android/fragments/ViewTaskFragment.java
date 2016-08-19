@@ -1,6 +1,7 @@
 package org.grassroot.android.fragments;
 
 import android.app.ProgressDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Typeface;
 import android.os.Bundle;
@@ -8,6 +9,7 @@ import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.widget.TextViewCompat;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -182,7 +184,6 @@ public class ViewTaskFragment extends Fragment {
     @Override
     public void onPrepareOptionsMenu(Menu menu) {
         super.onPrepareOptionsMenu(menu);
-        PreferenceObject preferenceObject = RealmUtils.loadPreferencesFromDB();
         boolean taskInFuture = (task == null || task.isInFuture());
         Log.e(TAG, "setting up options menu ... taskInFuture = " + taskInFuture);
         if (menu.findItem(R.id.mi_icon_filter) != null)
@@ -193,39 +194,45 @@ public class ViewTaskFragment extends Fragment {
             menu.findItem(R.id.mi_view_members).setVisible(false);
         if (menu.findItem(R.id.mi_group_settings) != null)
             menu.findItem(R.id.mi_group_settings).setVisible(false);
+        if (menu.findItem(R.id.mi_add_members) != null)
+            menu.findItem(R.id.mi_add_members).setVisible(false);
+        if (menu.findItem(R.id.mi_remove_members) != null)
+            menu.findItem(R.id.mi_remove_members).setVisible(false);
+        if (menu.findItem(R.id.mi_view_join_code) != null)
+            menu.findItem(R.id.mi_view_join_code).setVisible(false);
+        if (menu.findItem(R.id.mi_new_task) != null)
+            menu.findItem(R.id.mi_new_task).setVisible(false);
         if (menu.findItem(R.id.action_search) != null)
             menu.findItem(R.id.action_search).setVisible(false);
 
         if (menu.findItem(R.id.mi_share_default) != null)
             menu.findItem(R.id.mi_share_default).setVisible(taskInFuture);
-        if (menu.findItem(R.id.mi_share_task) != null)
-            menu.findItem(R.id.mi_share_task).setVisible(true);
-        if (menu.findItem(R.id.mi_share_fb) != null)
-            menu.findItem(R.id.mi_share_wapp).setVisible(preferenceObject.isHasWappInstalled());
-        if (menu.findItem(R.id.mi_share_wapp) != null)
-            menu.findItem(R.id.mi_share_fb).setVisible(preferenceObject.isHasFbInstalled());
-        if (menu.findItem(R.id.mi_view_join_code) != null)
-            menu.findItem(R.id.mi_view_join_code).setVisible(false);
 
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        if (item.getItemId() == R.id.mi_share_task) {
-           generateShareIntent(SharingService.OTHER);
-            return true;
-        } else if ((item.getItemId() == R.id.mi_share_fb)) {
-            generateShareIntent(SharingService.FB_PACKAGE_NAME);
-            return true;
-        } else if ((item.getItemId() == R.id.mi_share_wapp)) {
-            generateShareIntent(SharingService.WAPP_PACKAGE_NAME);
-            return true;
-        } else if ((item.getItemId() == R.id.mi_share_default)) {
-            PreferenceObject object = RealmUtils.loadPreferencesFromDB();
-            generateShareIntent(object.getDefaultSharePackage());
+        if ((item.getItemId() == R.id.mi_share_default)) {
+            showAndHandleShareOptions();
             return true;
         }else {
             return super.onOptionsItemSelected(item);
+        }
+    }
+
+    private void showAndHandleShareOptions() {
+        if (SharingService.jumpStraightToOtherIntent()) {
+            generateShareIntent(SharingService.OTHER);
+        } else {
+            AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+            builder.setTitle(R.string.share_title)
+                .setItems(SharingService.itemsForMultiChoice(), new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    generateShareIntent(SharingService.sharePackageFromItemSelected(which));
+                }
+            });
+            builder.create().show();
         }
     }
 
@@ -239,7 +246,7 @@ public class ViewTaskFragment extends Fragment {
         Intent i = new Intent(getActivity(), SharingService.class);
         i.putExtra(SharingService.TASK_TAG, task);
         i.putExtra(SharingService.APP_SHARE_TAG, packageName);
-        i.putExtra(SharingService.ACTION_TYPE,SharingService.SHARE_TYPE);
+        i.putExtra(SharingService.ACTION_TYPE,SharingService.TYPE_SHARE);
         getActivity().startService(i);
     }
 
@@ -458,7 +465,7 @@ public class ViewTaskFragment extends Fragment {
     }
 
     private void handleServerError(final String restMessage) {
-        Snackbar.make(mContainer, ErrorUtils.serverErrorText(restMessage, getContext()), Snackbar.LENGTH_SHORT).show();
+        Snackbar.make(mContainer, ErrorUtils.serverErrorText(restMessage), Snackbar.LENGTH_SHORT).show();
     }
 
     @OnClick(R.id.vt_left_response)

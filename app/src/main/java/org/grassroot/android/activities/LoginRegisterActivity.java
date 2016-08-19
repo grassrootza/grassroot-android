@@ -85,6 +85,8 @@ public class LoginRegisterActivity extends AppCompatActivity implements LoginScr
     public void requestLogin(final String mobileNumber) {
         progressDialog.show();
         this.enteredNumber = mobileNumber;
+        // the fragment does a check for local number before passing, so this should be acceptable
+        // however server will also do a check (as with register)
         this.msisdn = Utilities.formatNumberToE164(mobileNumber);
         LoginRegUtils.reqLogin(msisdn).subscribe(new Subscriber<String>() {
             @Override
@@ -246,7 +248,7 @@ public class LoginRegisterActivity extends AppCompatActivity implements LoginScr
     }
 
     private void handleRequestServerError(final String restMessage, String purpose) {
-        final String errorMsg = ErrorUtils.serverErrorText(restMessage, LoginRegisterActivity.this);
+        final String errorMsg = ErrorUtils.serverErrorText(restMessage);
         if (LOGIN.equals(purpose) && restMessage.equals(ErrorUtils.USER_DOESNT_EXIST)) {
             final String actionBtn = getString(R.string.bt_register);
             ErrorUtils.showSnackBar(rootView, errorMsg, Snackbar.LENGTH_LONG, actionBtn, new View.OnClickListener() {
@@ -269,7 +271,7 @@ public class LoginRegisterActivity extends AppCompatActivity implements LoginScr
     }
 
     private void handleAuthServerError(final String restMessage, final String purpose) {
-        final String errorMsg = ErrorUtils.serverErrorText(restMessage, LoginRegisterActivity.this);
+        final String errorMsg = ErrorUtils.serverErrorText(restMessage);
         if (ErrorUtils.WRONG_OTP.equals(restMessage)) {
             final String actionMsg = getString(R.string.resend_otp);
             ErrorUtils.showSnackBar(rootView, errorMsg, Snackbar.LENGTH_LONG, actionMsg, new View.OnClickListener() {

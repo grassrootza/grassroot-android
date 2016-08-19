@@ -16,26 +16,17 @@ import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
-import butterknife.BindView;
-import butterknife.ButterKnife;
-import butterknife.OnClick;
-import butterknife.OnTextChanged;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+
 import org.grassroot.android.R;
 import org.grassroot.android.events.GroupCreatedEvent;
 import org.grassroot.android.fragments.ContactSelectionFragment;
 import org.grassroot.android.fragments.MemberListFragment;
 import org.grassroot.android.interfaces.GroupConstants;
-import org.grassroot.android.models.exceptions.ApiCallException;
+import org.grassroot.android.interfaces.NavigationConstants;
 import org.grassroot.android.models.Contact;
 import org.grassroot.android.models.Group;
 import org.grassroot.android.models.Member;
+import org.grassroot.android.models.exceptions.ApiCallException;
 import org.grassroot.android.models.exceptions.InvalidNumberException;
 import org.grassroot.android.services.GroupService;
 import org.grassroot.android.utils.Constant;
@@ -45,6 +36,18 @@ import org.grassroot.android.utils.PermissionUtils;
 import org.grassroot.android.utils.RealmUtils;
 import org.greenrobot.eventbus.EventBus;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+
+import butterknife.BindView;
+import butterknife.ButterKnife;
+import butterknife.OnClick;
+import butterknife.OnTextChanged;
 import rx.Subscriber;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.functions.Action1;
@@ -76,9 +79,11 @@ public class CreateGroupActivity extends PortraitActivity implements ContactSele
   private boolean menuOpen;
 
   private String groupUid = UUID.randomUUID().toString();;
+
   private Group cachedGroup;
   private boolean editingOfflineGroup = false;
   private String serverGroupUid;
+  private boolean groupCreatedEventIssued = false;
 
   private String descCharCounter;
 
@@ -183,7 +188,8 @@ public class CreateGroupActivity extends PortraitActivity implements ContactSele
     }
   }
 
-  @Override public void onRequestPermissionsResult(int requestCode, String[] permissions,
+  @Override
+  public void onRequestPermissionsResult(int requestCode, String[] permissions,
       int[] grantResults) {
     super.onRequestPermissionsResult(requestCode, permissions, grantResults);
     if (PermissionUtils.checkContactsPermissionGranted(requestCode, grantResults)) {
@@ -228,7 +234,7 @@ public class CreateGroupActivity extends PortraitActivity implements ContactSele
   @OnClick(R.id.ll_add_member_manually) public void ic_edit_call() {
     toggleAddMenu();
     startActivityForResult(new Intent(CreateGroupActivity.this, AddContactManually.class),
-        Constant.activityManualMemberEntry);
+        NavigationConstants.MANUAL_MEMBER_ENTRY);
   }
 
   private void memberContextMenu(final int position, final String memberUid) {
@@ -251,20 +257,20 @@ public class CreateGroupActivity extends PortraitActivity implements ContactSele
     Intent i = new Intent(CreateGroupActivity.this, AddContactManually.class);
     i.putExtra(GroupConstants.MEMBER_OBJECT, member);
     i.putExtra(Constant.INDEX_FIELD, position);
-    startActivityForResult(i, Constant.activityManualMemberEdit);
+    startActivityForResult(i, NavigationConstants.MANUAL_MEMBER_EDIT);
   }
 
   @Override
   protected void onActivityResult(int requestCode, int resultCode, Intent data) {
     super.onActivityResult(requestCode, resultCode, data);
     if (resultCode == Activity.RESULT_OK && data != null) {
-      if (requestCode == Constant.activityManualMemberEntry) {
+      if (requestCode == NavigationConstants.MANUAL_MEMBER_ENTRY) {
         Member newMember = new Member(UUID.randomUUID().toString(), groupUid, data.getStringExtra("selectedNumber"),
             data.getStringExtra("name"), GroupConstants.ROLE_ORDINARY_MEMBER, -1, true);
         newMember.setLocal(true);
         manuallyAddedMembers.add(newMember);
         memberListFragment.addMembers(Collections.singletonList(newMember));
-      } else if (requestCode == Constant.activityManualMemberEdit) {
+      } else if (requestCode == NavigationConstants.MANUAL_MEMBER_EDIT) {
         Member revisedMember = data.getParcelableExtra(GroupConstants.MEMBER_OBJECT);
         int position = data.getIntExtra(Constant.INDEX_FIELD, -1);
         memberListFragment.updateMember(position, revisedMember);
@@ -305,7 +311,6 @@ public class CreateGroupActivity extends PortraitActivity implements ContactSele
                 break;
               case NetworkUtils.CONNECT_ERROR:
                 Group wipGroup = RealmUtils.loadGroupFromDB(groupUid);
-                Log.d(TAG, "here is the saved group = " + wipGroup.toString());
                 handleGroupCreationAndExit(wipGroup, true);
                 break;
               default:
@@ -348,13 +353,16 @@ public class CreateGroupActivity extends PortraitActivity implements ContactSele
           .show();
       handleMembersWithInvalidNumbers((String) e.data);
     } else {
-      final String errorMsg = ErrorUtils.serverErrorText(e.errorTag, CreateGroupActivity.this);
+      final String errorMsg = ErrorUtils.serverErrorText(e.errorTag);
       Snackbar.make(rlCgRoot, errorMsg, Snackbar.LENGTH_SHORT); // todo : have a "save anyway" button, and/or options to edit number
     }
   }
 
   private void handleGroupCreationAndExit(Group group, boolean unexpectedConnectionError) {
-    EventBus.getDefault().post(new GroupCreatedEvent(group));
+    if (!groupCreatedEventIssued) {
+      // issue this in almost all cases, except if previously issued when return with invalid numbers
+      EventBus.getDefault().post(new GroupCreatedEvent(group));
+    }
     Intent i = new Intent(CreateGroupActivity.this, ActionCompleteActivity.class);
     String completionMessage;
     if (!group.getIsLocal()) {
@@ -393,6 +401,8 @@ public class CreateGroupActivity extends PortraitActivity implements ContactSele
     save.setText(R.string.input_error_try_again);
     save.setEnabled(true);
     serverGroupUid = serverUid;
+    EventBus.getDefault().post(new GroupCreatedEvent(serverGroupUid));
+    groupCreatedEventIssued = true;
     RealmUtils.loadMembersSortedInvalid(serverUid).subscribe(new Action1<List<Member>>() {
       @Override
       public void call(List<Member> members) {
@@ -479,6 +489,8 @@ public class CreateGroupActivity extends PortraitActivity implements ContactSele
     }
 
     if (!TextUtils.isEmpty(serverGroupUid)) {
+      // depending on user's path, invalid number members may have been saved under either UID, so clean both out
+      GroupService.getInstance().cleanInvalidNumbersOnExit(groupUid,null).subscribe();
       GroupService.getInstance().cleanInvalidNumbersOnExit(serverGroupUid, null).subscribe();
     }
   }

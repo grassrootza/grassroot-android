@@ -8,6 +8,7 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 
 import org.grassroot.android.interfaces.GroupConstants;
+import org.grassroot.android.interfaces.NavigationConstants;
 import org.grassroot.android.interfaces.TaskConstants;
 
 /**
@@ -27,11 +28,12 @@ public class PermissionUtils {
     }
 
     public static void requestReadContactsPermission(Activity callingActivity) {
-        ActivityCompat.requestPermissions(callingActivity, new String[]{Manifest.permission.READ_CONTACTS}, Constant.alertAskForContactPermission);
+        ActivityCompat.requestPermissions(callingActivity, new String[]{Manifest.permission.READ_CONTACTS},
+            NavigationConstants.ASK_CONTACT_PERMISSION);
     }
 
     public static boolean checkContactsPermissionGranted(int requestCode, int[] grantResults) {
-        return (requestCode == Constant.alertAskForContactPermission) &&
+        return (requestCode == NavigationConstants.ASK_CONTACT_PERMISSION) &&
                 (grantResults.length > 0) &&
                 (grantResults[0] == PackageManager.PERMISSION_GRANTED);
     }

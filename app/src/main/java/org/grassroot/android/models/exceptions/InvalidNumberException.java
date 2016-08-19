@@ -13,7 +13,7 @@ public class InvalidNumberException extends ApiCallException {
 	enriched info from exceptions, hence have to do this ...
 	 */
 	public InvalidNumberException(final String incorrectNumbers) {
-		super(NetworkUtils.SERVER_ERROR, ErrorUtils.INVALID_MSISDN, incorrectNumbers);
+		super(NetworkUtils.SERVER_ERROR, ErrorUtils.GROUP_MEMBER_INVALID_PHONE, incorrectNumbers);
 	}
 
 }

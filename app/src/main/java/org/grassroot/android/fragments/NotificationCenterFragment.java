@@ -1,9 +1,11 @@
 package org.grassroot.android.fragments;
 
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -27,6 +29,7 @@ import org.grassroot.android.models.TaskNotification;
 import org.grassroot.android.services.GcmListenerService;
 import org.grassroot.android.services.GrassrootRestService;
 import org.grassroot.android.services.NotificationUpdateService;
+import org.grassroot.android.services.SharingService;
 import org.grassroot.android.utils.ErrorUtils;
 import org.grassroot.android.utils.RealmUtils;
 import org.grassroot.android.utils.Utilities;
@@ -62,7 +65,7 @@ public class NotificationCenterFragment extends Fragment {
 
     private int currentPage = 0;
     private int totalPages = 10; // just to init to a non-zero value while get screens
-    final private int pageSize = 100;
+    final private int pageSize = 20;
 
     private List<TaskNotification> notifications = new ArrayList<>();
 
@@ -73,6 +76,8 @@ public class NotificationCenterFragment extends Fragment {
     private int cacheStoredFirstVisible, cacheStoredLastVisible;
     private boolean isLoading;
 
+    private CharSequence[] sharingOptions;
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 
@@ -81,6 +86,12 @@ public class NotificationCenterFragment extends Fragment {
         GcmListenerService.clearNotifications(getContext()); // clears notifications in tray
         setUpRecyclerView();
         return viewToReturn;
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        sharingOptions = SharingService.itemsForMultiChoice(); // in case user navigated away to change prefs / install app etc
     }
 
     private void setUpRecyclerView() {
@@ -98,7 +109,8 @@ public class NotificationCenterFragment extends Fragment {
         notificationsToUpdate = new HashSet<>();
         positionsRead = new HashSet<>();
 
-        getNotifications(null, null);
+        getNotifications(0, pageSize);
+        sharingOptions = SharingService.itemsForMultiChoice();
 
         recyclerView.addOnItemTouchListener(new RecyclerTouchListener(getContext(), recyclerView,
             new ClickListener() {
@@ -116,7 +128,18 @@ public class NotificationCenterFragment extends Fragment {
                 }
 
                 @Override
-                public void onLongClick(View view, int position) { }
+                public void onLongClick(View view, int position) {
+                    final TaskNotification notification = notificationAdapter.getNotifications().get(position);
+                    AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+                    builder.setTitle(R.string.share_title)
+                        .setItems(sharingOptions, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            handleNotificationSharing(notification, which);
+                        }
+                    });
+                    builder.create().show();
+                }
             })
         );
 
@@ -143,6 +166,16 @@ public class NotificationCenterFragment extends Fragment {
                 }
             }
         });
+    }
+
+    private void handleNotificationSharing(final TaskNotification notification, final int optionSelected) {
+        final String sharePackage = SharingService.sharePackageFromItemSelected(optionSelected);
+        Intent i = new Intent(getActivity(), SharingService.class);
+        i.putExtra(SharingService.MESSAGE, String.format(getString(R.string.share_notification_format),
+            notification.getTitle(), notification.getMessage()));
+        i.putExtra(SharingService.APP_SHARE_TAG, sharePackage);
+        i.putExtra(SharingService.ACTION_TYPE, SharingService.TYPE_SHARE);
+        getActivity().startService(i);
     }
 
     // note : these following two we do on the main thread because changes can be very fast and might end
@@ -223,17 +256,22 @@ public class NotificationCenterFragment extends Fragment {
         getActivity().startService(intent);
     }
 
-    private void getNotifications(Integer page, Integer size) {
+    private void getNotifications(final int page, final int size) {
         final String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
         final String code = RealmUtils.loadPreferencesFromDB().getToken();
 
         progressBar.setVisibility(View.VISIBLE);
+
         long lastTimeUpdated = RealmUtils.loadPreferencesFromDB().getLastTimeNotificationsFetched();
-        Call<NotificationList> call = (lastTimeUpdated == 0) ?
-            GrassrootRestService.getInstance().getApi().getUserNotifications(phoneNumber, code, page, size) :
-            page != null && page > 1 ?
+
+        Call<NotificationList> call;
+        if (page == 0) {
+            call = (lastTimeUpdated == 0) ?
                 GrassrootRestService.getInstance().getApi().getUserNotifications(phoneNumber, code, page, size) :
                 GrassrootRestService.getInstance().getApi().getUserNotificationsChangedSince(phoneNumber, code,lastTimeUpdated);
+        } else {
+            call = GrassrootRestService.getInstance().getApi().getUserNotifications(phoneNumber, code, page, size);
+        }
 
         call.enqueue(new Callback<NotificationList>() {
             @Override
@@ -269,7 +307,7 @@ public class NotificationCenterFragment extends Fragment {
                 progressBar.setVisibility(View.GONE);
                 notificationAdapter.setToNotifications(RealmUtils.loadNotificationsSorted());
                 recyclerView.setVisibility(View.VISIBLE);
-                ErrorUtils.handleNetworkError(getContext(), rootView, t);
+                ErrorUtils.handleNetworkError(rootView, t);
             }
         });
     }

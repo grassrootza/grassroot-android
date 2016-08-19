@@ -1,6 +1,5 @@
 package org.grassroot.android.fragments;
 
-import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -37,14 +36,16 @@ import org.grassroot.android.events.GroupEditedEvent;
 import org.grassroot.android.events.GroupPictureChangedEvent;
 import org.grassroot.android.events.GroupsRefreshedEvent;
 import org.grassroot.android.events.JoinRequestReceived;
+import org.grassroot.android.events.LocalGroupToServerEvent;
 import org.grassroot.android.events.TaskAddedEvent;
 import org.grassroot.android.events.UserLoggedOutEvent;
 import org.grassroot.android.interfaces.GroupConstants;
 import org.grassroot.android.interfaces.GroupPickCallbacks;
 import org.grassroot.android.interfaces.SortInterface;
 import org.grassroot.android.interfaces.TaskConstants;
-import org.grassroot.android.models.exceptions.ApiCallException;
 import org.grassroot.android.models.Group;
+import org.grassroot.android.models.PreferenceObject;
+import org.grassroot.android.models.exceptions.ApiCallException;
 import org.grassroot.android.services.GroupService;
 import org.grassroot.android.utils.Constant;
 import org.grassroot.android.utils.ErrorUtils;
@@ -231,7 +232,7 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
                         Snackbar.make(rlGhpRoot, R.string.connect_error_offline_home, Snackbar.LENGTH_SHORT).show();
                         break;
                     default:
-                        final String errorMsg = ErrorUtils.serverErrorText(s, getContext());
+                        final String errorMsg = ErrorUtils.serverErrorText(s);
                         Snackbar.make(rlGhpRoot, errorMsg, Snackbar.LENGTH_SHORT).show();
                 }
                 hideProgress();
@@ -281,8 +282,7 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
     @OnClick(R.id.ic_fab_start_group)
     public void icFabStartGroup() {
         closeFloatingMenu();
-        Intent icFabStartGroup = new Intent(getActivity(), CreateGroupActivity.class);
-        startActivityForResult(icFabStartGroup, Constant.activityCreateGroup);
+        startActivity(new Intent(getActivity(), CreateGroupActivity.class));
     }
 
     @Override
@@ -324,14 +324,29 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
 
     private void trySendOfflineGroup(final Group group) {
         showProgress();
+        // if user has selected offline, override it so the service tries to connect (but just set preference
+        // so that the events & UI changes aren't triggered
+        if (!NetworkUtils.isOnline()) {
+            PreferenceObject prefs = RealmUtils.loadPreferencesFromDB();
+            prefs.setOnlineStatus(NetworkUtils.OFFLINE_ON_FAIL);
+            RealmUtils.saveDataToRealmSync(prefs);
+        }
+
         GroupService.getInstance().sendNewGroupToServer(group.getGroupUid(), AndroidSchedulers.mainThread())
             .subscribe(new Subscriber<String>() {
                 @Override
                 public void onNext(String s) {
-                    groupListRowAdapter.replaceGroup(group.getGroupUid(), s);
+                    // final String serverUid = s.substring("OK-".length());
+                    // groupListRowAdapter.replaceGroup(group.getGroupUid(), serverUid);
                     hideProgress();
-                    Snackbar.make(rlGhpRoot, R.string.cg_sent_server, Snackbar.LENGTH_SHORT).show();
+                    Log.e(TAG, "group created on server ... now try send the rest ...");
                     NetworkUtils.trySwitchToOnlineQuiet(getContext(), true, Schedulers.computation());
+
+                    if ("OK".equals(s.substring(0, 2))) {
+                        Snackbar.make(rlGhpRoot, R.string.cg_sent_server, Snackbar.LENGTH_SHORT).show();
+                    } else {
+                        Snackbar.make(rlGhpRoot, R.string.server_error_background_group_numbers, Snackbar.LENGTH_SHORT).show();
+                    }
                 }
 
                 @Override
@@ -341,8 +356,8 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
                         if (NetworkUtils.CONNECT_ERROR.equals(e.getMessage())) {
                             Snackbar.make(rlGhpRoot, R.string.cg_sending_failed_connect, Snackbar.LENGTH_SHORT).show();
                         } else if (NetworkUtils.SERVER_ERROR.equals(e.getMessage())) {
-                            final String restMessage = ((ApiCallException) e).errorTag;
-                            Snackbar.make(rlGhpRoot, restMessage, Snackbar.LENGTH_LONG).show();
+                            final String userMessage = ErrorUtils.serverErrorText(e);
+                            Snackbar.make(rlGhpRoot, userMessage, Snackbar.LENGTH_LONG).show();
                         }
                     }
                 }
@@ -379,7 +394,7 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
                             default:
                                 throw new UnsupportedOperationException("Error! Unknown task type");
                         }
-                        startActivityForResult(i, Constant.activityCreateTask);
+                        startActivity(i);
                     }
                 });
         dialog.show(getFragmentManager(), QuickTaskModalFragment.class.getSimpleName());
@@ -467,6 +482,12 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onEvent(LocalGroupToServerEvent event) {
+        Log.e(TAG, "onEvent ... localgrouptoserver recevied ...");
+        groupListRowAdapter.replaceGroup(event.localGroupUid, event.serverUid);
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
     public void onGroupJoinRequestsLoaded(JoinRequestReceived e) {
         Snackbar.make(rlGhpRoot, R.string.jreq_notice, Snackbar.LENGTH_LONG).show();
     }
@@ -485,9 +506,19 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
         }
     }
 
-    @Subscribe
+    @Subscribe(threadMode = ThreadMode.MAIN)
     public void onGroupAdded(GroupCreatedEvent e) {
-        groupListRowAdapter.refreshGroupsToDB();
+        if (e.getGroup() != null) {
+            // may be more efficient to compute number of children after layout, but possibly also micro-optimizing for later
+            // note : at present adapter method calls notifyDataSetChanged instead of using range, because of alpha weirdness
+            groupListRowAdapter.addGroupToTop(e.getGroup(), rcGroupList.getLayoutManager().getChildCount());
+        } else if (!TextUtils.isEmpty(e.getGroupUid())) {
+            groupListRowAdapter.addGroupToTop(RealmUtils.loadGroupFromDB(e.getGroupUid()),
+                rcGroupList.getLayoutManager().getChildCount());
+        } else {
+            // this should not be possible, but failure around/when one of these events is triggered is going to be critical, so deal with it gracefully
+            groupListRowAdapter.refreshGroupsToDB();
+        }
     }
 
     @Subscribe

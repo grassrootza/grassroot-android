@@ -16,8 +16,9 @@ import org.grassroot.android.activities.StartActivity;
 import org.grassroot.android.fragments.dialogs.NetworkErrorDialogFragment;
 import org.grassroot.android.interfaces.NetworkErrorDialogListener;
 import org.grassroot.android.models.Member;
-import org.grassroot.android.models.exceptions.ApiCallException;
 import org.grassroot.android.models.ServerErrorModel;
+import org.grassroot.android.models.exceptions.ApiCallException;
+import org.grassroot.android.services.ApplicationLoader;
 import org.grassroot.android.services.GrassrootRestService;
 import org.grassroot.android.services.NoConnectivityException;
 
@@ -43,6 +44,7 @@ public class ErrorUtils {
 
     // server errors
     public static final String GENERIC_ERROR = "BAD_REQUEST";
+    public static final String USER_INVALID_MSISDN = "INVALID_MSISDN";
     public static final String USER_EXISTS = "USER_ALREADY_EXISTS";
     public static final String USER_DOESNT_EXIST = "USER_DOES_NOT_EXIST";
     public static final String WRONG_OTP = "INVALID_OTP";
@@ -51,7 +53,7 @@ public class ErrorUtils {
     public static final String PERMISSION_DENIED = "PERMISSION_DENIED";
     public static final String PART_GROUP = "USER_ALREADY_PART_OF_GROUP";
     public static final String CANT_APPROVE_JOIN = "APPROVER_PERMISSIONS_CHANGED";
-    public static final String INVALID_MSISDN = "GROUP_BAD_PHONE_NUMBER";
+    public static final String GROUP_MEMBER_INVALID_PHONE = "GROUP_BAD_PHONE_NUMBER";
     public static final String IMAGE_ERROR = "BAD_PICTURE_FORMAT";
     public static final String NO_IMAGE_SENT = "PICTURE_NOT_RECEIVED";
     public static final String DATE_IN_PAST = "TIME_CANNOT_BE_IN_THE_PAST";
@@ -63,11 +65,14 @@ public class ErrorUtils {
     public static final String TODO_DONE = "TODO_ALREADY_COMPLETED";
     public static final String NOTIFICATIONS_DONE = "NOTIFICATIONS_FINISHED";
 
-    public static String serverErrorText(final String restMessage, final Context context) {
+    public static String serverErrorText(final String restMessage) {
+        final Context context = ApplicationLoader.applicationContext;
         if (TextUtils.isEmpty(restMessage)) {
             return context.getString(R.string.server_error_general);
         } else {
             switch (restMessage) {
+                case USER_INVALID_MSISDN:
+                    return context.getString(R.string.server_error_invalid_msisdn);
                 case USER_EXISTS:
                     return context.getString(R.string.server_error_user_exists);
                 case USER_DOESNT_EXIST:
@@ -78,7 +83,7 @@ public class ErrorUtils {
                     return context.getString(R.string.server_error_otp_early);
                 case GROUP_CREATE_ERROR:
                     return context.getString(R.string.server_error_group_create);
-                case INVALID_MSISDN:
+                case GROUP_MEMBER_INVALID_PHONE:
                     return context.getString(R.string.server_error_phone_number);
                 case PERMISSION_DENIED:
                     return context.getString(R.string.server_error_perms_denied);
@@ -137,12 +142,12 @@ public class ErrorUtils {
     }
 
     public static String serverErrorText(ResponseBody errorBody, final Context context) {
-        return serverErrorText(getRestMessage(errorBody), context);
+        return serverErrorText(getRestMessage(errorBody));
     }
 
-    public static String serverErrorText(Throwable e, final Context context) {
+    public static String serverErrorText(Throwable e) {
         final String restMsg = (e instanceof ApiCallException) ? ((ApiCallException) e).errorTag : GENERIC_ERROR;
-        return serverErrorText(restMsg, context);
+        return serverErrorText(restMsg);
     }
 
     /*
@@ -175,12 +180,10 @@ public class ErrorUtils {
     /**
      * Utility method to intercept and deal with common errors, in particular absence of a network
      * connection. Most / all display logic for error handling should be concentrated in here.
-     *
-     * @param context         The context where the error occurred
-     * @param errorViewHolder A holder for where to display the snackbar or alert dialog
+     *  @param errorViewHolder A holder for where to display the snackbar or alert dialog
      * @param e               The error thrown
      */
-    public static void handleNetworkError(Context context, View errorViewHolder, Throwable e) {
+    public static void handleNetworkError(View errorViewHolder, Throwable e) {
         if (e instanceof NoConnectivityException) {
             connectivityError(errorViewHolder, (NoConnectivityException) e);
         } else if (e instanceof UnknownHostException) {

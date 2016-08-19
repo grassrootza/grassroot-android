@@ -9,16 +9,4 @@
         android:icon="@drawable/ic_share_white"
         app:showAsAction="always" />
 
-    <item android:id="@+id/mi_share_wapp"
-          android:title="@string/share_wapp"
-          app:showAsAction="never" />
-
-    <item android:id="@+id/mi_share_fb"
-          android:title="@string/share_fb"
-          app:showAsAction="never" />
-
-    <item android:id="@+id/mi_share_task"
-          android:title="@string/share_other"
-          app:showAsAction="never" />
-
 </menu>

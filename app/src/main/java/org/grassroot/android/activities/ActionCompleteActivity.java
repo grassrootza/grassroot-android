@@ -26,8 +26,6 @@ import org.grassroot.android.utils.IntentUtils;
 import org.grassroot.android.utils.NetworkUtils;
 import org.grassroot.android.utils.RealmUtils;
 
-import java.util.ArrayList;
-
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
@@ -205,22 +203,15 @@ public class ActionCompleteActivity extends PortraitActivity implements NewTaskM
             Intent i = new Intent(this, SharingService.class);
             i.putExtra(SharingService.TASK_TAG, taskToPass);
             i.putExtra(SharingService.APP_SHARE_TAG, SharingService.OTHER);
-            i.putExtra(SharingService.ACTION_TYPE,SharingService.SHARE_TYPE);
+            i.putExtra(SharingService.ACTION_TYPE,SharingService.TYPE_SHARE);
             startService(i);
         } else {
-            AlertDialog.Builder builder = new AlertDialog.Builder(this);
-            final int labelSize = 1 + (hasWApp ? 1 : 0) + (hasFB ? 1 : 0);
-            CharSequence[] itemLabels = new CharSequence[ labelSize ];
-            if (hasWApp)
-                itemLabels[0] = getString(R.string.wapp_short);
-            if (hasFB)
-                itemLabels[hasWApp ? 1 : 0] = getString(R.string.fbm_short);
-            itemLabels[labelSize - 1] = getString(R.string.other_short);
-
-            builder.setItems(itemLabels, new DialogInterface.OnClickListener() {
+            AlertDialog.Builder builder = new AlertDialog.Builder(this)
+                .setItems(SharingService.itemsForMultiChoice(),
+                    new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialog, int which) {
-                    handleShareSelection(which, hasWApp, hasFB);
+                    handleShareSelection(which);
                 }
             });
 
@@ -228,30 +219,12 @@ public class ActionCompleteActivity extends PortraitActivity implements NewTaskM
         }
     }
 
-    private void handleShareSelection(int optionSelected, boolean hasWApp, boolean hasFBM) {
-        String sharePackage;
-        if (optionSelected == 0) {
-            if (hasWApp) {
-                sharePackage = SharingService.WAPP_PACKAGE_NAME;
-            } else if (hasFBM) {
-                sharePackage = SharingService.FB_PACKAGE_NAME;
-            } else {
-                sharePackage = SharingService.OTHER;
-            }
-        } else if (optionSelected == 1){
-            if (hasFBM) {
-                sharePackage = SharingService.FB_PACKAGE_NAME;
-            } else {
-                sharePackage = SharingService.OTHER;
-            }
-        } else {
-            sharePackage = SharingService.OTHER;
-        }
-
+    private void handleShareSelection(int optionSelected) {
+        String sharePackage = SharingService.sharePackageFromItemSelected(optionSelected);
         Intent i = new Intent(this, SharingService.class);
         i.putExtra(SharingService.TASK_TAG, taskToPass);
         i.putExtra(SharingService.APP_SHARE_TAG, sharePackage);
-        i.putExtra(SharingService.ACTION_TYPE, SharingService.SHARE_TYPE);
+        i.putExtra(SharingService.ACTION_TYPE, SharingService.TYPE_SHARE);
         startService(i);
     }
 

@@ -418,6 +418,7 @@ public class Group extends RealmObject implements Parcelable, Comparable<Group> 
   @Override public String toString() {
     return "Group{" +
         "groupUid='" + groupUid + '\'' +
+        ", isLocal='" + isLocal + '\'' +
         ", lastChangeType='" + lastChangeType + '\'' +
         ", lastMajorChangeTime ='" + lastMajorChangeMillis + '\'' +
         ", groupName='" + groupName + '\'' +

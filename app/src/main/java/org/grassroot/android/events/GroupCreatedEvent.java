@@ -9,17 +9,31 @@ import org.grassroot.android.models.TaskModel;
  */
 public class GroupCreatedEvent {
 
-  private Group group;
+  private final Group group;
 
-  private GroupCreatedEvent() {
-    this.group = null;
-  }
+  private final String groupUid;
 
   public GroupCreatedEvent(Group group){
     this.group = group;
+    this.groupUid = group.getGroupUid();
+  }
+
+  public GroupCreatedEvent(String groupUid) {
+    this.group = null;
+    this.groupUid = groupUid;
   }
 
   public Group getGroup() {
     return group;
+  }
+
+  public String getGroupUid() { return groupUid; }
+
+  @Override
+  public String toString() {
+    return "GroupCreatedEvent{" +
+        "groupUid='" + groupUid + '\'' +
+        ", group=" + group +
+        '}';
   }
 }

@@ -32,12 +32,13 @@ import org.grassroot.android.events.TaskAddedEvent;
 import org.grassroot.android.fragments.dialogs.DatePickerFragment;
 import org.grassroot.android.fragments.dialogs.TimePickerFragment;
 import org.grassroot.android.interfaces.GroupConstants;
+import org.grassroot.android.interfaces.NavigationConstants;
 import org.grassroot.android.interfaces.TaskConstants;
-import org.grassroot.android.models.exceptions.ApiCallException;
 import org.grassroot.android.models.Group;
 import org.grassroot.android.models.Member;
 import org.grassroot.android.models.RealmString;
 import org.grassroot.android.models.TaskModel;
+import org.grassroot.android.models.exceptions.ApiCallException;
 import org.grassroot.android.services.TaskService;
 import org.grassroot.android.utils.Constant;
 import org.grassroot.android.utils.ErrorUtils;
@@ -227,13 +228,13 @@ public class CreateTaskFragment extends Fragment {
 
     private void startPickMemberActivity(ArrayList<Member> preSelectedMembers) {
         Intent pickMember = IntentUtils.memberSelectionIntent(getActivity(), groupUid, CreateTaskFragment.class.getCanonicalName(), preSelectedMembers);
-        startActivityForResult(pickMember, Constant.activitySelectGroupMembers);
+        startActivityForResult(pickMember, NavigationConstants.SELECT_MEMBERS);
     }
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (resultCode == Activity.RESULT_OK && requestCode == Constant.activitySelectGroupMembers) {
+        if (resultCode == Activity.RESULT_OK && requestCode == NavigationConstants.SELECT_MEMBERS) {
             setAssignedMembers(data);
         }
     }
@@ -295,7 +296,7 @@ public class CreateTaskFragment extends Fragment {
                     if (NetworkUtils.CONNECT_ERROR.equals(type)) {
                         generateSuccessTask(model);
                     } else {
-                        final String msg = ErrorUtils.serverErrorText(e, getContext());
+                        final String msg = ErrorUtils.serverErrorText(e);
                         Snackbar.make(vContainer, msg, Snackbar.LENGTH_SHORT); // todo : add a "save and try again option"
                     }
                 }

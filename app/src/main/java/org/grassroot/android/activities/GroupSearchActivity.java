@@ -28,7 +28,6 @@ import org.grassroot.android.utils.RealmUtils;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
-import butterknife.OnClick;
 import rx.Subscriber;
 import rx.android.schedulers.AndroidSchedulers;
 
@@ -197,8 +196,8 @@ public class GroupSearchActivity extends PortraitActivity implements GroupSearch
                                 });
                             builder.create().show();
                         } else if (NetworkUtils.SERVER_ERROR.equals(e.getMessage())) {
-                            Snackbar.make(fragmentContainer, ErrorUtils.serverErrorText(((ApiCallException) e).errorTag,
-                                GroupSearchActivity.this), Snackbar.LENGTH_SHORT).show();
+                            Snackbar.make(fragmentContainer, ErrorUtils.serverErrorText(((ApiCallException) e).errorTag
+                            ), Snackbar.LENGTH_SHORT).show();
                         }
                     }
                 }
@@ -228,7 +227,7 @@ public class GroupSearchActivity extends PortraitActivity implements GroupSearch
                         if (e.getMessage().equals(NetworkUtils.CONNECT_ERROR)) {
                             showDoneMessage(groupName, false);
                         } else {
-                            final String errorMessage = ErrorUtils.serverErrorText(e, GroupSearchActivity.this);
+                            final String errorMessage = ErrorUtils.serverErrorText(e);
                             Snackbar.make(fragmentContainer, errorMessage, Snackbar.LENGTH_SHORT).show();
                         }
                     }
@@ -257,7 +256,7 @@ public class GroupSearchActivity extends PortraitActivity implements GroupSearch
                         final String errorMsg = getString(R.string.gs_req_remind_cancelled_connect_error);
                         Snackbar.make(fragmentContainer, errorMsg, Snackbar.LENGTH_SHORT).show();
                     } else {
-                        Snackbar.make(fragmentContainer, ErrorUtils.serverErrorText(e, GroupSearchActivity.this),
+                        Snackbar.make(fragmentContainer, ErrorUtils.serverErrorText(e),
                             Snackbar.LENGTH_LONG).show();
                     }
                 }
@@ -285,7 +284,7 @@ public class GroupSearchActivity extends PortraitActivity implements GroupSearch
                         final String errorMsg = getString(R.string.gs_req_remind_cancelled_connect_error);
                         Snackbar.make(fragmentContainer, errorMsg, Snackbar.LENGTH_SHORT).show();
                     } else {
-                        Snackbar.make(fragmentContainer, ErrorUtils.serverErrorText(e, GroupSearchActivity.this),
+                        Snackbar.make(fragmentContainer, ErrorUtils.serverErrorText(e),
                             Snackbar.LENGTH_LONG).show();
                     }
                 }

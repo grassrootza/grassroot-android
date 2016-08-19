@@ -10,6 +10,7 @@ import org.grassroot.android.events.GroupEditedEvent;
 import org.grassroot.android.events.GroupPictureChangedEvent;
 import org.grassroot.android.events.GroupsRefreshedEvent;
 import org.grassroot.android.events.JoinRequestReceived;
+import org.grassroot.android.events.LocalGroupToServerEvent;
 import org.grassroot.android.interfaces.GroupConstants;
 import org.grassroot.android.interfaces.TaskConstants;
 import org.grassroot.android.models.exceptions.ApiCallException;
@@ -33,7 +34,6 @@ import org.grassroot.android.utils.PermissionUtils;
 import org.grassroot.android.utils.RealmUtils;
 import org.grassroot.android.utils.Utilities;
 import org.greenrobot.eventbus.EventBus;
-import org.w3c.dom.Text;
 
 import java.io.File;
 import java.io.IOException;
@@ -158,7 +158,6 @@ public class GroupService {
     METHODS FOR CREATING AND MODIFYING / EDITING GROUPS
      */
 
-  // todo : don't need to do set members?
   public Group createGroupLocally(final String groupUid, final String groupName,
       final String groupDescription, final List<Member> groupMembers) {
     Realm realm = Realm.getDefaultInstance();
@@ -168,25 +167,28 @@ public class GroupService {
     group.setIsLocal(true);
     group.setGroupCreator(RealmUtils.loadPreferencesFromDB().getUserName());
     group.setLastChangeType(GroupConstants.GROUP_CREATED);
-    group.setGroupMemberCount(groupMembers.size() + 1);
+    group.setGroupMemberCount(groupMembers.size()); // view will add +1 if group is stored locally
     group.setDate(new Date());
     group.setDateTimeStringISO(group.getDateTimeStringISO());
     group.setLastMajorChangeMillis(Utilities.getCurrentTimeInMillisAtUTC());
     RealmList<RealmString> permissions = new RealmList<>();
-    //TODO investigate permission per user
+
     permissions.add(new RealmString(PermissionUtils.permissionForTaskType(TaskConstants.MEETING)));
     permissions.add(new RealmString(PermissionUtils.permissionForTaskType(TaskConstants.VOTE)));
     permissions.add(new RealmString(PermissionUtils.permissionForTaskType(TaskConstants.TODO)));
     permissions.add(new RealmString(GroupConstants.PERM_ADD_MEMBER));
+    permissions.add(new RealmString(GroupConstants.PERM_VIEW_MEMBERS));
+    permissions.add(new RealmString(GroupConstants.PERM_DEL_MEMBER));
     permissions.add(new RealmString(GroupConstants.PERM_GROUP_SETTNGS));
     group.setPermissions(permissions);
+
     realm.beginTransaction();
     realm.copyToRealmOrUpdate(group);
     realm.commitTransaction();
     realm.beginTransaction();
     for (Member m : groupMembers) {
       if (TextUtils.isEmpty(m.getGroupUid())) {
-        m.setGroupUid(groupUid);
+        m.setGroupUid(groupUid); // don't set the primary key or may not be able to erase later
       }
       realm.copyToRealmOrUpdate(m);
     }
@@ -200,13 +202,16 @@ public class GroupService {
     Realm realm = Realm.getDefaultInstance();
     group.setGroupName(updatedName);
     group.setDescription(groupDescription);
-    group.setGroupMemberCount(groupMembers.size() + 1);
+    group.setGroupMemberCount(groupMembers.size()); // view will add +1 if group is only local
     group.setLastMajorChangeMillis(Utilities.getCurrentTimeInMillisAtUTC());
     realm.beginTransaction();
     realm.copyToRealmOrUpdate(group);
     realm.commitTransaction();
     realm.beginTransaction();
     for (Member m : groupMembers) {
+      if (TextUtils.isEmpty(m.getGroupUid())) {
+        m.setGroupUid(group.getGroupUid());
+      }
       realm.copyToRealmOrUpdate(m);
     }
     realm.commitTransaction();
@@ -234,15 +239,18 @@ public class GroupService {
                 localGroup.getGroupName(), localGroup.getDescription(), members).execute();
             if (response.isSuccessful()) {
               final Group groupFromServer = response.body().getGroups().first();
+              final String serverUid = groupFromServer.getGroupUid();
+
               saveCreatedGroupToRealm(groupFromServer);
               cleanUpLocalGroup(localGroupUid, groupFromServer);
+              EventBus.getDefault().post(new LocalGroupToServerEvent(localGroupUid, serverUid));
+
               if (groupFromServer.getInvalidNumbers() == null || groupFromServer.getInvalidNumbers().isEmpty()) {
-                subscriber.onNext("OK-" + groupFromServer.getGroupUid());
+                subscriber.onNext("OK-" + serverUid);
               } else {
                 // so that activity can retrieve them & sort them
-                saveInvalidMembersForNewlyCreatedGroup(members, groupFromServer.getGroupUid(),
-                    groupFromServer.getInvalidNumbers());
-                final String returnMessage = "ER-" + groupFromServer.getGroupUid();
+                saveInvalidMembersForNewlyCreatedGroup(members, serverUid, groupFromServer.getInvalidNumbers());
+                final String returnMessage = "ER-" + serverUid;
                 subscriber.onNext(returnMessage);
               }
               subscriber.onCompleted();
@@ -252,7 +260,7 @@ public class GroupService {
                 throw new ApiCallException(NetworkUtils.SERVER_ERROR);
               }
 
-              if (ErrorUtils.INVALID_MSISDN.equals(errorModel.getMessage())) {
+              if (ErrorUtils.GROUP_MEMBER_INVALID_PHONE.equals(errorModel.getMessage())) {
                 final String invalidString = (String) errorModel.getData();
                 List<String> invalidNumbers = TextUtils.isEmpty(invalidString) ? null :
                     Arrays.asList(invalidString.split(","));
@@ -293,7 +301,8 @@ public class GroupService {
       m.composeMemberGroupUid();
       RealmUtils.saveDataToRealmSync(m);
     }
-    List<TaskModel> models = RealmUtils.loadListFromDBInline(TaskModel.class, findTasks);
+
+    RealmList<TaskModel> models = RealmUtils.loadListFromDBInline(TaskModel.class, findTasks);
     for (int i = 0; i < models.size(); i++) {
       (models.get(i)).setParentUid(groupFromServer.getGroupUid());
       TaskService.getInstance().sendTaskToServer(models.get(i), Schedulers.immediate()).subscribe(new Subscriber<TaskModel>() {
@@ -368,7 +377,7 @@ public class GroupService {
 
               final String restMessage = errorModel.getMessage();
 
-              if (ErrorUtils.INVALID_MSISDN.equals(restMessage)) {
+              if (ErrorUtils.GROUP_MEMBER_INVALID_PHONE.equals(restMessage)) {
                 Log.e(TAG, "here's the invalid msisdn : " + errorModel.getData());
                 final String concatInvalidMsisdns = (String) errorModel.getData(); // todo : use list of strings ?
                 List<String> invalidNumbers = TextUtils.isEmpty(concatInvalidMsisdns) ? null :
@@ -396,13 +405,17 @@ public class GroupService {
   }
 
   public void saveAddedMembersLocal(final String groupUid, List<Member> members) {
-    RealmUtils.saveDataToRealm(members, null).subscribe();
-    Group group = RealmUtils.loadGroupFromDB(groupUid);
-    group.setEditedLocal(true);
-    group.setGroupMemberCount(group.getGroupMemberCount()+members.size());
-    RealmUtils.saveGroupToRealm(group);
-    EventBus.getDefault().post(new GroupEditedEvent(GroupEditedEvent.MEMBERS_ADDED,
-        NetworkUtils.SAVED_OFFLINE_MODE, groupUid, null));
+    RealmUtils.saveDataToRealm(members, null).subscribe(new Action1<Boolean>() {
+      @Override
+      public void call(Boolean aBoolean) {
+        Group group = RealmUtils.loadGroupFromDB(groupUid);
+        group.setEditedLocal(true);
+        group.setGroupMemberCount((int) RealmUtils.countGroupMembers(groupUid));
+        RealmUtils.saveGroupToRealm(group);
+        EventBus.getDefault().post(new GroupEditedEvent(GroupEditedEvent.MEMBERS_ADDED,
+            NetworkUtils.SAVED_OFFLINE_MODE, groupUid, null));
+      }
+    });
   }
 
   public void saveInvalidMembersForNewlyCreatedGroup(List<Member> originalMembers, String serverGroupUid,
@@ -421,10 +434,13 @@ public class GroupService {
     Map<String, Object> map2 = new HashMap<>();
     map2.put("isLocal", true);
     map2.put("groupUid", groupUid);
-    List<Member> errorMembers = ErrorUtils.findMembersFromListOfNumbers(invalidNumbers,
+
+    @SuppressWarnings("unchecked")
+    List<Member> errorMembers = ErrorUtils
+        .findMembersFromListOfNumbers(invalidNumbers,
         RealmUtils.loadListFromDBInline(Member.class, map2));
+
     for (Member m : errorMembers) {
-      Log.e(TAG, "setting member number invalid!");
       m.setNumberInvalid(true);
       RealmUtils.saveDataToRealmSync(m);
     }
@@ -440,13 +456,22 @@ public class GroupService {
         removalMap.put("isNumberInvalid", true);
         Log.e(TAG, "about to try remove members ... count is : " + RealmUtils.countListInDB(Member.class, removalMap));
         RealmUtils.removeObjectsFromDatabase(Member.class, removalMap);
+
+        // now, reset group count, if group still exists
+        Group group = RealmUtils.loadGroupFromDB(groupUid);
+        if (group != null) {
+          group.setGroupMemberCount((int) RealmUtils.countGroupMembers(groupUid));
+          RealmUtils.saveGroupToRealm(group);
+        }
+
+        // and we're done
         subscriber.onNext("DONE");
         subscriber.onCompleted();
       }
     }).subscribeOn(Schedulers.io()).observeOn(observingThread);
   }
 
-  public Observable removeGroupMembers(final String groupUid, final Set<String> membersToRemoveUIDs) {
+  public Observable<String> removeGroupMembers(final String groupUid, final Set<String> membersToRemoveUIDs) {
     return Observable.create(new Observable.OnSubscribe<String>() {
       @Override
       public void call(Subscriber<? super String> subscriber) {
@@ -496,10 +521,11 @@ public class GroupService {
     for (String memberUid : memberUids) {
       final String memberGroupUid = memberUid + groupUid;
       RealmUtils.removeObjectFromDatabase(Member.class, "memberGroupUid", memberGroupUid);
-      Group group = RealmUtils.loadGroupFromDB(groupUid);
-      group.setGroupMemberCount(group.getGroupMemberCount()-memberUids.size());
-      RealmUtils.saveGroupToRealm(group);
     }
+
+    Group group = RealmUtils.loadGroupFromDB(groupUid);
+    group.setGroupMemberCount((int) RealmUtils.countGroupMembers(groupUid));
+    RealmUtils.saveGroupToRealm(group);
   }
 
   /* METHODS FOR EDITING GROUP */

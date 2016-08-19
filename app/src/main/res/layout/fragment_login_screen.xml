@@ -26,7 +26,7 @@
             android:inputType="phone"
             android:textColor="#000"
             android:drawableRight="@drawable/ic_call"
-            android:maxLength="13"
+            android:maxLength="10"
             android:imeOptions="actionDone" />
 
     </android.support.design.widget.TextInputLayout>

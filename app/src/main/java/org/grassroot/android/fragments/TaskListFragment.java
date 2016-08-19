@@ -30,7 +30,6 @@ import org.grassroot.android.interfaces.GroupPickCallbacks;
 import org.grassroot.android.interfaces.TaskConstants;
 import org.grassroot.android.models.TaskModel;
 import org.grassroot.android.models.TaskResponse;
-import org.grassroot.android.services.ApplicationLoader;
 import org.grassroot.android.services.GrassrootRestService;
 import org.grassroot.android.services.TaskService;
 import org.grassroot.android.utils.ErrorUtils;
@@ -235,14 +234,20 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
   }
 
   private void handleNoTasksFound(final String fetchType) {
-    taskView.setVisibility(View.GONE);
-    if (noTaskMessageText != null) { // since the call may time out / return when the user is on a different fragment
+    // since the call may time out / return when the user is on a different fragment, have to check for null on all these
+
+    if (taskView != null) {
+      taskView.setVisibility(View.GONE);
+    }
+
+    if (noTaskMessageText != null) {
       if (fetchType.equals(NetworkUtils.FETCHED_SERVER)) {
         noTaskMessageText.setText(groupUid == null ? R.string.txt_no_task_upcoming : R.string.txt_no_task_group);
       } else {
         noTaskMessageText.setText(R.string.txt_task_could_not_fetch);
       }
     }
+
     if (noTaskMessageLayout != null) {
       noTaskMessageLayout.setVisibility(View.VISIBLE);
     }
@@ -327,7 +332,7 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
               }
 
               @Override public void onFailure(Call<TaskResponse> call, Throwable t) {
-                ErrorUtils.handleNetworkError(getActivity(), container, t);
+                ErrorUtils.handleNetworkError(container, t);
               }
             });
           }

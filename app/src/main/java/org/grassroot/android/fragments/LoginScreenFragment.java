@@ -59,7 +59,7 @@ public class LoginScreenFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.container_login, container, false);
+        View view = inflater.inflate(R.layout.fragment_login_screen, container, false);
         ButterKnife.bind(this, view);
         view.startAnimation(AnimationUtils.loadAnimation(getActivity(), R.anim.fade_in));
         view.setLayoutParams(new ViewGroup.LayoutParams(-1, -1));

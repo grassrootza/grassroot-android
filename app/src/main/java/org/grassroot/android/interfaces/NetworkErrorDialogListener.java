@@ -23,7 +23,8 @@ public abstract class NetworkErrorDialogListener {
 
     public void checkNetworkSettingsClicked(Activity activity){
         Log.e(TAG,activity.getLocalClassName());
-        activity.startActivityForResult(new Intent(android.provider.Settings.ACTION_WIRELESS_SETTINGS), Constant.activityNetworkSettings);
+        activity.startActivityForResult(new Intent(android.provider.Settings.ACTION_WIRELESS_SETTINGS),
+            NavigationConstants.NETWORK_SETTINGS_DIALOG);
     }
 
 }

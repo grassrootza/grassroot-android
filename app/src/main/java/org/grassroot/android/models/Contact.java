@@ -42,10 +42,6 @@ public class Contact extends RealmObject implements Parcelable, Comparable {
         this.name = name;
     }
 
-    public String getNormalizedNumber() {
-        return selectedMsisdn == null ? null : Utilities.formatNumberToE164(selectedNumber);
-    }
-
     public String getDisplayName() {
         if (!TextUtils.isEmpty(name)) {
             return name;

@@ -31,7 +31,7 @@
             android:textColor="@color/black"
             android:textSize="@dimen/txt_large"
             android:drawableRight="@drawable/ic_call"
-            android:maxLength="13" />
+            android:maxLength="10" />
 
     </android.support.design.widget.TextInputLayout>
 

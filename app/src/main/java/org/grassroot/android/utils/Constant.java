@@ -22,6 +22,9 @@ public class Constant {
     public static final String restUrl = BuildConfig.BUILD_TYPE.equals("debug") ? localUrl
             : BuildConfig.FLAVOR.equals(PROD) ? productionUrl : stagingUrl;
 
+    public static final double testLatitude = 31.215263;
+    public static final double testLongitude = 121.476291;
+
 	/**
 	 * CONSTANTS FOR INTENT PASSING
      */
@@ -37,22 +40,5 @@ public class Constant {
     public static final String TITLE = "title";
     public static final String BODY = "body";
 
-
-    /**
-     * RESULT CODES FOR ACTIVITIES
-     * todo : make an enum with to/from int, or do bitmasking etc
-     */
-    public static final int activityManualMemberEntry = 2;
-    public static final int activityCreateGroup = 6;
-    public static final int activitySelectGroupMembers = 7;
-    public static final int activityManualMemberEdit = 8;
-    public static final int activityNetworkSettings = 20; //todo request code for network, will have to do it robustly
-    public static final int activityCreateTask = 11;
-    public static final int activityChangeGroupPicture = 12;
-
-    public static final int alertAskForContactPermission = 91;
-
-    public static final double testLatitude = 31.215263;
-    public static final double testLongitude = 121.476291;
 
 }

@@ -52,7 +52,7 @@ public class RealmUtils {
         realm.close();
     }
 
-    public static Observable saveDataToRealm(final List<? extends RealmObject> list, Scheduler observingThread) {
+    public static Observable<Boolean> saveDataToRealm(final List<? extends RealmObject> list, Scheduler observingThread) {
         observingThread = (observingThread == null) ? AndroidSchedulers.mainThread() : observingThread;
         return Observable.create(new Observable.OnSubscribe<Boolean>() {
             @Override
@@ -178,8 +178,7 @@ public class RealmUtils {
 
     public static <T> Observable loadListFromDB(final Class<? extends RealmObject> model,
                                                 final String pName, final boolean pValue, Scheduler returnThread) {
-        Observable<List<RealmObject>> observable =
-                Observable.create(new Observable.OnSubscribe<List<RealmObject>>() {
+        return Observable.create(new Observable.OnSubscribe<List<RealmObject>>() {
                     @Override
                     public void call(final Subscriber<? super List<RealmObject>> subscriber) {
                         // System.out.println("load list " + Thread.currentThread().getName());
@@ -191,13 +190,11 @@ public class RealmUtils {
                         subscriber.onCompleted();
                     }
                 }).subscribeOn(Schedulers.io()).observeOn(returnThread);
-        return observable;
     }
 
     public static Observable loadListFromDB(final Class<? extends RealmObject> model,
                                             final Map<String, Object> map) {
-        Observable<List<RealmObject>> observable =
-                Observable.create(new Observable.OnSubscribe<List<RealmObject>>() {
+        return Observable.create(new Observable.OnSubscribe<List<RealmObject>>() {
                     @Override
                     public void call(final Subscriber<? super List<RealmObject>> subscriber) {
                         RealmList<RealmObject> groups = new RealmList<>();
@@ -216,7 +213,6 @@ public class RealmUtils {
                         realm.close();
                     }
                 }).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread());
-        return observable;
     }
 
     // dislike copy and paste for this, but otherwise have extreme proliferation of boilerplate & thread multiplication in services

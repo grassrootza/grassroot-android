@@ -14,17 +14,15 @@ import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
-import com.squareup.picasso.Callback;
-import com.squareup.picasso.NetworkPolicy;
-import com.squareup.picasso.Picasso;
-
 import org.grassroot.android.R;
+import org.grassroot.android.events.LocalGroupToServerEvent;
 import org.grassroot.android.fragments.HomeGroupListFragment;
 import org.grassroot.android.interfaces.GroupConstants;
 import org.grassroot.android.models.Group;
-import org.grassroot.android.utils.CircularImageTransformer;
 import org.grassroot.android.utils.ImageUtils;
 import org.grassroot.android.utils.RealmUtils;
+import org.greenrobot.eventbus.Subscribe;
+import org.greenrobot.eventbus.ThreadMode;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -35,7 +33,6 @@ import java.util.Locale;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
-import rx.Subscriber;
 import rx.functions.Action1;
 
 /**
@@ -92,11 +89,18 @@ public class GroupListAdapter extends RecyclerView.Adapter<GroupListAdapter.GHP_
         for (int i = 0; i < displayedGroups.size(); i++) {
             if (displayedGroups.get(i).getGroupUid().equals(groupUid)) {
                 displayedGroups.remove(i);
+                group.setGroupMemberCount((int) RealmUtils.countGroupMembers(groupUid)); // because of lazy loading, this otherwise can go wrong
                 displayedGroups.add(0, group);
                 notifyItemRangeChanged(0, i + 1);
                 Log.d(TAG,"Changed group " + groupUid);
             }
         }
+    }
+
+    public void addGroupToTop(final Group group, final int numberItemsToRefresh) {
+        displayedGroups.add(0, group);
+        // notifyItemRangeChanged(0, numberItemsToRefresh); // this does not work with alpha because Google
+        notifyDataSetChanged();
     }
 
     public void removeSingleGroup(final String groupUid) {
@@ -119,6 +123,7 @@ public class GroupListAdapter extends RecyclerView.Adapter<GroupListAdapter.GHP_
                     groupFound = true;
                     displayedGroups.remove(i);
                     displayedGroups.add(i, replacementGroup);
+                    Log.e(TAG, "replacing the group! ... replacement group local = " + replacementGroup.getIsLocal());
                     notifyItemChanged(i);
                 }
                 i++;
@@ -228,7 +233,9 @@ public class GroupListAdapter extends RecyclerView.Adapter<GroupListAdapter.GHP_
         params.width = width;
 
         holder.profileV2.setLayoutParams(params);
-        holder.profileV2.setText("+" + String.valueOf(group.getGroupMemberCount()));
+        // adding one for organizer if group is local (server includes in count)
+        holder.profileV2.setText(String.format(context.getString(R.string.member_count_pattern),
+            group.getGroupMemberCount() + (group.getIsLocal() ? 1 : 0)));
     }
 
     private void setUpListeners(GHP_ViewHolder holder, final Group group) {
@@ -299,19 +306,8 @@ public class GroupListAdapter extends RecyclerView.Adapter<GroupListAdapter.GHP_
     }
 
     @Override
-    public int getItemViewType(int position) {
-        return position;
-    }
-
-    @Override
     public int getItemCount() {
         return displayedGroups.size();
-    }
-
-    public void updateGroup(int position, final String groupUid) {
-        displayedGroups.set(position, RealmUtils.loadGroupFromDB(groupUid));
-        notifyItemChanged(position);
-        notifyDataSetChanged();
     }
 
     public class GHP_ViewHolder extends RecyclerView.ViewHolder {

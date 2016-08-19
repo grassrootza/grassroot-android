@@ -66,7 +66,7 @@ public class WelcomeFragment extends android.support.v4.app.Fragment {
 
     @OnClick(R.id.bt_startgroup)
     public void startgroup() {
-        getActivity().startActivityForResult(new Intent(getActivity(), CreateGroupActivity.class), Constant.activityCreateGroup);
+        startActivity(new Intent(getActivity(), CreateGroupActivity.class));
     }
 
     @OnClick(R.id.bt_joingroup)
