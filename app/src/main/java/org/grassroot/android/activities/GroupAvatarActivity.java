@@ -1,9 +1,11 @@
 package org.grassroot.android.activities;
 
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
@@ -12,10 +14,13 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v4.view.ViewPager;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.Toolbar;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
@@ -29,18 +34,25 @@ import com.squareup.picasso.Picasso;
 import org.grassroot.android.R;
 import org.grassroot.android.fragments.ImageDetailFragment;
 import org.grassroot.android.interfaces.GroupConstants;
-import org.grassroot.android.models.exceptions.ApiCallException;
 import org.grassroot.android.models.Group;
+import org.grassroot.android.models.exceptions.ApiCallException;
 import org.grassroot.android.services.GroupService;
 import org.grassroot.android.utils.CircularImageTransformer;
 import org.grassroot.android.utils.ErrorUtils;
 import org.grassroot.android.utils.ImageUtils;
 import org.grassroot.android.utils.NetworkUtils;
 
+import java.io.File;
+import java.io.IOException;
+
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
+import rx.Observable;
 import rx.Subscriber;
+import rx.android.schedulers.AndroidSchedulers;
+import rx.functions.Action1;
+import rx.schedulers.Schedulers;
 
 import static android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
 
@@ -61,7 +73,8 @@ public class GroupAvatarActivity extends PortraitActivity {
     @BindView(R.id.image_tracker) LinearLayout pagerTracker;
     @BindView(R.id.avatar_pager) ViewPager defaultAvatars;
     @BindView(R.id.image_description) TextView imageDescription;
-    private AvatarPagerAdapter defaultAdapter;
+    @BindView(R.id.avatar_left_arrow) ImageButton leftArrow;
+    @BindView(R.id.avatar_right_arrow) ImageButton rightArrow;
 
     private boolean defaultAvatarsSetUp = false;
     private boolean customImage = false;
@@ -142,7 +155,7 @@ public class GroupAvatarActivity extends PortraitActivity {
     }
 
     private void setUpAvatarAdapter() {
-        defaultAdapter = new AvatarPagerAdapter(getSupportFragmentManager(), imageResIds.length);
+        AvatarPagerAdapter defaultAdapter = new AvatarPagerAdapter(getSupportFragmentManager(), imageResIds.length);
         defaultAvatars.setAdapter(defaultAdapter);
         final int defaultPos = getGroupItem();
         defaultAvatars.setCurrentItem(defaultPos);
@@ -164,6 +177,16 @@ public class GroupAvatarActivity extends PortraitActivity {
         defaultAvatarsSetUp = true;
     }
 
+    @OnClick(R.id.avatar_right_arrow)
+    public void onClickAvatarRight() {
+        defaultAvatars.setCurrentItem(defaultAvatars.getCurrentItem() + 1, true);
+    }
+
+    @OnClick(R.id.avatar_left_arrow)
+    public void onClickAvaterLeft() {
+        defaultAvatars.setCurrentItem(defaultAvatars.getCurrentItem() - 1, true);
+    }
+
     private void setViewToAvatars() {
         if (!defaultAvatarsSetUp) {
             setUpAvatarAdapter();
@@ -182,6 +205,11 @@ public class GroupAvatarActivity extends PortraitActivity {
         defaultAvatars.setVisibility(View.GONE);
         pagerTracker.setVisibility(View.GONE);
         imageDescription.setVisibility(View.GONE);
+        leftArrow.setVisibility(View.INVISIBLE);
+        leftArrow.setClickable(false);
+        rightArrow.setVisibility(View.INVISIBLE);
+        rightArrow.setClickable(false);
+
         btOther.setText(R.string.gp_bt_choose_another);
         btRemove.setVisibility(View.VISIBLE);
         customImage = true;
@@ -215,7 +243,7 @@ public class GroupAvatarActivity extends PortraitActivity {
 
                     @Override
                     public void onError() {
-                        Snackbar.make(rootView, R.string.gp_image_load_error, Snackbar.LENGTH_LONG);
+                        Snackbar.make(rootView, R.string.gp_image_load_error, Snackbar.LENGTH_SHORT).show();
                         setViewToAvatars();
                     }
                 });
@@ -223,32 +251,92 @@ public class GroupAvatarActivity extends PortraitActivity {
 
     @OnClick({ R.id.gp_bt_other, R.id.iv_gp_avatar })
     public void selectImageForUpload() {
-        Intent galleryIntent = new Intent(Intent.ACTION_PICK, EXTERNAL_CONTENT_URI);
-        startActivityForResult(galleryIntent, IMAGE_RESULT_INT);
+        if (NetworkUtils.isOnline()) {
+
+            Intent galleryIntent = new Intent(Intent.ACTION_PICK, EXTERNAL_CONTENT_URI);
+            startActivityForResult(galleryIntent, IMAGE_RESULT_INT);
+        } else {
+            checkForOfflineFirst();
+        }
+    }
+
+    private void checkForOfflineFirst() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setMessage(R.string.gp_offline_alert_message)
+            .setNegativeButton(R.string.gp_alert_later, new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    dialog.dismiss();
+                }
+            })
+            .setPositiveButton(R.string.gp_alert_online, new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    progressBar.setVisibility(View.VISIBLE);
+                    NetworkUtils.trySwitchToOnlineRx(GroupAvatarActivity.this, false, AndroidSchedulers.mainThread())
+                        .subscribe(new Action1<String>() {
+                            @Override
+                            public void call(String s) {
+                                progressBar.setVisibility(View.GONE);
+                                selectImageForUpload();
+                            }
+                        }, new Action1<Throwable>() {
+                            @Override
+                            public void call(Throwable throwable) {
+                                Log.e(TAG, "error!");
+                                NetworkUtils.setOfflineSelected(); // i.e., resetting
+                                Snackbar.make(rootView, R.string.gp_offline_connect_fail,
+                                    Snackbar.LENGTH_LONG).show();
+                                progressBar.setVisibility(View.GONE);
+                            }
+                        });
+                }
+            })
+            .setCancelable(true)
+            .create()
+            .show();
     }
 
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        try {
-            if (requestCode == IMAGE_RESULT_INT && resultCode == RESULT_OK && data != null) {
-                // todo : make sure all of this is on a background thread
-                Uri selectedImage = data.getData();
+        if (requestCode == IMAGE_RESULT_INT && resultCode == RESULT_OK && data != null) {
+            cleanUpCompressedFileIfExists();
+            progressBar.setVisibility(View.VISIBLE);
+            Uri selectedImage = data.getData();
+            compressBitmap(selectedImage).subscribe(new Action1<Bitmap>() {
+                @Override
+                public void call(Bitmap bitmap) {
+                    ivAvatar.setImageBitmap(ImageUtils.getRoundedShape(bitmap));
+                    progressBar.setVisibility(View.GONE);
+                    customImageChanged = true;
+                    setViewToCustomImage();
+                }
+            }, new Action1<Throwable>() {
+                @Override
+                public void call(Throwable throwable) {
+                    throwable.printStackTrace();
+                    Snackbar.make(rootView, R.string.process_error_image, Snackbar.LENGTH_SHORT);
+                }
+            });
+        }
+    }
+
+    private Observable<Bitmap> compressBitmap(final Uri selectedImage) {
+        return Observable.create(new Observable.OnSubscribe<Bitmap>() {
+            @Override
+            public void call(Subscriber<? super Bitmap> subscriber) {
+                mimeType = ImageUtils.getMimeType(selectedImage);
                 String[] filePathColumn = {MediaStore.Images.Media.DATA};
                 Cursor cursor = getContentResolver().query(selectedImage, filePathColumn, null, null, null);
-                cursor.moveToFirst();
+                cursor.moveToFirst(); // if null, will throw error to subscriber, so check in here would be redundant
                 int columnIndex = cursor.getColumnIndex(filePathColumn[0]);
                 String localImagePath = cursor.getString(columnIndex);
-                mimeType = ImageUtils.getMimeType(this, selectedImage);
                 cursor.close();
                 compressedFilePath = ImageUtils.getCompressedFileFromImage(localImagePath);
                 Bitmap bitmap = BitmapFactory.decodeFile(compressedFilePath);
-                ivAvatar.setImageBitmap(ImageUtils.getRoundedShape(bitmap));
-                customImageChanged = true;
-                setViewToCustomImage();
+                subscriber.onNext(bitmap);
+                subscriber.onCompleted();
             }
-        } catch (Exception e) {
-            Log.e(TAG, e.getMessage());
-        }
+        }).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread());
     }
 
     @OnClick(R.id.gp_bt_default)
@@ -256,54 +344,36 @@ public class GroupAvatarActivity extends PortraitActivity {
         setViewToAvatars();
     }
 
-    // todo : switch this to Rx and handle offline
     @OnClick(R.id.gp_bt_save)
     public void saveChanges() {
         if (!customImage) {
-            final String defaultSelected = defaultImageSequence[defaultAvatars.getCurrentItem()];
-            final int defaultSelectedRes = imageResIds[defaultAvatars.getCurrentItem()];
-            final boolean defaultImageChanged = defaultSelectedRes != group.getDefaultImageRes();
-            if (defaultImageChanged || group.hasCustomImage()) {
-                progressBar.setVisibility(View.VISIBLE);
-                GroupService.getInstance().changeGroupDefaultImage(group, defaultSelected, defaultSelectedRes, null).
-                    subscribe(new Subscriber<String>() {
-                        @Override
-                        public void onCompleted() { }
-
-                        @Override
-                        public void onError(Throwable e) {
-                            progressBar.setVisibility(View.GONE);
-                            final String errorMsg = ErrorUtils.serverErrorText(e);
-                            Snackbar.make(rootView, errorMsg, Snackbar.LENGTH_LONG).show();
-                        }
-
-                        @Override
-                        public void onNext(String s) {
-                            progressBar.setVisibility(View.GONE);
-                            finish();
-                        }
-                    });
-            }
+            uploadDefaultImageChoice();
         } else if (customImageChanged) {
-            progressBar.setVisibility(View.VISIBLE);
-            GroupService.getInstance().uploadCustomImage(group.getGroupUid(), compressedFilePath, mimeType, null)
-                .subscribe(new Subscriber<String>() {
-                    @Override
-                    public void onCompleted() {}
+            sendCustomImageToServer();
+        }
+    }
 
+    private void uploadDefaultImageChoice() {
+        final String defaultSelected = defaultImageSequence[defaultAvatars.getCurrentItem()];
+        final int defaultSelectedRes = imageResIds[defaultAvatars.getCurrentItem()];
+        final boolean defaultImageChanged = defaultSelectedRes != group.getDefaultImageRes();
+        if (defaultImageChanged || group.hasCustomImage()) {
+            progressBar.setVisibility(View.VISIBLE);
+            GroupService.getInstance().changeGroupDefaultImage(group, defaultSelected, defaultSelectedRes, null).
+                subscribe(new Subscriber<String>() {
                     @Override
                     public void onError(Throwable e) {
                         progressBar.setVisibility(View.GONE);
                         if (e instanceof ApiCallException) {
-                            ApiCallException apiCallException = (ApiCallException) e;
-                            if (NetworkUtils.SERVER_ERROR.equals(apiCallException.errorTag)) {
-                                final String errorMsg = ErrorUtils.serverErrorText(apiCallException.errorTag);
-                                Snackbar.make(rootView, errorMsg, Snackbar.LENGTH_LONG).show();
-                            } else if (NetworkUtils.CONNECT_ERROR.equals(apiCallException.errorTag)) {
-                                // todo : save offline, show a better message, and so forth ..
-                                Snackbar.make(rootView, ErrorUtils.serverErrorText(ErrorUtils.GENERIC_ERROR), Snackbar.LENGTH_SHORT)
-                                    .show();
+                            if (NetworkUtils.CONNECT_ERROR.equals(e.getMessage())) {
+                                handleNetworkErrorDefaultImage();
+                            } else if (NetworkUtils.SERVER_ERROR.equals(e.getMessage())) {
+                                Snackbar.make(rootView, ((ApiCallException) e).errorTag, Snackbar.LENGTH_LONG).show();
+                            } else {
+                                Snackbar.make(rootView, R.string.error_generic, Snackbar.LENGTH_SHORT).show();
                             }
+                        } else {
+                            Snackbar.make(rootView, R.string. error_generic, Snackbar.LENGTH_SHORT).show();
                         }
                     }
 
@@ -312,7 +382,103 @@ public class GroupAvatarActivity extends PortraitActivity {
                         progressBar.setVisibility(View.GONE);
                         finish();
                     }
+
+                    @Override
+                    public void onCompleted() { }
                 });
+        }
+    }
+
+    private void handleNetworkErrorDefaultImage() {
+        Snackbar snackbar = Snackbar.make(rootView, R.string.connect_error_group_default, Snackbar.LENGTH_LONG);
+        snackbar.setActionTextColor(Color.RED);
+        snackbar.setAction(R.string.bt_done, new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                finish();
+            }
+        });
+        snackbar.show();
+    }
+
+    private void sendCustomImageToServer() {
+        progressBar.setVisibility(View.VISIBLE);
+        GroupService.getInstance().uploadCustomImage(group.getGroupUid(), compressedFilePath, mimeType, null)
+            .subscribe(new Subscriber<String>() {
+                @Override
+                public void onCompleted() {}
+
+                @Override
+                public void onError(Throwable e) {
+                    progressBar.setVisibility(View.GONE);
+                    if (e instanceof ApiCallException) {
+                        if (NetworkUtils.SERVER_ERROR.equals(e.getMessage())) {
+                            final String errorMsg = ErrorUtils.serverErrorText(((ApiCallException) e).errorTag);
+                            Snackbar.make(rootView, errorMsg, Snackbar.LENGTH_LONG).show();
+                        } else if (NetworkUtils.CONNECT_ERROR.equals(e.getMessage())) {
+                            handleConnectionErrorOnUpload();
+                        }
+                    }
+                }
+
+                @Override
+                public void onNext(String s) {
+                    progressBar.setVisibility(View.GONE);
+                    finish();
+                }
+            });
+    }
+
+    private void handleConnectionErrorOnUpload() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setMessage(R.string.gp_tried_upload_connect_fail)
+            .setPositiveButton(R.string.gp_alert_online, new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    progressBar.setVisibility(View.VISIBLE);
+                    NetworkUtils.trySwitchToOnlineRx(GroupAvatarActivity.this, false, null)
+                        .subscribe(new Action1<String>() {
+                        @Override
+                        public void call(String s) {
+                            Log.e(TAG, "we are online ... send image to server");
+                            sendCustomImageToServer();
+                        }
+                    }, new Action1<Throwable>() {
+                        @Override
+                        public void call(Throwable throwable) {
+                            handleConnectionErrorOnUpload();
+                        }
+                    });
+                }
+            })
+            .setNegativeButton(R.string.gp_alert_cancel, new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    dialog.dismiss();
+                }
+            })
+            .create()
+            .show();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        cleanUpCompressedFileIfExists();
+    }
+
+    private void cleanUpCompressedFileIfExists() {
+        Log.e(TAG, "cleaning up compressed image, if it still exists ...");
+        if (!TextUtils.isEmpty(compressedFilePath)) {
+            try {
+                final File file = new File(compressedFilePath);
+                if (file.exists()) {
+                    Log.e(TAG, "image still exists ... deleting it");
+                    file.delete();
+                }
+            } catch (Exception e) { // just to guard against exceptions (don't fully trust exists on Android ...
+                e.printStackTrace();
+            }
         }
     }
 
@@ -327,6 +493,10 @@ public class GroupAvatarActivity extends PortraitActivity {
     private void setImageTrackerToPosition(final int position) {
         imageDescription.setText(labelResIds[position]);
         switchPageTracker(position);
+        leftArrow.setVisibility(position > 0 ? View.VISIBLE : View.INVISIBLE);
+        leftArrow.setClickable(position > 0);
+        rightArrow.setVisibility(position < (defaultImageSequence.length - 1) ? View.VISIBLE : View.INVISIBLE);
+        rightArrow.setClickable(position < defaultImageSequence.length);
     }
 
     private void switchPageTracker(final int position) {

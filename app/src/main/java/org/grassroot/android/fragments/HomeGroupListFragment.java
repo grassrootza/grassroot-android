@@ -492,9 +492,13 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
         Snackbar.make(rlGhpRoot, R.string.jreq_notice, Snackbar.LENGTH_LONG).show();
     }
 
-    @Subscribe
-    public void onEvent(GroupPictureChangedEvent groupPictureUploadedEvent) {
-        groupListRowAdapter.refreshGroupsToDB();
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onEvent(GroupPictureChangedEvent event) {
+        if (!TextUtils.isEmpty(event.groupUid)) {
+            groupListRowAdapter.refreshSingleGroup(event.groupUid);
+        } else {
+            groupListRowAdapter.refreshGroupsToDB();
+        }
     }
 
     @Subscribe

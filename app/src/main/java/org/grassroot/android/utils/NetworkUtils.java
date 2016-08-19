@@ -104,6 +104,17 @@ public class NetworkUtils {
     });
   }
 
+  public static void setOfflineSelected() {
+    PreferenceObject prefs = RealmUtils.loadPreferencesFromDB();
+    prefs.setOnlineStatus(OFFLINE_SELECTED);
+    prefs.setLastTimeSyncPerformed(0L);
+    RealmUtils.saveDataToRealm(prefs).subscribe(new Action1() {
+      @Override public void call(Object o) {
+        EventBus.getDefault().post(new OnlineOfflineToggledEvent(false));
+      }
+    });
+  }
+
   public static void trySwitchToOnlineQuiet(final Context context, final boolean sendQueue,
                                             Scheduler observingThread) {
     trySwitchToOnlineRx(context, sendQueue, observingThread).subscribe(new Subscriber<String>() {

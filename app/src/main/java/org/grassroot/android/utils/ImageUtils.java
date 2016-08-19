@@ -200,12 +200,13 @@ public class ImageUtils {
         return bitmap;
     }
 
-    public static String getMimeType(Context context, Uri uri) {
+    public static String getMimeType(Uri uri) {
         String mimeType = null;
         String extension;
         if (uri.getScheme().equals(ContentResolver.SCHEME_CONTENT)) {
             final MimeTypeMap mime = MimeTypeMap.getSingleton();
-            extension = mime.getExtensionFromMimeType(context.getContentResolver().getType(uri));
+            extension = mime.getExtensionFromMimeType(ApplicationLoader.applicationContext
+                .getContentResolver().getType(uri));
         } else {
             extension = MimeTypeMap.getFileExtensionFromUrl(Uri.fromFile(new File(uri.getPath())).toString());
         }

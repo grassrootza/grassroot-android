@@ -19,9 +19,9 @@ public interface TaskConstants {
     String TODO_DONE = "completed";
     String TODO_OVERDUE = "overdue";
 
-    String RESPONSE_YES = "Yes";
-    String RESPONSE_NO = "No";
-    String RESPONSE_NONE = "No response yet"; // todo: okay really need to fix this on server...asking for trouble in this form
+    String RESPONSE_YES = "YES";
+    String RESPONSE_NO = "NO";
+    String RESPONSE_NONE = "NO_RESPONSE";
 
     SimpleDateFormat dateDisplayFormatWithHours = new SimpleDateFormat("HH:mm dd-MM");
     SimpleDateFormat dateDisplayWithDayName = new SimpleDateFormat("H:mm, EEE, d MMM");

@@ -44,8 +44,9 @@
     <dimen name="group_avatar_small">50dp</dimen>
     <dimen name="group_avatar_large">72dp</dimen>
     <dimen name="group_card_elevation">4dp</dimen>
-    <dimen name="group_avatar_giant">180dp</dimen>
+    <dimen name="group_avatar_giant">172dp</dimen>
     <dimen name="group_avatar_giant_margin">38dp</dimen>
+    <dimen name="group_avatar_arrow">72dp</dimen>
 
     <dimen name="expanded_title_margin_top">48dp</dimen>
     <dimen name="expanded_title_margin_bottom">12dp</dimen>

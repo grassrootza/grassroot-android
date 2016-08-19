@@ -32,6 +32,7 @@
 
     <!--Error descriptions -->
 
+    <string name="error_generic">Sorry! Something went wrong in the request.</string> <!-- null pointer error, or who knows what -->
     <string name="connect_error_general">Sorry, we couldn\'t connect to the server. Please try again later.</string>
     <string name="server_error_general">Sorry, something went wrong with the request.</string> <!-- note : should never actually use this -->
     <string name="connect_error_logreg">Hmm, we can\'t connect to the server right now. Check connection and try again?</string>
@@ -59,6 +60,8 @@
 
     <string name="connect_error_homescreen">Sorry, we couldn\'t refresh right now because the connection isn\'t working</string>
     <string name="connect_error_offline_home">You\'re working in offline mode. Please go online and try refreshing again</string>
+    <string name="connect_error_group_default">The connection isn\'t working, but we saved the change and will upload next time
+    you\'re connected</string>
 
     <string name="server_error_background_group_numbers">The group is created, but some numbers were invalid, please check the group and
     add them</string>
@@ -79,12 +82,13 @@
     and you can try adding them again later at any time.</string>
     <string name="input_error_try_again">Try again</string>
 
+    <string name="process_error_image">Sorry, something went wrong processing the image. Please try again</string>
+
     <string name="INVALID_TOKEN">Sorry, wrong code. Please check again and re-enter.</string> <!-- todo : refactor this as others -->
 
     <string name="snackbar_try_again">Retry</string>
 
     <!-- Error messages -->
-    <string name="error_generic">Sorry! Something went wrong in the request.</string>
     <string name="error_no_network">You don\'t seem to have a working data connection.</string>
     <string name="error_wrong_number">Sorry! Error creating group, please check numbers</string>
 
@@ -504,7 +508,7 @@
     <string name="ctsk_todo_all_success">Done! Action assigned to whole group</string>
 
     <!--Select members button & reminder options -->
-    <string name="nm_bt_done">Done</string>
+    <string name="bt_done">Done</string>
     <string name="one_day">1 day ahead</string>
     <string name="half_day">Half a day ahead</string>
     <string name="one_hour">1 hour ahead</string>
@@ -683,9 +687,18 @@
     <string name="gp_bt_select_default">PICK AN ICON</string>
     <string name="gp_bt_save">SAVE</string>
 
+    <string name="gp_offline_alert_message">You must have a connection to upload a group picture. Try connect,
+        or wait until later?</string>
+    <string name="gp_alert_online">Connect</string>
+    <string name="gp_alert_later">Later</string>
+    <string name="gp_offline_connect_fail">Sorry, we still couldn\'t connect, please try again later</string>
+
+    <string name="gp_tried_upload_connect_fail">Sorry, we couldn\'t connect to upload the picture. Try reconnect or cancel?</string>
+    <string name="gp_alert_cancel">Cancel</string>
+
     <string name="gp_txt_title">Group picture</string>
     <string name="gp_update_success">Group photo updated</string>
-    <string name="gp_image_load_error">Sorry, something went wrong loading picture. Defaulting to icons.</string>
+    <string name="gp_image_load_error">Sorry, something went wrong loading the image, showing icons instead</string>
     <string name="group_settings">Group settings</string>
 
     <!-- Sharing strings -->

@@ -603,6 +603,7 @@ public class GroupService {
     return Observable.create(new Observable.OnSubscribe<String>() {
       @Override
       public void call(Subscriber<? super String> subscriber) {
+        // may be able to remove both of thse ...
         group.setDefaultImage(defaultImage);
         group.setDefaultImageRes(defaultImageRes);
         RealmUtils.saveGroupToRealm(group);
@@ -610,7 +611,7 @@ public class GroupService {
         final String groupUid = group.getGroupUid();
         if (!NetworkUtils.isOnline()) {
           storeImageChangeLocally(groupUid, defaultImage);
-          EventBus.getDefault().post(new GroupPictureChangedEvent());
+          EventBus.getDefault().post(new GroupPictureChangedEvent(groupUid));
           subscriber.onNext(NetworkUtils.SAVED_OFFLINE_MODE);
           subscriber.onCompleted();
         } else {
@@ -621,18 +622,19 @@ public class GroupService {
                 .changeDefaultImage(mobile, token, groupUid, defaultImage)
                 .execute();
             if (response.isSuccessful()) {
-              RealmUtils.saveDataToRealm(response.body().getGroups().first());
+              RealmUtils.saveGroupToRealm(response.body().getGroups().first());
               removeLocalEditsIfFound(groupUid);
-              EventBus.getDefault().post(new GroupPictureChangedEvent());
+              EventBus.getDefault().post(new GroupPictureChangedEvent(groupUid));
               subscriber.onNext(NetworkUtils.SAVED_SERVER);
               subscriber.onCompleted();
             } else {
-              throw new ApiCallException(NetworkUtils.SERVER_ERROR, ErrorUtils.getRestMessage(response.errorBody()));
+              throw new ApiCallException(NetworkUtils.SERVER_ERROR,
+                  ErrorUtils.getRestMessage(response.errorBody()));
             }
           } catch (IOException e) {
             NetworkUtils.setConnectionFailed();
             storeImageChangeLocally(groupUid, defaultImage);
-            EventBus.getDefault().post(new GroupPictureChangedEvent());
+            EventBus.getDefault().post(new GroupPictureChangedEvent(groupUid));
             throw new ApiCallException(NetworkUtils.CONNECT_ERROR);
           }
         }
@@ -656,7 +658,6 @@ public class GroupService {
         if (!NetworkUtils.isOnline()) {
           throw new ApiCallException(NetworkUtils.OFFLINE_SELECTED); // require online for this (maybe change later ...)
         } else {
-
           final File file = new File(compressedFilePath);
           Log.d(TAG, "file size : " + (file.length() / 1024));
           RequestBody requestFile = RequestBody.create(MediaType.parse(mimeType), file);
@@ -669,10 +670,9 @@ public class GroupService {
             Response<GroupResponse> response = GrassrootRestService.getInstance().getApi()
                 .uploadImage(phoneNumber, code, groupUid, image).execute();
 
-            file.delete();
             if (response.isSuccessful()) {
               RealmUtils.saveGroupToRealm(response.body().getGroups().first());
-              EventBus.getDefault().post(new GroupPictureChangedEvent());
+              EventBus.getDefault().post(new GroupPictureChangedEvent(groupUid));
               subscriber.onNext(NetworkUtils.SAVED_SERVER);
               subscriber.onCompleted();
             } else {
@@ -680,9 +680,8 @@ public class GroupService {
             }
 
           } catch (IOException e) {
-            file.delete();
             NetworkUtils.setConnectionFailed();
-            throw new ApiCallException(NetworkUtils.OFFLINE_ON_FAIL);
+            throw new ApiCallException(NetworkUtils.CONNECT_ERROR);
           }
         }
       }

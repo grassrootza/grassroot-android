@@ -170,7 +170,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
-        android:text="@string/nm_bt_done"
+        android:text="@string/bt_done"
         android:layout_marginTop="10dp"
         android:visibility="gone" />
 
