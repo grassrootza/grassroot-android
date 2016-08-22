@@ -9,6 +9,7 @@ import android.support.v4.app.FragmentActivity;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
+import android.view.ViewGroup;
 
 import org.grassroot.android.R;
 import org.grassroot.android.activities.HomeScreenActivity;
@@ -219,10 +220,15 @@ public class ErrorUtils {
         snackBar.show();
     }
 
-
     public static void connectivityError(Activity context, int message, NetworkErrorDialogListener networkErrorDialogListener) {
         NetworkErrorDialogFragment networkErrorDialogFragment = NetworkErrorDialogFragment.newInstance(message, networkErrorDialogListener);
         networkErrorDialogFragment.show(((FragmentActivity) context).getSupportFragmentManager(), "error_dialog");
+    }
+
+    public static void networkErrorSnackbar(ViewGroup container, int message, View.OnClickListener action) {
+        Snackbar snackbar = Snackbar.make(container, message, Snackbar.LENGTH_LONG);
+        snackbar.setActionTextColor(Color.RED);
+        snackbar.setAction(R.string.snackbar_try_again, action);
     }
 
     public static void hostError(View holder, UnknownHostException e) {

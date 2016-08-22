@@ -111,7 +111,7 @@ public class MemberListAdapter extends RecyclerView.Adapter<MemberListAdapter.Vi
 
         final boolean isPhoneUser;
 
-        if (!canIncludeCurrentUser || !member.getPhoneNumber().equals(thisUserPhoneNumber)) {
+        if (!canIncludeCurrentUser || !thisUserPhoneNumber.equals(member.getPhoneNumber())) {
             viewHolder.tvMemberName.setText(member.getDisplayName());
             isPhoneUser = false;
         } else {

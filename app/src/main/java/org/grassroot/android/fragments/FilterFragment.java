@@ -75,7 +75,7 @@ public class FilterFragment extends DialogFragment {
     private void updateUi() {
         final Context context = getActivity();
         final int primaryColor = ContextCompat.getColor(context, R.color.primaryColor);
-        final int greyColor = ContextCompat.getColor(context, R.color.grey);
+        final int greyColor = ContextCompat.getColor(context, R.color.md_grey_900);
 
         tvVote.setTextColor(filterVote ? primaryColor : greyColor);
         tvMeeting.setTextColor(filterMeeting ? primaryColor : greyColor);

@@ -23,7 +23,7 @@
     <style name="SearchSwitch" parent="Theme.AppCompat.Light">
         <item name="colorControlActivated">@color/primaryColor</item>
         <item name="colorSwitchThumbNormal">@color/black</item>
-        <item name="android:colorForeground">@color/grey</item>
+        <item name="android:colorForeground">@color/md_grey_400</item>
     </style>
 
     <style name="TextLabel" parent="TextAppearance.AppCompat">
@@ -203,13 +203,12 @@
         <item name="cardBackgroundColor">#fff</item>
     </style>
 
-    <style name="ListItemSmall">
-        <item name="android:padding">@dimen/padding_half</item>
-        <item name="android:layout_margin">@dimen/margin_small</item>
+    <style name="RsvpListTextView">
         <item name="android:ellipsize">end</item>
         <item name="android:singleLine">true</item>
         <item name="android:textSize">@dimen/txt_small</item>
-        <item name="android:textColor">@color/black</item>
+        <item name="android:textColor">@color/textSecondaryColorDark</item>
+        <item name="android:layout_marginTop">@dimen/padding_half</item>
     </style>
 
 

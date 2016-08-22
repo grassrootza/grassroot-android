@@ -37,13 +37,8 @@
 
     <color name="dark_grey_text">#424242</color>
 
-    <!--RateUs Scree-->
-    <color name="grey_dialog_bg">#fff5f5f5</color>
-    <color name="grey">#ff3e3e3e</color>
-
     <color name="mlist_title">#207A33</color>
 
-    <!-- used as background colors for contacts that don't have photos -->
     <!--++++++++++++++++++++-->
     <!--listview item colors-->
     <!--++++++++++++++++++++-->
@@ -55,7 +50,6 @@
 
     <!--View Vote-->
     <color name="vv_title">#4d4d4d</color>
-    <color name="vv_divider">#4d4d4d</color>
     <color name="vv_description">#4d4d4d</color>
 
     <color name="vv_body_row">#F6F6F6</color>

@@ -61,14 +61,14 @@ public class SortFragment extends android.support.v4.app.DialogFragment
         if (date) {
             tvDate.setTypeface(null, Typeface.BOLD);
             tvDate.setTextColor(ContextCompat.getColor(getActivity(),R.color.primaryColor));
-            tvrole.setTextColor(ContextCompat.getColor(getActivity(),R.color.grey));
-            tvdefaults.setTextColor(ContextCompat.getColor(getActivity(),R.color.grey));
+            tvrole.setTextColor(ContextCompat.getColor(getActivity(),R.color.md_grey_900));
+            tvdefaults.setTextColor(ContextCompat.getColor(getActivity(),R.color.md_grey_900));
         }
         else if (role)
         {
-            tvDate.setTextColor(ContextCompat.getColor(getActivity(),R.color.grey));
+            tvDate.setTextColor(ContextCompat.getColor(getActivity(),R.color.md_grey_900));
             tvrole.setTextColor(ContextCompat.getColor(getActivity(),R.color.primaryColor));
-            tvdefaults.setTextColor(ContextCompat.getColor(getActivity(),R.color.grey));
+            tvdefaults.setTextColor(ContextCompat.getColor(getActivity(),R.color.md_grey_900));
             tvrole.setTypeface(null, Typeface.BOLD);
 
         }
@@ -76,8 +76,8 @@ public class SortFragment extends android.support.v4.app.DialogFragment
         {
             tvdefaults.setTypeface(null, Typeface.BOLD);
 
-            tvDate.setTextColor(ContextCompat.getColor(getActivity(),R.color.grey));
-            tvrole.setTextColor(ContextCompat.getColor(getActivity(),R.color.grey));
+            tvDate.setTextColor(ContextCompat.getColor(getActivity(),R.color.md_grey_900));
+            tvrole.setTextColor(ContextCompat.getColor(getActivity(),R.color.md_grey_900));
             tvdefaults.setTextColor(ContextCompat.getColor(getActivity(),R.color.primaryColor));
 
 
@@ -96,8 +96,8 @@ public class SortFragment extends android.support.v4.app.DialogFragment
 
 
                 tvDate.setTextColor(ContextCompat.getColor(getActivity(),R.color.primaryColor));
-                tvrole.setTextColor(ContextCompat.getColor(getActivity(),R.color.grey));
-                tvdefaults.setTextColor(ContextCompat.getColor(getActivity(),R.color.grey));
+                tvrole.setTextColor(ContextCompat.getColor(getActivity(),R.color.md_grey_900));
+                tvdefaults.setTextColor(ContextCompat.getColor(getActivity(),R.color.md_grey_900));
 
                // ((HomeGroupListFragment) getActivity()).tvDateClick(date,role,defaults);
                 fragmentsCall.tvDateClick(date,role,defaults);
@@ -112,9 +112,9 @@ public class SortFragment extends android.support.v4.app.DialogFragment
                 date = false;
                 role=true;
                 defaults=false;
-                tvDate.setTextColor(ContextCompat.getColor(getActivity(),R.color.grey));
+                tvDate.setTextColor(ContextCompat.getColor(getActivity(),R.color.md_grey_900));
                 tvrole.setTextColor(ContextCompat.getColor(getActivity(),R.color.primaryColor));
-                tvdefaults.setTextColor(ContextCompat.getColor(getActivity(),R.color.grey));
+                tvdefaults.setTextColor(ContextCompat.getColor(getActivity(),R.color.md_grey_900));
                 tvrole.setTypeface(null, Typeface.BOLD);
 
                 fragmentsCall.roleClick(date, role, defaults);
@@ -129,8 +129,8 @@ public class SortFragment extends android.support.v4.app.DialogFragment
                 role=false;
                 defaults=true;
                 tvdefaults.setTypeface(null, Typeface.BOLD);
-                tvDate.setTextColor(ContextCompat.getColor(getActivity(),R.color.grey));
-                tvrole.setTextColor(ContextCompat.getColor(getActivity(),R.color.grey));
+                tvDate.setTextColor(ContextCompat.getColor(getActivity(),R.color.md_grey_900));
+                tvrole.setTextColor(ContextCompat.getColor(getActivity(),R.color.md_grey_900));
                 tvdefaults.setTextColor(ContextCompat.getColor(getActivity(),R.color.primaryColor));
                 fragmentsCall.defaultsClick(date, role, defaults);
                 getDialog().dismiss();

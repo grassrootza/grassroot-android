@@ -1,28 +1,29 @@
 package org.grassroot.android.services;
 
 import android.text.TextUtils;
-import android.util.Log;
-
-import java.io.IOException;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
 
 import org.grassroot.android.events.TasksRefreshedEvent;
 import org.grassroot.android.interfaces.TaskConstants;
-import org.grassroot.android.models.exceptions.ApiCallException;
 import org.grassroot.android.models.Group;
+import org.grassroot.android.models.Member;
+import org.grassroot.android.models.MemberList;
 import org.grassroot.android.models.PreferenceObject;
+import org.grassroot.android.models.ResponseTotalsModel;
+import org.grassroot.android.models.RsvpListModel;
 import org.grassroot.android.models.TaskChangedResponse;
 import org.grassroot.android.models.TaskModel;
 import org.grassroot.android.models.TaskResponse;
+import org.grassroot.android.models.exceptions.ApiCallException;
 import org.grassroot.android.utils.ErrorUtils;
 import org.grassroot.android.utils.NetworkUtils;
 import org.grassroot.android.utils.RealmUtils;
 import org.grassroot.android.utils.Utilities;
 import org.greenrobot.eventbus.EventBus;
+
+import java.io.IOException;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
 
 import io.realm.RealmList;
 import retrofit2.Call;
@@ -355,6 +356,8 @@ public class TaskService {
                 .fetchTaskEntity(phoneNumber, code, taskUid, taskType).execute();
             if (taskResponse.isSuccessful()) {
               RealmUtils.saveDataToRealmSync(taskResponse.body().getTasks().first());
+              subscriber.onNext(NetworkUtils.FETCHED_SERVER);
+              subscriber.onCompleted();
             } else {
               subscriber.onNext(NetworkUtils.SERVER_ERROR);
               subscriber.onCompleted();
@@ -368,6 +371,92 @@ public class TaskService {
       }
     }).subscribeOn(Schedulers.io()).observeOn(observingThread);
   }
+
+  public Observable<RsvpListModel> fetchMeetingRsvps(final String taskUid) {
+    return Observable.create(new Observable.OnSubscribe<RsvpListModel>() {
+      @Override
+      public void call(Subscriber<? super RsvpListModel> subscriber) {
+        if (!NetworkUtils.isOnline()) {
+          throw new ApiCallException(NetworkUtils.CONNECT_ERROR); // switch to offline_selected
+        } else {
+          final String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
+          final String code = RealmUtils.loadPreferencesFromDB().getToken();
+          try {
+            Response<RsvpListModel> response = GrassrootRestService.getInstance().getApi()
+                .fetchMeetingRsvps(phoneNumber, code, taskUid).execute();
+            if (response.isSuccessful()) {
+              subscriber.onNext(response.body());
+              subscriber.onCompleted();
+            } else {
+              throw new ApiCallException(NetworkUtils.SERVER_ERROR,
+                  ErrorUtils.getRestMessage(response.errorBody()));
+            }
+          } catch (IOException e) {
+            throw new ApiCallException(NetworkUtils.CONNECT_ERROR);
+          }
+        }
+      }
+    }).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread());
+  }
+
+  public Observable<ResponseTotalsModel> fetchVoteTotals(final String taskUid) {
+    return Observable.create(new Observable.OnSubscribe<ResponseTotalsModel>() {
+      @Override
+      public void call(Subscriber<? super ResponseTotalsModel> subscriber) {
+        if (!NetworkUtils.isOnline()) {
+          throw new ApiCallException(NetworkUtils.CONNECT_ERROR);
+        } else {
+          final String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
+          final String code = RealmUtils.loadPreferencesFromDB().getToken();
+          try {
+            Response<ResponseTotalsModel> response = GrassrootRestService.getInstance().getApi()
+                .fetchVoteTotals(phoneNumber, code, taskUid).execute();
+            if (response.isSuccessful()) {
+              subscriber.onNext(response.body());
+              subscriber.onCompleted();
+            } else {
+              throw new ApiCallException(NetworkUtils.SERVER_ERROR,
+                  ErrorUtils.getRestMessage(response.errorBody()));
+            }
+          } catch (IOException e) {
+            throw new ApiCallException(NetworkUtils.CONNECT_ERROR);
+          }
+        }
+      }
+    }).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread());
+  }
+
+  public Observable<List<Member>> fetchAssignedMembers(final String taskUid) {
+    return Observable.create(new Observable.OnSubscribe<List<Member>>() {
+      @Override
+      public void call(Subscriber<? super List<Member>> subscriber) {
+        if (NetworkUtils.isOnline()) {
+          final String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
+          final String code = RealmUtils.loadPreferencesFromDB().getToken();
+          try {
+            Response<MemberList> response = GrassrootRestService.getInstance().getApi()
+                .getTodoAssigned(phoneNumber, code, taskUid).execute();
+            if (response.isSuccessful()) {
+              subscriber.onNext(response.body().getMembers());
+              subscriber.onCompleted();
+            } else {
+              throw new ApiCallException(NetworkUtils.SERVER_ERROR,
+                  ErrorUtils.getRestMessage(response.errorBody()));
+            }
+          } catch (IOException e) {
+            NetworkUtils.setConnectionFailed();
+            throw new ApiCallException(NetworkUtils.CONNECT_ERROR);
+          }
+        } else {
+          throw new ApiCallException(NetworkUtils.CONNECT_ERROR);
+        }
+      }
+    }).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread());
+  }
+
+  /*
+  RESPONDING TO A TASK (and storing it)
+   */
 
   public Observable<String> respondToTaskRx(final TaskModel task, final String response, Scheduler observingThread) {
     observingThread = (observingThread == null) ? AndroidSchedulers.mainThread() : observingThread;

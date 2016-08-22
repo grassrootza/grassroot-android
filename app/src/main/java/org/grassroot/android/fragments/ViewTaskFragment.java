@@ -1,6 +1,5 @@
 package org.grassroot.android.fragments;
 
-import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Typeface;
@@ -24,6 +23,7 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
@@ -38,12 +38,9 @@ import org.grassroot.android.interfaces.NetworkErrorDialogListener;
 import org.grassroot.android.interfaces.TaskConstants;
 import org.grassroot.android.models.GenericResponse;
 import org.grassroot.android.models.Member;
-import org.grassroot.android.models.MemberList;
-import org.grassroot.android.models.PreferenceObject;
 import org.grassroot.android.models.ResponseTotalsModel;
 import org.grassroot.android.models.RsvpListModel;
 import org.grassroot.android.models.TaskModel;
-import org.grassroot.android.models.TaskResponse;
 import org.grassroot.android.models.exceptions.ApiCallException;
 import org.grassroot.android.services.GrassrootRestService;
 import org.grassroot.android.services.SharingService;
@@ -53,6 +50,7 @@ import org.grassroot.android.utils.NetworkUtils;
 import org.grassroot.android.utils.RealmUtils;
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
+import org.greenrobot.eventbus.ThreadMode;
 
 import java.util.Date;
 import java.util.List;
@@ -65,6 +63,8 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 import rx.Subscriber;
+import rx.android.schedulers.AndroidSchedulers;
+import rx.functions.Action1;
 
 public class ViewTaskFragment extends Fragment {
 
@@ -106,7 +106,7 @@ public class ViewTaskFragment extends Fragment {
     @BindView(R.id.vt_bt_modify) Button btModifyTask;
     @BindView(R.id.vt_bt_cancel) Button btCancelTask;
 
-    ProgressDialog progressDialog;
+    @BindView(R.id.progressBar) ProgressBar progressBar;
 
     public ViewTaskFragment() {
     }
@@ -170,15 +170,25 @@ public class ViewTaskFragment extends Fragment {
         unbinder = ButterKnife.bind(this, viewToReturn);
         mContainer = container;
 
-        progressDialog = new ProgressDialog(getActivity());
-        progressDialog.setIndeterminate(true);
-
         if (task == null) {
-            retrieveTaskDetails();
+            // only the case if task was not in DB, e.g., entering from notification
+            fetchTaskDetailsFromNetwork();
         } else {
             setUpViews(task);
         }
         return viewToReturn;
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        unbinder.unbind();
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        EventBus.getDefault().unregister(this);
     }
 
     @Override
@@ -236,12 +246,6 @@ public class ViewTaskFragment extends Fragment {
         }
     }
 
-    @Override
-    public void onDestroyView() {
-        super.onDestroyView();
-        unbinder.unbind();
-    }
-
     private void generateShareIntent(String packageName){
         Intent i = new Intent(getActivity(), SharingService.class);
         i.putExtra(SharingService.TASK_TAG, task);
@@ -250,39 +254,180 @@ public class ViewTaskFragment extends Fragment {
         getActivity().startService(i);
     }
 
-    private void retrieveTaskDetails() {
+    private void fetchTaskDetailsFromNetwork() {
+        task = RealmUtils.loadObjectFromDB(TaskModel.class, "taskUid", taskUid);
         if (!NetworkUtils.isOnline(getContext())) {
-            task = RealmUtils.loadObjectFromDB(TaskModel.class, "taskUid", taskUid);
-            setUpViews(task);
+            if (task != null) {
+                setUpViews(task);
+            } else {
+                // show a dialogue box
+            }
         } else {
-            progressDialog.show();
-            // todo : switch this to using task service, with an observer ...
-            GrassrootRestService.getInstance()
-                    .getApi()
-                    .fetchTaskEntity(phoneNumber, code, taskUid, taskType)
-                    .enqueue(new Callback<TaskResponse>() {
-                        @Override
-                        public void onResponse(Call<TaskResponse> call, Response<TaskResponse> response) {
-                            progressDialog.dismiss();
-                            if (response.isSuccessful()) {
-                                Log.d(TAG, response.body().toString());
-                                task = response.body().getTasks().get(0);
-                                Log.e(TAG, task.toString());
+            progressBar.setVisibility(View.VISIBLE);
+            TaskService.getInstance().fetchAndStoreTask(taskUid, taskType, AndroidSchedulers.mainThread())
+                .subscribe(new Action1<String>() {
+                    @Override
+                    public void call(String s) {
+                        if (NetworkUtils.FETCHED_SERVER.equals(s)) {
+                            task = RealmUtils.loadObjectFromDB(TaskModel.class, "taskUid", taskUid);
+                            setUpViews(task);
+                            progressBar.setVisibility(View.GONE);
+                        } else {
+                            if (task != null) {
                                 setUpViews(task);
+                                final String errorMsg = NetworkUtils.CONNECT_ERROR;
                             } else {
-                                // todo : swap to action complete activity if the error is because cancelled
-                                final String errorMsg = ErrorUtils.serverErrorText(response.errorBody(), getContext());
-                                Snackbar.make(mContainer, errorMsg, Snackbar.LENGTH_SHORT).show();
+                                // show an error dialogue
                             }
                         }
-
-                        @Override
-                        public void onFailure(Call<TaskResponse> call, Throwable t) {
-                            progressDialog.dismiss();
-                            handleNoNetwork("FETCH");
-                        }
-                    });
+                    }
+                });
         }
+    }
+
+    private void setMeetingRsvpView() {
+
+        mtgRsvpAdapter = new MtgRsvpAdapter();
+        rcResponseList.setLayoutManager(new LinearLayoutManager(getContext()));
+        rcResponseList.setAdapter(mtgRsvpAdapter);
+        rcResponseList.setItemAnimator(null);
+
+        TaskService.getInstance().fetchMeetingRsvps(taskUid).subscribe(new Subscriber<RsvpListModel>() {
+            @Override
+            public void onNext(RsvpListModel meetingResponses) {
+                tvResponsesCount.setText(String.format(getString(R.string.vt_mtg_response_count),
+                    meetingResponses.getNumberInvited(), meetingResponses.getNumberYes()));
+                if (meetingResponses.isCanViewRsvps()) {
+                    icResponsesExpand.setVisibility(View.VISIBLE);
+                    mtgRsvpAdapter.setMapOfResponses(meetingResponses.getRsvpResponses());
+                    canViewResponses = true;
+                    mtgRsvpAdapter.notifyDataSetChanged();
+                } else {
+                    icResponsesExpand.setVisibility(View.GONE);
+                    canViewResponses = false;
+                    cvResponseList.setClickable(false);
+                }
+            }
+
+            @Override
+            public void onError(Throwable e) {
+                tvResponsesCount.setText(R.string.vt_mtg_response_error); // add a button for retry in future
+                icResponsesExpand.setVisibility(View.GONE);
+                cvResponseList.setClickable(false);
+
+                if (e instanceof ApiCallException) {
+                    if (NetworkUtils.CONNECT_ERROR.equals(e.getMessage())) {
+                        ErrorUtils.networkErrorSnackbar(mContainer, R.string.connect_error_view_task_snackbar,
+                            new View.OnClickListener() {
+                                @Override
+                                public void onClick(View v) {
+                                    setMeetingRsvpView();
+                                }
+                            });
+                    } else {
+                        Snackbar.make(mContainer, ErrorUtils.serverErrorText(((ApiCallException) e).errorTag),
+                            Snackbar.LENGTH_SHORT).show();
+                    }
+                }
+            }
+
+            @Override
+            public void onCompleted() { }
+        });
+    }
+
+    private void setVoteResponseView() {
+        tvResponsesCount.setText(task.getDeadlineDate().after(new Date()) ? R.string.vt_vote_count_open
+            : R.string.vt_vote_count_closed);
+        TaskService.getInstance().fetchVoteTotals(taskUid).subscribe(new Subscriber<ResponseTotalsModel>() {
+            @Override
+            public void onNext(ResponseTotalsModel responseTotalsModel) {
+                TextView tvYes = (TextView) llVoteResponseDetails.findViewById(R.id.count_yes);
+                TextView tvNo = (TextView) llVoteResponseDetails.findViewById(R.id.count_no);
+                TextView tvAbstain = (TextView) llVoteResponseDetails.findViewById(R.id.count_abstain);
+                TextView tvNoResponse = (TextView) llVoteResponseDetails.findViewById(R.id.count_no_response);
+
+                tvYes.setText(String.valueOf(responseTotalsModel.getYes()));
+                tvNo.setText(String.valueOf(responseTotalsModel.getNo()));
+                tvAbstain.setText(String.valueOf(responseTotalsModel.getAbstained()));
+                tvNoResponse.setText(String.valueOf(responseTotalsModel.getNumberNoReply())); // todo : change this
+
+                canViewResponses = true;
+            }
+
+            @Override
+            public void onError(Throwable e) {
+                tvResponsesCount.setText(R.string.vt_vote_totals_error); // add a button for retry in future
+                icResponsesExpand.setVisibility(View.GONE);
+                cvResponseList.setClickable(false);
+
+                if (e instanceof ApiCallException) {
+                    if (NetworkUtils.CONNECT_ERROR.equals(e.getMessage())) {
+                        ErrorUtils.networkErrorSnackbar(mContainer, R.string.connect_error_view_task_snackbar,
+                            new View.OnClickListener() {
+                                @Override
+                                public void onClick(View v) {
+                                    setVoteResponseView();
+                                }
+                            });
+                    } else {
+                        Snackbar.make(mContainer, ErrorUtils.serverErrorText(((ApiCallException) e).errorTag),
+                            Snackbar.LENGTH_SHORT).show();
+                    }
+                }
+            }
+
+            @Override
+            public void onCompleted() { }
+        });
+
+    }
+
+    private void setUpToDoAssignedMemberView() {
+        memberListAdapter = new MemberListAdapter(getActivity(), true);
+        rcResponseList.setLayoutManager(new LinearLayoutManager(getContext()));
+        rcResponseList.setAdapter(memberListAdapter);
+
+        TaskService.getInstance().fetchAssignedMembers(taskUid).subscribe(new Subscriber<List<Member>>() {
+            @Override
+            public void onNext(List<Member> members) {
+                if (!members.isEmpty()) {
+                    Log.e(TAG, "returned these members : " + members.toString());
+                    memberListAdapter.setMembers(members);
+                    canViewResponses = true;
+                    tvResponsesCount.setText(R.string.vt_todo_members_assigned);
+                } else {
+                    tvResponsesCount.setText(R.string.vt_todo_group_assigned);
+                    icResponsesExpand.setVisibility(View.GONE);
+                    cvResponseList.setClickable(false);
+                }
+            }
+
+            @Override
+            public void onError(Throwable e) {
+                tvResponsesCount.setText(R.string.vt_todo_assigned_error);
+                icResponsesExpand.setVisibility(View.GONE);
+                cvResponseList.setClickable(false);
+
+                if (e instanceof ApiCallException) {
+                    if (NetworkUtils.CONNECT_ERROR.equals(e.getMessage())) {
+                        ErrorUtils.networkErrorSnackbar(mContainer, R.string.connect_error_view_task_snackbar,
+                            new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                setUpToDoAssignedMemberView();
+                            }
+                        });
+                    } else {
+                        Snackbar.make(mContainer, ErrorUtils.serverErrorText(((ApiCallException) e).errorTag), Snackbar.LENGTH_SHORT)
+                            .show();
+                    }
+                }
+            }
+
+            @Override
+            public void onCompleted() { }
+        });
     }
 
     private void setUpViews(TaskModel task) {
@@ -407,7 +552,7 @@ public class ViewTaskFragment extends Fragment {
             btModifyTask.setText(R.string.vt_todo_modify);
             btCancelTask.setVisibility(View.GONE);
         }
-        setUpAssignedMembersView();
+        setUpToDoAssignedMemberView();
     }
 
     private void diminishResponseCard() {
@@ -484,43 +629,6 @@ public class ViewTaskFragment extends Fragment {
     }
 
 
-    private void setUpAssignedMembersView() {
-
-        memberListAdapter = new MemberListAdapter(getActivity(), true);
-        rcResponseList.setLayoutManager(new LinearLayoutManager(getContext()));
-        rcResponseList.setAdapter(memberListAdapter);
-
-        if (NetworkUtils.isOnline(getContext())) {
-            GrassrootRestService.getInstance()
-                    .getApi()
-                    .getTodoAssigned(phoneNumber, code, taskUid)
-                    .enqueue(new Callback<MemberList>() {
-                        @Override
-                        public void onResponse(Call<MemberList> call, Response<MemberList> response) {
-                            if (response.isSuccessful()) {
-                                List<Member> members = response.body().getMembers();
-                                if (!members.isEmpty()) {
-                                    memberListAdapter.addMembers(response.body().getMembers());
-                                    canViewResponses = true;
-                                    tvResponsesCount.setText(R.string.vt_todo_members_assigned);
-                                } else {
-                                    tvResponsesCount.setText(R.string.vt_todo_group_assigned);
-                                    icResponsesExpand.setVisibility(View.GONE);
-                                    cvResponseList.setClickable(false);
-                                }
-                            } else {
-                                //todo handle this error
-                            }
-                        }
-
-                        @Override
-                        public void onFailure(Call<MemberList> call, Throwable t) {
-                            handleNoNetwork("ASSIGNED_MEMBERS");
-                        }
-                    });
-        }
-    }
-
     private void handleSuccessfulReply(TaskModel task, String reply) {
         ErrorUtils.showSnackBar(mContainer, snackBarMsg(reply),
                 Snackbar.LENGTH_SHORT); // todo: rename error utils)
@@ -541,56 +649,29 @@ public class ViewTaskFragment extends Fragment {
 
     private void handleSavedOffline(String action) {
         // todo : change message displayed here
-        handleNoNetwork(action);
+        handleNoNetworkResponse(action, R.string.error_no_network);
     }
 
-    private void handleNoNetwork(final String retryTag) {
-        ErrorUtils.connectivityError(getActivity(), R.string.error_no_network,
+    private void handleNoNetworkResponse(final String retryTag, int snackbarMsg) {
+        ErrorUtils.connectivityError(getActivity(), snackbarMsg,
                 new NetworkErrorDialogListener() {
                     @Override
                     public void retryClicked() {
                         switch (retryTag) {
-                            case "FETCH":
-                                retrieveTaskDetails();
-                                break;
                             case "RESPOND_YES":
                                 doRespondYes();
                                 break;
                             case "RESPOND_NO":
                                 doRespondNo();
                                 break;
-                            case "MTG_RSVP":
-                                setMeetingRsvpView();
-                                break;
-                            case "VOTE_TOTALS":
-                                setVoteResponseView();
-                                break;
                             case "COMPLETE_TODO":
                                 completeTodo();
                                 break;
-                            case "ASSIGNED_MEMBERS":
-                                setUpAssignedMembersView();
                             default:
-                                retrieveTaskDetails();
+                                fetchTaskDetailsFromNetwork();
                         }
                     }
                 });
-    }
-
-    private void handleUnknownError(Response<TaskResponse> response) {
-        ErrorUtils.showSnackBar(mContainer, R.string.error_generic, Snackbar.LENGTH_LONG);
-    }
-
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-        EventBus.getDefault().unregister(this);
-    }
-
-    @Subscribe
-    public void onTaskUpdated(TaskUpdatedEvent event) {
-        TaskModel updatedTask = event.getTask();
-        setUpViews(updatedTask);
     }
 
     // todo : consider shifting these into a map? but maybe better to rely on processor than clog memory
@@ -611,90 +692,9 @@ public class ViewTaskFragment extends Fragment {
     }
 
     /*
-    SECTION : HANDLING DETAILS ON RSVP LIST, VOTE TOTALS, ETC.
-    todo : switch these to Rx
+    SECTION : VIEWINGDETAILS ON RSVP LIST, VOTE TOTALS, ETC.
      */
 
-    private void setMeetingRsvpView() {
-
-        // have to do this here, as must be on main thread or won't draw
-        mtgRsvpAdapter = new MtgRsvpAdapter();
-        rcResponseList.setLayoutManager(new LinearLayoutManager(getContext()));
-        rcResponseList.setAdapter(mtgRsvpAdapter);
-        if (NetworkUtils.isOnline(getContext())) {
-            GrassrootRestService.getInstance()
-                    .getApi()
-                    .fetchMeetingRsvps(phoneNumber, code, taskUid)
-                    .enqueue(new Callback<RsvpListModel>() {
-                        @Override
-                        public void onResponse(Call<RsvpListModel> call, Response<RsvpListModel> response) {
-                            if (response.isSuccessful()) {
-                                RsvpListModel rsvps = response.body();
-                                tvResponsesCount.setText(String.format(getString(R.string.vt_mtg_response_count),
-                                        rsvps.getNumberInvited(), rsvps.getNumberYes()));
-                                if (rsvps.isCanViewRsvps()) {
-                                    icResponsesExpand.setVisibility(View.VISIBLE);
-                                    mtgRsvpAdapter.setMapOfResponses(rsvps.getRsvpResponses());
-                                    canViewResponses = true;
-                                } else {
-                                    icResponsesExpand.setVisibility(View.GONE);
-                                }
-                            } else {
-                                final String errorMsg = ErrorUtils.serverErrorText(response.errorBody(), getContext());
-                                Snackbar.make(mContainer, errorMsg, Snackbar.LENGTH_SHORT).show();
-                            }
-                        }
-
-                        @Override
-                        public void onFailure(Call<RsvpListModel> call, Throwable t) {
-                            handleNoNetwork("MTG_RSVP");
-                        }
-                    });
-        }
-    }
-
-    private void setVoteResponseView() {
-        tvResponsesCount.setText(task.getDeadlineDate().after(new Date()) ? R.string.vt_vote_count_open
-                : R.string.vt_vote_count_closed);
-        if (NetworkUtils.isOnline(getContext())) {
-            GrassrootRestService.getInstance()
-                    .getApi()
-                    .fetchVoteTotals(phoneNumber, code, taskUid)
-                    .enqueue(new Callback<ResponseTotalsModel>() {
-                        @Override
-                        public void onResponse(Call<ResponseTotalsModel> call,
-                                               Response<ResponseTotalsModel> response) {
-                            if (response.isSuccessful()) {
-                                ResponseTotalsModel totals = response.body();
-                                displayVoteTotals(totals);
-                                canViewResponses = true;
-                            } else {
-                                final String errorMsg = ErrorUtils.serverErrorText(response.errorBody(), getContext());
-                                Snackbar.make(mContainer, errorMsg, Snackbar.LENGTH_SHORT).show();
-                            }
-                        }
-
-                        @Override
-                        public void onFailure(Call<ResponseTotalsModel> call, Throwable t) {
-                            handleNoNetwork("VOTE_TOTALS");
-                        }
-                    });
-        }
-    }
-
-    private void displayVoteTotals(ResponseTotalsModel model) {
-        TextView tvYes = (TextView) llVoteResponseDetails.findViewById(R.id.count_yes);
-        TextView tvNo = (TextView) llVoteResponseDetails.findViewById(R.id.count_no);
-        TextView tvAbstain = (TextView) llVoteResponseDetails.findViewById(R.id.count_abstain);
-        TextView tvNoResponse = (TextView) llVoteResponseDetails.findViewById(R.id.count_no_response);
-
-        tvYes.setText(String.valueOf(model.getYes()));
-        tvNo.setText(String.valueOf(model.getNo()));
-        tvAbstain.setText(String.valueOf(model.getAbstained()));
-        tvNoResponse.setText(String.valueOf(model.getNumberNoReply())); // todo : change this
-    }
-
-    // do we want animation? seems expensive, for little gain, here. maybe, when polish this in general
     @OnClick(R.id.vt_cv_response_list)
     public void slideOutDetails() {
         Log.e(TAG, "viewing responses!");
@@ -714,8 +714,6 @@ public class ViewTaskFragment extends Fragment {
     }
 
     public void toggleResponseList() {
-        Log.d(TAG, "toggling recycler view, should have items : " + rcResponseList.getAdapter()
-                .getItemCount());
         if (rcResponseList.getVisibility() != View.VISIBLE) {
             rcResponseList.setVisibility(View.VISIBLE);
             icResponsesExpand.setImageResource(R.drawable.ic_arrow_up);
@@ -726,7 +724,6 @@ public class ViewTaskFragment extends Fragment {
     }
 
     public void toggleVoteDetails() {
-        Log.e(TAG, "toggling vote details!");
         if (llVoteResponseDetails.getVisibility() != View.VISIBLE) {
             llVoteResponseDetails.setVisibility(View.VISIBLE);
             icResponsesExpand.setImageResource(R.drawable.ic_arrow_up);
@@ -766,11 +763,11 @@ public class ViewTaskFragment extends Fragment {
     }
 
     private void cancelTask() {
-        progressDialog.show();
+        progressBar.setVisibility(View.VISIBLE);
         setUpCancelApiCall().enqueue(new Callback<GenericResponse>() {
             @Override
             public void onResponse(Call<GenericResponse> call, Response<GenericResponse> response) {
-                progressDialog.dismiss();
+                progressBar.setVisibility(View.GONE);
                 if (response.isSuccessful()) {
                     EventBus.getDefault().post(new TaskCancelledEvent(task));
                 } else {
@@ -832,6 +829,12 @@ public class ViewTaskFragment extends Fragment {
                 return R.string.vt_todo_done;
         }
         return -1;
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onTaskUpdated(TaskUpdatedEvent event) {
+        TaskModel updatedTask = event.getTask();
+        setUpViews(updatedTask);
     }
 
 
