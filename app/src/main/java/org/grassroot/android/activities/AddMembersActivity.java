@@ -24,6 +24,7 @@ import org.grassroot.android.models.Contact;
 import org.grassroot.android.models.Member;
 import org.grassroot.android.models.exceptions.ApiCallException;
 import org.grassroot.android.models.exceptions.InvalidNumberException;
+import org.grassroot.android.services.ContactService;
 import org.grassroot.android.services.GroupService;
 import org.grassroot.android.utils.Constant;
 import org.grassroot.android.utils.ErrorUtils;
@@ -43,6 +44,7 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 import rx.Subscriber;
+import rx.android.schedulers.AndroidSchedulers;
 import rx.functions.Action1;
 
 /**
@@ -64,6 +66,8 @@ public class AddMembersActivity extends AppCompatActivity implements
     private ContactSelectionFragment contactSelectionFragment;
     private HashMap<Integer, Member> membersFromContacts;
     private List<Member> manuallyAddedMembers;
+
+    private List<Contact> existingMemberContacts;
 
     private boolean onMainScreen;
     private boolean menuOpen;
@@ -133,7 +137,7 @@ public class AddMembersActivity extends AppCompatActivity implements
         RealmUtils.loadListFromDB(Member.class, validMemberMap).subscribe(
             new Action1<List<Member>>() {
                 @Override public void call(List<Member> members) {
-                    contactSelectionFragment = ContactSelectionFragment.newInstance(Contact.convertFromMembers(members), false);
+                    existingMemberContacts = Contact.convertFromMembers(members);
                     if (addFragment) {
                         getSupportFragmentManager().beginTransaction()
                             .add(R.id.am_existing_member_list_container, existingMemberListFragment)
@@ -207,14 +211,25 @@ public class AddMembersActivity extends AppCompatActivity implements
     }
 
     private void launchContactSelectionFragment() {
-        if (contactSelectionFragment != null) { // just in case we are still waiting for member list to be populated
-            onMainScreen = false;
-            toolbarTitle.setText(R.string.cs_title);
-            getSupportFragmentManager()
-                    .beginTransaction()
-                    .add(R.id.am_body_container, contactSelectionFragment)
-                    .addToBackStack(null)
-                    .commit();
+        if (existingMemberContacts != null) {
+            ContactService.getInstance().syncContactList(existingMemberContacts, false, AndroidSchedulers.mainThread())
+                .subscribe(new Action1<Boolean>() {
+                    @Override
+                    public void call(Boolean aBoolean) {
+                        onMainScreen = false;
+                        toolbarTitle.setText(R.string.cs_title);
+                        getSupportFragmentManager()
+                            .beginTransaction()
+                            .add(R.id.am_body_container, contactSelectionFragment)
+                            .addToBackStack(null)
+                            .commit();
+                    }
+                }, new Action1<Throwable>() {
+                    @Override
+                    public void call(Throwable throwable) {
+                        // todo : show a snackbar or a dialogue with an error
+                    }
+                });
         }
     }
 
@@ -243,7 +258,7 @@ public class AddMembersActivity extends AppCompatActivity implements
                 selectedMembers.add(membersFromContacts.get(c.id));
             } else {
                 Member m = new Member(UUID.randomUUID().toString(), groupUid, c.selectedMsisdn, c.getDisplayName(),
-                    GroupConstants.ROLE_ORDINARY_MEMBER, c.id, true);
+                    GroupConstants.ROLE_ORDINARY_MEMBER, c.id, c.version, true);
                 m.setLocal(true);
                 membersFromContacts.put(c.id, m);
                 selectedMembers.add(m);
@@ -262,7 +277,7 @@ public class AddMembersActivity extends AppCompatActivity implements
             if (requestCode == NavigationConstants.MANUAL_MEMBER_ENTRY) {
                 final String newUid = UUID.randomUUID().toString();
                 Member newMember = new Member(newUid, groupUid, data.getStringExtra("selectedNumber"),
-                    data.getStringExtra("name"), GroupConstants.ROLE_ORDINARY_MEMBER, -1, true);
+                    data.getStringExtra("name"), GroupConstants.ROLE_ORDINARY_MEMBER, -1, -1, true);
                 newMember.setLocal(true);
                 manuallyAddedMembers.add(newMember);
                 newMemberListFragment.addMembers(Collections.singletonList(newMember));

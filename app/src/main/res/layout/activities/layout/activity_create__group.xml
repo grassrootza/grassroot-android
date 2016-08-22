@@ -96,9 +96,7 @@
 
                         </android.support.design.widget.TextInputLayout>
 
-
                         <android.support.design.widget.TextInputLayout
-
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:theme="@style/TextLabel"
@@ -158,7 +156,6 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:id="@+id/cg_new_member_list_container">
-
                 </RelativeLayout>
 
             </LinearLayout>
@@ -226,7 +223,6 @@
 
         </android.support.design.widget.CoordinatorLayout>
 
-
         <Button
             android:id="@+id/cg_bt_save"
             android:layout_width="match_parent"
@@ -243,6 +239,13 @@
             />
 
     </RelativeLayout>
+
+    <ProgressBar
+        android:id="@+id/progressBar"
+        style="@style/ProgressBarMedium"
+        android:visibility="gone"
+        android:layout_centerVertical="true"
+        android:layout_centerHorizontal="true" />
 
 </RelativeLayout>
 

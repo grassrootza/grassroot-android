@@ -27,6 +27,8 @@ public class Member extends RealmObject implements Parcelable {
   private String roleName;
 
   private int contactId; // only set locally, if we retrieve member from contacts
+  private int contactVersion; // as above
+
   private boolean selected;
   private boolean isLocal;
 
@@ -49,6 +51,7 @@ public class Member extends RealmObject implements Parcelable {
     dest.writeInt(this.selected ? 1 : 0);
     dest.writeInt(this.isLocal ? 1 : 0);
     dest.writeInt(this.contactId);
+    dest.writeInt(this.contactVersion);
     dest.writeInt(this.isNumberInvalid ? 1 : 0);
   }
 
@@ -62,11 +65,12 @@ public class Member extends RealmObject implements Parcelable {
     selected = incoming.readInt() != 0;
     isLocal = incoming.readInt() != 0;
     contactId = incoming.readInt();
+    contactVersion = incoming.readInt();
     isNumberInvalid = incoming.readInt() != 0;
   }
 
   public Member(String memberUid, String parentUid, String phoneNumber, String displayName,
-                String roleName, int contactId, boolean selected) {
+                String roleName, int contactId, int contactVersion, boolean selected) {
     this.memberUid = memberUid;
     this.groupUid = parentUid;
     this.memberGroupUid = memberUid + parentUid;
@@ -136,6 +140,8 @@ public class Member extends RealmObject implements Parcelable {
   public void setContactId(int contactId) {
     this.contactId = contactId;
   }
+
+  public int getContactVersion() { return contactVersion; }
 
   public boolean isSelected() {
     return selected;

@@ -83,6 +83,7 @@
     <string name="input_error_try_again">Try again</string>
 
     <string name="process_error_image">Sorry, something went wrong processing the image. Please try again</string>
+    <string name="process_error_loading_contacts">Sorry, we couldn\'t load your contacts. Please try again or restart.</string>
 
     <string name="INVALID_TOKEN">Sorry, wrong code. Please check again and re-enter.</string> <!-- todo : refactor this as others -->
 

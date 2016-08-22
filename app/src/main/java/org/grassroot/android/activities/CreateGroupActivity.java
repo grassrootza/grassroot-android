@@ -5,6 +5,7 @@ import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.design.widget.TextInputEditText;
@@ -14,6 +15,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.LinearLayout;
+import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
@@ -28,6 +30,7 @@ import org.grassroot.android.models.Group;
 import org.grassroot.android.models.Member;
 import org.grassroot.android.models.exceptions.ApiCallException;
 import org.grassroot.android.models.exceptions.InvalidNumberException;
+import org.grassroot.android.services.ContactService;
 import org.grassroot.android.services.GroupService;
 import org.grassroot.android.utils.Constant;
 import org.grassroot.android.utils.ErrorUtils;
@@ -69,6 +72,8 @@ public class CreateGroupActivity extends PortraitActivity implements ContactSele
   @BindView(R.id.et_group_description) TextInputEditText et_group_description;
 
   @BindView(R.id.cg_bt_save) Button save;
+
+  @BindView(R.id.progressBar) ProgressBar progressBar;
 
   private List<Member> manuallyAddedMembers;
   private Map<Integer, Member> mapMembersContacts;
@@ -119,7 +124,7 @@ public class CreateGroupActivity extends PortraitActivity implements ContactSele
   }
 
   private void init() {
-    contactSelectionFragment = ContactSelectionFragment.newInstance(null, false);
+    contactSelectionFragment = new ContactSelectionFragment();
     mapMembersContacts = new HashMap<>();
     manuallyAddedMembers = new ArrayList<>();
     onMainScreen = true;
@@ -172,14 +177,16 @@ public class CreateGroupActivity extends PortraitActivity implements ContactSele
     }
   }
 
-  @OnClick(R.id.cg_add_member_options) public void toggleAddMenu() {
+  @OnClick(R.id.cg_add_member_options)
+  public void toggleAddMenu() {
     addMemberOptions.setImageResource(menuOpen ? R.drawable.ic_add : R.drawable.ic_add_45d);
     addMemberFromContacts.setVisibility(menuOpen ? View.GONE : View.VISIBLE);
     addMemberManually.setVisibility(menuOpen ? View.GONE : View.VISIBLE);
     menuOpen = !menuOpen;
   }
 
-  @OnClick(R.id.ll_add_member_contacts) public void icon_add_from_contacts() {
+  @OnClick(R.id.ll_add_member_contacts)
+  public void icon_add_from_contacts() {
     toggleAddMenu();
     if (!PermissionUtils.contactReadPermissionGranted(this)) {
       PermissionUtils.requestReadContactsPermission(this);
@@ -189,8 +196,8 @@ public class CreateGroupActivity extends PortraitActivity implements ContactSele
   }
 
   @Override
-  public void onRequestPermissionsResult(int requestCode, String[] permissions,
-      int[] grantResults) {
+  public void onRequestPermissionsResult(int requestCode, @NonNull  String[] permissions,
+      @NonNull  int[] grantResults) {
     super.onRequestPermissionsResult(requestCode, permissions, grantResults);
     if (PermissionUtils.checkContactsPermissionGranted(requestCode, grantResults)) {
       launchContactSelectionFragment();
@@ -198,11 +205,26 @@ public class CreateGroupActivity extends PortraitActivity implements ContactSele
   }
 
   private void launchContactSelectionFragment() {
-    onMainScreen = false;
-    getSupportFragmentManager().beginTransaction()
-        .add(R.id.cg_body_root, contactSelectionFragment)
-        .addToBackStack(null)
-        .commitAllowingStateLoss(); // todo : clean this up in a less hacky way (known issue w/ support lib and Android 6+, need to do an onResume check or similar)
+    progressBar.setVisibility(View.VISIBLE);
+    ContactService.getInstance().syncContactList(null, false, AndroidSchedulers.mainThread())
+        .subscribe(new Action1<Boolean>() {
+          @Override
+          public void call(Boolean aBoolean) {
+            onMainScreen = false;
+            progressBar.setVisibility(View.GONE);
+            if (contactSelectionFragment != null) {
+              getSupportFragmentManager().beginTransaction()
+                  .add(R.id.cg_body_root, contactSelectionFragment)
+                  .addToBackStack(null)
+                  .commit();
+            }
+          }
+        }, new Action1<Throwable>() {
+          @Override
+          public void call(Throwable throwable) {
+            Snackbar.make(rlCgRoot, R.string.process_error_loading_contacts, Snackbar.LENGTH_LONG);
+          }
+        });
   }
 
   private void closeContactSelectionFragment() {
@@ -218,7 +240,7 @@ public class CreateGroupActivity extends PortraitActivity implements ContactSele
         selectedMembers.add(mapMembersContacts.get(c.id));
       } else {
         Member m = new Member(UUID.randomUUID().toString(), groupUid, c.selectedMsisdn,
-            c.getDisplayName(), GroupConstants.ROLE_ORDINARY_MEMBER, c.id, true);
+            c.getDisplayName(), GroupConstants.ROLE_ORDINARY_MEMBER, c.id, -1, true);
         m.setLocal(true);
         RealmUtils.saveDataToRealmWithSubscriber(m);
         selectedMembers.add(m);
@@ -266,7 +288,7 @@ public class CreateGroupActivity extends PortraitActivity implements ContactSele
     if (resultCode == Activity.RESULT_OK && data != null) {
       if (requestCode == NavigationConstants.MANUAL_MEMBER_ENTRY) {
         Member newMember = new Member(UUID.randomUUID().toString(), groupUid, data.getStringExtra("selectedNumber"),
-            data.getStringExtra("name"), GroupConstants.ROLE_ORDINARY_MEMBER, -1, true);
+            data.getStringExtra("name"), GroupConstants.ROLE_ORDINARY_MEMBER, -1, -1, true);
         newMember.setLocal(true);
         manuallyAddedMembers.add(newMember);
         memberListFragment.addMembers(Collections.singletonList(newMember));

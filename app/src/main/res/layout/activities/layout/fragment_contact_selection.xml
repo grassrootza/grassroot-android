@@ -3,7 +3,7 @@
                 android:layout_height="match_parent"
                 android:id="@+id/contact_selection_root">
 
-    <ListView
+    <android.support.v7.widget.RecyclerView
         android:id="@+id/cs_list_view"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
