@@ -1,38 +1,30 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
               xmlns:tools="http://schemas.android.com/tools"
               android:layout_width="match_parent"
               android:layout_height="wrap_content"
-              android:orientation="horizontal"
+              style="@style/MemberListItemRow"
               tools:ignore="UnusedAttribute">
 
-    <!--just a background view for the header, so that it won't interfere with the headers changes and row-clicking-->
-
-    <RelativeLayout
+    <TextView
+        android:id="@+id/tv_person_name"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        style="@style/MemberListItemRow">
+        android:layout_alignParentTop="true"
+        android:layout_alignParentLeft="true"
+        android:layout_marginLeft="@dimen/margin_large"
+        android:layout_marginRight="@dimen/margin_large"
+        android:textColor="@color/black"
+        android:textSize="@dimen/txt_large"
+        tools:text="name" />
 
-        <TextView
-            android:id="@+id/tv_person_name"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_alignParentTop="true"
-            android:text="name"
-            android:textColor="@android:color/black"
-            android:textSize="18sp" />
+    <ImageView
+        android:id="@+id/iv_Selected"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentRight="true"
+        android:layout_centerVertical="true"
+        android:src="@drawable/btn_unchecked"
+        android:layout_marginRight="20dp"/>
 
-
-        <ImageView
-            android:id="@+id/iv_Selected"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignParentRight="true"
-            android:layout_centerVertical="true"
-            android:src="@drawable/btn_unchecked"
-            android:layout_marginRight="20dp"
-
-            />
-    </RelativeLayout>
-
-</LinearLayout>
+</RelativeLayout>

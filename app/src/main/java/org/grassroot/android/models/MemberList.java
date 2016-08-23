@@ -2,21 +2,23 @@ package org.grassroot.android.models;
 
 import com.google.gson.annotations.SerializedName;
 
-import io.realm.RealmList;
-import io.realm.RealmObject;
 import java.util.ArrayList;
 import java.util.List;
+
+import io.realm.RealmList;
 
 /**
  * Created by luke on 2016/05/05.
  * todo: superclass some of these, like status, code
  */
-public class MemberList extends RealmObject{
+public class MemberList {
+
     private String status;
     private Integer code;
     private String message;
+
     @SerializedName("data")
-    private RealmList<Member> members = new RealmList<>();
+    private List<Member> members = new ArrayList<>();
 
     // GETTERS
 

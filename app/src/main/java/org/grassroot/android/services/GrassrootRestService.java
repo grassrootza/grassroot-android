@@ -366,18 +366,11 @@ public class GrassrootRestService {
         @Path("code") String code,
         @Query("response") String response);
 
-    //complete logbook
-    @GET("logbook/complete/{phoneNumber}/{code}/{id}")
+    //complete todo
+    @GET("todo/complete/{phoneNumber}/{code}/{id}")
     Call<TaskResponse> completeTodo(@Path("phoneNumber") String phoneNumber,
         @Path("code") String code,
         @Path("id") String todoId);
-
-    //get logbook assigned
-    @GET("logbook/assigned/{phoneNumber}/{code}/{uid}")
-    Call<MemberList> getTodoAssigned(@Path("phoneNumber") String phoneNumber,
-        @Path("code") String code,
-        @Path("uid") String todoId);
-
 
         /*
         SECTION : CREATE TASKS
@@ -405,7 +398,7 @@ public class GrassrootRestService {
 
 
     // create to-do
-    @POST("logbook/create/{phoneNumber}/{code}/{parentUid}")
+    @POST("todo/create/{phoneNumber}/{code}/{parentUid}")
     Call<TaskResponse> createTodo(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
         @Path("parentUid") String parentUid, @Query("title") String title,
         @Query("description") String description,
@@ -435,15 +428,15 @@ public class GrassrootRestService {
         @Query("startTime") String startTime,
         @Query("members") List<String> assignedMemberUids);
 
-    //edit logbook
-    @POST("logbook/update/{phoneNumber}/{code}/{uid}")
+    //edit action
+    @POST("todo/update/{phoneNumber}/{code}/{uid}")
     Call<TaskResponse> editTodo(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
         @Query("title") String title,
         @Query("dueDate") String dueDate,
         @Query("members") Set<String> membersAssigned);
 
     @GET("task/assigned/{phoneNumber}/{code}/{taskUid}/{taskType}")
-    Call<List<Member>> fetchAssignedMembers(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
+    Call<MemberList> fetchAssignedMembers(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
         @Path("taskUid") String taskUid, @Path("taskType") String taskType);
 
     //cancel meeting

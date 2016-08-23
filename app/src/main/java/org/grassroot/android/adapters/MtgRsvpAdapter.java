@@ -46,7 +46,7 @@ public class MtgRsvpAdapter extends RecyclerView.Adapter<MtgRsvpAdapter.ViewHold
 
     @Override
     public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        View item = LayoutInflater.from(parent.getContext()).inflate(R.layout.listview_mtg_rsvp, parent, false);
+        View item = LayoutInflater.from(parent.getContext()).inflate(R.layout.row_meeting_rsvp, parent, false);
         return new ViewHolder(item);
     }
 

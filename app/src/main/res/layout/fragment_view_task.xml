@@ -162,6 +162,7 @@
                 android:layout_below="@id/vt_cv_respond"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:background="@color/md_grey_50"
                 card_view:cardElevation="2dp">
 
                 <RelativeLayout
@@ -190,7 +191,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_below="@id/vt_responses_count"
-                        tools:listitem="@layout/listview_mtg_rsvp"
+                        tools:listitem="@layout/row_meeting_rsvp"
                         android:visibility="gone">
 
                     </android.support.v7.widget.RecyclerView>

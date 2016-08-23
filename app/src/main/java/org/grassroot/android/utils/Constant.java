@@ -1,6 +1,8 @@
 package org.grassroot.android.utils;
 
 import org.grassroot.android.BuildConfig;
+import org.grassroot.android.R;
+import org.grassroot.android.services.ApplicationLoader;
 
 import java.text.SimpleDateFormat;
 
@@ -15,9 +17,12 @@ public class Constant {
     public static long mediumDelay = 500L;
     public static final SimpleDateFormat isoDateTimeSDF = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
 
-    public static final String productionUrl = "https://app.grassroot.org.za/api/";
-    public static final String stagingUrl = "https://staging.grassroot.org.za/api/";
-    public static final String localUrl = "http://10.0.2.2:8080/api/";
+    public static final String productionUrl = ApplicationLoader.applicationContext
+        .getString(R.string.production_url);
+    public static final String stagingUrl = ApplicationLoader.applicationContext
+        .getString(R.string.staging_url);
+    public static final String localUrl = ApplicationLoader.applicationContext
+        .getString(R.string.local_url);
 
     public static final String restUrl = BuildConfig.BUILD_TYPE.equals("debug") ? localUrl
             : BuildConfig.FLAVOR.equals(PROD) ? productionUrl : stagingUrl;

@@ -62,6 +62,9 @@
             <TextView
                 style="@style/MemberListHeader"
                 android:id="@+id/lm_tv_existing_members_title"
+                android:layout_marginLeft="@dimen/padding_card_left"
+                android:layout_marginRight="@dimen/padding_card_left"
+                android:textStyle="bold"
                 android:text="@string/member_list_default_header" />
 
             <LinearLayout
@@ -95,6 +98,8 @@
             <RelativeLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginLeft="@dimen/padding_card_left"
+                android:layout_marginRight="@dimen/padding_card_left"
                 android:id="@+id/lm_member_list_container">
             </RelativeLayout>
 

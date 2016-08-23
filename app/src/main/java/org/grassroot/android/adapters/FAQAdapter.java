@@ -134,14 +134,12 @@ public class FAQAdapter extends BaseExpandableListAdapter {
     @Override
     public View getChildView(int groupPosition, int childPosition, boolean isLastChild, View convertView, ViewGroup parent) {
 
-
         ViewHolder viewHolder = null;
         final String childText = (String) getChild(groupPosition, childPosition);
 
-
         if (convertView == null) {
             viewHolder = new ViewHolder();
-            convertView = inflater.inflate(R.layout.list_child, null);
+            convertView = inflater.inflate(R.layout.row_faq_detail, null);
             viewHolder.txt_txtListChild = (TextView) convertView.findViewById(R.id.txt_list_child);
             convertView.setTag(viewHolder);
         } else {
@@ -149,10 +147,7 @@ public class FAQAdapter extends BaseExpandableListAdapter {
         }
         viewHolder.txt_txtListChild.setText(childText);
 
-
-      /*  Animation animation = AnimationUtils.loadAnimation(this._context, (childPosition > lastPosition) ? R.anim.up_from_bottom : R.anim.down_from_top);
-        convertView.startAnimation(animation);
-     */   lastPosition = childPosition;
+        lastPosition = childPosition;
 
         return convertView;
 

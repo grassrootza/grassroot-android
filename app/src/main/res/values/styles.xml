@@ -157,10 +157,8 @@
     </style>
 
     <style name="MemberListItemRow">
-        <item name="android:paddingTop">10dp</item>
-        <item name="android:paddingLeft">16dp</item>
-        <item name="android:paddingBottom">10dp</item>
-        <item name="android:paddingRight">26dp</item>
+        <item name="android:paddingTop">@dimen/padding_card_left</item>
+        <item name="android:paddingBottom">@dimen/padding_card_left</item>
     </style>
 
     <style name="MemberListItemNameText">

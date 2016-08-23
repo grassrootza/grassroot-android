@@ -34,6 +34,7 @@ import org.grassroot.android.interfaces.NavigationConstants;
 import org.grassroot.android.interfaces.NetworkErrorDialogListener;
 import org.grassroot.android.interfaces.TaskConstants;
 import org.grassroot.android.models.Member;
+import org.grassroot.android.models.MemberList;
 import org.grassroot.android.models.TaskModel;
 import org.grassroot.android.models.TaskResponse;
 import org.grassroot.android.services.ApplicationLoader;
@@ -203,18 +204,18 @@ public class EditTaskFragment extends Fragment implements DatePickerDialog.OnDat
         } else {
             GrassrootRestService.getInstance().getApi().fetchAssignedMembers(
                     RealmUtils.loadPreferencesFromDB().getMobileNumber(), RealmUtils.loadPreferencesFromDB().getToken(),
-                    task.getTaskUid(), taskType).enqueue(new Callback<List<Member>>() {
+                    task.getTaskUid(), taskType).enqueue(new Callback<MemberList>() {
                 @Override
-                public void onResponse(Call<List<Member>> call, Response<List<Member>> response) {
+                public void onResponse(Call<MemberList> call, Response<MemberList> response) {
                     if (response.isSuccessful()) {
-                        selectedMembers = response.body();
+                        selectedMembers = response.body().getMembers();
                     } else {
                         selectedMembers = new ArrayList<>();
                     }
                 }
 
                 @Override
-                public void onFailure(Call<List<Member>> call, Throwable t) {
+                public void onFailure(Call<MemberList> call, Throwable t) {
                     selectedMembers = new ArrayList<>();
                 }
             });

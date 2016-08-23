@@ -88,6 +88,7 @@
                     style="@style/MemberListHeader"
                     android:id="@+id/tv_am_new_members_title"
                     android:visibility="gone"
+                    android:textStyle="bold"
                     android:text="@string/member_list_new_members_header" />
 
                 <RelativeLayout
@@ -96,9 +97,15 @@
                     android:id="@+id/am_new_member_list_container">
                 </RelativeLayout>
 
+                <View
+                    android:id="@+id/member_list_separator"
+                    android:visibility="gone"
+                    style="@style/SettingsSeparator" />
+
                 <TextView
                     style="@style/MemberListHeader"
                     android:id="@+id/tv_am_existing_members_title"
+                    android:textStyle="bold"
                     android:text="@string/member_list_default_header" />
 
                 <RelativeLayout

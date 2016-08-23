@@ -63,6 +63,8 @@
     <string name="connect_error_group_default">The connection isn\'t working, but we saved the change and will upload next time
     you\'re connected</string>
     <string name="connect_error_view_task_snackbar">We couldn\'t connect to fetch all details, we\'ve displayed what we can</string>
+    <string name="connect_error_task_responding">We couldn\'t connect now, but have saved the response and will send it when you
+    connect again</string>
 
     <string name="server_error_background_group_numbers">The group is created, but some numbers were invalid, please check the group and
     add them</string>
@@ -563,7 +565,7 @@
     <string name="vt_vote_no">no</string>
     <string name="vt_vote_snackbar_yes">Done! You voted yes</string>
     <string name="vt_vote_snackbar_no">Okay, we marked your vote as no</string>
-    <string name="vt_vote_count_closed">View results</string>
+    <string name="vt_vote_count_closed">View vote results</string>
     <string name="vt_vote_count_open">Results so far</string>
     <string name="vt_row_yes">Voted yes</string>
     <string name="vt_row_no">Voted no</string>
@@ -580,7 +582,7 @@
     <string name="vt_todo_overdue">The action is overdue</string>
     <string name="vt_todo_completed">The action was completed</string>
     <string name="vt_todo_pending">The action is pending</string>
-    <string name="vt_todo_members_assigned">Members assigned</string>
+    <string name="vt_todo_members_assigned">View assigned members</string>
     <string name="vt_todo_group_assigned">Whole group assigned</string>
     <string name="vt_todo_assigned_error">Couldn\'t fetch who is assigned</string>
 

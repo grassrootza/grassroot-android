@@ -1,6 +1,5 @@
 package org.grassroot.android.adapters;
 
-import android.content.Context;
 import android.os.SystemClock;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.CardView;
@@ -17,7 +16,6 @@ import org.grassroot.android.R;
 import org.grassroot.android.interfaces.TaskConstants;
 import org.grassroot.android.models.TaskModel;
 import org.grassroot.android.services.ApplicationLoader;
-import org.w3c.dom.Text;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -204,7 +202,7 @@ public class TasksAdapter extends RecyclerView.Adapter<TasksAdapter.TaskViewHold
 
   private void setUpToDo(TaskViewHolder holder, final TaskModel task, final int position) {
     holder.iv1.setImageResource(R.drawable.ic_group_to_do_pending_inactive); //pending icon
-    holder.iv2.setImageResource(R.drawable.ic_vote_tick_inactive); //completed icon
+    holder.iv2.setImageResource(R.drawable.respond_confirm_inactive); //completed icon
     holder.iv3.setImageResource(R.drawable.ic_group_to_do_overdue_inactive); //overdue icon
 
     if (task.isCanMarkCompleted()) setResponseListener(holder.iv2, task, "COMPLETED", position);
@@ -216,7 +214,7 @@ public class TasksAdapter extends RecyclerView.Adapter<TasksAdapter.TaskViewHold
         holder.iv1.setImageResource(R.drawable.ic_group_to_do_pending);
         break;
       case TaskConstants.TODO_DONE:
-        holder.iv2.setImageResource(R.drawable.ic_vote_tick_active);
+        holder.iv2.setImageResource(R.drawable.respond_confirm_active);
         break;
       case TaskConstants.TODO_OVERDUE:
         holder.iv3.setImageResource(R.drawable.ic_group_to_do_overdue);
@@ -226,7 +224,7 @@ public class TasksAdapter extends RecyclerView.Adapter<TasksAdapter.TaskViewHold
 
   private void setUpVoteOrMeeting(TaskViewHolder holder, final TaskModel task, final int position) {
     holder.iv1.setImageResource(
-        task.hasResponded() ? R.drawable.ic_vote_tick_active : R.drawable.ic_vote_tick_inactive);
+        task.hasResponded() ? R.drawable.respond_confirm_active : R.drawable.respond_confirm_inactive);
     if (task.canAction()) {
       if (task.hasResponded()) {
         hasRespondedButCanAction(holder, task, position);
@@ -244,9 +242,9 @@ public class TasksAdapter extends RecyclerView.Adapter<TasksAdapter.TaskViewHold
     boolean repliedNo = model.respondedNo();
 
     holder.iv2.setImageResource(
-        repliedYes ? R.drawable.ic_vote_active : R.drawable.ic_vote_inactive);
+        repliedYes ? R.drawable.respond_yes_active : R.drawable.respond_yes_inactive);
     holder.iv3.setImageResource(
-        repliedNo ? R.drawable.ic_no_vote_active : R.drawable.ic_no_vote_inactive);
+        repliedNo ? R.drawable.respond_no_active : R.drawable.respond_no_inactive);
 
     if (model.isCanRespondYes()) {
       setResponseListener(holder.iv2, model, "Yes", position);
@@ -264,8 +262,8 @@ public class TasksAdapter extends RecyclerView.Adapter<TasksAdapter.TaskViewHold
   private void hasNotRespondedButCanAction(TaskViewHolder holder, final TaskModel model,
       final int position) {
     Log.d(TAG, "setting up micro interaction responses, for event : " + model.getTitle());
-    holder.iv3.setImageResource(R.drawable.ic_no_vote_inactive);
-    holder.iv2.setImageResource(R.drawable.ic_vote_inactive);
+    holder.iv3.setImageResource(R.drawable.respond_no_inactive);
+    holder.iv2.setImageResource(R.drawable.respond_yes_inactive);
     holder.iv3.setEnabled(true);
     holder.iv2.setEnabled(true);
     setResponseListener(holder.iv2, model, "Yes", position);
@@ -275,9 +273,9 @@ public class TasksAdapter extends RecyclerView.Adapter<TasksAdapter.TaskViewHold
   private void cannotRespond(TaskViewHolder holder, TaskModel model) {
     Log.d(TAG, "setting up icons for no response, for event: " + model.getTitle());
     holder.iv2.setImageResource(
-        model.respondedYes() ? R.drawable.ic_vote_active : R.drawable.ic_vote_inactive);
+        model.respondedYes() ? R.drawable.respond_yes_active : R.drawable.respond_yes_inactive);
     holder.iv3.setImageResource(
-        model.respondedNo() ? R.drawable.ic_no_vote_active : R.drawable.ic_no_vote_inactive);
+        model.respondedNo() ? R.drawable.respond_no_active : R.drawable.respond_no_inactive);
     holder.iv2.setEnabled(false);
     holder.iv3.setEnabled(false);
   }

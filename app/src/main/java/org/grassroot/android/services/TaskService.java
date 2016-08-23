@@ -1,6 +1,7 @@
 package org.grassroot.android.services;
 
 import android.text.TextUtils;
+import android.util.Log;
 
 import org.grassroot.android.events.TasksRefreshedEvent;
 import org.grassroot.android.interfaces.TaskConstants;
@@ -426,7 +427,7 @@ public class TaskService {
     }).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread());
   }
 
-  public Observable<List<Member>> fetchAssignedMembers(final String taskUid) {
+  public Observable<List<Member>> fetchAssignedMembers(final String taskUid, final String taskType) {
     return Observable.create(new Observable.OnSubscribe<List<Member>>() {
       @Override
       public void call(Subscriber<? super List<Member>> subscriber) {
@@ -435,7 +436,7 @@ public class TaskService {
           final String code = RealmUtils.loadPreferencesFromDB().getToken();
           try {
             Response<MemberList> response = GrassrootRestService.getInstance().getApi()
-                .getTodoAssigned(phoneNumber, code, taskUid).execute();
+                .fetchAssignedMembers(phoneNumber, code, taskUid, taskType).execute();
             if (response.isSuccessful()) {
               subscriber.onNext(response.body().getMembers());
               subscriber.onCompleted();
@@ -477,9 +478,9 @@ public class TaskService {
                     : competeTodo(task.getTaskUid(),phoneNumber,code, response);
             Response<TaskResponse> response = call.execute();
             if (response.isSuccessful()) {
+              Log.e(TAG, "saving this task to the DB ... " + response.body().getTasks().get(0).toString());
+              RealmUtils.saveDataToRealmSync(response.body().getTasks().get(0));
               subscriber.onNext(NetworkUtils.SAVED_SERVER);
-              RealmUtils.saveDataToRealmSync(response.body().getTasks().first());
-              // EventBus.getDefault().post(new TaskUpdatedEvent(response.body().getTasks().first())); // todo : check if need
             } else {
               throw new ApiCallException(NetworkUtils.SERVER_ERROR, ErrorUtils.getRestMessage(response.errorBody()));
             }

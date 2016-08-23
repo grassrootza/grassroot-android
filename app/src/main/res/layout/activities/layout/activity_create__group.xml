@@ -149,12 +149,14 @@
                 <TextView
                     style="@style/MemberListHeader"
                     android:id="@+id/tv_am_new_members_title"
-                    android:layout_marginLeft="10dp"
+                    android:layout_marginLeft="@dimen/padding_card_left"
                     android:text="@string/cg_member_list_header" />
 
                 <RelativeLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:layout_marginLeft="@dimen/padding_card_left"
+                    android:layout_marginRight="@dimen/padding_card_left"
                     android:id="@+id/cg_new_member_list_container">
                 </RelativeLayout>
 

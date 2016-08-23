@@ -83,6 +83,7 @@ public class AddMembersActivity extends AppCompatActivity implements
 
     @BindView(R.id.am_tv_groupname) TextView groupNameView;
     @BindView(R.id.tv_am_new_members_title) TextView newMembersTitle;
+    @BindView(R.id.member_list_separator) View separator;
 
     @BindView(R.id.am_new_member_list_container) RelativeLayout newMemberContainer;
     @BindView(R.id.am_existing_member_list_container) RelativeLayout existingMemberContainer;
@@ -251,7 +252,6 @@ public class AddMembersActivity extends AppCompatActivity implements
 
     @Override
     public void onContactSelectionComplete(List<Contact> contactsSelected) {
-        Long start = SystemClock.currentThreadTimeMillis();
         List<Member> selectedMembers = new ArrayList<>(manuallyAddedMembers);
         for (Contact c : contactsSelected) {
             if (membersFromContacts.containsKey(c.id)) {
@@ -265,8 +265,8 @@ public class AddMembersActivity extends AppCompatActivity implements
                 RealmUtils.saveDataToRealm(m);
             }
         }
+        setNewMembersVisible();
         newMemberListFragment.transitionToMemberList(selectedMembers);
-        Log.d(TAG, String.format("added contacts to fragment, in all took %d msecs", SystemClock.currentThreadTimeMillis() - start));
         closeContactSelectionFragment();
     }
 
@@ -295,6 +295,7 @@ public class AddMembersActivity extends AppCompatActivity implements
             newMembersTitle.setVisibility(View.VISIBLE);
             newMemberContainer.setVisibility(View.VISIBLE);
             existingMemberContainer.setVisibility(View.VISIBLE);
+            separator.setVisibility(View.VISIBLE);
             newMemberListStarted = true;
         }
     }

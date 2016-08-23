@@ -93,7 +93,7 @@ public class MemberListAdapter extends RecyclerView.Adapter<MemberListAdapter.Vi
      */
     @Override
     public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        View listItem = layoutInflater.inflate(R.layout.member_list_item, parent, false); // todo : switch to getting inflater in here?
+        View listItem = layoutInflater.inflate(R.layout.row_member_list, parent, false); // todo : switch to getting inflater in here?
         ViewHolder vh = new ViewHolder(listItem);
         vh.ivSelectedIcon.setVisibility(showSelected ? View.VISIBLE : View.GONE);
         return vh;

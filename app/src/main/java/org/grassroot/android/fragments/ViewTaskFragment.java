@@ -73,8 +73,6 @@ public class ViewTaskFragment extends Fragment {
     private TaskModel task;
     private String taskType;
     private String taskUid;
-    private String phoneNumber;
-    private String code;
     private boolean canViewResponses;
     private MtgRsvpAdapter mtgRsvpAdapter;
     private MemberListAdapter memberListAdapter;
@@ -154,8 +152,6 @@ public class ViewTaskFragment extends Fragment {
                 task = RealmUtils.loadObjectFromDB(TaskModel.class, "taskUid", taskUid);
             }
 
-            phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
-            code = RealmUtils.loadPreferencesFromDB().getToken();
             canViewResponses = false;
         } else {
             throw new UnsupportedOperationException(
@@ -387,42 +383,44 @@ public class ViewTaskFragment extends Fragment {
         memberListAdapter = new MemberListAdapter(getActivity(), true);
         rcResponseList.setLayoutManager(new LinearLayoutManager(getContext()));
         rcResponseList.setAdapter(memberListAdapter);
+        rcResponseList.setItemAnimator(null);
 
-        TaskService.getInstance().fetchAssignedMembers(taskUid).subscribe(new Subscriber<List<Member>>() {
-            @Override
-            public void onNext(List<Member> members) {
-                if (!members.isEmpty()) {
-                    Log.e(TAG, "returned these members : " + members.toString());
-                    memberListAdapter.setMembers(members);
-                    canViewResponses = true;
-                    tvResponsesCount.setText(R.string.vt_todo_members_assigned);
-                } else {
-                    tvResponsesCount.setText(R.string.vt_todo_group_assigned);
-                    icResponsesExpand.setVisibility(View.GONE);
-                    cvResponseList.setClickable(false);
-                }
-            }
-
-            @Override
-            public void onError(Throwable e) {
-                tvResponsesCount.setText(R.string.vt_todo_assigned_error);
-                icResponsesExpand.setVisibility(View.GONE);
-                cvResponseList.setClickable(false);
-
-                if (e instanceof ApiCallException) {
-                    if (NetworkUtils.CONNECT_ERROR.equals(e.getMessage())) {
-                        ErrorUtils.networkErrorSnackbar(mContainer, R.string.connect_error_view_task_snackbar,
-                            new View.OnClickListener() {
-                            @Override
-                            public void onClick(View v) {
-                                setUpToDoAssignedMemberView();
-                            }
-                        });
+        TaskService.getInstance().fetchAssignedMembers(taskUid, TaskConstants.TODO)
+            .subscribe(new Subscriber<List<Member>>() {
+                @Override
+                public void onNext(List<Member> members) {
+                    if (!members.isEmpty()) {
+                        Log.e(TAG, "returned these members : " + members.toString());
+                        memberListAdapter.setMembers(members);
+                        canViewResponses = true;
+                        tvResponsesCount.setText(R.string.vt_todo_members_assigned);
                     } else {
-                        Snackbar.make(mContainer, ErrorUtils.serverErrorText(((ApiCallException) e).errorTag), Snackbar.LENGTH_SHORT)
-                            .show();
+                        tvResponsesCount.setText(R.string.vt_todo_group_assigned);
+                        icResponsesExpand.setVisibility(View.GONE);
+                        cvResponseList.setClickable(false);
                     }
                 }
+
+                @Override
+                public void onError(Throwable e) {
+                    tvResponsesCount.setText(R.string.vt_todo_assigned_error);
+                    icResponsesExpand.setVisibility(View.GONE);
+                    cvResponseList.setClickable(false);
+
+                    if (e instanceof ApiCallException) {
+                        if (NetworkUtils.CONNECT_ERROR.equals(e.getMessage())) {
+                            ErrorUtils.networkErrorSnackbar(mContainer, R.string.connect_error_view_task_snackbar,
+                                new View.OnClickListener() {
+                                @Override
+                                public void onClick(View v) {
+                                    setUpToDoAssignedMemberView();
+                                }
+                            });
+                        } else {
+                            Snackbar.make(mContainer, ErrorUtils.serverErrorText(((ApiCallException) e).errorTag), Snackbar.LENGTH_SHORT)
+                                .show();
+                        }
+                    }
             }
 
             @Override
@@ -475,7 +473,7 @@ public class ViewTaskFragment extends Fragment {
             tvResponseHeader.setText(!task.hasResponded() ? getString(R.string.vt_mtg_responseq)
                     : textHasRespondedCanChange());
             llResponseIcons.setVisibility(View.VISIBLE);
-            setUpResponseIconsCanAction();
+            setUpResponseIconsForEvent();
         } else {
             final String suffix = !task.hasResponded() ? getString(R.string.vt_mtg_no_response)
                     : task.respondedYes() ? getString(R.string.vt_mtg_attended)
@@ -507,7 +505,7 @@ public class ViewTaskFragment extends Fragment {
             tvResponseHeader.setText(!task.hasResponded() ? getString(R.string.vt_vote_responseq)
                     : textHasRespondedCanChange());
             llResponseIcons.setVisibility(View.VISIBLE);
-            setUpResponseIconsCanAction();
+            setUpResponseIconsForEvent();
         } else {
             final String suffix = !task.hasResponded() ? getString(R.string.vt_vote_no_response)
                     : task.respondedYes() ? getString(R.string.vt_vote_voted_yes)
@@ -546,7 +544,10 @@ public class ViewTaskFragment extends Fragment {
             tvResponseHeader.setText(R.string.vt_todo_pending);
         }
 
-        setUpTodoResponseIconsCanAction();
+        if (task.isCanAction()) {
+            setUpResponseIconsForTodo();
+        }
+
         if (task.isCanEdit()) {
             btModifyTask.setVisibility(View.VISIBLE);
             btModifyTask.setText(R.string.vt_todo_modify);
@@ -560,52 +561,57 @@ public class ViewTaskFragment extends Fragment {
                 getResources().getDisplayMetrics()));
     }
 
-    private void setUpResponseIconsCanAction() {
-        icRespondPositive.setImageResource(task.respondedYes() ? R.drawable.ic_vote_active
-                : R.drawable.ic_vote_inactive); // todo : rename these thumbs up / down
+    private void setUpResponseIconsForEvent() {
+		Log.e(TAG, "setting up response icons ... task = " + task.toString());
+        icRespondPositive.setImageResource(task.respondedYes() ?
+            R.drawable.respond_yes_active : R.drawable.respond_yes_inactive);
         icRespondPositive.setEnabled(!task.respondedYes());
-        icRespondNegative.setImageResource(
-                task.respondedNo() ? R.drawable.ic_no_vote_active : R.drawable.ic_no_vote_inactive);
+
+        icRespondNegative.setImageResource(task.respondedNo() ?
+            R.drawable.respond_no_active : R.drawable.respond_no_inactive);
         icRespondNegative.setEnabled(!task.respondedNo());
+
         if (task.hasResponded()) {
             icRespondPositive.setEnabled(false);
             icRespondNegative.setEnabled(false);
         }
     }
 
-    private void setUpTodoResponseIconsCanAction() {
-        if (task.canAction()) {
-            btTodoRespond.setImageResource(R.drawable.ic_vote_tick_inactive);
-        }
+    private void setUpResponseIconsForTodo() {
+        btTodoRespond.setImageResource(R.drawable.respond_confirm_inactive);
     }
 
-    public void respondRx(final String reply) {
-        TaskService.getInstance().respondToTaskRx(task, reply, null).subscribe(new Subscriber<String>() {
-            @Override
-            public void onNext(String s) {
-                task = RealmUtils.loadObjectFromDB(TaskModel.class, "taskUid", task.getTaskUid());
-                if (NetworkUtils.SAVED_SERVER.equals(s)) {
-                    handleSuccessfulReply(task, reply);
-                } else if (NetworkUtils.SAVED_OFFLINE_MODE.equals(s)) {
-                    handleSavedOffline(reply);
-                }
-            }
-
-            @Override
-            public void onError(Throwable e) {
-                if (e instanceof ApiCallException) {
-                    ApiCallException error = (ApiCallException) e;
-                    if (NetworkUtils.SERVER_ERROR.equals(error.getMessage())) {
-                        handleServerError(error.errorTag);
-                    } else if (NetworkUtils.CONNECT_ERROR.equals(error.getMessage())) {
-                        handleSavedOffline(reply);
+    public void respondToTask(final String response) {
+        TaskService.getInstance().respondToTaskRx(task, response, null)
+            .subscribe(new Subscriber<String>() {
+                @Override
+                public void onNext(String s) {
+                    task = RealmUtils.loadObjectFromDB(TaskModel.class, "taskUid", task.getTaskUid());
+                    if (NetworkUtils.SAVED_SERVER.equals(s)) {
+                        Log.e(TAG, "response received! handing over to handler");
+                        handleSuccessfulReply(response);
+                    } else if (NetworkUtils.SAVED_OFFLINE_MODE.equals(s)) {
+                        handleSavedOffline(response);
                     }
                 }
-            }
 
-            @Override
-            public void onCompleted() {
-            }
+                @Override
+                public void onError(Throwable e) {
+                    if (e instanceof ApiCallException) {
+                        ApiCallException error = (ApiCallException) e;
+                        if (NetworkUtils.SERVER_ERROR.equals(error.getMessage())) {
+                            handleServerError(error.errorTag);
+                        } else if (NetworkUtils.CONNECT_ERROR.equals(error.getMessage())) {
+                            // since we are resetting icons to what's stored in DB (for later sending)
+                            task = RealmUtils.loadObjectFromDB(TaskModel.class, "taskUid", task.getTaskUid());
+                            handleSavedOffline(response);
+
+                        }
+                    }
+                }
+
+                @Override
+                public void onCompleted() { }
         });
     }
 
@@ -615,41 +621,42 @@ public class ViewTaskFragment extends Fragment {
 
     @OnClick(R.id.vt_left_response)
     public void doRespondYes() {
-        respondRx(TaskConstants.RESPONSE_YES);
+        respondToTask(TaskConstants.RESPONSE_YES);
     }
 
     @OnClick(R.id.vt_right_response)
     public void doRespondNo() {
-        respondRx(TaskConstants.RESPONSE_NO);
+        respondToTask(TaskConstants.RESPONSE_NO);
     }
 
     @OnClick(R.id.bt_td_respond)
     public void completeTodo() {
-        respondRx(TaskConstants.TODO_DONE);
+        respondToTask(TaskConstants.TODO_DONE);
     }
 
-
-    private void handleSuccessfulReply(TaskModel task, String reply) {
-        ErrorUtils.showSnackBar(mContainer, snackBarMsg(reply),
-                Snackbar.LENGTH_SHORT); // todo: rename error utils)
-        switch (reply) {
+    private void resetIconsAfterResponse() {
+        Log.e(TAG, "resetting icons");
+        switch (task.getType()) {
             case TaskConstants.TODO:
-                setUpResponseIconsCanAction();
-                break;
-            case TaskConstants.TODO_DONE:
-                btTodoRespond.setImageResource(R.drawable.ic_vote_tick_active);
+                Log.e(TAG, "doing so on todo");
+                btTodoRespond.setImageResource(R.drawable.respond_confirm_active);
                 btTodoRespond.setEnabled(false);
                 break;
             default:
-                setUpResponseIconsCanAction();
+				Log.e(TAG, "setting response icons for event");
+                setUpResponseIconsForEvent();
                 break;
         }
-        tvResponseHeader.setText(snackBarMsg(reply));
+    }
+
+    private void handleSuccessfulReply(String response) {
+        Snackbar.make(mContainer, snackBarMsg(response), Snackbar.LENGTH_SHORT).show();
+        resetIconsAfterResponse();
+        tvResponseHeader.setText(snackBarMsg(response));
     }
 
     private void handleSavedOffline(String action) {
-        // todo : change message displayed here
-        handleNoNetworkResponse(action, R.string.error_no_network);
+        handleNoNetworkResponse(action, R.string.connect_error_task_responding);
     }
 
     private void handleNoNetworkResponse(final String retryTag, int snackbarMsg) {
@@ -674,7 +681,6 @@ public class ViewTaskFragment extends Fragment {
                 });
     }
 
-    // todo : consider shifting these into a map? but maybe better to rely on processor than clog memory
     private String textHasRespondedCanChange() {
         switch (taskType) {
             case TaskConstants.MEETING:
@@ -692,7 +698,7 @@ public class ViewTaskFragment extends Fragment {
     }
 
     /*
-    SECTION : VIEWINGDETAILS ON RSVP LIST, VOTE TOTALS, ETC.
+    SECTION : VIEWING DETAILS ON RSVP LIST, VOTE TOTALS, ETC.
      */
 
     @OnClick(R.id.vt_cv_response_list)

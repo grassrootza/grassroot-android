@@ -110,11 +110,13 @@ public class TaskModel extends RealmObject implements Parcelable, Comparable<Tas
   @Override
   public String toString() {
     return "TaskModel{" +
-            "title='" + title + '\'' +
-            ", type='" + type + '\'' +
-            ", deadlineDate=" + deadlineDate +
-            ", createdByUserName='" + createdByUserName + '\'' +
-            '}';
+        "title='" + title + '\'' +
+        ", type='" + type + '\'' +
+        ", hasResponded=" + hasResponded +
+        ", canAction=" + canAction +
+        ", canEdit=" + canEdit +
+        ", reply='" + reply + '\'' +
+        '}';
   }
 
   @Override public int describeContents() {
