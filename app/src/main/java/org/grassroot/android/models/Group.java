@@ -4,6 +4,7 @@ import android.content.Context;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.text.TextUtils;
+import android.util.Log;
 
 import io.realm.RealmList;
 import io.realm.RealmObject;
@@ -42,6 +43,7 @@ public class Group extends RealmObject implements Parcelable, Comparable<Group> 
   private String joinCode;
   private boolean discoverable;
   private String lastChangeType;
+  private String lastChangeDescription;
   private String description;
 
   private boolean isLocal; // i.e., is created local but not sent to server yet
@@ -124,6 +126,10 @@ public class Group extends RealmObject implements Parcelable, Comparable<Group> 
   public void setDescription(String description) {
     this.description = description;
   }
+
+  public String getLastChangeDescription() { return lastChangeDescription; }
+
+  public void setLastChangeDescription(String lastChangeDescription) { this.lastChangeDescription = lastChangeDescription; }
 
   public String getGroupCreator() {
     return groupCreator;
@@ -303,23 +309,20 @@ public class Group extends RealmObject implements Parcelable, Comparable<Group> 
     this.date = calendar.getTime();
   }
 
-  public String constructChangeType(Context context) {
+  public int getChangePrefix() {
     switch (lastChangeType) {
       case GroupConstants.MEETING_CALLED:
-        return (getDate().after(new Date()) ? context.getString(R.string.future_meeting_prefix)
-            : context.getString(R.string.past_meeting_prefix));
+        return getDate().after(new Date()) ? R.string.future_meeting_prefix : R.string.past_meeting_prefix;
       case GroupConstants.VOTE_CALLED:
-        return (getDate().after(new Date())) ? context.getString(R.string.future_vote_prefix)
-            : context.getString(R.string.past_vote_prefix);
+        return getDate().after(new Date()) ? R.string.future_vote_prefix : R.string.past_vote_prefix;
       case GroupConstants.GROUP_CREATED:
-        return context.getString(R.string.group_created_prefix);
+        return R.string.group_created_prefix;
       case GroupConstants.MEMBER_ADDED:
-        return context.getString(R.string.member_added_prefix);
+        return R.string.member_added_prefix;
       case GroupConstants.GROUP_MOD_OTHER:
-        return context.getString(R.string.group_other_prefix);
+        return R.string.group_other_prefix;
       default:
-        throw new UnsupportedOperationException(
-            "Error! Should only be one of standard change types");
+        return R.string.group_other_prefix;
     }
   }
 
@@ -345,6 +348,7 @@ public class Group extends RealmObject implements Parcelable, Comparable<Group> 
     dest.writeString(lastTimeTasksFetched);
     dest.writeLong(lastMajorChangeMillis);
     dest.writeInt(defaultImageRes);
+    dest.writeString(lastChangeDescription);
   }
 
   protected Group(Parcel in) {
@@ -365,6 +369,7 @@ public class Group extends RealmObject implements Parcelable, Comparable<Group> 
     lastTimeTasksFetched = in.readString();
     lastMajorChangeMillis = in.readLong();
     defaultImageRes = in.readInt();
+    lastChangeDescription = in.readString();
   }
 
   public static final Creator<Group> CREATOR = new Creator<Group>() {

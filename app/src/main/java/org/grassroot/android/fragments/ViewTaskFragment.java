@@ -307,6 +307,7 @@ public class ViewTaskFragment extends Fragment {
 
             @Override
             public void onError(Throwable e) {
+
                 tvResponsesCount.setText(R.string.vt_mtg_response_error); // add a button for retry in future
                 icResponsesExpand.setVisibility(View.GONE);
                 cvResponseList.setClickable(false);
@@ -346,7 +347,7 @@ public class ViewTaskFragment extends Fragment {
                 tvYes.setText(String.valueOf(responseTotalsModel.getYes()));
                 tvNo.setText(String.valueOf(responseTotalsModel.getNo()));
                 tvAbstain.setText(String.valueOf(responseTotalsModel.getAbstained()));
-                tvNoResponse.setText(String.valueOf(responseTotalsModel.getNumberNoReply())); // todo : change this
+                tvNoResponse.setText(String.valueOf(responseTotalsModel.getNumberNoReply()));
 
                 canViewResponses = true;
             }
@@ -456,13 +457,12 @@ public class ViewTaskFragment extends Fragment {
         TextViewCompat.setTextAppearance(tvPostedBy, R.style.CardViewFinePrint);
 
         final boolean inFuture = task.getDeadlineDate().after(new Date());
-        final int dateColor = inFuture ? ContextCompat.getColor(getActivity(), R.color.dark_grey_text)
-                : ContextCompat.getColor(getActivity(), R.color.red);
+        final int dateColor = inFuture ? R.color.dark_grey_text : R.color.red;
         tvDateTime.setText(inFuture ? String.format(getString(R.string.vt_mtg_datetime),
                 TaskConstants.dateDisplayWithDayName.format(task.getDeadlineDate()))
                 : String.format(getString(R.string.vt_mtg_date_past),
                 TaskConstants.dateDisplayWithoutHours.format(task.getDeadlineDate())));
-        tvDateTime.setTextColor(dateColor);
+        tvDateTime.setTextColor(ContextCompat.getColor(getActivity(), dateColor));
 
         if (task.isCreatedByUser()) {
             tvResponseHeader.setText(R.string.vt_mtg_called_by_user);
@@ -521,7 +521,6 @@ public class ViewTaskFragment extends Fragment {
             btCancelTask.setVisibility(View.GONE);
         }
 
-
         setVoteResponseView();
     }
 
@@ -551,8 +550,10 @@ public class ViewTaskFragment extends Fragment {
         if (task.isCanEdit()) {
             btModifyTask.setVisibility(View.VISIBLE);
             btModifyTask.setText(R.string.vt_todo_modify);
-            btCancelTask.setVisibility(View.GONE);
+            btCancelTask.setVisibility(View.VISIBLE);
+            btCancelTask.setText(R.string.vt_todo_cancel);
         }
+
         setUpToDoAssignedMemberView();
     }
 
@@ -562,33 +563,41 @@ public class ViewTaskFragment extends Fragment {
     }
 
     private void setUpResponseIconsForEvent() {
-		Log.e(TAG, "setting up response icons ... task = " + task.toString());
+
         icRespondPositive.setImageResource(task.respondedYes() ?
             R.drawable.respond_yes_active : R.drawable.respond_yes_inactive);
-        icRespondPositive.setEnabled(!task.respondedYes());
 
         icRespondNegative.setImageResource(task.respondedNo() ?
             R.drawable.respond_no_active : R.drawable.respond_no_inactive);
-        icRespondNegative.setEnabled(!task.respondedNo());
 
-        if (task.hasResponded()) {
+        if (!task.canAction()) {
             icRespondPositive.setEnabled(false);
             icRespondNegative.setEnabled(false);
+        } else {
+            icRespondPositive.setEnabled(!task.respondedYes());
+            icRespondNegative.setEnabled(!task.respondedNo());
         }
     }
 
     private void setUpResponseIconsForTodo() {
-        btTodoRespond.setImageResource(R.drawable.respond_confirm_inactive);
+        if (!task.hasResponded()) {
+            btTodoRespond.setImageResource(R.drawable.respond_confirm_inactive);
+            btTodoRespond.setEnabled(false);
+        } else{
+            btTodoRespond.setImageResource(R.drawable.respond_confirm_active);
+            btTodoRespond.setEnabled(false);
+        }
     }
 
     public void respondToTask(final String response) {
-        TaskService.getInstance().respondToTaskRx(task, response, null)
+        progressBar.setVisibility(View.VISIBLE);
+        TaskService.getInstance().respondToTask(task.getTaskUid(), response, null)
             .subscribe(new Subscriber<String>() {
                 @Override
                 public void onNext(String s) {
+                    progressBar.setVisibility(View.GONE);
                     task = RealmUtils.loadObjectFromDB(TaskModel.class, "taskUid", task.getTaskUid());
                     if (NetworkUtils.SAVED_SERVER.equals(s)) {
-                        Log.e(TAG, "response received! handing over to handler");
                         handleSuccessfulReply(response);
                     } else if (NetworkUtils.SAVED_OFFLINE_MODE.equals(s)) {
                         handleSavedOffline(response);
@@ -597,26 +606,18 @@ public class ViewTaskFragment extends Fragment {
 
                 @Override
                 public void onError(Throwable e) {
-                    if (e instanceof ApiCallException) {
-                        ApiCallException error = (ApiCallException) e;
-                        if (NetworkUtils.SERVER_ERROR.equals(error.getMessage())) {
-                            handleServerError(error.errorTag);
-                        } else if (NetworkUtils.CONNECT_ERROR.equals(error.getMessage())) {
-                            // since we are resetting icons to what's stored in DB (for later sending)
-                            task = RealmUtils.loadObjectFromDB(TaskModel.class, "taskUid", task.getTaskUid());
-                            handleSavedOffline(response);
-
-                        }
+                    progressBar.setVisibility(View.GONE);
+                    if (NetworkUtils.CONNECT_ERROR.equals(e.getMessage())) {
+                        task = RealmUtils.loadObjectFromDB(TaskModel.class, "taskUid", task.getTaskUid());
+                        handleSavedOffline(response);
+                    } else {
+                        Snackbar.make(mContainer, ErrorUtils.serverErrorText(e), Snackbar.LENGTH_SHORT).show();
                     }
                 }
 
                 @Override
                 public void onCompleted() { }
         });
-    }
-
-    private void handleServerError(final String restMessage) {
-        Snackbar.make(mContainer, ErrorUtils.serverErrorText(restMessage), Snackbar.LENGTH_SHORT).show();
     }
 
     @OnClick(R.id.vt_left_response)
@@ -635,16 +636,13 @@ public class ViewTaskFragment extends Fragment {
     }
 
     private void resetIconsAfterResponse() {
-        Log.e(TAG, "resetting icons");
         switch (task.getType()) {
             case TaskConstants.TODO:
-                Log.e(TAG, "doing so on todo");
                 btTodoRespond.setImageResource(R.drawable.respond_confirm_active);
                 btTodoRespond.setEnabled(false);
                 break;
             default:
-				Log.e(TAG, "setting response icons for event");
-                setUpResponseIconsForEvent();
+				setUpResponseIconsForEvent();
                 break;
         }
     }
@@ -770,29 +768,30 @@ public class ViewTaskFragment extends Fragment {
 
     private void cancelTask() {
         progressBar.setVisibility(View.VISIBLE);
-        setUpCancelApiCall().enqueue(new Callback<GenericResponse>() {
-            @Override
-            public void onResponse(Call<GenericResponse> call, Response<GenericResponse> response) {
-                progressBar.setVisibility(View.GONE);
-                if (response.isSuccessful()) {
-                    EventBus.getDefault().post(new TaskCancelledEvent(task));
-                } else {
-                    ErrorUtils.showSnackBar(getView(), "Error! Something went wrong", Snackbar.LENGTH_LONG,
-                            "", null);
+        TaskService.getInstance().cancelTask(taskUid, taskType, AndroidSchedulers.mainThread())
+            .subscribe(new Action1<String>() {
+                @Override
+                public void call(String s) {
+                    progressBar.setVisibility(View.GONE);
+                    EventBus.getDefault().post(new TaskCancelledEvent(taskUid));
                 }
-            }
-
-            @Override
-            public void onFailure(Call<GenericResponse> call, Throwable t) {
-                ErrorUtils.connectivityError(getActivity(), R.string.error_no_network,
-                        new NetworkErrorDialogListener() {
-                            @Override
-                            public void retryClicked() {
-                                cancelTask();
-                            }
-                        });
-            }
-        });
+            }, new Action1<Throwable>() {
+                @Override
+                public void call(Throwable e) {
+                    progressBar.setVisibility(View.GONE);
+                    if (NetworkUtils.CONNECT_ERROR.equals(e.getMessage())) {
+                        ErrorUtils.showSnackBar(mContainer, getString(R.string.connect_error_task_cancelled),
+                            Snackbar.LENGTH_LONG, getString(R.string.snackbar_try_again), new View.OnClickListener() {
+                                @Override
+                                public void onClick(View v) {
+                                    cancelTask();
+                                }
+                            });
+                    } else {
+                        Snackbar.make(mContainer, ErrorUtils.serverErrorText(e), Snackbar.LENGTH_SHORT).show();
+                    }
+                }
+            });
     }
 
     private String generateConfirmationDialogStrings() {
@@ -805,21 +804,6 @@ public class ViewTaskFragment extends Fragment {
                 return getActivity().getString(R.string.et_cnfrm_td);
             default:
                 throw new UnsupportedOperationException("Error! Missing task type");
-        }
-    }
-
-    private Call<GenericResponse> setUpCancelApiCall() {
-        final String uid = task.getTaskUid();
-        final String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
-        final String code = RealmUtils.loadPreferencesFromDB().getToken();
-        switch (taskType) {
-            case TaskConstants.MEETING:
-                return GrassrootRestService.getInstance().getApi().cancelMeeting(phoneNumber, code, uid);
-            case TaskConstants.VOTE:
-                return GrassrootRestService.getInstance().getApi().cancelVote(phoneNumber, code, uid);
-            case TaskConstants.TODO: // todo : set this up
-            default:
-                throw new UnsupportedOperationException("Error! Missing task type in call");
         }
     }
 

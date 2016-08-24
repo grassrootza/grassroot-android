@@ -205,7 +205,7 @@ public class TasksAdapter extends RecyclerView.Adapter<TasksAdapter.TaskViewHold
     holder.iv2.setImageResource(R.drawable.respond_confirm_inactive); //completed icon
     holder.iv3.setImageResource(R.drawable.ic_group_to_do_overdue_inactive); //overdue icon
 
-    if (task.isCanMarkCompleted()) setResponseListener(holder.iv2, task, "COMPLETED", position);
+    if (task.isCanMarkCompleted()) setResponseListener(holder.iv2, task, TaskConstants.TODO_DONE, position);
     holder.iv2.setEnabled(task.isCanMarkCompleted());
     holder.iv3.setEnabled(false);
 
@@ -246,14 +246,14 @@ public class TasksAdapter extends RecyclerView.Adapter<TasksAdapter.TaskViewHold
     holder.iv3.setImageResource(
         repliedNo ? R.drawable.respond_no_active : R.drawable.respond_no_inactive);
 
-    if (model.isCanRespondYes()) {
-      setResponseListener(holder.iv2, model, "Yes", position);
+    if (!model.respondedYes()) {
+      setResponseListener(holder.iv2, model, TaskConstants.RESPONSE_YES, position);
     } else {
       holder.iv2.setEnabled(false);
     }
 
-    if (model.isCanRespondNo()) {
-      setResponseListener(holder.iv3, model, "No", position);
+    if (!model.respondedNo()) {
+      setResponseListener(holder.iv3, model, TaskConstants.RESPONSE_NO, position);
     } else {
       holder.iv3.setEnabled(false);
     }
@@ -266,8 +266,8 @@ public class TasksAdapter extends RecyclerView.Adapter<TasksAdapter.TaskViewHold
     holder.iv2.setImageResource(R.drawable.respond_yes_inactive);
     holder.iv3.setEnabled(true);
     holder.iv2.setEnabled(true);
-    setResponseListener(holder.iv2, model, "Yes", position);
-    setResponseListener(holder.iv3, model, "No", position);
+    setResponseListener(holder.iv2, model, TaskConstants.RESPONSE_YES, position);
+    setResponseListener(holder.iv3, model, TaskConstants.RESPONSE_NO, position);
   }
 
   private void cannotRespond(TaskViewHolder holder, TaskModel model) {

@@ -26,6 +26,8 @@ import org.grassroot.android.services.NotificationUpdateService;
 import org.grassroot.android.services.TaskService;
 import org.grassroot.android.utils.RealmUtils;
 import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
+import org.greenrobot.eventbus.ThreadMode;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -46,6 +48,8 @@ public class ViewTaskActivity extends PortraitActivity {
     private Fragment fragment;
     private boolean showShareMenu;
 
+    private boolean isCancelNotification;
+
     @BindView(R.id.vta_root_layout) ViewGroup rootView;
     @BindView(R.id.vta_toolbar) Toolbar toolbar;
 
@@ -54,6 +58,8 @@ public class ViewTaskActivity extends PortraitActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_view_task);
         ButterKnife.bind(this);
+
+        EventBus.getDefault().register(this);
 
         if (getIntent().getExtras() == null) {
             throw new UnsupportedOperationException("Error! View task activity started without arguments");
@@ -74,8 +80,10 @@ public class ViewTaskActivity extends PortraitActivity {
         setUpToolbar();
 
         if (NotificationConstants.TASK_CANCELLED.equals(clickAction)) {
+            isCancelNotification = true;
             fragment = createCancelFragment(taskUid);
         } else {
+            isCancelNotification = false;
             TaskService.getInstance().fetchAndStoreTask(taskUid, taskType, null).subscribe(); // done in background, so have it next time
             if (NotificationConstants.TASK_CHANGED.equals(clickAction)) {
                 fragment = createChangedFragment();
@@ -110,6 +118,12 @@ public class ViewTaskActivity extends PortraitActivity {
         }
     }
 
+    @Override
+    protected void onDestroy() {
+        EventBus.getDefault().unregister(this);
+        super.onDestroy();
+    }
+
     private Fragment createCancelFragment(final String taskUid) {;
         final Group parentGroup = getParentGroup();
         boolean canViewGroup = parentGroup != null;
@@ -138,8 +152,9 @@ public class ViewTaskActivity extends PortraitActivity {
                 finish();
             }
         });
+
         RealmUtils.removeObjectFromDatabase(TaskModel.class, "taskUid", taskUid);
-        EventBus.getDefault().post(new TaskCancelledEvent());
+        EventBus.getDefault().post(new TaskCancelledEvent(taskUid));
         setTitle(R.string.vt_cancel_title);
         return fragment;
     }
@@ -204,6 +219,13 @@ public class ViewTaskActivity extends PortraitActivity {
         Intent intent = new Intent(this, NotificationUpdateService.class);
         intent.putExtra(NotificationConstants.NOTIFICATION_UID, notificationUid);
         startService(intent);
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onEvent(TaskCancelledEvent e) {
+        if (!isCancelNotification && e.getTaskUid().equals(taskUid)) {
+            finish();
+        }
     }
 
 }

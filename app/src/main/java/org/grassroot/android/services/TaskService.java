@@ -3,8 +3,11 @@ package org.grassroot.android.services;
 import android.text.TextUtils;
 import android.util.Log;
 
+import org.grassroot.android.events.TaskCancelledEvent;
+import org.grassroot.android.events.TaskUpdatedEvent;
 import org.grassroot.android.events.TasksRefreshedEvent;
 import org.grassroot.android.interfaces.TaskConstants;
+import org.grassroot.android.models.GenericResponse;
 import org.grassroot.android.models.Group;
 import org.grassroot.android.models.Member;
 import org.grassroot.android.models.MemberList;
@@ -456,16 +459,18 @@ public class TaskService {
   }
 
   /*
-  RESPONDING TO A TASK (and storing it)
+  RESPONDING TO A TASK, CANCELLING ETC (and storing it)
    */
 
-  public Observable<String> respondToTaskRx(final TaskModel task, final String response, Scheduler observingThread) {
+  public Observable<String> respondToTask(final String taskUid, final String response, Scheduler observingThread) {
     observingThread = (observingThread == null) ? AndroidSchedulers.mainThread() : observingThread;
     return Observable.create(new Observable.OnSubscribe<String>() {
       @Override
       public void call(Subscriber<? super String> subscriber) {
+        TaskModel task = RealmUtils.loadObjectFromDB(TaskModel.class, "taskUid", taskUid);
         if (!NetworkUtils.isOnline()) {
           storeTaskResponseOffline(task, response);
+          EventBus.getDefault().post(new TaskUpdatedEvent(task));
           subscriber.onNext(NetworkUtils.SAVED_OFFLINE_MODE);
           subscriber.onCompleted();
         } else {
@@ -473,16 +478,17 @@ public class TaskService {
             final String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
             final String code = RealmUtils.loadPreferencesFromDB().getToken();
             Call<TaskResponse> call =
-                task.getType().equals(TaskConstants.VOTE) ? voteCall(task.getTaskUid(),phoneNumber,code,response)
-                    : task.getType().equals(TaskConstants.MEETING) ? meetingCall(task.getTaskUid(),phoneNumber,code,response)
-                    : competeTodo(task.getTaskUid(),phoneNumber,code, response);
-            Response<TaskResponse> response = call.execute();
-            if (response.isSuccessful()) {
-              Log.e(TAG, "saving this task to the DB ... " + response.body().getTasks().get(0).toString());
-              RealmUtils.saveDataToRealmSync(response.body().getTasks().get(0));
+                task.getType().equals(TaskConstants.VOTE) ? voteCall(taskUid, phoneNumber,code,response)
+                    : task.getType().equals(TaskConstants.MEETING) ? meetingCall(taskUid,phoneNumber,code,response)
+                    : competeTodo(taskUid, phoneNumber, code, response);
+            Response<TaskResponse> apiCall = call.execute();
+            if (apiCall.isSuccessful()) {
+              RealmUtils.saveDataToRealmSync(apiCall.body().getTasks().get(0));
               subscriber.onNext(NetworkUtils.SAVED_SERVER);
+              EventBus.getDefault().post(new TaskUpdatedEvent(apiCall.body().getTasks().get(0)));
+              subscriber.onCompleted();
             } else {
-              throw new ApiCallException(NetworkUtils.SERVER_ERROR, ErrorUtils.getRestMessage(response.errorBody()));
+              throw new ApiCallException(NetworkUtils.SERVER_ERROR, ErrorUtils.getRestMessage(apiCall.errorBody()));
             }
           } catch (IOException e) {
             storeTaskResponseOffline(task, response);
@@ -492,6 +498,45 @@ public class TaskService {
         }
       }
     }).subscribeOn(Schedulers.io()).observeOn(observingThread);
+  }
+
+  public Observable<String> cancelTask(final String taskUid, final String taskType, Scheduler observingThread) {
+    observingThread = (observingThread == null) ? AndroidSchedulers.mainThread() : observingThread;
+    return Observable.create(new Observable.OnSubscribe<String>() {
+      @Override
+      public void call(Subscriber<? super String> subscriber) {
+        try {
+          Response<GenericResponse> response = setUpCancelApiCall(taskType, taskUid).execute();
+          if (response.isSuccessful()) {
+            RealmUtils.removeObjectFromDatabase(TaskModel.class, "taskUid", taskUid);
+            // subscriber must issue event, to trigger view removal, etc
+            subscriber.onNext(NetworkUtils.SAVED_SERVER);
+            subscriber.onCompleted();
+          } else {
+            throw new ApiCallException(NetworkUtils.SERVER_ERROR,
+                ErrorUtils.getRestMessage(response.errorBody()));
+          }
+        } catch (IOException e) {
+          NetworkUtils.setConnectionFailed();
+          throw new ApiCallException(NetworkUtils.CONNECT_ERROR);
+        }
+      }
+    }).subscribeOn(Schedulers.io()).observeOn(observingThread);
+  }
+
+  private Call<GenericResponse> setUpCancelApiCall(final String taskType, final String taskUid) {
+    final String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
+    final String code = RealmUtils.loadPreferencesFromDB().getToken();
+    switch (taskType) {
+      case TaskConstants.MEETING:
+        return GrassrootRestService.getInstance().getApi().cancelMeeting(phoneNumber, code, taskUid);
+      case TaskConstants.VOTE:
+        return GrassrootRestService.getInstance().getApi().cancelVote(phoneNumber, code, taskUid);
+      case TaskConstants.TODO:
+        return GrassrootRestService.getInstance().getApi().cancelTodo(phoneNumber, code, taskUid);
+      default:
+        throw new UnsupportedOperationException("Error! Missing task type in call");
+    }
   }
 
   private Call<TaskResponse> voteCall(String taskUid, String phoneNumber, String code,String response) {

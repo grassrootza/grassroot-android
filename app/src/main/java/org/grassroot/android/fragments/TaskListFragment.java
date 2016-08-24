@@ -23,14 +23,11 @@ import org.grassroot.android.R;
 import org.grassroot.android.adapters.TasksAdapter;
 import org.grassroot.android.events.TaskAddedEvent;
 import org.grassroot.android.events.TaskCancelledEvent;
-import org.grassroot.android.events.TaskChangedEvent;
 import org.grassroot.android.events.TaskUpdatedEvent;
 import org.grassroot.android.fragments.dialogs.ConfirmCancelDialogFragment;
 import org.grassroot.android.interfaces.GroupPickCallbacks;
 import org.grassroot.android.interfaces.TaskConstants;
 import org.grassroot.android.models.TaskModel;
-import org.grassroot.android.models.TaskResponse;
-import org.grassroot.android.services.GrassrootRestService;
 import org.grassroot.android.services.TaskService;
 import org.grassroot.android.utils.ErrorUtils;
 import org.grassroot.android.utils.NetworkUtils;
@@ -48,9 +45,6 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 import butterknife.Unbinder;
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
 import rx.Observable;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.functions.Action1;
@@ -68,8 +62,6 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
   private TasksAdapter tasksAdapter;
 
   private String groupUid;
-  private String phoneNumber;
-  private String code;
 
   private boolean isInNoTaskMessageView;
   private boolean hasFetchedFromServer;
@@ -119,8 +111,6 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
   @Override
   public void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
-    phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
-    code = RealmUtils.loadPreferencesFromDB().getToken();
     filterFlags = new HashMap<>();
   }
 
@@ -144,7 +134,6 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
 
   private void loadTasksOnCreateView() {
     if (hasTasksInDB()) {
-      Log.d(TAG, "tasks exist, loading from DB");
       loadTasksFromDB(NetworkUtils.FETCHED_CACHE);
       refreshTasksFromServer();
     } else {
@@ -152,7 +141,6 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
       TaskService.getInstance().fetchTasks(groupUid, AndroidSchedulers.mainThread()).subscribe(new Action1<String>() {
         @Override
         public void call(String s) {
-          Log.d(TAG, "returned from fetch tasks ... with fetch type = " + s);
           hasFetchedFromServer = NetworkUtils.FETCHED_SERVER.equals(s);
           loadTasksFromDB(s);
         }
@@ -277,66 +265,71 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
   @Override
   public void respondToTask(String taskUid, String taskType, String response, int position) {
 
-    Call<TaskResponse> restCall;
-    final int confirmationMessage, msgSuccess, msgAlreadyResponded;
+    final int confirmationMessage, msgSuccess;
     switch (taskType) {
       case TaskConstants.VOTE:
-        restCall = GrassrootRestService.getInstance()
-            .getApi()
-            .castVote(taskUid, phoneNumber, code, response);
         confirmationMessage =
-            (response.equalsIgnoreCase("Yes")) ? R.string.RESPOND_YES : R.string.RESPOND_NO;
-        msgSuccess = R.string.ga_Votesend;
-        msgAlreadyResponded = R.string.ga_VoteFailure;
+            (response.equals(TaskConstants.RESPONSE_YES))
+                ? R.string.vote_respond_yes_confirm
+                : R.string.vote_respond_no_confirm;
+        msgSuccess = R.string.tlist_vote_sent;
         break;
       case TaskConstants.MEETING:
-        restCall =
-            GrassrootRestService.getInstance().getApi().rsvp(taskUid, phoneNumber, code, response);
         confirmationMessage =
-            (response.equalsIgnoreCase("Yes")) ? R.string.RSVP_YES : R.string.RSVP_NO;
-        msgSuccess = R.string.ga_Meetingsend;
-        msgAlreadyResponded = R.string.ga_VoteFailure;
+            (response.equals(TaskConstants.RESPONSE_YES))
+                ? R.string.mtg_respond_yes_confirm
+                : R.string.mtg_respond_no_confirm;
+        msgSuccess = R.string.tlist_meeting_reply_sent;
         break;
       case TaskConstants.TODO:
-        restCall =
-            GrassrootRestService.getInstance().getApi().completeTodo(phoneNumber, code, taskUid);
-        confirmationMessage = R.string.TODO_COMPLETED;
-        msgSuccess = R.string.ga_ToDocompleted;
-        msgAlreadyResponded = R.string.ga_ToDoFailure;
+        confirmationMessage = R.string.todo_respond_done_confirm;
+        msgSuccess = R.string.tlist_todo_reply_sent;
         break;
       default:
         throw new UnsupportedOperationException(
             "Responding to neither vote nor meeting! Error somewhere");
     }
 
-    confirmAction(restCall, msgSuccess, msgAlreadyResponded, confirmationMessage, position);
+    confirmAction(taskUid, response, msgSuccess, confirmationMessage);
   }
 
-  public void confirmAction(final Call<TaskResponse> restCall, final int msgSuccess,
-      final int msgAlreadyResponded, final int message, final int position) {
-
-    DialogFragment newFragment = ConfirmCancelDialogFragment.newInstance(message,
-        new ConfirmCancelDialogFragment.ConfirmDialogListener() {
-          @Override public void doConfirmClicked() {
-            restCall.enqueue(new Callback<TaskResponse>() {
+  public void confirmAction(final String taskUid, final String response, final int msgSuccess, final int message) {
+    DialogFragment newFragment = ConfirmCancelDialogFragment.newInstance(message, new ConfirmCancelDialogFragment.ConfirmDialogListener() {
+      @Override
+      public void doConfirmClicked() {
+        progressBar.setVisibility(View.VISIBLE);
+        TaskService.getInstance().respondToTask(taskUid, response, AndroidSchedulers.mainThread())
+            .subscribe(new Action1<String>() {
               @Override
-              public void onResponse(Call<TaskResponse> call, Response<TaskResponse> response) {
-                if (response.isSuccessful()) {
-                  ErrorUtils.showSnackBar(container, msgSuccess, Snackbar.LENGTH_LONG);
-                  EventBus.getDefault()
-                      .post(new TaskChangedEvent(position, response.body().getTasks().get(0)));
+              public void call(String s) {
+                // event bus & subscriber will take care of adapter updating
+                progressBar.setVisibility(View.GONE);
+                if (NetworkUtils.SAVED_SERVER.equals(s)) {
+                  Snackbar.make(container, msgSuccess, Snackbar.LENGTH_LONG).show();
                 } else {
-                  final String errorMsg = ErrorUtils.serverErrorText(response.errorBody(), getContext());
-                  Snackbar.make(container, errorMsg, Snackbar.LENGTH_LONG).show();
+                  Snackbar.make(container, R.string.task_list_response_offline, Snackbar.LENGTH_SHORT).show();
                 }
               }
-
-              @Override public void onFailure(Call<TaskResponse> call, Throwable t) {
-                ErrorUtils.handleNetworkError(container, t);
+            }, new Action1<Throwable>() {
+              @Override
+              public void call(Throwable e) {
+                progressBar.setVisibility(View.GONE);
+                if (NetworkUtils.CONNECT_ERROR.equals(e.getMessage())) {
+                  Snackbar.make(container, R.string.task_list_response_offline, Snackbar.LENGTH_LONG).show();
+                } else {
+                  final String errorMsg = ErrorUtils.serverErrorText(e);
+                  final String retryMsg = getString(R.string.snackbar_try_again);
+                  ErrorUtils.showSnackBar(container, errorMsg, Snackbar.LENGTH_LONG, retryMsg, new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                      confirmAction(taskUid, response, msgSuccess, message);
+                    }
+                  });
+                }
               }
             });
-          }
-        });
+      }
+    });
     newFragment.show(getFragmentManager(), "dialog");
   }
 
@@ -346,7 +339,7 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
     ViewTaskFragment taskFragment = ViewTaskFragment.newInstance(taskType, taskUid);
     getFragmentManager().beginTransaction()
         .setCustomAnimations(R.anim.up_from_bottom, R.anim.down_from_top)
-        .add(container.getId(), taskFragment, ViewTaskFragment.class.getCanonicalName())
+        .add(container.getId(), taskFragment, ViewTaskFragment.class.getCanonicalName()) // must preserve this so managing activities etc can retrieve
         .addToBackStack(null)
         .commit();
   }
@@ -367,14 +360,7 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
 
   @Subscribe(threadMode = ThreadMode.MAIN)
   public void onTaskCancelledEvent(TaskCancelledEvent e) {
-    Fragment frag = getFragmentManager().findFragmentByTag(ViewTaskFragment.class.getCanonicalName());
-    if (frag != null && frag.isVisible()) {
-      getFragmentManager().beginTransaction()
-          .setCustomAnimations(R.anim.push_down_in, R.anim.push_down_out)
-          .remove(frag)
-          .commit();
-    }
-    tasksAdapter.removeTaskFromList(e.getTask().getTaskUid()); // todo : just pass the uid in Event, not whole task model
+    tasksAdapter.removeTaskFromList(e.getTaskUid());
   }
 
   private void showProgress() {

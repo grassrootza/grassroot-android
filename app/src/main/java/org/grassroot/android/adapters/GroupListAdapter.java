@@ -19,6 +19,7 @@ import org.grassroot.android.events.LocalGroupToServerEvent;
 import org.grassroot.android.fragments.HomeGroupListFragment;
 import org.grassroot.android.interfaces.GroupConstants;
 import org.grassroot.android.models.Group;
+import org.grassroot.android.services.ApplicationLoader;
 import org.grassroot.android.utils.ImageUtils;
 import org.grassroot.android.utils.RealmUtils;
 import org.greenrobot.eventbus.Subscribe;
@@ -63,8 +64,8 @@ public class GroupListAdapter extends RecyclerView.Adapter<GroupListAdapter.GHP_
 
     public GroupListAdapter(List<Group> groups, HomeGroupListFragment fragment) {
         this.displayedGroups = groups;
-        this.context = fragment.getContext();
         this.listener = fragment;
+        this.context = ApplicationLoader.applicationContext; // to avoid memory leaks, since only use context to get strings
     }
 
     public void setGroupList(List<Group> groupList) {
@@ -169,8 +170,7 @@ public class GroupListAdapter extends RecyclerView.Adapter<GroupListAdapter.GHP_
         View view = LayoutInflater.from(parent.getContext())
                 .inflate(R.layout.row_group_homepage, parent, false);
         ButterKnife.bind(this, view);
-        GHP_ViewHolder holder = new GHP_ViewHolder(view);
-        return holder;
+        return new GHP_ViewHolder(view);
     }
 
     @Override
@@ -204,22 +204,21 @@ public class GroupListAdapter extends RecyclerView.Adapter<GroupListAdapter.GHP_
         holder.txtGroupname.setText(group.getGroupName());
         holder.txtGroupownername.setText(groupOrganizerDescription);
 
-        if (!group.hasJoinCode()) {
-            final String groupDescription = group.getDescription();
-            final int visibility = (TextUtils.isEmpty(groupDescription)) ? View.GONE : View.VISIBLE;
-            holder.txtGroupdesc.setText(
-                    String.format(context.getString(R.string.desc_body_pattern), getChangePrefix(group),
-                            groupDescription));
-            holder.txtGroupdesc.setVisibility(visibility);
-        } else {
-            final String tokenCode =
-                    context.getString(R.string.join_code_prefix) + group.getJoinCode() + "#";
+        if (group.hasJoinCode()) {
+            final String tokenCode = context.getString(R.string.join_code_prefix) + group.getJoinCode() + "#";
             holder.txtGroupdesc.setText(tokenCode);
+        } else if (!TextUtils.isEmpty(group.getDescription())) {
+            holder.txtGroupdesc.setText(String.format(context.getString(R.string.group_description_prefix),
+                group.getDescription()));
+        } else if (!TextUtils.isEmpty(group.getLastChangeDescription())) {
+            holder.txtGroupdesc.setText(String.format(context.getString(R.string.desc_body_pattern),
+                context.getString(group.getChangePrefix()), group.getLastChangeDescription()));
+        } else {
+            holder.txtGroupdesc.setVisibility(View.GONE);
         }
 
-        holder.datetime.setText(
-                String.format(context.getString(R.string.date_time_pattern), getChangePrefix(group),
-                        outputSDF.format(group.getDate())));
+        holder.datetime.setText(String.format(context.getString(R.string.date_time_pattern),
+            context.getString(group.getChangePrefix()), outputSDF.format(group.getDate())));
     }
 
     private void setUpMemberCount(GHP_ViewHolder holder, final Group group) {
@@ -282,26 +281,6 @@ public class GroupListAdapter extends RecyclerView.Adapter<GroupListAdapter.GHP_
             }
         } catch (OutOfMemoryError e) {
             holder.avatar.setImageResource(R.drawable.ic_groups_default_avatar);
-        }
-    }
-
-    private String getChangePrefix(Group group) {
-        switch (group.getLastChangeType()) {
-            case GroupConstants.MEETING_CALLED:
-                return (group.getDate().after(new Date()) ? context.getString(
-                        R.string.future_meeting_prefix) : context.getString(R.string.past_meeting_prefix));
-            case GroupConstants.VOTE_CALLED:
-                return (group.getDate().after(new Date())) ? context.getString(R.string.future_vote_prefix)
-                        : context.getString(R.string.past_vote_prefix);
-            case GroupConstants.GROUP_CREATED:
-                return context.getString(R.string.group_created_prefix);
-            case GroupConstants.MEMBER_ADDED:
-                return context.getString(R.string.member_added_prefix);
-            case GroupConstants.GROUP_MOD_OTHER:
-                return context.getString(R.string.group_other_prefix);
-            default:
-                throw new UnsupportedOperationException(
-                        "Error! Should only be one of standard change types");
         }
     }
 

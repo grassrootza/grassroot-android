@@ -439,6 +439,8 @@ public class GrassrootRestService {
     Call<MemberList> fetchAssignedMembers(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
         @Path("taskUid") String taskUid, @Path("taskType") String taskType);
 
+    // should clearly consolidate / abstract / simplify these to one call in future versions
+
     //cancel meeting
     @POST("meeting/cancel/{phoneNumber}/{code}")
     Call<GenericResponse> cancelMeeting(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
@@ -448,6 +450,11 @@ public class GrassrootRestService {
     @POST("vote/cancel/{phoneNumber}/{code}")
     Call<GenericResponse> cancelVote(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
         @Query("uid") String uid);
+
+    //cancel to-do
+    @POST("todo/cancel/{phoneNumber}/{code}")
+    Call<GenericResponse> cancelTodo(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
+                                     @Query("todoUid") String todoUid);
 
     /* SECTION : EDIT GROUPS */
 

@@ -24,6 +24,7 @@ import org.grassroot.android.utils.ErrorUtils;
 import org.grassroot.android.utils.IntentUtils;
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
+import org.greenrobot.eventbus.ThreadMode;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -215,14 +216,17 @@ public class GroupTasksActivity extends PortraitActivity implements NewTaskMenuF
 
     @Override
     public void onTaskLoaded(String taskName) {
-        getSupportActionBar().setHomeAsUpIndicator(R.drawable.btn_close_white);
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setHomeAsUpIndicator(R.drawable.btn_close_white);
+        }
+        if (actionButton != null) {
+            actionButton.setVisibility(View.GONE);
+        }
         toggleMenuFilter(false);
-        actionButton.setVisibility(View.GONE);
     }
 
-    @Subscribe
+    @Subscribe(threadMode = ThreadMode.MAIN)
     public void onTaskCancelled(TaskCancelledEvent e) {
-        Log.e(TAG, "task cancelled ...");
         closeViewTaskFragment();
     }
 
@@ -233,8 +237,14 @@ public class GroupTasksActivity extends PortraitActivity implements NewTaskMenuF
                     .setCustomAnimations(R.anim.push_down_in, R.anim.push_down_out)
                     .remove(frag)
                     .commit();
-            actionButton.setVisibility(canCreateTask ? View.VISIBLE : View.GONE);
-            getSupportActionBar().setHomeAsUpIndicator(R.drawable.btn_back_wt);
+            // keep null checks in place in case subscriber triggered after view destroyed
+            if (actionButton != null) {
+                actionButton.setVisibility(canCreateTask ? View.VISIBLE : View.GONE);
+            }
+            if (getSupportActionBar() != null) {
+                getSupportActionBar().setHomeAsUpIndicator(R.drawable.btn_back_wt);
+            }
+            setTitle(groupMembership.getGroupName());
             toggleMenuFilter(true);
             return true;
         } else {

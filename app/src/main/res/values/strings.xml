@@ -65,6 +65,7 @@
     <string name="connect_error_view_task_snackbar">We couldn\'t connect to fetch all details, we\'ve displayed what we can</string>
     <string name="connect_error_task_responding">We couldn\'t connect now, but have saved the response and will send it when you
     connect again</string>
+    <string name="connect_error_task_cancelled">Sorry, you must be connected to cancel. Please connect and try again.</string>
 
     <string name="server_error_background_group_numbers">The group is created, but some numbers were invalid, please check the group and
     add them</string>
@@ -450,17 +451,18 @@
     <string name="notification_title_format_todo">%1$s for %2$s</string>
 
     <!--Task List :: mostly response strings -->
-    <string name="RESPOND_YES">You have clicked on \'Yes\'. Do you want to proceed with the vote?</string>
-    <string name="RESPOND_NO">You have clicked on \'No\'. Do you want to proceed with the vote?</string>
-    <string name="RSVP_YES">You have marked yourself as attending the meeting. Proceed?</string>
-    <string name="RSVP_NO">You have marked yourself as not attending the meeting. Proceed?</string>
-    <string name="TODO_COMPLETED">Are you sure you want to mark the action complete?</string>
+    <string name="vote_respond_yes_confirm">You\'re about to vote yes. Confirmed?</string>
+    <string name="vote_respond_no_confirm">You\'re about to vote no. Confirmed?</string>
+    <string name="mtg_respond_yes_confirm">You\'re about to reply you\'ll attend. Confirmed?</string>
+    <string name="mtg_respond_no_confirm">You\'re about to reply you can\'t make it. Confirmed?</string>
+    <string name="todo_respond_done_confirm">You\'re marking the todo as done. Confirmed?</string>
 
-    <string name="ga_Votesend">Vote sent successfully</string>
-    <string name="ga_Meetingsend">Reply sent</string>
-    <string name="ga_VoteFailure">Sorry, you\'ve already voted</string>
-    <string name="ga_ToDocompleted">Action marked done</string>
-    <string name="ga_ToDoFailure">Sorry, action already completed</string>
+    <string name="tlist_vote_sent">Vote sent successfully</string>
+    <string name="tlist_meeting_reply_sent">Reply sent</string>
+    <string name="tlist_todo_reply_sent">Todo marked completed</string>
+
+    <string name="task_list_response_offline">You\'re offline, but we\'ve saved your response and
+    will save it when you connect</string>
 
     <string name="ga_newVote">NEW VOTE</string>
     <string name="ga_newMeeting">NEW MEETING</string>
@@ -585,6 +587,7 @@
     <string name="vt_todo_members_assigned">View assigned members</string>
     <string name="vt_todo_group_assigned">Whole group assigned</string>
     <string name="vt_todo_assigned_error">Couldn\'t fetch who is assigned</string>
+    <string name="vt_todo_cancel">Cancel action</string>
 
     <!-- Section : Some strings for special display of notified tasks (e.g., cancelled) -->
     <string name="vt_cancel_title">Cancelled</string>

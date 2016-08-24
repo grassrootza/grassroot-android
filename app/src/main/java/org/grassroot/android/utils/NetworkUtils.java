@@ -434,7 +434,7 @@ public class NetworkUtils {
       @Override
       public void call(List<TaskModel> tasks) {
         for(TaskModel taskModel : tasks) {
-          TaskService.getInstance().respondToTaskRx(taskModel, taskModel.getReply(), Schedulers.immediate())
+          TaskService.getInstance().respondToTask(taskModel.getTaskUid(), taskModel.getReply(), Schedulers.immediate())
               .subscribe(new Subscriber<String>() {
                 @Override
                 public void onCompleted() { }

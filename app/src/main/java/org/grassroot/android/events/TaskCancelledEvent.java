@@ -6,17 +6,14 @@ import org.grassroot.android.models.TaskModel;
  * Created by paballo on 2016/06/22.
  */
 public class TaskCancelledEvent {
-    private final TaskModel task;
 
-    public TaskCancelledEvent(){
-        this.task = null;
+    private final String taskUid;
+
+    public TaskCancelledEvent(String taskUid) {
+        this.taskUid = taskUid;
     }
 
-    public TaskCancelledEvent(TaskModel task){
-        this.task = task;
-    }
-
-    public TaskModel getTask() {
-        return task;
+    public String getTaskUid() {
+        return taskUid;
     }
 }

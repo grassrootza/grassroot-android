@@ -19,6 +19,7 @@ import android.view.View;
 import android.widget.TextView;
 
 import org.grassroot.android.R;
+import org.grassroot.android.adapters.GroupPickAdapter;
 import org.grassroot.android.events.TaskAddedEvent;
 import org.grassroot.android.events.TaskCancelledEvent;
 import org.grassroot.android.events.UserLoggedOutEvent;
@@ -30,17 +31,19 @@ import org.grassroot.android.fragments.NewTaskMenuFragment;
 import org.grassroot.android.fragments.NotificationCenterFragment;
 import org.grassroot.android.fragments.QuickTaskModalFragment;
 import org.grassroot.android.fragments.TaskListFragment;
+import org.grassroot.android.fragments.ViewTaskFragment;
+import org.grassroot.android.fragments.dialogs.ConfirmCancelDialogFragment;
 import org.grassroot.android.interfaces.GroupConstants;
 import org.grassroot.android.interfaces.GroupPickCallbacks;
 import org.grassroot.android.interfaces.NavigationConstants;
 import org.grassroot.android.interfaces.TaskConstants;
 import org.grassroot.android.models.Group;
 import org.grassroot.android.services.SharingService;
-import org.grassroot.android.utils.Constant;
 import org.grassroot.android.utils.NetworkUtils;
 import org.grassroot.android.utils.PermissionUtils;
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
+import org.greenrobot.eventbus.ThreadMode;
 
 import java.util.Locale;
 
@@ -48,7 +51,8 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 
 public class HomeScreenActivity extends PortraitActivity implements NavigationDrawerFragment.NavigationDrawerCallbacks,
-        GroupPickCallbacks, NewTaskMenuFragment.NewTaskMenuListener, TaskListFragment.TaskListListener, SearchView.OnQueryTextListener {
+    GroupPickCallbacks, NewTaskMenuFragment.NewTaskMenuListener, TaskListFragment.TaskListListener,
+    SearchView.OnQueryTextListener, GroupPickAdapter.GroupPickAdapterListener {
 
     private static final String TAG = HomeScreenActivity.class.getSimpleName();
 
@@ -107,14 +111,17 @@ public class HomeScreenActivity extends PortraitActivity implements NavigationDr
     }
 
     private void setUpToolbar() {
-        setTitle(R.string.ghp_toolbar_title);
         setSupportActionBar(toolbar);
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        getSupportActionBar().setHomeButtonEnabled(true);
         drawerToggle = new ActionBarDrawerToggle(this, drawer, toolbar, R.string.nav_open, R.string.nav_close);
         drawer.addDrawerListener(drawerToggle);
-        drawerToggle.syncState();
         toggleClickableTitle(true);
+        resetDrawerToggle();
+    }
+
+    private void resetDrawerToggle() {
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        getSupportActionBar().setHomeButtonEnabled(true);
+        drawerToggle.syncState();
     }
 
     @Override
@@ -271,7 +278,6 @@ public class HomeScreenActivity extends PortraitActivity implements NavigationDr
 
     private void switchToTasksFragment() {
         setTitleAndNavDrawerSelection(NavigationConstants.ITEM_TASKS, false);
-
         if (taskListFragment == null) {
             taskListFragment = TaskListFragment.newInstance(null, this, this, true);
         }
@@ -392,26 +398,51 @@ public class HomeScreenActivity extends PortraitActivity implements NavigationDr
     public void groupPickerTriggered(final String taskType) {
         switchActionBarToPicker();
         final String permission = PermissionUtils.permissionForTaskType(taskType);
-        final Class activityToLaunch = TaskConstants.MEETING.equals(taskType) ? CreateMeetingActivity.class :
-                TaskConstants.VOTE.equals(taskType) ? CreateVoteActivity.class : CreateTodoActivity.class;
-        Fragment groupPicker = GroupPickFragment.newInstance(permission, taskType, new GroupPickFragment.GroupPickListener() {
-            @Override
-            public void onGroupPicked(Group group, String returnTag) {
-                Fragment picker = getSupportFragmentManager().findFragmentByTag(GroupPickFragment.class.getCanonicalName());
-                if (picker != null && picker.isVisible()) {
-                    getSupportFragmentManager().beginTransaction().remove(picker).commit();
-                }
-                switchActionBarOffPicker();
-                Intent i = new Intent(HomeScreenActivity.this, activityToLaunch);
-                i.putExtra(GroupConstants.UID_FIELD, group.getGroupUid());
-                i.putExtra(GroupConstants.LOCAL_FIELD, group.getIsLocal());
-                startActivity(i);
-            }
-        });
+        Fragment groupPicker = GroupPickFragment.newInstance(permission, taskType);
         getSupportFragmentManager().beginTransaction()
                 .add(R.id.home_fragment_container, groupPicker, GroupPickFragment.class.getCanonicalName())
                 .addToBackStack(null)
                 .commit();
+    }
+
+    @Override
+    public void onGroupPicked(final Group group, final String returnTag) {
+        // todo : have a "don't show this again" option
+        final String message = String.format(getString(R.string.group_picker_confirm_string),
+            getString(constructVerb(returnTag)), group.getGroupName());
+        ConfirmCancelDialogFragment.newInstance(message,
+            new ConfirmCancelDialogFragment.ConfirmDialogListener() {
+                @Override public void doConfirmClicked() {
+                    finishGroupPick(group, returnTag);
+                }
+            }).show(getSupportFragmentManager(), "confirm");
+    }
+
+    private int constructVerb(final String returnTag) {
+        switch (returnTag) {
+            case TaskConstants.MEETING:
+                return R.string.picker_call_mtg;
+            case TaskConstants.VOTE:
+                return R.string.picker_call_vote;
+            case TaskConstants.TODO:
+                return R.string.picker_rec_action;
+            default:
+                throw new UnsupportedOperationException("Error! Return tag in group picker not known type");
+        }
+    }
+
+    private void finishGroupPick(final Group group, final String taskType) {
+        final Class activityToLaunch = TaskConstants.MEETING.equals(taskType) ? CreateMeetingActivity.class :
+            TaskConstants.VOTE.equals(taskType) ? CreateVoteActivity.class : CreateTodoActivity.class;
+        Fragment picker = getSupportFragmentManager().findFragmentByTag(GroupPickFragment.class.getCanonicalName());
+        if (picker != null && picker.isVisible()) {
+            getSupportFragmentManager().beginTransaction().remove(picker).commit();
+        }
+        switchActionBarOffPicker();
+        Intent i = new Intent(HomeScreenActivity.this, activityToLaunch);
+        i.putExtra(GroupConstants.UID_FIELD, group.getGroupUid());
+        i.putExtra(GroupConstants.LOCAL_FIELD, group.getIsLocal());
+        startActivity(i);
     }
 
     private void toggleClickableTitle(boolean clickable) {
@@ -507,18 +538,26 @@ public class HomeScreenActivity extends PortraitActivity implements NavigationDr
         drawerToggle.setToolbarNavigationClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                getSupportFragmentManager().popBackStack();
-                drawerToggle.setDrawerIndicatorEnabled(true);
-                toggleClickableTitle(true);
-                setTitle(R.string.tasks_toolbar_title);
-                invalidateOptionsMenu();
+                closeViewTaskFragment();
             }
         });
     }
 
-    @Subscribe
-    public void onTaskCancelled(TaskCancelledEvent e) {
-        getSupportActionBar().setHomeAsUpIndicator(R.drawable.btn_navigation);
+    private void closeViewTaskFragment() {
+        getSupportFragmentManager().popBackStack();
+        drawerToggle.setDrawerIndicatorEnabled(true);
+        toggleClickableTitle(true);
+        setTitle(R.string.tasks_toolbar_title);
+        invalidateOptionsMenu();
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onEvent(TaskCancelledEvent e) {
+        Log.e(TAG, "on task cancelled event ...");
+        Fragment frag = getSupportFragmentManager().findFragmentByTag(ViewTaskFragment.class.getCanonicalName());
+        if (frag != null && frag.isVisible()) {
+            closeViewTaskFragment();
+        }
     }
 
     private void switchOffMenu() {
@@ -530,4 +569,5 @@ public class HomeScreenActivity extends PortraitActivity implements NavigationDr
         showMenuOptions = true;
         invalidateOptionsMenu();
     }
+
 }
