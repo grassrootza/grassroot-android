@@ -6,15 +6,18 @@ import android.content.Intent;
 
 import com.jakewharton.picasso.OkHttp3Downloader;
 import com.squareup.picasso.Picasso;
+
+import org.grassroot.android.BuildConfig;
+import org.grassroot.android.receivers.TaskManagerReceiver;
+
+import java.io.IOException;
+
 import io.realm.Realm;
 import io.realm.RealmConfiguration;
-import java.io.IOException;
 import okhttp3.Cache;
 import okhttp3.Interceptor;
 import okhttp3.OkHttpClient;
 import okhttp3.Response;
-import org.grassroot.android.BuildConfig;
-import org.grassroot.android.receivers.TaskManagerReceiver;
 
 /**
  * Created by luke on 2016/06/17.

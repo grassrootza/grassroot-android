@@ -3,9 +3,6 @@ package org.grassroot.android.services;
 import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
-import android.util.Log;
-
-import org.grassroot.android.utils.NetworkUtils;
 
 import java.io.IOException;
 

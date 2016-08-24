@@ -36,13 +36,11 @@ import org.grassroot.android.events.TaskUpdatedEvent;
 import org.grassroot.android.fragments.dialogs.ConfirmCancelDialogFragment;
 import org.grassroot.android.interfaces.NetworkErrorDialogListener;
 import org.grassroot.android.interfaces.TaskConstants;
-import org.grassroot.android.models.GenericResponse;
 import org.grassroot.android.models.Member;
 import org.grassroot.android.models.ResponseTotalsModel;
 import org.grassroot.android.models.RsvpListModel;
 import org.grassroot.android.models.TaskModel;
 import org.grassroot.android.models.exceptions.ApiCallException;
-import org.grassroot.android.services.GrassrootRestService;
 import org.grassroot.android.services.SharingService;
 import org.grassroot.android.services.TaskService;
 import org.grassroot.android.utils.ErrorUtils;
@@ -59,9 +57,6 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 import butterknife.Unbinder;
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
 import rx.Subscriber;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.functions.Action1;
@@ -79,6 +74,7 @@ public class ViewTaskFragment extends Fragment {
 
     private ViewGroup mContainer;
     private Unbinder unbinder;
+    private boolean bound; // to avoid null pointers on eventbus ..
 
     @BindView(R.id.vt_title) TextView tvTitle;
     @BindView(R.id.vt_header) TextView tvHeader;
@@ -131,7 +127,6 @@ public class ViewTaskFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        EventBus.getDefault().register(this);
         setHasOptionsMenu(true);
         if (getArguments() != null) {
             Bundle args = getArguments();
@@ -164,6 +159,7 @@ public class ViewTaskFragment extends Fragment {
                              Bundle savedInstanceState) {
         View viewToReturn = inflater.inflate(R.layout.fragment_view_task, container, false);
         unbinder = ButterKnife.bind(this, viewToReturn);
+        EventBus.getDefault().register(this);
         mContainer = container;
 
         if (task == null) {
@@ -178,13 +174,8 @@ public class ViewTaskFragment extends Fragment {
     @Override
     public void onDestroyView() {
         super.onDestroyView();
-        unbinder.unbind();
-    }
-
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
         EventBus.getDefault().unregister(this);
+        unbinder.unbind();
     }
 
     @Override

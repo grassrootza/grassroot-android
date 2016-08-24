@@ -1,6 +1,5 @@
 package org.grassroot.android.models;
 
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 
 /**

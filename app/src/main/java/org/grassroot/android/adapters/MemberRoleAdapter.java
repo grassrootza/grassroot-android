@@ -7,8 +7,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
-import io.realm.RealmObject;
-import io.realm.RealmResults;
 import org.grassroot.android.R;
 import org.grassroot.android.interfaces.GroupConstants;
 import org.grassroot.android.models.Member;

@@ -2,7 +2,6 @@ package org.grassroot.android.adapters;
 
 import android.content.Context;
 import android.os.Build;
-import android.os.SystemClock;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
@@ -16,23 +15,17 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import org.grassroot.android.R;
-import org.grassroot.android.events.LocalGroupToServerEvent;
 import org.grassroot.android.fragments.HomeGroupListFragment;
-import org.grassroot.android.interfaces.GroupConstants;
 import org.grassroot.android.models.Group;
 import org.grassroot.android.services.ApplicationLoader;
 import org.grassroot.android.utils.ImageUtils;
 import org.grassroot.android.utils.RealmUtils;
-import org.greenrobot.eventbus.Subscribe;
-import org.greenrobot.eventbus.ThreadMode;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.Date;
 import java.util.List;
-import java.util.Locale;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;

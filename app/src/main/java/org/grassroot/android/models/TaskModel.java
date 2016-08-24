@@ -4,15 +4,16 @@ import android.os.Parcel;
 import android.os.Parcelable;
 import android.util.Log;
 
-import io.realm.RealmList;
-import io.realm.RealmObject;
-import io.realm.annotations.PrimaryKey;
+import org.grassroot.android.interfaces.TaskConstants;
+import org.grassroot.android.utils.Constant;
+
 import java.text.ParseException;
 import java.util.Comparator;
 import java.util.Date;
 
-import org.grassroot.android.interfaces.TaskConstants;
-import org.grassroot.android.utils.Constant;
+import io.realm.RealmList;
+import io.realm.RealmObject;
+import io.realm.annotations.PrimaryKey;
 
 /**
  * Created by paballo on 2016/05/05.

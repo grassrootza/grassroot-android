@@ -1,7 +1,6 @@
 package org.grassroot.android.utils;
 
 import android.content.ContentResolver;
-import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.BitmapShader;
@@ -23,7 +22,6 @@ import org.grassroot.android.interfaces.GroupConstants;
 import org.grassroot.android.services.ApplicationLoader;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 
 /**

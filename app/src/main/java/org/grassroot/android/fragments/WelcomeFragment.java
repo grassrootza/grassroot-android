@@ -16,7 +16,6 @@ import android.widget.Button;
 import org.grassroot.android.R;
 import org.grassroot.android.activities.CreateGroupActivity;
 import org.grassroot.android.activities.GroupSearchActivity;
-import org.grassroot.android.utils.Constant;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;

@@ -3,9 +3,11 @@ package org.grassroot.android.models;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.util.Log;
+
+import org.grassroot.android.interfaces.GroupConstants;
+
 import io.realm.RealmObject;
 import io.realm.annotations.PrimaryKey;
-import org.grassroot.android.interfaces.GroupConstants;
 
 /**
  * Created by luke on 2016/05/05.

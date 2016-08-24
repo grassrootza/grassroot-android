@@ -4,15 +4,10 @@ import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
 import android.view.View;
 
-import com.google.android.gms.gcm.Task;
-
 import org.grassroot.android.R;
-import org.grassroot.android.fragments.CreateTaskFragment;
 import org.grassroot.android.fragments.EditTaskFragment;
-import org.grassroot.android.interfaces.GroupConstants;
 import org.grassroot.android.interfaces.TaskConstants;
 import org.grassroot.android.models.TaskModel;
-import org.grassroot.android.utils.Constant;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;

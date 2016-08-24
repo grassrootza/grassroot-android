@@ -1,6 +1,7 @@
 package org.grassroot.android.models;
 
 import com.google.gson.annotations.SerializedName;
+
 import io.realm.RealmObject;
 
 public class TokenResponse extends RealmObject {

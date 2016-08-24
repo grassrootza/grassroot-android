@@ -6,7 +6,6 @@ import android.graphics.Canvas;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
-import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
@@ -16,8 +15,6 @@ import android.view.ViewGroup;
 
 import org.grassroot.android.R;
 import org.grassroot.android.adapters.GroupPickAdapter;
-import org.grassroot.android.fragments.dialogs.ConfirmCancelDialogFragment;
-import org.grassroot.android.interfaces.TaskConstants;
 import org.grassroot.android.models.Group;
 import org.grassroot.android.utils.RealmUtils;
 
@@ -27,7 +24,6 @@ import java.util.List;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.Unbinder;
-import rx.Subscriber;
 import rx.functions.Action1;
 
 /**

@@ -11,14 +11,10 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.squareup.picasso.NetworkPolicy;
-import com.squareup.picasso.Picasso;
-
 import org.grassroot.android.R;
 import org.grassroot.android.interfaces.TaskConstants;
 import org.grassroot.android.models.TaskNotification;
 import org.grassroot.android.services.ApplicationLoader;
-import org.grassroot.android.utils.CircularImageTransformer;
 import org.grassroot.android.utils.ImageUtils;
 
 import java.util.ArrayList;

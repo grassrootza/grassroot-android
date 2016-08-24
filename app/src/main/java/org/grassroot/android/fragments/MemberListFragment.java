@@ -1,18 +1,15 @@
 package org.grassroot.android.fragments;
 
-import android.content.Context;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.support.v7.widget.helper.ItemTouchHelper;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ProgressBar;
 
-import io.realm.RealmResults;
 import org.grassroot.android.R;
 import org.grassroot.android.adapters.MemberListAdapter;
 import org.grassroot.android.adapters.RecyclerTouchListener;
@@ -20,14 +17,12 @@ import org.grassroot.android.interfaces.ClickListener;
 import org.grassroot.android.models.Group;
 import org.grassroot.android.models.Member;
 import org.grassroot.android.utils.RealmUtils;
-import org.grassroot.android.utils.Utilities;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import io.realm.RealmList;
 import rx.functions.Action1;
 
 /**

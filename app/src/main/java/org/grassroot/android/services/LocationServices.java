@@ -20,8 +20,8 @@ import com.google.android.gms.location.LocationSettingsResult;
 import org.grassroot.android.models.GenericResponse;
 import org.grassroot.android.utils.Constant;
 import org.grassroot.android.utils.PermissionUtils;
-
 import org.grassroot.android.utils.RealmUtils;
+
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;

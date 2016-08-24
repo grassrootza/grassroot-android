@@ -19,7 +19,6 @@ import org.grassroot.android.interfaces.GroupConstants;
 import org.grassroot.android.models.Group;
 import org.grassroot.android.models.Member;
 import org.grassroot.android.services.GroupService;
-import org.grassroot.android.utils.Constant;
 import org.grassroot.android.utils.IntentUtils;
 
 import java.util.Collections;

@@ -5,13 +5,8 @@ import android.app.Dialog;
 import android.content.DialogInterface;
 import android.os.Bundle;
 import android.support.v4.app.DialogFragment;
-import android.text.TextUtils;
-import android.util.Log;
 
 import org.grassroot.android.models.Contact;
-
-import java.util.Collections;
-import java.util.List;
 
 /**
  * Created by luke on 2016/06/07.

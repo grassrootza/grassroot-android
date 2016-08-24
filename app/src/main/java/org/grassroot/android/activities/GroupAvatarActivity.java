@@ -43,7 +43,6 @@ import org.grassroot.android.utils.ImageUtils;
 import org.grassroot.android.utils.NetworkUtils;
 
 import java.io.File;
-import java.io.IOException;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;

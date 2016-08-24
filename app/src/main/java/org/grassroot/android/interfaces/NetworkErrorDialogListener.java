@@ -5,7 +5,6 @@ import android.content.Intent;
 import android.util.Log;
 
 import org.grassroot.android.fragments.dialogs.NetworkErrorDialogFragment;
-import org.grassroot.android.utils.Constant;
 
 /**
  * Created by paballo on 2016/06/02.

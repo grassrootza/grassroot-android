@@ -2,10 +2,10 @@ package org.grassroot.android.models;
 
 import com.google.gson.annotations.SerializedName;
 
+import java.util.List;
+
 import io.realm.RealmList;
 import io.realm.RealmObject;
-
-import java.util.List;
 
 /**
  * Created by paballo on 2016/05/05.

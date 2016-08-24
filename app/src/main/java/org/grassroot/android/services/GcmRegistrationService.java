@@ -14,11 +14,11 @@ import org.grassroot.android.interfaces.NotificationConstants;
 import org.grassroot.android.models.GenericResponse;
 import org.grassroot.android.models.PreferenceObject;
 import org.grassroot.android.utils.Constant;
+import org.grassroot.android.utils.RealmUtils;
 
 import java.io.IOException;
 import java.util.Calendar;
 
-import org.grassroot.android.utils.RealmUtils;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;

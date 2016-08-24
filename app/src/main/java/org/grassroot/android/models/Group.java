@@ -1,25 +1,25 @@
 package org.grassroot.android.models;
 
-import android.content.Context;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.text.TextUtils;
-import android.util.Log;
 
-import io.realm.RealmList;
-import io.realm.RealmObject;
-import io.realm.annotations.Ignore;
-import io.realm.annotations.PrimaryKey;
-import java.text.ParseException;
-import java.util.Calendar;
-import java.util.Comparator;
-import java.util.Date;
-import java.util.List;
 import org.grassroot.android.R;
 import org.grassroot.android.interfaces.GroupConstants;
 import org.grassroot.android.utils.Constant;
 import org.grassroot.android.utils.ImageUtils;
 import org.grassroot.android.utils.RealmUtils;
+
+import java.text.ParseException;
+import java.util.Calendar;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.List;
+
+import io.realm.RealmList;
+import io.realm.RealmObject;
+import io.realm.annotations.Ignore;
+import io.realm.annotations.PrimaryKey;
 
 /**
  * Created by paballo on 2016/05/04.

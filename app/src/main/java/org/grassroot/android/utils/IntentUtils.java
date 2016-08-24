@@ -2,13 +2,12 @@ package org.grassroot.android.utils;
 
 import android.content.Context;
 import android.content.Intent;
-import android.os.Bundle;
 
 import org.grassroot.android.activities.ActionCompleteActivity;
+import org.grassroot.android.activities.GroupMembersActivity;
 import org.grassroot.android.interfaces.GroupConstants;
 import org.grassroot.android.models.Group;
 import org.grassroot.android.models.Member;
-import org.grassroot.android.activities.GroupMembersActivity;
 
 import java.util.ArrayList;
 

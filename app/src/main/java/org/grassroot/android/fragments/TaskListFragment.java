@@ -1,6 +1,7 @@
 package org.grassroot.android.fragments;
 
 import android.content.Context;
+import android.content.DialogInterface;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
@@ -8,6 +9,7 @@ import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.widget.SwipeRefreshLayout;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
@@ -28,6 +30,7 @@ import org.grassroot.android.fragments.dialogs.ConfirmCancelDialogFragment;
 import org.grassroot.android.interfaces.GroupPickCallbacks;
 import org.grassroot.android.interfaces.TaskConstants;
 import org.grassroot.android.models.TaskModel;
+import org.grassroot.android.services.ApplicationLoader;
 import org.grassroot.android.services.TaskService;
 import org.grassroot.android.utils.ErrorUtils;
 import org.grassroot.android.utils.NetworkUtils;
@@ -37,9 +40,8 @@ import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -77,8 +79,10 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
   @BindView(R.id.tl_no_task_message) RelativeLayout noTaskMessageLayout;
   @BindView(R.id.tl_no_task_text) TextView noTaskMessageText;
 
-  private boolean filteringActive;
-  private Map<String, Boolean> filterFlags;
+  // sequence meeting -> vote -> to-do must match string array
+  final CharSequence[] filterOptions = ApplicationLoader.applicationContext
+      .getResources().getStringArray(R.array.tasks_filter_options);
+  private boolean[] filtersChecked = { false, false, false };
 
   @BindView(R.id.progressBar) ProgressBar progressBar;
 
@@ -114,7 +118,6 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
   onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     setHasOptionsMenu(true);
-    filterFlags = new HashMap<>();
   }
 
   @Override
@@ -209,9 +212,13 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
           if (isInNoTaskMessageView) {
             switchOffNoTasks();
           }
-          tasksAdapter.refreshTaskList(taskModels);
-          tasksAdapter.notifyDataSetChanged();
-          taskView.setVisibility(View.VISIBLE);
+          tasksAdapter.refreshTaskList(taskModels).subscribe(new Action1<Boolean>() {
+            @Override
+            public void call(Boolean aBoolean) {
+              tasksAdapter.notifyDataSetChanged();
+              taskView.setVisibility(View.VISIBLE);
+            }
+          });
         }
         hideProgress();
       }
@@ -354,7 +361,7 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
       noTaskMessageLayout.setVisibility(View.GONE);
       isInNoTaskMessageView = false;
     }
-    tasksAdapter.addTaskToList(event.getTaskCreated(), 0);
+    tasksAdapter.addTaskToList(event.getTaskCreated()); // adds to top
   }
 
   @Subscribe(threadMode = ThreadMode.MAIN)
@@ -404,44 +411,49 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
      */
 
   public void filter() {
-    if (!filteringActive) {
-      startFiltering();
-    }
-    FilterFragment filterDialog = new FilterFragment();
-    filterDialog.setArguments(assembleFilterBundle());
-    filterDialog.show(getActivity().getSupportFragmentManager(), "FilterFragment");
 
-    filterDialog.setListener(new FilterFragment.TasksFilterListener() {
-      @Override public void itemClicked(String typeChanged, boolean changedFlagState) {
-        filterFlags.put(typeChanged, changedFlagState);
-        tasksAdapter.addOrRemoveTaskType(typeChanged, changedFlagState);
-      }
+    // store in case error
+    final boolean[] flagsChanged = Arrays.copyOf(filtersChecked, 3);
 
-      @Override public void clearFilters() {
-        filteringActive = false;
-        tasksAdapter.stopFiltering();
-        resetFilterFlags();
+    AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+    builder.setMultiChoiceItems(filterOptions, flagsChanged, new DialogInterface.OnMultiChoiceClickListener() {
+      @Override
+      public void onClick(DialogInterface dialog, int which, boolean isChecked) {
+        flagsChanged[which] = isChecked;
+        // tasksAdapter.addOrRemoveTaskType(filterTags[which], isChecked);
       }
     });
-  }
 
-  private void startFiltering() {
-    resetFilterFlags();
-    tasksAdapter.startFiltering();
-    filteringActive = true;
-  }
+    builder.setPositiveButton(R.string.tasks_filter_do, new DialogInterface.OnClickListener() {
+      @Override
+      public void onClick(DialogInterface dialog, int which) {
+        tasksAdapter.setToFilters(flagsChanged, AndroidSchedulers.mainThread())
+            .subscribe(new Action1<Boolean>() {
+              @Override
+              public void call(Boolean aBoolean) {
+                tasksAdapter.notifyDataSetChanged();
+                filtersChecked = flagsChanged;
+              }
+            }, new Action1<Throwable>() {
+              @Override
+              public void call(Throwable throwable) {
+                throwable.printStackTrace();
+              }
+            });
+      }
+    });
 
-  private Bundle assembleFilterBundle() {
-    Bundle b = new Bundle();
-    b.putBoolean(TaskConstants.VOTE, filterFlags.get(TaskConstants.VOTE));
-    b.putBoolean(TaskConstants.MEETING, filterFlags.get(TaskConstants.MEETING));
-    b.putBoolean(TaskConstants.TODO, filterFlags.get(TaskConstants.TODO));
-    return b;
-  }
+    builder.setNegativeButton(R.string.tasks_filter_clear, new DialogInterface.OnClickListener() {
+      @Override
+      public void onClick(DialogInterface dialog, int which) {
+        Arrays.fill(filtersChecked, false); // UI initializes to false, with buttons unchecked (adapter, in logic, initializes to true)
+        tasksAdapter.stopFiltering();
+      }
+    });
 
-  private void resetFilterFlags() {
-    filterFlags.put(TaskConstants.VOTE, false);
-    filterFlags.put(TaskConstants.MEETING, false);
-    filterFlags.put(TaskConstants.TODO, false);
+    builder
+        .setCancelable(true)
+        .create()
+        .show();
   }
 }

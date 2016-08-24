@@ -11,9 +11,7 @@ import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
-import butterknife.BindView;
-import butterknife.ButterKnife;
-import butterknife.OnClick;
+
 import org.grassroot.android.R;
 import org.grassroot.android.adapters.ProfileAdapter;
 import org.grassroot.android.adapters.RecyclerTouchListener;
@@ -30,6 +28,9 @@ import org.grassroot.android.utils.RealmUtils;
 import java.util.ArrayList;
 import java.util.List;
 
+import butterknife.BindView;
+import butterknife.ButterKnife;
+import butterknife.OnClick;
 import io.realm.RealmList;
 import retrofit2.Call;
 import retrofit2.Callback;

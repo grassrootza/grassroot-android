@@ -1,7 +1,5 @@
 package org.grassroot.android.models.exceptions;
 
-import android.util.Log;
-
 /**
  * Created by luke on 2016/08/02.
  */

@@ -18,15 +18,16 @@ import org.grassroot.android.models.TaskModel;
 import org.grassroot.android.services.ApplicationLoader;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import rx.Observable;
+import rx.Scheduler;
 import rx.Subscriber;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.functions.Action1;
@@ -47,6 +48,10 @@ public class TasksAdapter extends RecyclerView.Adapter<TasksAdapter.TaskViewHold
   private Map<String, Integer> uidPositionMap = new HashMap<>();
 
   private List<TaskModel> fullTaskList;
+  private boolean filteringActive;
+  private boolean[] storedFilters = { true, true, true };
+  private final ArrayList<String> filterOrder = new ArrayList<>(Arrays.asList(TaskConstants.MEETING,
+      TaskConstants.VOTE, TaskConstants.TODO));
 
   private final int primaryColor, textColor, secondaryColor;
 
@@ -64,16 +69,42 @@ public class TasksAdapter extends RecyclerView.Adapter<TasksAdapter.TaskViewHold
     this.viewedTasks = tasks;
   }
 
-  public void refreshTaskList(List<TaskModel> allTasks) {
-    viewedTasks = allTasks;
-    notifyDataSetChanged();
-    resetUidPositionMap().subscribe();
+  public Observable<Boolean> refreshTaskList(final List<TaskModel> allTasks) {
+    return Observable.create(new Observable.OnSubscribe<Boolean>() {
+      @Override
+      public void call(final Subscriber<? super Boolean> subscriber) {
+        viewedTasks = new ArrayList<>(allTasks);
+        try {
+          if (!filteringActive) {
+            subscriber.onNext(true);
+            resetUidPositionMap().subscribe();
+            subscriber.onCompleted();
+          } else {
+            fullTaskList = new ArrayList<>(allTasks);
+            // may be more elegant to hive out for loop from setToFilters into tiny helper method
+            setToFilters(storedFilters, Schedulers.immediate()).subscribe(new Action1<Boolean>() {
+              @Override
+              public void call(Boolean aBoolean) {
+                subscriber.onNext(true); // this might not work entirely
+                subscriber.onCompleted();
+              }
+            });
+          }
+        } catch (Exception e) {
+          e.printStackTrace();
+          subscriber.onNext(false); // just to enable graceful fail if an error in here
+        }
+      }
+    }).subscribeOn(Schedulers.computation()).observeOn(AndroidSchedulers.mainThread());
   }
 
-  public void addTaskToList(TaskModel task, int position) {
-    viewedTasks.add(position, task);
+  public void addTaskToList(TaskModel task) {
+    viewedTasks.add(0, task);
     notifyDataSetChanged(); // otherwise it only changes the view on the first item, so it looks like a replace
     resetUidPositionMap().subscribe(); // since positions will be updated throughout ...
+    if (fullTaskList != null) {
+      fullTaskList.add(0, task);
+    }
   }
 
   public void removeTaskFromList(final String taskUid) {
@@ -82,6 +113,7 @@ public class TasksAdapter extends RecyclerView.Adapter<TasksAdapter.TaskViewHold
       viewedTasks.remove((int) position);
       notifyItemRemoved(position);
       resetUidPositionMap().subscribe();
+      // todo : also remove from full task list
     } else {
       Log.e(TAG, "error! no such task found ...");
     }
@@ -105,7 +137,7 @@ public class TasksAdapter extends RecyclerView.Adapter<TasksAdapter.TaskViewHold
           uidPositionMap.put(viewedTasks.get(i).getTaskUid(), i);
         }
       }
-    }).subscribeOn(Schedulers.computation()).observeOn(AndroidSchedulers.mainThread());
+    }).subscribeOn(Schedulers.computation());
   }
 
   @Override
@@ -293,9 +325,7 @@ public class TasksAdapter extends RecyclerView.Adapter<TasksAdapter.TaskViewHold
 
   public void searchByName(final String query) {
     // final long startTime = SystemClock.currentThreadTimeMillis();
-    if (fullTaskList == null || fullTaskList.isEmpty()) {
-      fullTaskList = new ArrayList<>(viewedTasks);
-    } else {
+    if (!storeFullList()) {
       viewedTasks = new ArrayList<>(fullTaskList);
     }
 
@@ -328,60 +358,46 @@ public class TasksAdapter extends RecyclerView.Adapter<TasksAdapter.TaskViewHold
             notifyDataSetChanged();
           }
         });
-
-
   }
 
-  public void startFiltering() {
-    if (fullTaskList == null || fullTaskList.isEmpty()) {
+  public boolean storeFullList() {
+    if (fullTaskList == null || fullTaskList.isEmpty() || fullTaskList.size() < viewedTasks.size()) {
+      // i.e., have never filtered, or filtered a while ago, viewed tasks got bigger, now resetting
       fullTaskList = new ArrayList<>(viewedTasks);
+      return true;
+    } else {
+      return false;
     }
-    viewedTasks.clear();
+  }
+
+  public Observable<Boolean> setToFilters(final boolean filterFlags[], Scheduler observingThread) {
+    return Observable.create(new Observable.OnSubscribe<Boolean>() {
+      @Override
+      public void call(Subscriber<? super Boolean> subscriber) {
+        long startTime = SystemClock.currentThreadTimeMillis();
+        storeFullList();
+        viewedTasks.clear();
+        final int size = fullTaskList.size();
+        for (int i = 0; i < size; i++) {
+          if (filterFlags[filterOrder.indexOf(fullTaskList.get(i).getType())]) {
+            viewedTasks.add(fullTaskList.get(i));
+          }
+        }
+        subscriber.onNext(true);
+        storedFilters = filterFlags;
+        filteringActive = true;
+        resetUidPositionMap().subscribe();
+        subscriber.onCompleted();
+      }
+    }).subscribeOn(Schedulers.computation()).observeOn(observingThread);
   }
 
   public void stopFiltering() {
     viewedTasks = new ArrayList<>(fullTaskList);
     notifyDataSetChanged();
-  }
-
-  public void addOrRemoveTaskType(final String taskType, final boolean addToDisplay) {
-    final long startTime = SystemClock.currentThreadTimeMillis();
-
-    if (fullTaskList == null || fullTaskList.isEmpty() || fullTaskList.size() < viewedTasks.size()) {
-      // i.e., have never filtered, or filtered a while ago, viewed tasks got bigger, now resetting
-      fullTaskList = new ArrayList<>(viewedTasks);
-      viewedTasks.clear();
-    }
-
-    Observable.from(fullTaskList)
-        .subscribeOn(Schedulers.computation())
-        .observeOn(AndroidSchedulers.mainThread())
-        .filter(new Func1<TaskModel, Boolean>() {
-          @Override
-          public Boolean call(TaskModel taskModel) {
-            return taskModel.getType().equals(taskType);
-          }
-        })
-        .subscribe(new Subscriber<TaskModel>() {
-          @Override
-          public void onError(Throwable e) { e.printStackTrace(); }
-
-          @Override
-          public void onNext(TaskModel taskModel) {
-            if (addToDisplay) {
-              viewedTasks.add(taskModel);
-            } else {
-              viewedTasks.remove(taskModel);
-            }
-          }
-
-          @Override
-          public void onCompleted() {
-            Collections.sort(viewedTasks, Collections.<TaskModel>reverseOrder());
-            notifyDataSetChanged();
-            Log.d(TAG, "filtering method took ... " + (SystemClock.currentThreadTimeMillis() - startTime));
-          }
-    });
+    filteringActive = false;
+    Arrays.fill(storedFilters, true);
+    fullTaskList = null;
   }
 
     /*

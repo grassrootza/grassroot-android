@@ -197,8 +197,13 @@ public class NotificationCenterFragment extends Fragment {
     private void handleNotificationUpdating(final int firstCompletelyVisibleItem, final int lastCompletelyVisibleItem) {
         // Log.d(TAG, String.format("handling notification updating : %d to %d", firstCompletelyVisibleItem, lastCompletelyVisibleItem));
 
-        final boolean firstItemChanged = firstCompletelyVisibleItem != cacheStoredFirstVisible;
-        final boolean lastItemChanged = lastCompletelyVisibleItem != cacheStoredLastVisible;
+        Log.e(TAG, String.format("handling update ... first completely visibke = %1d, last = %2d",
+            firstCompletelyVisibleItem, lastCompletelyVisibleItem));
+
+        final boolean firstItemChanged = firstCompletelyVisibleItem != cacheStoredFirstVisible &&
+            firstCompletelyVisibleItem != -1; // in case no items after filter
+        final boolean lastItemChanged = lastCompletelyVisibleItem != cacheStoredLastVisible &&
+            lastCompletelyVisibleItem != -1; // in case no items after filter
 
         if (firstItemChanged || lastItemChanged) {
             if (firstItemChanged && lastItemChanged) {
@@ -216,6 +221,7 @@ public class NotificationCenterFragment extends Fragment {
     }
 
     private void handleAddingNotificationToBatchForUpdate(final int positionStart, final int positionEnd) {
+        Log.e(TAG, String.format("handle adding notification ... %1d to %2d", positionStart, positionEnd));
         updateNotificationToRead(positionStart, positionEnd).subscribe(new Action1<Integer>() {
             @Override
             public void call(Integer count) {
@@ -233,6 +239,7 @@ public class NotificationCenterFragment extends Fragment {
         return Observable.create(new Observable.OnSubscribe<Integer>() {
             @Override
             public void call(Subscriber<? super Integer> subscriber) {
+                Log.e(TAG, String.format("entering the update batch ... %1d to %2d", positionStart, positionEnd));
                 int changedToViewCounter = 0;
                 for (int i = positionStart; i <= positionEnd; i++) {
                     if (!positionsRead.contains(i)) {

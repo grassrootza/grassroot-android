@@ -1,9 +1,7 @@
 package org.grassroot.android.services;
 
 import android.text.TextUtils;
-import android.util.Log;
 
-import org.grassroot.android.events.TaskCancelledEvent;
 import org.grassroot.android.events.TaskUpdatedEvent;
 import org.grassroot.android.events.TasksRefreshedEvent;
 import org.grassroot.android.interfaces.TaskConstants;

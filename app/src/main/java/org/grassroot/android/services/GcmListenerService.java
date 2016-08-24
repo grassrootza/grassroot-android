@@ -14,7 +14,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
-import java.util.List;
+
 import org.grassroot.android.R;
 import org.grassroot.android.activities.ViewTaskActivity;
 import org.grassroot.android.events.NotificationCountChangedEvent;
@@ -24,6 +24,9 @@ import org.grassroot.android.models.PreferenceObject;
 import org.grassroot.android.utils.Constant;
 import org.grassroot.android.utils.RealmUtils;
 import org.greenrobot.eventbus.EventBus;
+
+import java.util.List;
+
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;

@@ -10,11 +10,9 @@ import org.grassroot.android.interfaces.NotificationConstants;
 import org.grassroot.android.models.GenericResponse;
 import org.grassroot.android.models.TaskNotification;
 import org.grassroot.android.utils.RealmUtils;
-import org.w3c.dom.Text;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 
 import io.realm.Realm;
 import io.realm.RealmQuery;

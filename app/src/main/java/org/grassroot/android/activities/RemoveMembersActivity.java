@@ -18,6 +18,8 @@ import org.grassroot.android.interfaces.GroupConstants;
 import org.grassroot.android.models.exceptions.ApiCallException;
 import org.grassroot.android.services.GroupService;
 import org.grassroot.android.utils.Constant;
+import org.grassroot.android.utils.IntentUtils;
+import org.grassroot.android.utils.NetworkUtils;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -25,10 +27,6 @@ import java.util.Set;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
-
-import org.grassroot.android.utils.IntentUtils;
-import org.grassroot.android.utils.NetworkUtils;
-
 import rx.Subscriber;
 
 /**

@@ -7,8 +7,8 @@ import com.google.android.gms.gcm.GcmNetworkManager;
 import com.google.android.gms.gcm.GcmTaskService;
 import com.google.android.gms.gcm.TaskParams;
 
-import org.grassroot.android.models.exceptions.ApiCallException;
 import org.grassroot.android.models.PreferenceObject;
+import org.grassroot.android.models.exceptions.ApiCallException;
 import org.grassroot.android.receivers.TaskManagerReceiver;
 import org.grassroot.android.utils.NetworkUtils;
 import org.grassroot.android.utils.RealmUtils;
