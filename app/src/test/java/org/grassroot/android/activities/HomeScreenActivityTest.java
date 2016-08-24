@@ -6,11 +6,8 @@ import android.net.http.WelcomeFragment;
 import android.os.Build;
 import android.support.v4.widget.DrawerLayout;
 
-import com.grassroot.android.BuildConfig;
-import com.grassroot.android.R;
-
-
-
+import org.grassroot.android.BuildConfig;
+import org.grassroot.android.R;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -20,9 +17,7 @@ import org.robolectric.RuntimeEnvironment;
 import org.robolectric.annotation.Config;
 import org.robolectric.shadows.support.v4.SupportFragmentTestUtil;
 
-import static org.junit.Assert.*;
-import static org.robolectric.shadows.support.v4.SupportFragmentTestUtil.startFragment;
-import static org.robolectric.shadows.support.v4.SupportFragmentTestUtil.startVisibleFragment;
+import static org.junit.Assert.assertNotNull;
 
 /**
  * Created by paballo on 2016/05/16.

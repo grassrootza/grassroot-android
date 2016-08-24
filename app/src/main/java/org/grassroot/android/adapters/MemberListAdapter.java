@@ -32,9 +32,9 @@ public class MemberListAdapter extends RecyclerView.Adapter<MemberListAdapter.Vi
     private boolean showSelected;
     private LayoutInflater layoutInflater;
 
-    public MemberListAdapter(Context context, boolean canIncludeCurrentMember) {
+    public MemberListAdapter(Context layoutContext, boolean canIncludeCurrentMember) {
         this.members = new ArrayList<>();
-        this.layoutInflater = LayoutInflater.from(context);
+        this.layoutInflater = LayoutInflater.from(layoutContext);
         this.canIncludeCurrentUser = canIncludeCurrentMember;
         this.thisUserPhoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
     }
@@ -93,7 +93,7 @@ public class MemberListAdapter extends RecyclerView.Adapter<MemberListAdapter.Vi
      */
     @Override
     public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        View listItem = layoutInflater.inflate(R.layout.row_member_list, parent, false); // todo : switch to getting inflater in here?
+        View listItem = layoutInflater.inflate(R.layout.row_member_list, parent, false);
         ViewHolder vh = new ViewHolder(listItem);
         vh.ivSelectedIcon.setVisibility(showSelected ? View.VISIBLE : View.GONE);
         return vh;

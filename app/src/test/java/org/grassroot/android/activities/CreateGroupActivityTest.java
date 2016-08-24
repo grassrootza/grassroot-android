@@ -2,8 +2,7 @@ package org.grassroot.android.activities;
 
 import android.os.Build;
 
-import com.grassroot.android.BuildConfig;
-
+import org.grassroot.android.BuildConfig;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -11,7 +10,7 @@ import org.robolectric.Robolectric;
 import org.robolectric.RobolectricGradleTestRunner;
 import org.robolectric.annotation.Config;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertNotNull;
 
 /**
  * Created by paballo on 2016/05/16.
@@ -21,8 +20,6 @@ import static org.junit.Assert.*;
 public class CreateGroupActivityTest {
 
     private CreateGroupActivity createGroupActivity;
-
-
 
     @Before
     public void setUp(){

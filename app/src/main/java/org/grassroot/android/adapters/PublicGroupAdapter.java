@@ -12,9 +12,9 @@ import android.widget.TextView;
 
 import org.grassroot.android.R;
 import org.grassroot.android.models.PublicGroupModel;
+import org.grassroot.android.services.ApplicationLoader;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -31,10 +31,10 @@ public class PublicGroupAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
     private Map<Integer, Integer> positionHeaderMap;
     LayoutInflater inflater;
 
-    public PublicGroupAdapter(Context context, List<PublicGroupModel> publicGroups, Map<Integer, Integer> sectionHeadings) {
+    public PublicGroupAdapter(Context viewContext, List<PublicGroupModel> publicGroups, Map<Integer, Integer> sectionHeadings) {
         this.publicGroupModels = publicGroups;
         this.positionHeaderMap = sectionHeadings;
-        inflater = LayoutInflater.from(context);
+        inflater = LayoutInflater.from(viewContext);
     }
 
     public void resetResults(List<PublicGroupModel> groups, Map<Integer, Integer> sectionHeaders) {
@@ -106,6 +106,7 @@ public class PublicGroupAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
     private void bindPublicGroup(PublicGroupViewHolder holder, int position) {
 
         PublicGroupModel model = publicGroupModels.get(position);
+        final Context context = ApplicationLoader.applicationContext;
 
         holder.sentReqIcon.setVisibility(model.isHasOpenRequest() ? View.VISIBLE : View.GONE);
 
@@ -113,15 +114,12 @@ public class PublicGroupAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
             model.getGroupName());
         holder.txtGroupname.setText(groupName);
 
-        final String groupCreator = String.format(inflater.getContext().getString(R.string.pgroup_org_format),
-            model.getGroupCreator());
+        final String groupCreator = String.format(context.getString(R.string.pgroup_org_format), model.getGroupCreator());
         holder.txtGroupownername.setText(groupCreator);
 
-        if (!TextUtils.isEmpty(model.getDescription())) {
-            holder.txtGroupdesc.setText(model.getDescription());
-        } else {
-            holder.txtGroupdesc.setVisibility(View.GONE);
-        }
+        final String description = !TextUtils.isEmpty(model.getDescription()) ? model.getDescription() :
+            ApplicationLoader.applicationContext.getString(R.string.pgroup_no_description);
+        holder.txtGroupdesc.setText(String.format(context.getString(R.string.group_description_prefix), description));
     }
 
     @Override

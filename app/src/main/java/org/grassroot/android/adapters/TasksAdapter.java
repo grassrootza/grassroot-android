@@ -27,7 +27,10 @@ import java.util.Map;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import rx.Observable;
+import rx.Subscriber;
 import rx.android.schedulers.AndroidSchedulers;
+import rx.functions.Action1;
+import rx.functions.Func1;
 import rx.schedulers.Schedulers;
 
 /**
@@ -44,7 +47,6 @@ public class TasksAdapter extends RecyclerView.Adapter<TasksAdapter.TaskViewHold
   private Map<String, Integer> uidPositionMap = new HashMap<>();
 
   private List<TaskModel> fullTaskList;
-  private Map<String, List<TaskModel>> decomposedList;
 
   private final int primaryColor, textColor, secondaryColor;
 
@@ -116,7 +118,7 @@ public class TasksAdapter extends RecyclerView.Adapter<TasksAdapter.TaskViewHold
   @Override
   public void onBindViewHolder(TaskViewHolder holder, final int position) {
     final TaskModel taskModel = viewedTasks.get(position);
-    taskModel.resetResponseFlags(); // since we can't trust Android's construction mechanism (todo : revisit)
+    taskModel.resetResponseFlags(); // since this may have changed during scroll and return, always reset
     setCardListener(holder.cardView, taskModel, position);
     setUpCardImagesAndView(taskModel, holder, position);
 
@@ -261,7 +263,6 @@ public class TasksAdapter extends RecyclerView.Adapter<TasksAdapter.TaskViewHold
 
   private void hasNotRespondedButCanAction(TaskViewHolder holder, final TaskModel model,
       final int position) {
-    Log.d(TAG, "setting up micro interaction responses, for event : " + model.getTitle());
     holder.iv3.setImageResource(R.drawable.respond_no_inactive);
     holder.iv2.setImageResource(R.drawable.respond_yes_inactive);
     holder.iv3.setEnabled(true);
@@ -271,7 +272,6 @@ public class TasksAdapter extends RecyclerView.Adapter<TasksAdapter.TaskViewHold
   }
 
   private void cannotRespond(TaskViewHolder holder, TaskModel model) {
-    Log.d(TAG, "setting up icons for no response, for event: " + model.getTitle());
     holder.iv2.setImageResource(
         model.respondedYes() ? R.drawable.respond_yes_active : R.drawable.respond_yes_inactive);
     holder.iv3.setImageResource(
@@ -284,80 +284,104 @@ public class TasksAdapter extends RecyclerView.Adapter<TasksAdapter.TaskViewHold
     return viewedTasks.size();
   }
 
-    /*
-    SECTION : FILTER BY DATES, TIMES, ETC.
-    // todo : make this async off the UI thread
-     */
+  /*
+  SECTION : FILTER BY DATES, TIMES, ETC.
+  */
 
-  private void decomposeLists() {
-    Long startTime = SystemClock.currentThreadTimeMillis();
+  // see note in group list adapter re possible later optimization by string length and then add/remove
+  // note : in next version, get the filter & search to play nicely together (at present search overrides)
 
-    decomposedList = new HashMap<>();
-    List<TaskModel> voteList = new ArrayList<>();
-    List<TaskModel> meetingList = new ArrayList<>();
-    List<TaskModel> toDoList = new ArrayList<>();
-
-    for (TaskModel tm : fullTaskList) {
-      if (TaskConstants.MEETING.equals(tm.getType())) {
-        meetingList.add(tm);
-      } else if (TaskConstants.VOTE.equals(tm.getType())) {
-        voteList.add(tm);
-      } else if (TaskConstants.TODO.equals(tm.getType())) toDoList.add(tm);
-    }
-
-    decomposedList.put(TaskConstants.MEETING, meetingList);
-    decomposedList.put(TaskConstants.VOTE, voteList);
-    decomposedList.put(TaskConstants.TODO, toDoList);
-
-    Log.d(TAG, String.format(
-        "decomposed task list, sizes: %d total, %d votes, %d mtgs, %d todos, took %d msecs",
-        fullTaskList.size(), voteList.size(), meetingList.size(), toDoList.size(),
-        SystemClock.currentThreadTimeMillis() - startTime));
-  }
-
-  // todo : optimize / make much more efficient
-  public void filterByName(String query) {
+  public void searchByName(final String query) {
+    // final long startTime = SystemClock.currentThreadTimeMillis();
     if (fullTaskList == null || fullTaskList.isEmpty()) {
       fullTaskList = new ArrayList<>(viewedTasks);
+    } else {
+      viewedTasks = new ArrayList<>(fullTaskList);
     }
-    viewedTasks.clear();
-    for (TaskModel t : fullTaskList) {
-      if (t.getTitle().trim().toLowerCase(Locale.getDefault()).contains(query)) {
-        viewedTasks.add(t);
-      }
-    }
-    notifyDataSetChanged();
+
+    final String lcQuery = query.toLowerCase();
+
+    // before above optimization, could probably switch list removal to background by setting up a
+    // better observable chain ... so, that in next round of optimizations
+    // Log.e(TAG, "search method took ... " + (SystemClock.currentThreadTimeMillis() - startTime));
+
+    Observable.from(fullTaskList)
+        .subscribeOn(Schedulers.computation())
+        .observeOn(AndroidSchedulers.mainThread())
+        .filter(new Func1<TaskModel, Boolean>() {
+          @Override
+          public Boolean call(TaskModel taskModel) {
+            return !taskModel.containsString(lcQuery);
+          }
+        })
+        .subscribe(new Subscriber<TaskModel>() {
+          @Override
+          public void onError(Throwable e) { e.printStackTrace(); }
+
+          @Override
+          public void onNext(TaskModel taskModel) {
+            viewedTasks.remove(taskModel);
+          }
+
+          @Override
+          public void onCompleted() {
+            notifyDataSetChanged();
+          }
+        });
+
+
   }
 
   public void startFiltering() {
-    // todo : be careful / thoroughly debug this, including corner cases (user refreshes then hits filter etc)
     if (fullTaskList == null || fullTaskList.isEmpty()) {
       fullTaskList = new ArrayList<>(viewedTasks);
     }
-    decomposeLists();
     viewedTasks.clear();
   }
 
   public void stopFiltering() {
-    viewedTasks.clear();
-    viewedTasks.addAll(fullTaskList);
+    viewedTasks = new ArrayList<>(fullTaskList);
     notifyDataSetChanged();
   }
 
-  public void addOrRemoveTaskType(final String taskType, final boolean add) {
-    final List<TaskModel> tasks = decomposedList.get(taskType);
-    if (tasks == null) {
-      throw new UnsupportedOperationException("Error! Calling add remove with invalid type");
+  public void addOrRemoveTaskType(final String taskType, final boolean addToDisplay) {
+    final long startTime = SystemClock.currentThreadTimeMillis();
+
+    if (fullTaskList == null || fullTaskList.isEmpty() || fullTaskList.size() < viewedTasks.size()) {
+      // i.e., have never filtered, or filtered a while ago, viewed tasks got bigger, now resetting
+      fullTaskList = new ArrayList<>(viewedTasks);
+      viewedTasks.clear();
     }
 
-    if (!add) {
-      viewedTasks.remove(tasks);
-    } else {
-      viewedTasks.addAll(tasks);
-    }
+    Observable.from(fullTaskList)
+        .subscribeOn(Schedulers.computation())
+        .observeOn(AndroidSchedulers.mainThread())
+        .filter(new Func1<TaskModel, Boolean>() {
+          @Override
+          public Boolean call(TaskModel taskModel) {
+            return taskModel.getType().equals(taskType);
+          }
+        })
+        .subscribe(new Subscriber<TaskModel>() {
+          @Override
+          public void onError(Throwable e) { e.printStackTrace(); }
 
-    Collections.sort(viewedTasks, Collections.reverseOrder());
-    notifyDataSetChanged();
+          @Override
+          public void onNext(TaskModel taskModel) {
+            if (addToDisplay) {
+              viewedTasks.add(taskModel);
+            } else {
+              viewedTasks.remove(taskModel);
+            }
+          }
+
+          @Override
+          public void onCompleted() {
+            Collections.sort(viewedTasks, Collections.<TaskModel>reverseOrder());
+            notifyDataSetChanged();
+            Log.d(TAG, "filtering method took ... " + (SystemClock.currentThreadTimeMillis() - startTime));
+          }
+    });
   }
 
     /*

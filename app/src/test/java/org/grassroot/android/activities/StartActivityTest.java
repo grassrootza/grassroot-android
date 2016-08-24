@@ -6,8 +6,8 @@ import android.content.SharedPreferences;
 import android.os.Build;
 
 import com.google.android.gms.common.ConnectionResult;
-import com.grassroot.android.BuildConfig;
 
+import org.grassroot.android.BuildConfig;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;

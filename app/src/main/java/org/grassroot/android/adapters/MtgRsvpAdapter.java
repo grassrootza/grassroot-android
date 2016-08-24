@@ -36,8 +36,6 @@ public class MtgRsvpAdapter extends RecyclerView.Adapter<MtgRsvpAdapter.ViewHold
         responseTextMap.put(TaskConstants.RESPONSE_NONE, R.string.vt_rlist_response_none);
     }
 
-    // todo: make sure it's sorted on server, and sort is transmitting, to avoid processing here
-    // todo: figure out how to use UIDs in here to avoid duplication if identical names ...
     public void setMapOfResponses(Map<String, String> responses) {
         this.mapOfResponses = responses;
         this.listOfNames = new ArrayList<>(responses.keySet());

@@ -16,6 +16,7 @@ import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
@@ -41,7 +42,6 @@ import org.grassroot.android.events.TaskAddedEvent;
 import org.grassroot.android.events.UserLoggedOutEvent;
 import org.grassroot.android.interfaces.GroupConstants;
 import org.grassroot.android.interfaces.GroupPickCallbacks;
-import org.grassroot.android.interfaces.SortInterface;
 import org.grassroot.android.interfaces.TaskConstants;
 import org.grassroot.android.models.Group;
 import org.grassroot.android.models.PreferenceObject;
@@ -121,6 +121,7 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
         View view = inflater.inflate(R.layout.activity_group__homepage, container, false);
         unbinder = ButterKnife.bind(this, view);
         EventBus.getDefault().register(this);
+        setHasOptionsMenu(true);
 
         setUpRecyclerView();
         return view;
@@ -145,6 +146,17 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
     public void onDetach() {
         super.onDetach();
         mCallbacks = null;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.mi_icon_sort:
+                sortGroups();
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
     }
 
     private void setUpRecyclerView() {
@@ -419,47 +431,34 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
     }
 
     public void sortGroups() {
-        SortFragment sortFragment = new SortFragment();
-        Bundle b = new Bundle();
-        b.putBoolean("Date", date_click);
-        b.putBoolean("Role", role_click);
-        b.putBoolean("Default", defaults_click);
-        sortFragment.setArguments(b);
-        sortFragment.show(getFragmentManager(), "SortFragment");
-        sortFragment.setListener(new SortInterface() {
 
-            @Override
-            public void tvDateClick(boolean date, boolean role, boolean defaults) {
-                date_click = true;
-                role_click = false;
-                Long start = SystemClock.currentThreadTimeMillis();
-                groupListRowAdapter.sortByDate();
-                Log.d(TAG, String.format("sorting group list took %d msecs",
-                    SystemClock.currentThreadTimeMillis() - start));
-            }
+        // note : unfortunately we have to pass the array to the builder, instead of assembling
+        // a map etc., so always make sure this array has to correspond to sequence in the string array file
 
-            @Override
-            public void roleClick(boolean date, boolean role, boolean defaults) {
-                date_click = false;
-                role_click = true;
-                Long start = SystemClock.currentThreadTimeMillis();
-                groupListRowAdapter.sortByRole();
-                Log.d(TAG, String.format("sorting group list took %d msecs",
-                    SystemClock.currentThreadTimeMillis() - start));
-            }
+        final String[] searchOptions = {
+            GroupListAdapter.SORT_BY_GROUP_NAME,
+            GroupListAdapter.SORT_BY_SIZE,
+            GroupListAdapter.SORT_BY_ROLE,
+            GroupListAdapter.SORT_BY_TASK_DATE,
+            GroupListAdapter.SORT_BY_DATE_CHANGED };
 
+        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+        builder.setTitle(R.string.group_sort_title)
+            .setItems(R.array.group_sort_options, new DialogInterface.OnClickListener() {
             @Override
-            public void defaultsClick(boolean date, boolean role, boolean defaults) {
-                // todo : restore whatever was here
+            public void onClick(DialogInterface dialog, int which) {
+                groupListRowAdapter.setSortType(searchOptions[which]);
             }
         });
+
+        builder.show();
     }
 
     public void searchStringChanged(String query) {
         if (TextUtils.isEmpty(query)) {
             groupListRowAdapter.refreshGroupsToDB();
         } else {
-            groupListRowAdapter.simpleSearchByName(query);
+            groupListRowAdapter.localSearchByText(query);
         }
     }
 

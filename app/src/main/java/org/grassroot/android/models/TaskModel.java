@@ -59,14 +59,6 @@ public class TaskModel extends RealmObject implements Parcelable, Comparable<Tas
   private boolean isEdited;
   private boolean isActionLocal;
 
-  public boolean isActionLocal() {
-    return isActionLocal;
-  }
-
-  public void setActionLocal(boolean actionLocal) {
-    isActionLocal = actionLocal;
-  }
-
   private RealmList<RealmString> memberUIDS;
 
   public TaskModel() {
@@ -193,6 +185,16 @@ public class TaskModel extends RealmObject implements Parcelable, Comparable<Tas
     return deadlineDate;
   }
 
+  // assumes searchTerm is lower case (may be an issue once have unicode weird chars, at which point may need expensive regex ...)
+  public boolean containsString(final String searchTerm) {
+    return type.toLowerCase().contains(searchTerm)
+        || title.toLowerCase().contains(searchTerm)
+        || createdByUserName.toLowerCase().contains(searchTerm)
+        || parentName.toLowerCase().contains(searchTerm)
+        || (description != null && description.toLowerCase().contains(searchTerm))
+        || (location != null && location.toLowerCase().contains(searchTerm));
+  }
+
   public RealmList<RealmString> getMemberUIDS() {
     return memberUIDS;
   }
@@ -261,6 +263,14 @@ public class TaskModel extends RealmObject implements Parcelable, Comparable<Tas
 
   public String getType() {
     return type;
+  }
+
+  public boolean isActionLocal() {
+    return isActionLocal;
+  }
+
+  public void setActionLocal(boolean actionLocal) {
+    isActionLocal = actionLocal;
   }
 
   public void calcDeadlineDate() {

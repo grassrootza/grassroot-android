@@ -330,7 +330,7 @@ public class GroupSearchActivity extends PortraitActivity implements GroupSearch
 
     private void exitToHomeScreen() {
         Intent upIntent;
-        if (RealmUtils.loadPreferencesFromDB().isHasGroups()) { // todo : may want to just check DB count ...
+        if (RealmUtils.loadPreferencesFromDB().isHasGroups()) {
             upIntent = new Intent(this, HomeScreenActivity.class);
             if (homeActivityFragmentTag != null) {
                 upIntent.putExtra(NavigationConstants.HOME_OPEN_ON_NAV, homeActivityFragmentTag);

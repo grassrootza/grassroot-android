@@ -56,17 +56,6 @@ public class NavigationDrawerAdapter extends RecyclerView.Adapter<RecyclerView.V
         rowNormalColor = ContextCompat.getColor(context, R.color.white);
     }
 
-    public NavigationDrawerAdapter(Context context, List<NavDrawerItem> data, boolean showCounters,
-                                   boolean showSelected, NavDrawerItemListener listener) {
-        this.data = data;
-        this.listener = listener;
-
-        textSelectedColor = ContextCompat.getColor(context, R.color.primaryColor);
-        rowSelectedBgColor = ContextCompat.getColor(context, R.color.text_beige);
-        textNormalColor = ContextCompat.getColor(context, R.color.black);
-        rowNormalColor = ContextCompat.getColor(context, R.color.white);
-    }
-
     @Override
     public int getItemViewType(int position) {
         return positionTypeMap.get(position);
@@ -113,7 +102,7 @@ public class NavigationDrawerAdapter extends RecyclerView.Adapter<RecyclerView.V
         }
     }
 
-    public void bindPrimaryItem(PrimaryViewHolder holder, final NavDrawerItem drawerItem) {
+    private void bindPrimaryItem(PrimaryViewHolder holder, final NavDrawerItem drawerItem) {
         holder.label.setText(drawerItem.getItemLabel());
         if (drawerItem.isChecked()) {
             holder.rootView.setBackgroundColor(rowSelectedBgColor);
@@ -143,7 +132,7 @@ public class NavigationDrawerAdapter extends RecyclerView.Adapter<RecyclerView.V
         });
     }
 
-    public void bindSecondaryItem(SecondaryViewHolder holder, final NavDrawerItem drawerItem) {
+    private void bindSecondaryItem(SecondaryViewHolder holder, final NavDrawerItem drawerItem) {
         holder.label.setText(drawerItem.getItemLabel());
         holder.label.setTextColor(textNormalColor);
         holder.label.setTypeface(Typeface.DEFAULT);
@@ -155,6 +144,11 @@ public class NavigationDrawerAdapter extends RecyclerView.Adapter<RecyclerView.V
                 listener.onItemClicked(drawerItem.getTag());
             }
         });
+    }
+
+    public void switchItemTypes(Map<Integer, Integer> newTypeMap) {
+        this.positionTypeMap = newTypeMap;
+        notifyDataSetChanged();
     }
 
     @Override

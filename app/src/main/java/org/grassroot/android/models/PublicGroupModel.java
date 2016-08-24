@@ -19,11 +19,13 @@ public class PublicGroupModel extends RealmObject {
     private String groupName;
     private String description;
     private String groupCreator;
-    private Integer count;
+    private Integer memberCount;
 
     private boolean termInName;
     private boolean hasOpenRequest;
     private boolean isJoinReqLocal;
+
+    private String createdDate;
 
     public PublicGroupModel() {
         id = UUID.randomUUID().toString(); // to enforce non-null behaviour, but this should be sent from server
@@ -61,12 +63,12 @@ public class PublicGroupModel extends RealmObject {
         this.groupCreator = groupCreator;
     }
 
-    public Integer getCount() {
-        return count;
+    public Integer getMemberCount() {
+        return memberCount;
     }
 
-    public void setCount(Integer count) {
-        this.count = count;
+    public void setMemberCount(Integer memberCount) {
+        this.memberCount = memberCount;
     }
 
     public boolean isJoinReqLocal() {
@@ -91,6 +93,14 @@ public class PublicGroupModel extends RealmObject {
 
     public void setHasOpenRequest(boolean hasOpenRequest) {
         this.hasOpenRequest = hasOpenRequest;
+    }
+
+    public String getCreatedDate() {
+        return createdDate;
+    }
+
+    public void setCreatedDate(String createdDate) {
+        this.createdDate = createdDate;
     }
 
     @Override

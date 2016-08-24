@@ -103,18 +103,22 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
     return fragment;
   }
 
-  @Override public void onAttach(Context context) {
+  @Override
+  public void onAttach(Context context) {
     super.onAttach(context);
     EventBus.getDefault().register(this);
   }
 
   @Override
-  public void onCreate(Bundle savedInstanceState) {
+  public void
+  onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
+    setHasOptionsMenu(true);
     filterFlags = new HashMap<>();
   }
 
-  @Override public View onCreateView(LayoutInflater inflater, ViewGroup container,
+  @Override
+  public View onCreateView(LayoutInflater inflater, ViewGroup container,
       Bundle savedInstanceState) {
 
     View viewToReturn = inflater.inflate(R.layout.fragment_task_list, container, false);
@@ -130,6 +134,27 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
 
     loadTasksOnCreateView();
     return viewToReturn;
+  }
+
+  @Override
+  public void onActivityCreated(Bundle savedInstanceState) {
+    super.onActivityCreated(savedInstanceState);
+    swipeRefreshLayout.setColorSchemeColors(ContextCompat.getColor(getActivity(), R.color.primaryColor));
+    swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+      @Override public void onRefresh() {
+        refreshTasksFromServer();
+      }
+    });
+  }
+
+  @Override public void onDestroyView() {
+    super.onDestroyView();
+    unbinder.unbind();
+  }
+
+  @Override public void onDetach() {
+    super.onDetach();
+    EventBus.getDefault().unregister(this);
   }
 
   private void loadTasksOnCreateView() {
@@ -154,27 +179,6 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
     } else {
       return RealmUtils.countGroupTasksInDB(groupUid) > 0;
     }
-  }
-
-  @Override
-  public void onActivityCreated(Bundle savedInstanceState) {
-    super.onActivityCreated(savedInstanceState);
-    swipeRefreshLayout.setColorSchemeColors(ContextCompat.getColor(getActivity(), R.color.primaryColor));
-    swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
-      @Override public void onRefresh() {
-        refreshTasksFromServer();
-      }
-    });
-  }
-
-  @Override public void onDestroyView() {
-    super.onDestroyView();
-    unbinder.unbind();
-  }
-
-  @Override public void onDetach() {
-    super.onDetach();
-    EventBus.getDefault().unregister(this);
   }
 
   /*
@@ -383,14 +387,15 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
 
   /*
   HANDLE SEARCHING
-  todo : make this much more efficient
    */
 
   public void searchStringChanged(String query) {
-    if (TextUtils.isEmpty(query)) {
-      tasksAdapter.stopFiltering();
-    } else {
-      tasksAdapter.filterByName(query);
+    if (tasksAdapter != null && taskView != null && taskView.getVisibility() == View.VISIBLE) {
+      if (TextUtils.isEmpty(query)) {
+        tasksAdapter.stopFiltering();
+      } else {
+        tasksAdapter.searchByName(query);
+      }
     }
   }
 

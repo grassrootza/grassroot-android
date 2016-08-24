@@ -9,6 +9,7 @@ import android.support.v7.app.AlertDialog;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.TextView;
 
 import org.grassroot.android.R;
 import org.grassroot.android.models.PublicGroupModel;
@@ -38,7 +39,16 @@ public class SendJoinRequestFragment extends DialogFragment {
         LayoutInflater inflater = getActivity().getLayoutInflater();
 
         View dialogView = inflater.inflate(R.layout.dialog_send_join_request, null);
+        TextView descriptionView = (TextView) dialogView.findViewById(R.id.dialog_group_description);
         final TextInputEditText textEdit = (TextInputEditText) dialogView.findViewById(R.id.text_edit_message);
+
+        if (!TextUtils.isEmpty(groupModel.getDescription())) {
+            descriptionView.setText(String.format(getContext().getString(R.string.group_description_prefix),
+                groupModel.getDescription()));
+        } else {
+            descriptionView.setText(String.format(getContext().getString(R.string.gs_dialog_no_desc_format),
+                groupModel.getGroupName(), groupModel.getCreatedDate(), groupModel.getGroupCreator(), groupModel.getMemberCount()));
+        }
 
         builder.setView(dialogView)
                 .setTitle(R.string.gs_dialog_title)

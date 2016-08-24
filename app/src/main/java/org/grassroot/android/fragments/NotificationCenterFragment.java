@@ -12,6 +12,7 @@ import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ProgressBar;
@@ -75,14 +76,15 @@ public class NotificationCenterFragment extends Fragment {
     private int itemsLaidOutSoFar, lastVisibileItem;
     private int cacheStoredFirstVisible, cacheStoredLastVisible;
     private boolean isLoading;
+    private boolean isSortOrFilter = false; // to prevent further calls if sort or filter is empty
 
     private CharSequence[] sharingOptions;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-
         View viewToReturn = inflater.inflate(R.layout.fragment_notification_center, container, false);
         ButterKnife.bind(this, viewToReturn);
+        setHasOptionsMenu(true);
         GcmListenerService.clearNotifications(getContext()); // clears notifications in tray
         setUpRecyclerView();
         return viewToReturn;
@@ -92,6 +94,17 @@ public class NotificationCenterFragment extends Fragment {
     public void onResume() {
         super.onResume();
         sharingOptions = SharingService.itemsForMultiChoice(); // in case user navigated away to change prefs / install app etc
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (item.getItemId() == R.id.mi_icon_filter) {
+            isSortOrFilter = !isSortOrFilter;
+            notificationAdapter.filterByUnviewed();
+            return true;
+        } else {
+            return super.onOptionsItemSelected(item);
+        }
     }
 
     private void setUpRecyclerView() {
@@ -157,7 +170,7 @@ public class NotificationCenterFragment extends Fragment {
 
                 handleNotificationUpdating(firstCompletelyVisitbleItem, lastCompletelyVisibleItem);
 
-                if (currentPage < totalPages && itemsLaidOutSoFar <= (lastVisibileItem + 10) && !isLoading) {
+                if (!isSortOrFilter && currentPage < totalPages && itemsLaidOutSoFar <= (lastVisibileItem + 10) && !isLoading) {
                     Log.e(TAG, "fetching more notifications ... current page = " + currentPage);
                     progressBar.setVisibility(View.VISIBLE);
                     currentPage++;
@@ -328,11 +341,11 @@ public class NotificationCenterFragment extends Fragment {
         }}
     }
 
-    public void filterNotifications(String filterText) {
-        if (TextUtils.isEmpty(filterText)) {
+    public void searchNotifications(String queryText) {
+        if (TextUtils.isEmpty(queryText)) {
             notificationAdapter.resetToStored();
         } else {
-            notificationAdapter.filter(filterText);
+            notificationAdapter.searchText(queryText);
         }
     }
 }

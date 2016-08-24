@@ -326,6 +326,13 @@ public class Group extends RealmObject implements Parcelable, Comparable<Group> 
     }
   }
 
+  // note : not including lastChangeDescription or will create confusing results for eg term 'meeting'
+  public boolean containsQueryText(final String queryText) {
+    return groupName.toLowerCase().contains(queryText)
+        || groupCreator.toLowerCase().contains(queryText)
+        || (description != null && description.toLowerCase().contains(queryText));
+  }
+
   @Override public int describeContents() {
     return 0;
   }
@@ -389,10 +396,32 @@ public class Group extends RealmObject implements Parcelable, Comparable<Group> 
             this.getDate().compareTo(g2.getDate()); // last one just in case both are zero for some reason
   }
 
+  public static Comparator<Group> GroupLastChangeComparator = new Comparator<Group>() {
+    @Override
+    public int compare(Group lhs, Group rhs) {
+      return lhs.compareTo(rhs);
+    }
+  };
+
   public static Comparator<Group> GroupTaskDateComparator = new Comparator<Group>() {
     @Override
     public int compare(Group lhs, Group rhs) {
       return lhs.getDate().compareTo(rhs.getDate());
+    }
+  };
+
+  public static Comparator<Group> GroupSizeComparator = new Comparator<Group>() {
+    @Override
+    public int compare(Group lhs, Group rhs) {
+      return lhs.groupMemberCount > rhs.groupMemberCount ? 1
+          : lhs.groupMemberCount < rhs.groupMemberCount ? -1 : 0;
+    }
+  };
+
+  public static Comparator<Group> GroupNameComparator = new Comparator<Group>() {
+    @Override
+    public int compare(Group lhs, Group rhs) {
+      return lhs.getGroupName().compareTo(rhs.getGroupName());
     }
   };
 

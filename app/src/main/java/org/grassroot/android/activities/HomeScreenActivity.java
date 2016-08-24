@@ -380,7 +380,7 @@ public class HomeScreenActivity extends PortraitActivity implements NavigationDr
                 taskListFragment.searchStringChanged(queryString);
                 break;
             case NavigationConstants.HOME_NAV_NOTIFICATIONS:
-                notificationCenterFragment.filterNotifications(query);
+                notificationCenterFragment.searchNotifications(query);
                 break;
         }
     }

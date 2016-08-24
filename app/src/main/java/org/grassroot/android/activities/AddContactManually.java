@@ -40,7 +40,6 @@ public class AddContactManually extends PortraitActivity {
     setContentView(R.layout.activity_add_contact_manually);
     ButterKnife.bind(this);
 
-    // todo : check if we have a member passed to us, to edit
     memberBeingEdited = getIntent().getParcelableExtra(GroupConstants.MEMBER_OBJECT);
     if (memberBeingEdited != null) {
       positionBeingEdited = getIntent().getIntExtra(Constant.INDEX_FIELD, -1);

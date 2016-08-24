@@ -1,6 +1,7 @@
 package org.grassroot.android.adapters;
 
 import android.graphics.Typeface;
+import android.os.SystemClock;
 import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
 import android.util.Log;
@@ -25,9 +26,13 @@ import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import rx.Observable;
+import rx.functions.Action1;
+import rx.functions.Func1;
+import rx.schedulers.Schedulers;
 
 /**
- * Created by ravi on 12/5/16.
+ * Created by luke.
  */
 public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapter.ViewHolder> {
 
@@ -129,26 +134,68 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
         }
     }
 
-    public void filter(String queryText) {
+    public void filterByUnviewed() {
+        long startTime = SystemClock.currentThreadTimeMillis();
+        if (storedNotifications == null || storedNotifications.isEmpty()) {
+            storedNotifications = new ArrayList<>(notifications);
+        }
+        Observable.from(storedNotifications)
+            .filter(new Func1<TaskNotification, Boolean>() {
+                @Override
+                public Boolean call(TaskNotification notification) {
+                    return notification.isViewedAndroid();
+                }
+            }).subscribe(new Action1<TaskNotification>() {
+            @Override
+            public void call(TaskNotification notification) {
+                notifications.remove(notification);
+            }
+        }, new Action1<Throwable>() {
+            @Override
+            public void call(Throwable throwable) {
+                throwable.printStackTrace();
+            }
+        });
+        Log.e(TAG, "number of notifications after filter .... " + notifications.size() + " " +
+            "and it took ... " + (SystemClock.currentThreadTimeMillis() - startTime));
+        notifyDataSetChanged();
+    }
+
+    public void searchText(String queryText) {
         if (storedNotifications == null || storedNotifications.isEmpty()) {
                 storedNotifications = new ArrayList<>(notifications);
+        } else {
+            notifications = new ArrayList<>(storedNotifications);
         }
 
-        notifications.clear();
-        for (TaskNotification n : storedNotifications) {
-            // todo : probably want to also filter by group name etc
-            boolean add = n.getTitle().toLowerCase().contains(queryText) ||
-                    n.getMessage().toLowerCase().contains(queryText);
-            if (add) {
-                notifications.add(n);
-            }
-        }
+        final String lCase = queryText.toLowerCase();
+
+        Observable.from(storedNotifications)
+            .subscribeOn(Schedulers.computation())
+            .observeOn(Schedulers.immediate())
+            .filter(new Func1<TaskNotification, Boolean>() {
+                @Override
+                public Boolean call(TaskNotification notification) {
+                    return !notification.containsText(lCase);
+                }
+            })
+            .subscribe(new Action1<TaskNotification>() {
+                @Override
+                public void call(TaskNotification notification) {
+                    notifications.remove(notification);
+                }
+            }, new Action1<Throwable>() {
+                @Override
+                public void call(Throwable throwable) {
+                    throwable.printStackTrace();
+                }
+            });
+
         notifyDataSetChanged();
     }
 
     public void resetToStored() {
-        notifications.clear();
-        notifications.addAll(storedNotifications);
+        notifications = new ArrayList<>(storedNotifications);
         notifyDataSetChanged();
     }
 

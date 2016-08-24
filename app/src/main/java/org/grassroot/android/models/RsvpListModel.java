@@ -1,6 +1,7 @@
 package org.grassroot.android.models;
 
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 
 /**
  * Created by luke on 2016/06/09.
@@ -16,7 +17,7 @@ public class RsvpListModel {
 
     private boolean canViewRsvps;
 
-    private HashMap<String, String> rsvpResponses;
+    private LinkedHashMap<String, String> rsvpResponses;
 
     public String getMeetingUid() {
         return meetingUid;
@@ -38,7 +39,7 @@ public class RsvpListModel {
         return numberNoReply;
     }
 
-    public HashMap<String, String> getRsvpResponses() {
+    public LinkedHashMap<String, String> getRsvpResponses() {
         return rsvpResponses;
     }
 

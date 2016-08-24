@@ -144,6 +144,8 @@
     <string name="nav_open">Open navigation</string>
     <string name="nav_close">Close navigation</string>
 
+    <string name="toast_no_groups">Create or join a group to get started</string>
+
     <!--welcome content-->
     <string name="txt_welcome">Welcome to <b>Grassroot</b></string>
     <string name="txt_welcome_para">To get started, create your own group, or ask to join one. You can then call meetings, take votes, record decisions, and more&#8230;</string>
@@ -166,6 +168,10 @@
     <string name="intro_page1_msg">Call meetings, with notices sent to any kind of phone, responses, and reminders</string>
     <string name="intro_page2_msg">Take simple polls, lasting five minutes or five weeks, of five or five thousand members</string>
     <string name="intro_page3_msg">Record shared to-dos, automatically reminding the group until they are done</string>
+
+    <!-- Menu items -->
+    <string name="menu_sort">Sort</string>
+    <string name="menu_filter">Filter</string>
 
     <!--HomeScreen Activity & Screens-->
     <string name="joingroup">REQUEST TO JOIN A GROUP</string>
@@ -194,10 +200,16 @@
     <string name="bt_save">Save</string> <!-- probably duplicated, todo : clean up -->
     <string name="bt_cancel">Cancel</string>
 
-    <string name="sort">Sort</string>
-    <string name="sort_title">Sort groups by:</string>
-    <string name="date">Date of last action</string>
-    <string name="role">Your role</string>
+    <string name="group_sort_title">Sort by:</string>
+
+    <string-array name="group_sort_options">
+        <item>Group name</item>
+        <item>Group size</item>
+        <item>Your role</item>
+        <item>Latest event</item>
+        <item>Default (latest change)</item>
+    </string-array>
+
     <string name="Default">Clear</string>
 
     <string name="group_description_prefix">Description: %s</string>
@@ -272,9 +284,15 @@
 
     <string name="pgroup_name_format">Name: %s</string>
     <string name="pgroup_org_format">Organizer: %s</string>
+    <string name="pgroup_no_description">Group does not have a public description</string>
 
-    <string name="gs_dialog_title">Send join request?</string>
-    <string name="gs_dialog_message_hint">Enter a message to let the group organizer know who you are</string>
+    <string name="gs_dialog_title">Ask to join?</string>
+    <string name="gs_dialog_message_hint">Message to the organizer (say who you are)</string>
+    <string name="gs_dialog_desc_placeholder">This group may or may not have a description. If it does not
+    then we will insert something else here.</string>
+    <string name="gs_dialog_no_desc_format">Group \'%1$s\' has no public description. It was created
+    on %2$s by %3$s and has %4$d members.</string>
+
     <string name="gs_dialog_message_error">Please enter a message to send</string>
     <string name="gs_dialog_send">SEND</string>
     <string name="gs_dialog_cancel">CANCEL</string>

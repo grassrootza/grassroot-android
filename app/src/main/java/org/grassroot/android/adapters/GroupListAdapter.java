@@ -2,6 +2,7 @@ package org.grassroot.android.adapters;
 
 import android.content.Context;
 import android.os.Build;
+import android.os.SystemClock;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
@@ -28,13 +29,19 @@ import org.greenrobot.eventbus.ThreadMode;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import rx.Observable;
+import rx.Subscriber;
+import rx.android.schedulers.AndroidSchedulers;
 import rx.functions.Action1;
+import rx.functions.Func1;
+import rx.schedulers.Schedulers;
 
 /**
  * P
@@ -45,6 +52,16 @@ public class GroupListAdapter extends RecyclerView.Adapter<GroupListAdapter.GHP_
 
     private final Context context;
     private final GroupRowListener listener;
+
+    // in future, sort by 'most active', and search by location
+    public static final String SORT_BY_ROLE = "sort_role";
+    public static final String SORT_BY_GROUP_NAME = "sort_by_role";
+    public static final String SORT_BY_SIZE = "sort_by_size";
+    public static final String SORT_BY_TASK_DATE = "sort_by_task_date";
+    public static final String SORT_BY_DATE_CHANGED = "sort_changed";
+    public static final String SORT_DEFAULT = "sort_default";
+
+    private String currentSort;
 
     List<Group> fullGroupList;
     List<Group> displayedGroups;
@@ -63,24 +80,27 @@ public class GroupListAdapter extends RecyclerView.Adapter<GroupListAdapter.GHP_
     }
 
     public GroupListAdapter(List<Group> groups, HomeGroupListFragment fragment) {
+        this.currentSort = SORT_DEFAULT;
         this.displayedGroups = groups;
         this.listener = fragment;
         this.context = ApplicationLoader.applicationContext; // to avoid memory leaks, since only use context to get strings
     }
 
     public void setGroupList(List<Group> groupList) {
-        displayedGroups.clear();
-        displayedGroups.addAll(groupList);
-        notifyDataSetChanged(); // calling item range inserted causes a strange crash (related to main/background threads, I think)
+        displayedGroups = new ArrayList<>(groupList);
+        notifyDataSetChanged(); // calling item range inserted causes a strange crash (related to main/background threads, possibly)
     }
 
     public void refreshGroupsToDB() {
         RealmUtils.loadGroupsSorted().subscribe(new Action1<List<Group>>() {
             @Override
             public void call(List<Group> groups) {
-                displayedGroups.clear();
-                displayedGroups.addAll(groups);
-                notifyDataSetChanged();
+                displayedGroups = new ArrayList<>(groups);
+                if (currentSort.equals(SORT_DEFAULT) || currentSort.equals(SORT_BY_DATE_CHANGED)) {
+                    notifyDataSetChanged();
+                } else {
+                    setSortType(currentSort); // makes sure current sort retained
+                }
             }
         });
     }
@@ -132,37 +152,93 @@ public class GroupListAdapter extends RecyclerView.Adapter<GroupListAdapter.GHP_
         }
     }
 
-    public void sortByChangedTime() {
-        Collections.sort(displayedGroups, Collections.reverseOrder());
-        notifyDataSetChanged();
-    }
-
-    // todo : make sure interactions of this and refresh from DB are okay
-    public void sortByDate() {
-        Collections.sort(displayedGroups, Collections.reverseOrder(
-                Group.GroupTaskDateComparator)); // since Date entity sorts earliest to latest
-        notifyDataSetChanged();
-    }
-
-    public void sortByRole() {
-        Collections.sort(displayedGroups,
-                Collections.reverseOrder(Group.GroupRoleComparator)); // as above
-        notifyDataSetChanged();
-    }
-
-    // todo : maybe just use Realm query to do this
-    public void simpleSearchByName(String searchText) {
-        if (fullGroupList == null) {
-            fullGroupList = new ArrayList<>(displayedGroups);
+    private boolean sortBySearchType(final String sortType) {
+        Comparator<Group> comparator;
+        switch (sortType) {
+            case SORT_BY_ROLE:
+                comparator = Group.GroupRoleComparator;
+                break;
+            case SORT_BY_TASK_DATE:
+                comparator = Collections.reverseOrder(Group.GroupTaskDateComparator); // earliest to latest
+                break;
+            case SORT_BY_SIZE:
+                comparator = Collections.reverseOrder(Group.GroupSizeComparator); // largest to smallest
+                break;
+            case SORT_BY_GROUP_NAME:
+                comparator = Group.GroupNameComparator;
+                break;
+            case SORT_BY_DATE_CHANGED:
+            default:
+                comparator = Collections.reverseOrder(Group.GroupLastChangeComparator);
         }
 
-        final List<Group> filteredGroups = new ArrayList<>();
-        for (Group group : fullGroupList) {
-            if (group.getGroupName().trim().toLowerCase(Locale.getDefault()).contains(searchText)) {
-                filteredGroups.add(group);
+        Collections.sort(displayedGroups, comparator);
+        return true;
+    }
+
+    public void setSortType(final String sortType) {
+        Observable.create(new Observable.OnSubscribe<Boolean>() {
+            @Override
+            public void call(Subscriber<? super Boolean> subscriber) {
+                sortBySearchType(sortType);
+                subscriber.onNext(true);
             }
+        }).subscribeOn(Schedulers.computation()).observeOn(AndroidSchedulers.mainThread())
+        .subscribe(new Action1<Boolean>() {
+            @Override
+            public void call(Boolean aBoolean) {
+                notifyDataSetChanged();
+                currentSort = sortType;
+            }
+        }, new Action1<Throwable>() {
+            @Override
+            public void call(Throwable throwable) {
+                throwable.printStackTrace();
+            }
+        });
+    }
+
+    /*
+    note: it would be more efficient to detect if string is longer/shorter, and go for
+    add or remove instead, but group lists are small (~20-30 items) and JIT/JVM has
+    hyper-optimized copy and remove on arraylists, so likely first task is shift the arraylist
+    operation onto computation thread, next is to do any kind of further micro-optimizations
+    (placeholder for timing log : Log.d(TAG, "finished and refreshed display ... in time :" + (SystemClock.currentThreadTimeMillis() - startTime));)
+     */
+
+    public void localSearchByText(final String searchText) {
+        // final long startTime = SystemClock.currentThreadTimeMillis();
+        if (fullGroupList == null) {
+            fullGroupList = new ArrayList<>(displayedGroups); // i.e., we are starting a search
+        } else {
+            displayedGroups = new ArrayList<>(fullGroupList); // i.e., we are modifying a search
         }
-        setGroupList(filteredGroups);
+
+        final String lcQuery = searchText.toLowerCase();
+
+        Observable.from(fullGroupList)
+            .subscribeOn(Schedulers.computation())
+            .observeOn(AndroidSchedulers.mainThread())
+            .filter(new Func1<Group, Boolean>() {
+                @Override
+                public Boolean call(Group group) {
+                return !group.containsQueryText(lcQuery);
+                }
+            }).subscribe(new Subscriber<Group>() {
+            @Override
+            public void onError(Throwable e) { e.printStackTrace(); }
+
+            @Override
+            public void onNext(Group group) {
+                displayedGroups.remove(group);
+            }
+
+            @Override
+            public void onCompleted() {
+                notifyDataSetChanged();
+            }
+        });
+
     }
 
     @Override
@@ -222,7 +298,7 @@ public class GroupListAdapter extends RecyclerView.Adapter<GroupListAdapter.GHP_
     }
 
     private void setUpMemberCount(GHP_ViewHolder holder, final Group group) {
-        // todo : check later if there's a more efficient way to do this?
+        // note: check during drawing optimization if this is best way to do it (also need to handle X00)
         final int height = holder.profileV1.getDrawable().getIntrinsicWidth();
         final int width = holder.profileV1.getDrawable().getIntrinsicHeight();
 

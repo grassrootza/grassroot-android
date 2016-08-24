@@ -5,9 +5,12 @@ import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.NavUtils;
+import android.support.v4.view.MenuItemCompat;
+import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 
@@ -81,7 +84,6 @@ public class GroupTasksActivity extends PortraitActivity implements NewTaskMenuF
     @Override
     protected void onResume() {
         super.onResume();
-        Log.e(TAG, "inside group tasks activity ... removing new task menu if showing");
         if (newTaskMenuFragment != null) {
             getSupportFragmentManager()
                 .beginTransaction()
@@ -97,7 +99,31 @@ public class GroupTasksActivity extends PortraitActivity implements NewTaskMenuF
     }
 
     @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_group_tasks, menu);
+        final MenuItem searchItem = menu.findItem(R.id.action_search);
+        final SearchView searchView = (SearchView) MenuItemCompat.getActionView(searchItem);
+        if (searchView != null) {
+            searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+                @Override
+                public boolean onQueryTextSubmit(String query) {
+                    taskListFragment.searchStringChanged(query);
+                    return true;
+                }
+
+                @Override
+                public boolean onQueryTextChange(String newText) {
+                    taskListFragment.searchStringChanged(newText);
+                    return true;
+                }
+            });
+        }
+        return true;
+    }
+
+    @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
+        menu.findItem(R.id.action_search).setVisible(true); // consider hiding if no tasks
         menu.findItem(R.id.mi_view_join_code).setVisible(groupMembership.hasJoinCode());
         menu.findItem(R.id.mi_new_task).setVisible(groupMembership.hasCreatePermissions());
         menu.findItem(R.id.mi_add_members).setVisible(groupMembership.canAddMembers());
@@ -106,12 +132,6 @@ public class GroupTasksActivity extends PortraitActivity implements NewTaskMenuF
         menu.findItem(R.id.mi_group_settings).setVisible(groupMembership.canEditGroup());
         menu.findItem(R.id.mi_share_default).setVisible(false);
         this.thisMenu = menu;
-        return true;
-    }
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.menu_group_tasks, menu);
         return true;
     }
 

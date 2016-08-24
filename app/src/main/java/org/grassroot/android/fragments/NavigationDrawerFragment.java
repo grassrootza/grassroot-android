@@ -14,6 +14,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import org.grassroot.android.BuildConfig;
 import org.grassroot.android.R;
@@ -39,6 +40,7 @@ import org.grassroot.android.models.Group;
 import org.grassroot.android.models.GroupJoinRequest;
 import org.grassroot.android.models.NavDrawerItem;
 import org.grassroot.android.models.exceptions.ApiCallException;
+import org.grassroot.android.services.ApplicationLoader;
 import org.grassroot.android.services.GcmRegistrationService;
 import org.grassroot.android.utils.Constant;
 import org.grassroot.android.utils.LoginRegUtils;
@@ -89,6 +91,8 @@ public class NavigationDrawerFragment extends Fragment implements NavigationDraw
     private NavDrawerItem joinRequests;
     private NavDrawerItem onlineOffineSwitch;
 
+    private boolean primaryItemsActive;
+
     @BindView(R.id.displayName) TextView displayName;
     @BindView(R.id.nav_items_primary) RecyclerView primaryItemsView;
     @BindView(R.id.nav_tv_footer) TextView txtVersion;
@@ -112,6 +116,7 @@ public class NavigationDrawerFragment extends Fragment implements NavigationDraw
         super.onAttach(context);
         try {
             mCallbacks = (NavigationDrawerCallbacks) context;
+            primaryItemsActive = RealmUtils.loadPreferencesFromDB().isHasGroups();
             setUpPrimaryItems();
             itemAdapter = new NavigationDrawerAdapter(getActivity(), itemList, positionMap, this);
         } catch (ClassCastException e) {
@@ -152,27 +157,30 @@ public class NavigationDrawerFragment extends Fragment implements NavigationDraw
         positionMap = new HashMap<>();
         int pos = 0;
 
+        // if the user does not have groups, then the top four shouldn't have selection & counters (will just show toast)
+        final int topFourItemType = primaryItemsActive ? NavigationDrawerAdapter.PRIMARY : NavigationDrawerAdapter.SECONDARY;
+
         final String defltItem = TextUtils.isEmpty(defaultSelectedItemTag) ? ITEM_SHOW_GROUPS : defaultSelectedItemTag;
 
         groups = new NavDrawerItem(ITEM_SHOW_GROUPS, getString(R.string.drawer_group_list), R.drawable.ic_groups_black, R.drawable.ic_groups_green,
             ITEM_SHOW_GROUPS.equals(defltItem), true);
         groups.setItemCount((int) RealmUtils.countObjectsInDB(Group.class));
-        pos = addItemAndIncrement(pos, NavigationDrawerAdapter.PRIMARY, groups);
+        pos = addItemAndIncrement(pos, topFourItemType, groups);
 
         notifications = new NavDrawerItem(ITEM_NOTIFICATIONS, getString(R.string.drawer_notis), R.drawable.ic_exclamation_black, R.drawable.ic_excl_green,
             ITEM_NOTIFICATIONS.equals(defltItem), true);
         notifications.setItemCount(RealmUtils.loadPreferencesFromDB().getNotificationCounter());
-        pos = addItemAndIncrement(pos, NavigationDrawerAdapter.PRIMARY, notifications);
+        pos = addItemAndIncrement(pos, topFourItemType, notifications);
 
         tasks = new NavDrawerItem(ITEM_TASKS, getString(R.string.drawer_open_tasks), R.drawable.ic_tasks_black, R.drawable.ic_tasks_green,
             ITEM_TASKS.equals(defltItem), true);
         tasks.setItemCount((int) RealmUtils.countUpcomingTasksInDB());
-        pos = addItemAndIncrement(pos, NavigationDrawerAdapter.PRIMARY, tasks);
+        pos = addItemAndIncrement(pos, topFourItemType, tasks);
 
         joinRequests = new NavDrawerItem(ITEM_JOIN_REQS, getString(R.string.drawer_join_request), R.drawable.ic_join_black, R.drawable.ic_join_green,
             ITEM_JOIN_REQS.equals(defltItem), true);
         joinRequests.setItemCount((int) RealmUtils.countObjectsInDB(GroupJoinRequest.class));
-        pos = addItemAndIncrement(pos, NavigationDrawerAdapter.PRIMARY, joinRequests);
+        pos = addItemAndIncrement(pos, topFourItemType, joinRequests);
 
         pos = addItemAndIncrement(pos, NavigationDrawerAdapter.SEPARATOR, new NavDrawerItem());
 
@@ -239,7 +247,11 @@ public class NavigationDrawerFragment extends Fragment implements NavigationDraw
             case ITEM_TASKS:
             case ITEM_NOTIFICATIONS:
             case ITEM_JOIN_REQS:
-                setSelectedItem(tag);
+                if (primaryItemsActive) {
+                    setSelectedItem(tag);
+                } else {
+                    showNoGroupsToast();
+                }
                 break;
             case ITEM_OFFLINE:
                 offlineSwitch();
@@ -275,6 +287,21 @@ public class NavigationDrawerFragment extends Fragment implements NavigationDraw
         } catch (Exception e) {
             e.printStackTrace(); // means some weirdness with null pointers somewhere above
         }
+    }
+
+    // make sure to switch the flag before calling this
+    private void switchPrimaryItemsActiveState() {
+        final int newType = primaryItemsActive ? NavigationDrawerAdapter.PRIMARY : NavigationDrawerAdapter.SECONDARY;
+        positionMap.put(0, newType);
+        positionMap.put(1, newType);
+        positionMap.put(2, newType);
+        positionMap.put(3, newType);
+        itemAdapter.switchItemTypes(positionMap);
+    }
+
+    private void showNoGroupsToast() {
+        Toast.makeText(ApplicationLoader.applicationContext, R.string.toast_no_groups, Toast.LENGTH_SHORT)
+            .show();
     }
 
     private void offlineSwitch() {
@@ -394,6 +421,10 @@ public class NavigationDrawerFragment extends Fragment implements NavigationDraw
     }
 
     public void refreshGroupCount() {
+        if (!primaryItemsActive) {
+            primaryItemsActive = RealmUtils.loadPreferencesFromDB().isHasGroups();
+            switchPrimaryItemsActiveState();
+        }
         groups.setItemCount((int) RealmUtils.countObjectsInDB(Group.class));
         safeItemChange(NavigationConstants.HOME_NAV_GROUPS);
     }

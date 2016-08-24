@@ -11,8 +11,14 @@
 
     <item
         android:id="@+id/mi_icon_sort"
-        android:title="@string/sort"
+        android:title="@string/menu_sort"
         android:icon="@drawable/btn_sort"
+        app:showAsAction="ifRoom" />
+
+    <item
+        android:id="@+id/mi_icon_filter"
+        android:title="@string/menu_filter"
+        android:icon="@drawable/btn_filter"
         app:showAsAction="ifRoom" />
 
     <!-- these two items are for viewing tasks -->

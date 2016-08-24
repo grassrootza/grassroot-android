@@ -1,13 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout
+<LinearLayout
 	xmlns:android="http://schemas.android.com/apk/res/android"
+	android:layout_width="wrap_content"
+	android:layout_height="wrap_content"
+	android:orientation="vertical"
 	style="@style/AppTheme">
+
+	<TextView
+		android:id="@+id/dialog_group_description"
+		android:padding="@dimen/padding"
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:textSize="@dimen/txt_medium"
+		android:textColor="@color/textSecondaryColorDark"
+		android:text="@string/gs_dialog_desc_placeholder"/>
 
 	<android.support.design.widget.TextInputLayout
 		android:layout_width="match_parent"
 		android:layout_height="wrap_content"
         android:padding="@dimen/padding"
-        android:layout_marginTop="@dimen/margin_large"
         android:layout_marginBottom="@dimen/margin_large">
 
 		<android.support.design.widget.TextInputEditText
@@ -23,4 +34,4 @@
 
 	</android.support.design.widget.TextInputLayout>
 
-</FrameLayout>
+</LinearLayout>
