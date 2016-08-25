@@ -26,8 +26,4 @@ public interface NavigationConstants {
     int ASK_CONTACT_PERMISSION = 104;
     int NETWORK_SETTINGS_DIALOG = 105;
 
-    public static final int activityNetworkSettings = 20; //todo request code for network, will have to do it robustly
-
-    public static final int alertAskForContactPermission = 91;
-
 }

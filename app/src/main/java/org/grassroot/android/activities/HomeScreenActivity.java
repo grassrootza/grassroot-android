@@ -46,6 +46,7 @@ import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
 import java.util.Locale;
+import java.util.Map;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -189,32 +190,9 @@ public class HomeScreenActivity extends PortraitActivity implements NavigationDr
         if (!showMenuOptions) {
             return false;
         } else {
-            switchOnMainMenu(menu, currentMainFragment != NavigationConstants.HOME_NAV_GROUPS);
+            if (menu.findItem(R.id.action_search) != null)
+                menu.findItem(R.id.action_search).setVisible(true);
             return true;
-        }
-    }
-
-    private void switchOnMainMenu(Menu menu, boolean includingSort) {
-        if (menu.findItem(R.id.mi_icon_filter) != null)
-            menu.findItem(R.id.mi_icon_filter).setVisible(true);
-        if (menu.findItem(R.id.action_search) != null)
-            menu.findItem(R.id.action_search).setVisible(true);
-        if (menu.findItem(R.id.mi_icon_sort) != null && includingSort)
-            menu.findItem(R.id.mi_icon_sort).setVisible(true);
-
-        // disable sharing items ...
-        if (menu.findItem(R.id.mi_share_default) != null)
-            menu.findItem(R.id.mi_share_default).setVisible(false);
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.mi_icon_sort:
-                groupListFragment.sortGroups(); // todo : and on other fragments ...
-                return true;
-            default:
-                return super.onOptionsItemSelected(item);
         }
     }
 

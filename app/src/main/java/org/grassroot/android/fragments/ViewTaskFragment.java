@@ -182,7 +182,6 @@ public class ViewTaskFragment extends Fragment {
     public void onPrepareOptionsMenu(Menu menu) {
         super.onPrepareOptionsMenu(menu);
         boolean taskInFuture = (task == null || task.isInFuture());
-        Log.e(TAG, "setting up options menu ... taskInFuture = " + taskInFuture);
         if (menu.findItem(R.id.mi_icon_filter) != null)
             menu.findItem(R.id.mi_icon_filter).setVisible(false);
         if (menu.findItem(R.id.mi_icon_sort) != null)

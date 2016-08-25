@@ -135,8 +135,6 @@ public class CreateTaskFragment extends Fragment {
         taskType = b.getString(TaskConstants.TASK_TYPE_FIELD);
         groupLocal = b.getBoolean(GroupConstants.LOCAL_FIELD);
 
-        Log.e(TAG, "create task fragment initiated, with group local set to : " + groupLocal);
-
         selectedDateTimeCal = Calendar.getInstance();
         includeWholeGroup = true;
     }
@@ -367,7 +365,6 @@ public class CreateTaskFragment extends Fragment {
 
         final RealmList<RealmString> realmMemberUids = RealmUtils.convertListOfStringInRealmListOfString(new ArrayList<>(memberUids));
         model.setMemberUIDS(realmMemberUids);
-        RealmUtils.saveDataToRealm(realmMemberUids, null).subscribe();
 
         return model;
     }

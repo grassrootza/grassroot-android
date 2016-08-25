@@ -82,10 +82,13 @@ public class Contact implements Parcelable, Comparable {
         }
     };
 
-    // todo: optimize the hell out of this
     public static List<Contact> convertFromMembers(List<Member> members) {
         List<Contact> contacts = new ArrayList<>();
-        for (final Member m : members) {
+        // using explicit for loop to make sure this is rapid
+        final int size = members.size();
+        Member m;
+        for (int i = 0; i < size; i++) {
+            m = members.get(i);
             Contact c = new Contact();
             c.id = -1;
             c.selectedNumber = m.getPhoneNumber();

@@ -19,7 +19,6 @@ import org.grassroot.android.services.ApplicationLoader;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -110,10 +109,12 @@ public class TasksAdapter extends RecyclerView.Adapter<TasksAdapter.TaskViewHold
   public void removeTaskFromList(final String taskUid) {
     Integer position = uidPositionMap.get(taskUid);
     if (position != null) {
+      if (fullTaskList != null) {
+        fullTaskList.remove(viewedTasks.get(position));
+      }
       viewedTasks.remove((int) position);
       notifyItemRemoved(position);
       resetUidPositionMap().subscribe();
-      // todo : also remove from full task list
     } else {
       Log.e(TAG, "error! no such task found ...");
     }

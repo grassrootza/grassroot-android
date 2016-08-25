@@ -1,18 +1,20 @@
 package org.grassroot.android.fragments;
 
 import android.os.Bundle;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ListView;
+import android.widget.ProgressBar;
 
 import org.grassroot.android.R;
 import org.grassroot.android.adapters.PermissionsAdapter;
-import org.grassroot.android.interfaces.GroupConstants;
-import org.grassroot.android.models.Group;
 import org.grassroot.android.models.Permission;
 import org.grassroot.android.services.GroupService;
+import org.grassroot.android.utils.ErrorUtils;
+import org.grassroot.android.utils.NetworkUtils;
 
 import java.util.List;
 
@@ -20,36 +22,36 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 import butterknife.Unbinder;
+import rx.Subscriber;
+import rx.functions.Action1;
 
 /**
  * Created by luke on 2016/07/18.
  */
-public class GroupPermissionsFragment extends Fragment implements GroupService.GroupPermissionsListener {
+public class GroupPermissionsFragment extends Fragment {
 
-    private static final String TAG = GroupPermissionsFragment.class.getSimpleName();
+    // note : with so many potential issues with conflicting changes etc., this should only ever be called while online
 
-    private Group group;
+    private String groupUid;
     private String role;
 
     @BindView(R.id.gset_permission_list) ListView listView;
+    @BindView(R.id.progressBar) ProgressBar progressBar;
+
     PermissionsAdapter permissionsAdapter;
+    List<Permission> permissions;
+
+    private Subscriber<String> subscriber;
 
     private Unbinder unbinder;
 
-    public static GroupPermissionsFragment newInstance(Group group, String role) {
+    public static GroupPermissionsFragment newInstance(String groupUid, String role,
+                                                       List<Permission> permissions, Subscriber<String> subscriber) {
         GroupPermissionsFragment fragment = new GroupPermissionsFragment();
-        if (group == null) {
-            throw new UnsupportedOperationException("Error! Permissions fragment called without role");
-        }
-        if (!group.canEditGroup()) {
-            throw new UnsupportedOperationException("Error! Permissions fragment called without permission to adjust");
-        }
-        if (!GroupConstants.ROLE_GROUP_ORGANIZER.equals(role) && !GroupConstants.ROLE_COMMITTEE_MEMBER.equals(role)
-                && !GroupConstants.ROLE_ORDINARY_MEMBER.equals(role)) {
-            throw new UnsupportedOperationException("Error! Permissions fragment called with non-standard role");
-        }
-        fragment.group = group;
+        fragment.groupUid = groupUid;
         fragment.role = role;
+        fragment.permissions = permissions;
+        fragment.subscriber = subscriber;
         return fragment;
     }
 
@@ -57,39 +59,49 @@ public class GroupPermissionsFragment extends Fragment implements GroupService.G
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_permission_set, container, false);
         unbinder = ButterKnife.bind(this, view);
-        GroupService.getInstance().fetchGroupPermissions(group, role, this);
+
+        permissionsAdapter = new PermissionsAdapter(getContext(), permissions);
+        listView.setAdapter(permissionsAdapter);
+        listView.setVisibility(View.VISIBLE);
+
         return view;
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        unbinder.unbind();
     }
 
     @OnClick(R.id.gset_perm_save)
     public void onSaveClick() {
+        progressBar.setVisibility(View.VISIBLE);
         List<Permission> permissions = permissionsAdapter.getPermissions();
-        GroupService.getInstance().updateGroupPermissions(group, role, permissions, this);
+        GroupService.getInstance().updateGroupPermissions(groupUid, role, permissions)
+            .subscribe(new Action1<String>() {
+                @Override
+                public void call(String s) {
+                    progressBar.setVisibility(View.GONE);
+                    subscriber.onNext(NetworkUtils.SAVED_SERVER);
+                }
+            }, new Action1<Throwable>() {
+                @Override
+                public void call(Throwable e) {
+                    progressBar.setVisibility(View.GONE);
+                    if (NetworkUtils.CONNECT_ERROR.equals(e.getMessage())) {
+                        ErrorUtils.snackBarWithAction(listView, R.string.gset_perms_error_connect,
+                            R.string.snackbar_try_again, new View.OnClickListener() {
+                                @Override
+                                public void onClick(View v) {
+                                    onSaveClick();
+                                }
+                            });
+                    } else {
+                        Snackbar.make(listView, ErrorUtils.serverErrorText(e), Snackbar.LENGTH_SHORT)
+                            .show();
+                    }
+                }
+            });
     }
-
-    @Override
-    public void permissionsLoaded(List<Permission> permissions) {
-        permissionsAdapter = new PermissionsAdapter(getContext(), permissions);
-        listView.setAdapter(permissionsAdapter);
-        listView.setVisibility(View.VISIBLE);
-        // permissionsAdapter.setPermissionsList(permissions);
-    }
-
-    @Override
-    public void permissionsUpdated(List<Permission> permissions) {
-        // todo : show error
-    }
-
-    @Override
-    public void errorLoadingPermissions(String errorDescription) {
-        // todo : show error
-    }
-
-    @Override
-    public void errorUpdatingPermissions(String errorDescription) {
-
-    }
-
-    // note : with so many potential issues with conflicting changes etc., this should only ever be called while online
 
 }

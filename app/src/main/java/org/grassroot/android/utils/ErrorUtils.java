@@ -10,6 +10,7 @@ import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
 import org.grassroot.android.R;
 import org.grassroot.android.activities.HomeScreenActivity;
@@ -120,6 +121,9 @@ public class ErrorUtils {
 
     // todo : use this in an uncaught exception handler
     public static Intent gracefulExitToHome(Activity callingActivity) {
+        Toast.makeText(ApplicationLoader.applicationContext,
+            ApplicationLoader.applicationContext.getText(R.string.application_crash_error),
+            Toast.LENGTH_SHORT).show();
         return new Intent(callingActivity, HomeScreenActivity.class);
     }
 
@@ -248,6 +252,14 @@ public class ErrorUtils {
         } catch (Exception e1) {
             Log.e(TAG, "Socket error on startup");
         }
+    }
+
+    // todo : consolidate these
+    public static void snackBarWithAction(View holder, final int message, final int actionText, View.OnClickListener actionToTake) {
+        Snackbar snackbar = Snackbar.make(holder, message, Snackbar.LENGTH_LONG);
+        snackbar.setActionTextColor(Color.RED);
+        snackbar.setAction(actionText, actionToTake);
+        snackbar.show();
     }
 
     public static void showSnackBar(View holder, final String message, int length, final String actionText,

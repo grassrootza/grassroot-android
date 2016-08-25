@@ -15,6 +15,7 @@ import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ProgressBar;
@@ -128,6 +129,7 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
     unbinder = ButterKnife.bind(this, viewToReturn);
     this.container = container;
     floatingActionButton.setVisibility(displayFAB ? View.VISIBLE : View.GONE);
+    setHasOptionsMenu(true);
 
     tasksAdapter = new TasksAdapter(new ArrayList<TaskModel>(), TextUtils.isEmpty(groupUid), this);
     taskView.setAdapter(tasksAdapter);
@@ -148,6 +150,21 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
         refreshTasksFromServer();
       }
     });
+  }
+
+  @Override
+  public void onPrepareOptionsMenu(Menu menu) {
+    super.onPrepareOptionsMenu(menu);
+    if (menu.findItem(R.id.action_search) != null)
+      menu.findItem(R.id.action_search).setVisible(!isInNoTaskMessageView);
+    if (menu.findItem(R.id.mi_icon_filter) != null)
+      menu.findItem(R.id.mi_icon_filter).setVisible(!isInNoTaskMessageView);
+    if (menu.findItem(R.id.mi_icon_sort) != null)
+      menu.findItem(R.id.mi_icon_sort).setVisible(false);
+    if (menu.findItem(R.id.mi_share_default) != null)
+      menu.findItem(R.id.mi_share_default).setVisible(false);
+    if (menu.findItem(R.id.mi_only_unread) != null)
+      menu.findItem(R.id.mi_only_unread).setVisible(false);
   }
 
   @Override public void onDestroyView() {

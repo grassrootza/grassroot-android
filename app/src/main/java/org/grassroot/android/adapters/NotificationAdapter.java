@@ -23,6 +23,8 @@ import java.util.List;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import rx.Observable;
+import rx.Subscriber;
+import rx.android.schedulers.AndroidSchedulers;
 import rx.functions.Action1;
 import rx.functions.Func1;
 import rx.schedulers.Schedulers;
@@ -40,6 +42,10 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
     private final String titleFormatEvent;
     private final String titleFormatTodo;
 
+    private boolean onlyUnread;
+    private boolean isSearching;
+    private String lowerCaseQuery;
+
     public NotificationAdapter() {
         notifications = new ArrayList<>();
         storedNotifications = new ArrayList<>();
@@ -53,9 +59,23 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
         this.notifyDataSetChanged();
     }
 
-    public void addNotifications(List<TaskNotification> notifications) {
-        this.notifications.addAll(notifications);
-        this.notifyDataSetChanged();
+    public void addNotifications(List<TaskNotification> notificationsToAdd) {
+        // note : come back and optimize this in next phase
+        if (onlyUnread || isSearching) {
+            storedNotifications.addAll(notificationsToAdd);
+            final int size = notificationsToAdd.size();
+            for (int i = 0; i < size; i++) {
+                if (onlyUnread && !notificationsToAdd.get(i).isViewedAndroid()) {
+                    notifications.add(notificationsToAdd.get(i));
+                }
+                if (isSearching && notificationsToAdd.get(i).containsText(lowerCaseQuery)) {
+                    notifications.add(notificationsToAdd.get(i));
+                }
+            }
+        } else {
+            this.notifications.addAll(notificationsToAdd);
+        }
+        notifyDataSetChanged();
     }
 
     @Override
@@ -130,67 +150,68 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
         }
     }
 
-    public void filterByUnviewed() {
-        long startTime = SystemClock.currentThreadTimeMillis();
-        if (storedNotifications == null || storedNotifications.isEmpty()) {
-            storedNotifications = new ArrayList<>(notifications);
-        }
-        Observable.from(storedNotifications)
-            .filter(new Func1<TaskNotification, Boolean>() {
-                @Override
-                public Boolean call(TaskNotification notification) {
-                    return notification.isViewedAndroid();
+    public Observable<Boolean> filterByUnviewed() {
+        return Observable.create(new Observable.OnSubscribe<Boolean>() {
+            @Override
+            public void call(Subscriber<? super Boolean> subscriber) {
+                long startTime = SystemClock.currentThreadTimeMillis();
+                if (storedNotifications == null || storedNotifications.isEmpty()) {
+                    storedNotifications = new ArrayList<>(notifications);
                 }
-            }).subscribe(new Action1<TaskNotification>() {
-            @Override
-            public void call(TaskNotification notification) {
-                notifications.remove(notification);
+
+                onlyUnread = true;
+
+                // note : can also do this via Rx filters, but then thread choreography gets a bit complex
+                // and this is marginally faster, so sacrificing a little elegance
+                final int size = storedNotifications.size();
+                notifications.clear();
+                for (int i =0; i < size; i++) {
+                    if (storedNotifications.get(i).isViewedAndroid()) {
+                        notifications.add(storedNotifications.get(i));
+                    }
+                }
+
+                subscriber.onNext(true);
+
+                Log.e(TAG, "number of notifications after filter .... " + notifications.size() + " " +
+                    "and it took ... " + (SystemClock.currentThreadTimeMillis() - startTime));
+                subscriber.onCompleted();
             }
-        }, new Action1<Throwable>() {
-            @Override
-            public void call(Throwable throwable) {
-                throwable.printStackTrace();
-            }
-        });
-        Log.e(TAG, "number of notifications after filter .... " + notifications.size() + " " +
-            "and it took ... " + (SystemClock.currentThreadTimeMillis() - startTime));
-        notifyDataSetChanged();
+        }).subscribeOn(Schedulers.computation()).observeOn(AndroidSchedulers.mainThread());
     }
 
-    public void searchText(String queryText) {
-        if (storedNotifications == null || storedNotifications.isEmpty()) {
-                storedNotifications = new ArrayList<>(notifications);
-        } else {
-            notifications = new ArrayList<>(storedNotifications);
-        }
-
-        final String lCase = queryText.toLowerCase();
-
-        Observable.from(storedNotifications)
-            .subscribeOn(Schedulers.computation())
-            .observeOn(Schedulers.immediate())
-            .filter(new Func1<TaskNotification, Boolean>() {
-                @Override
-                public Boolean call(TaskNotification notification) {
-                    return !notification.containsText(lCase);
+    public Observable<Boolean> searchText(final String queryText) {
+        return Observable.create(new Observable.OnSubscribe<Boolean>() {
+            @Override
+            public void call(Subscriber<? super Boolean> subscriber) {
+                if (storedNotifications == null || storedNotifications.isEmpty()) {
+                    storedNotifications = new ArrayList<>(notifications);
+                } else {
+                    notifications = new ArrayList<>(storedNotifications);
                 }
-            })
-            .subscribe(new Action1<TaskNotification>() {
-                @Override
-                public void call(TaskNotification notification) {
-                    notifications.remove(notification);
-                }
-            }, new Action1<Throwable>() {
-                @Override
-                public void call(Throwable throwable) {
-                    throwable.printStackTrace();
-                }
-            });
 
-        notifyDataSetChanged();
+                onlyUnread = true;
+                final String lCase = queryText.toLowerCase();
+                final int size = storedNotifications.size();
+
+                // note : as above re Rx filters and threads
+                for (int i = 0; i < size; i++) {
+                    if (!storedNotifications.get(i).containsText(lCase)) {
+                        notifications.remove(storedNotifications.get(i));
+                    }
+                }
+
+                subscriber.onNext(true);
+                lowerCaseQuery = lCase; // stores it for future adds
+                subscriber.onCompleted();
+            }
+        }).subscribeOn(Schedulers.computation()).observeOn(AndroidSchedulers.mainThread());
     }
 
     public void resetToStored() {
+        onlyUnread = false;
+        isSearching = false;
+        lowerCaseQuery = "";
         notifications = new ArrayList<>(storedNotifications);
         notifyDataSetChanged();
     }

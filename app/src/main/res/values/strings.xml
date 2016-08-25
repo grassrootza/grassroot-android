@@ -32,6 +32,8 @@
 
     <!--Error descriptions -->
 
+    <string name="application_crash_error">Sorry! Grassroot crashed (we\'ve reported it)</string>
+
     <string name="error_generic">Sorry! Something went wrong in the request.</string> <!-- null pointer error, or who knows what -->
     <string name="connect_error_general">Sorry, we couldn\'t connect to the server. Please try again later.</string>
     <string name="server_error_general">Sorry, something went wrong with the request.</string> <!-- note : should never actually use this -->
@@ -92,6 +94,7 @@
     <string name="INVALID_TOKEN">Sorry, wrong code. Please check again and re-enter.</string> <!-- todo : refactor this as others -->
 
     <string name="snackbar_try_again">Retry</string>
+    <string name="snackbar_try_connect">Connect</string>
 
     <!-- Error messages -->
     <string name="error_no_network">You don\'t seem to have a working data connection.</string>
@@ -172,6 +175,8 @@
     <!-- Menu items -->
     <string name="menu_sort">Sort</string>
     <string name="menu_filter">Filter</string>
+    <string name="menu_unread">Only unread</string>
+    <string name="menu_all_notis">Show all</string>
 
     <!--HomeScreen Activity & Screens-->
     <string name="joingroup">REQUEST TO JOIN A GROUP</string>
@@ -423,6 +428,9 @@
 
     <string name="gset_rename_heading">Change group name</string>
     <string name="gset_rename_hint">Enter new name for "%s"</string>
+    <string name="gset_rename_done">Done! Group renamed</string>
+    <string name="gset_rename_offline">You\'re offline, but we\'ve saved the name change and will
+    send it when you connect</string>
 
     <string name="gset_public">Group can be found by search</string>
     <string name="gset_join_code">Group has a join code</string>
@@ -431,15 +439,30 @@
     without a join code. Continue?</string>
     <string name="gset_public_to_on">People who search for your group name will find it, but will
     have to ask your permission to join. Confirmed?</string>
+    <string name="gset_public_done">Done! Group status changed</string>
+
+    <string name="gset_offline_generic">You\'re offline, but we\'ve saved the change and will
+    send it when you connect</string>
 
     <string name="gset_join_code_to_on">Open a join code for this group?</string>
     <string name="gset_join_code_to_off">About to close this join code. Confirmed?</string>
     <string name="gset_join_code_done">Done! Anyone can dial *134*1994*%s# to join the group.</string>
+    <string name="gset_join_code_closed_done">Done! Code closed</string>
+
+    <string name="gset_join_code_offline">Sorry, you have to be offline to change the join code. Try
+    connect?</string>
+    <string name="gset_error_join_code_create_offline">Sorry, we couldn\'t connect to open the code.
+        Please try again later</string>
+    <string name="gset_error_join_code_close_offline">Sorry, we couldn\'t connect to close the code. Please try later
+    or dial *134*1994#</string>
 
     <string name="gset_organizer_confirm">Add as organizer?</string>
+    <string name="gset_organizer_done">Done! Organizer added</string>
 
-    <string name="gset_member_remove">Remove %s</string>
-    <string name="gset_member_role">Change role</string>
+    <string-array name="gset_member_popup">
+        <item>Change role</item>
+        <item>Remove from group</item>
+    </string-array>
 
     <string name="gset_role_organizer">Organizer</string>
     <string name="gset_role_committee">Committee member</string>
@@ -447,6 +470,9 @@
 
     <string name="gset_mrole_title">Change %s to &#8230;</string>
     <string name="gset_remove_confirm">Remove %s, confirmed?</string>
+    <string name="gset_remove_done">Done, %s is no longer a member</string>
+    <string name="gset_remove_connect_error">The connection failed, but we have saved the change
+    and will send it next time you connect</string>
 
     <string name="gset_perms_title">For which role?</string>
 
@@ -455,6 +481,10 @@
         <item>Committee member</item>
         <item>Ordinary member</item>
     </string-array>
+
+    <string name="gset_role_done">Done! Role changed for %1$s</string>
+    <string name="gset_role_connect_error">Sorry, we couldn\'t connect. You must be online to change
+    the role</string>
 
     <string-array name="gset_permissions">
         <item>Call meetings</item>
@@ -466,12 +496,10 @@
         <item>Change group settings</item>
     </string-array>
 
-    <!-- todo : refine all of these -->
-    <string name="gset_error_join_code_create_offline">Sorry, creating a join code requires a connection. Please check and try again.</string>
-    <string name="gset_error_join_code_create_online">Sorry, something went wrong creating the code. Please try again later.</string>
-    <string name="gset_error_join_code_close_offline">Sorry, we could not close the join code. Please try again later.</string>
-    <string name="gset_error_join_code_close_online">Sorry, something went wrong closing the code. Please try again later.</string>
-    <string name="gset_error_public_online">Sorry, something went wrong. Please try again later.</string>
+    <string name="gset_perms_done">Done! Permissions changed</string>
+    <string name="gset_error_unknown">Sorry, there was an unknown error</string>
+    <string name="gset_perms_error_connect">Sorry, the connection failed. You must be online to change
+    permissions</string>
 
     <!-- Notification Strings -->
     <string name="notification_title_format_event">%1$s of %2$s</string>

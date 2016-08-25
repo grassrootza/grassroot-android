@@ -122,7 +122,6 @@ public class GroupTasksActivity extends PortraitActivity implements NewTaskMenuF
 
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
-        menu.findItem(R.id.action_search).setVisible(true); // consider hiding if no tasks
         menu.findItem(R.id.mi_view_join_code).setVisible(groupMembership.hasJoinCode());
         menu.findItem(R.id.mi_new_task).setVisible(groupMembership.hasCreatePermissions());
         menu.findItem(R.id.mi_add_members).setVisible(groupMembership.canAddMembers());
@@ -203,7 +202,6 @@ public class GroupTasksActivity extends PortraitActivity implements NewTaskMenuF
 
     private void handleUpButton() {
         if (!closeViewTaskFragment()) {
-            Log.e(TAG, "handling up button with no view task ...");
             NavUtils.navigateUpFromSameTask(this);
         }
     }

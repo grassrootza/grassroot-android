@@ -12,6 +12,7 @@ import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
@@ -76,7 +77,7 @@ public class NotificationCenterFragment extends Fragment {
     private int itemsLaidOutSoFar, lastVisibileItem;
     private int cacheStoredFirstVisible, cacheStoredLastVisible;
     private boolean isLoading;
-    private boolean isSortOrFilter = false; // to prevent further calls if sort or filter is empty
+    private boolean isFiltering = false; // to prevent further calls if sort or filter is empty
 
     private CharSequence[] sharingOptions;
 
@@ -97,10 +98,41 @@ public class NotificationCenterFragment extends Fragment {
     }
 
     @Override
+    public void onPrepareOptionsMenu(Menu menu) {
+        super.onPrepareOptionsMenu(menu);
+        if (menu.findItem(R.id.mi_icon_sort) != null)
+            menu.findItem(R.id.mi_icon_sort).setVisible(false);
+        if (menu.findItem(R.id.mi_icon_filter) != null)
+            menu.findItem(R.id.mi_icon_filter).setVisible(false);
+        if (menu.findItem(R.id.mi_share_default) != null)
+            menu.findItem(R.id.mi_share_default).setVisible(false);
+        if (menu.findItem(R.id.mi_only_unread) != null)
+            menu.findItem(R.id.mi_only_unread).setVisible(true);
+    }
+
+    @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        if (item.getItemId() == R.id.mi_icon_filter) {
-            isSortOrFilter = !isSortOrFilter;
-            notificationAdapter.filterByUnviewed();
+        if (item.getItemId() == R.id.mi_only_unread) {
+            if (!isFiltering) {
+                item.setTitle(R.string.menu_all_notis);
+                isFiltering = true;
+                notificationAdapter.filterByUnviewed().subscribe(new Action1<Boolean>() {
+                    @Override
+                    public void call(Boolean aBoolean) {
+                        Log.e(TAG, "resetting adapter ...");
+                        notificationAdapter.notifyDataSetChanged();
+                    }
+                }, new Action1<Throwable>() {
+                    @Override
+                    public void call(Throwable throwable) {
+                        throwable.printStackTrace();
+                    }
+                });
+            } else {
+                notificationAdapter.resetToStored();
+                item.setTitle(R.string.menu_unread);
+                isFiltering = false;
+            }
             return true;
         } else {
             return super.onOptionsItemSelected(item);
@@ -131,7 +163,6 @@ public class NotificationCenterFragment extends Fragment {
                 public void onClick(View view, int position) {
                     TaskNotification notification = notificationAdapter.getNotifications().get(position);
                     updateNotificationStatus(notification);
-                    Log.d(TAG, "clicked on item" + position + ", with message: " + notification.getMessage());
 
                     Intent openactivity = new Intent(getActivity(), ViewTaskActivity.class);
                     openactivity.putExtra(NotificationConstants.ENTITY_UID, notification.getEntityUid());
@@ -165,13 +196,13 @@ public class NotificationCenterFragment extends Fragment {
                 itemsLaidOutSoFar = viewLayoutManager.getItemCount();
                 lastVisibileItem = viewLayoutManager.findLastVisibleItemPosition();
 
-                int firstCompletelyVisitbleItem = viewLayoutManager.findFirstCompletelyVisibleItemPosition();
+                int firstCompletelyVisibleItem = viewLayoutManager.findFirstCompletelyVisibleItemPosition();
                 int lastCompletelyVisibleItem = viewLayoutManager.findLastCompletelyVisibleItemPosition();
 
-                handleNotificationUpdating(firstCompletelyVisitbleItem, lastCompletelyVisibleItem);
+                handleNotificationUpdating(firstCompletelyVisibleItem, lastCompletelyVisibleItem);
 
-                if (!isSortOrFilter && currentPage < totalPages && itemsLaidOutSoFar <= (lastVisibileItem + 10) && !isLoading) {
-                    Log.e(TAG, "fetching more notifications ... current page = " + currentPage);
+                if (currentPage < totalPages && itemsLaidOutSoFar <= (lastVisibileItem + 10) && !isLoading) {
+                    Log.d(TAG, "fetching more notifications ... current page = " + currentPage);
                     progressBar.setVisibility(View.VISIBLE);
                     currentPage++;
                     isLoading = true;
@@ -195,10 +226,7 @@ public class NotificationCenterFragment extends Fragment {
     // up with conflicts on background, plus they are _very_ simple / fast int & boolean operations
     // as soon as we are starting to process, though, we shift to background thread ...
     private void handleNotificationUpdating(final int firstCompletelyVisibleItem, final int lastCompletelyVisibleItem) {
-        // Log.d(TAG, String.format("handling notification updating : %d to %d", firstCompletelyVisibleItem, lastCompletelyVisibleItem));
-
-        Log.e(TAG, String.format("handling update ... first completely visibke = %1d, last = %2d",
-            firstCompletelyVisibleItem, lastCompletelyVisibleItem));
+        Log.v(TAG, String.format("handling notification updating : %d to %d", firstCompletelyVisibleItem, lastCompletelyVisibleItem));
 
         final boolean firstItemChanged = firstCompletelyVisibleItem != cacheStoredFirstVisible &&
             firstCompletelyVisibleItem != -1; // in case no items after filter
@@ -221,7 +249,7 @@ public class NotificationCenterFragment extends Fragment {
     }
 
     private void handleAddingNotificationToBatchForUpdate(final int positionStart, final int positionEnd) {
-        Log.e(TAG, String.format("handle adding notification ... %1d to %2d", positionStart, positionEnd));
+        Log.v(TAG, String.format("handle adding notification ... %1d to %2d", positionStart, positionEnd));
         updateNotificationToRead(positionStart, positionEnd).subscribe(new Action1<Integer>() {
             @Override
             public void call(Integer count) {
@@ -229,6 +257,7 @@ public class NotificationCenterFragment extends Fragment {
                 int revisedCounter = Math.max(0, prefs.getNotificationCounter() - count);
                 prefs.setNotificationCounter(revisedCounter);
                 EventBus.getDefault().post(new NotificationCountChangedEvent(revisedCounter));
+                RealmUtils.saveDataToRealm(prefs).subscribe();
                 RealmUtils.saveDataToRealm(prefs).subscribe();
             }
         });
@@ -239,7 +268,7 @@ public class NotificationCenterFragment extends Fragment {
         return Observable.create(new Observable.OnSubscribe<Integer>() {
             @Override
             public void call(Subscriber<? super Integer> subscriber) {
-                Log.e(TAG, String.format("entering the update batch ... %1d to %2d", positionStart, positionEnd));
+                 // Log.e(TAG, String.format("entering the update batch ... %1d to %2d", positionStart, positionEnd));
                 int changedToViewCounter = 0;
                 for (int i = positionStart; i <= positionEnd; i++) {
                     if (!positionsRead.contains(i)) {
@@ -247,7 +276,6 @@ public class NotificationCenterFragment extends Fragment {
                         TaskNotification notification = notificationAdapter.getItem(i);
                         notificationsToUpdate.add(notification.getUid());
                         if (!notification.isViewedAndroid()) {
-                            Log.d(TAG, "setting notification viewed ...");
                             changedToViewCounter++;
                             notification.setRead(true);
                             notification.setViewedAndroid(true); // don't call update on adapter, because don't want change to be instant (on next scroll / view)
@@ -302,7 +330,7 @@ public class NotificationCenterFragment extends Fragment {
                     currentPage = response.body().getNotificationWrapper().getPageNumber();
                     totalPages = response.body().getNotificationWrapper().getTotalPages();
 
-                    Log.e(TAG, "fetched the lists, total pages = " + totalPages);
+                    Log.d(TAG, "fetched the lists, total pages = " + totalPages);
                     recyclerView.setVisibility(View.VISIBLE);
                     if (currentPage > 1) {
                         notificationAdapter.addNotifications(notifications);
@@ -352,7 +380,20 @@ public class NotificationCenterFragment extends Fragment {
         if (TextUtils.isEmpty(queryText)) {
             notificationAdapter.resetToStored();
         } else {
-            notificationAdapter.searchText(queryText);
+            notificationAdapter.searchText(queryText)
+                .subscribe(new Action1<Boolean>() {
+                @Override
+                public void call(Boolean aBoolean) {
+                    notificationAdapter.notifyDataSetChanged();
+                }
+            }, new Action1<Throwable>() {
+                @Override
+                public void call(Throwable throwable) {
+                    throwable.printStackTrace();
+                }
+            });
         }
     }
+
+
 }

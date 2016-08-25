@@ -16,6 +16,7 @@ import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
@@ -98,8 +99,6 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
 
     ProgressDialog progressDialog;
 
-    public boolean date_click = false, role_click = false, defaults_click = false;
-
     private GroupPickCallbacks mCallbacks;
 
     @Override
@@ -132,6 +131,19 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
         super.onResume();
         Log.e(TAG, "on resume triggered");
         fabOpenMenu.setVisibility(View.VISIBLE);
+    }
+
+    @Override
+    public void onPrepareOptionsMenu(Menu menu) {
+        super.onPrepareOptionsMenu(menu);
+        if (menu.findItem(R.id.mi_icon_filter) != null)
+            menu.findItem(R.id.mi_icon_filter).setVisible(false);
+        if (menu.findItem(R.id.mi_icon_sort) != null)
+            menu.findItem(R.id.mi_icon_sort).setVisible(true);
+        if (menu.findItem(R.id.mi_share_default) != null)
+            menu.findItem(R.id.mi_share_default).setVisible(false);
+        if (menu.findItem(R.id.mi_only_unread) != null)
+            menu.findItem(R.id.mi_only_unread).setVisible(false);
     }
 
     @Override
@@ -451,7 +463,9 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
             }
         });
 
-        builder.show();
+        builder.setCancelable(true)
+            .create()
+            .show();
     }
 
     public void searchStringChanged(String query) {

@@ -104,7 +104,8 @@ public class TaskNotification extends RealmObject {
     // note : assumes query text has been shifted to lower case prior to passing
     public boolean containsText(String queryText) {
         return entityType.toLowerCase().contains(queryText) ||
-            title.toLowerCase().contains(queryText) || message.toLowerCase().contains(queryText);
+            title.toLowerCase().contains(queryText) ||
+            message.toLowerCase().contains(queryText);
     }
 
 }

@@ -21,11 +21,17 @@
         android:icon="@drawable/btn_filter"
         app:showAsAction="ifRoom" />
 
-    <!-- these two items are for viewing tasks -->
+    <!-- this one is just for viewing tasks -->
     <item
         android:id="@+id/mi_share_default"
         android:title="@string/share_ic_title"
         android:icon="@drawable/ic_share_white"
         app:showAsAction="always" />
+
+    <!-- this one is just for notification fragment -->
+    <item
+        android:id="@+id/mi_only_unread"
+        android:title="@string/menu_unread"
+        app:showAsAction="never" />
 
 </menu>

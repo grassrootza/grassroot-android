@@ -1,7 +1,6 @@
 package org.grassroot.android.adapters;
 
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -27,7 +26,8 @@ public class MemberRoleAdapter extends RecyclerView.Adapter<MemberRoleAdapter.Me
     private static final String TAG = MemberRoleAdapter.class.getSimpleName();
 
     final private String groupUid;
-    private RealmList<Member> members=new RealmList<>();
+    private RealmList<Member> members = new RealmList<>();
+
     private Map<String, Integer> mapUidPosition;
     private final Map<String, Integer> roleMap;
 
@@ -40,13 +40,13 @@ public class MemberRoleAdapter extends RecyclerView.Adapter<MemberRoleAdapter.Me
 
     public MemberRoleAdapter(String groupUid, MemberRoleClickListener listener) {
         this.groupUid  = groupUid;
-         RealmUtils.loadListFromDB(Member.class, "groupUid", groupUid).subscribe(new Action1<List<Member>>() {
+
+        RealmUtils.loadGroupMembers(groupUid, true).subscribe(new Action1<List<Member>>() {
             @Override public void call(List<Member> realmResults) {
-                for(Member m : realmResults){
-                    members.add(m);
-                };
+                members.addAll(realmResults);
             }
         });
+
         userMobile = RealmUtils.loadPreferencesFromDB().getMobileNumber();
         roleMap = new HashMap<>();
         roleMap.put(GroupConstants.ROLE_GROUP_ORGANIZER, R.string.gset_role_organizer);
@@ -54,6 +54,17 @@ public class MemberRoleAdapter extends RecyclerView.Adapter<MemberRoleAdapter.Me
         roleMap.put(GroupConstants.ROLE_ORDINARY_MEMBER, R.string.gset_role_ordinary);
         this.listener = listener;
         mapUidPosition = new HashMap<>();
+    }
+
+    public void refreshToDB() {
+        members.clear();
+        RealmUtils.loadGroupMembers(groupUid, true).subscribe(new Action1<List<Member>>() {
+                @Override
+                public void call(List<Member> realmResults) {
+                    members.addAll(realmResults);
+                    notifyDataSetChanged();
+                }
+            });
     }
 
     @Override
@@ -66,17 +77,17 @@ public class MemberRoleAdapter extends RecyclerView.Adapter<MemberRoleAdapter.Me
     public void onBindViewHolder(MemberRoleViewHolder holder, int position) {
         final Member member = members.get(position);
         mapUidPosition.put(member.getMemberUid(), position);
-        holder.userName.setText(member.getDisplayName());
         holder.userRole.setText(roleMap.get(member.getRoleName()));
         if (!userMobile.equals(member.getPhoneNumber())) {
+            holder.userName.setText(member.getDisplayName());
             holder.rootView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    Log.e(TAG, "member clicked!");
                     listener.onGroupMemberClicked(member.getMemberUid(), member.getDisplayName());
                 }
             });
         } else {
+            holder.userName.setText(R.string.member_list_you);
             holder.rootView.setClickable(false);
         }
     }
@@ -87,11 +98,9 @@ public class MemberRoleAdapter extends RecyclerView.Adapter<MemberRoleAdapter.Me
     }
 
     public void refreshDisplayedMember(final String memberUid) {
-        Log.e(TAG, "refreshing group member");
         int position = mapUidPosition.get(memberUid);
         Member updatedMember = RealmUtils.loadObjectFromDB(Member.class, Member.PKEY, memberUid + groupUid);
         members.set(position, updatedMember);
-        Log.e(TAG, "current role of member: " + members.get(position).getRoleName());
         notifyItemChanged(position);
     }
 
