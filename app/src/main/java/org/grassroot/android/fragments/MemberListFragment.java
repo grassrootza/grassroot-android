@@ -103,6 +103,13 @@ public class MemberListFragment extends Fragment {
         return viewToReturn;
     }
 
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        memberListRecyclerView = null;
+        progressBar = null;
+    }
+
     public void transitionToMemberList(List<Member> members) {
         // todo : optimize this (get difference), maybe
         if (memberListAdapter != null) {

@@ -41,6 +41,7 @@ public class GroupSearchResultsFragment extends Fragment {
 	SearchResultsListener listener;
 
 	@BindView(R.id.find_group_results_display) RecyclerView resultsDisplay;
+
 	private PublicGroupAdapter resultsAdapter;
 
 	public interface SearchResultsListener {
@@ -68,6 +69,12 @@ public class GroupSearchResultsFragment extends Fragment {
 		unbinder = ButterKnife.bind(this, viewToReturn);
 		setUpNameResultsDisplay();
 		return viewToReturn;
+	}
+
+	@Override
+	public void onDestroyView() {
+		super.onDestroyView();
+		unbinder.unbind();
 	}
 
 	public void refreshResultsList() {

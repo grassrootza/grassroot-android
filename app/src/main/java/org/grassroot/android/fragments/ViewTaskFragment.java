@@ -2,7 +2,9 @@ package org.grassroot.android.fragments;
 
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.Color;
 import android.graphics.Typeface;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
@@ -41,6 +43,7 @@ import org.grassroot.android.models.ResponseTotalsModel;
 import org.grassroot.android.models.RsvpListModel;
 import org.grassroot.android.models.TaskModel;
 import org.grassroot.android.models.exceptions.ApiCallException;
+import org.grassroot.android.services.ApplicationLoader;
 import org.grassroot.android.services.SharingService;
 import org.grassroot.android.services.TaskService;
 import org.grassroot.android.utils.ErrorUtils;
@@ -74,7 +77,6 @@ public class ViewTaskFragment extends Fragment {
 
     private ViewGroup mContainer;
     private Unbinder unbinder;
-    private boolean bound; // to avoid null pointers on eventbus ..
 
     @BindView(R.id.vt_title) TextView tvTitle;
     @BindView(R.id.vt_header) TextView tvHeader;
@@ -240,13 +242,27 @@ public class ViewTaskFragment extends Fragment {
         getActivity().startService(i);
     }
 
+    private Intent generateMapsIntent() {
+        if (taskType.equals(TaskConstants.MEETING) && task != null) {
+            Uri mapsIntentUri = Uri.parse("geo:0,0?q=" + Uri.encode(task.getLocation()));
+            Intent intent = new Intent(Intent.ACTION_VIEW, mapsIntentUri);
+            if (intent.resolveActivity(ApplicationLoader.applicationContext.getPackageManager()) != null) {
+                return intent;
+            } else {
+                return null;
+            }
+        } else {
+            return null;
+        }
+    }
+
     private void fetchTaskDetailsFromNetwork() {
         task = RealmUtils.loadObjectFromDB(TaskModel.class, "taskUid", taskUid);
         if (!NetworkUtils.isOnline(getContext())) {
             if (task != null) {
                 setUpViews(task);
             } else {
-                // show a dialogue box
+                // todo : show a dialogue box (network error listener thing)
             }
         } else {
             progressBar.setVisibility(View.VISIBLE);
@@ -263,7 +279,7 @@ public class ViewTaskFragment extends Fragment {
                                 setUpViews(task);
                                 final String errorMsg = NetworkUtils.CONNECT_ERROR;
                             } else {
-                                // show an error dialogue
+                                // todo : show an error dialogue
                             }
                         }
                     }
@@ -437,11 +453,20 @@ public class ViewTaskFragment extends Fragment {
     }
 
     private void setViewForMeeting(final TaskModel task) {
-
         tvTitle.setText(task.isInFuture() ? R.string.vt_mtg_title : R.string.vt_mtg_title_past);
         tvHeader.setText(task.getTitle());
         tvLocation.setVisibility(View.VISIBLE);
-        tvLocation.setText(String.format(getString(R.string.vt_mtg_location), task.getLocation())); // todo: integrate w/Maps
+
+        tvLocation.setText(String.format(getString(R.string.vt_mtg_location), task.getLocation()));
+        if (generateMapsIntent() != null) {
+            tvLocation.setTextColor(ContextCompat.getColor(getContext(), R.color.md_teal_700));
+            tvLocation.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    openLocationInMaps();
+                }
+            });
+        }
 
         tvPostedBy.setText(String.format(getString(R.string.vt_mtg_posted), task.getName()));
         TextViewCompat.setTextAppearance(tvPostedBy, R.style.CardViewFinePrint);
@@ -481,6 +506,26 @@ public class ViewTaskFragment extends Fragment {
         }
 
         setMeetingRsvpView();
+    }
+
+    private void openLocationInMaps() {
+        // monitor user reaction to this (i.e., do we need dialog box before launching or can remove ...)
+        AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+        builder.setMessage(R.string.vt_mtg_maps_open)
+            .setPositiveButton(R.string.vt_mtg_loc_dial_okay, new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    startActivity(generateMapsIntent());
+                }
+            })
+            .setNegativeButton(R.string.alert_cancel, new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    dialog.cancel();
+                }
+            })
+            .setCancelable(true)
+            .show();
     }
 
     private void setViewForVote(final TaskModel task) {

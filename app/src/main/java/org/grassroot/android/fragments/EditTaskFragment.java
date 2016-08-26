@@ -77,7 +77,7 @@ public class EditTaskFragment extends Fragment implements DatePickerDialog.OnDat
 
     private final Calendar calendar = Calendar.getInstance();
 
-    private ViewGroup vContainer;
+    private ViewGroup vContainer; // note : come back and check this for memory leaks
     private List<Member> selectedMembers;
 
     private ProgressDialog progressDialog;

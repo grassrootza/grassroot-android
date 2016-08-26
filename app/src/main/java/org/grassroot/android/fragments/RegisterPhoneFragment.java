@@ -5,7 +5,6 @@ import android.support.design.widget.Snackbar;
 import android.support.design.widget.TextInputEditText;
 import android.support.v4.app.Fragment;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -20,6 +19,7 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 import butterknife.OnEditorAction;
+import butterknife.Unbinder;
 
 /**
  * Created by luke on 2016/08/08.
@@ -29,6 +29,7 @@ public class RegisterPhoneFragment extends Fragment {
 	RegisterPhoneListener listener;
 	String preEnteredNumber;
 
+	Unbinder unbinder;
 	@BindView(R.id.fragment_display_phone_root) RelativeLayout rootView;
 	@BindView(R.id.input_mobile_phone) TextInputEditText phoneInput;
 
@@ -40,7 +41,6 @@ public class RegisterPhoneFragment extends Fragment {
 		RegisterPhoneFragment fragment = new RegisterPhoneFragment();
 		fragment.listener = listener;
 		fragment.preEnteredNumber = preEnteredNumber;
-		Log.e("REG", "preEnteredNumber = " + preEnteredNumber);
 		return fragment;
 	}
 
@@ -53,6 +53,12 @@ public class RegisterPhoneFragment extends Fragment {
 		}
 		phoneInput.requestFocus();
 		return view;
+	}
+
+	@Override
+	public void onDestroyView() {
+		super.onDestroyView();
+		unbinder.unbind();
 	}
 
 	@OnClick(R.id.bt_register)

@@ -62,6 +62,7 @@ import butterknife.ButterKnife;
 import butterknife.OnCheckedChanged;
 import butterknife.OnClick;
 import butterknife.OnTextChanged;
+import butterknife.Unbinder;
 import io.realm.RealmList;
 import rx.Subscriber;
 import rx.functions.Action1;
@@ -88,6 +89,8 @@ public class CreateTaskFragment extends Fragment {
     private ProgressDialog progressDialog;
     private String shortCharCounter;
     private String longCharCounter;
+
+    private Unbinder unbinder;
 
     @BindView(R.id.ctsk_et_title)
     TextInputEditText etTitleInput;
@@ -143,7 +146,7 @@ public class CreateTaskFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View viewToReturn = inflater.inflate(R.layout.fragment_create_task, container, false);
-        ButterKnife.bind(this, viewToReturn);
+        unbinder = ButterKnife.bind(this, viewToReturn);
 
         this.vContainer = container;
         progressDialog = new ProgressDialog(getContext());
@@ -154,6 +157,12 @@ public class CreateTaskFragment extends Fragment {
 
         setUpStrings();
         return viewToReturn;
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        unbinder.unbind();
     }
 
     @OnClick(R.id.ctsk_cv_datepicker)

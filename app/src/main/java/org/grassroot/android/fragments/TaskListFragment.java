@@ -70,6 +70,7 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
 
   private boolean displayFAB; // todo : just show it always (move FAB from GT-Activity to here)
   private ViewGroup container;
+
   private Unbinder unbinder;
 
   @BindView(R.id.tl_swipe_refresh) SwipeRefreshLayout swipeRefreshLayout;
@@ -169,6 +170,8 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
   @Override public void onDestroyView() {
     super.onDestroyView();
     unbinder.unbind();
+    // want to keep adapter updated in background (not always clear when destroy view called vs detach),
+    // so don't unregister from eventbus here, though avoid unchecked calls to views
   }
 
   @Override public void onDetach() {

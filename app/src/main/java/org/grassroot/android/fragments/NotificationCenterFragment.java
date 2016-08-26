@@ -44,6 +44,7 @@ import java.util.Set;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import butterknife.Unbinder;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -57,12 +58,13 @@ public class NotificationCenterFragment extends Fragment {
 
     private static final String TAG = NotificationCenterFragment.class.getSimpleName();
 
-    @BindView(R.id.notifications_root_view) ViewGroup rootView;
 
-    @BindView(R.id.notification_recycler_view) RecyclerView recyclerView;
     private NotificationAdapter notificationAdapter;
     private LinearLayoutManager viewLayoutManager;
 
+    Unbinder unbinder;
+    @BindView(R.id.notifications_root_view) ViewGroup rootView;
+    @BindView(R.id.notification_recycler_view) RecyclerView recyclerView;
     @BindView(R.id.progressBar) ProgressBar progressBar;
 
     private int currentPage = 0;
@@ -84,11 +86,16 @@ public class NotificationCenterFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View viewToReturn = inflater.inflate(R.layout.fragment_notification_center, container, false);
-        ButterKnife.bind(this, viewToReturn);
+        unbinder = ButterKnife.bind(this, viewToReturn);
         setHasOptionsMenu(true);
         GcmListenerService.clearNotifications(getContext()); // clears notifications in tray
         setUpRecyclerView();
         return viewToReturn;
+    }
+
+    public void onDestroyView() {
+        super.onDestroyView();
+        unbinder.unbind();
     }
 
     @Override

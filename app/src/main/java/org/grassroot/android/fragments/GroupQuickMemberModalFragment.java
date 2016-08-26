@@ -24,6 +24,7 @@ import org.grassroot.android.utils.IntentUtils;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
+import butterknife.Unbinder;
 
 
 public class GroupQuickMemberModalFragment extends android.support.v4.app.DialogFragment {
@@ -37,12 +38,14 @@ public class GroupQuickMemberModalFragment extends android.support.v4.app.Dialog
     @BindView(R.id.ic_remove_members_active)
     ImageView icRemoveMembersIcon;
 
+    private Unbinder unbinder;
+
     private Group group;
     private String groupUid;
     private String groupName;
     private int groupPosition;
 
-    private boolean addMemberPermitted, viewMembersPermitted, editSettingsPermitted, removeMembersPermitted;
+    private boolean addMemberPermitted, viewMembersPermitted, removeMembersPermitted;
 
     // would rather use good practice and not have empty constructor, but Android is Android
     public GroupQuickMemberModalFragment() { }
@@ -56,10 +59,16 @@ public class GroupQuickMemberModalFragment extends android.support.v4.app.Dialog
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.modal_group_members_quick, container, false);
-        ButterKnife.bind(this, view);
+        unbinder = ButterKnife.bind(this, view);
         getDialog().getWindow().requestFeature(Window.FEATURE_NO_TITLE);
         getDialog().getWindow().setBackgroundDrawable(new ColorDrawable(0));
         return view;
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        unbinder.unbind();
     }
 
     @Override
@@ -84,7 +93,6 @@ public class GroupQuickMemberModalFragment extends android.support.v4.app.Dialog
         addMemberPermitted = group.canAddMembers();
         viewMembersPermitted = group.canViewMembers();
         removeMembersPermitted = group.canDeleteMembers();
-        editSettingsPermitted = group.canEditGroup();
 
         int addIcon = addMemberPermitted ? R.drawable.ic_add_circle_active_24dp : R.drawable.ic_add_circle_inactive_24dp;
         int viewIcon = viewMembersPermitted ? R.drawable.ic_list_icon_active_24dp : R.drawable.ic_list_icon_inactive_24dp;

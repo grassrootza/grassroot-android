@@ -25,6 +25,7 @@ import java.util.List;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
+import butterknife.Unbinder;
 
 /**
  * Created by luke on 2016/06/07.
@@ -33,6 +34,8 @@ public class ContactSelectionFragment extends Fragment
     implements PickNumberDialogFragment.PickNumberListener, ContactsAdapter.ContactsAdapterListener {
 
   private static final String TAG = ContactSelectionFragment.class.getSimpleName();
+
+  private Unbinder unbinder;
 
   public interface ContactSelectionListener {
     void onContactSelectionComplete(List<Contact> contactsSelected);
@@ -51,21 +54,17 @@ public class ContactSelectionFragment extends Fragment
     super.onAttach(context);
     try {
       listener = (ContactSelectionListener) context;
-      EventBus.getDefault().register(this);
     } catch (ClassCastException e) {
       throw new UnsupportedOperationException("Error! Activity must implement listener");
     }
-  }
-
-  @Override public void onCreate(Bundle savedInstanceState) {
-    super.onCreate(savedInstanceState);
   }
 
   @Override
   public View onCreateView(LayoutInflater inflater, ViewGroup container,
       Bundle savedInstanceState) {
     View viewToReturn = inflater.inflate(R.layout.fragment_contact_selection, container, false);
-    ButterKnife.bind(this, viewToReturn);
+    unbinder = ButterKnife.bind(this, viewToReturn);
+    EventBus.getDefault().register(this);
 
     adapter = new ContactsAdapter(this.getContext(), this);
     contactListView.setAdapter(adapter);
@@ -82,8 +81,14 @@ public class ContactSelectionFragment extends Fragment
     listener.onContactSelectionComplete(addedMembers);
   }
 
-  @Override public void onDetach() {
+  @Override
+  public void onDestroyView() {
+    super.onDestroyView();
     EventBus.getDefault().unregister(this);
+    unbinder.unbind();
+  }
+
+  @Override public void onDetach() {
     ContactService.getInstance().resetSelectedState(false); // should only get called on activity destroyed, but watch out and possibly move to activity itself
     super.onDetach();
   }
@@ -122,8 +127,6 @@ public class ContactSelectionFragment extends Fragment
 
   @Subscribe(threadMode = ThreadMode.MAIN)
   public void onEvent(PhoneContactsChanged e) {
-    if (adapter != null) {
-      adapter.notifyDataSetChanged();
-    }
+    adapter.notifyDataSetChanged();
   }
 }

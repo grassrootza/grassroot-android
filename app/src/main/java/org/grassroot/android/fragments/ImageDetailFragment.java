@@ -48,4 +48,10 @@ public class ImageDetailFragment extends Fragment {
         imageView.setImageResource(imageResource);
     }
 
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        imageView = null;
+    }
+
 }

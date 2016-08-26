@@ -14,6 +14,7 @@ import org.grassroot.android.interfaces.GroupConstants;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
+import butterknife.Unbinder;
 
 /**
  * Created by paballo on 2016/06/10.
@@ -22,12 +23,11 @@ public class JoinCodeFragment extends Fragment {
 
     public static final String TAG = JoinCodeFragment.class.getCanonicalName();
 
-    @BindView(R.id.jc_text_row1)
-    TextView tvRow1;
-    @BindView(R.id.jc_text_row2)
-    TextView tvRow2;
-    @BindView(R.id.jc_text_row3)
-    TextView tvRow3;
+    @BindView(R.id.jc_text_row1) TextView tvRow1;
+    @BindView(R.id.jc_text_row2) TextView tvRow2;
+    @BindView(R.id.jc_text_row3) TextView tvRow3;
+
+    private Unbinder unbinder;
 
     private String joinCode;
     private JoinCodeListener listener;
@@ -66,7 +66,7 @@ public class JoinCodeFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_join_code, container, false);
-        ButterKnife.bind(this, view);
+        unbinder = ButterKnife.bind(this, view);
 
         if(!joinCode.equals(getString(R.string.none))){
             tvRow1.setText(R.string.jc_row_one);
@@ -81,12 +81,15 @@ public class JoinCodeFragment extends Fragment {
         return view;
     }
 
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        unbinder.unbind();
+    }
+
     @OnClick(R.id.jc_iv_back)
     public void onBackClicked() {
         listener.joinCodeClose();
     }
 
 }
-
-
-

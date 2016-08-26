@@ -29,6 +29,7 @@ import org.grassroot.android.utils.NetworkUtils;
 import org.grassroot.android.utils.RealmUtils;
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
+import org.greenrobot.eventbus.ThreadMode;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -191,7 +192,7 @@ public class JoinRequestsFragment extends Fragment {
     }
 
     // note : this isn't triggered anywhere yet, but will be once notifications etc properly wired
-    @Subscribe
+    @Subscribe(threadMode = ThreadMode.MAIN)
     public void groupJoinRequestReceived(JoinRequestReceived e) {
         adapter.insertRequest(e.request);
     }
@@ -220,11 +221,6 @@ public class JoinRequestsFragment extends Fragment {
         if (progressDialog != null) {
             progressDialog.dismiss();
         }
-    }
-
-    @Override
-    public void onDetach() {
-        super.onDetach();
         EventBus.getDefault().unregister(this);
     }
 

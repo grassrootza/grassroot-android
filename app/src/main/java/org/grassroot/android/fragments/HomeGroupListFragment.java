@@ -129,7 +129,6 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
     @Override
     public void onResume() {
         super.onResume();
-        Log.e(TAG, "on resume triggered");
         fabOpenMenu.setVisibility(View.VISIBLE);
     }
 

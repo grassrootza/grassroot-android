@@ -19,6 +19,7 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 import butterknife.OnEditorAction;
+import butterknife.Unbinder;
 
 /**
  * Created by luke on 2016/08/08.
@@ -27,6 +28,7 @@ public class RegisterNameFragment extends Fragment {
 
 	RegisterNameListener listener;
 
+	Unbinder unbinder;
 	@BindView(R.id.fragment_display_name_root) RelativeLayout rootView;
 	@BindView(R.id.input_display_name) TextInputEditText nameInput;
 
@@ -43,9 +45,15 @@ public class RegisterNameFragment extends Fragment {
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 		View view = inflater.inflate(R.layout.fragment_register_display_name, container, false);
-		ButterKnife.bind(this, view);
+		unbinder = ButterKnife.bind(this, view);
 		nameInput.requestFocus();
 		return view;
+	}
+
+	@Override
+	public void onDestroyView() {
+		super.onDestroyView();
+		unbinder.unbind();
 	}
 
 	@OnClick(R.id.bt_next)

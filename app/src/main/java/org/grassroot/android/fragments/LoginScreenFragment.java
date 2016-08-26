@@ -23,7 +23,7 @@ import butterknife.OnClick;
  */
 public class LoginScreenFragment extends Fragment {
 
-    @BindView(R.id.et_mobile_login) TextInputEditText etNumberInput;
+    TextInputEditText etNumberInput;
 
     String presetNumber;
 
@@ -42,11 +42,6 @@ public class LoginScreenFragment extends Fragment {
     }
 
     @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-    }
-
-    @Override
     public void onAttach(Context context) {
         super.onAttach(context);
         try {
@@ -60,10 +55,10 @@ public class LoginScreenFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_login_screen, container, false);
-        ButterKnife.bind(this, view);
         view.startAnimation(AnimationUtils.loadAnimation(getActivity(), R.anim.fade_in));
         view.setLayoutParams(new ViewGroup.LayoutParams(-1, -1));
 
+        etNumberInput = (TextInputEditText) view.findViewById(R.id.et_mobile_login);
         if (!TextUtils.isEmpty(presetNumber)) {
             etNumberInput.setText(presetNumber);
         }
@@ -94,5 +89,11 @@ public class LoginScreenFragment extends Fragment {
         } else {
             listener.requestLogin(number);
         }
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        etNumberInput = null;
     }
 }

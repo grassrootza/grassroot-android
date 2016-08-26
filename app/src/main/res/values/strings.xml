@@ -607,6 +607,8 @@
     <string name="vt_mtg_title_past">Past meeting about:</string>
     <string name="vt_mtg_posted">Called by %s</string>
     <string name="vt_mtg_location">Location: %s</string>
+    <string name="vt_mtg_maps_open">Open in Maps?</string>
+    <string name="vt_mtg_loc_dial_okay">Open</string>
     <string name="vt_mtg_datetime">For %s</string>
     <string name="vt_mtg_date_past">Took place on %s</string>
     <string name="vt_mtg_responseq">Will you attend?</string>

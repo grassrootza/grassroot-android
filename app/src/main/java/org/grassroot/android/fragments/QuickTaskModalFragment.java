@@ -33,12 +33,9 @@ public class QuickTaskModalFragment extends android.support.v4.app.DialogFragmen
     private boolean groupSelected;
     private Group group;
 
-    @BindView(R.id.ic_home_vote_active)
-    ImageView icHomeVoteActive;
-    @BindView(R.id.ic_home_call_meeting_active)
-    ImageView icHomeCallMeetingActive;
-    @BindView(R.id.ic_home_to_do_active)
-    ImageView icHomeToDoActive;
+    @BindView(R.id.ic_home_vote_active) ImageView icHomeVoteActive;
+    @BindView(R.id.ic_home_call_meeting_active) ImageView icHomeCallMeetingActive;
+    @BindView(R.id.ic_home_to_do_active) ImageView icHomeToDoActive;
 
 
     public boolean votePermitted = false, meetingPermitted = false, todoPermitted = false;

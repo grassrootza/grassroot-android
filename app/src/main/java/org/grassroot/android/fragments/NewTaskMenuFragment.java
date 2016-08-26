@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -22,33 +23,30 @@ import org.grassroot.android.utils.IntentUtils;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
+import butterknife.Unbinder;
 
 
 public class NewTaskMenuFragment extends Fragment {
 
     private static final String TAG = NewTaskMenuFragment.class.getCanonicalName();
 
+    // switch to Rx subscriber pattern soon
     public interface NewTaskMenuListener {
         void menuCloseClicked();
     }
 
-    @BindView(R.id.iv_back)
-    ImageView ivBack;
-    @BindView(R.id.bt_vote)
-    Button bt_vote;
-    @BindView(R.id.bt_meeting)
-    Button bt_meeting;
-    @BindView(R.id.bt_todo)
-    Button bt_todo;
-    @BindView(R.id.bt_newmember)
-    Button bt_addmember;
+    Unbinder unbinder;
+    @BindView(R.id.iv_back) ImageView ivBack;
+    @BindView(R.id.bt_vote) Button bt_vote;
+    @BindView(R.id.bt_meeting) Button bt_meeting;
+    @BindView(R.id.bt_todo) Button bt_todo;
+    @BindView(R.id.bt_newmember) Button bt_addmember;
 
     private NewTaskMenuListener listener;
 
     private Group groupMembership;
     private String groupUid;
     private String groupName;
-    private boolean isGroupLocal;
 
     private boolean showAddMembers;
 
@@ -86,18 +84,18 @@ public class NewTaskMenuFragment extends Fragment {
 
         this.groupMembership = b.getParcelable(GroupConstants.OBJECT_FIELD);
         if (groupMembership == null) {
-            throw new UnsupportedOperationException("Error! New task called without valid group");
+            Log.e(TAG, "Error! New task called without valid group");
+            // todo : add error / graceful exit
         }
 
         groupUid = groupMembership.getGroupUid();
         groupName = groupMembership.getGroupName();
-        isGroupLocal = groupMembership.getIsLocal();
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstance) {
         View viewToReturn = inflater.inflate(R.layout.fragment_new_task_menu, container, false);
-        ButterKnife.bind(this, viewToReturn);
+        unbinder = ButterKnife.bind(this, viewToReturn);
         setVisibility(groupMembership);
         return viewToReturn;
     }
@@ -106,6 +104,12 @@ public class NewTaskMenuFragment extends Fragment {
     public void onResume() {
         super.onResume();
         bt_addmember.setVisibility(showAddMembers ? View.VISIBLE : View.GONE);
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        unbinder.unbind();
     }
 
     private void setVisibility(Group groupMembership) {

@@ -30,8 +30,7 @@ public class OtpScreenFragment extends Fragment {
         void onOtpSubmitButtonClick(String otp, String purpose);
     }
 
-    @BindView(R.id.et_otp)
-    EditText et_otp;
+    EditText otpInput;
 
     private String purpose; // i.e., for login or for register
     private OtpListener onOtpScreenFragmentListener;
@@ -46,10 +45,6 @@ public class OtpScreenFragment extends Fragment {
         return otpScreenFragment;
     }
 
-    public void setOtpDisplayed(String otpPassed) {
-        checkBuildFlavorIntegrity(otpPassed);
-        et_otp.setText(otpPassed);
-    }
 
     public void setPurpose(String purpose) {
         this.purpose = purpose;
@@ -61,16 +56,6 @@ public class OtpScreenFragment extends Fragment {
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater,  ViewGroup container,  Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.container_otp, container, false);
-        ButterKnife.bind(this, view);
-        et_otp.setText(getArguments().getString("verification_code"));
-        purpose = getArguments().getString("purpose");
-        return view;
-    }
-
-
-    @Override
     public void onAttach(Context context) {
         super.onAttach(context);
         try {
@@ -80,14 +65,33 @@ public class OtpScreenFragment extends Fragment {
         }
     }
 
+    @Override
+    public View onCreateView(LayoutInflater inflater,  ViewGroup container,  Bundle savedInstanceState) {
+        View view = inflater.inflate(R.layout.container_otp, container, false);
+        otpInput = (EditText) view.findViewById(R.id.et_otp);
+        otpInput.setText(getArguments().getString("verification_code"));
+        purpose = getArguments().getString("purpose");
+        return view;
+    }
+
+    @Override
+    public void onDestroyView() {
+        otpInput = null;
+    }
+
+    public void setOtpDisplayed(String otpPassed) {
+        checkBuildFlavorIntegrity(otpPassed);
+        otpInput.setText(otpPassed);
+    }
+
 
     @OnClick(R.id.bt_submit_otp)
     public void submitButtonClicked(){
-        if (TextUtils.isEmpty(et_otp.getText().toString())) {
-            et_otp.setError(getResources().getString(R.string.OTP_empty));
+        if (TextUtils.isEmpty(otpInput.getText().toString())) {
+            otpInput.setError(getResources().getString(R.string.OTP_empty));
         } else {
             Log.d(TAG, "OTP submit clicked, for purpose: " + purpose);
-            onOtpScreenFragmentListener.onOtpSubmitButtonClick(et_otp.getText().toString(), purpose);
+            onOtpScreenFragmentListener.onOtpSubmitButtonClick(otpInput.getText().toString(), purpose);
         }
     }
 

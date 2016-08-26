@@ -20,18 +20,22 @@ import org.grassroot.android.activities.GroupSearchActivity;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
+import butterknife.Unbinder;
 
 
 public class WelcomeFragment extends android.support.v4.app.Fragment {
 
-    @BindView(R.id.toolbar)
-    Toolbar toolbar;
-    @BindView(R.id.bt_joingroup)
-    Button bt_joingroup;
-    @BindView(R.id.bt_startgroup)
-    Button bt_startgroup;
+    Unbinder unbinder;
+
+    @BindView(R.id.toolbar) Toolbar toolbar;
+    @BindView(R.id.bt_joingroup) Button bt_joingroup;
+    @BindView(R.id.bt_startgroup) Button bt_startgroup;
 
     private WelcomeFragmentListener listener;
+
+    public interface WelcomeFragmentListener {
+        void menuClick();
+    }
 
     @Override
     public void onAttach(Context context) {
@@ -48,7 +52,7 @@ public class WelcomeFragment extends android.support.v4.app.Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.welcome, container, false);
-        ButterKnife.bind(this, view);
+        unbinder = ButterKnife.bind(this, view);
         setUpToolbar();
         return view;
     }
@@ -73,14 +77,15 @@ public class WelcomeFragment extends android.support.v4.app.Fragment {
         startActivity(new Intent(getActivity(), GroupSearchActivity.class));
     }
 
-    public interface WelcomeFragmentListener {
-        void menuClick();
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        unbinder.unbind();
     }
 
     @Override
     public void onDetach() {
         super.onDetach();
         listener = null;
-        Log.e("onDetach", "Detached");
     }
 }

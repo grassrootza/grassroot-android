@@ -57,6 +57,7 @@ import java.util.Map;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import butterknife.Unbinder;
 import rx.Subscriber;
 
 public class NavigationDrawerFragment extends Fragment implements NavigationDrawerAdapter.NavDrawerItemListener {
@@ -93,6 +94,7 @@ public class NavigationDrawerFragment extends Fragment implements NavigationDraw
 
     private boolean primaryItemsActive;
 
+    Unbinder unbinder;
     @BindView(R.id.displayName) TextView displayName;
     @BindView(R.id.nav_items_primary) RecyclerView primaryItemsView;
     @BindView(R.id.nav_tv_footer) TextView txtVersion;
@@ -124,21 +126,12 @@ public class NavigationDrawerFragment extends Fragment implements NavigationDraw
         }
     }
 
-    public void setSelectedItem(String itemTag) {
-        if (itemAdapter == null || itemAdapter.getItemCount() == 0) {
-            defaultSelectedItemTag = itemTag;
-        } else {
-            currentlySelectedItemTag = itemTag;
-            switchPrimarySelected(itemTag);
-        }
-    }
-
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
 
         View view = inflater.inflate(R.layout.fragment_navigation_drawer, container, false);
-        ButterKnife.bind(this, view);
+        unbinder = ButterKnife.bind(this, view);
 
         displayName.setText(RealmUtils.loadPreferencesFromDB().getUserName());
         txtVersion.setText(String.format(getString(R.string.nav_bar_footer), BuildConfig.VERSION_NAME));
@@ -149,6 +142,28 @@ public class NavigationDrawerFragment extends Fragment implements NavigationDraw
         primaryItemsView.setAdapter(itemAdapter);
 
         return view;
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        unbinder.unbind();
+        // note : may need to update some counters etc even when views null, so don't unregister here (instead check for null in item change)
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        EventBus.getDefault().unregister(this);
+    }
+
+    public void setSelectedItem(String itemTag) {
+        if (itemAdapter == null || itemAdapter.getItemCount() == 0) {
+            defaultSelectedItemTag = itemTag;
+        } else {
+            currentlySelectedItemTag = itemTag;
+            switchPrimarySelected(itemTag);
+        }
     }
 
     public List<NavDrawerItem> setUpPrimaryItems() {
@@ -402,12 +417,6 @@ public class NavigationDrawerFragment extends Fragment implements NavigationDraw
         gcmUnregister.putExtra(NotificationConstants.PHONE_NUMBER, RealmUtils.loadPreferencesFromDB().getMobileNumber());
         gcmUnregister.putExtra(Constant.USER_TOKEN, RealmUtils.loadPreferencesFromDB().getToken());
         getActivity().startService(gcmUnregister);
-    }
-
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-        EventBus.getDefault().unregister(this);
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
