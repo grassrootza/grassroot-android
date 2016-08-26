@@ -50,4 +50,12 @@
         app:rippleColor="@color/fab_tasks_ripple"
         app:elevation="6dp" />
 
+    <ProgressBar
+        android:id="@+id/progressBar"
+        style="@style/ProgressBarMedium"
+        android:visibility="gone"
+        android:layout_gravity="center"
+        android:layout_centerVertical="true"
+        android:layout_centerHorizontal="true" />
+
 </RelativeLayout>

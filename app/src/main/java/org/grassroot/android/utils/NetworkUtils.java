@@ -63,9 +63,17 @@ public class NetworkUtils {
   static boolean sendingLocalQueue = false;
   static boolean fetchingServerEntities = false;
 
+  public static boolean batteryLow = false;
+
   public static boolean isOnline() {
     return isOnline(ApplicationLoader.applicationContext);
   }
+
+  public static void setBatteryLow(final boolean isBatteryLow) {
+    batteryLow = isBatteryLow;
+  }
+
+  public static boolean isBatteryLow() { return batteryLow; }
 
   public static Observable<String> toggleOnlineOfflineRx(final Context context, final boolean sendQueue, Scheduler observingThread) {
     observingThread = (observingThread == null) ? AndroidSchedulers.mainThread() : observingThread;
@@ -263,7 +271,7 @@ public class NetworkUtils {
 
   public static boolean shouldAttemptSync(final Context context) {
     Log.e(TAG, "checking if we should try sync ...");
-    return isOnline(context) && hasIntervalElapsedSinceSync();
+    return isOnline(context) && hasIntervalElapsedSinceSync() && !batteryLow;
   }
 
   private static void saveSyncTime() {

@@ -7,6 +7,7 @@ import android.support.v4.app.Fragment;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -15,7 +16,7 @@ import android.view.ViewGroup;
 import org.grassroot.android.R;
 import org.grassroot.android.adapters.PublicGroupAdapter;
 import org.grassroot.android.adapters.RecyclerTouchListener;
-import org.grassroot.android.fragments.dialogs.SendJoinRequestFragment;
+import org.grassroot.android.fragments.dialogs.MultiLineTextDialog;
 import org.grassroot.android.interfaces.ClickListener;
 import org.grassroot.android.models.PublicGroupModel;
 import org.grassroot.android.services.GroupSearchService;
@@ -30,10 +31,11 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 import butterknife.Unbinder;
+import rx.functions.Action1;
 
 public class GroupSearchResultsFragment extends Fragment {
 
-    private static final String TAG = GroupSearchResultsFragment.class.getSimpleName();
+	private static final String TAG = GroupSearchResultsFragment.class.getSimpleName();
 
 	Unbinder unbinder;
 	SearchResultsListener listener;
@@ -129,13 +131,20 @@ public class GroupSearchResultsFragment extends Fragment {
 
 	private void sendJoinRequest(final PublicGroupModel group, final int adapterViewPosition) {
 		if (!group.isHasOpenRequest()) {
-			SendJoinRequestFragment.newInstance(group, new SendJoinRequestFragment.SendJoinRequestListener() {
+			String description = TextUtils.isEmpty(group.getDescription()) ?
+					getString(R.string.gs_dialog_no_desc_format, group.getGroupName(),
+						group.getCreatedDate(), group.getGroupCreator(), group.getMemberCount()) :
+					getString(R.string.group_description_prefix, group.getDescription());
+
+			MultiLineTextDialog.showMultiLineDialog(getFragmentManager(), R.string.gs_dialog_title, description,
+					R.string.gs_dialog_message_hint, R.string.gs_dialog_send).subscribe(new Action1<String>() {
 				@Override
-				public void requestConfirmed(PublicGroupModel groupModel) {
-					listener.sendJoinRequest(groupModel);
+				public void call(String s) {
+					group.setDescription(s);
+					listener.sendJoinRequest(group);
 					resultsAdapter.toggleRequestSent(adapterViewPosition, true);
 				}
-			}).show(getFragmentManager(), "dialog");
+			});
 		} else {
 			AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
 			// might prefer to have verbose items and simple title ... to test w/users

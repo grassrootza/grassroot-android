@@ -20,7 +20,8 @@ public class TaskManagerReceiver extends BroadcastReceiver {
     public static final String ACTION_START = "org.grassroot.android.ACTION_START";
     public static final String ACTION_DONE = "org.grassroot.android.ACTION_DONE";
     public static final String TASK_TAG_PERIODIC = "TASK_TAG_PERIODIC";
-    private static final long REFRESH_PERIOD = 5*60;
+
+    private static final long REFRESH_PERIOD_NORMAL = 15*60; // roughly four times an hour
 
     @Override
     public void onReceive(Context context, Intent intent) {
@@ -45,10 +46,13 @@ public class TaskManagerReceiver extends BroadcastReceiver {
 
     private Task createPeriodicTask() {
         PeriodicTask task = new PeriodicTask.Builder()
-                .setService(SyncService.class)
-                .setTag(TASK_TAG_PERIODIC)
-                .setPeriod(REFRESH_PERIOD).setFlex(10).setUpdateCurrent(true).setRequiredNetwork(Task.NETWORK_STATE_ANY)
-                .build();
+            .setService(SyncService.class)
+            .setTag(TASK_TAG_PERIODIC)
+            .setPeriod(REFRESH_PERIOD_NORMAL)
+            .setFlex(30)
+            .setUpdateCurrent(true)
+            .setRequiredNetwork(Task.NETWORK_STATE_ANY)
+            .build();
         return task;
     }
 

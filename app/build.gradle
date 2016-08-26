@@ -27,8 +27,8 @@ android {
         applicationId "org.grassroot.android"
         minSdkVersion 9
         targetSdkVersion 23
-        versionCode 10
-        versionName "0.1.10"
+        versionCode 11
+        versionName "0.1.11"
     }
 
   buildTypes {

@@ -462,6 +462,10 @@ public class GrassrootRestService {
     Call<GenericResponse> renameGroup(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
                                       @Query("groupUid") String groupUid, @Query("name") String name);
 
+    @POST("group/edit/description/{phoneNumber}/{code}")
+    Call<GenericResponse> changeGroupDesc(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
+                                          @Query("groupUid") String groupUid, @Query("description") String description);
+
     @POST("group/edit/public_switch/{phoneNumber}/{code}")
     Call<GenericResponse> switchGroupPublicPrivate(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
                                                    @Query("groupUid") String groupUid, @Query("state") boolean state);

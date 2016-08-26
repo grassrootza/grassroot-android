@@ -196,8 +196,8 @@ public class ViewTaskFragment extends Fragment {
             menu.findItem(R.id.mi_remove_members).setVisible(false);
         if (menu.findItem(R.id.mi_view_join_code) != null)
             menu.findItem(R.id.mi_view_join_code).setVisible(false);
-        if (menu.findItem(R.id.mi_new_task) != null)
-            menu.findItem(R.id.mi_new_task).setVisible(false);
+        if (menu.findItem(R.id.mi_change_desc) != null)
+            menu.findItem(R.id.mi_change_desc).setVisible(false);
         if (menu.findItem(R.id.action_search) != null)
             menu.findItem(R.id.action_search).setVisible(false);
 

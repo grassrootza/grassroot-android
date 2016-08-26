@@ -29,9 +29,10 @@ public class SyncService extends GcmTaskService {
         // Default result is success.
         int result = GcmNetworkManager.RESULT_SUCCESS;
 
-        // Choose method based on the tag.
-        if (TaskManagerReceiver.TASK_TAG_PERIODIC.equals(tag)) {
-            PreferenceObject object = RealmUtils.loadPreferencesFromDB();
+        // Choose method based on the tag, so long as battery is not low.
+        if (!NetworkUtils.isBatteryLow() && TaskManagerReceiver.TASK_TAG_PERIODIC.equals(tag)) {
+          Log.d(TAG, "onRunTask: battery not low, executing ... ");
+					PreferenceObject object = RealmUtils.loadPreferencesFromDB();
             switch (object.getOnlineStatus()){
                 case NetworkUtils.ONLINE_DEFAULT:
                     result = doPeriodicTask();

@@ -1,6 +1,5 @@
 package org.grassroot.android.fragments;
 
-import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -11,10 +10,11 @@ import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SwitchCompat;
-import android.util.Log;
+import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -22,20 +22,15 @@ import android.widget.Toast;
 
 import org.grassroot.android.R;
 import org.grassroot.android.adapters.MemberRoleAdapter;
-import org.grassroot.android.events.GroupEditErrorEvent;
-import org.grassroot.android.events.GroupEditedEvent;
 import org.grassroot.android.fragments.dialogs.ConfirmCancelDialogFragment;
 import org.grassroot.android.fragments.dialogs.EditTextDialogFragment;
+import org.grassroot.android.fragments.dialogs.MultiLineTextDialog;
 import org.grassroot.android.interfaces.GroupConstants;
 import org.grassroot.android.models.Group;
 import org.grassroot.android.services.ApplicationLoader;
 import org.grassroot.android.services.GroupService;
 import org.grassroot.android.utils.ErrorUtils;
 import org.grassroot.android.utils.NetworkUtils;
-import org.grassroot.android.utils.RealmUtils;
-import org.greenrobot.eventbus.EventBus;
-import org.greenrobot.eventbus.Subscribe;
-import org.greenrobot.eventbus.ThreadMode;
 
 import java.util.Collections;
 
@@ -43,7 +38,6 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 import butterknife.Unbinder;
-import rx.Subscriber;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.functions.Action1;
 
@@ -60,6 +54,8 @@ public class GroupSettingsMainFragment extends Fragment implements MemberRoleAda
     private Unbinder unbinder;
     @BindView(R.id.gsfrag_header) TextView header;
     @BindView(R.id.gset_main_view) NestedScrollView mainRoot;
+
+    @BindView(R.id.gset_btn_description) Button changeDescription;
 
     @BindView(R.id.gset_switch_public_private) SwitchCompat switchPublicOnOff;
     private CompoundButton.OnCheckedChangeListener publicPrivateListener;
@@ -119,6 +115,12 @@ public class GroupSettingsMainFragment extends Fragment implements MemberRoleAda
                 }
             };
         switchWithoutEvent(switchJoinCode, group.hasJoinCode(), joinCodeListener);
+
+        if (TextUtils.isEmpty(group.getDescription())) {
+            changeDescription.setText(R.string.gset_desc_add);
+        } else {
+            changeDescription.setText(R.string.gset_desc_change);
+        }
     }
 
     @Override
@@ -135,9 +137,8 @@ public class GroupSettingsMainFragment extends Fragment implements MemberRoleAda
                     @Override
                     public void confirmClicked(String textEntered) {
                     if (!textEntered.isEmpty()) {
+                        // the dialog checks this, but ...
                         renameGroupCall(textEntered.trim());
-                    } else {
-                        // todo : add the error handling into the fragment
                     }
                     }
                 });
@@ -171,6 +172,49 @@ public class GroupSettingsMainFragment extends Fragment implements MemberRoleAda
                 public void call(Throwable throwable) {
                     Snackbar.make(mainRoot, ErrorUtils.serverErrorText(throwable), Snackbar.LENGTH_SHORT)
                         .show();
+                }
+            });
+    }
+
+    @OnClick(R.id.gset_btn_description)
+    public void changeGroupDescription() {
+        final String message = TextUtils.isEmpty(group.getDescription()) ? getString(R.string.gset_no_description)
+            : getString(R.string.gset_has_desc_body, group.getDescription());
+        MultiLineTextDialog.showMultiLineDialog(getFragmentManager(), -1, message, R.string.gset_desc_dialog_hint, R.string.gset_desc_dialog_done)
+            .subscribe(new Action1<String>() {
+            @Override
+            public void call(String s) {
+                changeDescription(s);
+            }
+        });
+    }
+
+    private void changeDescription(final String newDescription) {
+        progressBar.setVisibility(View.VISIBLE);
+        GroupService.getInstance().changeGroupDescription(group.getGroupUid(), newDescription, AndroidSchedulers.mainThread())
+            .subscribe(new Action1<String>() {
+                @Override
+                public void call(String s) {
+                    progressBar.setVisibility(View.GONE);
+                    if (s.equals(NetworkUtils.SAVED_SERVER)) {
+                        Toast.makeText(ApplicationLoader.applicationContext, R.string.gset_desc_change_done, Toast.LENGTH_SHORT)
+                            .show();
+                    } else {
+                        ErrorUtils.snackBarWithAction(mainRoot, R.string.gset_desc_offline, R.string.snackbar_try_again,
+                            new View.OnClickListener() {
+                                @Override
+                                public void onClick(View v) {
+                                    changeDescription(newDescription);
+                                }
+                            });
+                    }
+                    group.setDescription(newDescription);
+                }
+            }, new Action1<Throwable>() {
+                @Override
+                public void call(Throwable e) {
+                    progressBar.setVisibility(View.GONE);
+                    Snackbar.make(mainRoot, ErrorUtils.serverErrorText(e), Snackbar.LENGTH_SHORT).show();
                 }
             });
     }

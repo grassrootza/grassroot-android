@@ -8,8 +8,7 @@ public class GroupEditedEvent {
     public static final String MEMBERS_ADDED = "members_added";
     public static final String MEMBERS_REMOVED = "members_removed";
     public static final String RENAMED = "renamed";
-    public static final String IMAGE_UPLOADED = "image_uploaded";
-    public static final String IMAGE_TO_DEFAULT = "image_removed";
+    public static final String DESCRIPTION = "description";
     public static final String JOIN_CODE_OPENED = "join_opened";
     public static final String JOIN_CODE_CLOSED = "join_closed";
     public static final String ORGANIZER_ADDED = "organizer_added";

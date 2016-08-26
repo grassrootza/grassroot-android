@@ -17,6 +17,7 @@ public class LocalGroupEdits extends RealmObject {
 	private String groupUid; // would like this to be unique, but Realm doesn't have that annotation
 
 	private String revisedGroupName;
+	private String revisedGroupDescription;
 	private RealmList<RealmString> membersToRemove;
 
 	private boolean changedImage;
@@ -38,6 +39,7 @@ public class LocalGroupEdits extends RealmObject {
 		this.groupUid = referenceGroupUid;
 		this.membersToRemove = new RealmList<>();
 		this.revisedGroupName = "";
+		this.revisedGroupDescription = "";
 		this.changedImage = false;
 		this.changedImageName = null;
 		this.changedPublicPrivate = false;
@@ -67,6 +69,14 @@ public class LocalGroupEdits extends RealmObject {
 
 	public void setRevisedGroupName(String revisedGroupName) {
 		this.revisedGroupName = revisedGroupName;
+	}
+
+	public String getRevisedGroupDescription() {
+		return revisedGroupDescription;
+	}
+
+	public void setRevisedGroupDescription(String revisedGroupDescription) {
+		this.revisedGroupDescription = revisedGroupDescription;
 	}
 
 	public RealmList<RealmString> getMembersToRemove() {

@@ -5,7 +5,6 @@ import android.text.TextUtils;
 import android.util.Log;
 
 import org.grassroot.android.events.GroupDeletedEvent;
-import org.grassroot.android.events.GroupEditErrorEvent;
 import org.grassroot.android.events.GroupEditedEvent;
 import org.grassroot.android.events.GroupPictureChangedEvent;
 import org.grassroot.android.events.GroupsRefreshedEvent;
@@ -52,7 +51,6 @@ import okhttp3.MediaType;
 import okhttp3.MultipartBody;
 import okhttp3.RequestBody;
 import retrofit2.Call;
-import retrofit2.Callback;
 import retrofit2.Response;
 import rx.Observable;
 import rx.Scheduler;
@@ -740,6 +738,57 @@ public class GroupService {
     if (storeEditsForSync) {
       LocalGroupEdits edits = generateLocalGroupEditObject(group.getGroupUid());
       edits.setRevisedGroupName(newName);
+      RealmUtils.saveDataToRealm(edits).subscribe();
+    }
+  }
+
+  public Observable<String> changeGroupDescription(final String groupUid, final String newDescription,
+                                                   Scheduler observingThread) {
+    observingThread = (observingThread == null) ? AndroidSchedulers.mainThread() : observingThread;
+    return Observable.create(new Observable.OnSubscribe<String>() {
+      @Override
+      public void call(Subscriber<? super String> subscriber) {
+        String saveType;
+        if (!NetworkUtils.isOnline()) {
+          saveGroupDescToDB(groupUid, newDescription, true);
+          saveType = NetworkUtils.SAVED_OFFLINE_MODE;
+        } else {
+          final String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
+          final String token = RealmUtils.loadPreferencesFromDB().getToken();
+          try {
+            Response<GenericResponse> response = GrassrootRestService.getInstance().getApi()
+                .changeGroupDesc(phoneNumber, token, groupUid, newDescription).execute();
+            if (response.isSuccessful()) {
+              saveGroupDescToDB(groupUid, newDescription, false);
+              saveType = NetworkUtils.SAVED_SERVER;
+            } else {
+              throw new ApiCallException(NetworkUtils.SERVER_ERROR, ErrorUtils.getRestMessage(response.errorBody()));
+            }
+          } catch (IOException e) {
+            NetworkUtils.setConnectionFailed();
+            saveGroupDescToDB(groupUid, newDescription, true);
+            saveType = NetworkUtils.CONNECT_ERROR;
+          }
+        }
+        subscriber.onNext(saveType);
+        EventBus.getDefault().post(new GroupEditedEvent(GroupEditedEvent.DESCRIPTION, saveType,
+            groupUid, newDescription));
+        subscriber.onCompleted();
+      }
+    }).subscribeOn(Schedulers.io()).observeOn(observingThread);
+  }
+
+  private void saveGroupDescToDB(final String groupUid, final String newDesc, boolean storeEditsForSync) {
+    Group group = RealmUtils.loadGroupFromDB(groupUid);
+    group.setDescription(newDesc);
+    group.setLastMajorChangeMillis(Utilities.getCurrentTimeInMillisAtUTC());
+    group.setLastChangeType(GroupConstants.GROUP_MOD_OTHER);
+    group.setDate(new Date());
+    RealmUtils.saveGroupToRealm(group);
+
+    if (storeEditsForSync) {
+      LocalGroupEdits edits = generateLocalGroupEditObject(group.getGroupUid());
+      edits.setRevisedGroupDescription(newDesc);
       RealmUtils.saveDataToRealm(edits).subscribe();
     }
   }

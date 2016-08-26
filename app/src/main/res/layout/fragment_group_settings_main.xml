@@ -46,7 +46,8 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
 
-            <RelativeLayout
+            <LinearLayout
+                android:orientation="vertical"
                 style="@style/SettingsBlockTightMargin" >
 
                 <Button
@@ -55,39 +56,38 @@
                     android:text="@string/gset_rename"/>
 
                 <View
-                    android:id="@+id/separator_0"
-                    android:layout_below="@id/gset_btn_rename"
+                    style="@style/SettingsSeparator" />
+
+                <Button
+                    android:id="@+id/gset_btn_description"
+                    style="@style/SettingsButton"
+                    android:text="@string/gset_desc_add" />
+
+                <View
                     style="@style/SettingsSeparator" />
 
                 <Button
                     android:id="@+id/gset_btn_picture"
                     android:text="@string/gset_picture"
-                    android:layout_below="@id/separator_0"
                     style="@style/SettingsButton" />
 
                 <View
-                    android:id="@+id/separator_1"
-                    android:layout_below="@id/gset_btn_picture"
                     style="@style/SettingsSeparator" />
 
                 <Button
                     android:id="@+id/gset_btn_add_org"
                     android:text="@string/gset_add_org"
-                    android:layout_below="@id/separator_1"
                     style="@style/SettingsButton" />
 
                 <View
-                    android:id="@+id/separator_2"
-                    android:layout_below="@id/gset_btn_add_org"
                     style="@style/SettingsSeparator" />
 
                 <Button
                     android:id="@+id/gset_btn_change_perms"
                     android:text="@string/gset_change_perms"
-                    android:layout_below="@id/separator_2"
                     style="@style/SettingsButton" />
 
-            </RelativeLayout>
+            </LinearLayout>
 
             <RelativeLayout
                 style="@style/SettingsBlockLargeMargin">

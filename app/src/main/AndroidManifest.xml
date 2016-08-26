@@ -241,14 +241,24 @@
             </intent-filter>
         </service>
 
-        <receiver android:name=".receivers.TaskManagerReceiver">
+        <receiver
+            android:name=".receivers.TaskManagerReceiver"
+            android:exported="false">
             <intent-filter>
                 <action android:name="org.grassroot.android.ACTION_DONE"/>
                 <action android:name="org.grassroot.android.ACTION_START"/>
             </intent-filter>
         </receiver>
 
+        <receiver android:name=".receivers.BatteryLevelReceiver">
+            <intent-filter>
+                <action android:name="android.intent.action.BATTERY_LOW" />
+                <action android:name="android.intent.action.BATTERY_OKAY" />
+            </intent-filter>
+        </receiver>
+
         <service android:name=".services.SharingService"/>
+
     </application>
 
 </manifest>

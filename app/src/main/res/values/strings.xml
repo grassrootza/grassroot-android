@@ -88,6 +88,8 @@
     and you can try adding them again later at any time.</string>
     <string name="input_error_try_again">Try again</string>
 
+    <string name="input_error_empty">Please enter text or cancel</string>
+
     <string name="process_error_image">Sorry, something went wrong processing the image. Please try again</string>
     <string name="process_error_loading_contacts">Sorry, we couldn\'t load your contacts. Please try again or restart.</string>
 
@@ -193,11 +195,16 @@
     <string name="ghp_fab_create_group">Create group</string>
     <string name="ghp_fab_join_group">Find other groups</string>
 
-    <string name="gta_menu_add_task">Create new task</string>
+    <string name="gta_menu_change_desc">Change description</string>
+    <string name="gta_menu_add_desc">Set description</string>
+    <string name="gta_menu_view_desc">View description</string>
+
     <string name="gta_view_code">View join code</string>
     <string name="gta_view_members">View members</string>
     <string name="gta_add_members">Add members</string>
     <string name="gta_del_members">Remove members</string>
+
+    <string name="gta_desc_title">Group description</string>
 
     <string name="home_group_pick">Select group</string>
     <string name="btn_group_select">Pick</string>
@@ -353,7 +360,7 @@
     <!-- Create Group--><!--cg-->
     <string name="cg_title">Create new group</string>
     <string name="cg_group_name">Group name</string>
-    <string name="cg_group_description">Group description (optional)</string>
+    <string name="cg_group_description">Description (to help people find the group)</string>
     <string name="cg_member_list_header">Group members</string>
 
     <string name="generic_35_char_counter">%d / 35</string>
@@ -422,6 +429,8 @@
     <string name="gset_main_title">Group settings</string>
 
     <string name="gset_rename">Rename group</string>
+    <string name="gset_desc_add">Add description</string>
+    <string name="gset_desc_change">Change description</string>
     <string name="gset_picture">Change group picture</string>
     <string name="gset_add_org">Add another organizer</string>
     <string name="gset_change_perms">Change permissions</string>
@@ -431,6 +440,17 @@
     <string name="gset_rename_done">Done! Group renamed</string>
     <string name="gset_rename_offline">You\'re offline, but we\'ve saved the name change and will
     send it when you connect</string>
+
+    <string name="gset_has_desc_body">The group\'s current description is: \"%s\". Enter a new description
+    below:</string>
+    <string name="gset_no_description">A group description helps people who are looking for your group
+    to find it. Please enter one below:</string>
+    <string name="gset_desc_dialog_hint">Enter description</string>
+    <string name="gset_desc_dialog_done">Done</string>
+
+    <string name="gset_desc_change_done">Done, description updated</string>
+    <string name="gset_desc_offline">You\'re offline, but we\'ve saved the description change and
+    will upload it when you connect</string>
 
     <string name="gset_public">Group can be found by search</string>
     <string name="gset_join_code">Group has a join code</string>

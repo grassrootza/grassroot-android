@@ -3,15 +3,20 @@ package org.grassroot.android.activities;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.NavUtils;
 import android.support.v4.view.MenuItemCompat;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.ProgressBar;
+import android.widget.Toast;
 
 import org.grassroot.android.R;
 import org.grassroot.android.events.TaskCancelledEvent;
@@ -19,11 +24,14 @@ import org.grassroot.android.fragments.JoinCodeFragment;
 import org.grassroot.android.fragments.NewTaskMenuFragment;
 import org.grassroot.android.fragments.TaskListFragment;
 import org.grassroot.android.fragments.ViewTaskFragment;
+import org.grassroot.android.fragments.dialogs.MultiLineTextDialog;
 import org.grassroot.android.interfaces.GroupConstants;
 import org.grassroot.android.models.Group;
+import org.grassroot.android.services.GroupService;
 import org.grassroot.android.utils.Constant;
 import org.grassroot.android.utils.ErrorUtils;
 import org.grassroot.android.utils.IntentUtils;
+import org.grassroot.android.utils.NetworkUtils;
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
@@ -31,6 +39,8 @@ import org.greenrobot.eventbus.ThreadMode;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
+import rx.android.schedulers.AndroidSchedulers;
+import rx.functions.Action1;
 
 public class GroupTasksActivity extends PortraitActivity implements NewTaskMenuFragment.NewTaskMenuListener, JoinCodeFragment.JoinCodeListener, TaskListFragment.TaskListListener {
 
@@ -43,11 +53,12 @@ public class GroupTasksActivity extends PortraitActivity implements NewTaskMenuF
     private JoinCodeFragment joinCodeFragment;
 
     private Menu thisMenu;
+    private boolean showDescOption;
+    private int descOptionText;
 
-    @BindView(R.id.gta_toolbar)
-    Toolbar toolbar;
-    @BindView(R.id.gta_fab)
-    FloatingActionButton actionButton;
+    @BindView(R.id.gta_toolbar) Toolbar toolbar;
+    @BindView(R.id.gta_fab) FloatingActionButton actionButton;
+    @BindView(R.id.progressBar) ProgressBar progressBar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -120,10 +131,25 @@ public class GroupTasksActivity extends PortraitActivity implements NewTaskMenuF
         return true;
     }
 
+    private void setUpViews() {
+        setTitle(groupMembership.getGroupName());
+
+        // if don't have permission to change, we just display
+        showDescOption = groupMembership.canEditGroup() || !TextUtils.isEmpty(groupMembership.getDescription());
+        descOptionText = TextUtils.isEmpty(groupMembership.getDescription()) ? R.string.gset_desc_add
+            : groupMembership.canEditGroup() ? R.string.gta_menu_change_desc : R.string.gta_menu_view_desc;
+
+        setSupportActionBar(toolbar);
+        getSupportActionBar().setHomeButtonEnabled(true);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        actionButton.setVisibility(canCreateTask ? View.VISIBLE : View.GONE);
+    }
+
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
+        menu.findItem(R.id.mi_change_desc).setVisible(showDescOption);
+        menu.findItem(R.id.mi_change_desc).setTitle(descOptionText);
         menu.findItem(R.id.mi_view_join_code).setVisible(groupMembership.hasJoinCode());
-        menu.findItem(R.id.mi_new_task).setVisible(groupMembership.hasCreatePermissions());
         menu.findItem(R.id.mi_add_members).setVisible(groupMembership.canAddMembers());
         menu.findItem(R.id.mi_remove_members).setVisible(groupMembership.canDeleteMembers());
         menu.findItem(R.id.mi_view_members).setVisible(groupMembership.canViewMembers());
@@ -131,14 +157,6 @@ public class GroupTasksActivity extends PortraitActivity implements NewTaskMenuF
         menu.findItem(R.id.mi_share_default).setVisible(false);
         this.thisMenu = menu;
         return true;
-    }
-
-    private void setUpViews() {
-        setTitle(groupMembership.getGroupName());
-        setSupportActionBar(toolbar);
-        getSupportActionBar().setHomeButtonEnabled(true);
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        actionButton.setVisibility(canCreateTask ? View.VISIBLE : View.GONE);
     }
 
     private void setUpFragment() {
@@ -150,15 +168,19 @@ public class GroupTasksActivity extends PortraitActivity implements NewTaskMenuF
 
     @OnClick(R.id.gta_fab)
     public void openNewTaskMenu() {
-        openNewTaskMenu(true);
-    }
-
-    private void openNewTaskMenu(boolean showAddMembers) {
-        newTaskMenuFragment.setShowAddMembers(showAddMembers);
+        newTaskMenuFragment.setShowAddMembers(true);
         getSupportFragmentManager().beginTransaction()
-            .setCustomAnimations(R.anim.up_from_bottom, R.anim.down_from_top)
+            .setCustomAnimations(R.anim.flyin_fast, R.anim.flyout_fast)
             .replace(R.id.gta_root_layout, newTaskMenuFragment)
             .addToBackStack(null)
+            .commit();
+    }
+
+    @Override
+    public void menuCloseClicked() {
+        getSupportFragmentManager().beginTransaction()
+            .setCustomAnimations(R.anim.flyin_fast, R.anim.flyout_fast)
+            .remove(newTaskMenuFragment)
             .commit();
     }
 
@@ -173,8 +195,8 @@ public class GroupTasksActivity extends PortraitActivity implements NewTaskMenuF
             case R.id.mi_icon_filter:
                 taskListFragment.filter();
                 return true;
-            case R.id.mi_new_task:
-                openNewTaskMenu(false);
+            case R.id.mi_change_desc:
+                viewOrChangeDescription();
                 return true;
             case R.id.mi_view_join_code:
                 setUpJoinCodeFragment();
@@ -206,27 +228,67 @@ public class GroupTasksActivity extends PortraitActivity implements NewTaskMenuF
         }
     }
 
+    private void viewOrChangeDescription() {
+        if (groupMembership.canEditGroup()) {
+            changeGroupDescDialog(TextUtils.isEmpty(groupMembership.getDescription()));
+        } else if (showDescOption) {
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setTitle(R.string.gta_desc_title)
+                .setMessage(groupMembership.getDescription())
+                .setCancelable(true)
+                .show();
+        }
+    }
+
+    private void changeGroupDescDialog(final boolean isEmptyDesc) {
+        final String message = isEmptyDesc ? getString(R.string.gset_no_description) :
+            getString(R.string.gset_has_desc_body, groupMembership.getDescription());
+        MultiLineTextDialog.showMultiLineDialog(getSupportFragmentManager(), -1, message,
+            R.string.gset_desc_dialog_hint, R.string.gset_desc_dialog_done).subscribe(new Action1<String>() {
+            @Override
+            public void call(String s) {
+                progressBar.setVisibility(View.VISIBLE);
+                serviceCallChangeDesc(s);
+            }
+        });
+    }
+
+    private void serviceCallChangeDesc(final String newDescription) {
+        GroupService.getInstance().changeGroupDescription(groupMembership.getGroupUid(), newDescription,
+            AndroidSchedulers.mainThread()).subscribe(new Action1<String>() {
+            @Override
+            public void call(String s) {
+                progressBar.setVisibility(View.GONE);
+                if (s.equals(NetworkUtils.SAVED_SERVER)) {
+                    Toast.makeText(GroupTasksActivity.this, R.string.gset_desc_change_done, Toast.LENGTH_SHORT).show();
+                } else {
+                    Snackbar.make(actionButton, R.string.gset_desc_offline, Snackbar.LENGTH_SHORT).show();
+                }
+                groupMembership.setDescription(newDescription);
+            }
+        }, new Action1<Throwable>() {
+            @Override
+            public void call(Throwable throwable) {
+                progressBar.setVisibility(View.GONE);
+                Snackbar.make(actionButton, ErrorUtils.serverErrorText(throwable), Snackbar.LENGTH_SHORT).show();
+            }
+        });
+    }
+
     private void setUpJoinCodeFragment(){
         String joinCode = groupMembership.getJoinCode();
         joinCodeFragment = JoinCodeFragment.newInstance(joinCode);
         getSupportFragmentManager().beginTransaction()
-                .replace(R.id.gta_root_layout, joinCodeFragment, JoinCodeFragment.class.getCanonicalName())
-                .addToBackStack(null)
-                .commit();
-    }
-
-    @Override
-    public void menuCloseClicked() {
-        getSupportFragmentManager().beginTransaction()
-                .setCustomAnimations(R.anim.push_down_in, R.anim.push_down_out)
-                .remove(newTaskMenuFragment)
-                .commit();
+            .setCustomAnimations(R.anim.flyin_fast, R.anim.flyout_fast)
+            .replace(R.id.gta_root_layout, joinCodeFragment, JoinCodeFragment.class.getCanonicalName())
+            .addToBackStack(null)
+            .commit();
     }
 
     @Override
     public void joinCodeClose() {
         getSupportFragmentManager().beginTransaction()
-                .setCustomAnimations(R.anim.push_down_in, R.anim.push_down_out)
+            .setCustomAnimations(R.anim.flyin_fast, R.anim.flyout_fast)
                 .remove(joinCodeFragment)
                 .commit();
     }
@@ -239,7 +301,7 @@ public class GroupTasksActivity extends PortraitActivity implements NewTaskMenuF
         if (actionButton != null) {
             actionButton.setVisibility(View.GONE);
         }
-        toggleMenuFilter(false);
+        toggleMenuFilter(false); // todo : may not need this (view task overrides & replaces it) ...
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)

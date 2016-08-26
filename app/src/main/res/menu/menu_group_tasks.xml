@@ -21,8 +21,8 @@
         app:showAsAction="always" />
 
     <item
-        android:id="@+id/mi_new_task"
-        android:title="@string/gta_menu_add_task"
+        android:id="@+id/mi_change_desc"
+        android:title="@string/gta_menu_change_desc"
         app:showAsAction="never" />
 
     <item android:id="@+id/mi_view_join_code"
