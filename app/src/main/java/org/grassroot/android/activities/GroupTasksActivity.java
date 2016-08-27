@@ -2,7 +2,6 @@ package org.grassroot.android.activities;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.NavUtils;
@@ -15,6 +14,7 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
@@ -38,7 +38,6 @@ import org.greenrobot.eventbus.ThreadMode;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
-import butterknife.OnClick;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.functions.Action1;
 
@@ -47,17 +46,15 @@ public class GroupTasksActivity extends PortraitActivity implements NewTaskMenuF
     private static final String TAG = GroupTasksActivity.class.getCanonicalName();
 
     private Group groupMembership;
-    private boolean canCreateTask;
     private TaskListFragment taskListFragment;
-    private NewTaskMenuFragment newTaskMenuFragment;
     private JoinCodeFragment joinCodeFragment;
+    private NewTaskMenuFragment newTaskMenuFragment;
 
-    private Menu thisMenu;
     private boolean showDescOption;
     private int descOptionText;
 
+    @BindView(R.id.gta_root_layout) ViewGroup rootLayout;
     @BindView(R.id.gta_toolbar) Toolbar toolbar;
-    @BindView(R.id.gta_fab) FloatingActionButton actionButton;
     @BindView(R.id.progressBar) ProgressBar progressBar;
 
     @Override
@@ -83,9 +80,6 @@ public class GroupTasksActivity extends PortraitActivity implements NewTaskMenuF
             finish();
             return;
         }
-
-        newTaskMenuFragment = NewTaskMenuFragment.newInstance(groupMembership, true);
-        canCreateTask = groupMembership.canCallMeeting() || groupMembership.canCallVote() || groupMembership.canCreateTodo();
 
         setUpViews();
         setUpFragment();
@@ -142,7 +136,6 @@ public class GroupTasksActivity extends PortraitActivity implements NewTaskMenuF
         setSupportActionBar(toolbar);
         getSupportActionBar().setHomeButtonEnabled(true);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        actionButton.setVisibility(canCreateTask ? View.VISIBLE : View.GONE);
     }
 
     @Override
@@ -155,33 +148,14 @@ public class GroupTasksActivity extends PortraitActivity implements NewTaskMenuF
         menu.findItem(R.id.mi_view_members).setVisible(groupMembership.canViewMembers());
         menu.findItem(R.id.mi_group_settings).setVisible(groupMembership.canEditGroup());
         menu.findItem(R.id.mi_share_default).setVisible(false);
-        this.thisMenu = menu;
         return true;
     }
 
     private void setUpFragment() {
-        taskListFragment = TaskListFragment.newInstance(groupMembership.getGroupUid(), null, this, false);
+        taskListFragment = TaskListFragment.newInstance(groupMembership.getGroupUid(), this);
         getSupportFragmentManager().beginTransaction()
                 .add(R.id.gta_fragment_holder, taskListFragment)
                 .commit();
-    }
-
-    @OnClick(R.id.gta_fab)
-    public void openNewTaskMenu() {
-        newTaskMenuFragment.setShowAddMembers(true);
-        getSupportFragmentManager().beginTransaction()
-            .setCustomAnimations(R.anim.flyin_fast, R.anim.flyout_fast)
-            .replace(R.id.gta_root_layout, newTaskMenuFragment)
-            .addToBackStack(null)
-            .commit();
-    }
-
-    @Override
-    public void menuCloseClicked() {
-        getSupportFragmentManager().beginTransaction()
-            .setCustomAnimations(R.anim.flyin_fast, R.anim.flyout_fast)
-            .remove(newTaskMenuFragment)
-            .commit();
     }
 
     @Override
@@ -262,7 +236,7 @@ public class GroupTasksActivity extends PortraitActivity implements NewTaskMenuF
                 if (s.equals(NetworkUtils.SAVED_SERVER)) {
                     Toast.makeText(GroupTasksActivity.this, R.string.gset_desc_change_done, Toast.LENGTH_SHORT).show();
                 } else {
-                    Snackbar.make(actionButton, R.string.gset_desc_offline, Snackbar.LENGTH_SHORT).show();
+                    Snackbar.make(rootLayout, R.string.gset_desc_offline, Snackbar.LENGTH_SHORT).show();
                 }
                 groupMembership.setDescription(newDescription);
             }
@@ -270,7 +244,7 @@ public class GroupTasksActivity extends PortraitActivity implements NewTaskMenuF
             @Override
             public void call(Throwable throwable) {
                 progressBar.setVisibility(View.GONE);
-                Snackbar.make(actionButton, ErrorUtils.serverErrorText(throwable), Snackbar.LENGTH_SHORT).show();
+                Snackbar.make(rootLayout, ErrorUtils.serverErrorText(throwable), Snackbar.LENGTH_SHORT).show();
             }
         });
     }
@@ -298,10 +272,28 @@ public class GroupTasksActivity extends PortraitActivity implements NewTaskMenuF
         if (getSupportActionBar() != null) {
             getSupportActionBar().setHomeAsUpIndicator(R.drawable.btn_close_white);
         }
-        if (actionButton != null) {
-            actionButton.setVisibility(View.GONE);
+    }
+
+    @Override
+    public void onFabClicked() {
+        if (newTaskMenuFragment == null) {
+            newTaskMenuFragment = NewTaskMenuFragment.newInstance(groupMembership, true);
         }
-        toggleMenuFilter(false); // todo : may not need this (view task overrides & replaces it) ...
+        if (groupMembership != null && groupMembership.hasCreatePermissions()) {
+            getSupportFragmentManager() .beginTransaction()
+                .setCustomAnimations(R.anim.flyin_fast, R.anim.flyout_fast)
+                .replace(R.id.gta_root_layout, newTaskMenuFragment)
+                .addToBackStack(null)
+                .commit();
+        }
+    }
+
+    @Override
+    public void menuCloseClicked() {
+        getSupportFragmentManager().beginTransaction()
+            .setCustomAnimations(R.anim.flyin_fast, R.anim.flyout_fast)
+            .remove(newTaskMenuFragment)
+            .commit();
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
@@ -317,31 +309,13 @@ public class GroupTasksActivity extends PortraitActivity implements NewTaskMenuF
                     .remove(frag)
                     .commit();
             // keep null checks in place in case subscriber triggered after view destroyed
-            if (actionButton != null) {
-                actionButton.setVisibility(canCreateTask ? View.VISIBLE : View.GONE);
-            }
             if (getSupportActionBar() != null) {
                 getSupportActionBar().setHomeAsUpIndicator(R.drawable.btn_back_wt);
             }
             setTitle(groupMembership.getGroupName());
-            toggleMenuFilter(true);
             return true;
         } else {
             return false;
-        }
-    }
-
-    private void toggleMenuFilter(boolean showFilter) {
-        MenuItem filter = thisMenu.findItem(R.id.mi_icon_filter);
-        if (filter != null) {
-            Log.e(TAG, "found menu item"); // note : for some reason, this is not hiding the filter
-            if (showFilter) {
-                filter.setVisible(true);
-                this.invalidateOptionsMenu();
-            } else {
-                filter.setVisible(false);
-                this.invalidateOptionsMenu();
-            }
         }
     }
 }

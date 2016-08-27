@@ -92,26 +92,22 @@ public class CreateTaskFragment extends Fragment {
 
     private Unbinder unbinder;
 
-    @BindView(R.id.ctsk_et_title)
-    TextInputEditText etTitleInput;
-    @BindView(R.id.ctsk_et_location)
-    TextInputEditText etLocationInput;
-    @BindView(R.id.ctsk_et_description)
-    TextInputEditText etDescriptionInput;
+    @BindView(R.id.ctsk_et_title) TextInputEditText etTitleInput;
+    @BindView(R.id.ctsk_et_location) TextInputEditText etLocationInput;
+    @BindView(R.id.ctsk_et_description) TextInputEditText etDescriptionInput;
 
     private DatePickerFragment datePicker;
     private TimePickerFragment timePicker;
-    @BindView(R.id.ctsk_txt_deadline)
-    TextView dateDisplayed;
-    @BindView(R.id.ctsk_txt_time)
-    TextView timeDisplayed;
+    @BindView(R.id.ctsk_txt_deadline) TextView dateDisplayed;
+    @BindView(R.id.ctsk_txt_time) TextView timeDisplayed;
 
-    @BindView(R.id.ctsk_sw_one_day)
-    SwitchCompat swOneDayAhead;
-    @BindView(R.id.ctsk_sw_half_day)
-    SwitchCompat swHalfDayAhead;
-    @BindView(R.id.ctsk_sw_one_hour)
-    SwitchCompat swOneHourAhead;
+    @BindView(R.id.ctsk_reminder_body) RelativeLayout rlReminderBody;
+    @BindView(R.id.ctsk_remind_option0) TextView textRemindOption0;
+    @BindView(R.id.ctsk_sw_one_day) SwitchCompat switchReminderOption0;
+    @BindView(R.id.ctsk_remind_option1) TextView textRemindOption1;
+    @BindView(R.id.ctsk_sw_half_day) SwitchCompat switchReminderOption1;
+    @BindView(R.id.ctsk_remind_option2) TextView textRemindOption2;
+    @BindView(R.id.ctsk_sw_one_hour) SwitchCompat switchRemindOption2;
 
     @BindView(R.id.ctsk_rl_notify_count)
     LinearLayout notifyCountHolder;
@@ -120,11 +116,7 @@ public class CreateTaskFragment extends Fragment {
     @BindView(R.id.ctsk_tv_suffix)
     TextView notifyCountSuffix;
 
-    @BindView(R.id.ctsk_reminder_body)
-    RelativeLayout rlReminderBody;
-
-    @BindView(R.id.ctsk_btn_create_task)
-    Button btTaskCreate;
+    @BindView(R.id.ctsk_btn_create_task) Button btTaskCreate;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -292,7 +284,7 @@ public class CreateTaskFragment extends Fragment {
             @Override
             public void onNext(TaskModel taskModel) {
                 progressDialog.dismiss();
-                generateSuccessTask(taskModel);
+                finishAndLaunchDoneFragment(taskModel);
             }
 
             @Override
@@ -301,7 +293,7 @@ public class CreateTaskFragment extends Fragment {
                     progressDialog.dismiss();
                     final String type = e.getMessage();
                     if (NetworkUtils.CONNECT_ERROR.equals(type)) {
-                        generateSuccessTask(model);
+                        finishAndLaunchDoneFragment(model);
                     } else {
                         final String msg = ErrorUtils.serverErrorText(e);
                         Snackbar.make(vContainer, msg, Snackbar.LENGTH_SHORT); // todo : add a "save and try again option"
@@ -314,10 +306,10 @@ public class CreateTaskFragment extends Fragment {
         });
     }
 
-    private void generateSuccessTask(TaskModel model) {
+    private void finishAndLaunchDoneFragment(TaskModel model) {
         Intent i = new Intent(getActivity(), ActionCompleteActivity.class);
         if (model.isLocal()) {
-            i.putExtra(ActionCompleteActivity.BODY_FIELD, getString(R.string.ac_body_task_create_local));
+            i.putExtra(ActionCompleteActivity.BODY_FIELD, getString(R.string.ac_body_task_create_local, taskType.toLowerCase()));
             i.putExtra(ActionCompleteActivity.HEADER_FIELD, R.string.ac_header_task_create_local);
         } else {
             i.putExtra(ActionCompleteActivity.HEADER_FIELD, R.string.ac_header_task_create);
@@ -378,21 +370,21 @@ public class CreateTaskFragment extends Fragment {
         return model;
     }
 
-
-  private int obtainReminderMinutes() {
-    if (TaskConstants.MEETING.equals(taskType)) {
-      if (swOneDayAhead.isChecked()) {
-        return 60 * 24;
-      } else if (swHalfDayAhead.isChecked()) {
-        return 60 * 6;
-      } else if (swOneHourAhead.isChecked()) {
-        return 60;
-      } else {
-        return -1;
-      }
-    } else {
-      return -1;
-    }
+    // todo : make this more flexible (esp for todo)
+    private int obtainReminderMinutes() {
+        final int reminderChecked = getReminderSwitchChecked();
+        if (reminderChecked != -1 && reminderChecked < 3) {
+            switch (taskType) {
+                case TaskConstants.MEETING:
+                    return TaskConstants.meetingReminderMinutes[reminderChecked];
+                case TaskConstants.TODO:
+                    return TaskConstants.todoReminderMinutes[reminderChecked];
+                default:
+                    return -1;
+            }
+        } else {
+            return -1;
+        }
   }
 
     // note : returning just the int might be slightly more efficient, but then break string/placeholder pattern
@@ -443,7 +435,16 @@ public class CreateTaskFragment extends Fragment {
 
         switch (taskType) {
             case TaskConstants.MEETING:
-                // since meeting is most complex, and most commonly used, fragment is pre-set for it, so nothing to do here
+                // since meeting is most complex, and most commonly used, fragment is pre-set for it
+                // hence just making explicit remind logic here
+
+                textRemindOption0.setText(TaskConstants.meetingReminderDesc[0]);
+                textRemindOption1.setText(TaskConstants.meetingReminderDesc[1]);
+                textRemindOption2.setText(TaskConstants.meetingReminderDesc[2]);
+                // defaults to one day ahead
+                switchReminderOption0.setChecked(true);
+                toggleSwitches(switchReminderOption0);
+
                 break;
             case TaskConstants.VOTE:
                 subjectInput.setHint(getContext().getString(R.string.cvote_subject));
@@ -465,6 +466,14 @@ public class CreateTaskFragment extends Fragment {
                 descriptionInput.setHint(getContext().getString(R.string.ctodo_desc_hint));
                 assignmentLabel.setText(R.string.ctodo_invite_all);
                 btTaskCreate.setText(R.string.ctodo_button);
+
+                textRemindOption0.setText(TaskConstants.todoReminderDesc[0]);
+                textRemindOption1.setText(TaskConstants.todoReminderDesc[1]);
+                textRemindOption2.setText(TaskConstants.todoReminderDesc[2]);
+                // default to one day ahead
+                switchReminderOption1.setChecked(true);
+                toggleSwitches(switchReminderOption1);
+
                 break;
             default:
                 throw new UnsupportedOperationException("Error! Fragment must have valid task type");
@@ -494,9 +503,21 @@ public class CreateTaskFragment extends Fragment {
     }
 
     private void toggleSwitches(SwitchCompat swChecked) {
-        swOneHourAhead.setChecked(swChecked.equals(swOneHourAhead));
-        swHalfDayAhead.setChecked(swChecked.equals(swHalfDayAhead));
-        swOneDayAhead.setChecked(swChecked.equals(swOneDayAhead));
+        switchReminderOption0.setChecked(swChecked.equals(switchReminderOption0));
+        switchReminderOption1.setChecked(swChecked.equals(switchReminderOption1));
+        switchRemindOption2.setChecked(swChecked.equals(switchRemindOption2));
+    }
+
+    private int getReminderSwitchChecked() {
+        if (switchReminderOption0.isChecked()) {
+            return 0;
+        } else if (switchReminderOption1.isChecked()) {
+            return 1;
+        } else if (switchRemindOption2.isChecked()) {
+            return 2;
+        } else {
+            return -1;
+        }
     }
 
     @BindView(R.id.ctsk_cv_description)
@@ -510,7 +531,6 @@ public class CreateTaskFragment extends Fragment {
 
     @OnClick(R.id.ctsk_cv_description)
     public void expandDescription() {
-
         if (descriptionBody.getVisibility() != View.VISIBLE) {
             descriptionBody.setVisibility(View.VISIBLE);
             ivDescExpandIcon.setImageResource(R.drawable.ic_arrow_up);

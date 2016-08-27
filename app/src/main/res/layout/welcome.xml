@@ -73,7 +73,6 @@
             android:orientation="vertical"
             android:padding="16dp">
 
-            <!-- todo: figure out why second button is smaller -->
             <Button
                 android:id="@+id/bt_joingroup"
                 style="@style/NewTaskButton"

@@ -96,14 +96,13 @@ public class NewTaskMenuFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstance) {
         View viewToReturn = inflater.inflate(R.layout.fragment_new_task_menu, container, false);
         unbinder = ButterKnife.bind(this, viewToReturn);
-        setVisibility(groupMembership);
         return viewToReturn;
     }
 
     @Override
     public void onResume() {
         super.onResume();
-        bt_addmember.setVisibility(showAddMembers ? View.VISIBLE : View.GONE);
+        setVisibility();
     }
 
     @Override
@@ -112,12 +111,12 @@ public class NewTaskMenuFragment extends Fragment {
         unbinder.unbind();
     }
 
-    private void setVisibility(Group groupMembership) {
+    private void setVisibility() {
         // todo : handle situation where it contains none of the permissions
         bt_meeting.setVisibility(groupMembership.canCallMeeting() ? View.VISIBLE : View.GONE);
         bt_vote.setVisibility(groupMembership.canCallVote() ? View.VISIBLE : View.GONE);
         bt_todo.setVisibility(groupMembership.canCreateTodo() ? View.VISIBLE : View.GONE);
-        bt_addmember.setVisibility(groupMembership.canAddMembers() && showAddMembers ? View.VISIBLE : View.GONE);
+        bt_addmember.setVisibility((groupMembership.canAddMembers() && showAddMembers) ? View.VISIBLE : View.GONE);
     }
 
     @OnClick(R.id.iv_back)

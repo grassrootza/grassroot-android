@@ -1,6 +1,9 @@
 package org.grassroot.android.interfaces;
 
+import org.grassroot.android.R;
+
 import java.text.SimpleDateFormat;
+import java.util.Locale;
 
 /**
  * Created by luke on 2016/06/01.
@@ -23,9 +26,15 @@ public interface TaskConstants {
     String RESPONSE_NO = "NO";
     String RESPONSE_NONE = "NO_RESPONSE";
 
-    SimpleDateFormat dateDisplayFormatWithHours = new SimpleDateFormat("HH:mm dd-MM");
-    SimpleDateFormat dateDisplayWithDayName = new SimpleDateFormat("H:mm, EEE, d MMM");
-    SimpleDateFormat dateDisplayWithoutHours = new SimpleDateFormat("EEE, d MMM");
-    SimpleDateFormat timeDisplayWithoutDate = new SimpleDateFormat("HH:mm");
+    SimpleDateFormat dateDisplayFormatWithHours = new SimpleDateFormat("HH:mm dd-MM", Locale.getDefault());
+    SimpleDateFormat dateDisplayWithDayName = new SimpleDateFormat("H:mm, EEE, d MMM", Locale.getDefault());
+    SimpleDateFormat dateDisplayWithoutHours = new SimpleDateFormat("EEE, d MMM", Locale.getDefault());
+    SimpleDateFormat timeDisplayWithoutDate = new SimpleDateFormat("HH:mm", Locale.getDefault());
+
+    int[] meetingReminderMinutes = { 60 * 24, 60 * 6, 60 };
+    int[] meetingReminderDesc = { R.string.one_day, R.string.half_day, R.string.one_hour };
+
+    int[] todoReminderMinutes = { 7 * 60 * 24, 60 * 24, 0 };
+    int[] todoReminderDesc = { R.string.one_week, R.string.one_day, R.string.on_day };
 
 }

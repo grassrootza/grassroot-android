@@ -32,24 +32,6 @@
         android:layout_below="@+id/gta_appbar">
     </FrameLayout>
 
-    <android.support.design.widget.FloatingActionButton
-        android:id="@+id/gta_fab"
-        android:layout_gravity="bottom|end"
-        android:layout_margin="@dimen/fab_margin"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:layout_alignParentRight="true"
-
-        android:paddingRight="10dp"
-        android:paddingBottom="10dp"
-        android:paddingLeft="10dp"
-
-        android:src="@drawable/fab_add"
-        app:backgroundTint="@color/fab_tasks"
-        app:rippleColor="@color/fab_tasks_ripple"
-        app:elevation="6dp" />
-
     <ProgressBar
         android:id="@+id/progressBar"
         style="@style/ProgressBarMedium"

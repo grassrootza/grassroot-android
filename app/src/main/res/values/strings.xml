@@ -68,7 +68,6 @@
     <string name="connect_error_task_responding">We couldn\'t connect now, but have saved the response and will send it when you
     connect again</string>
     <string name="connect_error_task_cancelled">Sorry, you must be connected to cancel. Please connect and try again.</string>
-
     <string name="server_error_background_group_numbers">The group is created, but some numbers were invalid, please check the group and
     add them</string>
 
@@ -76,7 +75,6 @@
     <string name="input_error_name_regex">Please enter a name without special characters (e.g., !, &amp;)</string>
     <string name="input_error_phone_empty">Please enter a cellphone number to register</string>
     <string name="input_error_phone_invalid">Sorry, that\'s not a valid South African number, please check again</string>
-
     <string name="input_error_phone_title">Invalid number</string>
     <string name="input_error_member_phone_some">Sorry, one or more of the members has an invalid number. We have highlighted
     them in red. Please check and try again</string>
@@ -87,11 +85,13 @@
     <string name="input_error_still_invalid">Sorry, something is still going wrong with those members. But the group is created
     and you can try adding them again later at any time.</string>
     <string name="input_error_try_again">Try again</string>
-
     <string name="input_error_empty">Please enter text or cancel</string>
 
     <string name="process_error_image">Sorry, something went wrong processing the image. Please try again</string>
     <string name="process_error_loading_contacts">Sorry, we couldn\'t load your contacts. Please try again or restart.</string>
+
+    <string name="permissions_error_new_task">Sorry, you don\'t have permission to call a new event or action for this group</string>
+    <string name="permissions_error_add_member">Sorry, you don\'t have permission to add members to this group</string>
 
     <string name="INVALID_TOKEN">Sorry, wrong code. Please check again and re-enter.</string> <!-- todo : refactor this as others -->
 
@@ -158,6 +158,7 @@
     <string name="txt_no_task_group">This group has no events or tasks yet. To get started, call a meeting, a vote, record an action, or add members &#8230; Just hit the + button below</string>
     <string name="txt_no_task_upcoming">You have no upcoming meetings, votes, or actions. To create one, just hit the + button below</string>
     <string name="txt_task_could_not_fetch">Sorry, we had an error connecting to the server. Please retry later, or continue in offline mode.</string>
+    <string name="txt_no_task_no_create">This group has no events or tasks yet. When some are called, they will be displayed here.</string> <!-- not great, but a weird situation in a any case -->
 
     <string name="txt_getstart">To get started</string>
     <string name="new_joingroup">Join Group</string>
@@ -593,6 +594,9 @@
     <string name="one_day">1 day ahead</string>
     <string name="half_day">Half a day ahead</string>
     <string name="one_hour">1 hour ahead</string>
+    <string name="one_week">1 week ahead</string>
+    <string name="on_day">On day</string>
+    <string name="no_reminder">No reminder</string>
 
     <!-- View task strings -->
     <string name="tlist_posted_by_mtg">Called by %s</string>

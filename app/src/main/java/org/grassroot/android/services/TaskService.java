@@ -172,6 +172,7 @@ public class TaskService {
     subscriber.onCompleted();
   }
 
+  @SuppressWarnings("unchecked")
   private void persistUpcomingTasks(RealmList<TaskModel> tasks) {
     for (TaskModel task : tasks) {
       task.calcDeadlineDate(); // triggers processing & store of Date object (maybe move into a JSON converter)
@@ -179,7 +180,7 @@ public class TaskService {
     RealmUtils.saveDataToRealm(tasks, Schedulers.immediate()).subscribe(new Action1() {
       @Override
       public void call(Object o) {
-        // post in here to make sure count updates etc refresh to correct count
+        // do the post in here to make sure count updates etc refresh to correct count
         EventBus.getDefault().post(new TasksRefreshedEvent());
       }
     });
@@ -271,8 +272,8 @@ public class TaskService {
         return GrassrootRestService.getInstance()
             .getApi()
             .createTodo(phoneNumber, code, task.getParentUid(), task.getTitle(),
-                task.getDescription(), task.getDeadlineISO(), task.getMinutes(), new HashSet<>(
-                    RealmUtils.convertListOfRealmStringInListOfString(task.getMemberUIDS())));
+                task.getDescription(), task.getDeadlineISO(), task.getMinutes(),
+                new HashSet<>(RealmUtils.convertListOfRealmStringInListOfString(task.getMemberUIDS())));
       default:
         throw new UnsupportedOperationException("Error! Missing task type in call");
     }

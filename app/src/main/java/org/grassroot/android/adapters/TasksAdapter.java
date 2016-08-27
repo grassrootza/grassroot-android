@@ -394,11 +394,14 @@ public class TasksAdapter extends RecyclerView.Adapter<TasksAdapter.TaskViewHold
   }
 
   public void stopFiltering() {
-    viewedTasks = new ArrayList<>(fullTaskList);
-    notifyDataSetChanged();
-    filteringActive = false;
-    Arrays.fill(storedFilters, true);
-    fullTaskList = null;
+    // this may be called by user hitting clear without having started to filter, hence check first
+    if (filteringActive) {
+      viewedTasks = new ArrayList<>(fullTaskList);
+      notifyDataSetChanged();
+      filteringActive = false;
+      Arrays.fill(storedFilters, true);
+      fullTaskList = null;
+    }
   }
 
     /*

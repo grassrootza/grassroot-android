@@ -13,6 +13,7 @@ import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.View;
@@ -20,6 +21,7 @@ import android.view.ViewGroup;
 import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import org.grassroot.android.R;
 import org.grassroot.android.adapters.TasksAdapter;
@@ -29,6 +31,7 @@ import org.grassroot.android.events.TaskUpdatedEvent;
 import org.grassroot.android.fragments.dialogs.ConfirmCancelDialogFragment;
 import org.grassroot.android.interfaces.GroupPickCallbacks;
 import org.grassroot.android.interfaces.TaskConstants;
+import org.grassroot.android.models.Group;
 import org.grassroot.android.models.TaskModel;
 import org.grassroot.android.services.ApplicationLoader;
 import org.grassroot.android.services.TaskService;
@@ -58,21 +61,18 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
 
   private static final String TAG = TaskListFragment.class.getSimpleName();
 
-  GroupPickCallbacks pickCallbacks;
   TaskListListener listener;
-
   private TasksAdapter tasksAdapter;
 
   private String groupUid;
+  private Group group;
 
   private boolean isInNoTaskMessageView;
   private boolean hasFetchedFromServer;
 
-  private boolean displayFAB; // todo : just show it always (move FAB from GT-Activity to here)
-  private ViewGroup container;
-
   private Unbinder unbinder;
 
+  @BindView(R.id.rl_task_list_root) ViewGroup rootView;
   @BindView(R.id.tl_swipe_refresh) SwipeRefreshLayout swipeRefreshLayout;
   @BindView(R.id.tl_recycler_view) RecyclerView taskView;
   @BindView(R.id.tl_fab) FloatingActionButton floatingActionButton;
@@ -89,6 +89,7 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
 
   public interface TaskListListener {
     void onTaskLoaded(String taskName);
+    void onFabClicked();
   }
 
     /*
@@ -96,14 +97,11 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
      */
 
   // pass null if this is a group-neutral task fragment
-  public static TaskListFragment newInstance(String parentUid,
-      GroupPickCallbacks groupPickCallbacks, TaskListListener listener, boolean showFAB) {
+  public static TaskListFragment newInstance(String parentUid, TaskListListener listener) {
 
     TaskListFragment fragment = new TaskListFragment();
     fragment.groupUid = parentUid;
-    fragment.pickCallbacks = groupPickCallbacks;
     fragment.listener = listener;
-    fragment.displayFAB = showFAB;
 
     return fragment;
   }
@@ -111,12 +109,16 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
   @Override
   public void onAttach(Context context) {
     super.onAttach(context);
+
+    if (groupUid != null) {
+      group = RealmUtils.loadGroupFromDB(groupUid);
+    }
+
     EventBus.getDefault().register(this);
   }
 
   @Override
-  public void
-  onCreate(Bundle savedInstanceState) {
+  public void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     setHasOptionsMenu(true);
   }
@@ -127,9 +129,6 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
 
     View viewToReturn = inflater.inflate(R.layout.fragment_task_list, container, false);
     unbinder = ButterKnife.bind(this, viewToReturn);
-    this.container = container;
-    floatingActionButton.setVisibility(displayFAB ? View.VISIBLE : View.GONE);
-    setHasOptionsMenu(true);
 
     tasksAdapter = new TasksAdapter(new ArrayList<TaskModel>(), TextUtils.isEmpty(groupUid), this);
     taskView.setAdapter(tasksAdapter);
@@ -150,6 +149,12 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
         refreshTasksFromServer();
       }
     });
+  }
+
+  @Override
+  public void onResume() {
+    super.onResume();
+    floatingActionButton.setVisibility(group == null || group.hasCreatePermissions() ? View.VISIBLE : View.GONE);
   }
 
   @Override
@@ -177,6 +182,17 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
   @Override public void onDetach() {
     super.onDetach();
     EventBus.getDefault().unregister(this);
+  }
+
+  @Override
+  public void onDestroy() {
+    super.onDestroy();
+    listener = null;
+  }
+
+  @OnClick(R.id.tl_fab)
+  public void activateNewTask() {
+    listener.onFabClicked();
   }
 
   private void loadTasksOnCreateView() {
@@ -260,7 +276,8 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
 
     if (noTaskMessageText != null) {
       if (fetchType.equals(NetworkUtils.FETCHED_SERVER)) {
-        noTaskMessageText.setText(groupUid == null ? R.string.txt_no_task_upcoming : R.string.txt_no_task_group);
+        noTaskMessageText.setText(group == null ? R.string.txt_no_task_upcoming :
+            group.hasCreatePermissions() ? R.string.txt_no_task_group : R.string.txt_no_task_no_create);
       } else {
         noTaskMessageText.setText(R.string.txt_task_could_not_fetch);
       }
@@ -270,22 +287,7 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
       noTaskMessageLayout.setVisibility(View.VISIBLE);
     }
     isInNoTaskMessageView = true;
-  }
-
-  /*
-  HANDLE NEW TASK
-   */
-
-  @OnClick(R.id.tl_fab) public void quickTaskModal() {
-    if (pickCallbacks != null) {
-      QuickTaskModalFragment modal = QuickTaskModalFragment.newInstance(false, null,
-          new QuickTaskModalFragment.TaskModalListener() {
-            @Override public void onTaskClicked(String taskType) {
-              pickCallbacks.groupPickerTriggered(taskType);
-            }
-          });
-      modal.show(getFragmentManager(), QuickTaskModalFragment.class.getSimpleName());
-    }
+    getActivity().supportInvalidateOptionsMenu();
   }
 
     /*
@@ -335,9 +337,9 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
                 // event bus & subscriber will take care of adapter updating
                 progressBar.setVisibility(View.GONE);
                 if (NetworkUtils.SAVED_SERVER.equals(s)) {
-                  Snackbar.make(container, msgSuccess, Snackbar.LENGTH_LONG).show();
+                  Toast.makeText(ApplicationLoader.applicationContext, msgSuccess, Toast.LENGTH_LONG).show();
                 } else {
-                  Snackbar.make(container, R.string.task_list_response_offline, Snackbar.LENGTH_SHORT).show();
+                  Snackbar.make(rootView, R.string.task_list_response_offline, Snackbar.LENGTH_SHORT).show();
                 }
               }
             }, new Action1<Throwable>() {
@@ -345,11 +347,11 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
               public void call(Throwable e) {
                 progressBar.setVisibility(View.GONE);
                 if (NetworkUtils.CONNECT_ERROR.equals(e.getMessage())) {
-                  Snackbar.make(container, R.string.task_list_response_offline, Snackbar.LENGTH_LONG).show();
+                  Snackbar.make(rootView, R.string.task_list_response_offline, Snackbar.LENGTH_LONG).show();
                 } else {
                   final String errorMsg = ErrorUtils.serverErrorText(e);
                   final String retryMsg = getString(R.string.snackbar_try_again);
-                  ErrorUtils.showSnackBar(container, errorMsg, Snackbar.LENGTH_LONG, retryMsg, new View.OnClickListener() {
+                  ErrorUtils.showSnackBar(rootView, errorMsg, Snackbar.LENGTH_LONG, retryMsg, new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
                       confirmAction(taskUid, response, msgSuccess, message);
@@ -367,18 +369,19 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
   public void onCardClick(int position, String taskUid, String taskType, String taskTitle) {
     listener.onTaskLoaded(taskTitle);
     ViewTaskFragment taskFragment = ViewTaskFragment.newInstance(taskType, taskUid);
+    final int containerId = getView() != null ? ((ViewGroup) getView().getParent()).getId() : rootView.getId();
     getFragmentManager().beginTransaction()
         .setCustomAnimations(R.anim.up_from_bottom, R.anim.down_from_top)
-        .add(container.getId(), taskFragment, ViewTaskFragment.class.getCanonicalName()) // must preserve this so managing activities etc can retrieve
+        .add(containerId, taskFragment, ViewTaskFragment.class.getCanonicalName()) // must use tag so managing activities etc can retrieve
         .addToBackStack(null)
         .commit();
   }
 
   @Subscribe(threadMode = ThreadMode.MAIN)
   public void onEvent(TaskAddedEvent event) {
-    if (isInNoTaskMessageView) {
-      noTaskMessageLayout.setVisibility(View.GONE);
-      isInNoTaskMessageView = false;
+    switchOffNoTasks();
+    if (taskView != null) {
+      taskView.setVisibility(View.VISIBLE);
     }
     tasksAdapter.addTaskToList(event.getTaskCreated()); // adds to top
   }
@@ -439,7 +442,6 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
       @Override
       public void onClick(DialogInterface dialog, int which, boolean isChecked) {
         flagsChanged[which] = isChecked;
-        // tasksAdapter.addOrRemoveTaskType(filterTags[which], isChecked);
       }
     });
 

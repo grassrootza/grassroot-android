@@ -19,7 +19,6 @@
         android:paddingTop="15dp"
         android:scrollbars="vertical">
 
-        <!-- todo : put into styles -->
         <android.support.v7.widget.CardView
             android:id="@+id/card_view"
             style="@style/RootCardView">
@@ -57,7 +56,6 @@
                     android:visibility="visible"
                     android:text="0/35" />
 
-                <!-- todo : use a location selector? may be resource intensive -->
                 <android.support.design.widget.TextInputLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -133,7 +131,6 @@
                     card_view:cardElevation="3dp"
                     card_view:contentPadding="10dp">
 
-                    <!-- todo : try to flatten this -->
                     <RelativeLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content">
@@ -212,7 +209,7 @@
                             android:visibility="gone">
 
                             <TextView
-                                android:id="@+id/tv_one_day"
+                                android:id="@+id/ctsk_remind_option0"
                                 style="@style/ReminderRowText"
                                 android:gravity="center_vertical"
                                 android:layout_alignTop="@+id/ctsk_sw_one_day"
@@ -224,7 +221,7 @@
                                 style="@style/ReminderSwitch"/>
 
                             <TextView
-                                android:id="@+id/tv_half_day"
+                                android:id="@+id/ctsk_remind_option1"
                                 android:layout_below="@id/ctsk_sw_one_day"
                                 android:layout_alignTop="@+id/ctsk_sw_half_day"
                                 android:layout_alignBottom="@+id/ctsk_sw_half_day"
@@ -238,8 +235,8 @@
                                 style="@style/ReminderSwitch"/>
 
                             <TextView
-                                android:id="@+id/tv_one_hour"
-                                android:layout_below="@id/tv_half_day"
+                                android:id="@+id/ctsk_remind_option2"
+                                android:layout_below="@id/ctsk_remind_option1"
                                 android:layout_alignTop="@+id/ctsk_sw_one_hour"
                                 android:layout_alignBottom="@+id/ctsk_sw_one_hour"
                                 style="@style/ReminderRowText"

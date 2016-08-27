@@ -256,7 +256,7 @@ public class HomeScreenActivity extends PortraitActivity implements NavigationDr
     private void switchToTasksFragment() {
         setTitleAndNavDrawerSelection(NavigationConstants.ITEM_TASKS, false);
         if (taskListFragment == null) {
-            taskListFragment = TaskListFragment.newInstance(null, this, this, true);
+            taskListFragment = TaskListFragment.newInstance(null, this);
         }
         showOrReplaceFragment(taskListFragment, NavigationConstants.ITEM_TASKS);
         currentMainFragment = NavigationConstants.HOME_NAV_TASKS;
@@ -518,6 +518,17 @@ public class HomeScreenActivity extends PortraitActivity implements NavigationDr
                 closeViewTaskFragment();
             }
         });
+    }
+
+    @Override
+    public void onFabClicked() {
+        QuickTaskModalFragment modal = QuickTaskModalFragment.newInstance(false, null,
+            new QuickTaskModalFragment.TaskModalListener() {
+                @Override public void onTaskClicked(String taskType) {
+                    groupPickerTriggered(taskType);
+                }
+            });
+        modal.show(getSupportFragmentManager(), QuickTaskModalFragment.class.getSimpleName());
     }
 
     private void closeViewTaskFragment() {

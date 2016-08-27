@@ -3,6 +3,7 @@ package org.grassroot.android.activities;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
+import android.support.design.widget.Snackbar;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
@@ -52,6 +53,9 @@ public class GroupMembersActivity extends PortraitActivity implements NewTaskMen
     @BindView(R.id.lm_tv_existing_members_title) TextView tvExistingMembers;
 
     private boolean menuOpen;
+    private boolean showNewTaskFab;
+    private boolean showAddMemberFab;
+
     @BindView(R.id.lm_ic_floating_menu) FloatingActionButton floatingMenu;
     @BindView(R.id.lm_fab_add_members) LinearLayout fabAddMembers;
     @BindView(R.id.lm_fab_new_task) LinearLayout fabNewTask;
@@ -91,17 +95,24 @@ public class GroupMembersActivity extends PortraitActivity implements NewTaskMen
         boolean showGroupHeader = extras.getBoolean(Constant.SHOW_HEADER_FLAG, true);
         boolean showActionButton = extras.getBoolean(Constant.SHOW_ACTION_BUTTON_FLAG, true);
 
+        showNewTaskFab = group.hasCreatePermissions();
+        showAddMemberFab = group.canAddMembers();
+
+        floatingMenu.setVisibility(showActionButton && (showNewTaskFab || showAddMemberFab)
+            ? View.VISIBLE : View.GONE);
+
         if (selectMembers) {
             membersSelected = extras.getParcelableArrayList(Constant.SELECTED_MEMBERS_FIELD);
         }
 
-        floatingMenu.setVisibility(showActionButton ? View.VISIBLE : View.GONE);
         btnDone.setVisibility(showActionButton ? View.GONE : View.VISIBLE);
         tvGroupName.setVisibility(showGroupHeader ? View.VISIBLE : View.GONE);
         tvExistingMembers.setVisibility(showGroupHeader ? View.VISIBLE : View.GONE);
         llCheckAllClearAll.setVisibility(showGroupHeader ? View.GONE : View.VISIBLE);
 
-        newTaskMenuFragment = NewTaskMenuFragment.newInstance(group, false);
+        if (showNewTaskFab) {
+            newTaskMenuFragment = NewTaskMenuFragment.newInstance(group, false);
+        }
 
         setUpToolbar();
         setUpMemberListFragment();
@@ -117,8 +128,8 @@ public class GroupMembersActivity extends PortraitActivity implements NewTaskMen
     @OnClick(R.id.lm_ic_floating_menu)
     public void toggleActionMenu() {
         floatingMenu.setImageResource(menuOpen ? R.drawable.ic_add : R.drawable.ic_add_45d);
-        fabAddMembers.setVisibility(menuOpen ? View.GONE : View.VISIBLE);
-        fabNewTask.setVisibility(menuOpen ? View.GONE : View.VISIBLE);
+        fabAddMembers.setVisibility(menuOpen ? View.GONE : (showAddMemberFab) ? View.VISIBLE : View.GONE);
+        fabNewTask.setVisibility(menuOpen ? View.GONE : (showNewTaskFab) ? View.VISIBLE : View.GONE);
         menuOpen = !menuOpen;
     }
 
@@ -174,19 +185,28 @@ public class GroupMembersActivity extends PortraitActivity implements NewTaskMen
     @OnClick(R.id.lm_fab_add_members)
     public void launchAddMembers() {
         toggleActionMenu();
-        Intent i = IntentUtils.constructIntent(this, AddMembersActivity.class, groupUid, groupName);
-        startActivity(i);
+        // the button should not event display, so this shouldn't be possible, but usual Android / phone
+        // trust issues mean prudent to add another layer of protection
+        if (group.canAddMembers()) {
+            Intent i = IntentUtils.constructIntent(this, AddMembersActivity.class, groupUid, groupName);
+            startActivity(i);
+        } else {
+            Snackbar.make(fabAddMembers, R.string.permissions_error_new_task, Snackbar.LENGTH_SHORT).show();
+        }
     }
 
     @OnClick(R.id.lm_fab_new_task)
     public void launchNewTask() {
-        // todo: tell new task menu to not include "add members" & only allow it if at least one permission
         toggleActionMenu();
-        getSupportFragmentManager().beginTransaction()
+        if (group.hasCreatePermissions()) {
+            getSupportFragmentManager().beginTransaction()
                 .setCustomAnimations(R.anim.up_from_bottom, R.anim.down_from_top)
                 .add(R.id.rl_lm_root, newTaskMenuFragment)
                 .addToBackStack(null)
                 .commit();
+        } else {
+            Snackbar.make(fabNewTask, R.string.permissions_error_new_task, Snackbar.LENGTH_SHORT).show();
+        }
     }
 
     @Override
