@@ -25,4 +25,6 @@ public interface NotificationConstants {
     String TASK_REMINDER = "TASK_REMINDER";
     String TASK_CHANGED = "TASK_CHANGED";
     String TASK_CANCELLED = "TASK_CANCELLED";
+
+    String JOIN_REQUEST = "JOIN_REQUEST";
 }

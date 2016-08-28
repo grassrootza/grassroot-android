@@ -57,6 +57,8 @@ public class GcmRegistrationService extends IntentService {
         final String projectId = BuildConfig.FLAVOR.equals(Constant.PROD) ?
                 getString(R.string.prod_project_id) : getString(R.string.staging_project_id);
 
+        Log.e(TAG, "received registration intent ... trying to get a token");
+
         try {
 
             String gcmToken = InstanceID.getInstance(this)

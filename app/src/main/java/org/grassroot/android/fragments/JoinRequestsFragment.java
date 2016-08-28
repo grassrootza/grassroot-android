@@ -9,20 +9,19 @@ import android.support.v4.content.ContextCompat;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import org.grassroot.android.R;
 import org.grassroot.android.adapters.JoinRequestAdapter;
 import org.grassroot.android.events.JoinRequestReceived;
 import org.grassroot.android.interfaces.GroupConstants;
-import org.grassroot.android.models.GenericResponse;
 import org.grassroot.android.models.GroupJoinRequest;
-import org.grassroot.android.services.GrassrootRestService;
+import org.grassroot.android.services.ApplicationLoader;
 import org.grassroot.android.services.GroupService;
 import org.grassroot.android.utils.ErrorUtils;
 import org.grassroot.android.utils.NetworkUtils;
@@ -35,9 +34,7 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 import butterknife.Unbinder;
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
+import rx.Subscriber;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.functions.Action1;
 
@@ -152,37 +149,32 @@ public class JoinRequestsFragment extends Fragment {
     }
 
     private void respondToJoinRequest(final String approvedOrDenied, final String requestUid, final int position) {
-        if (NetworkUtils.isOnline(getContext())) {
-            showProgress();
-            GrassrootRestService.getInstance().getApi().respondToJoinRequest(mobile, code,
-                    requestUid, approvedOrDenied).enqueue(new Callback<GenericResponse>() {
+        showProgress(); // todo : use progress bar instead of dialog
+        GroupService.getInstance().respondToJoinRequest(approvedOrDenied, requestUid, AndroidSchedulers.mainThread())
+            .subscribe(new Subscriber<String>() {
                 @Override
-                public void onResponse(Call<GenericResponse> call, Response<GenericResponse> response) {
-                    if (response.isSuccessful()) {
-                        Log.e(TAG, "sucess! hide this, and do the remainder");
-                        adapter.clearRequest(position);
-                        RealmUtils.removeObjectFromDatabase(GroupJoinRequest.class, "requestUid", requestUid);
-                        int snackMsg = approvedOrDenied.equals(GroupConstants.JOIN_REQUEST_APPROVE) ?
-                                R.string.jreq_approved : R.string.jreq_denied;
-                        ErrorUtils.showSnackBar(frameLayout, snackMsg, Snackbar.LENGTH_SHORT);
-                        selectMessageOrList();
-                        hideProgess();
+                public void onNext(String s) {
+                    adapter.clearRequest(position);
+                    hideProgess();
+                    int snackMsg = approvedOrDenied.equals(GroupConstants.JOIN_REQUEST_APPROVE) ?
+                        R.string.jreq_approved : R.string.jreq_denied;
+                    Toast.makeText(ApplicationLoader.applicationContext, snackMsg, Toast.LENGTH_SHORT).show();
+                    selectMessageOrList();
+                }
+
+                @Override
+                public void onError(Throwable e) {
+                    hideProgess();
+                    if (NetworkUtils.CONNECT_ERROR.equals(e.getMessage())) {
+                        Snackbar.make(frameLayout, R.string.jreq_response_connect_error, Snackbar.LENGTH_SHORT).show();
                     } else {
-                        final String errorMessage = ErrorUtils.serverErrorText(response.errorBody(), getContext());
-                        Snackbar.make(frameLayout, errorMessage, Snackbar.LENGTH_SHORT).show();
-                        hideProgess();
+                        Snackbar.make(frameLayout, ErrorUtils.serverErrorText(e), Snackbar.LENGTH_SHORT).show();
                     }
                 }
 
                 @Override
-                public void onFailure(Call<GenericResponse> call, Throwable t) {
-                    // todo : store this offline & send once connected
-                    hideProgess();
-                }
+                public void onCompleted() {}
             });
-        } else {
-            // todo : store this offline & send once connected
-        }
     }
 
     @OnClick(R.id.jreq_no_requests)

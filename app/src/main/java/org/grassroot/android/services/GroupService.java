@@ -1,6 +1,7 @@
 package org.grassroot.android.services;
 
 import android.os.Looper;
+import android.support.annotation.NonNull;
 import android.text.TextUtils;
 import android.util.Log;
 
@@ -1081,6 +1082,35 @@ public class GroupService {
       }
     }).subscribeOn(Schedulers.io()).observeOn(observingThread);
   }
+
+  public Observable<String> respondToJoinRequest(@NonNull final String approvedOrDenied, @NonNull final String requestUid,
+                                                 @NonNull Scheduler observingThread) {
+    return Observable.create(new Observable.OnSubscribe<String>() {
+      @Override
+      public void call(Subscriber<? super String> subscriber) {
+        if (!NetworkUtils.isOnline()) {
+          throw new ApiCallException(NetworkUtils.CONNECT_ERROR);
+        } else {
+          final String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
+          final String code = RealmUtils.loadPreferencesFromDB().getToken();
+          try {
+            Response<GenericResponse> response = GrassrootRestService.getInstance().getApi()
+                .respondToJoinRequest(phoneNumber, code, requestUid, approvedOrDenied).execute();
+            if (response.isSuccessful()) {
+              RealmUtils.removeObjectFromDatabase(GroupJoinRequest.class, "requestUid", requestUid);
+              subscriber.onNext(NetworkUtils.SAVED_SERVER);
+              subscriber.onCompleted();
+            } else {
+              throw new ApiCallException(NetworkUtils.SERVER_ERROR, ErrorUtils.getRestMessage(response.errorBody()));
+            }
+          } catch (IOException e) {
+            throw new ApiCallException(NetworkUtils.CONNECT_ERROR);
+          }
+        }
+      }
+    }).subscribeOn(Schedulers.io()).observeOn(observingThread);
+  }
+
 
   private void saveJoinRequestsInDB(RealmList<GroupJoinRequest> requests) {
     Realm realm = Realm.getDefaultInstance();

@@ -229,18 +229,20 @@ public class ActionCompleteActivity extends PortraitActivity implements NewTaskM
     }
 
     private Intent doneIntent() {
-        switch (actionIntent) {
-            case HOME_SCREEN:
-                Log.d(TAG, "heading back to home screen ...");
-                return homeIntent();
-            case GROUP_SCREEN:
-                Log.d(TAG, "heading to group screen ...");
-                Intent i = new Intent(ActionCompleteActivity.this, GroupTasksActivity.class);
-                i.putExtra(GroupConstants.OBJECT_FIELD, groupToPass);
-                i.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                return i;
-            default:
-                return homeIntent();
+        if (TextUtils.isEmpty(actionIntent)) {
+            return homeIntent();
+        } else {
+            switch (actionIntent) {
+                case HOME_SCREEN:
+                    return homeIntent();
+                case GROUP_SCREEN:
+                    Intent i = new Intent(ActionCompleteActivity.this, GroupTasksActivity.class);
+                    i.putExtra(GroupConstants.OBJECT_FIELD, groupToPass);
+                    i.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                    return i;
+                default:
+                    return homeIntent();
+            }
         }
     }
 

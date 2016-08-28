@@ -9,8 +9,10 @@ import android.support.v4.app.DialogFragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v7.app.AlertDialog;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.Button;
 import android.widget.TextView;
 
 import org.grassroot.android.R;
@@ -66,26 +68,36 @@ public class MultiLineTextDialog extends DialogFragment {
             builder.setTitle(titleRes);
         }
 
-        builder.setPositiveButton(okayBtnRes, new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                if (TextUtils.isEmpty(textEdit.getText())) {
-                    textEdit.setError(getString(R.string.gs_dialog_message_error));
-                } else {
-                    subscriber.onNext(textEdit.getText().toString().trim());
-                    subscriber.onCompleted();
-                }
-            }
-        });
-
+        builder.setPositiveButton(okayBtnRes, null);
         builder.setNegativeButton(R.string.alert_cancel, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
-                dialog.cancel();
+                dialog.dismiss();
             }
         });
 
-        return builder.create();
+        final AlertDialog createdDialog = builder.create();
+        createdDialog.setOnShowListener(new DialogInterface.OnShowListener() {
+            @Override
+            public void onShow(DialogInterface dialog) {
+                Button b = createdDialog.getButton(AlertDialog.BUTTON_POSITIVE);
+                b.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        if (TextUtils.isEmpty(textEdit.getText())) {
+                            textEdit.setError(getString(R.string.gs_dialog_message_error));
+                            textEdit.requestFocus();
+                        } else {
+                            subscriber.onNext(textEdit.getText().toString().trim());
+                            subscriber.onCompleted();
+                            createdDialog.dismiss();
+                        }
+                    }
+                });
+            }
+        });
+
+        return createdDialog;
     }
 
 }

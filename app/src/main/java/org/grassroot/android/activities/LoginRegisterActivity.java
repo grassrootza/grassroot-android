@@ -69,7 +69,8 @@ public class LoginRegisterActivity extends AppCompatActivity implements LoginScr
     }
 
     private void switchFragments(Fragment fragment, boolean addToBackStack) {
-        FragmentTransaction transaction =  getSupportFragmentManager().beginTransaction()
+        FragmentTransaction transaction =  getSupportFragmentManager()
+            .beginTransaction()
             .setCustomAnimations(R.anim.a_slide_in_right, R.anim.a_slide_out_left, R.anim.a_slide_in_left, R.anim.a_slide_out_right)
             .replace(R.id.lr_frag_content, fragment, fragment.getClass().getSimpleName());
 
@@ -176,7 +177,6 @@ public class LoginRegisterActivity extends AppCompatActivity implements LoginScr
             @Override
             public void onNext(String s) {
                 progressDialog.dismiss();
-                registerOrRefreshGCM(msisdn);
                 launchHomeScreen(LoginRegUtils.AUTH_HAS_GROUPS.equals(s));
                 setResult(RESULT_OK);
                 finish();
@@ -200,7 +200,6 @@ public class LoginRegisterActivity extends AppCompatActivity implements LoginScr
             @Override
             public void onNext(String s) {
                 progressDialog.dismiss();
-                registerOrRefreshGCM(msisdn);
                 launchHomeScreen(false); // by definition, registering means no group
                 setResult(RESULT_OK);
                 finish();
@@ -332,12 +331,13 @@ public class LoginRegisterActivity extends AppCompatActivity implements LoginScr
 
     private void launchHomeScreen(boolean userHasGroups) {
         if (userHasGroups) {
-            NetworkUtils.syncAndStartTasks(this, false, true).subscribe();
             NetworkUtils.registerForGCM(this).subscribe();
+            NetworkUtils.syncAndStartTasks(this, false, true).subscribe();
             Intent homeScreenIntent = new Intent(LoginRegisterActivity.this, HomeScreenActivity.class);
             homeScreenIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
             startActivity(homeScreenIntent);
         } else {
+            NetworkUtils.registerForGCM(this).subscribe();
             Intent welcomeScreenIntent = new Intent(LoginRegisterActivity.this, NoGroupWelcomeActivity.class);
             welcomeScreenIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
             startActivity(welcomeScreenIntent);

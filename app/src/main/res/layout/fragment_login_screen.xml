@@ -4,21 +4,17 @@
     android:layout_centerHorizontal="true"
     android:layout_gravity="center_horizontal"
     android:paddingLeft="16dp"
-    android:paddingRight="16dp"
-    android:background="#00000000"
-    android:orientation="vertical">
-
+    android:paddingRight="16dp">
 
     <android.support.design.widget.TextInputLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:id="@+id/mobile2">
+        android:layout_height="wrap_content">
 
         <android.support.design.widget.TextInputEditText
             android:id="@+id/et_mobile_login"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Cellphone number"
+            android:hint="@string/login_input_hint"
             android:padding="10dp"
             android:singleLine="true"
             android:textColorHint="#5d5d5d"
@@ -32,11 +28,11 @@
     </android.support.design.widget.TextInputLayout>
 
     <Button
-        android:id="@+id/bt_login"
+        android:id="@+id/login_submit_number"
+        android:clickable="true"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@drawable/buttonrounded_corner"
-        android:textAllCaps="false"
         android:textColor="#fff"
         android:text="@string/bt_login"
         android:textSize="@dimen/txt_medium"

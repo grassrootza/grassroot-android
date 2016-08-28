@@ -13,10 +13,13 @@
     <string name="title_activity_create_vote">CreateVote</string>
     <string name="title_activity_action_completed">Completed</string>
     <string name="title_activity_group_settings">GroupSettings</string>
+    <string name="title_activity_join_request_notice">JoinRequestNotice</string>
 
     <!-- Welcome, register, OTP screens -->
     <string name="txt_pls_wait">Please wait&#8230;</string>
     <string name="wait_message">Please wait&#8230;</string> <!-- todo : clean redundancy -->
+
+    <string name="login_input_hint">Cellphone number</string>
     <string name="bt_login">LOGIN</string>
     <string name="bt_next">NEXT</string>
     <string name="bt_register">REGISTER</string>
@@ -347,9 +350,21 @@
 
     <string name="jreq_approved">Done! Join request approved</string>
     <string name="jreq_denied">Okay, the join request was denied</string>
+    <string name="jreq_response_connect_error">Sorry, we couldn\'t connect, please try again later</string>
 
     <string name="jreq_no_requests">We couldn\'t find any pending requests. To check again, please
     just tap here</string>
+
+    <string name="jreq_gmsg_header">Join request</string>
+    <string name="jreq_gmsg_header_approved">Approved</string>
+    <string name="jreq_gmsg_header_denied">Denied</string>
+    <string name="jreq_btn_group">View group</string>
+    <string name="jreq_btn_home">Home</string>
+    <string name="jreq_btn_approve">Approve</string>
+    <string name="jreq_btn_later">Later</string>
+
+    <string name="jreq_approved_load_error">Sorry, we couldn\'t fetch the group, but you have been added.
+    Please try again later</string>
 
     <!-- Member list fragment -->
     <string name="member_list_default_header">Current members</string>

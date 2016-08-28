@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.support.design.widget.TextInputEditText;
 import android.support.v4.app.Fragment;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -17,21 +18,23 @@ import org.grassroot.android.utils.Utilities;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
+import butterknife.Unbinder;
 
 /**
  * Created by paballo on 2016/04/26.
  */
 public class LoginScreenFragment extends Fragment {
 
-    TextInputEditText etNumberInput;
+    @BindView(R.id.et_mobile_login) TextInputEditText etNumberInput;
+    private String presetNumber;
 
-    String presetNumber;
+    private LoginFragmentListener listener;
+    private Unbinder unbinder;
 
     public interface LoginFragmentListener {
         void requestLogin(String mobileNumber);
-    }
 
-    private LoginFragmentListener listener;
+    }
 
     public static LoginScreenFragment newInstance(final String presetNumber) {
         LoginScreenFragment fragment = new LoginScreenFragment();
@@ -54,11 +57,13 @@ public class LoginScreenFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
+
         View view = inflater.inflate(R.layout.fragment_login_screen, container, false);
         view.startAnimation(AnimationUtils.loadAnimation(getActivity(), R.anim.fade_in));
         view.setLayoutParams(new ViewGroup.LayoutParams(-1, -1));
 
-        etNumberInput = (TextInputEditText) view.findViewById(R.id.et_mobile_login);
+        unbinder = ButterKnife.bind(this, view);
+
         if (!TextUtils.isEmpty(presetNumber)) {
             etNumberInput.setText(presetNumber);
         }
@@ -77,7 +82,7 @@ public class LoginScreenFragment extends Fragment {
         }
     }
 
-    @OnClick(R.id.bt_login)
+    @OnClick(R.id.login_submit_number)
     public void onLoginButtonClick() {
         final String number = etNumberInput.getText().toString();
         if (TextUtils.isEmpty(number)) {
@@ -87,6 +92,7 @@ public class LoginScreenFragment extends Fragment {
             etNumberInput.requestFocus();
             etNumberInput.setError(getResources().getString(R.string.Cellphone_number_invalid));
         } else {
+            Log.e("L", "calling listener");
             listener.requestLogin(number);
         }
     }
@@ -94,6 +100,6 @@ public class LoginScreenFragment extends Fragment {
     @Override
     public void onDestroyView() {
         super.onDestroyView();
-        etNumberInput = null;
+        unbinder.unbind();
     }
 }

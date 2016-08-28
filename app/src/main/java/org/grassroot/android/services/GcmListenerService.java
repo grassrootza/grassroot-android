@@ -16,8 +16,11 @@ import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 
 import org.grassroot.android.R;
+import org.grassroot.android.activities.ActionCompleteActivity;
+import org.grassroot.android.activities.JoinRequestNoticeActivity;
 import org.grassroot.android.activities.ViewTaskActivity;
 import org.grassroot.android.events.NotificationCountChangedEvent;
+import org.grassroot.android.interfaces.GroupConstants;
 import org.grassroot.android.interfaces.NotificationConstants;
 import org.grassroot.android.models.GenericResponse;
 import org.grassroot.android.models.PreferenceObject;
@@ -30,6 +33,7 @@ import java.util.List;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
+import rx.schedulers.Schedulers;
 
 /**
  * Created by paballo on 2016/05/09.
@@ -40,7 +44,7 @@ public class GcmListenerService extends com.google.android.gms.gcm.GcmListenerSe
   private static final String STACK_KEY = "stack_key";
 
   @Override public void onMessageReceived(String from, Bundle data) {
-    Log.e(TAG, "message received, from : " + from);
+    Log.d(TAG, "message received, from : " + from);
     incrementNotificationCounter();
     relayNotification(data);
   }
@@ -57,7 +61,7 @@ public class GcmListenerService extends com.google.android.gms.gcm.GcmListenerSe
 
   private void relayNotification(Bundle msg) {
 
-    Log.e(TAG, "Received a push notification from server, looks like: + " + msg.toString());
+    Log.d(TAG, "Received a push notification from server, looks like: + " + msg.toString());
     PendingIntent resultPendingIntent = generateResultIntent(msg);
     long when = System.currentTimeMillis();
 
@@ -70,13 +74,15 @@ public class GcmListenerService extends com.google.android.gms.gcm.GcmListenerSe
     if (Build.VERSION.SDK_INT >= 21) {
       NotificationCompat.InboxStyle inboxStyle = new NotificationCompat.InboxStyle();
       NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(this);
-      Notification notification = mBuilder.setTicker(msg.getString(Constant.TITLE))
+      Notification notification = mBuilder
+          .setTicker(msg.getString(Constant.TITLE))
           .setWhen(when)
           .setAutoCancel(true)
           .setContentTitle(msg.getString(Constant.TITLE))
           .setStyle(inboxStyle)
-          .setContentIntent(resultPendingIntent).setSmallIcon((Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) ? R.drawable.ic_notification_icon
-          : R.drawable.app_icon)
+          .setContentIntent(resultPendingIntent)
+          .setSmallIcon((Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP)
+              ? R.drawable.ic_notification_icon : R.drawable.app_icon)
           .setDefaults(Notification.DEFAULT_ALL)
           .setSound(RingtoneManager.getActualDefaultRingtoneUri(getApplicationContext(),
               RingtoneManager.TYPE_NOTIFICATION))
@@ -89,7 +95,7 @@ public class GcmListenerService extends com.google.android.gms.gcm.GcmListenerSe
             notification);
 
     } else {
-      Log.e(TAG, "notification received, following KitKat branch");
+      Log.d(TAG, "notification received, following KitKat branch");
       NotificationCompat.Builder mNotifyBuilder = new NotificationCompat.Builder(this);
       Notification notification = mNotifyBuilder.setContentTitle(msg.getString(Constant.TITLE))
           .setWhen(when)
@@ -103,21 +109,15 @@ public class GcmListenerService extends com.google.android.gms.gcm.GcmListenerSe
           .build();
         mNotificationManager.notify(entityReferencedUid, (int) System.currentTimeMillis(),
             notification);
-
     }
 
     GrassrootRestService.getInstance()
         .getApi()
-        .updateRead(RealmUtils.loadPreferencesFromDB().getMobileNumber(),
-            RealmUtils.loadPreferencesFromDB().getToken(), notificationUid)
+        .updateRead(RealmUtils.loadPreferencesFromDB().getMobileNumber(), RealmUtils.loadPreferencesFromDB().getToken(), notificationUid)
         .enqueue(new Callback<GenericResponse>() {
           @Override
           public void onResponse(Call<GenericResponse> call, Response<GenericResponse> response) {
-            if (response.isSuccessful()) {
-              Log.d(TAG, "Set message as read!");
-            } else {
-              Log.d(TAG, "Failed: " + response.errorBody());
-            }
+            Log.d(TAG, response.isSuccessful() ? "Set message as read!" : "Failed: " + response.errorBody());
           }
 
           @Override public void onFailure(Call<GenericResponse> call, Throwable t) {
@@ -165,21 +165,33 @@ public class GcmListenerService extends com.google.android.gms.gcm.GcmListenerSe
   }
 
   private PendingIntent generateResultIntent(Bundle msg) {
-
     Log.d(TAG, "generateResultIntent called, with message bundle: " + msg.toString());
+    final String entityType = msg.getString(NotificationConstants.ENTITY_TYPE);
+    Intent resultIntent;
+    if (entityType != null && entityType.contains(NotificationConstants.JOIN_REQUEST)) {
+      if (entityType.equals(GroupConstants.JOIN_REQUEST_APPROVE)) {
+        Log.e(TAG, "approved ... go fetch the groups");
+        // note : do it via overall fetch function, which will anyway just send 'changed since', else changed since
+        // logic will be messed with by a single group fetch
+        GroupService.getInstance().fetchGroupList(Schedulers.immediate()).subscribe();
+      }
+      resultIntent = new Intent(this, JoinRequestNoticeActivity.class);
+      resultIntent.putExtra(NotificationConstants.ENTITY_TYPE, entityType);
+      resultIntent.putExtra(NotificationConstants.ENTITY_UID, msg.getString(NotificationConstants.ENTITY_UID));
+      resultIntent.putExtra(NotificationConstants.CLICK_ACTION, msg.getString(NotificationConstants.CLICK_ACTION));
+      resultIntent.putExtra(NotificationConstants.BODY, msg.getString(NotificationConstants.BODY));
+      resultIntent.putExtra(GroupConstants.UID_FIELD, msg.getString("group"));
+    } else {
+      resultIntent = new Intent(this, ViewTaskActivity.class);
+      resultIntent.putExtra(NotificationConstants.ENTITY_TYPE, entityType);
+      resultIntent.putExtra(NotificationConstants.ENTITY_UID, msg.getString(NotificationConstants.ENTITY_UID));
+      resultIntent.putExtra(NotificationConstants.NOTIFICATION_UID, msg.getString(NotificationConstants.NOTIFICATION_UID));
+      resultIntent.putExtra(NotificationConstants.CLICK_ACTION, msg.getString(NotificationConstants.CLICK_ACTION));
+      resultIntent.putExtra(NotificationConstants.BODY, msg.getString(NotificationConstants.BODY));
 
-    Intent resultIntent = new Intent(this, ViewTaskActivity.class);
-
-    // todo : consider just passing the whole message?
-    resultIntent.putExtra(NotificationConstants.ENTITY_TYPE, msg.getString(NotificationConstants.ENTITY_TYPE));
-    resultIntent.putExtra(NotificationConstants.ENTITY_UID, msg.getString(NotificationConstants.ENTITY_UID));
-    resultIntent.putExtra(NotificationConstants.NOTIFICATION_UID, msg.getString(NotificationConstants.NOTIFICATION_UID));
-    resultIntent.putExtra(NotificationConstants.CLICK_ACTION, msg.getString(NotificationConstants.CLICK_ACTION));
-    resultIntent.putExtra(NotificationConstants.BODY, msg.getString(NotificationConstants.BODY));
-
+    }
     PendingIntent resultPendingIntent = PendingIntent.getActivity(this, (int) System.currentTimeMillis(), resultIntent,
-            PendingIntent.FLAG_CANCEL_CURRENT);
-
+        PendingIntent.FLAG_CANCEL_CURRENT);
     Log.e(TAG, "and generateResultIntent exits, with intent: " + resultPendingIntent.toString());
     return resultPendingIntent;
   }
@@ -189,6 +201,3 @@ public class GcmListenerService extends com.google.android.gms.gcm.GcmListenerSe
     nMgr.cancelAll();
   }
 }
-
-
-

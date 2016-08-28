@@ -38,6 +38,11 @@ public interface GroupConstants {
     String JOIN_REQUEST_APPROVE = "APPROVE";
     String JOIN_REQUEST_DENY = "DENY";
 
+    String JREQ_RECEIVED = "JOIN_REQUEST";
+    String JREQ_REMIND = "JOIN_REQUEST_REMINDER";
+    String JREQ_APPROVED = "JOIN_REQUEST_APPROVED";
+    String JREQ_DENIED = "JOIN_REQUEST_DENIED";
+
     // names of default images
     String SOCIAL_MOVEMENT = "SOCIAL_MOVEMENT";
     String COMMUNITY_GROUP = "COMMUNITY_GROUP";
