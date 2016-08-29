@@ -16,7 +16,6 @@ import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 
 import org.grassroot.android.R;
-import org.grassroot.android.activities.ActionCompleteActivity;
 import org.grassroot.android.activities.JoinRequestNoticeActivity;
 import org.grassroot.android.activities.ViewTaskActivity;
 import org.grassroot.android.events.NotificationCountChangedEvent;
@@ -65,8 +64,7 @@ public class GcmListenerService extends com.google.android.gms.gcm.GcmListenerSe
     PendingIntent resultPendingIntent = generateResultIntent(msg);
     long when = System.currentTimeMillis();
 
-    NotificationManager mNotificationManager =
-        (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+    NotificationManager mNotificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
 
     final String entityReferencedUid = msg.getString(NotificationConstants.ENTITY_UID);
     final String notificationUid = msg.getString(NotificationConstants.NOTIFICATION_UID);
@@ -160,20 +158,23 @@ public class GcmListenerService extends com.google.android.gms.gcm.GcmListenerSe
         EventBus.getDefault().post(new NotificationCountChangedEvent(currentCount + 1));
       }
     });
+
     preferenceObject.setNotificationCounter(currentCount + 1);
-    RealmUtils.saveDataToRealm(preferenceObject).subscribe();
+    RealmUtils.saveDataToRealmSync(preferenceObject); // otherwise this prefs object and setting has groups may trip over each other
   }
 
   private PendingIntent generateResultIntent(Bundle msg) {
     Log.d(TAG, "generateResultIntent called, with message bundle: " + msg.toString());
+
     final String entityType = msg.getString(NotificationConstants.ENTITY_TYPE);
     Intent resultIntent;
     if (entityType != null && entityType.contains(NotificationConstants.JOIN_REQUEST)) {
-      if (entityType.equals(GroupConstants.JOIN_REQUEST_APPROVE)) {
-        Log.e(TAG, "approved ... go fetch the groups");
+      if (entityType.equals(GroupConstants.JREQ_APPROVED)) {
         // note : do it via overall fetch function, which will anyway just send 'changed since', else changed since
         // logic will be messed with by a single group fetch
+        Log.d(TAG, "received an approval! setting has groups to true");
         GroupService.getInstance().fetchGroupList(Schedulers.immediate()).subscribe();
+        GroupService.getInstance().setHasGroups(true);
       }
       resultIntent = new Intent(this, JoinRequestNoticeActivity.class);
       resultIntent.putExtra(NotificationConstants.ENTITY_TYPE, entityType);
@@ -190,6 +191,7 @@ public class GcmListenerService extends com.google.android.gms.gcm.GcmListenerSe
       resultIntent.putExtra(NotificationConstants.BODY, msg.getString(NotificationConstants.BODY));
 
     }
+
     PendingIntent resultPendingIntent = PendingIntent.getActivity(this, (int) System.currentTimeMillis(), resultIntent,
         PendingIntent.FLAG_CANCEL_CURRENT);
     Log.e(TAG, "and generateResultIntent exits, with intent: " + resultPendingIntent.toString());

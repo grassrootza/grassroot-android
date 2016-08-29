@@ -124,7 +124,7 @@ public class TaskService {
               subscriber.onCompleted();
             } else {
               final String restMessage = ErrorUtils.getRestMessage(response.errorBody());
-              subscriber.onNext(restMessage); // todo : include rest message
+              subscriber.onNext(restMessage);
               subscriber.onCompleted();
             }
           } catch (IOException e) {

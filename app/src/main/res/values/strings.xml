@@ -62,6 +62,7 @@
     <string name="server_error_vote_cancelled">Sorry, that vote was already cancelled</string>
     <string name="server_error_todo_completed">You\'ve already marked the action complete</string>
     <string name="server_error_notifications_done">That\'s all the notifications in your list</string>
+    <string name="server_error_unsubscribe_error">You have already left, please refresh on the home screen</string>
 
     <string name="connect_error_homescreen">Sorry, we couldn\'t refresh right now because the connection isn\'t working</string>
     <string name="connect_error_offline_home">You\'re working in offline mode. Please go online and try refreshing again</string>
@@ -73,6 +74,9 @@
     <string name="connect_error_task_cancelled">Sorry, you must be connected to cancel. Please connect and try again.</string>
     <string name="server_error_background_group_numbers">The group is created, but some numbers were invalid, please check the group and
     add them</string>
+    <string name="connect_error_group_unsubscribe">Sorry, we couldn\'t connect to the server. Please try later or unsubscribe through
+    *134*1994#</string>
+    <string name="connect_error_unsub_offline">You\'re offline, but leaving a group requires a connection. Try connect?</string>
 
     <string name="input_error_no_display_name">Please enter whatever name people know you by</string>
     <string name="input_error_name_regex">Please enter a name without special characters (e.g., !, &amp;)</string>
@@ -155,8 +159,12 @@
     <string name="toast_no_groups">Create or join a group to get started</string>
 
     <!--welcome content-->
-    <string name="txt_welcome">Welcome to <b>Grassroot</b></string>
+    <string name="txt_welcome">Welcome to Grassroot</string>
     <string name="txt_welcome_para">To get started, create your own group, or ask to join one. You can then call meetings, take votes, record decisions, and more&#8230;</string>
+
+    <string name="welcome_toast_groups">You\'ve joined a group!</string>
+    <string name="welcome_snackbar_connect_error">Sorry, we couldn\'t connect to look for groups, please try later</string>
+    <string name="welcome_snackbar_refresh_no_groups">Sorry, we couldn\'t find any groups you\'ve joined yet, please join or create one</string>
 
     <string name="txt_no_task_group">This group has no events or tasks yet. To get started, call a meeting, a vote, record an action, or add members &#8230; Just hit the + button below</string>
     <string name="txt_no_task_upcoming">You have no upcoming meetings, votes, or actions. To create one, just hit the + button below</string>
@@ -166,6 +174,8 @@
     <string name="txt_getstart">To get started</string>
     <string name="new_joingroup">Join Group</string>
     <string name="new_startgroup">Create Group</string>
+
+    <string name="no_groups_check_again">Check for joined groups</string>
 
     <!-- For walk-through -->
     <string name="intro_page0_title">Meet, vote, act</string>
@@ -209,6 +219,10 @@
     <string name="gta_del_members">Remove members</string>
 
     <string name="gta_desc_title">Group description</string>
+
+    <string name="gta_unsub_message">Are you sure you want to leave the group \'%s\'?
+    You won\'t be able to rejoin unless added back</string>
+    <string name="gta_unsub_done">Done! You\'ve left the group</string>
 
     <string name="home_group_pick">Select group</string>
     <string name="btn_group_select">Pick</string>
@@ -693,6 +707,8 @@
     <string name="vt_cancel_home">Home</string>
 
     <string name="vt_changed_header">Change</string>
+    <string name="vt_reminder_header">Reminder</string>
+    <string name="vt_results_header">Results</string>
     <string name="vt_changed_task">View Details</string>
     <string name="vt_changed_group">View Group</string>
     <string name="vt_changed_home">Home</string>
@@ -806,6 +822,7 @@
     <string name="gp_update_success">Group photo updated</string>
     <string name="gp_image_load_error">Sorry, something went wrong loading the image, showing icons instead</string>
     <string name="group_settings">Group settings</string>
+    <string name="gp_unsubscribe">Leave group</string>
 
     <!-- Sharing strings -->
     <string name="share_ic_title">Share</string>

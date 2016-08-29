@@ -11,6 +11,7 @@ import org.grassroot.android.events.GroupPictureChangedEvent;
 import org.grassroot.android.events.GroupsRefreshedEvent;
 import org.grassroot.android.events.JoinRequestReceived;
 import org.grassroot.android.events.LocalGroupToServerEvent;
+import org.grassroot.android.events.TasksRefreshedEvent;
 import org.grassroot.android.interfaces.GroupConstants;
 import org.grassroot.android.interfaces.TaskConstants;
 import org.grassroot.android.models.GenericResponse;
@@ -127,6 +128,34 @@ public class GroupService {
     }).subscribeOn(Schedulers.io()).observeOn(observingThread);
   }
 
+  public Observable<String> unsubscribeFromGroup(final String groupUid, @NonNull Scheduler observingThread) {
+    return Observable.create(new Observable.OnSubscribe<String>() {
+      @Override
+      public void call(Subscriber<? super String> subscriber) {
+        if (!NetworkUtils.isOnline()) {
+          throw new ApiCallException(NetworkUtils.CONNECT_ERROR);
+        } else {
+          final String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
+          final String code = RealmUtils.loadPreferencesFromDB().getToken();
+          try {
+            Response<GenericResponse> response = GrassrootRestService.getInstance().getApi()
+                .unsubscribeFromGroup(phoneNumber, code, groupUid).execute();
+            if (response.isSuccessful()) {
+              cleanGroupFromDB(groupUid);
+              subscriber.onNext(NetworkUtils.SAVED_SERVER);
+              subscriber.onCompleted();
+            } else {
+              throw new ApiCallException(NetworkUtils.SERVER_ERROR,
+                  ErrorUtils.getRestMessage(response.errorBody()));
+            }
+          } catch (IOException e) {
+            throw new ApiCallException(NetworkUtils.CONNECT_ERROR);
+          }
+        }
+      }
+    }).subscribeOn(Schedulers.io()).observeOn(observingThread);
+  }
+
   private void persistGroupsAddedUpdated(GroupsChangedResponse responseBody) {
     if (Looper.myLooper() == Looper.getMainLooper()) {
       throw new IllegalStateException("Must not persist group list on main thread");
@@ -147,10 +176,31 @@ public class GroupService {
     }
   }
 
+  private void cleanGroupFromDB(final String groupUid) {
+    Map<String, Object> memberMap = new HashMap<>();
+    memberMap.put("groupUid", groupUid);
+    RealmUtils.removeObjectsFromDatabase(Member.class, memberMap);
+    Map<String, Object> taskMap = new HashMap<>();
+    taskMap.put("parentUid", groupUid);
+    RealmUtils.removeObjectsFromDatabase(TaskModel.class, taskMap);
+    RealmUtils.removeObjectFromDatabase(Group.class, "groupUid", groupUid);
+    if (RealmUtils.countGroupsInDB() == 0) {
+      setHasGroups(false);
+    }
+    EventBus.getDefault().post(new GroupsRefreshedEvent());
+    EventBus.getDefault().post(new TasksRefreshedEvent());
+  }
+
   private void updateGroupsFetchedTime() {
     PreferenceObject preferenceObject = RealmUtils.loadPreferencesFromDB();
     preferenceObject.setLastTimeGroupsFetched(Utilities.getCurrentTimeInMillisAtUTC());
     RealmUtils.saveDataToRealm(preferenceObject).subscribe();
+  }
+
+  public void setHasGroups(boolean hasGroups) {
+    PreferenceObject preferenceObject = RealmUtils.loadPreferencesFromDB();
+    preferenceObject.setHasGroups(hasGroups);
+    RealmUtils.saveDataToRealmSync(preferenceObject);
   }
 
     /*

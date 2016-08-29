@@ -9,7 +9,6 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.View;
-import android.view.ViewGroup;
 
 import org.grassroot.android.R;
 import org.grassroot.android.events.NotificationCountChangedEvent;
@@ -50,7 +49,6 @@ public class ViewTaskActivity extends PortraitActivity {
 
     private boolean isCancelNotification;
 
-    @BindView(R.id.vta_root_layout) ViewGroup rootView;
     @BindView(R.id.vta_toolbar) Toolbar toolbar;
 
     @Override
@@ -80,17 +78,36 @@ public class ViewTaskActivity extends PortraitActivity {
         setUpToolbar();
 
         if (NotificationConstants.TASK_CANCELLED.equals(clickAction)) {
+            // requires deleting & removing, hence handled differently to rest
             isCancelNotification = true;
             fragment = createCancelFragment(taskUid);
         } else {
             isCancelNotification = false;
-            TaskService.getInstance().fetchAndStoreTask(taskUid, taskType, null).subscribe(); // done in background, so have it next time
-            if (NotificationConstants.TASK_CHANGED.equals(clickAction)) {
-                fragment = createChangedFragment();
-            } else {
+            TaskService.getInstance()
+                .fetchAndStoreTask(taskUid, taskType, null)
+                .subscribe(); // done in background, so have it next time
+
+            if (TextUtils.isEmpty(clickAction)) {
                 fragment = ViewTaskFragment.newInstance(taskType, taskUid);
                 showShareMenu = true;
             }
+
+            // note : possibly add share option to all / most of these ...
+            switch (clickAction) {
+                case NotificationConstants.TASK_CHANGED:
+                    fragment = createMessageFragment(R.string.vt_changed_header);
+                    break;
+                case NotificationConstants.TASK_REMINDER:
+                    fragment = createMessageFragment(R.string.vt_reminder_header);
+                    break;
+                case NotificationConstants.TASK_RESULTS:
+                    fragment = createMessageFragment(R.string.vt_results_header);
+                    break;
+                default:
+                    fragment = ViewTaskFragment.newInstance(taskType, taskUid);
+                    showShareMenu = true;
+            }
+
         }
 
         getSupportFragmentManager().beginTransaction()
@@ -128,11 +145,11 @@ public class ViewTaskActivity extends PortraitActivity {
         final Group parentGroup = getParentGroup();
         boolean canViewGroup = parentGroup != null;
 
-        GiantMessageFragment fragment = GiantMessageFragment.newInstance(R.string.vt_cancel_header,
-            messageBody, canViewGroup, true);
+        GiantMessageFragment.Builder builder = new GiantMessageFragment.Builder(R.string.vt_cancel_header)
+            .setBody(messageBody);
 
         if (canViewGroup) {
-            fragment.setButtonOne(R.string.vt_cancel_group, new View.OnClickListener() {
+            builder.setButtonOne(R.string.vt_cancel_group, new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
                     Intent viewGroup = new Intent(ViewTaskActivity.this, GroupTasksActivity.class);
@@ -143,7 +160,7 @@ public class ViewTaskActivity extends PortraitActivity {
             });
         }
 
-        fragment.setButtonTwo(R.string.vt_cancel_upcoming, new View.OnClickListener() {
+        builder.setButtonTwo(R.string.vt_cancel_upcoming, new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Intent viewTasks = new Intent(ViewTaskActivity.this, HomeScreenActivity.class);
@@ -156,18 +173,19 @@ public class ViewTaskActivity extends PortraitActivity {
         RealmUtils.removeObjectFromDatabase(TaskModel.class, "taskUid", taskUid);
         EventBus.getDefault().post(new TaskCancelledEvent(taskUid));
         setTitle(R.string.vt_cancel_title);
-        return fragment;
+
+        return builder.build();
     }
 
-    private Fragment createChangedFragment() {
+    private Fragment createMessageFragment(final int headerResource) {
         final String messageBody = getIntent().getStringExtra(NotificationConstants.BODY);
         final Group parentGroup = getParentGroup();
 
         boolean canViewGroup = parentGroup != null;
 
-        GiantMessageFragment fragment = GiantMessageFragment.newInstance(R.string.vt_changed_header,
-            messageBody, true, canViewGroup);
-        fragment.setButtonOne(R.string.vt_changed_task, new View.OnClickListener() {
+        GiantMessageFragment.Builder builder = new GiantMessageFragment.Builder(headerResource)
+            .setBody(messageBody)
+            .setButtonOne(R.string.vt_changed_task, new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 switchToViewTaskFragment();
@@ -175,7 +193,7 @@ public class ViewTaskActivity extends PortraitActivity {
         });
 
         if (canViewGroup) {
-            fragment.setButtonTwo(R.string.vt_changed_group, new View.OnClickListener() {
+            builder.setButtonTwo(R.string.vt_changed_group, new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
                     Intent viewGroup = new Intent(ViewTaskActivity.this, GroupTasksActivity.class);
@@ -185,7 +203,8 @@ public class ViewTaskActivity extends PortraitActivity {
                 }
             });
         }
-        return fragment;
+
+        return builder.build();
     }
 
     private void switchToViewTaskFragment() {

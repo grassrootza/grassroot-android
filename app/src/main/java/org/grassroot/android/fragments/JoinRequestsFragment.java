@@ -67,12 +67,12 @@ public class JoinRequestsFragment extends Fragment {
         adapter = new JoinRequestAdapter(context, new JoinRequestAdapter.JoinRequestClickListener() {
             @Override
             public void requestApproved(GroupJoinRequest request, int position) {
-                respondToJoinRequest(GroupConstants.JOIN_REQUEST_APPROVE, request.getRequestUid(), position);
+                respondToJoinRequest(GroupConstants.APPROVE_JOIN_REQUEST, request.getRequestUid(), position);
             }
 
             @Override
             public void requestDenied(GroupJoinRequest request, int position) {
-                respondToJoinRequest(GroupConstants.JOIN_REQUEST_DENY, request.getRequestUid(), position);
+                respondToJoinRequest(GroupConstants.DENY_JOIN_REQUEST, request.getRequestUid(), position);
             }
         });
     }
@@ -156,7 +156,7 @@ public class JoinRequestsFragment extends Fragment {
                 public void onNext(String s) {
                     adapter.clearRequest(position);
                     hideProgess();
-                    int snackMsg = approvedOrDenied.equals(GroupConstants.JOIN_REQUEST_APPROVE) ?
+                    int snackMsg = approvedOrDenied.equals(GroupConstants.APPROVE_JOIN_REQUEST) ?
                         R.string.jreq_approved : R.string.jreq_denied;
                     Toast.makeText(ApplicationLoader.applicationContext, snackMsg, Toast.LENGTH_SHORT).show();
                     selectMessageOrList();

@@ -47,7 +47,7 @@ public class RegisterPhoneFragment extends Fragment {
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 		View view = inflater.inflate(R.layout.fragment_register_phone_number, container, false);
-		ButterKnife.bind(this, view);
+		unbinder = ButterKnife.bind(this, view);
 		if (!TextUtils.isEmpty(preEnteredNumber)) {
 			phoneInput.setText(preEnteredNumber);
 		}

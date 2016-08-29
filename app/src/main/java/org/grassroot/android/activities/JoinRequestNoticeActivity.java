@@ -69,11 +69,11 @@ public class JoinRequestNoticeActivity extends PortraitActivity {
 		setUpViews();
 
 		toolbar.setNavigationIcon(R.drawable.btn_close_white);
-		setTitle(""); // would just be repetitive
+		setTitle(""); // would just be repetitive if anything else
 	}
 
 	private void setUpViews() {
-		GiantMessageFragment fragment;
+		GiantMessageFragment.Builder builder;
 
 		groupUid = getIntent().getStringExtra(GroupConstants.UID_FIELD);
 		requestUid = getIntent().getStringExtra(NotificationConstants.ENTITY_UID);
@@ -82,16 +82,19 @@ public class JoinRequestNoticeActivity extends PortraitActivity {
 		switch (typeOfNotice) {
 			case GroupConstants.JREQ_RECEIVED:
 			case GroupConstants.JREQ_REMIND:
-				fragment = GiantMessageFragment.newInstance(R.string.jreq_gmsg_header, message, requestUid != null, true);
+				builder = new GiantMessageFragment.Builder(R.string.jreq_gmsg_header);
+				builder.setBody(message);
+
 				if (requestUid != null) {
-					fragment.setButtonOne(R.string.jreq_btn_approve, new View.OnClickListener() {
+					builder.setButtonOne(R.string.jreq_btn_approve, new View.OnClickListener() {
 						@Override
 						public void onClick(View v) {
 							approveJoinRequest(requestUid);
 						}
 					});
 				}
-				fragment.setButtonTwo(R.string.jreq_btn_later, new View.OnClickListener() {
+
+				builder.setButtonTwo(R.string.jreq_btn_later, new View.OnClickListener() {
 					@Override
 					public void onClick(View v) {
 						if (group != null) {
@@ -104,35 +107,35 @@ public class JoinRequestNoticeActivity extends PortraitActivity {
 				break;
 
 			case GroupConstants.JREQ_APPROVED:
-				fragment = GiantMessageFragment.newInstance(R.string.jreq_gmsg_header_approved, message, true, false);
-				fragment.setButtonOne(R.string.jreq_btn_group, new View.OnClickListener() {
+				builder = new GiantMessageFragment.Builder(R.string.jreq_gmsg_header_approved)
+						.setBody(message)
+						.setButtonOne(R.string.jreq_btn_group, new View.OnClickListener() {
 					@Override
 					public void onClick(View v) {
-						Group group = RealmUtils.loadGroupFromDB(groupUid);
-						if (group != null) {
-							goToGroupTasks(group);
-						} else {
-							tryFetchGroupAndExit(groupUid);
+							Group group = RealmUtils.loadGroupFromDB(groupUid);
+							if (group != null) {
+								goToGroupTasks(group);
+							} else {
+								tryFetchGroupAndExit(groupUid);
+							}
 						}
-					}
-				});
+					});
 				break;
 
 			case GroupConstants.JREQ_DENIED:
 			default:
-				setTitle("");
-				fragment = GiantMessageFragment.newInstance(R.string.jreq_gmsg_header_denied, message, false, false);
+				builder = new GiantMessageFragment.Builder(R.string.jreq_gmsg_header_denied).setBody(message);
 				break;
 		}
 
 		getSupportFragmentManager().beginTransaction()
-				.add(R.id.jrn_fragment_holder, fragment)
+				.add(R.id.jrn_fragment_holder, builder.build())
 				.commit();
 	}
 
 	private void approveJoinRequest(String requestUid) {
 		progressBar.setVisibility(View.VISIBLE);
-		GroupService.getInstance().respondToJoinRequest(GroupConstants.JOIN_REQUEST_APPROVE,
+		GroupService.getInstance().respondToJoinRequest(GroupConstants.APPROVE_JOIN_REQUEST,
 				requestUid, AndroidSchedulers.mainThread()).subscribe(new Subscriber<String>() {
 			@Override
 			public void onNext(String s) {

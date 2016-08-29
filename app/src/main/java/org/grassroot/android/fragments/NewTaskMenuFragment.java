@@ -18,6 +18,7 @@ import org.grassroot.android.activities.CreateTodoActivity;
 import org.grassroot.android.activities.CreateVoteActivity;
 import org.grassroot.android.interfaces.GroupConstants;
 import org.grassroot.android.models.Group;
+import org.grassroot.android.utils.ErrorUtils;
 import org.grassroot.android.utils.IntentUtils;
 
 import butterknife.BindView;
@@ -25,6 +26,10 @@ import butterknife.ButterKnife;
 import butterknife.OnClick;
 import butterknife.Unbinder;
 
+/*
+ NB : this presumes prior calling activities have done proper checks that at least one permission is present
+ using group.hasCreatePermission. If none are present, and it is called, user will just see a green screen
+ */
 
 public class NewTaskMenuFragment extends Fragment {
 
@@ -85,7 +90,7 @@ public class NewTaskMenuFragment extends Fragment {
         this.groupMembership = b.getParcelable(GroupConstants.OBJECT_FIELD);
         if (groupMembership == null) {
             Log.e(TAG, "Error! New task called without valid group");
-            // todo : add error / graceful exit
+            ErrorUtils.gracefulExitToHome(getActivity());
         }
 
         groupUid = groupMembership.getGroupUid();
@@ -112,7 +117,6 @@ public class NewTaskMenuFragment extends Fragment {
     }
 
     private void setVisibility() {
-        // todo : handle situation where it contains none of the permissions
         bt_meeting.setVisibility(groupMembership.canCallMeeting() ? View.VISIBLE : View.GONE);
         bt_vote.setVisibility(groupMembership.canCallVote() ? View.VISIBLE : View.GONE);
         bt_todo.setVisibility(groupMembership.canCreateTodo() ? View.VISIBLE : View.GONE);

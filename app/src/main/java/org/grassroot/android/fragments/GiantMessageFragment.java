@@ -3,6 +3,7 @@ package org.grassroot.android.fragments;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -11,6 +12,8 @@ import android.widget.TextView;
 
 import org.grassroot.android.R;
 import org.grassroot.android.activities.HomeScreenActivity;
+import org.grassroot.android.activities.NoGroupWelcomeActivity;
+import org.grassroot.android.utils.RealmUtils;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -42,25 +45,61 @@ public class GiantMessageFragment extends Fragment {
 	private int btnTwoLabelRes;
 	private View.OnClickListener btnTwoListener;
 
-	public static GiantMessageFragment newInstance(final int headerString, final String bodyText,
-												   boolean btnOneVisible, boolean btnTwoVisible) {
+	public static class Builder {
+		private int headerRes;
+		private String bodyText;
+
+		private boolean btnOneVisible = false;
+		private boolean btnTwoVisible = false;
+
+		private int btnOneLabelRes;
+		private View.OnClickListener btnOneListener;
+		private int btnTwoLabelRes;
+		private View.OnClickListener btnTwoListener;
+
+		public Builder(int headerRes) {
+			this.headerRes = headerRes;
+		}
+
+		public Builder setBody(String bodyText) {
+			this.bodyText = bodyText;
+			return this;
+		}
+
+		public Builder setButtonOne(int label, View.OnClickListener listener) {
+			this.btnOneVisible = true;
+			this.btnOneLabelRes = label;
+			this.btnOneListener = listener;
+			return this;
+		}
+
+		public Builder setButtonTwo(int label, View.OnClickListener listener) {
+			this.btnTwoVisible = true;
+			this.btnTwoLabelRes = label;
+			this.btnTwoListener = listener;
+			return this;
+		}
+
+		public GiantMessageFragment build() {
+			return GiantMessageFragment.newInstance(this);
+		}
+
+	}
+
+	private static GiantMessageFragment newInstance(Builder builder) {
 		GiantMessageFragment fragment = new GiantMessageFragment();
-		fragment.headerRes = headerString;
-		fragment.bodyText = bodyText;
-		fragment.btnOneVisible = btnOneVisible;
-		fragment.btnTwoVisible = btnTwoVisible;
+		fragment.headerRes = builder.headerRes;
+		fragment.bodyText = builder.bodyText;
+
+		fragment.btnOneVisible = builder.btnOneVisible;
+		fragment.btnOneLabelRes = builder.btnOneLabelRes;
+		fragment.btnOneListener = builder.btnOneListener;
+
+		fragment.btnTwoVisible = builder.btnTwoVisible;
+		fragment.btnTwoLabelRes = builder.btnTwoLabelRes;
+		fragment.btnTwoListener = builder.btnTwoListener;
+
 		return fragment;
-	}
-
-	// todo : convert to builder pattern
-	public void setButtonOne(int buttonText, View.OnClickListener listener) {
-		this.btnOneLabelRes = buttonText;
-		this.btnOneListener = listener;
-	}
-
-	public void setButtonTwo(int buttonText, View.OnClickListener listener) {
-		this.btnTwoLabelRes = buttonText;
-		this.btnTwoListener = listener;
 	}
 
 	@Override
@@ -95,7 +134,10 @@ public class GiantMessageFragment extends Fragment {
 		homeButton.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				Intent i = new Intent(getActivity(), HomeScreenActivity.class); // todo : decide back behavior (should be okay to show again)
+				boolean hasGroups = RealmUtils.loadPreferencesFromDB().isHasGroups();
+				Log.e(TAG, "going home ... has groups set to ... " + hasGroups);
+				Intent i = RealmUtils.loadPreferencesFromDB().isHasGroups() ?
+						new Intent(getActivity(), HomeScreenActivity.class) : new Intent(getActivity(), NoGroupWelcomeActivity.class);
 				startActivity(i);
 				getActivity().finish();
 			}

@@ -249,9 +249,11 @@ public class GrassrootRestService {
                                                           @Path("code") String code,
                                                           @Query("changedSince") Long changedSince);
 
-    @GET("group/get/{phoneNumber}/{code}/{groupUid}")
-    Call<GroupResponse> getSingleGroup(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
-        @Path("groupUid") String groupUid);
+    // leave a group
+    @POST("group/members/unsubscribe/{phoneNumber}/{code}")
+    Call<GenericResponse> unsubscribeFromGroup(@Path("phoneNumber") String phoneNumber,
+                                               @Path("code") String code,
+                                               @Query("groupUid") String groupUid);
 
     //search for public groups
     @GET("group/search/{phoneNumber}/{code}")
@@ -366,7 +368,7 @@ public class GrassrootRestService {
         @Path("code") String code,
         @Query("response") String response);
 
-    //complete todo
+    //complete to-do
     @GET("todo/complete/{phoneNumber}/{code}/{id}")
     Call<TaskResponse> completeTodo(@Path("phoneNumber") String phoneNumber,
         @Path("code") String code,

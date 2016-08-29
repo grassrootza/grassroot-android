@@ -45,4 +45,8 @@
         android:title="@string/group_settings"
         app:showAsAction="never" />
 
+    <item android:id="@+id/mi_group_unsubscribe"
+          android:title="@string/gp_unsubscribe"
+          app:showAsAction="never" />
+
 </menu>

@@ -24,20 +24,24 @@ import org.grassroot.android.fragments.JoinCodeFragment;
 import org.grassroot.android.fragments.NewTaskMenuFragment;
 import org.grassroot.android.fragments.TaskListFragment;
 import org.grassroot.android.fragments.ViewTaskFragment;
+import org.grassroot.android.fragments.dialogs.ConfirmCancelDialogFragment;
 import org.grassroot.android.fragments.dialogs.MultiLineTextDialog;
 import org.grassroot.android.interfaces.GroupConstants;
 import org.grassroot.android.models.Group;
+import org.grassroot.android.services.ApplicationLoader;
 import org.grassroot.android.services.GroupService;
 import org.grassroot.android.utils.Constant;
 import org.grassroot.android.utils.ErrorUtils;
 import org.grassroot.android.utils.IntentUtils;
 import org.grassroot.android.utils.NetworkUtils;
+import org.grassroot.android.utils.RealmUtils;
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import rx.Subscriber;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.functions.Action1;
 
@@ -147,6 +151,7 @@ public class GroupTasksActivity extends PortraitActivity implements NewTaskMenuF
         menu.findItem(R.id.mi_remove_members).setVisible(groupMembership.canDeleteMembers());
         menu.findItem(R.id.mi_view_members).setVisible(groupMembership.canViewMembers());
         menu.findItem(R.id.mi_group_settings).setVisible(groupMembership.canEditGroup());
+        menu.findItem(R.id.mi_group_unsubscribe).setVisible(!groupMembership.canEditGroup()); // organizers can't leave (refine in future)
         menu.findItem(R.id.mi_share_default).setVisible(false);
         return true;
     }
@@ -190,6 +195,9 @@ public class GroupTasksActivity extends PortraitActivity implements NewTaskMenuF
             case R.id.mi_group_settings:
                 Intent groupSettings = IntentUtils.constructIntent(this, GroupSettingsActivity.class, groupMembership);
                 startActivity(groupSettings);
+                return true;
+            case R.id.mi_group_unsubscribe:
+                unsubscribePrompt();
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
@@ -247,6 +255,56 @@ public class GroupTasksActivity extends PortraitActivity implements NewTaskMenuF
                 Snackbar.make(rootLayout, ErrorUtils.serverErrorText(throwable), Snackbar.LENGTH_SHORT).show();
             }
         });
+    }
+
+    private void unsubscribePrompt() {
+        ConfirmCancelDialogFragment.newInstance(getString(R.string.gta_unsub_message, groupMembership.getGroupName()),
+            new ConfirmCancelDialogFragment.ConfirmDialogListener() {
+                @Override
+                public void doConfirmClicked() {
+                    unsubscribeAndExit();
+                }
+            }).show(getSupportFragmentManager(), "dialog");
+    }
+
+    private void unsubscribeAndExit() {
+        progressBar.setVisibility(View.VISIBLE);
+        GroupService.getInstance().unsubscribeFromGroup(groupMembership.getGroupUid(), AndroidSchedulers.mainThread())
+            .subscribe(new Subscriber<String>() {
+                @Override
+                public void onNext(String s) {
+                    progressBar.setVisibility(View.GONE);
+                    if (!RealmUtils.loadPreferencesFromDB().isHasGroups()) {
+                        startActivity(new Intent(GroupTasksActivity.this, NoGroupWelcomeActivity.class));
+                    } else {
+                        startActivity(new Intent(GroupTasksActivity.this, HomeScreenActivity.class));
+                    }
+                    Toast.makeText(ApplicationLoader.applicationContext, R.string.gta_unsub_done, Toast.LENGTH_SHORT)
+                        .show();
+                    finish();
+                }
+
+                @Override
+                public void onError(Throwable e) {
+                    progressBar.setVisibility(View.GONE);
+                    if (NetworkUtils.OFFLINE_SELECTED.equals(e.getMessage())) {
+                        ErrorUtils.snackBarWithAction(rootLayout, R.string.connect_error_unsub_offline, R.string.snackbar_try_connect,
+                            new View.OnClickListener() {
+                                @Override
+                                public void onClick(View v) {
+                                    unsubscribeAndExit();
+                                }
+                            });
+                    } else if (NetworkUtils.CONNECT_ERROR.equals(e.getMessage())) {
+                        Snackbar.make(rootLayout, R.string.connect_error_group_unsubscribe, Snackbar.LENGTH_SHORT).show();
+                    } else {
+                        Snackbar.make(rootLayout, ErrorUtils.serverErrorText(e), Snackbar.LENGTH_SHORT).show();
+                    }
+                }
+
+                @Override
+                public void onCompleted() { }
+            });
     }
 
     private void setUpJoinCodeFragment(){

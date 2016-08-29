@@ -306,10 +306,9 @@ public class GroupSearchActivity extends PortraitActivity implements GroupSearch
         final String body = String.format(getString(onLineSent ?
             R.string.fgroup_jreq_sent_body_online : R.string.fgroup_jreq_sent_body_offline), groupName);
 
-        GiantMessageFragment giantMessageFragment = GiantMessageFragment
-            .newInstance(header, body, true, false);
-
-        giantMessageFragment.setButtonOne(R.string.find_group_search_again, new View.OnClickListener() {
+        GiantMessageFragment.Builder builder = new GiantMessageFragment.Builder(header)
+            .setBody(body)
+            .setButtonOne(R.string.find_group_search_again, new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 if (startFragment != null) {
@@ -319,6 +318,7 @@ public class GroupSearchActivity extends PortraitActivity implements GroupSearch
             }
         });
 
+        GiantMessageFragment giantMessageFragment = builder.build();
         currentFragment = giantMessageFragment;
         getSupportFragmentManager().beginTransaction()
             .add(R.id.find_group_fragment_container, giantMessageFragment) // make sure fragment is killed after

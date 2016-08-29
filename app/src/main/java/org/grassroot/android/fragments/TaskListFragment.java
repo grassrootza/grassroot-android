@@ -287,7 +287,10 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
       noTaskMessageLayout.setVisibility(View.VISIBLE);
     }
     isInNoTaskMessageView = true;
-    getActivity().supportInvalidateOptionsMenu();
+
+    if (getActivity() != null) { // as usual, this call back may happen after activity is destroyed
+      getActivity().supportInvalidateOptionsMenu();
+    }
   }
 
     /*

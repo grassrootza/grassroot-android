@@ -14,6 +14,7 @@ import android.widget.Toast;
 
 import org.grassroot.android.R;
 import org.grassroot.android.activities.HomeScreenActivity;
+import org.grassroot.android.activities.NoGroupWelcomeActivity;
 import org.grassroot.android.activities.StartActivity;
 import org.grassroot.android.fragments.dialogs.NetworkErrorDialogFragment;
 import org.grassroot.android.interfaces.NetworkErrorDialogListener;
@@ -66,6 +67,7 @@ public class ErrorUtils {
     public static final String VOTE_CANCELLED = "VOTE_ALREADY_CANCELLED";
     public static final String TODO_DONE = "TODO_ALREADY_COMPLETED";
     public static final String NOTIFICATIONS_DONE = "NOTIFICATIONS_FINISHED";
+    public static final String ALREADY_LEFT = "MEMBER_ALREADY_LEFT";
 
     public static String serverErrorText(final String restMessage) {
         final Context context = ApplicationLoader.applicationContext;
@@ -113,6 +115,8 @@ public class ErrorUtils {
                     return context.getString(R.string.server_error_todo_completed);
                 case NOTIFICATIONS_DONE:
                     return context.getString(R.string.server_error_notifications_done);
+                case ALREADY_LEFT:
+                    return context.getString(R.string.server_error_unsubscribe_error);
                 default:
                     return context.getString(R.string.server_error_general);
             }
@@ -124,7 +128,14 @@ public class ErrorUtils {
         Toast.makeText(ApplicationLoader.applicationContext,
             ApplicationLoader.applicationContext.getText(R.string.application_crash_error),
             Toast.LENGTH_SHORT).show();
-        return new Intent(callingActivity, HomeScreenActivity.class);
+        try {
+            return RealmUtils.loadPreferencesFromDB().isHasGroups() ?
+                new Intent(callingActivity, HomeScreenActivity.class) :
+                new Intent(callingActivity, NoGroupWelcomeActivity.class);
+        } catch (Exception e) {
+            // just in case there is some error with Realm that makes this happen
+            return new Intent(callingActivity, StartActivity.class);
+        }
     }
 
     // remember : conversion will consume the JSON, so can call this at most once in a given flow
