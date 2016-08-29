@@ -87,7 +87,6 @@
             android:checked="true"/>
 
         <RadioButton
-            android:id="@+id/gsearch_radio_name_only"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@string/find_group_name_only"/>

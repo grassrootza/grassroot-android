@@ -70,7 +70,7 @@ public class GroupSearchActivity extends PortraitActivity implements GroupSearch
         Log.e(TAG, homeActivityFragmentTag == null ? "no navigation constant" : "nav constant = " + homeActivityFragmentTag);
 
         progressDialog = new ProgressDialog(this);
-        progressDialog.setMessage(getString(R.string.txt_pls_wait));
+        progressDialog.setMessage(getString(R.string.wait_message));
         progressDialog.setIndeterminate(true);
 
         switchToFragment(SEARCH, false, false);

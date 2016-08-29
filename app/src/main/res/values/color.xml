@@ -53,13 +53,10 @@
     <color name="vv_description">#4d4d4d</color>
 
     <color name="vv_body_row">#F6F6F6</color>
-    <color name="vv_yes">#4aca85</color>
-    <color name="vv_no">#e84343</color>
 
     <!--Edit Vote-->
     <color name="ev_txt_counter">#0d0d0d</color>
 
     <!--notifications-->
-    <color name="nc_date">#b4b4b4</color>
 
 </resources>

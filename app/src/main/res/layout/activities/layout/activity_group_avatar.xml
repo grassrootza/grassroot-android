@@ -21,7 +21,6 @@
         android:layout_below="@+id/tlb_gp">
 
         <LinearLayout
-            android:id="@+id/ll_image_holder"
             android:orientation="vertical"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -80,34 +79,29 @@
                 android:layout_marginTop="@dimen/margin_large">
 
                 <View
-                    android:id="@+id/gp_dot_zero"
                     android:layout_width="5dp"
                     android:layout_height="5dp"
                     android:background="@color/primaryColor"/>
 
                 <View
-                    android:id="@+id/gp_dot_one"
                     android:layout_width="5dp"
                     android:layout_height="5dp"
                     android:background="#bbbbbb"
                     android:layout_marginLeft="7dp"/>
 
                 <View
-                    android:id="@+id/gp_dot_two"
                     android:layout_width="5dp"
                     android:layout_height="5dp"
                     android:background="#bbbbbb"
                     android:layout_marginLeft="7dp"/>
 
                 <View
-                    android:id="@+id/gp_dot_three"
                     android:layout_width="5dp"
                     android:layout_height="5dp"
                     android:background="#bbbbbb"
                     android:layout_marginLeft="7dp"/>
 
                 <View
-                    android:id="@+id/gp_dot_four"
                     android:layout_width="5dp"
                     android:layout_height="5dp"
                     android:background="#bbbbbb"

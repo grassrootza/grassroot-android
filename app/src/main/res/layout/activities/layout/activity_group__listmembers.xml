@@ -25,12 +25,10 @@
         android:layout_above="@+id/lm_btn_done">
 
         <android.support.design.widget.AppBarLayout
-            android:id="@+id/lm_app_bar"
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
 
             <android.support.design.widget.CollapsingToolbarLayout
-                android:id="@+id/lm_ctl_toolbar"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:paddingBottom="16dp"
@@ -56,7 +54,6 @@
             android:orientation="vertical"
             android:layout_below="@id/am_app_bar"
             android:layout_marginTop="10dp"
-            android:id="@+id/ll_am_member_lists"
             app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
             <TextView
@@ -109,7 +106,6 @@
 
     <!-- must of this should be put in style, but don't work in style (Android, robust, etc), hence copy & pasted -->
     <LinearLayout
-        android:id="@+id/menu2"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"

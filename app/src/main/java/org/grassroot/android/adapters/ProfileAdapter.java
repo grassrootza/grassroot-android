@@ -9,73 +9,45 @@ import android.widget.TextView;
 
 import org.grassroot.android.R;
 
-import java.util.ArrayList;
-
 /**
  * Created by ravi on 6/5/16.
  */
 public class ProfileAdapter extends RecyclerView.Adapter<ProfileAdapter.ProfileHolder> {
 
-    ArrayList<String> titlelist;
+    final int[] titles;
+    final int[] icons;
 
-    public ProfileAdapter()
-    {
-
+    public ProfileAdapter(int[] titles, int[] icons) {
+        this.titles = titles;
+        this.icons = icons;
     }
 
     @Override
-    public ProfileHolder onCreateViewHolder(ViewGroup parent, int viewType)
-    {
+    public ProfileHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.row_profile,parent,false);
-        ProfileHolder profileHolder = new ProfileHolder(v);
-        return  profileHolder;
-
+        return new ProfileHolder(v);
     }
 
     @Override
-    public void onBindViewHolder(ProfileHolder holder, int position)
-    {
-        switch (position)
-        {
-            case  0 ://Updtaename
-            holder.ivPpTitleIcon.setImageResource(R.drawable.ic_update_name);
-            holder.txtPpTitle.setText(R.string.pp_txt_Updatename);
-            break;
-
-            case  1 ://language
-                holder.ivPpTitleIcon.setImageResource(R.drawable.ic_language);
-                holder.txtPpTitle.setText(R.string.pp_txt_language);
-            break;
-
-            case  2 ://notifications
-                holder.ivPpTitleIcon.setImageResource(R.drawable.ic_configure);
-                holder.txtPpTitle.setText(R.string.pp_txt_notifications);
-            break;
-
-            case  3 ://Settings
-                holder.ivPpTitleIcon.setImageResource(R.drawable.ic_share);
-                holder.txtPpTitle.setText(R.string.default_share);
-             break;
-
-
-        }
+    public void onBindViewHolder(ProfileHolder holder, int position) {
+        holder.icon.setImageResource(icons[position]);
+        holder.text.setText(titles[position]);
     }
 
     @Override
     public int getItemCount() {
-        return 4;
+        return titles.length;
     }
 
-    public class ProfileHolder extends RecyclerView.ViewHolder
-    {
-        private ImageView ivPpTitleIcon;
-        private TextView txtPpTitle;
+    public class ProfileHolder extends RecyclerView.ViewHolder {
+
+        private ImageView icon;
+        private TextView text;
 
         public ProfileHolder(View view) {
             super(view);
-            ivPpTitleIcon = (ImageView) view.findViewById(R.id.iv_pp_title_icon);
-            txtPpTitle = (TextView) view.findViewById(R.id.txt_pp_title);
-
+            icon = (ImageView) view.findViewById(R.id.iv_pp_title_icon);
+            text = (TextView) view.findViewById(R.id.txt_pp_title);
         }
     }
 }

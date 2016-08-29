@@ -101,7 +101,7 @@ public class CreateGroupActivity extends PortraitActivity implements ContactSele
 
     descCharCounter = getString(R.string.generic_160_char_counter);
     progressDialog = new ProgressDialog(this);
-    progressDialog.setMessage(getString(R.string.txt_pls_wait));
+    progressDialog.setMessage(getString(R.string.wait_message));
     progressDialog.setIndeterminate(true);
 
     init();

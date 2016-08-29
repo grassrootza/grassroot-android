@@ -14,7 +14,6 @@
         android:paddingTop="12dp">
 
         <TextView
-            android:id="@+id/txt_yes"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textColor="@color/primaryColor"
@@ -40,7 +39,6 @@
         android:paddingTop="12dp">
 
         <TextView
-            android:id="@+id/txt_no"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textColor="@color/black"
@@ -66,7 +64,6 @@
         android:paddingTop="12dp">
 
         <TextView
-            android:id="@+id/txt_maybe"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/vt_row_abstain" />
@@ -90,7 +87,6 @@
         android:paddingTop="12dp">
 
         <TextView
-            android:id="@+id/txt_no_response"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/vt_row_no_reply" />

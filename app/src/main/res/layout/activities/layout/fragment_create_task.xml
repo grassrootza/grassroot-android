@@ -4,13 +4,11 @@
     xmlns:card_view="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
 
-    android:id="@+id/ctsk_rl_root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/off_white_background">
 
     <ScrollView
-        android:id="@+id/ctsk_scrollview"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_above="@+id/ctsk_btn_create_task"
@@ -20,7 +18,6 @@
         android:scrollbars="vertical">
 
         <android.support.v7.widget.CardView
-            android:id="@+id/card_view"
             style="@style/RootCardView">
 
             <RelativeLayout

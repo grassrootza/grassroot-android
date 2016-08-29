@@ -74,7 +74,7 @@ public class RemoveMembersActivity extends PortraitActivity implements MemberLis
         membersToRemove = new HashSet<>();
         progressDialog = new ProgressDialog(this);
         progressDialog.setIndeterminate(true);
-        progressDialog.setMessage(getString(R.string.txt_pls_wait));
+        progressDialog.setMessage(getString(R.string.wait_message));
 
         setUpToolbar();
         setUpMemberListFragment();

@@ -51,7 +51,7 @@ public class EditTextDialogFragment extends DialogFragment {
 
         builder.setView(dialogView)
                 .setTitle(title)
-                .setPositiveButton(R.string.pp_OK, new DialogInterface.OnClickListener() {
+                .setPositiveButton(R.string.okay_button, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialogInterface, int i) {
                         if (TextUtils.isEmpty(textEdit.getText())) {
@@ -61,7 +61,7 @@ public class EditTextDialogFragment extends DialogFragment {
                         }
                     }
                 })
-                .setNegativeButton(R.string.pp_Cancel, new DialogInterface.OnClickListener() {
+                .setNegativeButton(R.string.alert_cancel, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialogInterface, int i) {
                         EditTextDialogFragment.this.getDialog().cancel();

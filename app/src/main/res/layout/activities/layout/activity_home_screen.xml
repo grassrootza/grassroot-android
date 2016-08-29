@@ -8,7 +8,6 @@
 
     <!--main layout -->
     <RelativeLayout
-        android:id="@+id/home_main_screen"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 

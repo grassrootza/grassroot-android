@@ -479,7 +479,7 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
         if (progressDialog == null) {
             progressDialog = new ProgressDialog(getContext());
             progressDialog.setIndeterminate(true);
-            progressDialog.setMessage(getString(R.string.txt_pls_wait));
+            progressDialog.setMessage(getString(R.string.wait_message));
         }
         progressDialog.show();
     }

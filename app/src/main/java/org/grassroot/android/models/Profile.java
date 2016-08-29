@@ -11,7 +11,7 @@ public class Profile extends RealmObject {
     private String language;
     private String alertPreference;
 
-    public String getDisplay_name() {
+    public String getDisplayName() {
         return displayName;
     }
 

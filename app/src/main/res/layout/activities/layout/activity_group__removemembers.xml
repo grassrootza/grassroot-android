@@ -24,7 +24,6 @@
         android:layout_above="@+id/rm_ll_footer">
 
         <android.support.design.widget.AppBarLayout
-            android:id="@+id/rm_app_bar"
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
 
@@ -54,12 +53,10 @@
             android:orientation="vertical"
             android:layout_below="@id/am_app_bar"
             android:layout_marginTop="10dp"
-            android:id="@+id/ll_rm_member_lists"
             app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
             <TextView
                 style="@style/MemberListHeader"
-                android:id="@+id/tv_am_existing_members_title"
                 android:text="@string/member_list_default_header" />
 
             <RelativeLayout

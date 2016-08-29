@@ -143,7 +143,7 @@ public class EditTaskFragment extends Fragment implements DatePickerDialog.OnDat
         unbinder = ButterKnife.bind(this, viewToReturn);
         vContainer = container;
         progressDialog = new ProgressDialog(getContext());
-        progressDialog.setMessage(getString(R.string.txt_pls_wait));
+        progressDialog.setMessage(getString(R.string.wait_message));
         progressDialog.setIndeterminate(true);
         populateFields();
         fetchAssignedMembers();

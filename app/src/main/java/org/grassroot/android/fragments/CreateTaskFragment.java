@@ -143,7 +143,7 @@ public class CreateTaskFragment extends Fragment {
         this.vContainer = container;
         progressDialog = new ProgressDialog(getContext());
         progressDialog.setIndeterminate(true);
-        progressDialog.setMessage(getString(R.string.txt_pls_wait));
+        progressDialog.setMessage(getString(R.string.wait_message));
         shortCharCounter = getString(R.string.generic_35_char_counter);
         longCharCounter = getString(R.string.generic_250_char_conter);
 

@@ -450,7 +450,7 @@ public class GroupAvatarActivity extends PortraitActivity {
                     });
                 }
             })
-            .setNegativeButton(R.string.gp_alert_cancel, new DialogInterface.OnClickListener() {
+            .setNegativeButton(R.string.alert_cancel, new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialog, int which) {
                     dialog.dismiss();

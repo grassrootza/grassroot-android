@@ -14,11 +14,10 @@
     <string name="title_activity_action_completed">Completed</string>
     <string name="title_activity_group_settings">GroupSettings</string>
     <string name="title_activity_join_request_notice">JoinRequestNotice</string>
+    <string name="title_activity_UserSettings">UserSettings</string>
 
     <!-- Welcome, register, OTP screens -->
-    <string name="txt_pls_wait">Please wait&#8230;</string>
-    <string name="wait_message">Please wait&#8230;</string> <!-- todo : clean redundancy -->
-
+    <string name="wait_message">Please wait&#8230;</string>
     <string name="login_input_hint">Cellphone number</string>
     <string name="bt_login">LOGIN</string>
     <string name="bt_next">NEXT</string>
@@ -38,14 +37,12 @@
     <string name="application_crash_error">Sorry! Grassroot crashed (we\'ve reported it)</string>
 
     <string name="error_generic">Sorry! Something went wrong in the request.</string> <!-- null pointer error, or who knows what -->
-    <string name="connect_error_general">Sorry, we couldn\'t connect to the server. Please try again later.</string>
     <string name="server_error_general">Sorry, something went wrong with the request.</string> <!-- note : should never actually use this -->
     <string name="connect_error_logreg">Hmm, we can\'t connect to the server right now. Check connection and try again?</string>
     <string name="server_error_invalid_msisdn">Sorry, that isn\'t a valid South African phone number. Please check and try again</string>
     <string name="server_error_user_exists">That number is already registered, you can just login</string>
     <string name="server_error_user_not_exist">Sorry, that number isn\'t registered, please sign up</string>
     <string name="server_error_otp_wrong">Sorry, incorrect pin entered. Please try again or resend</string>
-    <string name="connect_otp_resend_fail">Sorry, we could not contact the server. Please try again later.</string>
     <string name="server_error_otp_early">Sorry, can\'t resend the code before clicking register</string>
     <string name="server_error_group_create">Sorry, there was an error creating the group. You can save it and try later.</string>
     <string name="server_error_phone_number">Sorry, one of the member\'s phone numbers was incorrect. Save and try later?</string>
@@ -98,7 +95,6 @@
     <string name="process_error_loading_contacts">Sorry, we couldn\'t load your contacts. Please try again or restart.</string>
 
     <string name="permissions_error_new_task">Sorry, you don\'t have permission to call a new event or action for this group</string>
-    <string name="permissions_error_add_member">Sorry, you don\'t have permission to add members to this group</string>
 
     <string name="INVALID_TOKEN">Sorry, wrong code. Please check again and re-enter.</string> <!-- todo : refactor this as others -->
 
@@ -107,11 +103,13 @@
 
     <!-- Error messages -->
     <string name="error_no_network">You don\'t seem to have a working data connection.</string>
-    <string name="error_wrong_number">Sorry! Error creating group, please check numbers</string>
 
     <!--Error dialogs -->
+
     <string name="alert_confirm">Confirm</string>
-    <string name="alert_cancel">Cancel</string>
+    <string name="alert_cancel">@android:string/cancel</string>
+    <string name="okay_button">@android:string/ok</string>
+
     <string name="Network_Settings">Check Network Settings</string>
     <string name="Alert_Retry">Retry</string>
     <string name="work_offline">Offline mode</string>
@@ -172,8 +170,6 @@
     <string name="txt_no_task_no_create">This group has no events or tasks yet. When some are called, they will be displayed here.</string> <!-- not great, but a weird situation in a any case -->
 
     <string name="txt_getstart">To get started</string>
-    <string name="new_joingroup">Join Group</string>
-    <string name="new_startgroup">Create Group</string>
 
     <string name="no_groups_check_again">Check for joined groups</string>
 
@@ -200,9 +196,6 @@
 
     <string name="ghp_toolbar_title">Your groups</string>
 
-    <string name="offline_dialog_message">You don\'t seem to have a working connection. But you can work offline, and we will
-    sync your groups next time you connect.</string>
-
     <string name="tasks_toolbar_title">Upcoming events</string>
 
     <string name="ghp_fab_new_task">New event or action</string>
@@ -210,7 +203,6 @@
     <string name="ghp_fab_join_group">Find other groups</string>
 
     <string name="gta_menu_change_desc">Change description</string>
-    <string name="gta_menu_add_desc">Set description</string>
     <string name="gta_menu_view_desc">View description</string>
 
     <string name="gta_view_code">View join code</string>
@@ -225,7 +217,6 @@
     <string name="gta_unsub_done">Done! You\'ve left the group</string>
 
     <string name="home_group_pick">Select group</string>
-    <string name="btn_group_select">Pick</string>
 
     <string name="bt_save">Save</string> <!-- probably duplicated, todo : clean up -->
     <string name="bt_cancel">Cancel</string>
@@ -248,8 +239,6 @@
 
     <string name="tasks_filter_do">Filter</string>
     <string name="tasks_filter_clear">Clear</string>
-
-    <string name="Default">Clear</string>
 
     <string name="group_description_prefix">Description: %s</string>
     <string name="group_organizer_prefix">Organizer: %s</string>
@@ -319,7 +308,6 @@
 
     <string name="search">Search</string>
     <string name="search_box">Enter group name</string>
-    <string name="validate_search_box">Please enter a search word to find public groups</string>
 
     <string name="pgroup_name_format">Name: %s</string>
     <string name="pgroup_org_format">Organizer: %s</string>
@@ -327,14 +315,11 @@
 
     <string name="gs_dialog_title">Ask to join?</string>
     <string name="gs_dialog_message_hint">Message to the organizer (say who you are)</string>
-    <string name="gs_dialog_desc_placeholder">This group may or may not have a description. If it does not
-    then we will insert something else here.</string>
     <string name="gs_dialog_no_desc_format">Group \'%1$s\' has no public description. It was created
     on %2$s by %3$s and has %4$d members.</string>
 
     <string name="gs_dialog_message_error">Please enter a message to send</string>
     <string name="gs_dialog_send">SEND</string>
-    <string name="gs_dialog_cancel">CANCEL</string>
 
     <string name="gs_req_open_dialog">You\'ve sent a join request to this group already. The group organizer
     has not responded yet. Remind them, or cancel the request?</string>
@@ -351,7 +336,6 @@
 
     <!-- SECTION: Viewing and responding to join requests -->
     <string name="jreq_notice">You have requests to join one of your groups</string>
-    <string name="jreq_notice_button">View</string>
 
     <string name="jreq_frag_title">Join requests</string>
     <string name="jreq_group_name">Group: %s</string>
@@ -373,7 +357,6 @@
     <string name="jreq_gmsg_header_approved">Approved</string>
     <string name="jreq_gmsg_header_denied">Denied</string>
     <string name="jreq_btn_group">View group</string>
-    <string name="jreq_btn_home">Home</string>
     <string name="jreq_btn_approve">Approve</string>
     <string name="jreq_btn_later">Later</string>
 
@@ -397,13 +380,11 @@
     <string name="generic_160_char_counter">%d/160</string>
     <string name="generic_250_char_conter">%d / 250</string>
 
-    <string name="cg_member_title">%1$s (%2$s)</string>
     <string-array name="cg_member_popup">
         <item>Edit</item>
         <item>Remove</item>
     </string-array>
 
-    <string name="bt_add_manual">Add</string>
     <string name="bt_add_contacts">Add from contacts</string>
     <string name="bt_add_manually">Add manually</string>
 
@@ -436,12 +417,9 @@
     members and will add them to the group when we can connect.</string>
 
     <string name="am_server_error_header">Error</string>
-    <string name="am_server_permission">Sorry, but you don\'t have permission to add members to this group.</string>
     <string name="am_server_other">Sorry, something went wrong adding the members. Please try again later.</string>
 
     <string name="rm_offline_header">Done</string>
-    <string name="rm_offline_body_delib">Since you\'re working in offline mode, we\'ve stored the change and will sync to the
-    server when you connect.</string>
     <string name="rm_offline_body_error">Sorry, something went wrong connecting to the server, but we saved the
     changes and will save them to the group when we can connect.</string>
 
@@ -452,7 +430,6 @@
 
     <!-- Phone book and other strings -->
     <string name="cs_title">Select contacts</string>
-    <string name="cs_loading_contacts">Loading your contacts....</string>
     <string name="title_activity_add_contact_manually">AddContactManually</string>
 
     <!-- Group settings activity -->
@@ -494,7 +471,6 @@
     <string name="gset_offline_generic">You\'re offline, but we\'ve saved the change and will
     send it when you connect</string>
 
-    <string name="gset_join_code_to_on">Open a join code for this group?</string>
     <string name="gset_join_code_to_off">About to close this join code. Confirmed?</string>
     <string name="gset_join_code_done">Done! Anyone can dial *134*1994*%s# to join the group.</string>
     <string name="gset_join_code_closed_done">Done! Code closed</string>
@@ -518,7 +494,6 @@
     <string name="gset_role_committee">Committee member</string>
     <string name="gset_role_ordinary">Ordinary member</string>
 
-    <string name="gset_mrole_title">Change %s to &#8230;</string>
     <string name="gset_remove_confirm">Remove %s, confirmed?</string>
     <string name="gset_remove_done">Done, %s is no longer a member</string>
     <string name="gset_remove_connect_error">The connection failed, but we have saved the change
@@ -535,16 +510,6 @@
     <string name="gset_role_done">Done! Role changed for %1$s</string>
     <string name="gset_role_connect_error">Sorry, we couldn\'t connect. You must be online to change
     the role</string>
-
-    <string-array name="gset_permissions">
-        <item>Call meetings</item>
-        <item>Call a vote</item>
-        <item>Record actions</item>
-        <item>View group members</item>
-        <item>Add members</item>
-        <item>Remove members</item>
-        <item>Change group settings</item>
-    </string-array>
 
     <string name="gset_perms_done">Done! Permissions changed</string>
     <string name="gset_error_unknown">Sorry, there was an unknown error</string>
@@ -625,7 +590,6 @@
     <string name="one_hour">1 hour ahead</string>
     <string name="one_week">1 week ahead</string>
     <string name="on_day">On day</string>
-    <string name="no_reminder">No reminder</string>
 
     <!-- View task strings -->
     <string name="tlist_posted_by_mtg">Called by %s</string>
@@ -704,14 +668,12 @@
     <string name="vt_cancel_header">Cancelled</string>
     <string name="vt_cancel_group">View Group</string>
     <string name="vt_cancel_upcoming">Upcoming Tasks</string>
-    <string name="vt_cancel_home">Home</string>
 
     <string name="vt_changed_header">Change</string>
     <string name="vt_reminder_header">Reminder</string>
     <string name="vt_results_header">Results</string>
     <string name="vt_changed_task">View Details</string>
     <string name="vt_changed_group">View Group</string>
-    <string name="vt_changed_home">Home</string>
 
     <!-- Section : edit task strings -->
 
@@ -767,9 +729,6 @@
     <string name="ac_btn_share">SHARE</string>
     <string name="ac_btn_done">DONE</string>
     <string name="ac_btn_home">HOME</string>
-    <string name="ac_btn_mtg">CALL MEETING</string>
-    <string name="ac_btn_vote">TAKE A VOTE</string>
-    <string name="ac_btn_todo">RECORD ACTION</string>
 
     <string name="ac_btn_avatar">CHOOSE PICTURE</string>
     <string name="ac_btn_tasks">MEETING, VOTE OR ACTION</string>
@@ -781,20 +740,15 @@
     Try Reconnect from the navigation bar</string>
 
     <!--Profile-->
-    <string name="pp_txt_toolbar">Profile Settings</string>
     <string name="pp_bt_update">Update</string>
     <string name="pp_txt_Updatename">Update name</string>
     <string name="pp_txt_language">Change language</string>
     <string name="pp_txt_notifications">Configure notifications</string>
-    <string name="pp_txt_settings">Security settings</string>
     <string name="pp_et_title">Name</string>
     <string name="pp_name_dialog">Update name</string>
     <string name="pp_language_dialog_title">Choose language</string>
     <string name="pp_notifications_dialog_title">Configure notifications</string>
-    <!-- todo: clean redundancy -->
-    <string name="profile_updated">Profile Updated</string>
-    <string name="pp_Cancel">CANCEL</string>
-    <string name="pp_OK">OK</string>
+    <string name="profile_updated">Profile updated</string>
 
     <!--Group picture -->
     <string name="gp_social_move">Social movement</string>
@@ -802,7 +756,6 @@
     <string name="gp_faith_group">Faith group, church, mosque</string>
     <string name="gp_school">School, creche, youth group</string>
     <string name="gp_hands">Community group</string>
-    <string name="gp_custom">Custom image</string>
 
     <string name="gp_bt_choose_own">PICK MY OWN</string>
     <string name="gp_bt_choose_another">CHANGE PICTURE</string>
@@ -816,19 +769,13 @@
     <string name="gp_offline_connect_fail">Sorry, we still couldn\'t connect, please try again later</string>
 
     <string name="gp_tried_upload_connect_fail">Sorry, we couldn\'t connect to upload the picture. Try reconnect or cancel?</string>
-    <string name="gp_alert_cancel">Cancel</string>
 
-    <string name="gp_txt_title">Group picture</string>
-    <string name="gp_update_success">Group photo updated</string>
     <string name="gp_image_load_error">Sorry, something went wrong loading the image, showing icons instead</string>
     <string name="group_settings">Group settings</string>
     <string name="gp_unsubscribe">Leave group</string>
 
     <!-- Sharing strings -->
     <string name="share_ic_title">Share</string>
-    <string name="share_other">Share with other</string>
-    <string name="share_fb">Share with Facebook</string>
-    <string name="share_wapp">Share with WhatsApp</string>
     <string name="default_share">Default app to share</string>
 
     <string name="share_title">Share with &#8230;</string>
@@ -894,8 +841,11 @@
         <item>Notify on just new events</item>
         <item>Notify on new  events and changes to groups</item>
     </string-array>
-    <!--Sharing apps-->
+    <!--Sharing apps--> <!-- todo : do we need this? -->
     <string-array name="SharingApps">
+        <item>WhatsApp</item>
+        <item>Facebook Messenger</item>
+        <item>Other</item>
     </string-array>
 
 </resources>

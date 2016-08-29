@@ -117,7 +117,7 @@ public class AddMembersActivity extends AppCompatActivity implements
         onMainScreen = true;
 
         progressDialog = new ProgressDialog(this);
-        progressDialog.setMessage(getString(R.string.txt_pls_wait));
+        progressDialog.setMessage(getString(R.string.wait_message));
         progressDialog.setIndeterminate(true);
     }
 
