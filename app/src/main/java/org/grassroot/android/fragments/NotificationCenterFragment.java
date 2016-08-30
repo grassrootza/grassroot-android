@@ -353,7 +353,7 @@ public class NotificationCenterFragment extends Fragment {
                     notificationAdapter.notifyDataSetChanged();
                 } else {
                     progressBar.setVisibility(View.GONE);
-                    final String errorMessage = ErrorUtils.serverErrorText(response.errorBody(), getContext());
+                    final String errorMessage = ErrorUtils.serverErrorText(response.errorBody());
                     Snackbar.make(recyclerView, errorMessage, Snackbar.LENGTH_SHORT).show();
                 }
             }

@@ -201,6 +201,21 @@ public class GrassrootRestService {
         @Query("displayName") String displayName, @Query("language") String language,
         @Query("alertPreference") String preference);
 
+    //Change user name
+    @GET("user/profile/settings/rename/{phoneNumber}/{code}")
+    Call<GenericResponse> renameUser(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
+                                     @Query("displayName") String displayName); // use query, not path, for better encoding options
+
+    //Alter notification priority preference
+    @GET("user/profile/settings/notify/priority/{phoneNumber}/{code}")
+    Call<GenericResponse> changeNotifyPriority(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
+                                               @Query("alertPreference") String alertPreference);
+
+    //Change user language (for SMSs)
+    @GET("user/profile/settings/language/{phoneNumber}/{code}")
+    Call<GenericResponse> changeUserLanguage(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
+                                             @Query("language") String languageKey);
+
     @GET("gcm/deregister/{phoneNumber}/{code}")
     Call<GenericResponse> pushUnregister(@Path("phoneNumber") String phoneNumber,
         @Path("code") String code);

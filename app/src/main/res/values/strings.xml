@@ -740,15 +740,21 @@
     Try Reconnect from the navigation bar</string>
 
     <!--Profile-->
-    <string name="pp_bt_update">Update</string>
-    <string name="pp_txt_Updatename">Update name</string>
-    <string name="pp_txt_language">Change language</string>
-    <string name="pp_txt_notifications">Configure notifications</string>
-    <string name="pp_et_title">Name</string>
-    <string name="pp_name_dialog">Update name</string>
-    <string name="pp_language_dialog_title">Choose language</string>
+    <string name="pp_txt_Updatename">Change name</string>
+    <string name="pp_txt_language">Change SMS language</string>
+    <string name="pp_txt_notifications">Notify me about &#8230;</string>
+
+    <string name="pp_name_dialog_title">Change name</string>
+    <string name="pp_language_dialog_title">Choose SMS language</string>
     <string name="pp_notifications_dialog_title">Configure notifications</string>
     <string name="profile_updated">Profile updated</string>
+
+    <string name="user_rename_done">Done! Your name is updated</string>
+    <string name="profile_settings_connect_error">Sorry, we couldn\'t connect. Please retry or use *134*1994#</string>
+    <string name="user_rename_server_error">Sorry, there was an error on the server. Please try with *134*1994#</string>
+
+    <string name="user_notify_pref_done">Done! Your preference is updated</string>
+    <string name="user_language_pref_done">Done! SMS language changed</string>
 
     <!--Group picture -->
     <string name="gp_social_move">Social movement</string>
@@ -821,31 +827,35 @@
     </string-array>
 
     <!--language-->
-    <string-array name="language">
+    <string-array name="language_descriptions">
         <item>English</item>
         <item>isiZulu</item>
+        <item>Sesotho</item>
         <item>Xitsonga</item>
         <item>North Sotho</item>
     </string-array>
 
-    <string-array name="languagekey">
+    <string-array name="language_keys">
         <item>en</item>
         <item>zu</item>
+        <item>st</item>
         <item>ts</item>
         <item>nso</item>
     </string-array>
 
-    <!--Notifications-->
-    <string-array name="Notifications">
-        <item>Notify on all events</item>
-        <item>Notify on just new events</item>
-        <item>Notify on new  events and changes to groups</item>
+    <!--notification settings -->
+    <string-array name="notification_setting_descriptions">
+        <item>Everything</item>
+        <item>Only new events and reminders</item>
+        <item>Only new events (no reminders)</item>
+        <!-- <item>Only urgent events</item> --> to implement once we implement on events
     </string-array>
-    <!--Sharing apps--> <!-- todo : do we need this? -->
-    <string-array name="SharingApps">
-        <item>WhatsApp</item>
-        <item>Facebook Messenger</item>
-        <item>Other</item>
+
+    <!-- corresponding API descriptions (must be in same order as above -->
+    <string-array name="notification_setting_calls">
+        <item>NOTIFY_EVERYTHING</item>
+        <item>NOTIFY_NEW_AND_REMINDERS</item>
+        <item>NOTIFY_ONLY_NEW</item>
     </string-array>
 
 </resources>

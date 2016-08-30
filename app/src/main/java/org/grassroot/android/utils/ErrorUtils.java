@@ -157,7 +157,7 @@ public class ErrorUtils {
         return errorModel != null ? errorModel.getMessage() : GENERIC_ERROR;
     }
 
-    public static String serverErrorText(ResponseBody errorBody, final Context context) {
+    public static String serverErrorText(ResponseBody errorBody) {
         return serverErrorText(getRestMessage(errorBody));
     }
 
