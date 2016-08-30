@@ -2,7 +2,6 @@ package org.grassroot.android.fragments;
 
 import android.app.Activity;
 import android.app.DatePickerDialog;
-import android.app.ProgressDialog;
 import android.app.TimePickerDialog;
 import android.content.Context;
 import android.content.Intent;
@@ -13,7 +12,6 @@ import android.support.design.widget.TextInputLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.CardView;
-import android.util.Log;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -23,6 +21,7 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.DatePicker;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.TimePicker;
@@ -30,8 +29,8 @@ import android.widget.TimePicker;
 import org.grassroot.android.R;
 import org.grassroot.android.events.TaskUpdatedEvent;
 import org.grassroot.android.fragments.dialogs.ConfirmCancelDialogFragment;
+import org.grassroot.android.fragments.dialogs.NetworkErrorDialogFragment;
 import org.grassroot.android.interfaces.NavigationConstants;
-import org.grassroot.android.interfaces.NetworkErrorDialogListener;
 import org.grassroot.android.interfaces.TaskConstants;
 import org.grassroot.android.models.Member;
 import org.grassroot.android.models.MemberList;
@@ -63,6 +62,7 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 import rx.functions.Action1;
+import rx.observers.Subscribers;
 
 /**
  * Created by paballo on 2016/06/21.
@@ -80,7 +80,6 @@ public class EditTaskFragment extends Fragment implements DatePickerDialog.OnDat
     private ViewGroup vContainer; // note : come back and check this for memory leaks
     private List<Member> selectedMembers;
 
-    private ProgressDialog progressDialog;
     private Unbinder unbinder;
 
     @BindView(R.id.etsk_til_location)
@@ -112,6 +111,8 @@ public class EditTaskFragment extends Fragment implements DatePickerDialog.OnDat
     @BindView(R.id.etsk_btn_update_task)
     Button btTaskUpdate;
 
+    @BindView(R.id.progressBar) ProgressBar progressBar;
+
     public static EditTaskFragment newInstance(TaskModel task) {
         EditTaskFragment fragment = new EditTaskFragment();
         Bundle args = new Bundle();
@@ -142,9 +143,6 @@ public class EditTaskFragment extends Fragment implements DatePickerDialog.OnDat
         View viewToReturn = inflater.inflate(R.layout.fragment_edit_task, container, false);
         unbinder = ButterKnife.bind(this, viewToReturn);
         vContainer = container;
-        progressDialog = new ProgressDialog(getContext());
-        progressDialog.setMessage(getString(R.string.wait_message));
-        progressDialog.setIndeterminate(true);
         populateFields();
         fetchAssignedMembers();
         return viewToReturn;
@@ -153,7 +151,6 @@ public class EditTaskFragment extends Fragment implements DatePickerDialog.OnDat
     @Override
     public void onDestroyView() {
         super.onDestroyView();
-        progressDialog.dismiss();
         unbinder.unbind();
     }
 
@@ -167,6 +164,7 @@ public class EditTaskFragment extends Fragment implements DatePickerDialog.OnDat
         dateDisplayed.setText(String.format(getString(R.string.etsk_vote_date), TaskConstants.dateDisplayWithoutHours.format(task.getDeadlineDate())));
         timeDisplayed.setText(String.format(getString(R.string.etsk_mtg_time), TaskConstants.timeDisplayWithoutDate.format(task.getDeadlineDate())));
 
+        // we may want to use plurals here in future, but a 1-person meeting/vote/etc seems somewhat implausible
         switch (task.getType()) {
             case TaskConstants.MEETING:
                 etTitleInput.setHint(R.string.cmtg_title_hint);
@@ -334,9 +332,10 @@ public class EditTaskFragment extends Fragment implements DatePickerDialog.OnDat
 
             List<Member> newlySelectedMembers = data.getParcelableArrayListExtra(Constant.SELECTED_MEMBERS_FIELD);
             if (!selectedMembers.equals(newlySelectedMembers)) {
-                Log.d(TAG, "changed selected members ..." + newlySelectedMembers);
                 selectedMembers = newlySelectedMembers;
-                tvInviteeLabel.setText(String.format(getString(R.string.etsk_mtg_invite_x), selectedMembers.size()));
+                final String pluralMember = getResources().getQuantityString(R.plurals.numberMembersSelected,
+                    selectedMembers.size(), selectedMembers.size());
+                tvInviteeLabel.setText(pluralMember);
                 tvInviteeLabel.setTextColor(changeColor);
             }
         }
@@ -357,26 +356,33 @@ public class EditTaskFragment extends Fragment implements DatePickerDialog.OnDat
     }
 
     public void updateTask() {
-        progressDialog.show();
+        progressBar.setVisibility(View.VISIBLE);
         TaskModel model = generateTaskObject();
         if(NetworkUtils.isOnline(getContext())) {
             setUpUpdateApiCall(model).enqueue(new Callback<TaskResponse>() {
                 @Override public void onResponse(Call<TaskResponse> call, Response<TaskResponse> response) {
-                    progressDialog.hide();
+                    progressBar.setVisibility(View.GONE);
                     if (response.isSuccessful()) {
                         generateSuccessIntent(response.body().getTasks().first());
                     } else {
-                        ErrorUtils.showSnackBar(vContainer, "Error! Something went wrong", Snackbar.LENGTH_LONG, "", null);
+                        Snackbar.make(vContainer, ErrorUtils.serverErrorText(response.errorBody()), Snackbar.LENGTH_LONG).show();
                     }
                 }
 
                 @Override public void onFailure(Call<TaskResponse> call, Throwable t) {
-                    progressDialog.hide();
-                    ErrorUtils.connectivityError(getActivity(), R.string.error_no_network, new NetworkErrorDialogListener() {
-                        @Override public void retryClicked() {
-                            updateTask();
-                        }
-                    });
+                    progressBar.setVisibility(View.GONE);
+                    NetworkErrorDialogFragment.newInstance(R.string.connect_error_edit_task, progressBar,
+                        Subscribers.create(new Action1<String>() {
+                            @Override
+                            public void call(String s) {
+                                progressBar.setVisibility(View.GONE);
+                                if (s.equals(NetworkUtils.CONNECT_ERROR)) {
+                                    Snackbar.make(vContainer, R.string.connect_error_failed_retry, Snackbar.LENGTH_SHORT).show();
+                                } else {
+                                    updateTask();
+                                }
+                            }
+                        })).show(getFragmentManager(), "error");
                 }
             });
         }else{

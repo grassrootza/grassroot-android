@@ -89,7 +89,7 @@ public class OtpScreenFragment extends Fragment {
     @OnClick(R.id.bt_submit_otp)
     public void submitButtonClicked(){
         if (TextUtils.isEmpty(otpInput.getText().toString())) {
-            otpInput.setError(getResources().getString(R.string.OTP_empty));
+            otpInput.setError(getResources().getString(R.string.input_error_otp_empty));
         } else {
             onOtpScreenFragmentListener.onOtpSubmitButtonClick(otpInput.getText().toString(), purpose);
         }

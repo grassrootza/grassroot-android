@@ -17,6 +17,7 @@ import org.grassroot.android.fragments.GroupPermissionsFragment;
 import org.grassroot.android.fragments.GroupSettingsMainFragment;
 import org.grassroot.android.fragments.MemberListFragment;
 import org.grassroot.android.fragments.dialogs.ConfirmCancelDialogFragment;
+import org.grassroot.android.fragments.dialogs.NetworkErrorDialogFragment;
 import org.grassroot.android.interfaces.GroupConstants;
 import org.grassroot.android.models.Group;
 import org.grassroot.android.models.Member;
@@ -37,6 +38,7 @@ import butterknife.ButterKnife;
 import rx.Subscriber;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.functions.Action1;
+import rx.observers.Subscribers;
 
 /**
  * Created by luke on 2016/07/15.
@@ -183,20 +185,28 @@ public class GroupSettingsActivity extends PortraitActivity implements
                 public void call(Throwable e) {
                     progressBar.setVisibility(View.GONE);
                     if (NetworkUtils.CONNECT_ERROR.equals(e.getMessage())) {
-                        ErrorUtils.snackBarWithAction(container, R.string.gset_perms_error_connect,
-                            R.string.snackbar_try_connect, new View.OnClickListener() {
-                                @Override
-                                public void onClick(View v) {
-                                    changePermissions(role);
-                                }
-                            });
+                        handlePermissionRetry(role);
                     } else {
                         Snackbar.make(container, ErrorUtils.serverErrorText(e), Snackbar.LENGTH_SHORT)
                             .show();
                     }
                 }
             });
+    }
 
+    private void handlePermissionRetry(final String roleName) {
+        NetworkErrorDialogFragment.newInstance(R.string.gset_perms_error_connect, progressBar,
+            Subscribers.create(new Action1<String>() {
+                @Override
+                public void call(String s) {
+                    progressBar.setVisibility(View.GONE);
+                    if (s.equals(NetworkUtils.CONNECT_ERROR)) {
+                        Snackbar.make(container, R.string.connect_error_failed_retry, Snackbar.LENGTH_SHORT).show();
+                    } else {
+                        changePermissions(roleName);
+                    }
+                }
+            })).show(getSupportFragmentManager(), "dialog");
     }
 
     // using a subscriber here was an experiment that worked well, consider replacing eventbus elsewhere that the link is so direct

@@ -2,7 +2,6 @@ package org.grassroot.android.fragments;
 
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.graphics.Color;
 import android.graphics.Typeface;
 import android.net.Uri;
 import android.os.Bundle;
@@ -28,6 +27,7 @@ import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import org.grassroot.android.R;
 import org.grassroot.android.activities.EditTaskActivity;
@@ -36,7 +36,7 @@ import org.grassroot.android.adapters.MtgRsvpAdapter;
 import org.grassroot.android.events.TaskCancelledEvent;
 import org.grassroot.android.events.TaskUpdatedEvent;
 import org.grassroot.android.fragments.dialogs.ConfirmCancelDialogFragment;
-import org.grassroot.android.interfaces.NetworkErrorDialogListener;
+import org.grassroot.android.fragments.dialogs.NetworkErrorDialogFragment;
 import org.grassroot.android.interfaces.TaskConstants;
 import org.grassroot.android.models.Member;
 import org.grassroot.android.models.ResponseTotalsModel;
@@ -63,6 +63,7 @@ import butterknife.Unbinder;
 import rx.Subscriber;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.functions.Action1;
+import rx.observers.Subscribers;
 
 public class ViewTaskFragment extends Fragment {
 
@@ -163,9 +164,7 @@ public class ViewTaskFragment extends Fragment {
         unbinder = ButterKnife.bind(this, viewToReturn);
         EventBus.getDefault().register(this);
         mContainer = container;
-
-        if (task == null) {
-            // only the case if task was not in DB, e.g., entering from notification
+        if (task == null) {// only the case if task was not in DB, e.g., entering from notification
             fetchTaskDetailsFromNetwork();
         } else {
             setUpViews(task);
@@ -322,6 +321,7 @@ public class ViewTaskFragment extends Fragment {
 
                 if (e instanceof ApiCallException) {
                     if (NetworkUtils.CONNECT_ERROR.equals(e.getMessage())) {
+                        // to remain somewhat discreet use the snackbar here, rather than dialog
                         ErrorUtils.networkErrorSnackbar(mContainer, R.string.connect_error_view_task_snackbar,
                             new View.OnClickListener() {
                                 @Override
@@ -619,7 +619,7 @@ public class ViewTaskFragment extends Fragment {
     private void setUpResponseIconsForTodo() {
         if (!task.hasResponded()) {
             btTodoRespond.setImageResource(R.drawable.respond_confirm_inactive);
-            btTodoRespond.setEnabled(false);
+            btTodoRespond.setEnabled(true);
         } else{
             btTodoRespond.setImageResource(R.drawable.respond_confirm_active);
             btTodoRespond.setEnabled(false);
@@ -685,7 +685,7 @@ public class ViewTaskFragment extends Fragment {
     }
 
     private void handleSuccessfulReply(String response) {
-        Snackbar.make(mContainer, snackBarMsg(response), Snackbar.LENGTH_SHORT).show();
+        Toast.makeText(ApplicationLoader.applicationContext, snackBarMsg(response), Toast.LENGTH_SHORT).show();
         resetIconsAfterResponse();
         tvResponseHeader.setText(snackBarMsg(response));
     }
@@ -695,25 +695,29 @@ public class ViewTaskFragment extends Fragment {
     }
 
     private void handleNoNetworkResponse(final String retryTag, int snackbarMsg) {
-        ErrorUtils.connectivityError(getActivity(), snackbarMsg,
-                new NetworkErrorDialogListener() {
-                    @Override
-                    public void retryClicked() {
-                        switch (retryTag) {
-                            case "RESPOND_YES":
-                                doRespondYes();
-                                break;
-                            case "RESPOND_NO":
-                                doRespondNo();
-                                break;
-                            case "COMPLETE_TODO":
-                                completeTodo();
-                                break;
-                            default:
-                                fetchTaskDetailsFromNetwork();
-                        }
+        NetworkErrorDialogFragment.newInstance(snackbarMsg, progressBar, Subscribers.create(new Action1<String>() {
+            @Override
+            public void call(String s) {
+                progressBar.setVisibility(View.GONE);
+                if (s.equals(NetworkUtils.CONNECT_ERROR)) {
+                    Snackbar.make(mContainer, R.string.connect_error_failed_retry, Snackbar.LENGTH_SHORT).show();
+                } else {
+                    switch (retryTag) {
+                        case "RESPOND_YES":
+                            doRespondYes();
+                            break;
+                        case "RESPOND_NO":
+                            doRespondNo();
+                            break;
+                        case "COMPLETE_TODO":
+                            completeTodo();
+                            break;
+                        default:
+                            fetchTaskDetailsFromNetwork();
                     }
-                });
+                }
+            }
+        })).show(getFragmentManager(), "dialog");
     }
 
     private String textHasRespondedCanChange() {
@@ -817,18 +821,27 @@ public class ViewTaskFragment extends Fragment {
                 public void call(Throwable e) {
                     progressBar.setVisibility(View.GONE);
                     if (NetworkUtils.CONNECT_ERROR.equals(e.getMessage())) {
-                        ErrorUtils.showSnackBar(mContainer, getString(R.string.connect_error_task_cancelled),
-                            Snackbar.LENGTH_LONG, getString(R.string.snackbar_try_again), new View.OnClickListener() {
-                                @Override
-                                public void onClick(View v) {
-                                    cancelTask();
-                                }
-                            });
+                        handleRetryCancel();
                     } else {
                         Snackbar.make(mContainer, ErrorUtils.serverErrorText(e), Snackbar.LENGTH_SHORT).show();
                     }
                 }
             });
+    }
+
+    private void handleRetryCancel() {
+        NetworkErrorDialogFragment.newInstance(R.string.connect_error_task_cancelled, progressBar,
+            Subscribers.create(new Action1<String>() {
+                @Override
+                public void call(String s) {
+                    progressBar.setVisibility(View.GONE);
+                    if (s.equals(NetworkUtils.CONNECT_ERROR)) {
+                        Snackbar.make(mContainer, R.string.connect_error_failed_retry, Snackbar.LENGTH_SHORT).show();
+                    } else {
+                        cancelTask();
+                    }
+                }
+            })).show(getFragmentManager(), "dialog");
     }
 
     private String generateConfirmationDialogStrings() {

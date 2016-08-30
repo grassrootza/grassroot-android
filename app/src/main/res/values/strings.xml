@@ -28,9 +28,8 @@
     <string name="et_userName">Name</string>
     <string name="et_mobile_register">Cellphone number</string>
 
+    <string name="otp_hint">Enter code sent by SMS</string>
     <string name="resend_otp">Resend</string>
-
-    <!-- todo : fix redundancy in next three sections ... -->
 
     <!--Error descriptions -->
 
@@ -60,7 +59,11 @@
     <string name="server_error_todo_completed">You\'ve already marked the action complete</string>
     <string name="server_error_notifications_done">That\'s all the notifications in your list</string>
     <string name="server_error_unsubscribe_error">You have already left, please refresh on the home screen</string>
+    <string name="server_error_background_group_numbers">The group is created, but some numbers were invalid, please check the group and
+    add them</string>
 
+    <string name="connect_error_group_unsubscribe">Sorry, we couldn\'t connect to the server. Please try later or unsubscribe through
+    *134*1994#</string>
     <string name="connect_error_homescreen">Sorry, we couldn\'t refresh right now because the connection isn\'t working</string>
     <string name="connect_error_offline_home">You\'re working in offline mode. Please go online and try refreshing again</string>
     <string name="connect_error_group_default">The connection isn\'t working, but we saved the change and will upload next time
@@ -69,12 +72,15 @@
     <string name="connect_error_task_responding">We couldn\'t connect now, but have saved the response and will send it when you
     connect again</string>
     <string name="connect_error_task_cancelled">Sorry, you must be connected to cancel. Please connect and try again.</string>
-    <string name="server_error_background_group_numbers">The group is created, but some numbers were invalid, please check the group and
-    add them</string>
-    <string name="connect_error_group_unsubscribe">Sorry, we couldn\'t connect to the server. Please try later or unsubscribe through
-    *134*1994#</string>
     <string name="connect_error_unsub_offline">You\'re offline, but leaving a group requires a connection. Try connect?</string>
+    <string name="connect_error_notifications">Sorry, we can\'t connect at the moment</string>
+    <string name="connect_error_edit_task">You don\'t seem to have a working data connection.</string>
+    <string name="connect_error_failed_retry">Sorry, we still can\'t connect. Please retry later.</string>
 
+    <string name="input_error_field_empty">Please enter all fields to proceed</string>
+    <string name="input_error_cellphone_snackbar">Please enter a valid cellphone number</string>
+    <string name="input_error_cellphone_hint">Please enter cellphone number to proceed</string>
+    <string name="input_error_otp_empty">Please enter the code sent by SMS</string>
     <string name="input_error_no_display_name">Please enter whatever name people know you by</string>
     <string name="input_error_name_regex">Please enter a name without special characters (e.g., !, &amp;)</string>
     <string name="input_error_phone_empty">Please enter a cellphone number to register</string>
@@ -91,43 +97,39 @@
     <string name="input_error_try_again">Try again</string>
     <string name="input_error_empty">Please enter text or cancel</string>
 
+    <string name="input_error_task_no_subject">Please enter a subject</string>
+    <string name="input_error_task_no_location">Please enter a location</string>
+    <string name="input_error_task_no_date">Please enter a date and time</string>
+
     <string name="process_error_image">Sorry, something went wrong processing the image. Please try again</string>
     <string name="process_error_loading_contacts">Sorry, we couldn\'t load your contacts. Please try again or restart.</string>
 
     <string name="permissions_error_new_task">Sorry, you don\'t have permission to call a new event or action for this group</string>
 
-    <string name="INVALID_TOKEN">Sorry, wrong code. Please check again and re-enter.</string> <!-- todo : refactor this as others -->
+    <string name="server_error_invalid_auth">Sorry, something is wrong with your login. Please logout and login again</string>
+    <string name="server_error_expired_auth">Sorry, your session has expired, please logout and login again</string>
 
     <string name="snackbar_try_again">Retry</string>
     <string name="snackbar_try_connect">Connect</string>
 
-    <!-- Error messages -->
-    <string name="error_no_network">You don\'t seem to have a working data connection.</string>
-
-    <!--Error dialogs -->
+    <!--Common dialog and button strings-->
 
     <string name="alert_confirm">Confirm</string>
     <string name="alert_cancel">@android:string/cancel</string>
     <string name="okay_button">@android:string/ok</string>
+    <string name="button_save">Save</string>
+    <string name="button_cancel">@android:string/cancel</string>
 
-    <string name="Network_Settings">Check Network Settings</string>
-    <string name="Alert_Retry">Retry</string>
-    <string name="work_offline">Offline mode</string>
-    <string name="LOG_OUT">Logout</string>
-
-    <!-- Error : validation messages -->
-    <string name="Either_field_empty">Please enter all fields to proceed</string>
-    <string name="Cellphone_number_invalid">Please enter a valid cellphone number</string>
-    <string name="Cellphone_number_empty">Please enter cellphone number to proceed</string>
-    <string name="otp_hint">Enter code sent by SMS</string>
-    <string name="OTP_empty">Please enter the code sent by SMS</string>
-
+    <string name="alert_check_network">Check Network Settings</string>
+    <string name="alert_retry">Retry</string>
+    <string name="work_offline">Continue offline</string>
+    <string name="action_logout">Logout</string>
 
     <!-- Navigation drawer items -->
     <string name="drawer_group_list">Your groups</string>
     <string name="drawer_open_tasks">Upcoming events</string>
     <string name="drawer_notis">Notifications</string>
-    <string name="drawer_join_request">Join requests</string> <!-- todo : find better name -->
+    <string name="drawer_join_request">Join requests</string>
 
     <string name="drawer_offline">Switch to offline</string>
     <string name="drawer_online_delib">Switch to online</string>
@@ -217,9 +219,6 @@
     <string name="gta_unsub_done">Done! You\'ve left the group</string>
 
     <string name="home_group_pick">Select group</string>
-
-    <string name="bt_save">Save</string> <!-- probably duplicated, todo : clean up -->
-    <string name="bt_cancel">Cancel</string>
 
     <string name="group_sort_title">Sort by:</string>
 
@@ -546,10 +545,13 @@
 
     <!-- Create tasks strings -->
     <string name="ctsk_desc_header">Add notes</string>
-    <string name="ctsk_assign_members_prefix">You have selected</string>
-    <!-- todo : use android getplural instead -->
     <string name="ctsk_select_date">Select date</string>
     <string name="ctsk_select_time">Select time</string>
+    
+    <plurals name="numberMembersSelected">
+        <item quantity="one">You have selected %d member</item>
+        <item quantity="other">You have selected %d members</item>
+    </plurals>
 
     <string name="cmtg_title">Call a meeting</string>
     <string name="cmtg_button">Send</string>

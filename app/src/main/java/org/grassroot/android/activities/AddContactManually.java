@@ -83,23 +83,23 @@ public class AddContactManually extends PortraitActivity {
     if (displayName.getText().toString().trim().isEmpty() || phoneNumber.getText()
         .toString()
         .isEmpty()) {
-      showSnackBar(getResources().getString(R.string.Either_field_empty), Snackbar.LENGTH_SHORT);
+      showSnackBar(getResources().getString(R.string.input_error_field_empty), Snackbar.LENGTH_SHORT);
       return false;
     } else {
       if (phoneNumber.getText().toString().length() != 10
           && phoneNumber.getText().toString().length() < 10) {
-        showSnackBar(getResources().getString(R.string.Cellphone_number_invalid), Snackbar.LENGTH_SHORT);
+        showSnackBar(getResources().getString(R.string.input_error_cellphone_snackbar), Snackbar.LENGTH_SHORT);
         return false;
       } else {
         if (Integer.parseInt(String.valueOf(phoneNumber.getText().toString().charAt(0)))
             != 0) {
-          showSnackBar(getResources().getString(R.string.Cellphone_number_invalid), Snackbar.LENGTH_SHORT);
+          showSnackBar(getResources().getString(R.string.input_error_cellphone_snackbar), Snackbar.LENGTH_SHORT);
           return false;
         } else if (Integer.parseInt(
             String.valueOf(phoneNumber.getText().toString().charAt(1))) == 0
             || Integer.parseInt(String.valueOf(phoneNumber.getText().toString().charAt(1)))
             == 9) {
-          showSnackBar(getResources().getString(R.string.Cellphone_number_invalid), Snackbar.LENGTH_SHORT);
+          showSnackBar(getResources().getString(R.string.input_error_cellphone_snackbar), Snackbar.LENGTH_SHORT);
           return false;
         } else {
           return true;

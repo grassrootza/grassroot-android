@@ -87,10 +87,10 @@ public class LoginScreenFragment extends Fragment {
         final String number = etNumberInput.getText().toString();
         if (TextUtils.isEmpty(number)) {
             etNumberInput.requestFocus();
-            etNumberInput.setError(getResources().getString(R.string.Cellphone_number_empty));
+            etNumberInput.setError(getResources().getString(R.string.input_error_cellphone_hint));
         } else if (!Utilities.checkIfLocalNumber(number)) {
             etNumberInput.requestFocus();
-            etNumberInput.setError(getResources().getString(R.string.Cellphone_number_invalid));
+            etNumberInput.setError(getResources().getString(R.string.input_error_cellphone_snackbar));
         } else {
             Log.e("L", "calling listener");
             listener.requestLogin(number);

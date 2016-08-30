@@ -13,7 +13,6 @@ import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.View;
@@ -29,7 +28,6 @@ import org.grassroot.android.events.TaskAddedEvent;
 import org.grassroot.android.events.TaskCancelledEvent;
 import org.grassroot.android.events.TaskUpdatedEvent;
 import org.grassroot.android.fragments.dialogs.ConfirmCancelDialogFragment;
-import org.grassroot.android.interfaces.GroupPickCallbacks;
 import org.grassroot.android.interfaces.TaskConstants;
 import org.grassroot.android.models.Group;
 import org.grassroot.android.models.TaskModel;
@@ -349,17 +347,16 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
               @Override
               public void call(Throwable e) {
                 progressBar.setVisibility(View.GONE);
+                // since we store offline, and it's a microinteraction, with a confirm dialog already, keeping to snackbar rather than heavier dialog
                 if (NetworkUtils.CONNECT_ERROR.equals(e.getMessage())) {
-                  Snackbar.make(rootView, R.string.task_list_response_offline, Snackbar.LENGTH_LONG).show();
+                  ErrorUtils.networkErrorSnackbar(rootView, R.string.task_list_response_offline,
+                      new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) { confirmAction(taskUid, response, msgSuccess, message);
+                        }
+                      });
                 } else {
-                  final String errorMsg = ErrorUtils.serverErrorText(e);
-                  final String retryMsg = getString(R.string.snackbar_try_again);
-                  ErrorUtils.showSnackBar(rootView, errorMsg, Snackbar.LENGTH_LONG, retryMsg, new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                      confirmAction(taskUid, response, msgSuccess, message);
-                    }
-                  });
+                  Snackbar.make(rootView, ErrorUtils.serverErrorText(e), Snackbar.LENGTH_LONG).show();
                 }
               }
             });

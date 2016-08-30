@@ -11,6 +11,7 @@ import android.widget.ProgressBar;
 
 import org.grassroot.android.R;
 import org.grassroot.android.adapters.PermissionsAdapter;
+import org.grassroot.android.fragments.dialogs.NetworkErrorDialogFragment;
 import org.grassroot.android.models.Permission;
 import org.grassroot.android.services.GroupService;
 import org.grassroot.android.utils.ErrorUtils;
@@ -24,6 +25,7 @@ import butterknife.OnClick;
 import butterknife.Unbinder;
 import rx.Subscriber;
 import rx.functions.Action1;
+import rx.observers.Subscribers;
 
 /**
  * Created by luke on 2016/07/18.
@@ -89,13 +91,18 @@ public class GroupPermissionsFragment extends Fragment {
                 public void call(Throwable e) {
                     progressBar.setVisibility(View.GONE);
                     if (NetworkUtils.CONNECT_ERROR.equals(e.getMessage())) {
-                        ErrorUtils.snackBarWithAction(listView, R.string.gset_perms_error_connect,
-                            R.string.snackbar_try_again, new View.OnClickListener() {
+                        NetworkErrorDialogFragment.newInstance(R.string.gset_perms_error_connect, progressBar,
+                            Subscribers.create(new Action1<String>() {
                                 @Override
-                                public void onClick(View v) {
-                                    onSaveClick();
+                                public void call(String s) {
+                                    progressBar.setVisibility(View.GONE);
+                                    if (s.equals(NetworkUtils.CONNECT_ERROR)) {
+                                        Snackbar.make(listView, R.string.connect_error_failed_retry, Snackbar.LENGTH_SHORT).show();
+                                    } else {
+                                        onSaveClick();
+                                    }
                                 }
-                            });
+                            })).show(getFragmentManager(), "dialog");
                     } else {
                         Snackbar.make(listView, ErrorUtils.serverErrorText(e), Snackbar.LENGTH_SHORT)
                             .show();

@@ -182,7 +182,8 @@ public class ProfileSettingsActivity extends PortraitActivity  {
       @Override
       public void onFailure(Call<GenericResponse> call, Throwable t) {
         progressBar.setVisibility(View.GONE);
-        ErrorUtils.snackBarWithAction(rootLayout, R.string.profile_settings_connect_error, R.string.snackbar_try_connect,
+        // note : since *134*1994# makes it easy to do any of these, for the moment using snackbar instead of heavier dialog approach
+        ErrorUtils.networkErrorSnackbar(rootLayout, R.string.profile_settings_connect_error,
             new View.OnClickListener() {
               @Override
               public void onClick(View v) {
@@ -251,7 +252,7 @@ public class ProfileSettingsActivity extends PortraitActivity  {
           @Override
           public void onFailure(Call<GenericResponse> call, Throwable t) {
             alertPreference = getResources().getStringArray(R.array.notification_setting_calls)[fallbackIndex];
-            ErrorUtils.snackBarWithAction(rootLayout, R.string.profile_settings_connect_error, R.string.snackbar_try_connect,
+            ErrorUtils.networkErrorSnackbar(rootLayout, R.string.profile_settings_connect_error,
                 new View.OnClickListener() {
                   @Override
                   public void onClick(View v) {
@@ -320,7 +321,7 @@ public class ProfileSettingsActivity extends PortraitActivity  {
           public void onFailure(Call<GenericResponse> call, Throwable t) {
             progressBar.setVisibility(View.VISIBLE);
             language = getResources().getStringArray(R.array.language_keys)[fallbackIndex];
-            ErrorUtils.snackBarWithAction(rootLayout, R.string.profile_settings_connect_error, R.string.snackbar_try_connect,
+            ErrorUtils.networkErrorSnackbar(rootLayout, R.string.profile_settings_connect_error,
                 new View.OnClickListener() {
                   @Override
                   public void onClick(View v) {

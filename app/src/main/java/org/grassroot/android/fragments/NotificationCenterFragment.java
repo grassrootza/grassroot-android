@@ -23,6 +23,7 @@ import org.grassroot.android.activities.ViewTaskActivity;
 import org.grassroot.android.adapters.NotificationAdapter;
 import org.grassroot.android.adapters.RecyclerTouchListener;
 import org.grassroot.android.events.NotificationCountChangedEvent;
+import org.grassroot.android.fragments.dialogs.NetworkErrorDialogFragment;
 import org.grassroot.android.interfaces.ClickListener;
 import org.grassroot.android.interfaces.NotificationConstants;
 import org.grassroot.android.models.NotificationList;
@@ -33,6 +34,7 @@ import org.grassroot.android.services.GrassrootRestService;
 import org.grassroot.android.services.NotificationUpdateService;
 import org.grassroot.android.services.SharingService;
 import org.grassroot.android.utils.ErrorUtils;
+import org.grassroot.android.utils.NetworkUtils;
 import org.grassroot.android.utils.RealmUtils;
 import org.grassroot.android.utils.Utilities;
 import org.greenrobot.eventbus.EventBus;
@@ -52,6 +54,7 @@ import rx.Observable;
 import rx.Subscriber;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.functions.Action1;
+import rx.observers.Subscribers;
 import rx.schedulers.Schedulers;
 
 public class NotificationCenterFragment extends Fragment {
@@ -362,7 +365,18 @@ public class NotificationCenterFragment extends Fragment {
                 progressBar.setVisibility(View.GONE);
                 notificationAdapter.setToNotifications(RealmUtils.loadNotificationsSorted());
                 recyclerView.setVisibility(View.VISIBLE);
-                ErrorUtils.handleNetworkError(rootView, t);
+                NetworkErrorDialogFragment.newInstance(R.string.connect_error_notifications,
+                    progressBar, Subscribers.create(new Action1<String>() {
+                        @Override
+                        public void call(String s) {
+                            progressBar.setVisibility(View.GONE);
+                            if (s.equals(NetworkUtils.CONNECT_ERROR)) {
+                                Snackbar.make(recyclerView, R.string.connect_error_failed_retry, Snackbar.LENGTH_SHORT).show();
+                            } else {
+                                getNotifications(page, size);
+                            }
+                        }
+                    })).show(getFragmentManager(), "dialog");
             }
         });
     }

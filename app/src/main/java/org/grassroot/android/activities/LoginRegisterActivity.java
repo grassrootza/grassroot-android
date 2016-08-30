@@ -231,9 +231,8 @@ public class LoginRegisterActivity extends AppCompatActivity implements LoginScr
     }
 
     private void handleConnectError(final String mobileNumber, final String purpose) {
-        final String errorMessage = getString(R.string.connect_error_logreg);
-        final String actionMsg = getString(R.string.snackbar_try_again);
-        ErrorUtils.showSnackBar(rootView, errorMessage, Snackbar.LENGTH_LONG, actionMsg, new View.OnClickListener() {
+        // don't use dialog here as "offline" makes little sense
+        ErrorUtils.networkErrorSnackbar(rootView, R.string.connect_error_logreg, new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 if (LOGIN.equals(purpose)) {
@@ -248,16 +247,15 @@ public class LoginRegisterActivity extends AppCompatActivity implements LoginScr
     private void handleRequestServerError(final String restMessage, String purpose) {
         final String errorMsg = ErrorUtils.serverErrorText(restMessage);
         if (LOGIN.equals(purpose) && restMessage.equals(ErrorUtils.USER_DOESNT_EXIST)) {
-            final String actionBtn = getString(R.string.bt_register);
-            ErrorUtils.showSnackBar(rootView, errorMsg, Snackbar.LENGTH_LONG, actionBtn, new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    switchFromLoginToRegister();
-                }
+            ErrorUtils.snackBarWithAction(rootView, R.string.server_error_user_not_exist, R.string.bt_register,
+                new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        switchFromLoginToRegister();
+                    }
             });
         } else if (REGISTER.equals(purpose) && restMessage.equals(ErrorUtils.USER_EXISTS)) {
-            final String actionBtn = getString(R.string.bt_login);
-            ErrorUtils.showSnackBar(rootView, errorMsg, Snackbar.LENGTH_LONG, actionBtn, new View.OnClickListener() {
+            ErrorUtils.snackBarWithAction(rootView, R.string.server_error_user_exists, R.string.bt_login, new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
                     switchFromRegisterToLogin(msisdn);
@@ -269,17 +267,16 @@ public class LoginRegisterActivity extends AppCompatActivity implements LoginScr
     }
 
     private void handleAuthServerError(final String restMessage, final String purpose) {
-        final String errorMsg = ErrorUtils.serverErrorText(restMessage);
         if (ErrorUtils.WRONG_OTP.equals(restMessage)) {
-            final String actionMsg = getString(R.string.resend_otp);
-            ErrorUtils.showSnackBar(rootView, errorMsg, Snackbar.LENGTH_LONG, actionMsg, new View.OnClickListener() {
+            ErrorUtils.snackBarWithAction(rootView, R.string.server_error_otp_wrong, R.string.resend_otp,
+                new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
                     requestNewOtp(purpose);
                 }
             });
         } else {
-            Snackbar.make(rootView, errorMsg, Snackbar.LENGTH_SHORT);
+            Snackbar.make(rootView, ErrorUtils.serverErrorText(restMessage), Snackbar.LENGTH_SHORT).show();
         }
     }
 

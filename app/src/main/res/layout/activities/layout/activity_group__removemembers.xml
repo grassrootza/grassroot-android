@@ -84,7 +84,7 @@
             android:minWidth="88dp"
             android:minHeight="36dp"
 
-            android:text="@string/bt_cancel"
+            android:text="@string/button_cancel"
             android:textSize="@dimen/txt_medium"
             android:textColor="@color/textSecondaryColorDark"
 
@@ -96,7 +96,7 @@
         <Button
             android:id="@+id/rm_bt_save"
             style="@style/ButtonFlat"
-            android:text="@string/bt_save"
+            android:text="@string/button_save"
             android:textColor="@color/primaryColor"
             android:layout_alignParentRight="true"
             android:layout_marginBottom="20dp"

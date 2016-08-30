@@ -5,7 +5,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
 import android.support.design.widget.Snackbar;
-import android.support.v4.app.FragmentActivity;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
@@ -16,26 +15,19 @@ import org.grassroot.android.R;
 import org.grassroot.android.activities.HomeScreenActivity;
 import org.grassroot.android.activities.NoGroupWelcomeActivity;
 import org.grassroot.android.activities.StartActivity;
-import org.grassroot.android.fragments.dialogs.NetworkErrorDialogFragment;
-import org.grassroot.android.interfaces.NetworkErrorDialogListener;
 import org.grassroot.android.models.Member;
 import org.grassroot.android.models.ServerErrorModel;
 import org.grassroot.android.models.exceptions.ApiCallException;
 import org.grassroot.android.services.ApplicationLoader;
 import org.grassroot.android.services.GrassrootRestService;
-import org.grassroot.android.services.NoConnectivityException;
 
-import java.io.IOException;
 import java.lang.annotation.Annotation;
-import java.net.SocketTimeoutException;
-import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 import okhttp3.ResponseBody;
 import retrofit2.Converter;
-import retrofit2.Response;
 
 
 /**
@@ -52,6 +44,9 @@ public class ErrorUtils {
     public static final String USER_DOESNT_EXIST = "USER_DOES_NOT_EXIST";
     public static final String WRONG_OTP = "INVALID_OTP";
     public static final String OTP_EARLY_REQ = "OTP_REQ_BEFORE_ADD";
+    public static final String TOKEN_EXPIRED = "TOKEN_EXPIRED";
+    public static final String INVALID_TOKEN = "INVALID_TOKEN";
+
     public static final String GROUP_CREATE_ERROR = "GROUP_NOT_CREATED";
     public static final String PERMISSION_DENIED = "PERMISSION_DENIED";
     public static final String PART_GROUP = "USER_ALREADY_PART_OF_GROUP";
@@ -85,6 +80,10 @@ public class ErrorUtils {
                     return context.getString(R.string.server_error_otp_wrong);
                 case OTP_EARLY_REQ:
                     return context.getString(R.string.server_error_otp_early);
+                case TOKEN_EXPIRED:
+                    return context.getString(R.string.server_error_expired_auth);
+                case INVALID_TOKEN:
+                    return context.getString(R.string.server_error_invalid_auth);
                 case GROUP_CREATE_ERROR:
                     return context.getString(R.string.server_error_group_create);
                 case GROUP_MEMBER_INVALID_PHONE:
@@ -123,7 +122,6 @@ public class ErrorUtils {
         }
     }
 
-    // todo : use this in an uncaught exception handler
     public static Intent gracefulExitToHome(Activity callingActivity) {
         Toast.makeText(ApplicationLoader.applicationContext,
             ApplicationLoader.applicationContext.getText(R.string.application_crash_error),
@@ -166,6 +164,20 @@ public class ErrorUtils {
         return serverErrorText(restMsg);
     }
 
+    public static void networkErrorSnackbar(ViewGroup container, final int message, View.OnClickListener action) {
+        Snackbar snackbar = Snackbar.make(container, message, Snackbar.LENGTH_LONG);
+        snackbar.setActionTextColor(Color.RED);
+        snackbar.setAction(R.string.snackbar_try_again, action);
+        snackbar.show();
+    }
+
+    public static void snackBarWithAction(View holder, final int message, final int actionText, View.OnClickListener actionToTake) {
+        Snackbar snackbar = Snackbar.make(holder, message, Snackbar.LENGTH_LONG);
+        snackbar.setActionTextColor(Color.RED);
+        snackbar.setAction(actionText, actionToTake);
+        snackbar.show();
+    }
+
     /*
     Utility method to retrieve a list of members from a string of bad phone numbers
      */
@@ -191,101 +203,6 @@ public class ErrorUtils {
             }
         }
         return foundMembers;
-    }
-
-    /**
-     * Utility method to intercept and deal with common errors, in particular absence of a network
-     * connection. Most / all display logic for error handling should be concentrated in here.
-     *  @param errorViewHolder A holder for where to display the snackbar or alert dialog
-     * @param e               The error thrown
-     */
-    public static void handleNetworkError(View errorViewHolder, Throwable e) {
-        if (e instanceof NoConnectivityException) {
-            connectivityError(errorViewHolder, (NoConnectivityException) e);
-        } else if (e instanceof UnknownHostException) {
-            hostError(errorViewHolder, (UnknownHostException) e);
-        } else if (e instanceof SocketTimeoutException) {
-            socketError(errorViewHolder, (SocketTimeoutException) e);
-        } else if (e instanceof IOException) {
-            otherIOError(errorViewHolder, (IOException) e);
-        } else {
-            Log.e(TAG, "Error! Should not be another kind of error here! Output: " + e.toString());
-        }
-    }
-
-    // todo : somehow intercept this everywhere ...
-    public static void handleBadAuthToken(final View holder, final Activity activity, final Response response) {
-        showSnackBar(holder, activity.getString(R.string.INVALID_TOKEN), Snackbar.LENGTH_LONG,
-            activity.getString(R.string.LOG_OUT), new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    RealmUtils.deleteAllObjects();
-                    Intent open = new Intent(activity, StartActivity.class);
-                    activity.startActivity(open);
-                    activity.finish();
-                }
-            });
-    }
-
-    // todo : double check if we still want / replace
-    public static void connectivityError(View holder, NoConnectivityException e) {
-        // todo : all sorts of things for persisting, asking to turn on, etc
-        final String errorText = "Connectivity error! On calling URL: " + e.getUriAttempted();
-        Snackbar snackBar = Snackbar.make(holder, errorText, Snackbar.LENGTH_INDEFINITE);
-        snackBar.show();
-    }
-
-    public static void connectivityError(Activity context, int message, NetworkErrorDialogListener networkErrorDialogListener) {
-        NetworkErrorDialogFragment networkErrorDialogFragment = NetworkErrorDialogFragment.newInstance(message, networkErrorDialogListener);
-        networkErrorDialogFragment.show(((FragmentActivity) context).getSupportFragmentManager(), "error_dialog");
-    }
-
-    public static void networkErrorSnackbar(ViewGroup container, int message, View.OnClickListener action) {
-        Snackbar snackbar = Snackbar.make(container, message, Snackbar.LENGTH_LONG);
-        snackbar.setActionTextColor(Color.RED);
-        snackbar.setAction(R.string.snackbar_try_again, action);
-    }
-
-    public static void hostError(View holder, UnknownHostException e) {
-        final String errorText = "Host error! With message: " + e.getMessage();
-        Snackbar.make(holder, errorText, Snackbar.LENGTH_LONG).show();
-    }
-
-    public static void otherIOError(View holder, IOException e) {
-        final String errorText = "Other IO error! With message: " + e.getMessage();
-        Snackbar.make(holder, errorText, Snackbar.LENGTH_LONG).show();
-    }
-
-    public static void socketError(View holder, SocketTimeoutException e) {
-        final String errorText = "Sorry! Our server may be down: " + e.getMessage();
-        try {
-            Snackbar.make(holder, errorText, Snackbar.LENGTH_LONG).show();
-        } catch (Exception e1) {
-            Log.e(TAG, "Socket error on startup");
-        }
-    }
-
-    // todo : consolidate these
-    public static void snackBarWithAction(View holder, final int message, final int actionText, View.OnClickListener actionToTake) {
-        Snackbar snackbar = Snackbar.make(holder, message, Snackbar.LENGTH_LONG);
-        snackbar.setActionTextColor(Color.RED);
-        snackbar.setAction(actionText, actionToTake);
-        snackbar.show();
-    }
-
-    public static void showSnackBar(View holder, final String message, int length, final String actionText,
-                                    View.OnClickListener actionToTake) {
-        Snackbar snackbar = Snackbar.make(holder, message, length);
-        if (actionText != null && actionToTake != null) {
-            snackbar.setActionTextColor(Color.RED);
-            snackbar.setAction(actionText, actionToTake);
-        }
-        snackbar.show();
-    }
-
-    public static void showSnackBar(View holder, final int messageRes, int length) {
-        Snackbar snackbar = Snackbar.make(holder, messageRes, length);
-        snackbar.show();
     }
 
 }

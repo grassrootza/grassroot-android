@@ -109,12 +109,8 @@ public class CreateTaskFragment extends Fragment {
     @BindView(R.id.ctsk_remind_option2) TextView textRemindOption2;
     @BindView(R.id.ctsk_sw_one_hour) SwitchCompat switchRemindOption2;
 
-    @BindView(R.id.ctsk_rl_notify_count)
-    LinearLayout notifyCountHolder;
     @BindView(R.id.ctsk_tv_member_count)
     TextView notifyMembersCount;
-    @BindView(R.id.ctsk_tv_suffix)
-    TextView notifyCountSuffix;
 
     @BindView(R.id.ctsk_btn_create_task) Button btTaskCreate;
 
@@ -255,23 +251,24 @@ public class CreateTaskFragment extends Fragment {
             includeWholeGroup = true;
         } else {
             includeWholeGroup = false;
-            notifyMembersCount.setText(String.valueOf(assignedMembers.size()));
-            notifyCountSuffix.setText(assignedMembers.size() > 1 ? "members" : "member");
-            notifyCountHolder.setVisibility(View.VISIBLE);
+            final String pluralMember = getResources().getQuantityString(R.plurals.numberMembersSelected,
+                assignedMembers.size(), assignedMembers.size());
+            Log.e(TAG, "pluralMember string = " + pluralMember);
+            notifyMembersCount.setText(pluralMember);
+            notifyMembersCount.setVisibility(View.VISIBLE);
         }
     }
 
     @OnClick(R.id.ctsk_btn_create_task)
     public void validateFormAndCreateTask() {
         if (etTitleInput.getText().toString().trim().isEmpty()) {
-            ErrorUtils.showSnackBar(vContainer, "Please enter a subject", Snackbar.LENGTH_LONG, "", null);
-        } else if (TaskConstants.MEETING.equals(taskType) && etLocationInput.getText()
-                .toString()
-                .trim()
-                .equals("")) {
-            ErrorUtils.showSnackBar(vContainer, "Please enter a location", Snackbar.LENGTH_LONG, "", null);
+            etTitleInput.setError(getString(R.string.input_error_task_no_subject));
+            Snackbar.make(vContainer, R.string.input_error_task_no_subject, Snackbar.LENGTH_SHORT).show();
+        } else if (TaskConstants.MEETING.equals(taskType) && etLocationInput.getText().toString().trim().isEmpty()) {
+            etLocationInput.setError(getString(R.string.input_error_task_no_location));
+            Snackbar.make(vContainer, R.string.input_error_task_no_location, Snackbar.LENGTH_SHORT).show();
         } else if (!datePicked || (!taskType.equals(TaskConstants.TODO) && !timePicked)) {
-            ErrorUtils.showSnackBar(vContainer, "Please enter a date and time for the meeting", Snackbar.LENGTH_LONG, "", null);
+            Snackbar.make(vContainer, R.string.input_error_task_no_date, Snackbar.LENGTH_SHORT).show();
         } else {
             createTask();
         }

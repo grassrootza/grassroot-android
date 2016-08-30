@@ -25,6 +25,7 @@ import org.grassroot.android.adapters.MemberRoleAdapter;
 import org.grassroot.android.fragments.dialogs.ConfirmCancelDialogFragment;
 import org.grassroot.android.fragments.dialogs.EditTextDialogFragment;
 import org.grassroot.android.fragments.dialogs.MultiLineTextDialog;
+import org.grassroot.android.fragments.dialogs.NetworkErrorDialogFragment;
 import org.grassroot.android.interfaces.GroupConstants;
 import org.grassroot.android.models.Group;
 import org.grassroot.android.services.ApplicationLoader;
@@ -40,6 +41,7 @@ import butterknife.OnClick;
 import butterknife.Unbinder;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.functions.Action1;
+import rx.observers.Subscribers;
 
 /**
  * Created by luke on 2016/07/15.
@@ -156,13 +158,18 @@ public class GroupSettingsMainFragment extends Fragment implements MemberRoleAda
                         Toast.makeText(ApplicationLoader.applicationContext, R
                             .string.gset_rename_done, Toast.LENGTH_SHORT).show();
                     } else {
-                        ErrorUtils.snackBarWithAction(mainRoot, R.string.gset_rename_offline,
-                            R.string.snackbar_try_again, new View.OnClickListener() {
+                        NetworkErrorDialogFragment.newInstance(R.string.gset_rename_offline, progressBar,
+                            Subscribers.create(new Action1<String>() {
                                 @Override
-                                public void onClick(View v) {
-                                    renameGroupCall(newName);
+                                public void call(String s) {
+                                    progressBar.setVisibility(View.GONE);
+                                    if (s.equals(NetworkUtils.CONNECT_ERROR)) {
+                                        Snackbar.make(mainRoot, R.string.connect_error_failed_retry, Snackbar.LENGTH_SHORT).show();
+                                    } else {
+                                        renameGroupCall(newName);
+                                    }
                                 }
-                            });
+                            })).show(getFragmentManager(), "dialog");
                     }
                     header.setText(newName);
                     group.setGroupName(newName); // to make sure local reference is up to date
@@ -200,13 +207,18 @@ public class GroupSettingsMainFragment extends Fragment implements MemberRoleAda
                         Toast.makeText(ApplicationLoader.applicationContext, R.string.gset_desc_change_done, Toast.LENGTH_SHORT)
                             .show();
                     } else {
-                        ErrorUtils.snackBarWithAction(mainRoot, R.string.gset_desc_offline, R.string.snackbar_try_again,
-                            new View.OnClickListener() {
+                        NetworkErrorDialogFragment.newInstance(R.string.gset_desc_offline, progressBar,
+                            Subscribers.create(new Action1<String>() {
                                 @Override
-                                public void onClick(View v) {
-                                    changeDescription(newDescription);
+                                public void call(String s) {
+                                    progressBar.setVisibility(View.GONE);
+                                    if (s.equals(NetworkUtils.CONNECT_ERROR)) {
+                                        Snackbar.make(mainRoot, R.string.connect_error_failed_retry, Snackbar.LENGTH_SHORT).show();
+                                    } else {
+                                        changeDescription(newDescription);
+                                    }
                                 }
-                            });
+                            })).show(getFragmentManager(), "dialog");
                     }
                     group.setDescription(newDescription);
                 }
@@ -295,13 +307,9 @@ public class GroupSettingsMainFragment extends Fragment implements MemberRoleAda
                     Toast.makeText(ApplicationLoader.applicationContext, R
                         .string.gset_public_done, Toast.LENGTH_SHORT).show();
                 } else {
-                    ErrorUtils.snackBarWithAction(mainRoot, R.string.gset_offline_generic,
-                        R.string.snackbar_try_again, new View.OnClickListener() {
-                            @Override
-                            public void onClick(View v) {
-                                serviceCallPublicOnOff(setToPublic);
-                            }
-                        });
+                    // since we cache, and this is not overly significant, just show a snackbar, without retry
+                    // but then todo : make sure the caching works
+                    Snackbar.make(mainRoot, R.string.gset_offline_generic, Snackbar.LENGTH_LONG).show();
                 }
                 group.setDiscoverable(setToPublic);
             }
@@ -317,42 +325,37 @@ public class GroupSettingsMainFragment extends Fragment implements MemberRoleAda
     }
 
     public void switchJoinCodeOnOff(final boolean isChangingToOpen) {
-        if (!NetworkUtils.isOnline()) {
-            switchWithoutEvent(switchJoinCode, !isChangingToOpen, joinCodeListener);
-            connectFailSnackbar(R.string.gset_join_code_offline);
-        } else {
-            final int message = group.hasJoinCode() ? R.string.gset_join_code_to_off : R.string.gset_join_code_to_off;
-            AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
-            builder.setMessage(message)
-                .setPositiveButton(R.string.alert_confirm, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        progressBar.setVisibility(View.VISIBLE);
-                        if (isChangingToOpen)
-                            serviceCallOpenJoinCode();
-                        else
-                            serviceCallCloseJoinCode();
-                    }
-                })
-                .setNegativeButton(R.string.alert_cancel, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        switchWithoutEvent(switchJoinCode, !isChangingToOpen, joinCodeListener);
-                    }
-                });
+        final int message = group.hasJoinCode() ? R.string.gset_join_code_to_off : R.string.gset_join_code_to_off;
+        AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+        builder.setMessage(message)
+            .setPositiveButton(R.string.alert_confirm, new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    progressBar.setVisibility(View.VISIBLE);
+                    if (isChangingToOpen)
+                        serviceCallOpenJoinCode();
+                    else
+                        serviceCallCloseJoinCode();
+                }
+            })
+            .setNegativeButton(R.string.alert_cancel, new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    switchWithoutEvent(switchJoinCode, !isChangingToOpen, joinCodeListener);
+                }
+            });
 
-            builder.setCancelable(true)
-                .setOnCancelListener(new DialogInterface.OnCancelListener() {
-                    @Override
-                    public void onCancel(DialogInterface dialog) {
-                        switchWithoutEvent(switchJoinCode, !isChangingToOpen, joinCodeListener);
-                    }
-                });
+        builder.setCancelable(true)
+            .setOnCancelListener(new DialogInterface.OnCancelListener() {
+                @Override
+                public void onCancel(DialogInterface dialog) {
+                    switchWithoutEvent(switchJoinCode, !isChangingToOpen, joinCodeListener);
+                }
+            });
 
-            builder
-                .create()
-                .show();
-        }
+        builder
+            .create()
+            .show();
     }
 
     private void serviceCallOpenJoinCode() {
@@ -369,7 +372,7 @@ public class GroupSettingsMainFragment extends Fragment implements MemberRoleAda
                 public void call(Throwable e) {
                     progressBar.setVisibility(View.GONE);
                     if (e.getMessage().equals(NetworkUtils.CONNECT_ERROR)) {
-                        connectFailSnackbar(R.string.gset_error_join_code_create_offline);
+                        networkErrorDialog(R.string.gset_error_join_code_create_offline, "JOIN_OPEN");
                     } else {
                         Snackbar.make(mainRoot, ErrorUtils.serverErrorText(e), Snackbar.LENGTH_SHORT).show();
                     }
@@ -391,7 +394,7 @@ public class GroupSettingsMainFragment extends Fragment implements MemberRoleAda
                 public void call(Throwable e) {
                     progressBar.setVisibility(View.GONE);
                     if (e.getMessage().equals(NetworkUtils.CONNECT_ERROR)) {
-                        connectFailSnackbar(R.string.gset_error_join_code_close_offline);
+                        networkErrorDialog(R.string.gset_error_join_code_close_offline, "JOIN_CLOSE");
                     } else {
                         Snackbar.make(mainRoot, ErrorUtils.serverErrorText(e), Snackbar.LENGTH_SHORT).show();
                     }
@@ -405,28 +408,29 @@ public class GroupSettingsMainFragment extends Fragment implements MemberRoleAda
         switchCompat.setOnCheckedChangeListener(listener);
     }
 
-    private void connectFailSnackbar(final int message) {
-        ErrorUtils.snackBarWithAction(mainRoot, message, R.string.snackbar_try_connect, new View.OnClickListener() {
+    private void networkErrorDialog(final int message, final String retryTag) {
+        NetworkErrorDialogFragment.newInstance(message, progressBar, Subscribers.create(new Action1<String>() {
             @Override
-            public void onClick(View v) {
-                NetworkUtils.trySwitchToOnlineRx(getContext(), true, AndroidSchedulers.mainThread())
-                    .subscribe(new Action1<String>() {
-                        @Override
-                        public void call(String s) {
-                            AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
-                            builder.setMessage(R.string.go_online_success);
-                            builder.setCancelable(true).create().show();
-                        }
-                    }, new Action1<Throwable>() {
-                        @Override
-                        public void call(Throwable throwable) {
-                            AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
-                            builder.setMessage(R.string.go_online_failure_network);
-                            builder.setCancelable(true).create().show();
-                        }
-                    });
+            public void call(String s) {
+                progressBar.setVisibility(View.GONE);
+                if (s.equals(NetworkUtils.CONNECT_ERROR)) {
+                    Snackbar.make(mainRoot, R.string.connect_error_failed_retry, Snackbar.LENGTH_SHORT).show();
+                } else {
+                    directRetry(retryTag);
+                }
             }
-        });
+        })).show(getFragmentManager(), "dialog");
+    }
+
+    private void directRetry(final String retryTag) {
+        switch(retryTag) {
+            case "JOIN_OPEN":
+                serviceCallOpenJoinCode();
+                break;
+            case "JOIN_CLOSE":
+                serviceCallCloseJoinCode();
+                break;
+        }
     }
 
     public void onGroupMemberClicked(final String memberUid, final String memberName) {
@@ -435,14 +439,14 @@ public class GroupSettingsMainFragment extends Fragment implements MemberRoleAda
             builder.setItems(R.array.gset_member_popup, new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialog, int which) {
-                    switch (which) {
-                        case 0:
-                            switchMemberRole(memberUid, memberName);
-                            break;
-                        case 1:
-                            removeMemberConfirm(memberUid, memberName);
-                            break;
-                    }
+                switch (which) {
+                    case 0:
+                        switchMemberRole(memberUid, memberName);
+                        break;
+                    case 1:
+                        removeMemberConfirm(memberUid, memberName);
+                        break;
+                }
                 }
             });
             builder.create().show();
@@ -452,21 +456,21 @@ public class GroupSettingsMainFragment extends Fragment implements MemberRoleAda
     private void switchMemberRole(final String memberUid, final String memberName) {
         AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
         builder.setItems(R.array.gset_roles, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        switch (which) {
-                            case 0:
-                                changeRoleDo(memberUid, memberName, GroupConstants.ROLE_GROUP_ORGANIZER);
-                                break;
-                            case 1:
-                                changeRoleDo(memberUid, memberName, GroupConstants.ROLE_COMMITTEE_MEMBER);
-                                break;
-                            case 2:
-                                changeRoleDo(memberUid, memberName, GroupConstants.ROLE_ORDINARY_MEMBER);
-                                break;
-                        }
-                    }
-                });
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+            switch (which) {
+                case 0:
+                    changeRoleDo(memberUid, memberName, GroupConstants.ROLE_GROUP_ORGANIZER);
+                    break;
+                case 1:
+                    changeRoleDo(memberUid, memberName, GroupConstants.ROLE_COMMITTEE_MEMBER);
+                    break;
+                case 2:
+                    changeRoleDo(memberUid, memberName, GroupConstants.ROLE_ORDINARY_MEMBER);
+                    break;
+            }
+            }
+        });
         builder.create().show();
     }
 
@@ -486,7 +490,18 @@ public class GroupSettingsMainFragment extends Fragment implements MemberRoleAda
                 public void call(Throwable e) {
                     progressBar.setVisibility(View.GONE);
                     if (NetworkUtils.CONNECT_ERROR.equals(e.getMessage())) {
-                        connectFailSnackbar(R.string.gset_role_connect_error);
+                        // this can be done later by user, hence leaving it to just snackbar (not dialog)
+                        NetworkErrorDialogFragment.newInstance(R.string.gset_role_connect_error, progressBar,
+                            Subscribers.create(new Action1<String>() {
+                                @Override
+                                public void call(String s) {
+                                if (s.equals(NetworkUtils.CONNECT_ERROR)) {
+                                    Snackbar.make(mainRoot, R.string.connect_error_failed_retry, Snackbar.LENGTH_SHORT).show();
+                                } else {
+                                    changeRoleDo(memberUid, memberName, roleToSet);
+                                }
+                                }
+                            }));
                     } else {
                         Snackbar.make(mainRoot, ErrorUtils.serverErrorText(e), Snackbar.LENGTH_LONG).show();
                     }
@@ -516,7 +531,7 @@ public class GroupSettingsMainFragment extends Fragment implements MemberRoleAda
                         Toast.makeText(ApplicationLoader.applicationContext, message, Toast.LENGTH_SHORT).show();
                         roleAdapter.removeDisplayedMember(memberUid);
                     } else {
-                        connectFailSnackbar(R.string.gset_remove_connect_error);
+                        Snackbar.make(mainRoot, R.string.gset_remove_connect_error, Snackbar.LENGTH_SHORT).show();
                         roleAdapter.removeDisplayedMember(memberUid);
                     }
                 }
@@ -525,7 +540,7 @@ public class GroupSettingsMainFragment extends Fragment implements MemberRoleAda
                 public void call(Throwable e) {
                     progressBar.setVisibility(View.GONE);
                     if (NetworkUtils.CONNECT_ERROR.equals(e.getMessage())) {
-                        connectFailSnackbar(R.string.gset_remove_connect_error);
+                        Snackbar.make(mainRoot, R.string.gset_remove_connect_error, Snackbar.LENGTH_SHORT).show();
                         roleAdapter.removeDisplayedMember(memberUid);
                     } else {
                         Snackbar.make(mainRoot, ErrorUtils.serverErrorText(e), Snackbar.LENGTH_SHORT).show();

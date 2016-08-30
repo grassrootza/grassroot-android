@@ -345,38 +345,17 @@
                             android:text="@string/cmtg_invite_all"
                             android:textColor="@color/dark_grey_text" />
 
-                        <LinearLayout android:id="@+id/ctsk_rl_notify_count"
+                        <!-- todo : get alignment right -->
+                        <TextView
+                            android:id="@+id/ctsk_tv_member_count"
                             android:layout_below="@id/ctsk_tv_assign_label"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:orientation="horizontal"
-                            android:layout_centerHorizontal="true"
-                            android:visibility="gone">
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="@string/ctsk_assign_members_prefix"
-                                android:textColor="@color/black"
-                                android:padding="10dp" />
-
-                            <TextView
-                                android:id="@+id/ctsk_tv_member_count"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                tools:text="5"
-                                android:textColor="@color/black"
-                                android:textStyle="bold" />
-
-                            <TextView
-                                android:id="@+id/ctsk_tv_suffix"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                tools:text="members"
-                                android:textColor="@color/black"
-                                android:padding="10dp" />
-
-                        </LinearLayout>
+                            android:gravity="center_horizontal"
+                            android:visibility="gone"
+                            tools:text="Number of selected members"
+                            android:textColor="@color/black"
+                            android:padding="@dimen/padding_card_left" />
 
                     </RelativeLayout>
 

@@ -26,6 +26,7 @@ import org.grassroot.android.fragments.TaskListFragment;
 import org.grassroot.android.fragments.ViewTaskFragment;
 import org.grassroot.android.fragments.dialogs.ConfirmCancelDialogFragment;
 import org.grassroot.android.fragments.dialogs.MultiLineTextDialog;
+import org.grassroot.android.fragments.dialogs.NetworkErrorDialogFragment;
 import org.grassroot.android.interfaces.GroupConstants;
 import org.grassroot.android.models.Group;
 import org.grassroot.android.services.ApplicationLoader;
@@ -44,6 +45,7 @@ import butterknife.ButterKnife;
 import rx.Subscriber;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.functions.Action1;
+import rx.observers.Subscribers;
 
 public class GroupTasksActivity extends PortraitActivity implements NewTaskMenuFragment.NewTaskMenuListener, JoinCodeFragment.JoinCodeListener, TaskListFragment.TaskListListener {
 
@@ -287,18 +289,22 @@ public class GroupTasksActivity extends PortraitActivity implements NewTaskMenuF
                 @Override
                 public void onError(Throwable e) {
                     progressBar.setVisibility(View.GONE);
-                    if (NetworkUtils.OFFLINE_SELECTED.equals(e.getMessage())) {
-                        ErrorUtils.snackBarWithAction(rootLayout, R.string.connect_error_unsub_offline, R.string.snackbar_try_connect,
-                            new View.OnClickListener() {
-                                @Override
-                                public void onClick(View v) {
-                                    unsubscribeAndExit();
-                                }
-                            });
-                    } else if (NetworkUtils.CONNECT_ERROR.equals(e.getMessage())) {
-                        Snackbar.make(rootLayout, R.string.connect_error_group_unsubscribe, Snackbar.LENGTH_SHORT).show();
-                    } else {
+                    if (NetworkUtils.SERVER_ERROR.equals(e.getMessage())) {
                         Snackbar.make(rootLayout, ErrorUtils.serverErrorText(e), Snackbar.LENGTH_SHORT).show();
+                    } else {
+                        final int dialogMsg = NetworkUtils.OFFLINE_SELECTED.equals(e.getMessage()) ?
+                            R.string.connect_error_unsub_offline : R.string.connect_error_group_unsubscribe;
+                        NetworkErrorDialogFragment.newInstance(dialogMsg, progressBar, Subscribers.create(new Action1<String>() {
+                                @Override
+                                public void call(String s) {
+                                    progressBar.setVisibility(View.GONE);
+                                    if (s.equals(NetworkUtils.CONNECT_ERROR)) {
+                                        Snackbar.make(rootLayout, R.string.connect_error_failed_retry, Snackbar.LENGTH_SHORT).show();
+                                    } else {
+                                        unsubscribeAndExit();
+                                    }
+                                }
+                            })).show(getSupportFragmentManager(), "dialog");
                     }
                 }
 

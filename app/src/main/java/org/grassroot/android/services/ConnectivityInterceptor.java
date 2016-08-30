@@ -27,9 +27,9 @@ public class ConnectivityInterceptor implements Interceptor {
     @Override
     public Response intercept(Chain chain) throws IOException {
         NetworkInfo activeNetwork = connectivityManager.getActiveNetworkInfo();
-        if (activeNetwork == null || !activeNetwork.isConnectedOrConnecting()) {
-//            throw new NoConnectivityException("No connectivity", chain.request().url().toString());
-        }
+        // if (activeNetwork == null || !activeNetwork.isConnectedOrConnecting()) {
+            // throw new IOException("Error! Call intercepted as no network");
+        //}
         Request request = chain.request();
         Response response = chain.proceed(request);
         return response;

@@ -307,9 +307,9 @@ public class CreateGroupActivity extends PortraitActivity implements ContactSele
     if (menuOpen) {
       toggleAddMenu();
     }
-
     if (TextUtils.isEmpty(et_groupname.getText())) {
-      ErrorUtils.showSnackBar(rlCgRoot, R.string.error_group_name_blank, Snackbar.LENGTH_SHORT);
+      Snackbar.make(rlCgRoot, R.string.error_group_name_blank, Snackbar.LENGTH_SHORT);
+      et_groupname.setError(getString(R.string.error_group_name_blank));
     } else {
       createGroup();
     }
