@@ -148,17 +148,18 @@ public class MemberListFragment extends Fragment {
     }
 
     public void selectAllMembers() {
+        // todo : move this into adapter
         for (Member m : memberListAdapter.getMembers()) {
             m.setSelected(true);
         }
-        memberListAdapter.notifyDataSetChanged(); // todo : as elsewhere, use more efficient method
+        memberListAdapter.notifyDataSetChanged();
     }
 
     public void unselectAllMembers() {
         for (Member m : memberListAdapter.getMembers()) {
             m.setSelected(false);
         }
-        memberListAdapter.notifyDataSetChanged();
+        memberListAdapter.notifyDataSetChanged(); // by definition have to refresh whole dataset
     }
 
     private void setUpRecyclerView() {

@@ -325,8 +325,8 @@ public class GrassrootRestService {
 
     // combine several common changes (add calls here, or separate calls, as needed
     @POST("group/edit/multi/{phoneNumber}/{code}/{groupUid}")
-    Call<GroupResponse> combinedGroupEdits(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
-                                           @Path("groupUid") String groupUid, @Query("name") String newName,
+    Call<GroupResponse> combinedGroupEdits(@Path("phoneNumber") String phoneNumber, @Path("code") String code, @Path("groupUid") String groupUid,
+                                           @Query("name") String newName, @Query("description") String description,
                                            @Query("resetImage") boolean resetGroupImage, @Query("dfltImageName") String imageName,
                                            @Query("changePublicPrivate") boolean changePubPriv, @Query("isPublic") boolean changeToPublic,
                                            @Query("closeJoinCode") boolean closeJoinCode, @Query("membersToRemove") List<String> memberUids,

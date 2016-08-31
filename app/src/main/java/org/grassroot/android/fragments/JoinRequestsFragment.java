@@ -1,6 +1,5 @@
 package org.grassroot.android.fragments;
 
-import android.app.ProgressDialog;
 import android.content.Context;
 import android.os.Bundle;
 import android.support.design.widget.Snackbar;
@@ -13,30 +12,31 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import org.grassroot.android.R;
 import org.grassroot.android.adapters.JoinRequestAdapter;
 import org.grassroot.android.events.JoinRequestReceived;
+import org.grassroot.android.fragments.dialogs.NetworkErrorDialogFragment;
 import org.grassroot.android.interfaces.GroupConstants;
 import org.grassroot.android.models.GroupJoinRequest;
 import org.grassroot.android.services.ApplicationLoader;
 import org.grassroot.android.services.GroupService;
 import org.grassroot.android.utils.ErrorUtils;
 import org.grassroot.android.utils.NetworkUtils;
-import org.grassroot.android.utils.RealmUtils;
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
-import butterknife.OnClick;
 import butterknife.Unbinder;
 import rx.Subscriber;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.functions.Action1;
+import rx.observers.Subscribers;
 
 /**
  * Created by luke on 2016/07/14.
@@ -46,23 +46,20 @@ public class JoinRequestsFragment extends Fragment {
     private static final String TAG = JoinRequestsFragment.class.getSimpleName();
 
     private JoinRequestAdapter adapter;
-    private String mobile;
-    private String code;
 
     @BindView(R.id.jreq_fl_root) FrameLayout frameLayout;
     @BindView(R.id.jreq_swipe_refresh) SwipeRefreshLayout swipeRefreshLayout;
     @BindView(R.id.jreq_recycler_view) RecyclerView recyclerView;
     @BindView(R.id.jreq_no_requests) TextView noRequestsMessage;
 
+		@BindView(R.id.progressBar) ProgressBar progressBar;
+
     Unbinder unbinder;
-    ProgressDialog progressDialog;
 
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
         EventBus.getDefault().register(this);
-        mobile = RealmUtils.loadPreferencesFromDB().getMobileNumber();
-        code = RealmUtils.loadPreferencesFromDB().getToken();
 
         adapter = new JoinRequestAdapter(context, new JoinRequestAdapter.JoinRequestClickListener() {
             @Override
@@ -117,30 +114,51 @@ public class JoinRequestsFragment extends Fragment {
         noRequestsMessage.setVisibility(View.GONE);
     }
 
-    // todo : differentiate among these
     private void refreshJoinRequests() {
         swipeRefreshLayout.setRefreshing(true);
         GroupService.getInstance().fetchGroupJoinRequests(AndroidSchedulers.mainThread())
-			.subscribe(new Action1<String>() {
+            .subscribe(new Action1<String>() {
 				@Override
 				public void call(String s) {
-					switch (s) {
-						case NetworkUtils.FETCHED_SERVER:
-							adapter.refreshList();
-							selectMessageOrList();
-							break;
-						case NetworkUtils.OFFLINE_SELECTED:
-							// todo : show an error message
-							break;
-						case NetworkUtils.CONNECT_ERROR:
-							// todo : show an error message
-							break;
-					}
-					swipeRefreshOff(); // todo : combine these
-					hideProgess();
+              switch (s) {
+                case NetworkUtils.FETCHED_SERVER:
+                  adapter.refreshList();
+                  selectMessageOrList();
+                  break;
+                case NetworkUtils.OFFLINE_SELECTED:
+									NetworkErrorDialogFragment.newInstance(R.string.connect_error_jreqs_offline, progressBar,
+											goOnlineSubscriber());
+                  break;
+                case NetworkUtils.CONNECT_ERROR:
+                  ErrorUtils.networkErrorSnackbar(frameLayout, R.string.connect_error_jreqs_list, new View.OnClickListener() {
+										@Override
+										public void onClick(View v) {
+											refreshJoinRequests();
+										}
+									});
+                  break;
+                case NetworkUtils.SERVER_ERROR:
+									Snackbar.make(frameLayout, R.string.server_error_general, Snackbar.LENGTH_SHORT).show();
+              }
+              swipeRefreshOff();
+              hideProgess();
 				}
 			});
     }
+
+	private Subscriber<String> goOnlineSubscriber() {
+		return Subscribers.create(new Action1<String>() {
+			@Override
+			public void call(String s) {
+				progressBar.setVisibility(View.GONE);
+				if (s.equals(NetworkUtils.SERVER_ERROR)) {
+					Snackbar.make(frameLayout, R.string.connect_error_failed_retry, Snackbar.LENGTH_SHORT).show();
+				} else {
+					refreshJoinRequests();
+				}
+			}
+		});
+	}
 
     private void swipeRefreshOff() {
         if (swipeRefreshLayout != null) {
@@ -149,7 +167,7 @@ public class JoinRequestsFragment extends Fragment {
     }
 
     private void respondToJoinRequest(final String approvedOrDenied, final String requestUid, final int position) {
-        showProgress(); // todo : use progress bar instead of dialog
+        showProgress();
         GroupService.getInstance().respondToJoinRequest(approvedOrDenied, requestUid, AndroidSchedulers.mainThread())
             .subscribe(new Subscriber<String>() {
                 @Override
@@ -177,42 +195,24 @@ public class JoinRequestsFragment extends Fragment {
             });
     }
 
-    @OnClick(R.id.jreq_no_requests)
-    public void onNoRequestsClicked() {
-        showProgress();
-        refreshJoinRequests();
-    }
-
-    // note : this isn't triggered anywhere yet, but will be once notifications etc properly wired
+    // todo : make sure this is connected to the join request received notification handler
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void groupJoinRequestReceived(JoinRequestReceived e) {
         adapter.insertRequest(e.request);
     }
 
     private void showProgress() {
-        if (progressDialog == null) {
-            progressDialog = new ProgressDialog(getContext());
-            progressDialog.setIndeterminate(true);
-            progressDialog.setMessage(getString(R.string.wait_message));
-        }
-        if (!progressDialog.isShowing()) {
-            progressDialog.show();
-        }
+        progressBar.setVisibility(View.VISIBLE);
     }
 
     private void hideProgess() {
-        if (progressDialog != null && progressDialog.isShowing()) {
-            progressDialog.dismiss();
-        }
+        progressBar.setVisibility(View.GONE);
     }
 
     @Override
     public void onDestroyView() {
         super.onDestroyView();
         unbinder.unbind();
-        if (progressDialog != null) {
-            progressDialog.dismiss();
-        }
         EventBus.getDefault().unregister(this);
     }
 

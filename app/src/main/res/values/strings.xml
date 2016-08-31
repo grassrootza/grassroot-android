@@ -75,6 +75,8 @@
     <string name="connect_error_unsub_offline">You\'re offline, but leaving a group requires a connection. Try connect?</string>
     <string name="connect_error_notifications">Sorry, we can\'t connect at the moment</string>
     <string name="connect_error_edit_task">You don\'t seem to have a working data connection.</string>
+    <string name="connect_error_jreqs_list">Sorry, we couldn\'t connect to refresh. Retry?</string>
+    <string name="connect_error_jreqs_offline">You are in offline mode. To refresh you need to go online. Try connect?</string>
     <string name="connect_error_failed_retry">Sorry, we still can\'t connect. Please retry later.</string>
 
     <string name="input_error_field_empty">Please enter all fields to proceed</string>
@@ -109,6 +111,8 @@
     <string name="server_error_invalid_auth">Sorry, something is wrong with your login. Please logout and login again</string>
     <string name="server_error_expired_auth">Sorry, your session has expired, please logout and login again</string>
 
+    <string name="local_error_load_contacts">Error loading your contacts. Please check address book permissions.</string>
+
     <string name="snackbar_try_again">Retry</string>
     <string name="snackbar_try_connect">Connect</string>
 
@@ -122,6 +126,7 @@
 
     <string name="alert_check_network">Check Network Settings</string>
     <string name="alert_retry">Retry</string>
+    <string name="alert_go_online">Try go online</string>
     <string name="work_offline">Continue offline</string>
     <string name="action_logout">Logout</string>
 
@@ -168,7 +173,8 @@
 
     <string name="txt_no_task_group">This group has no events or tasks yet. To get started, call a meeting, a vote, record an action, or add members &#8230; Just hit the + button below</string>
     <string name="txt_no_task_upcoming">You have no upcoming meetings, votes, or actions. To create one, just hit the + button below</string>
-    <string name="txt_task_could_not_fetch">Sorry, we had an error connecting to the server. Please retry later, or continue in offline mode.</string>
+    <string name="txt_no_task_offline">You are in offline mode, so we could not connect to check for new tasks. Please try switch to online mode to check for tasks</string>
+    <string name="txt_task_could_not_fetch">Sorry, we had an error connecting to the server. Please retry later, or dial *314*1994# to check upcoming events, or continue in offline mode.</string>
     <string name="txt_no_task_no_create">This group has no events or tasks yet. When some are called, they will be displayed here.</string> <!-- not great, but a weird situation in a any case -->
 
     <string name="txt_getstart">To get started</string>
@@ -350,7 +356,7 @@
     <string name="jreq_response_connect_error">Sorry, we couldn\'t connect, please try again later</string>
 
     <string name="jreq_no_requests">We couldn\'t find any pending requests. To check again, please
-    just tap here</string>
+    pull down to refresh</string>
 
     <string name="jreq_gmsg_header">Join request</string>
     <string name="jreq_gmsg_header_approved">Approved</string>
@@ -431,6 +437,8 @@
     <string name="cs_title">Select contacts</string>
     <string name="title_activity_add_contact_manually">AddContactManually</string>
 
+    <string name="contact_number_pick">Pick number</string>
+
     <!-- Group settings activity -->
     <string name="gset_main_title">Group settings</string>
 
@@ -480,6 +488,7 @@
         Please try again later</string>
     <string name="gset_error_join_code_close_offline">Sorry, we couldn\'t connect to close the code. Please try later
     or dial *134*1994#</string>
+    <string name="gset_error_role_change_offline">Sorry, you must be connected to change member roles. Try connect?</string>
 
     <string name="gset_organizer_confirm">Add as organizer?</string>
     <string name="gset_organizer_done">Done! Organizer added</string>

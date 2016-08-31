@@ -56,7 +56,7 @@ public class SyncService extends GcmTaskService {
     }
 
 	private void tryConnect() {
-		NetworkUtils.trySwitchToOnlineRx(this, true, Schedulers.immediate())
+		NetworkUtils.trySwitchToOnline(this, true, Schedulers.immediate())
 			.subscribe(new Subscriber<String>() {
 				@Override
 				public void onError(Throwable e) {

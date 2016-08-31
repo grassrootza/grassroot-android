@@ -362,21 +362,24 @@ public class NotificationCenterFragment extends Fragment {
             }
             @Override
             public void onFailure(Call<NotificationList> call, Throwable t) {
-                progressBar.setVisibility(View.GONE);
-                notificationAdapter.setToNotifications(RealmUtils.loadNotificationsSorted());
-                recyclerView.setVisibility(View.VISIBLE);
-                NetworkErrorDialogFragment.newInstance(R.string.connect_error_notifications,
-                    progressBar, Subscribers.create(new Action1<String>() {
-                        @Override
-                        public void call(String s) {
-                            progressBar.setVisibility(View.GONE);
-                            if (s.equals(NetworkUtils.CONNECT_ERROR)) {
-                                Snackbar.make(recyclerView, R.string.connect_error_failed_retry, Snackbar.LENGTH_SHORT).show();
-                            } else {
-                                getNotifications(page, size);
+                // as usual, have to make sure the call back doesn't trigger a null
+                if (progressBar != null) {
+                    progressBar.setVisibility(View.GONE);
+                    notificationAdapter.setToNotifications(RealmUtils.loadNotificationsSorted());
+                    recyclerView.setVisibility(View.VISIBLE);
+                    NetworkErrorDialogFragment.newInstance(R.string.connect_error_notifications,
+                        progressBar, Subscribers.create(new Action1<String>() {
+                            @Override
+                            public void call(String s) {
+                                progressBar.setVisibility(View.GONE);
+                                if (s.equals(NetworkUtils.CONNECT_ERROR)) {
+                                    Snackbar.make(recyclerView, R.string.connect_error_failed_retry, Snackbar.LENGTH_SHORT).show();
+                                } else {
+                                    getNotifications(page, size);
+                                }
                             }
-                        }
-                    })).show(getFragmentManager(), "dialog");
+                        })).show(getFragmentManager(), "dialog");
+                }
             }
         });
     }

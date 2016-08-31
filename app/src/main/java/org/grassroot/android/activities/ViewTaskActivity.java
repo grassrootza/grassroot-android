@@ -90,22 +90,22 @@ public class ViewTaskActivity extends PortraitActivity {
             if (TextUtils.isEmpty(clickAction)) {
                 fragment = ViewTaskFragment.newInstance(taskType, taskUid);
                 showShareMenu = true;
-            }
-
-            // note : possibly add share option to all / most of these ...
-            switch (clickAction) {
-                case NotificationConstants.TASK_CHANGED:
-                    fragment = createMessageFragment(R.string.vt_changed_header);
-                    break;
-                case NotificationConstants.TASK_REMINDER:
-                    fragment = createMessageFragment(R.string.vt_reminder_header);
-                    break;
-                case NotificationConstants.TASK_RESULTS:
-                    fragment = createMessageFragment(R.string.vt_results_header);
-                    break;
-                default:
-                    fragment = ViewTaskFragment.newInstance(taskType, taskUid);
-                    showShareMenu = true;
+            } else {
+                // todo : possibly add share option to all / most of these ...
+                switch (clickAction) {
+                    case NotificationConstants.TASK_CHANGED:
+                        fragment = createMessageFragment(R.string.vt_changed_header);
+                        break;
+                    case NotificationConstants.TASK_REMINDER:
+                        fragment = createMessageFragment(R.string.vt_reminder_header);
+                        break;
+                    case NotificationConstants.TASK_RESULTS:
+                        fragment = createMessageFragment(R.string.vt_results_header);
+                        break;
+                    default:
+                        fragment = ViewTaskFragment.newInstance(taskType, taskUid);
+                        showShareMenu = true;
+                }
             }
 
         }

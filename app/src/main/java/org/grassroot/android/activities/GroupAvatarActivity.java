@@ -272,7 +272,7 @@ public class GroupAvatarActivity extends PortraitActivity {
                 @Override
                 public void onClick(DialogInterface dialog, int which) {
                     progressBar.setVisibility(View.VISIBLE);
-                    NetworkUtils.trySwitchToOnlineRx(GroupAvatarActivity.this, false, AndroidSchedulers.mainThread())
+                    NetworkUtils.trySwitchToOnline(GroupAvatarActivity.this, false, AndroidSchedulers.mainThread())
                         .subscribe(new Action1<String>() {
                             @Override
                             public void call(String s) {
@@ -435,7 +435,7 @@ public class GroupAvatarActivity extends PortraitActivity {
                 @Override
                 public void onClick(DialogInterface dialog, int which) {
                     progressBar.setVisibility(View.VISIBLE);
-                    NetworkUtils.trySwitchToOnlineRx(GroupAvatarActivity.this, false, null)
+                    NetworkUtils.trySwitchToOnline(GroupAvatarActivity.this, false, null)
                         .subscribe(new Action1<String>() {
                         @Override
                         public void call(String s) {

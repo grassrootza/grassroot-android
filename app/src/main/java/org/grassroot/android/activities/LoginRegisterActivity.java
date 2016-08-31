@@ -18,9 +18,7 @@ import org.grassroot.android.fragments.LoginScreenFragment;
 import org.grassroot.android.fragments.OtpScreenFragment;
 import org.grassroot.android.fragments.RegisterNameFragment;
 import org.grassroot.android.fragments.RegisterPhoneFragment;
-import org.grassroot.android.interfaces.NotificationConstants;
 import org.grassroot.android.models.exceptions.ApiCallException;
-import org.grassroot.android.services.GcmRegistrationService;
 import org.grassroot.android.utils.ErrorUtils;
 import org.grassroot.android.utils.LoginRegUtils;
 import org.grassroot.android.utils.NetworkUtils;
@@ -145,30 +143,26 @@ public class LoginRegisterActivity extends AppCompatActivity implements LoginScr
     }
 
     @Override
-    public void requestNewOtp(final String purpose) {
-        if (LOGIN.equals(purpose)) {
-            requestLogin(enteredNumber);
-        } else {
-            progressDialog.show();
-            LoginRegUtils.resendRegistrationOtp(msisdn).subscribe(new Subscriber<String>() {
-                @Override
-                public void onNext(String s) {
-                    progressDialog.dismiss();
-                    final String otpToPass = (LoginRegUtils.OTP_ALREADY_SENT.equals(s) ||
-                        LoginRegUtils.OTP_PROD_SENT.equals(s)) ? "" : s;
-                    switchToOtpFragment(otpToPass, REGISTER);
-                }
+    public void requestResendOtp(final String purpose) {
+        progressDialog.show();
+        LoginRegUtils.resendRegistrationOtp(msisdn).subscribe(new Subscriber<String>() {
+            @Override
+            public void onNext(String s) {
+                progressDialog.dismiss();
+                final String otpToPass = (LoginRegUtils.OTP_ALREADY_SENT.equals(s) ||
+                    LoginRegUtils.OTP_PROD_SENT.equals(s)) ? "" : s;
+                switchToOtpFragment(otpToPass, purpose);
+            }
 
-                @Override
-                public void onError(Throwable e) {
-                    progressDialog.dismiss();
-                    handleError(msisdn, REGISTER, false, e);
-                }
+            @Override
+            public void onError(Throwable e) {
+                progressDialog.dismiss();
+                handleError(msisdn, purpose, false, e);
+            }
 
-                @Override
-                public void onCompleted() { }
-            });
-        }
+            @Override
+            public void onCompleted() { }
+        });
     }
 
     private void authenticateLogin(String otpEntered) {
@@ -272,7 +266,7 @@ public class LoginRegisterActivity extends AppCompatActivity implements LoginScr
                 new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    requestNewOtp(purpose);
+                    requestResendOtp(purpose);
                 }
             });
         } else {
@@ -317,13 +311,6 @@ public class LoginRegisterActivity extends AppCompatActivity implements LoginScr
         } else {
             verifyRegistration(otp);
         }
-    }
-
-    private void registerOrRefreshGCM(final String phoneNumber) {
-        Intent gcmRegistrationIntent = new Intent(LoginRegisterActivity.this, GcmRegistrationService.class);
-        gcmRegistrationIntent.putExtra(NotificationConstants.ACTION, NotificationConstants.GCM_REGISTER);
-        gcmRegistrationIntent.putExtra(NotificationConstants.PHONE_NUMBER, phoneNumber);
-        startService(gcmRegistrationIntent);
     }
 
     private void launchHomeScreen(boolean userHasGroups) {

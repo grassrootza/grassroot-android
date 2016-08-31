@@ -39,4 +39,10 @@
         android:textStyle="bold"
         android:text="@string/jreq_no_requests" />
 
+    <ProgressBar
+        android:id="@+id/progressBar"
+        style="@style/ProgressBarMedium"
+        android:visibility="gone"
+        android:layout_gravity="center"/>
+
 </FrameLayout>

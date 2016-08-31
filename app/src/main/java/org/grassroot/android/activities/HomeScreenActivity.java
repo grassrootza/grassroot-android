@@ -206,8 +206,12 @@ public class HomeScreenActivity extends PortraitActivity implements NavigationDr
         if (drawer.isDrawerOpen(GravityCompat.START)) {
             drawer.closeDrawer(GravityCompat.START);
         } else {
-            super.onBackPressed();
-            setTitleAndNavDrawerSelection(getCurrentFragmentTag(), true);
+            if (groupListFragment != null && groupListFragment.isVisible() && groupListFragment.isFloatingMenuOpen()) {
+                groupListFragment.toggleFloatingMenu();
+            } else {
+                super.onBackPressed();
+                setTitleAndNavDrawerSelection(getCurrentFragmentTag(), true);
+            }
         }
     }
 
@@ -332,7 +336,7 @@ public class HomeScreenActivity extends PortraitActivity implements NavigationDr
         }
 
         if (changeNavDrawerSelection) {
-            setNavBarToItem(currentNavTag); // todo : harmonize constants to avoid later fragility
+            setNavBarToItem(currentNavTag);
         }
     }
 

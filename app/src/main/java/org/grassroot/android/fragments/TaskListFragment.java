@@ -180,12 +180,8 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
   @Override public void onDetach() {
     super.onDetach();
     EventBus.getDefault().unregister(this);
-  }
-
-  @Override
-  public void onDestroy() {
-    super.onDestroy();
-    listener = null;
+    // note : setting listener to null creates risks of null pointer errors if frequent fragment swapping
+    // and Android stack management is an issue ... creates slight risk of memory leak, but that's a trade off
   }
 
   @OnClick(R.id.tl_fab)
@@ -277,7 +273,11 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
         noTaskMessageText.setText(group == null ? R.string.txt_no_task_upcoming :
             group.hasCreatePermissions() ? R.string.txt_no_task_group : R.string.txt_no_task_no_create);
       } else {
-        noTaskMessageText.setText(R.string.txt_task_could_not_fetch);
+        if (RealmUtils.loadPreferencesFromDB().getOnlineStatus().equals(NetworkUtils.OFFLINE_SELECTED)) {
+          noTaskMessageText.setText(R.string.txt_no_task_offline);
+        } else {
+          noTaskMessageText.setText(R.string.txt_task_could_not_fetch);
+        }
       }
     }
 

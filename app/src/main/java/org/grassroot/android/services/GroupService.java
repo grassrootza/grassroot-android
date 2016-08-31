@@ -143,6 +143,7 @@ public class GroupService {
             if (response.isSuccessful()) {
               cleanGroupFromDB(groupUid);
               subscriber.onNext(NetworkUtils.SAVED_SERVER);
+              fetchGroupList(Schedulers.immediate()).subscribe(); // to sync up removed UIDs and sync time
               subscriber.onCompleted();
             } else {
               throw new ApiCallException(NetworkUtils.SERVER_ERROR,
@@ -161,12 +162,26 @@ public class GroupService {
       throw new IllegalStateException("Must not persist group list on main thread");
     }
 
-    RealmUtils.saveDataToRealmSync(responseBody.getAddedAndUpdated());
+    /*
+    note: there are corner cases where user has both left and joined a group in the period since
+    the last refresh, so the same group appears in both lists (e.g., unsubscribed, then was
+    added back) ... when this happens, the balance of risk is to leave the group in place,
+    since a group not present can't be retrieved without exit / login, whereas spurious group
+    in place can be cleaned locally with an unsubscribe (as long as that activity exits gracefully)
+    a fully robust reconcile on the diffs would not have this problem, but that would require a lot
+    more complexity on the server changedSince logic than is present at possible (e.g., would have
+    to differentiate between unsubs from Android and from USSD, and so forth)
+    for the moment, then, we remove before we add, and trigger a group refresh after a succesful
+    unsubscribe, which should avoid 90% of cases
+    */
+
     if (!responseBody.getRemovedUids().isEmpty()) {
       RealmUtils.removeObjectsByUid(Group.class, "groupUid",
           RealmUtils.convertListOfRealmStringInListOfString(
               responseBody.getRemovedUids()));
     }
+
+    RealmUtils.saveDataToRealmSync(responseBody.getAddedAndUpdated());
 
     for (Group g : responseBody.getAddedAndUpdated()) {
       for (Member m : g.getMembers()) {
@@ -427,7 +442,7 @@ public class GroupService {
               final String restMessage = errorModel.getMessage();
 
               if (ErrorUtils.GROUP_MEMBER_INVALID_PHONE.equals(restMessage)) {
-                Log.e(TAG, "here's the invalid msisdn : " + errorModel.getData());
+                Log.d(TAG, "here's the invalid msisdn : " + errorModel.getData());
                 final String concatInvalidMsisdns = (String) errorModel.getData(); // todo : use list of strings ?
                 List<String> invalidNumbers = TextUtils.isEmpty(concatInvalidMsisdns) ? null :
                     Arrays.asList(concatInvalidMsisdns.split("\\s+"));
@@ -631,7 +646,8 @@ public class GroupService {
     final String code = RealmUtils.loadPreferencesFromDB().getToken();
     return GrassrootRestService.getInstance().getApi()
         .combinedGroupEdits(phoneNumber, code, groupUid,
-            edits.getRevisedGroupName(), edits.isChangedImage(), edits.getChangedImageName(),
+            edits.getRevisedGroupName(), edits.getRevisedGroupDescription(),
+            edits.isChangedImage(), edits.getChangedImageName(),
             edits.isChangedPublicPrivate(), edits.isChangedToPublic(), edits.isClosedJoinCode(),
             RealmUtils.convertListOfRealmStringInListOfString(edits.getMembersToRemove()),
             RealmUtils.convertListOfRealmStringInListOfString(edits.getOrganizersToAdd()));
@@ -1012,7 +1028,7 @@ public class GroupService {
       @Override
       public void call(Subscriber<? super List<Permission>> subscriber) {
         if (!NetworkUtils.isOnline()) {
-          throw new ApiCallException(NetworkUtils.OFFLINE_SELECTED);
+          throw new ApiCallException(NetworkUtils.CONNECT_ERROR);
         } else {
           final String mobileNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
           final String code = RealmUtils.loadPreferencesFromDB().getToken();

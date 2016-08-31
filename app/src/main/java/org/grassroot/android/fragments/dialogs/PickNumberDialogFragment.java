@@ -4,8 +4,11 @@ import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.DialogInterface;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.v4.app.DialogFragment;
+import android.text.TextUtils;
 
+import org.grassroot.android.R;
 import org.grassroot.android.models.Contact;
 
 /**
@@ -21,37 +24,48 @@ public class PickNumberDialogFragment extends DialogFragment {
 
     private int contactPosition;
     private Contact contact;
-    private int defaultNumberIndex;
+    private int startingIndex;
     private int selectedIndex;
 
     private PickNumberListener listener;
 
-    public static PickNumberDialogFragment newInstance(final Contact contact, final int contactPosition, final PickNumberListener listener) {
+    public static PickNumberDialogFragment newInstance(@NonNull final Contact contact, final int contactPosition,
+                                                       @NonNull final PickNumberListener listener) {
         PickNumberDialogFragment fragment = new PickNumberDialogFragment();
-        // todo : switch these to args
-        fragment.contact = contact;
-        fragment.contactPosition = contactPosition;
+        Bundle args = new Bundle();
+        args.putParcelable("contact", contact);
+        args.putInt("contactPosition", contactPosition);
+        fragment.setArguments(args);
         fragment.listener = listener;
         return fragment;
     }
 
     @Override
+    @NonNull
     public Dialog onCreateDialog(Bundle savedInstanceState) {
+
+        contact = getArguments().getParcelable("contact");
+        contactPosition = getArguments().getInt("contactPosition");
+
         if (contact == null)
             throw new UnsupportedOperationException("Error! Dialog created without valid contact");
 
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
         final CharSequence[] numbers = contact.numbers.toArray(new CharSequence[contact.numbers.size()]);
-        selectedIndex = defaultNumberIndex;
 
-        builder.setTitle("Pick a number")
-                .setSingleChoiceItems(numbers, defaultNumberIndex, new DialogInterface.OnClickListener() {
+        // in theory, the second check should not be necessary, but don't fully trust the number handling on many of our user's phones
+        startingIndex = (TextUtils.isEmpty(contact.selectedMsisdn)) ? 0 :
+            !contact.msisdns.contains(contact.selectedMsisdn) ? 0 :
+                contact.msisdns.indexOf(contact.selectedMsisdn);
+
+        builder.setTitle(R.string.contact_number_pick)
+                .setSingleChoiceItems(numbers, startingIndex, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialogInterface, int i) {
                         selectedIndex = i;
                     }
                 })
-                .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+                .setPositiveButton(R.string.okay_button, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialogInterface, int i) {
                         listener.onNumberPicked(contactPosition, selectedIndex);

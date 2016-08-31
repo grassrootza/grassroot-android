@@ -116,7 +116,6 @@ public class RemoveMembersActivity extends PortraitActivity implements MemberLis
 
     @OnClick(R.id.rm_bt_save)
     public void saveAndExit() {
-        // todo: localize
         if (membersToRemove.isEmpty()) {
             navigateUp();
         } else {

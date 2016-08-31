@@ -26,7 +26,6 @@ public class DatePickerFragment extends DialogFragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        // todo : figure out how to style the colors on this
         setStyle(DialogFragment.STYLE_NORMAL, R.style.AppTheme);
     }
 

@@ -94,6 +94,7 @@ public class RealmUtils {
     public static void saveDataToRealmSync(final List<? extends RealmObject> list) {
         Realm realm = Realm.getDefaultInstance();
         realm.beginTransaction();
+        Log.e(TAG, "okay and now saving the list to Realm ... has this many objects = " + list.size());
         realm.copyToRealmOrUpdate(list);
         realm.commitTransaction();
         realm.close();
@@ -197,26 +198,13 @@ public class RealmUtils {
         return Observable.create(new Observable.OnSubscribe<List<RealmObject>>() {
                     @Override
                     public void call(final Subscriber<? super List<RealmObject>> subscriber) {
-                        RealmList<RealmObject> groups = new RealmList<>();
-                        Realm realm = Realm.getDefaultInstance();
-                        RealmQuery<? extends RealmObject> query = realm.where(model);
-                        for (Map.Entry<String, Object> entry : map.entrySet()) {
-                            if (entry.getValue() instanceof String) {
-                                query.equalTo(entry.getKey(), entry.getValue().toString());
-                            } else {
-                                query.equalTo(entry.getKey(), Boolean.valueOf(entry.getValue().toString()));
-                            }
-                        }
-                        groups.addAll(realm.copyFromRealm(query.findAll()));
-                        subscriber.onNext(groups);
+                        RealmList<RealmObject> objects = loadListFromDBInline(model, map);
+                        subscriber.onNext(objects);
                         subscriber.onCompleted();
-                        realm.close();
                     }
                 }).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread());
     }
 
-    // dislike copy and paste for this, but otherwise have extreme proliferation of boilerplate & thread multiplication in services
-    // todo: check if realm.close necessary to come after subscriber calls above, hence maybe consolidate
     public static <T extends RealmList> T loadListFromDBInline(final Class<? extends RealmObject> model,
                                                                final Map<String, Object> map) {
         if (Looper.myLooper() == Looper.getMainLooper()) {
@@ -377,7 +365,6 @@ public class RealmUtils {
                     .notEqualTo("phoneNumber", userMsisdn);
                 members.addAll(realm.copyFromRealm(query.findAllSorted("displayName")));
 
-                Log.e(TAG, "returning this many members : " + members.size());
                 subscriber.onNext(members);
                 subscriber.onCompleted();
                 realm.close();

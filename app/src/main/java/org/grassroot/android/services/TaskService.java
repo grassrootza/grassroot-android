@@ -573,7 +573,6 @@ public class TaskService {
         RealmUtils.saveDataToRealmSync(task);
         break;
     }
-    // EventBus.getDefault().post(new TaskUpdatedEvent(task)); // todo : check if need
   }
 
 }

@@ -32,6 +32,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import retrofit2.Response;
 import rx.Observable;
@@ -81,7 +82,7 @@ public class NetworkUtils {
     if (ONLINE_DEFAULT.equals(currentStatus)) {
       return switchToOfflineMode(observingThread);
     } else {
-      return trySwitchToOnlineRx(context, sendQueue, observingThread);
+      return trySwitchToOnline(context, sendQueue, observingThread);
     }
   }
 
@@ -125,7 +126,7 @@ public class NetworkUtils {
 
   public static void trySwitchToOnlineQuiet(final Context context, final boolean sendQueue,
                                             Scheduler observingThread) {
-    trySwitchToOnlineRx(context, sendQueue, observingThread).subscribe(new Subscriber<String>() {
+    trySwitchToOnline(context, sendQueue, observingThread).subscribe(new Subscriber<String>() {
       @Override
       public void onError(Throwable e) {
         NetworkUtils.setConnectionFailed();
@@ -142,7 +143,7 @@ public class NetworkUtils {
     });
   }
 
-  public static Observable<String> trySwitchToOnlineRx(final Context context, final boolean sendQueue,
+  public static Observable<String> trySwitchToOnline(final Context context, final boolean sendQueue,
                                                      Scheduler observingThread) {
     observingThread = (observingThread == null) ? AndroidSchedulers.mainThread() : observingThread;
     return Observable.create(new Observable.OnSubscribe<String>() {
@@ -179,6 +180,19 @@ public class NetworkUtils {
         }
       }
     }).subscribeOn(Schedulers.io()).observeOn(observingThread);
+  }
+
+  public static void sendQueueAfterDelay() {
+    Observable
+        .timer(Constant.serverSyncDelay, TimeUnit.MILLISECONDS)
+        .observeOn(Schedulers.io())
+        .subscribe(new Action1<Long>() {
+          @Override
+          public void call(Long aLong) {
+            Log.e(TAG, "timer done! calling sync to server");
+            syncLocalAndServer(ApplicationLoader.applicationContext);
+          }
+        });
   }
 
   public static boolean isOnline(Context context) {

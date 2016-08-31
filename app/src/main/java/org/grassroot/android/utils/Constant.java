@@ -15,6 +15,8 @@ public class Constant {
     public static final String PROD = "production";
 
     public static long mediumDelay = 500L;
+    public static long serverSyncDelay = 3000L; // leave a decent margin (but also get optimistic locking more robust on server)
+
     public static final SimpleDateFormat isoDateTimeSDF = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
 
     public static final String productionUrl = ApplicationLoader.applicationContext

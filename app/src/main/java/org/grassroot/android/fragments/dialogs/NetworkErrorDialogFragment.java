@@ -37,7 +37,7 @@ public class NetworkErrorDialogFragment extends DialogFragment {
 			args.putInt("message", message);
 			frag.setArguments(args);
 			frag.subscriber = subscriber;
-			frag.progressBar = progressBar; // todo : make sure no memory leaks
+			frag.progressBar = progressBar; // todo : check memory leaks
 			return frag;
     }
 
@@ -47,38 +47,42 @@ public class NetworkErrorDialogFragment extends DialogFragment {
 			int message = getArguments().getInt("message");
 
 			AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
-			builder.setMessage(message) // todo : change button text if offline mode selected
-					.setPositiveButton(R.string.alert_retry, new DialogInterface.OnClickListener() {
+			final boolean offlineSelected = RealmUtils.loadPreferencesFromDB().getOnlineStatus().equals(NetworkUtils.OFFLINE_SELECTED);
+
+			builder.setMessage(message)
+					.setPositiveButton(offlineSelected ? R.string.alert_go_online : R.string.alert_retry, new DialogInterface.OnClickListener() {
 						@Override
 						public void onClick(DialogInterface dialogInterface, int i) {
-							if (!RealmUtils.loadPreferencesFromDB().getOnlineStatus().equals(NetworkUtils.ONLINE_DEFAULT)) {
-								if (progressBar != null) {
-									progressBar.setVisibility(View.VISIBLE);
-								}
-								NetworkUtils.trySwitchToOnlineRx(getContext(), false, AndroidSchedulers.mainThread())
-										.subscribe(new Action1<String>() {
-											@Override
-											public void call(String s) {
-												subscriber.onNext(NetworkUtils.ONLINE_DEFAULT);
-											}
-										}, new Action1<Throwable>() {
-											@Override
-											public void call(Throwable throwable) {
-												Log.e(TAG, "we got an error!");
-												subscriber.onNext(NetworkUtils.CONNECT_ERROR);
-											}
-										});
-							} else {
-								subscriber.onNext(NetworkUtils.ONLINE_DEFAULT);
+							if (progressBar != null) {
+								progressBar.setVisibility(View.VISIBLE);
 							}
+
+							// note : need to leave a gap in the call to sync the local queue in case the call to this
+							// needs to submit first (otherwise get transaction errors on server (at some point probably need a proper call queuing system)
+
+							NetworkUtils.trySwitchToOnline(getContext(), false, AndroidSchedulers.mainThread())
+									.subscribe(new Action1<String>() {
+										@Override
+										public void call(String s) {
+											subscriber.onNext(NetworkUtils.ONLINE_DEFAULT);
+											Log.e(TAG, "and now queuing up the send sync");
+											NetworkUtils.sendQueueAfterDelay();
+										}
+									}, new Action1<Throwable>() {
+										@Override
+										public void call(Throwable throwable) {
+											subscriber.onNext(NetworkUtils.CONNECT_ERROR);
+										}
+									});
 						}
 					});
 
-			if (!RealmUtils.loadPreferencesFromDB().getOnlineStatus().equals(NetworkUtils.OFFLINE_SELECTED)) {
+			if (!offlineSelected) {
 				builder.setNegativeButton(R.string.work_offline, new DialogInterface.OnClickListener() {
 					@Override
 					public void onClick(DialogInterface dialog, int which) {
 						NetworkUtils.setOfflineSelected();
+						subscriber.onNext(NetworkUtils.OFFLINE_SELECTED);
 						NetworkErrorDialogFragment.this.dismiss();
 					}
 				});
@@ -91,7 +95,14 @@ public class NetworkErrorDialogFragment extends DialogFragment {
 													NavigationConstants.NETWORK_SETTINGS_DIALOG); }
 								});
 
+			builder.setCancelable(true);
 			return builder.create();
     }
+
+	@Override
+	public void onCancel(DialogInterface dialogInterface) {
+		super.onCancel(dialogInterface);
+		subscriber.onNext(NetworkUtils.OFFLINE_SELECTED); // since this is effectively the same
+	}
 
 }

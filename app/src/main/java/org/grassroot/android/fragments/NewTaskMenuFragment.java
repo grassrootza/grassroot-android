@@ -149,7 +149,7 @@ public class NewTaskMenuFragment extends Fragment {
 
     @OnClick(R.id.bt_newmember)
     public void onNewMemberButtonClick() {
-        // todo: if called from here, on finishing go back to group page (manage stack)
+        // activity just uses finish, so will return to whatever activity called this fragment, as long as it manages fragment stack properly
         Intent addMembers = new Intent(getActivity(), AddMembersActivity.class);
         addMembers.putExtra(GroupConstants.UID_FIELD, groupUid);
         addMembers.putExtra(GroupConstants.NAME_FIELD, groupName);

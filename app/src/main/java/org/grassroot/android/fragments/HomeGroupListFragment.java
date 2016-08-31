@@ -565,6 +565,10 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
         }
     }
 
+    public boolean isFloatingMenuOpen() {
+        return floatingMenuOpen;
+    }
+
     private void openFloatingMenu() {
         floatingMenuOpen = true;
         fabOpenMenu.setImageResource(R.drawable.ic_add_45d);

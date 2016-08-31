@@ -141,7 +141,6 @@
             android:name=".activities.RemoveMembersActivity"
             android:label="@string/title_activity_remove_members"
             android:parentActivityName=".activities.GroupTasksActivity">
-            <!-- todo: reorder to home, possibly -->
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value=".activities.GroupTasksActivity" />
@@ -245,7 +244,8 @@
             android:name=".activities.ProfileSettingsActivity"
             android:configChanges="orientation|keyboardHidden"
             android:theme="@style/AppTheme"
-            android:label="@string/title_activity_UserSettings">
+            android:label="@string/title_activity_UserSettings"
+            android:parentActivityName=".activities.HomeScreenActivity">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value=".activities.HomeScreenActivity" />

@@ -367,7 +367,6 @@ public class CreateTaskFragment extends Fragment {
         return model;
     }
 
-    // todo : make this more flexible (esp for todo)
     private int obtainReminderMinutes() {
         final int reminderChecked = getReminderSwitchChecked();
         if (reminderChecked != -1 && reminderChecked < 3) {

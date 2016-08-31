@@ -33,7 +33,7 @@ public class OtpScreenFragment extends Fragment {
     private OtpListener onOtpScreenFragmentListener;
 
     public interface OtpListener {
-        void requestNewOtp(String purpose);
+        void requestResendOtp(String purpose);
         void onOtpSubmitButtonClick(String otp, String purpose);
     }
 
@@ -97,7 +97,7 @@ public class OtpScreenFragment extends Fragment {
 
     @OnClick(R.id.txt_resend)
     public void textResendClicked(){
-        onOtpScreenFragmentListener.requestNewOtp(purpose);
+        onOtpScreenFragmentListener.requestResendOtp(purpose);
     }
 
 }

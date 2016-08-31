@@ -54,8 +54,12 @@ public class Contact implements Parcelable, Comparable {
         dest.writeString(this.addedBy);
         dest.writeByte(isSelected ? (byte) 1 : (byte) 0);
         dest.writeString(this.name);
+        dest.writeString(this.firstName);
+        dest.writeString(this.lastName);
         dest.writeStringList(this.numbers);
+        dest.writeStringList(this.msisdns);
         dest.writeString(this.selectedNumber);
+        dest.writeString(this.selectedMsisdn);
         dest.writeInt(this.version);
         dest.writeInt(this.id);
     }
@@ -64,8 +68,12 @@ public class Contact implements Parcelable, Comparable {
         this.addedBy = in.readString();
         this.isSelected = in.readByte() != 0;
         this.name = in.readString();
+        this.firstName = in.readString();
+        this.lastName = in.readString();
         this.numbers = in.createStringArrayList();
+        this.msisdns = in.createStringArrayList();
         this.selectedNumber = in.readString();
+        this.selectedMsisdn = in.readString();
         this.version = in.readInt();
         this.id = in.readInt();
     }

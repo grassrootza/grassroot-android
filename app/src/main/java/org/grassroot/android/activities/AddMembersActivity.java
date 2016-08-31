@@ -227,7 +227,13 @@ public class AddMembersActivity extends AppCompatActivity implements
                 }, new Action1<Throwable>() {
                     @Override
                     public void call(Throwable throwable) {
-                        // todo : show a snackbar or a dialogue with an error
+                        ErrorUtils.snackBarWithAction(amRlRoot, R.string.local_error_load_contacts, R.string.snackbar_try_again,
+                            new View.OnClickListener() {
+                                @Override
+                                public void onClick(View v) {
+                                    launchContactSelectionFragment();
+                                }
+                            });
                     }
                 });
         }
@@ -246,7 +252,9 @@ public class AddMembersActivity extends AppCompatActivity implements
     public void addMemberManually() {
         toggleAddMenu();
         Intent intent = new Intent(this, AddContactManually.class);
-        startActivityForResult(intent, NavigationConstants.MANUAL_MEMBER_ENTRY); // todo: filter so can't add existing member
+        // note : this may allow existing members through (filter on contacts, but ..), however, server will handle any duplication
+        // and the member will remain added, so there is little gain in adding a filter
+        startActivityForResult(intent, NavigationConstants.MANUAL_MEMBER_ENTRY);
     }
 
     @Override
