@@ -222,6 +222,7 @@
         <activity
             android:name=".activities.ActionCompleteActivity"
             android:configChanges="orientation|keyboardHidden"
+            android:windowSoftInputMode="stateAlwaysHidden"
             android:label="@string/title_activity_action_completed"
             android:theme="@style/AppTheme" />
 

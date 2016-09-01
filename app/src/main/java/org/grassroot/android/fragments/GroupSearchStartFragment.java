@@ -57,7 +57,6 @@ public class GroupSearchStartFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View viewToReturn = inflater.inflate(R.layout.fragment_group_search_open, container, false);
         unbinder = ButterKnife.bind(this, viewToReturn);
-        searchTerm.requestFocus();
         return viewToReturn;
     }
 
@@ -105,6 +104,7 @@ public class GroupSearchStartFragment extends Fragment {
         } else {
             listener.searchTriggered(searchTerm.getText().toString(), searchNameAndSubject.isChecked(),
                 restrictByGeo.isChecked(), restrictByGeo.isChecked() ? geoRadius : 0);
+            searchTerm.clearFocus();
         }
     }
 

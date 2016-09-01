@@ -47,10 +47,8 @@ public class ProfileSettingsActivity extends PortraitActivity  {
   @BindView(R.id.rc_pp) RecyclerView updateCardsView;
   @BindView(R.id.progressBar) ProgressBar progressBar;
 
-  private String username;
   private String language;
   private String alertPreference;
-  private int alertPreferenceIndex = -1;
 
   private String phoneNumber;
   private String token;
@@ -107,7 +105,6 @@ public class ProfileSettingsActivity extends PortraitActivity  {
           public void onResponse(Call<ProfileResponse> call, Response<ProfileResponse> response) {
             progressBar.setVisibility(View.GONE);
             if (response.isSuccessful()) {
-              username = response.body().getProfile().getDisplayName();
               language = response.body().getProfile().getLanguage();
               alertPreference = response.body().getProfile().getAlertPreference();
               setUpRecyclerView();

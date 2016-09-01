@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.app.DatePickerDialog;
 import android.app.ProgressDialog;
 import android.app.TimePickerDialog;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.Snackbar;
@@ -18,6 +19,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.EditorInfo;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.DatePicker;
 import android.widget.ImageView;
@@ -39,6 +41,7 @@ import org.grassroot.android.models.Member;
 import org.grassroot.android.models.RealmString;
 import org.grassroot.android.models.TaskModel;
 import org.grassroot.android.models.exceptions.ApiCallException;
+import org.grassroot.android.services.ApplicationLoader;
 import org.grassroot.android.services.TaskService;
 import org.grassroot.android.utils.Constant;
 import org.grassroot.android.utils.ErrorUtils;
@@ -480,11 +483,11 @@ public class CreateTaskFragment extends Fragment {
     ImageView ivExpandReminders;
 
     @OnClick(R.id.ctsk_reminder_header)
-    public void expandableReminderHeader() {
-
+    public void expandAndContractReminders() {
         if (rlReminderBody.getVisibility() != View.VISIBLE) {
             ivExpandReminders.setImageResource(R.drawable.ic_arrow_up);
             rlReminderBody.setVisibility(View.VISIBLE);
+            hideKeyboard(rlReminderBody); // to make sure the views underneath stay visible
         } else {
             ivExpandReminders.setImageResource(R.drawable.ic_arrow_down);
             rlReminderBody.setVisibility(View.GONE);
@@ -516,6 +519,12 @@ public class CreateTaskFragment extends Fragment {
         }
     }
 
+    private void hideKeyboard(View currentView) {
+        InputMethodManager imm = (InputMethodManager) ApplicationLoader.applicationContext
+            .getSystemService(Context.INPUT_METHOD_SERVICE);
+        imm.hideSoftInputFromWindow(currentView.getWindowToken(), 0);
+    }
+
     @BindView(R.id.ctsk_cv_description)
     CardView descriptionCard;
     @BindView(R.id.ctsk_rl_desc_body)
@@ -530,6 +539,9 @@ public class CreateTaskFragment extends Fragment {
         if (descriptionBody.getVisibility() != View.VISIBLE) {
             descriptionBody.setVisibility(View.VISIBLE);
             ivDescExpandIcon.setImageResource(R.drawable.ic_arrow_up);
+            // hide these to make sure space on small phone screens
+            ivExpandReminders.setImageResource(R.drawable.ic_arrow_down);
+            rlReminderBody.setVisibility(View.GONE);;
         } else {
             descriptionBody.setVisibility(View.GONE);
             ivDescExpandIcon.setImageResource(R.drawable.ic_arrow_down);

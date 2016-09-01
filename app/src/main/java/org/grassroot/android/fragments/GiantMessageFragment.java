@@ -7,6 +7,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.TextView;
 
@@ -135,7 +136,7 @@ public class GiantMessageFragment extends Fragment {
 			@Override
 			public void onClick(View v) {
 				boolean hasGroups = RealmUtils.loadPreferencesFromDB().isHasGroups();
-				Log.e(TAG, "going home ... has groups set to ... " + hasGroups);
+				Log.d(TAG, "going home ... has groups set to ... " + hasGroups);
 				Intent i = RealmUtils.loadPreferencesFromDB().isHasGroups() ?
 						new Intent(getActivity(), HomeScreenActivity.class) : new Intent(getActivity(), NoGroupWelcomeActivity.class);
 				startActivity(i);
@@ -144,6 +145,13 @@ public class GiantMessageFragment extends Fragment {
 		});
 
 		return viewToReturn;
+	}
+
+	@Override
+	public void onResume() {
+		super.onResume();
+		// Android incredible awfulness on keyboard management necessitates the below (and note does not mean "always" hidden, but just hidden doesn't hide ... Android)
+		getActivity().getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
 	}
 
 	@Override
