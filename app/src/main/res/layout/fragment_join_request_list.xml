@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.v4.widget.SwipeRefreshLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/jreq_swipe_refresh"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:clipToPadding="false"
+    android:background="@color/md_grey_200"
+    android:clickable="true">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <android.support.v7.widget.RecyclerView
+            android:id="@+id/jreq_recycler_view"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            tools:listitem="@layout/row_join_request">
+        </android.support.v7.widget.RecyclerView>
+
+        <TextView
+            android:id="@+id/jreq_no_requests"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_centerVertical="true"
+            android:layout_alignParentLeft="true"
+            android:singleLine="false"
+            android:padding="@dimen/padding_large"
+            android:paddingTop="@dimen/margin_largest"
+            android:clickable="false"
+
+            android:textColor="@color/primaryColor"
+            android:visibility="gone"
+            android:textSize="@dimen/txt_large"
+            android:textStyle="bold"
+            android:text="@string/jreq_no_requests" />
+
+        <ProgressBar
+            android:id="@+id/progressBar"
+            style="@style/ProgressBarMedium"
+            android:visibility="gone"
+            android:layout_centerInParent="true"/>
+
+    </RelativeLayout>
+
+</android.support.v4.widget.SwipeRefreshLayout>

@@ -1,4 +1,7 @@
-package org.grassroot.android.models;
+package org.grassroot.android.models.responses;
+
+import org.grassroot.android.models.Group;
+import org.grassroot.android.models.RealmString;
 
 import io.realm.RealmList;
 import io.realm.RealmObject;

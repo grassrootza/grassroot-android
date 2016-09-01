@@ -1,9 +1,9 @@
 package org.grassroot.android.utils;
 
 import org.grassroot.android.BuildConfig;
-import org.grassroot.android.models.GenericResponse;
+import org.grassroot.android.models.responses.GenericResponse;
 import org.grassroot.android.models.PreferenceObject;
-import org.grassroot.android.models.TokenResponse;
+import org.grassroot.android.models.responses.TokenResponse;
 import org.grassroot.android.models.exceptions.ApiCallException;
 import org.grassroot.android.services.GrassrootRestService;
 

@@ -9,7 +9,7 @@
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:padding="@dimen/padding">
+        android:padding="@dimen/padding_half">
 
         <TextView
             android:id="@+id/jreq_group_name"
@@ -47,19 +47,12 @@
             android:background="@color/grey_divider"/>
 
         <TextView
-            android:id="@+id/jreq_desc_header"
-            android:text="@string/jreq_desc_head"
-            android:layout_marginTop="@dimen/margin_medium"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_below="@id/jreq_separator"/>
-
-
-        <TextView
             android:id="@+id/jreq_request_description"
-            android:layout_below="@id/jreq_desc_header"
+            android:layout_below="@id/jreq_separator"
+            android:text="@string/jreq_desc_head"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/margin_medium"
 
             android:maxLines="5"
             android:ellipsize="end"
@@ -82,14 +75,14 @@
             android:paddingBottom="@dimen/flat_button_padding_vertical"
             android:textSize="@dimen/txt_medium"
             android:textColor="@color/red"
-            android:layout_marginTop="@dimen/margin_xlarge"
+            android:layout_marginTop="@dimen/margin_medium"
             android:layout_marginLeft="@dimen/margin_xlarge" />
 
         <Button
             android:id="@+id/jreq_btn_approve"
             android:text="@string/jreq_approve"
             android:layout_below="@id/jreq_request_description"
-            android:layout_marginTop="@dimen/margin_xlarge"
+            android:layout_marginTop="@dimen/margin_medium"
             android:layout_marginRight="@dimen/margin_xlarge"
             style="@style/ButtonFlat"
             android:textColor="@color/primaryColor"

@@ -2,6 +2,8 @@ package org.grassroot.android.models;
 
 /**
  * Created by luke on 2016/08/07.
+ * note : be very careful including this in inheritance chain as with rest of responses, given the custom adapter it uses and
+ * its importance for digesting and relaying API errors
  */
 public class ServerErrorModel {
 

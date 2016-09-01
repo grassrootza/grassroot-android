@@ -19,9 +19,13 @@ import io.realm.annotations.PrimaryKey;
  */
 public class GroupJoinRequest extends RealmObject implements Parcelable, Comparable<GroupJoinRequest> {
 
+    public static final String SENT_REQUEST = "SENT_REQUEST";
+    public static final String REC_REQUEST = "RECEIVED_REQUEST";
+
     @PrimaryKey
     private String requestUid;
 
+    private String joinReqType;
     private String requestorName;
     private String requestorNumber;
 
@@ -68,6 +72,8 @@ public class GroupJoinRequest extends RealmObject implements Parcelable, Compara
         return createdDateTimeISO;
     }
 
+    public String getJoinReqType() { return joinReqType; }
+
     public Date getCreatedDateTime() {
         if (createdDateTime == null) {
             try {
@@ -80,6 +86,7 @@ public class GroupJoinRequest extends RealmObject implements Parcelable, Compara
         return createdDateTime;
     }
 
+    // todo : make nullsafe
     @Override
     public int compareTo(GroupJoinRequest another) {
         return getCreatedDateTime().compareTo(another.getCreatedDateTime());

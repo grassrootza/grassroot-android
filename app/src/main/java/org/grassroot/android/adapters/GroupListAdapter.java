@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -59,7 +60,7 @@ public class GroupListAdapter extends RecyclerView.Adapter<GroupListAdapter.GHP_
     List<Group> fullGroupList;
     List<Group> displayedGroups;
 
-    private static final SimpleDateFormat outputSDF = new SimpleDateFormat("EEE, d MMM");
+    private static final SimpleDateFormat outputSDF = new SimpleDateFormat("EEE, d MMM", Locale.getDefault());
     private final float localGroupAlpha = 0.5f;
 
     public interface GroupRowListener {

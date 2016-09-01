@@ -11,7 +11,7 @@ import org.grassroot.android.events.NetworkFailureEvent;
 import org.grassroot.android.events.OfflineActionsSent;
 import org.grassroot.android.events.OnlineOfflineToggledEvent;
 import org.grassroot.android.interfaces.NotificationConstants;
-import org.grassroot.android.models.GenericResponse;
+import org.grassroot.android.models.responses.GenericResponse;
 import org.grassroot.android.models.Group;
 import org.grassroot.android.models.LocalGroupEdits;
 import org.grassroot.android.models.Member;

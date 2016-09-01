@@ -9,20 +9,19 @@ import org.grassroot.android.events.GroupDeletedEvent;
 import org.grassroot.android.events.GroupEditedEvent;
 import org.grassroot.android.events.GroupPictureChangedEvent;
 import org.grassroot.android.events.GroupsRefreshedEvent;
-import org.grassroot.android.events.JoinRequestReceived;
 import org.grassroot.android.events.LocalGroupToServerEvent;
 import org.grassroot.android.events.TasksRefreshedEvent;
 import org.grassroot.android.interfaces.GroupConstants;
 import org.grassroot.android.interfaces.TaskConstants;
-import org.grassroot.android.models.GenericResponse;
+import org.grassroot.android.models.responses.GenericResponse;
 import org.grassroot.android.models.Group;
 import org.grassroot.android.models.GroupJoinRequest;
-import org.grassroot.android.models.GroupResponse;
-import org.grassroot.android.models.GroupsChangedResponse;
+import org.grassroot.android.models.responses.GroupResponse;
+import org.grassroot.android.models.responses.GroupsChangedResponse;
 import org.grassroot.android.models.LocalGroupEdits;
 import org.grassroot.android.models.Member;
 import org.grassroot.android.models.Permission;
-import org.grassroot.android.models.PermissionResponse;
+import org.grassroot.android.models.responses.PermissionResponse;
 import org.grassroot.android.models.PreferenceObject;
 import org.grassroot.android.models.RealmString;
 import org.grassroot.android.models.ServerErrorModel;
@@ -48,7 +47,6 @@ import java.util.Set;
 
 import io.realm.Realm;
 import io.realm.RealmList;
-import io.realm.RealmResults;
 import okhttp3.MediaType;
 import okhttp3.MultipartBody;
 import okhttp3.RequestBody;
@@ -1133,9 +1131,6 @@ public class GroupService {
                 .getOpenJoinRequests(mobileNumber, code).execute();
             if (response.isSuccessful()) {
               saveJoinRequestsInDB(response.body());
-              if (!response.body().isEmpty()) {
-                EventBus.getDefault().post(new JoinRequestReceived(response.body().get(0)));
-              }
               subscriber.onNext(NetworkUtils.FETCHED_SERVER);
               subscriber.onCompleted();
             }
@@ -1186,18 +1181,6 @@ public class GroupService {
       realm.commitTransaction();
       realm.close();
     }
-  }
-
-  public RealmList<GroupJoinRequest> loadRequestsFromDB() {
-    Realm realm = Realm.getDefaultInstance();
-    RealmList<GroupJoinRequest> requests = new RealmList<>();
-    if (realm != null && !realm.isClosed()) {
-      // todo : probably want to filter by open, etc etc
-      RealmResults<GroupJoinRequest> results = realm.where(GroupJoinRequest.class).findAll();
-      requests.addAll(realm.copyFromRealm(results));
-    }
-    realm.close();
-    return requests;
   }
 
 }

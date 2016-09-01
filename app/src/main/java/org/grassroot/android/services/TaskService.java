@@ -5,16 +5,16 @@ import android.text.TextUtils;
 import org.grassroot.android.events.TaskUpdatedEvent;
 import org.grassroot.android.events.TasksRefreshedEvent;
 import org.grassroot.android.interfaces.TaskConstants;
-import org.grassroot.android.models.GenericResponse;
+import org.grassroot.android.models.responses.MemberListResponse;
+import org.grassroot.android.models.responses.GenericResponse;
 import org.grassroot.android.models.Group;
 import org.grassroot.android.models.Member;
-import org.grassroot.android.models.MemberList;
 import org.grassroot.android.models.PreferenceObject;
 import org.grassroot.android.models.ResponseTotalsModel;
 import org.grassroot.android.models.RsvpListModel;
-import org.grassroot.android.models.TaskChangedResponse;
+import org.grassroot.android.models.responses.TaskChangedResponse;
 import org.grassroot.android.models.TaskModel;
-import org.grassroot.android.models.TaskResponse;
+import org.grassroot.android.models.responses.TaskResponse;
 import org.grassroot.android.models.exceptions.ApiCallException;
 import org.grassroot.android.utils.ErrorUtils;
 import org.grassroot.android.utils.NetworkUtils;
@@ -437,7 +437,7 @@ public class TaskService {
           final String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
           final String code = RealmUtils.loadPreferencesFromDB().getToken();
           try {
-            Response<MemberList> response = GrassrootRestService.getInstance().getApi()
+            Response<MemberListResponse> response = GrassrootRestService.getInstance().getApi()
                 .fetchAssignedMembers(phoneNumber, code, taskUid, taskType).execute();
             if (response.isSuccessful()) {
               subscriber.onNext(response.body().getMembers());

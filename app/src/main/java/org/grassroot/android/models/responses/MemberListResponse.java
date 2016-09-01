@@ -1,6 +1,8 @@
-package org.grassroot.android.models;
+package org.grassroot.android.models.responses;
 
 import com.google.gson.annotations.SerializedName;
+
+import org.grassroot.android.models.Member;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -9,30 +11,11 @@ import io.realm.RealmList;
 
 /**
  * Created by luke on 2016/05/05.
- * todo: superclass some of these, like status, code
  */
-public class MemberList {
-
-    private String status;
-    private Integer code;
-    private String message;
+public class MemberListResponse extends AbstractResponse {
 
     @SerializedName("data")
     private List<Member> members = new ArrayList<>();
-
-    // GETTERS
-
-    public String getStatus() {
-        return status;
-    }
-
-    public Integer getCode() {
-        return code;
-    }
-
-    public String getMessage() {
-        return message;
-    }
 
     public List<Member> getMembers() {
         return members;
@@ -42,7 +25,7 @@ public class MemberList {
 
     @Override
     public String toString() {
-        StringBuilder sb = new StringBuilder("MemberList=");
+        StringBuilder sb = new StringBuilder("MemberListResponse=");
         for (Member m : members)
             sb.append("Member=" + m.toString());
         return sb.toString();

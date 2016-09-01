@@ -18,10 +18,12 @@ import android.util.Log;
 import org.grassroot.android.R;
 import org.grassroot.android.activities.JoinRequestNoticeActivity;
 import org.grassroot.android.activities.ViewTaskActivity;
+import org.grassroot.android.events.JoinRequestEvent;
 import org.grassroot.android.events.NotificationCountChangedEvent;
 import org.grassroot.android.interfaces.GroupConstants;
 import org.grassroot.android.interfaces.NotificationConstants;
-import org.grassroot.android.models.GenericResponse;
+import org.grassroot.android.models.responses.GenericResponse;
+import org.grassroot.android.models.GroupJoinRequest;
 import org.grassroot.android.models.PreferenceObject;
 import org.grassroot.android.utils.Constant;
 import org.grassroot.android.utils.RealmUtils;
@@ -169,19 +171,15 @@ public class GcmListenerService extends com.google.android.gms.gcm.GcmListenerSe
     final String entityType = msg.getString(NotificationConstants.ENTITY_TYPE);
     Intent resultIntent;
     if (entityType != null && entityType.contains(NotificationConstants.JOIN_REQUEST)) {
-      if (entityType.equals(GroupConstants.JREQ_APPROVED)) {
-        // note : do it via overall fetch function, which will anyway just send 'changed since', else changed since
-        // logic will be messed with by a single group fetch
-        Log.d(TAG, "received an approval! setting has groups to true");
-        GroupService.getInstance().fetchGroupList(Schedulers.immediate()).subscribe();
-        GroupService.getInstance().setHasGroups(true);
-      }
+      final String groupUid = msg.getString("group");
+      handleJoinRequestInDB(entityType, groupUid);
       resultIntent = new Intent(this, JoinRequestNoticeActivity.class);
       resultIntent.putExtra(NotificationConstants.ENTITY_TYPE, entityType);
       resultIntent.putExtra(NotificationConstants.ENTITY_UID, msg.getString(NotificationConstants.ENTITY_UID));
       resultIntent.putExtra(NotificationConstants.CLICK_ACTION, msg.getString(NotificationConstants.CLICK_ACTION));
       resultIntent.putExtra(NotificationConstants.BODY, msg.getString(NotificationConstants.BODY));
-      resultIntent.putExtra(GroupConstants.UID_FIELD, msg.getString("group"));
+      resultIntent.putExtra(GroupConstants.UID_FIELD, groupUid);
+      EventBus.getDefault().post(new JoinRequestEvent(TAG));
     } else {
       resultIntent = new Intent(this, ViewTaskActivity.class);
       resultIntent.putExtra(NotificationConstants.ENTITY_TYPE, entityType);
@@ -189,13 +187,30 @@ public class GcmListenerService extends com.google.android.gms.gcm.GcmListenerSe
       resultIntent.putExtra(NotificationConstants.NOTIFICATION_UID, msg.getString(NotificationConstants.NOTIFICATION_UID));
       resultIntent.putExtra(NotificationConstants.CLICK_ACTION, msg.getString(NotificationConstants.CLICK_ACTION));
       resultIntent.putExtra(NotificationConstants.BODY, msg.getString(NotificationConstants.BODY));
-
     }
 
     PendingIntent resultPendingIntent = PendingIntent.getActivity(this, (int) System.currentTimeMillis(), resultIntent,
         PendingIntent.FLAG_CANCEL_CURRENT);
-    Log.e(TAG, "and generateResultIntent exits, with intent: " + resultPendingIntent.toString());
+    Log.d(TAG, "and generateResultIntent exits, with intent: " + resultPendingIntent.toString());
     return resultPendingIntent;
+  }
+
+  private void handleJoinRequestInDB(final String entityType, final String groupUid) {
+    if (entityType.equals(GroupConstants.JREQ_APPROVED)) {
+      // note : do it via overall fetch function, which will anyway just send 'changed since', else changed since
+      // logic will be messed with by a single group fetch
+      GroupService.getInstance().fetchGroupList(Schedulers.immediate()).subscribe();
+      GroupService.getInstance().setHasGroups(true);
+      RealmUtils.removeObjectFromDatabase(GroupJoinRequest.class, "groupUid", groupUid);
+    }
+
+    if (entityType.equals(GroupConstants.JREQ_DENIED)) {
+      RealmUtils.removeObjectFromDatabase(GroupJoinRequest.class, "groupUid", groupUid);
+    }
+
+    if (entityType.equals(GroupConstants.JREQ_RECEIVED)) {
+      GroupService.getInstance().fetchGroupJoinRequests(Schedulers.immediate()).subscribe();
+    }
   }
 
   public static void clearNotifications(Context context) {

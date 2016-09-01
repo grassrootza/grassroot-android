@@ -13,23 +13,24 @@ import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 
 import org.grassroot.android.BuildConfig;
-import org.grassroot.android.models.GenericResponse;
 import org.grassroot.android.models.GroupJoinRequest;
-import org.grassroot.android.models.GroupResponse;
-import org.grassroot.android.models.GroupSearchResponse;
-import org.grassroot.android.models.GroupsChangedResponse;
 import org.grassroot.android.models.Member;
-import org.grassroot.android.models.MemberList;
+import org.grassroot.android.models.responses.MemberListResponse;
 import org.grassroot.android.models.NotificationList;
 import org.grassroot.android.models.Permission;
-import org.grassroot.android.models.PermissionResponse;
-import org.grassroot.android.models.ProfileResponse;
 import org.grassroot.android.models.RealmString;
 import org.grassroot.android.models.ResponseTotalsModel;
 import org.grassroot.android.models.RsvpListModel;
-import org.grassroot.android.models.TaskChangedResponse;
-import org.grassroot.android.models.TaskResponse;
-import org.grassroot.android.models.TokenResponse;
+import org.grassroot.android.models.responses.GenericResponse;
+import org.grassroot.android.models.responses.GroupResponse;
+import org.grassroot.android.models.responses.GroupSearchResponse;
+import org.grassroot.android.models.responses.GroupsChangedResponse;
+import org.grassroot.android.models.responses.JoinRequestResponse;
+import org.grassroot.android.models.responses.PermissionResponse;
+import org.grassroot.android.models.responses.ProfileResponse;
+import org.grassroot.android.models.responses.TaskChangedResponse;
+import org.grassroot.android.models.responses.TaskResponse;
+import org.grassroot.android.models.responses.TokenResponse;
 import org.grassroot.android.utils.Constant;
 
 import java.io.IOException;
@@ -281,9 +282,9 @@ public class GrassrootRestService {
 
     //group join request
     @POST("group/join/request/{phoneNumber}/{code}")
-    Call<GenericResponse> sendGroupJoinRequest(@Path("phoneNumber") String phoneNumber,
-                                               @Path("code") String code,
-                                               @Query("uid") String uid, @Query("message") String message);
+    Call<JoinRequestResponse> sendGroupJoinRequest(@Path("phoneNumber") String phoneNumber,
+                                                   @Path("code") String code,
+                                                   @Query("uid") String uid, @Query("message") String message);
 
     //find open join requests assigned to this user
     @GET("group/join/list/{phoneNumber}/{code}")
@@ -453,8 +454,8 @@ public class GrassrootRestService {
         @Query("members") Set<String> membersAssigned);
 
     @GET("task/assigned/{phoneNumber}/{code}/{taskUid}/{taskType}")
-    Call<MemberList> fetchAssignedMembers(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
-        @Path("taskUid") String taskUid, @Path("taskType") String taskType);
+    Call<MemberListResponse> fetchAssignedMembers(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
+                                                  @Path("taskUid") String taskUid, @Path("taskType") String taskType);
 
     // should clearly consolidate / abstract / simplify these to one call in future versions
 

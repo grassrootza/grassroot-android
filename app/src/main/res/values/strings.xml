@@ -334,22 +334,23 @@
 
     <string name="gs_req_cancelled">Done, the request is cancelled</string>
     <string name="gs_req_remind">Done, we\'ve sent a reminder</string>
-    <string name="gs_req_remind_cancelled_connect_error">Sorry, you\'re connection isn\'t working. Please
+    <string name="gs_req_remind_cancelled_connect_error">Sorry, your connection isn\'t working. Please
     try again later</string>
 
     <string name="none">NONE</string>
 
     <!-- SECTION: Viewing and responding to join requests -->
-    <string name="jreq_notice">You have requests to join one of your groups</string>
-
     <string name="jreq_frag_title">Join requests</string>
     <string name="jreq_group_name">Group: %s</string>
     <string name="jreq_req_name">Request from: %s</string>
     <string name="jreq_req_number">Phone: %s</string>
-    <string name="jreq_desc_head">Message: </string>
+    <string name="jreq_desc_head">Message: %s</string>
+    <string name="jreq_sent_date">Sent: %s</string>
+    <string name="jreq_no_desc_rec">No message included</string>
 
     <string name="jreq_approve">APPROVE</string>
     <string name="jreq_deny">DENY</string>
+    <string name="jreq_remind">Remind</string>
 
     <string name="jreq_approved">Done! Join request approved</string>
     <string name="jreq_denied">Okay, the join request was denied</string>
@@ -357,6 +358,8 @@
 
     <string name="jreq_no_requests">We couldn\'t find any pending requests. To check again, please
     pull down to refresh</string>
+    <string name="jreq_no_requests_sent">We couldn\'t find any open requests. To find and join groups,
+        go to \'find other groups\'</string>
 
     <string name="jreq_gmsg_header">Join request</string>
     <string name="jreq_gmsg_header_approved">Approved</string>
@@ -367,6 +370,7 @@
 
     <string name="jreq_approved_load_error">Sorry, we couldn\'t fetch the group, but you have been added.
     Please try again later</string>
+    <string name="jreq_cancel_confirm">Are you sure you want to cancel the request?</string>
 
     <!-- Member list fragment -->
     <string name="member_list_default_header">Current members</string>

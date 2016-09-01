@@ -25,6 +25,7 @@ import org.grassroot.android.activities.StartActivity;
 import org.grassroot.android.adapters.NavigationDrawerAdapter;
 import org.grassroot.android.events.GroupCreatedEvent;
 import org.grassroot.android.events.GroupsRefreshedEvent;
+import org.grassroot.android.events.JoinRequestEvent;
 import org.grassroot.android.events.NetworkFailureEvent;
 import org.grassroot.android.events.NotificationCountChangedEvent;
 import org.grassroot.android.events.OfflineActionsSent;
@@ -93,6 +94,7 @@ public class NavigationDrawerFragment extends Fragment implements NavigationDraw
     private NavDrawerItem onlineOffineSwitch;
 
     private boolean primaryItemsActive;
+    private boolean onStartUp;
 
     Unbinder unbinder;
     @BindView(R.id.displayName) TextView displayName;
@@ -141,7 +143,21 @@ public class NavigationDrawerFragment extends Fragment implements NavigationDraw
         primaryItemsView.setLayoutManager(new LinearLayoutManager(getContext()));
         primaryItemsView.setAdapter(itemAdapter);
 
+        onStartUp = true;
+
         return view;
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        if (!onStartUp) {
+            Log.e(TAG, "resuming with start up set false, refreshing counts");
+            refreshCounts();
+        } else {
+            Log.e(TAG, "on start up, not refreshing counts");
+            onStartUp = false;
+        }
     }
 
     @Override
@@ -419,6 +435,14 @@ public class NavigationDrawerFragment extends Fragment implements NavigationDraw
         getActivity().startService(gcmUnregister);
     }
 
+    private void refreshCounts() {
+        refreshGroupCount();
+        notifications.setItemCount(RealmUtils.loadPreferencesFromDB().getNotificationCounter()); // todo : switch to a DB count
+        tasks.setItemCount((int) RealmUtils.countUpcomingTasksInDB());
+        joinRequests.setItemCount((int) RealmUtils.countObjectsInDB(GroupJoinRequest.class));
+        itemAdapter.notifyDataSetChanged();
+    }
+
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onGroupsRefreshedEvent(GroupsRefreshedEvent e) {
         refreshGroupCount();
@@ -462,6 +486,13 @@ public class NavigationDrawerFragment extends Fragment implements NavigationDraw
             tasks.setItemCount((int) RealmUtils.countUpcomingTasksInDB());
             safeItemChange(NavigationConstants.HOME_NAV_TASKS);
         }
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onJoinRequestsChanged(JoinRequestEvent event) {
+        Log.e(TAG, "join requests changed!");
+        joinRequests.setItemCount((int) RealmUtils.countObjectsInDB(GroupJoinRequest.class));
+        safeItemChange(NavigationConstants.HOME_NAV_JOIN_REQUESTS);
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)

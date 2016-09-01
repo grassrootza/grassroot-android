@@ -1,23 +1,11 @@
-package org.grassroot.android.models;
+package org.grassroot.android.models.responses;
 
-import com.google.gson.annotations.SerializedName;
-
-import java.util.List;
-
-import io.realm.RealmList;
-
-/**
- * Created by luke on 2016/07/18.
- */
-public class PermissionResponse {
+public class GenericResponse {
 
     private String status;
     private Integer code;
     private String message;
-    @SerializedName("data")
-    List<Permission> permissions = new RealmList<>();
-
-    public PermissionResponse() { }
+    private Object data;
 
     public String getStatus() {
         return status;
@@ -43,11 +31,12 @@ public class PermissionResponse {
         this.message = message;
     }
 
-    public List<Permission> getPermissions() {
-        return permissions;
+    public Object getData() {
+        return data;
     }
 
-    public void setPermissions(List<Permission> permissions) {
-        this.permissions = permissions;
+    public void setData(Object data) {
+        this.data = data;
     }
+
 }

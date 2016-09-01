@@ -13,18 +13,22 @@ import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
 import org.grassroot.android.R;
+import org.grassroot.android.events.JoinRequestEvent;
 import org.grassroot.android.fragments.GiantMessageFragment;
 import org.grassroot.android.fragments.GroupSearchResultsFragment;
 import org.grassroot.android.fragments.GroupSearchStartFragment;
 import org.grassroot.android.interfaces.NavigationConstants;
 import org.grassroot.android.models.PublicGroupModel;
 import org.grassroot.android.models.exceptions.ApiCallException;
+import org.grassroot.android.services.ApplicationLoader;
 import org.grassroot.android.services.GroupSearchService;
 import org.grassroot.android.utils.ErrorUtils;
 import org.grassroot.android.utils.NetworkUtils;
 import org.grassroot.android.utils.RealmUtils;
+import org.greenrobot.eventbus.EventBus;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -241,12 +245,13 @@ public class GroupSearchActivity extends PortraitActivity implements GroupSearch
     @Override
     public void cancelJoinRequest(PublicGroupModel groupModel) {
         progressDialog.show(); // should really switch to just a prog bar
-        GroupSearchService.getInstance().cancelJoinRequest(groupModel, AndroidSchedulers.mainThread())
+        GroupSearchService.getInstance().cancelJoinRequest(groupModel.getId(), AndroidSchedulers.mainThread())
             .subscribe(new Subscriber<String>() {
                 @Override
                 public void onNext(String s) {
                     progressDialog.dismiss();
-                    Snackbar.make(fragmentContainer, R.string.gs_req_cancelled, Snackbar.LENGTH_SHORT).show();
+                    Toast.makeText(ApplicationLoader.applicationContext, R.string.gs_req_cancelled, Toast.LENGTH_SHORT).show();
+                    EventBus.getDefault().post(new JoinRequestEvent(TAG));
                 }
 
                 @Override
@@ -269,12 +274,12 @@ public class GroupSearchActivity extends PortraitActivity implements GroupSearch
     @Override
     public void remindJoinRequest(PublicGroupModel groupModel) {
         progressDialog.show();
-        GroupSearchService.getInstance().remindJoinRequest(groupModel, AndroidSchedulers.mainThread())
+        GroupSearchService.getInstance().remindJoinRequest(groupModel.getId(), AndroidSchedulers.mainThread())
             .subscribe(new Subscriber<String>() {
                 @Override
                 public void onNext(String s) {
                     progressDialog.dismiss();
-                    Snackbar.make(fragmentContainer, R.string.gs_req_remind, Snackbar.LENGTH_SHORT).show();
+                    Toast.makeText(ApplicationLoader.applicationContext, R.string.gs_req_remind, Toast.LENGTH_SHORT).show();
                 }
 
                 @Override
@@ -326,6 +331,7 @@ public class GroupSearchActivity extends PortraitActivity implements GroupSearch
             .commit();
         currentFragmentTag = DONE;
         switchToolbar(DONE);
+        EventBus.getDefault().post(new JoinRequestEvent(TAG));
     }
 
     private void exitToHomeScreen() {

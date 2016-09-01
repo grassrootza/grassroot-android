@@ -1,9 +1,13 @@
 package org.grassroot.android.services;
 
-import org.grassroot.android.models.GenericResponse;
-import org.grassroot.android.models.GroupSearchResponse;
+import android.util.Log;
+
+import org.grassroot.android.models.GroupJoinRequest;
 import org.grassroot.android.models.PublicGroupModel;
 import org.grassroot.android.models.exceptions.ApiCallException;
+import org.grassroot.android.models.responses.GenericResponse;
+import org.grassroot.android.models.responses.GroupSearchResponse;
+import org.grassroot.android.models.responses.JoinRequestResponse;
 import org.grassroot.android.utils.ErrorUtils;
 import org.grassroot.android.utils.NetworkUtils;
 import org.grassroot.android.utils.RealmUtils;
@@ -115,11 +119,12 @@ public class GroupSearchService {
 				try {
 					final String mobileNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
 					final String code = RealmUtils.loadPreferencesFromDB().getToken();
-					Response<GenericResponse> sendRequest = GrassrootRestService.getInstance().getApi()
-						.sendGroupJoinRequest(mobileNumber, code, groupModel.getId(), groupModel.getDescription())
-						.execute();
+					Response<JoinRequestResponse> sendRequest = GrassrootRestService.getInstance().getApi()
+						.sendGroupJoinRequest(mobileNumber, code, groupModel.getId(), groupModel.getDescription()).execute();
 					if (sendRequest.isSuccessful()) {
 						removePublicGroup(groupModel);
+						Log.e(TAG, "response = " + sendRequest.body().toString());
+						RealmUtils.saveDataToRealmSync(sendRequest.body().getRequests().first());
 						subscriber.onNext(NetworkUtils.SAVED_SERVER);
 						subscriber.onCompleted();
 					} else {
@@ -135,7 +140,7 @@ public class GroupSearchService {
 		}).subscribeOn(Schedulers.io()).observeOn(observingThread);
 	}
 
-	public Observable<String> cancelJoinRequest(final PublicGroupModel groupModel, Scheduler observingThread) {
+	public Observable<String> cancelJoinRequest(final String groupUid, Scheduler observingThread) {
 		observingThread = (observingThread == null) ? AndroidSchedulers.mainThread() : observingThread;
 		return Observable.create(new Observable.OnSubscribe<String>() {
 			@Override
@@ -144,13 +149,22 @@ public class GroupSearchService {
 					final String mobileNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
 					final String code = RealmUtils.loadPreferencesFromDB().getToken();
 					Response<GenericResponse> response = GrassrootRestService.getInstance().getApi()
-						.cancelJoinRequest(mobileNumber, code, groupModel.getId()).execute();
+						.cancelJoinRequest(mobileNumber, code, groupUid).execute();
 					if (response.isSuccessful()) {
+						RealmUtils.removeObjectFromDatabase(GroupJoinRequest.class, "groupUid", groupUid);
 						subscriber.onNext(NetworkUtils.SAVED_SERVER);
 						subscriber.onCompleted();
 					} else {
-						throw new ApiCallException(NetworkUtils.SERVER_ERROR,
-							ErrorUtils.getRestMessage(response.errorBody()));
+						final String restMessage = ErrorUtils.getRestMessage(response.errorBody());
+						if (ErrorUtils.JREQ_NOT_FOUND.equals(restMessage)) {
+							// slight violence here, but just in case it was approved already (should display different msg in future .. todo)
+							subscriber.onNext(NetworkUtils.SAVED_SERVER);
+							RealmUtils.removeObjectFromDatabase(GroupJoinRequest.class, "groupUid", groupUid);
+							subscriber.onCompleted();
+						} else {
+							throw new ApiCallException(NetworkUtils.SERVER_ERROR,
+									ErrorUtils.getRestMessage(response.errorBody()));
+						}
 					}
 				} catch (IOException e) {
 					NetworkUtils.setConnectionFailed();
@@ -160,7 +174,7 @@ public class GroupSearchService {
 		}).subscribeOn(Schedulers.io()).observeOn(observingThread);
 	}
 
-	public Observable<String> remindJoinRequest(final PublicGroupModel groupModel, Scheduler observingThread) {
+	public Observable<String> remindJoinRequest(final String groupUid, Scheduler observingThread) {
 		observingThread = (observingThread == null) ? AndroidSchedulers.mainThread() : observingThread;
 		return Observable.create(new Observable.OnSubscribe<String>() {
 			@Override
@@ -169,7 +183,7 @@ public class GroupSearchService {
 					final String mobileNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
 					final String code = RealmUtils.loadPreferencesFromDB().getToken();
 					Response<GenericResponse> response = GrassrootRestService.getInstance().getApi()
-						.remindJoinRequest(mobileNumber, code, groupModel.getId()).execute();
+						.remindJoinRequest(mobileNumber, code, groupUid).execute();
 					if (response.isSuccessful()) {
 						subscriber.onNext(NetworkUtils.SAVED_SERVER);
 						subscriber.onCompleted();

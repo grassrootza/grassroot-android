@@ -11,7 +11,7 @@ import com.google.android.gms.iid.InstanceID;
 import org.grassroot.android.BuildConfig;
 import org.grassroot.android.R;
 import org.grassroot.android.interfaces.NotificationConstants;
-import org.grassroot.android.models.GenericResponse;
+import org.grassroot.android.models.responses.GenericResponse;
 import org.grassroot.android.models.PreferenceObject;
 import org.grassroot.android.utils.Constant;
 import org.grassroot.android.utils.RealmUtils;

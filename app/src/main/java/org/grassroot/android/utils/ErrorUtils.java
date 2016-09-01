@@ -64,6 +64,8 @@ public class ErrorUtils {
     public static final String NOTIFICATIONS_DONE = "NOTIFICATIONS_FINISHED";
     public static final String ALREADY_LEFT = "MEMBER_ALREADY_LEFT";
 
+    public static final String JREQ_NOT_FOUND = "GROUP_JOIN_REQUEST_NOT_FOUND";
+
     public static String serverErrorText(final String restMessage) {
         final Context context = ApplicationLoader.applicationContext;
         if (TextUtils.isEmpty(restMessage)) {

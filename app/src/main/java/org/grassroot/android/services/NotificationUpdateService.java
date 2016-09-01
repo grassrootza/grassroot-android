@@ -7,7 +7,7 @@ import android.text.TextUtils;
 import android.util.Log;
 
 import org.grassroot.android.interfaces.NotificationConstants;
-import org.grassroot.android.models.GenericResponse;
+import org.grassroot.android.models.responses.GenericResponse;
 import org.grassroot.android.models.TaskNotification;
 import org.grassroot.android.utils.RealmUtils;
 

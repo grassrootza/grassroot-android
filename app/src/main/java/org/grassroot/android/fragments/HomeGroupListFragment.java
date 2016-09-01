@@ -37,7 +37,6 @@ import org.grassroot.android.events.GroupDeletedEvent;
 import org.grassroot.android.events.GroupEditedEvent;
 import org.grassroot.android.events.GroupPictureChangedEvent;
 import org.grassroot.android.events.GroupsRefreshedEvent;
-import org.grassroot.android.events.JoinRequestReceived;
 import org.grassroot.android.events.LocalGroupToServerEvent;
 import org.grassroot.android.events.TaskAddedEvent;
 import org.grassroot.android.events.UserLoggedOutEvent;
@@ -497,11 +496,6 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
     public void onEvent(LocalGroupToServerEvent event) {
         Log.e(TAG, "onEvent ... localgrouptoserver recevied ...");
         groupListRowAdapter.replaceGroup(event.localGroupUid, event.serverUid);
-    }
-
-    @Subscribe(threadMode = ThreadMode.MAIN)
-    public void onGroupJoinRequestsLoaded(JoinRequestReceived e) {
-        Snackbar.make(rlGhpRoot, R.string.jreq_notice, Snackbar.LENGTH_LONG).show();
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)

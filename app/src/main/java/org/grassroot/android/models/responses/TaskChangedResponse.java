@@ -1,4 +1,6 @@
-package org.grassroot.android.models;
+package org.grassroot.android.models.responses;
+
+import org.grassroot.android.models.TaskModel;
 
 import java.util.ArrayList;
 import java.util.List;

@@ -25,7 +25,7 @@ import org.grassroot.android.events.TaskCancelledEvent;
 import org.grassroot.android.events.UserLoggedOutEvent;
 import org.grassroot.android.fragments.GroupPickFragment;
 import org.grassroot.android.fragments.HomeGroupListFragment;
-import org.grassroot.android.fragments.JoinRequestsFragment;
+import org.grassroot.android.fragments.JoinRequestMasterFragment;
 import org.grassroot.android.fragments.NavigationDrawerFragment;
 import org.grassroot.android.fragments.NewTaskMenuFragment;
 import org.grassroot.android.fragments.NotificationCenterFragment;
@@ -63,7 +63,7 @@ public class HomeScreenActivity extends PortraitActivity implements NavigationDr
     private HomeGroupListFragment groupListFragment;
     private TaskListFragment taskListFragment;
     private NotificationCenterFragment notificationCenterFragment;
-    private JoinRequestsFragment joinRequestsFragment;
+    private JoinRequestMasterFragment joinRequestsFragment;
 
     private boolean isFirstFragmentSwap = true;
     private boolean showMenuOptions = true;
@@ -280,7 +280,7 @@ public class HomeScreenActivity extends PortraitActivity implements NavigationDr
     private void switchToJoinRequestsFragment() {
         setTitleAndNavDrawerSelection(NavigationConstants.ITEM_JOIN_REQS, false);
         if (joinRequestsFragment == null) {
-            joinRequestsFragment = new JoinRequestsFragment();
+            joinRequestsFragment = new JoinRequestMasterFragment();
         }
         showOrReplaceFragment(joinRequestsFragment, NavigationConstants.ITEM_JOIN_REQS);
         currentMainFragment = NavigationConstants.HOME_NAV_JOIN_REQUESTS;
