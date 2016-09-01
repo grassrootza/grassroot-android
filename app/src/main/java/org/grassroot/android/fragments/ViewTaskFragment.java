@@ -203,6 +203,8 @@ public class ViewTaskFragment extends Fragment {
             menu.findItem(R.id.mi_change_desc).setVisible(false);
         if (menu.findItem(R.id.action_search) != null)
             menu.findItem(R.id.action_search).setVisible(false);
+        if (menu.findItem(R.id.mi_refresh_screen) != null)
+            menu.findItem(R.id.mi_refresh_screen).setVisible(false);
 
         if (menu.findItem(R.id.mi_share_default) != null)
             menu.findItem(R.id.mi_share_default).setVisible(taskInFuture);

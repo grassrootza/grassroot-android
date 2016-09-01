@@ -13,6 +13,7 @@ import android.widget.ProgressBar;
 import org.grassroot.android.R;
 import org.grassroot.android.fragments.GiantMessageFragment;
 import org.grassroot.android.interfaces.GroupConstants;
+import org.grassroot.android.interfaces.NavigationConstants;
 import org.grassroot.android.interfaces.NotificationConstants;
 import org.grassroot.android.models.Group;
 import org.grassroot.android.services.GroupService;
@@ -97,11 +98,10 @@ public class JoinRequestNoticeActivity extends PortraitActivity {
 				builder.setButtonTwo(R.string.jreq_btn_later, new View.OnClickListener() {
 					@Override
 					public void onClick(View v) {
-						if (group != null) {
-							goToGroupTasks(group);
-						} else {
-							NavUtils.navigateUpFromSameTask(JoinRequestNoticeActivity.this);
-						}
+						Intent i = new Intent(JoinRequestNoticeActivity.this, HomeScreenActivity.class);
+						i.putExtra(NavigationConstants.HOME_OPEN_ON_NAV, NavigationConstants.ITEM_JOIN_REQS);
+						startActivity(i);
+						finish();
 					}
 				});
 				break;

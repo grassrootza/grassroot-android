@@ -10,7 +10,6 @@ import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -123,12 +122,6 @@ public class JoinRequestListFragment extends Fragment implements JoinRequestAdap
         return view;
     }
 
-    @Override
-    public void onResume() {
-      super.onResume();
-
-    }
-
     private void setUpRecyclerView() {
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         recyclerView.setHasFixedSize(true);
@@ -153,16 +146,20 @@ public class JoinRequestListFragment extends Fragment implements JoinRequestAdap
     }
 
     private void switchToEmptyList() {
+      if (recyclerView != null) {
         recyclerView.setVisibility(View.GONE);
         noRequestsMessage.setVisibility(View.VISIBLE);
+      }
     }
 
     private void switchToShownList() {
+      if (recyclerView != null) {
         recyclerView.setVisibility(View.VISIBLE);
         noRequestsMessage.setVisibility(View.GONE);
+      }
     }
 
-    private void refreshJoinRequests() {
+    protected void refreshJoinRequests() {
         swipeRefreshLayout.setRefreshing(true);
         GroupService.getInstance().fetchGroupJoinRequests(AndroidSchedulers.mainThread())
             .subscribe(new Action1<String>() {
@@ -298,8 +295,7 @@ public class JoinRequestListFragment extends Fragment implements JoinRequestAdap
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void groupJoinRequestReceived(JoinRequestEvent e) {
-			Log.e(TAG, "got a join request! with tag ... " + e.getTAG());
-      if (!TAG.equals(e.getTAG()) && swipeRefreshLayout != null) {
+			if (!TAG.equals(e.getTAG())) {
           adapter.refreshList();
       }
     }

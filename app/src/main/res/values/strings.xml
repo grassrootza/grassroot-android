@@ -195,6 +195,7 @@
     <!-- Menu items -->
     <string name="menu_sort">Sort</string>
     <string name="menu_filter">Filter</string>
+    <string name="menu_refresh">Refresh</string>
     <string name="menu_unread">Only unread</string>
     <string name="menu_all_notis">Show all</string>
 
@@ -366,7 +367,7 @@
     <string name="jreq_gmsg_header_denied">Denied</string>
     <string name="jreq_btn_group">View group</string>
     <string name="jreq_btn_approve">Approve</string>
-    <string name="jreq_btn_later">Later</string>
+    <string name="jreq_btn_later">Show list</string>
 
     <string name="jreq_approved_load_error">Sorry, we couldn\'t fetch the group, but you have been added.
     Please try again later</string>

@@ -1,9 +1,11 @@
 package org.grassroot.android.utils;
 
 import android.os.Looper;
+import android.support.annotation.NonNull;
 import android.util.Log;
 
 import org.grassroot.android.models.Group;
+import org.grassroot.android.models.GroupJoinRequest;
 import org.grassroot.android.models.Member;
 import org.grassroot.android.models.PreferenceObject;
 import org.grassroot.android.models.RealmString;
@@ -497,6 +499,43 @@ public class RealmUtils {
         realm.close();
 
         return notifications;
+    }
+
+    public static void persistFullListJoinRequests(@NonNull final List<GroupJoinRequest> requests) {
+        if (Looper.myLooper() == Looper.getMainLooper()) {
+            Log.e(TAG, "Error! Calling inline DB query on main thread");
+            return;
+        }
+
+        final Realm realm = Realm.getDefaultInstance();
+        if (realm != null && !realm.isClosed()) {
+            realm.executeTransaction(new Realm.Transaction() {
+                @Override
+                public void execute(Realm realm) {
+                    if (!requests.isEmpty()) {
+                        realm.copyToRealmOrUpdate(requests);
+                        final int size = requests.size();
+                        final String[] presentUids = new String[size];
+                        for (int i = 0; i < size; i++) {
+                            presentUids[i] = requests.get(i).getRequestUid();
+                        }
+
+                        realm.where(GroupJoinRequest.class)
+                            .not()
+                            .beginGroup()
+                            .in("requestUid", presentUids)
+                            .endGroup()
+                            .findAll()
+                            .deleteAllFromRealm();
+                    } else {
+                        realm.where(GroupJoinRequest.class)
+                            .findAll()
+                            .deleteAllFromRealm();
+                    }
+                }
+            });
+            realm.close();
+        }
     }
 
     /*

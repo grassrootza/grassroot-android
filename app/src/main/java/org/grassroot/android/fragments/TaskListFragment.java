@@ -15,6 +15,7 @@ import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ProgressBar;
@@ -144,7 +145,7 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
     swipeRefreshLayout.setColorSchemeColors(ContextCompat.getColor(getActivity(), R.color.primaryColor));
     swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
       @Override public void onRefresh() {
-        refreshTasksFromServer();
+        refreshTasksFromServer(false);
       }
     });
   }
@@ -168,6 +169,19 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
       menu.findItem(R.id.mi_share_default).setVisible(false);
     if (menu.findItem(R.id.mi_only_unread) != null)
       menu.findItem(R.id.mi_only_unread).setVisible(false);
+    if (menu.findItem(R.id.mi_refresh_screen) != null)
+      menu.findItem(R.id.mi_refresh_screen).setVisible(true);
+  }
+
+  @Override
+  public boolean onOptionsItemSelected(MenuItem item) {
+    switch (item.getItemId()) {
+      case R.id.mi_refresh_screen:
+        refreshTasksFromServer(true);
+        return true;
+      default:
+        return super.onOptionsItemSelected(item);
+    }
   }
 
   @Override public void onDestroyView() {
@@ -192,7 +206,7 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
   private void loadTasksOnCreateView() {
     if (hasTasksInDB()) {
       loadTasksFromDB(NetworkUtils.FETCHED_CACHE);
-      refreshTasksFromServer();
+      refreshTasksFromServer(false);
     } else {
       showProgress();
       TaskService.getInstance().fetchTasks(groupUid, AndroidSchedulers.mainThread()).subscribe(new Action1<String>() {
@@ -218,7 +232,10 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
    */
 
   // a null or empty groupUid passed through, tells the service to fetch all upcoming tasks, across groups
-  private void refreshTasksFromServer() {
+  private void refreshTasksFromServer(boolean forceShowRefreshing) {
+    if (forceShowRefreshing && swipeRefreshLayout != null) {
+      swipeRefreshLayout.setRefreshing(true);
+    }
     TaskService.getInstance().fetchTasks(groupUid, null).subscribe(new Action1<String>() {
       @Override
       public void call(String s) {

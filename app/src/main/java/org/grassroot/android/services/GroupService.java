@@ -13,21 +13,21 @@ import org.grassroot.android.events.LocalGroupToServerEvent;
 import org.grassroot.android.events.TasksRefreshedEvent;
 import org.grassroot.android.interfaces.GroupConstants;
 import org.grassroot.android.interfaces.TaskConstants;
-import org.grassroot.android.models.responses.GenericResponse;
 import org.grassroot.android.models.Group;
 import org.grassroot.android.models.GroupJoinRequest;
-import org.grassroot.android.models.responses.GroupResponse;
-import org.grassroot.android.models.responses.GroupsChangedResponse;
 import org.grassroot.android.models.LocalGroupEdits;
 import org.grassroot.android.models.Member;
 import org.grassroot.android.models.Permission;
-import org.grassroot.android.models.responses.PermissionResponse;
 import org.grassroot.android.models.PreferenceObject;
 import org.grassroot.android.models.RealmString;
 import org.grassroot.android.models.ServerErrorModel;
 import org.grassroot.android.models.TaskModel;
 import org.grassroot.android.models.exceptions.ApiCallException;
 import org.grassroot.android.models.exceptions.InvalidNumberException;
+import org.grassroot.android.models.responses.GenericResponse;
+import org.grassroot.android.models.responses.GroupResponse;
+import org.grassroot.android.models.responses.GroupsChangedResponse;
+import org.grassroot.android.models.responses.PermissionResponse;
 import org.grassroot.android.utils.ErrorUtils;
 import org.grassroot.android.utils.NetworkUtils;
 import org.grassroot.android.utils.PermissionUtils;
@@ -1130,7 +1130,7 @@ public class GroupService {
             Response<RealmList<GroupJoinRequest>> response =  GrassrootRestService.getInstance().getApi()
                 .getOpenJoinRequests(mobileNumber, code).execute();
             if (response.isSuccessful()) {
-              saveJoinRequestsInDB(response.body());
+              RealmUtils.persistFullListJoinRequests(response.body());
               subscriber.onNext(NetworkUtils.FETCHED_SERVER);
               subscriber.onCompleted();
             }
@@ -1170,17 +1170,6 @@ public class GroupService {
         }
       }
     }).subscribeOn(Schedulers.io()).observeOn(observingThread);
-  }
-
-
-  private void saveJoinRequestsInDB(RealmList<GroupJoinRequest> requests) {
-    Realm realm = Realm.getDefaultInstance();
-    if (requests != null && realm != null && !realm.isClosed()) {
-      realm.beginTransaction();
-      realm.copyToRealmOrUpdate(requests);
-      realm.commitTransaction();
-      realm.close();
-    }
   }
 
 }

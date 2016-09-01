@@ -104,7 +104,6 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
     public void onAttach(Context context) {
         super.onAttach(context);
         Log.d(TAG, "home group list fragment ... on attach ... timer ... " + SystemClock.currentThreadTimeMillis());
-
         try {
             mCallbacks = (GroupPickCallbacks) context;
         } catch (ClassCastException e) {
@@ -142,6 +141,8 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
             menu.findItem(R.id.mi_share_default).setVisible(false);
         if (menu.findItem(R.id.mi_only_unread) != null)
             menu.findItem(R.id.mi_only_unread).setVisible(false);
+        if (menu.findItem(R.id.mi_refresh_screen) != null)
+            menu.findItem(R.id.mi_refresh_screen).setVisible(true);
     }
 
     @Override
@@ -163,6 +164,9 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
         switch (item.getItemId()) {
             case R.id.mi_icon_sort:
                 sortGroups();
+                return true;
+            case R.id.mi_refresh_screen:
+                refreshGroupList(true);
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
@@ -199,7 +203,7 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
         glSwipeRefresh.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
-                refreshGroupList();
+                refreshGroupList(false);
             }
         });
     }
@@ -238,8 +242,11 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
     Separating this method from the above, because we will probably want it to call some kind of diff
     in time, rather than doing a full refresh, and don't need to worry about progress bar, etc
    */
-    public void refreshGroupList() {
+    public void refreshGroupList(final boolean showProgressBar) {
         triggeredGroupRefresh = true;
+        if (showProgressBar) {
+            showProgress();
+        }
         GroupService.getInstance().fetchGroupList(null).subscribe(new Subscriber<String>() {
             @Override
             public void onNext(String s) {

@@ -61,7 +61,6 @@ public class NotificationCenterFragment extends Fragment {
 
     private static final String TAG = NotificationCenterFragment.class.getSimpleName();
 
-
     private NotificationAdapter notificationAdapter;
     private LinearLayoutManager viewLayoutManager;
 
@@ -122,30 +121,34 @@ public class NotificationCenterFragment extends Fragment {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        if (item.getItemId() == R.id.mi_only_unread) {
-            if (!isFiltering) {
-                item.setTitle(R.string.menu_all_notis);
-                isFiltering = true;
-                notificationAdapter.filterByUnviewed().subscribe(new Action1<Boolean>() {
-                    @Override
-                    public void call(Boolean aBoolean) {
-                        Log.e(TAG, "resetting adapter ...");
-                        notificationAdapter.notifyDataSetChanged();
-                    }
-                }, new Action1<Throwable>() {
-                    @Override
-                    public void call(Throwable throwable) {
-                        throwable.printStackTrace();
-                    }
-                });
-            } else {
-                notificationAdapter.resetToStored();
-                item.setTitle(R.string.menu_unread);
-                isFiltering = false;
-            }
-            return true;
-        } else {
-            return super.onOptionsItemSelected(item);
+        switch(item.getItemId()) {
+            case R.id.mi_refresh_screen:
+                refreshNotificationList();
+                return true;
+            case R.id.mi_only_unread:
+                if (!isFiltering) {
+                    item.setTitle(R.string.menu_all_notis);
+                    isFiltering = true;
+                    notificationAdapter.filterByUnviewed().subscribe(new Action1<Boolean>() {
+                        @Override
+                        public void call(Boolean aBoolean) {
+                            Log.e(TAG, "resetting adapter ...");
+                            notificationAdapter.notifyDataSetChanged();
+                        }
+                    }, new Action1<Throwable>() {
+                        @Override
+                        public void call(Throwable throwable) {
+                            throwable.printStackTrace();
+                        }
+                    });
+                } else {
+                    notificationAdapter.resetToStored();
+                    item.setTitle(R.string.menu_unread);
+                    isFiltering = false;
+                }
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
         }
     }
 
@@ -220,6 +223,10 @@ public class NotificationCenterFragment extends Fragment {
                 }
             }
         });
+    }
+
+    private void refreshNotificationList() {
+        getNotifications(0, pageSize);
     }
 
     private void handleNotificationSharing(final TaskNotification notification, final int optionSelected) {

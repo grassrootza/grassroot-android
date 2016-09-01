@@ -490,7 +490,6 @@ public class NavigationDrawerFragment extends Fragment implements NavigationDraw
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onJoinRequestsChanged(JoinRequestEvent event) {
-        Log.e(TAG, "join requests changed!");
         joinRequests.setItemCount((int) RealmUtils.countObjectsInDB(GroupJoinRequest.class));
         safeItemChange(NavigationConstants.HOME_NAV_JOIN_REQUESTS);
     }

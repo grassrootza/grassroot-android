@@ -21,6 +21,13 @@
         android:icon="@drawable/btn_filter"
         app:showAsAction="ifRoom" />
 
+    <item
+        android:id="@+id/mi_refresh_screen"
+        android:title="@string/menu_refresh"
+        android:icon="@drawable/ic_refresh"
+        app:showAsAction="ifRoom" />
+
+
     <!-- this one is just for viewing tasks -->
     <item
         android:id="@+id/mi_share_default"

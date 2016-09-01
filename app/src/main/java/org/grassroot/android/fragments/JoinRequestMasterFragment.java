@@ -9,6 +9,7 @@ import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.view.LayoutInflater;
 import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 
@@ -69,6 +70,21 @@ public class JoinRequestMasterFragment extends Fragment {
 			menu.findItem(R.id.mi_share_default).setVisible(false);
 		if (menu.findItem(R.id.mi_only_unread) != null)
 			menu.findItem(R.id.mi_only_unread).setVisible(false);
+		if (menu.findItem(R.id.mi_refresh_screen) != null)
+			menu.findItem(R.id.mi_refresh_screen).setVisible(true);
+	}
+
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		switch (item.getItemId()) {
+			case R.id.mi_refresh_screen:
+				// todo : think about / guard against possible null pointers (view closed ... ?)
+				fragmentSent.refreshJoinRequests();
+				fragmentReceived.refreshJoinRequests();
+				return true;
+			default:
+				return super.onOptionsItemSelected(item);
+		}
 	}
 
 	@Override

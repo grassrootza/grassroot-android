@@ -295,8 +295,12 @@ public class HomeScreenActivity extends PortraitActivity implements NavigationDr
         Fragment currentMain = getSupportFragmentManager().findFragmentById(R.id.home_fragment_container);
         FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
 
-        if (currentMain != null && currentMain != groupListFragment) {
-            transaction.remove(currentMain);
+        if (currentMain != null) {
+            currentMain.setMenuVisibility(false);
+            fragment.setMenuVisibility(true);
+            if (currentMain != groupListFragment) {
+                transaction.remove(currentMain);
+            }
         }
 
         if (fragment.isAdded()) {
