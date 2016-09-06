@@ -78,6 +78,7 @@
     <string name="connect_error_jreqs_list">Sorry, we couldn\'t connect to refresh. Retry?</string>
     <string name="connect_error_jreqs_offline">You are in offline mode. To refresh you need to go online. Try connect?</string>
     <string name="connect_error_failed_retry">Sorry, we still can\'t connect. Please retry later.</string>
+    <string name="connect_error_members_assigned">Could not retrieve assigned member list from server</string>
 
     <string name="input_error_field_empty">Please enter all fields to proceed</string>
     <string name="input_error_cellphone_snackbar">Please enter a valid cellphone number</string>
@@ -112,6 +113,8 @@
     <string name="server_error_expired_auth">Sorry, your session has expired, please logout and login again</string>
 
     <string name="local_error_load_contacts">Error loading your contacts. Please check address book permissions.</string>
+    <string name="local_error_load_task_for_edit">Sorry, there was an error loading the task to edit, please retry later</string>
+    <string name="local_error_pick_activity">Sorry, there\'s an error on the device that is preventing image selection</string>
 
     <string name="snackbar_try_again">Retry</string>
     <string name="snackbar_try_connect">Connect</string>
@@ -143,7 +146,7 @@
     <string name="drawer_faqs">FAQs</string>
     <string name="drawer_logout">Logout</string>
     <string name="drawer_share">Share app</string>
-    <string name="nav_bar_footer">Grassroot %s</string>
+    <string name="nav_bar_footer">Grassroot v1</string>
 
     <string name="online_go_offline">Switch to offline mode?</string>
     <string name="offline_go_online_failed">Try connect to server?</string>
@@ -200,7 +203,7 @@
     <string name="menu_all_notis">Show all</string>
 
     <!--HomeScreen Activity & Screens-->
-    <string name="joingroup">REQUEST TO JOIN A GROUP</string>
+    <string name="joingroup">FIND GROUPS</string>
     <string name="startgroup">START A GROUP</string>
 
     <string name="ghp_toolbar_title">Your groups</string>
@@ -813,6 +816,8 @@
     to see more details (*134*1994# or use the app)</string>
 
     <string name="share_notification_format">%1$s: %2$s</string>
+
+    <string name="share_error_no_app">Sorry, there was an error sharing with that app</string>
 
     <!--FAQ-->
     <string name="fq_txt_toolbar">FAQs</string>

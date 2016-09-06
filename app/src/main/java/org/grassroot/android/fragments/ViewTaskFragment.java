@@ -78,6 +78,7 @@ public class ViewTaskFragment extends Fragment {
 
     private ViewGroup mContainer;
     private Unbinder unbinder;
+    private boolean viewsBound;
 
     @BindView(R.id.vt_title) TextView tvTitle;
     @BindView(R.id.vt_header) TextView tvHeader;
@@ -162,6 +163,7 @@ public class ViewTaskFragment extends Fragment {
                              Bundle savedInstanceState) {
         View viewToReturn = inflater.inflate(R.layout.fragment_view_task, container, false);
         unbinder = ButterKnife.bind(this, viewToReturn);
+        viewsBound = true;
         EventBus.getDefault().register(this);
         mContainer = container;
         if (task == null) {// only the case if task was not in DB, e.g., entering from notification
@@ -176,6 +178,7 @@ public class ViewTaskFragment extends Fragment {
     public void onDestroyView() {
         super.onDestroyView();
         EventBus.getDefault().unregister(this);
+        viewsBound = false;
         unbinder.unbind();
     }
 
@@ -297,29 +300,34 @@ public class ViewTaskFragment extends Fragment {
         rcResponseList.setAdapter(mtgRsvpAdapter);
         rcResponseList.setItemAnimator(null);
 
-        TaskService.getInstance().fetchMeetingRsvps(taskUid).subscribe(new Subscriber<RsvpListModel>() {
+        TaskService.getInstance().fetchMeetingRsvps(taskUid)
+            .subscribe(new Subscriber<RsvpListModel>() {
             @Override
             public void onNext(RsvpListModel meetingResponses) {
-                tvResponsesCount.setText(String.format(getString(R.string.vt_mtg_response_count),
-                    meetingResponses.getNumberInvited(), meetingResponses.getNumberYes()));
-                if (meetingResponses.isCanViewRsvps()) {
-                    icResponsesExpand.setVisibility(View.VISIBLE);
-                    mtgRsvpAdapter.setMapOfResponses(meetingResponses.getRsvpResponses());
-                    canViewResponses = true;
-                    mtgRsvpAdapter.notifyDataSetChanged();
-                } else {
-                    icResponsesExpand.setVisibility(View.GONE);
-                    canViewResponses = false;
-                    cvResponseList.setClickable(false);
+                if (viewsBound) {
+                    tvResponsesCount.setText(String.format(getString(R.string.vt_mtg_response_count),
+                        meetingResponses.getNumberInvited(), meetingResponses.getNumberYes()));
+                    if (meetingResponses.isCanViewRsvps()) {
+                        icResponsesExpand.setVisibility(View.VISIBLE);
+                        mtgRsvpAdapter.setMapOfResponses(meetingResponses.getRsvpResponses());
+                        canViewResponses = true;
+                        mtgRsvpAdapter.notifyDataSetChanged();
+                    } else {
+                        icResponsesExpand.setVisibility(View.GONE);
+                        canViewResponses = false;
+                        cvResponseList.setClickable(false);
+                    }
                 }
             }
 
             @Override
             public void onError(Throwable e) {
 
-                tvResponsesCount.setText(R.string.vt_mtg_response_error); // add a button for retry in future
-                icResponsesExpand.setVisibility(View.GONE);
-                cvResponseList.setClickable(false);
+                if (viewsBound) {
+                    tvResponsesCount.setText(R.string.vt_mtg_response_error); // add a button for retry in future
+                    icResponsesExpand.setVisibility(View.GONE);
+                    cvResponseList.setClickable(false);
+                }
 
                 if (e instanceof ApiCallException) {
                     if (NetworkUtils.CONNECT_ERROR.equals(e.getMessage())) {
@@ -349,24 +357,28 @@ public class ViewTaskFragment extends Fragment {
         TaskService.getInstance().fetchVoteTotals(taskUid).subscribe(new Subscriber<ResponseTotalsModel>() {
             @Override
             public void onNext(ResponseTotalsModel responseTotalsModel) {
-                TextView tvYes = (TextView) llVoteResponseDetails.findViewById(R.id.count_yes);
-                TextView tvNo = (TextView) llVoteResponseDetails.findViewById(R.id.count_no);
-                TextView tvAbstain = (TextView) llVoteResponseDetails.findViewById(R.id.count_abstain);
-                TextView tvNoResponse = (TextView) llVoteResponseDetails.findViewById(R.id.count_no_response);
+                if (viewsBound) {
+                    TextView tvYes = (TextView) llVoteResponseDetails.findViewById(R.id.count_yes);
+                    TextView tvNo = (TextView) llVoteResponseDetails.findViewById(R.id.count_no);
+                    TextView tvAbstain = (TextView) llVoteResponseDetails.findViewById(R.id.count_abstain);
+                    TextView tvNoResponse = (TextView) llVoteResponseDetails.findViewById(R.id.count_no_response);
 
-                tvYes.setText(String.valueOf(responseTotalsModel.getYes()));
-                tvNo.setText(String.valueOf(responseTotalsModel.getNo()));
-                tvAbstain.setText(String.valueOf(responseTotalsModel.getAbstained()));
-                tvNoResponse.setText(String.valueOf(responseTotalsModel.getNumberNoReply()));
+                    tvYes.setText(String.valueOf(responseTotalsModel.getYes()));
+                    tvNo.setText(String.valueOf(responseTotalsModel.getNo()));
+                    tvAbstain.setText(String.valueOf(responseTotalsModel.getAbstained()));
+                    tvNoResponse.setText(String.valueOf(responseTotalsModel.getNumberNoReply()));
 
-                canViewResponses = true;
+                    canViewResponses = true;
+                }
             }
 
             @Override
             public void onError(Throwable e) {
-                tvResponsesCount.setText(R.string.vt_vote_totals_error); // add a button for retry in future
-                icResponsesExpand.setVisibility(View.GONE);
-                cvResponseList.setClickable(false);
+                if (viewsBound) {
+                    tvResponsesCount.setText(R.string.vt_vote_totals_error); // add a button for retry in future
+                    icResponsesExpand.setVisibility(View.GONE);
+                    cvResponseList.setClickable(false);
+                }
 
                 if (e instanceof ApiCallException) {
                     if (NetworkUtils.CONNECT_ERROR.equals(e.getMessage())) {
@@ -400,23 +412,27 @@ public class ViewTaskFragment extends Fragment {
             .subscribe(new Subscriber<List<Member>>() {
                 @Override
                 public void onNext(List<Member> members) {
-                    if (!members.isEmpty()) {
-                        Log.e(TAG, "returned these members : " + members.toString());
-                        memberListAdapter.setMembers(members);
-                        canViewResponses = true;
-                        tvResponsesCount.setText(R.string.vt_todo_members_assigned);
-                    } else {
-                        tvResponsesCount.setText(R.string.vt_todo_group_assigned);
-                        icResponsesExpand.setVisibility(View.GONE);
-                        cvResponseList.setClickable(false);
+                    if (viewsBound) {
+                        if (!members.isEmpty()) {
+                            Log.e(TAG, "returned these members : " + members.toString());
+                            memberListAdapter.setMembers(members);
+                            canViewResponses = true;
+                            tvResponsesCount.setText(R.string.vt_todo_members_assigned);
+                        } else {
+                            tvResponsesCount.setText(R.string.vt_todo_group_assigned);
+                            icResponsesExpand.setVisibility(View.GONE);
+                            cvResponseList.setClickable(false);
+                        }
                     }
                 }
 
                 @Override
                 public void onError(Throwable e) {
-                    tvResponsesCount.setText(R.string.vt_todo_assigned_error);
-                    icResponsesExpand.setVisibility(View.GONE);
-                    cvResponseList.setClickable(false);
+                    if (viewsBound) {
+                        tvResponsesCount.setText(R.string.vt_todo_assigned_error);
+                        icResponsesExpand.setVisibility(View.GONE);
+                        cvResponseList.setClickable(false);
+                    }
 
                     if (e instanceof ApiCallException) {
                         if (NetworkUtils.CONNECT_ERROR.equals(e.getMessage())) {
@@ -688,8 +704,10 @@ public class ViewTaskFragment extends Fragment {
 
     private void handleSuccessfulReply(String response) {
         Toast.makeText(ApplicationLoader.applicationContext, snackBarMsg(response), Toast.LENGTH_SHORT).show();
-        resetIconsAfterResponse();
-        tvResponseHeader.setText(snackBarMsg(response));
+        if (viewsBound) {
+            resetIconsAfterResponse();
+            tvResponseHeader.setText(snackBarMsg(response));
+        }
     }
 
     private void handleSavedOffline(String action) {
@@ -787,9 +805,17 @@ public class ViewTaskFragment extends Fragment {
     @OnClick(R.id.vt_bt_modify)
     public void modifyTask() {
         if (task.isCanEdit()) {
+            // make sure passing latest version of task
+            // note: might also just pass UID, but parcelable lighter weight and entity gets passed around a bit
             Intent editMtg = new Intent(getActivity(), EditTaskActivity.class);
-            editMtg.putExtra(TaskConstants.TASK_ENTITY_FIELD, task);
-            startActivityForResult(editMtg, 1);
+            final TaskModel latestVersion = RealmUtils.loadObjectFromDB(TaskModel.class, "taskUid", task.getTaskUid());
+            if (latestVersion != null) {
+                latestVersion.calcDeadlineDate();
+                editMtg.putExtra(TaskConstants.TASK_ENTITY_FIELD, latestVersion);
+                startActivityForResult(editMtg, 1);
+            } else {
+                Snackbar.make(mContainer, R.string.local_error_load_task_for_edit, Snackbar.LENGTH_SHORT).show();
+            }
         }
     }
 

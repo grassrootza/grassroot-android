@@ -25,30 +25,24 @@ import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.TimePicker;
+import android.widget.Toast;
 
 import org.grassroot.android.R;
-import org.grassroot.android.events.TaskUpdatedEvent;
 import org.grassroot.android.fragments.dialogs.ConfirmCancelDialogFragment;
 import org.grassroot.android.fragments.dialogs.NetworkErrorDialogFragment;
 import org.grassroot.android.interfaces.NavigationConstants;
 import org.grassroot.android.interfaces.TaskConstants;
 import org.grassroot.android.models.Member;
-import org.grassroot.android.models.responses.MemberListResponse;
 import org.grassroot.android.models.TaskModel;
-import org.grassroot.android.models.responses.TaskResponse;
 import org.grassroot.android.services.ApplicationLoader;
-import org.grassroot.android.services.GrassrootRestService;
+import org.grassroot.android.services.TaskService;
 import org.grassroot.android.utils.Constant;
 import org.grassroot.android.utils.ErrorUtils;
 import org.grassroot.android.utils.IntentUtils;
 import org.grassroot.android.utils.NetworkUtils;
-import org.grassroot.android.utils.RealmUtils;
-import org.grassroot.android.utils.Utilities;
-import org.greenrobot.eventbus.EventBus;
 
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
@@ -58,9 +52,7 @@ import butterknife.OnClick;
 import butterknife.OnEditorAction;
 import butterknife.OnTextChanged;
 import butterknife.Unbinder;
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
+import rx.android.schedulers.AndroidSchedulers;
 import rx.functions.Action1;
 import rx.observers.Subscribers;
 
@@ -75,41 +67,32 @@ public class EditTaskFragment extends Fragment implements DatePickerDialog.OnDat
     private TaskModel task;
     private String taskType;
 
-    private final Calendar calendar = Calendar.getInstance();
+    // Java 7 loveliness on testing for difference means hold two of these
+    private final Calendar changedCalendar = Calendar.getInstance();
+    private final Calendar priorCalendar = Calendar.getInstance();
 
     private ViewGroup vContainer; // note : come back and check this for memory leaks
     private List<Member> selectedMembers;
 
     private Unbinder unbinder;
+    private boolean viewsBound;
 
-    @BindView(R.id.etsk_til_location)
-    TextInputLayout locationInput;
-    @BindView(R.id.etsk_et_title)
-    TextInputEditText etTitleInput;
-    @BindView(R.id.etsk_et_location)
-    TextInputEditText etLocationInput;
-    @BindView(R.id.etsk_et_description)
-    TextInputEditText etDescriptionInput;
+    @BindView(R.id.etsk_til_location) TextInputLayout locationInput;
+    @BindView(R.id.etsk_et_title) TextInputEditText etTitleInput;
+    @BindView(R.id.etsk_et_location) TextInputEditText etLocationInput;
+    @BindView(R.id.etsk_et_description) TextInputEditText etDescriptionInput;
 
-    @BindView(R.id.etsk_deadline_date)
-    TextView dateDisplayed;
-    @BindView(R.id.etsk_cv_time)
-    CardView timeCard;
-    @BindView(R.id.etsk_deadline_time)
-    TextView timeDisplayed;
+    @BindView(R.id.etsk_deadline_date) TextView dateDisplayed;
+    @BindView(R.id.etsk_cv_time) CardView timeCard;
+    @BindView(R.id.etsk_deadline_time) TextView timeDisplayed;
 
-    @BindView(R.id.etsk_desc_header)
-    TextView descriptionHeader;
-    @BindView(R.id.etsk_rl_desc_body)
-    RelativeLayout descriptionBody;
-    @BindView(R.id.etsk_desc_expand)
-    ImageView ivDescExpandIcon;
+    @BindView(R.id.etsk_desc_header) TextView descriptionHeader;
+    @BindView(R.id.etsk_rl_desc_body) RelativeLayout descriptionBody;
+    @BindView(R.id.etsk_desc_expand) ImageView ivDescExpandIcon;
 
-    @BindView(R.id.etsk_tv_assign_label)
-    TextView tvInviteeLabel;
+    @BindView(R.id.etsk_tv_assign_label) TextView tvInviteeLabel;
 
-    @BindView(R.id.etsk_btn_update_task)
-    Button btTaskUpdate;
+    @BindView(R.id.etsk_btn_update_task) Button btTaskUpdate;
 
     @BindView(R.id.progressBar) ProgressBar progressBar;
 
@@ -135,13 +118,15 @@ public class EditTaskFragment extends Fragment implements DatePickerDialog.OnDat
         }
 
         taskType = task.getType();
-        calendar.setTime(task.getDeadlineDate());
+        changedCalendar.setTime(task.getDeadlineDate());
+        priorCalendar.setTime(task.getDeadlineDate());
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View viewToReturn = inflater.inflate(R.layout.fragment_edit_task, container, false);
         unbinder = ButterKnife.bind(this, viewToReturn);
+        viewsBound = true;
         vContainer = container;
         populateFields();
         fetchAssignedMembers();
@@ -151,6 +136,7 @@ public class EditTaskFragment extends Fragment implements DatePickerDialog.OnDat
     @Override
     public void onDestroyView() {
         super.onDestroyView();
+        viewsBound = false;
         unbinder.unbind();
     }
 
@@ -197,26 +183,21 @@ public class EditTaskFragment extends Fragment implements DatePickerDialog.OnDat
     }
 
     private void fetchAssignedMembers() {
-        if (task.getWholeGroupAssigned()) {
-            selectedMembers = new ArrayList<>();
-        } else {
-            GrassrootRestService.getInstance().getApi().fetchAssignedMembers(
-                    RealmUtils.loadPreferencesFromDB().getMobileNumber(), RealmUtils.loadPreferencesFromDB().getToken(),
-                    task.getTaskUid(), taskType).enqueue(new Callback<MemberListResponse>() {
-                @Override
-                public void onResponse(Call<MemberListResponse> call, Response<MemberListResponse> response) {
-                    if (response.isSuccessful()) {
-                        selectedMembers = response.body().getMembers();
-                    } else {
-                        selectedMembers = new ArrayList<>();
+        selectedMembers = new ArrayList<>();
+        if (!task.getWholeGroupAssigned()) {
+            TaskService.getInstance().fetchAssignedMembers(task.getTaskUid(), taskType)
+                .subscribe(new Action1<List<Member>>() {
+                    @Override
+                    public void call(List<Member> members) {
+                        selectedMembers = new ArrayList<>(members);
                     }
-                }
-
-                @Override
-                public void onFailure(Call<MemberListResponse> call, Throwable t) {
-                    selectedMembers = new ArrayList<>();
-                }
-            });
+                }, new Action1<Throwable>() {
+                    @Override
+                    public void call(Throwable throwable) {
+                        // just display a snackbar (this is not a vital function, so that will be enough)
+                        Snackbar.make(tvInviteeLabel, R.string.connect_error_members_assigned, Snackbar.LENGTH_SHORT);
+                    }
+                });
         }
     }
 
@@ -261,29 +242,37 @@ public class EditTaskFragment extends Fragment implements DatePickerDialog.OnDat
 
     @OnClick(R.id.etsk_cv_date)
     public void launchDatePicker() {
-        DatePickerDialog dialog = new DatePickerDialog(getActivity(), R.style.AppTheme, this, calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH));
+        DatePickerDialog dialog = new DatePickerDialog(getActivity(), this,
+            changedCalendar.get(Calendar.YEAR),
+            changedCalendar.get(Calendar.MONTH),
+            changedCalendar.get(Calendar.DAY_OF_MONTH));
         dialog.show();
     }
 
     @Override
     public void onDateSet(DatePicker view, int year, int monthOfYear, int dayOfMonth) {
-        calendar.set(year, monthOfYear, dayOfMonth);
-        dateDisplayed.setText(String.format(getString(R.string.etsk_mtg_date_changed), TaskConstants.dateDisplayWithoutHours.format(calendar.getTime())));
-        dateDisplayed.setTextColor(changeColor);
+        changedCalendar.set(year, monthOfYear, dayOfMonth);
+        if (year != priorCalendar.get(Calendar.YEAR) || monthOfYear != priorCalendar.get(Calendar.MONTH) ||
+            dayOfMonth != priorCalendar.get(Calendar.DAY_OF_MONTH)) {
+            dateDisplayed.setText(String.format(getString(R.string.etsk_mtg_date_changed), TaskConstants.dateDisplayWithoutHours.format(changedCalendar.getTime())));
+            dateDisplayed.setTextColor(changeColor);
+        }
     }
 
     @OnClick(R.id.etsk_cv_time)
     public void launchTimePicker() {
-        TimePickerDialog dialog = new TimePickerDialog(getActivity(), R.style.AppTheme, this, calendar.get(Calendar.HOUR_OF_DAY), calendar.get(Calendar.MINUTE), true);
+        TimePickerDialog dialog = new TimePickerDialog(getActivity(), this, changedCalendar.get(Calendar.HOUR_OF_DAY), changedCalendar.get(Calendar.MINUTE), true);
         dialog.show();
     }
 
     @Override
     public void onTimeSet(TimePicker view, int hourOfDay, int minute) {
-        calendar.set(Calendar.HOUR_OF_DAY, hourOfDay);
-        calendar.set(Calendar.MINUTE, minute);
-        timeDisplayed.setText(String.format(getString(R.string.etsk_mtg_time_changed), TaskConstants.timeDisplayWithoutDate.format(calendar.getTime())));
-        timeDisplayed.setTextColor(changeColor);
+        changedCalendar.set(Calendar.HOUR_OF_DAY, hourOfDay);
+        changedCalendar.set(Calendar.MINUTE, minute);
+        if (hourOfDay != priorCalendar.get(Calendar.HOUR_OF_DAY) || minute != priorCalendar.get(Calendar.MINUTE)) {
+            timeDisplayed.setText(String.format(getString(R.string.etsk_mtg_time_changed), TaskConstants.timeDisplayWithoutDate.format(changedCalendar.getTime())));
+            timeDisplayed.setTextColor(changeColor);
+        }
     }
 
     @OnClick(R.id.etsk_cv_description)
@@ -358,50 +347,53 @@ public class EditTaskFragment extends Fragment implements DatePickerDialog.OnDat
     public void updateTask() {
         progressBar.setVisibility(View.VISIBLE);
         TaskModel model = generateTaskObject();
-        if(NetworkUtils.isOnline(getContext())) {
-            setUpUpdateApiCall(model).enqueue(new Callback<TaskResponse>() {
-                @Override public void onResponse(Call<TaskResponse> call, Response<TaskResponse> response) {
+        TaskService.getInstance().editTask(model, selectedMembers, AndroidSchedulers.mainThread())
+            .subscribe(new Action1<String>() {
+                @Override
+                public void call(String s) {
                     progressBar.setVisibility(View.GONE);
-                    if (response.isSuccessful()) {
-                        generateSuccessIntent(response.body().getTasks().first());
-                    } else {
-                        Snackbar.make(vContainer, ErrorUtils.serverErrorText(response.errorBody()), Snackbar.LENGTH_LONG).show();
+                    generateSuccessIntent();
+                }
+            }, new Action1<Throwable>() {
+                @Override
+                public void call(Throwable e) {
+                    progressBar.setVisibility(View.GONE);
+                    switch (e.getMessage()) {
+                        case NetworkUtils.CONNECT_ERROR:
+                        case NetworkUtils.OFFLINE_SELECTED:
+                            handleNetworkFail();
+                            break;
+                        default:
+                            Snackbar.make(vContainer, ErrorUtils.serverErrorText(e), Snackbar.LENGTH_LONG).show();
                     }
                 }
-
-                @Override public void onFailure(Call<TaskResponse> call, Throwable t) {
-                    progressBar.setVisibility(View.GONE);
-                    NetworkErrorDialogFragment.newInstance(R.string.connect_error_edit_task, progressBar,
-                        Subscribers.create(new Action1<String>() {
-                            @Override
-                            public void call(String s) {
-                                progressBar.setVisibility(View.GONE);
-                                if (s.equals(NetworkUtils.CONNECT_ERROR)) {
-                                    Snackbar.make(vContainer, R.string.connect_error_failed_retry, Snackbar.LENGTH_SHORT).show();
-                                } else {
-                                    updateTask();
-                                }
-                            }
-                        })).show(getFragmentManager(), "error");
-                }
             });
-        }else{
-            generateSuccessIntent(model);
-        }
     }
 
-    private void generateSuccessIntent(final TaskModel model){
+    private void generateSuccessIntent(){
         Intent i = new Intent();
+        final String message = generateSuccessString();
+        Toast.makeText(ApplicationLoader.applicationContext, message, Toast.LENGTH_LONG).show();
         i.putExtra(Constant.SUCCESS_MESSAGE, generateSuccessString());
         getActivity().setResult(Activity.RESULT_OK, i);
-        RealmUtils.saveDataToRealm(model).subscribe(new Action1() {
-            @Override public void call(Object o) {
-                EventBus.getDefault().post(new TaskUpdatedEvent(model));
-                getActivity().finish();
-            }
-        });
-
+        getActivity().finish();
     }
+
+    private void handleNetworkFail() {
+        NetworkErrorDialogFragment.newInstance(R.string.connect_error_edit_task, progressBar,
+            Subscribers.create(new Action1<String>() {
+                @Override
+                public void call(String s) {
+                    progressBar.setVisibility(View.GONE);
+                    if (s.equals(NetworkUtils.CONNECT_ERROR)) {
+                        Snackbar.make(vContainer, R.string.connect_error_failed_retry, Snackbar.LENGTH_SHORT).show();
+                    } else {
+                        updateTask();
+                    }
+                }
+            })).show(getFragmentManager(), "error");
+    }
+
     private TaskModel generateTaskObject() {
         final String title = etTitleInput.getText().toString();
         final String description = etDescriptionInput.getText().toString().trim();
@@ -411,7 +403,7 @@ public class EditTaskFragment extends Fragment implements DatePickerDialog.OnDat
         model.setTitle(title);
         model.setTaskUid(task.getTaskUid());
         model.setParentUid(task.getParentUid());
-        model.setUpdateTime(calendar.getTime().getTime());
+        model.setUpdateTime(changedCalendar.getTime().getTime());
         model.setLocation(etLocationInput.getText().toString());
         model.setType(taskType);
         model.setEdited(true);
@@ -424,26 +416,6 @@ public class EditTaskFragment extends Fragment implements DatePickerDialog.OnDat
         model.setCreatedByUserName(task.getCreatedByUserName());
         model.setDeadlineISO(Constant.isoDateTimeSDF.format(new Date(model.getUpdateTime())));
         return model;
-    }
-
-    public Call<TaskResponse> setUpUpdateApiCall(TaskModel model) {
-        List<String> memberUids = (selectedMembers == null) ? Collections.EMPTY_LIST :
-                new ArrayList<>(Utilities.convertMemberListToUids(selectedMembers));
-        final String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
-        final String code = RealmUtils.loadPreferencesFromDB().getToken();
-        switch (taskType) {
-            case TaskConstants.MEETING:
-                return GrassrootRestService.getInstance().getApi().editMeeting(phoneNumber, code, model.getTaskUid(),
-                        model.getTitle(), model.getDescription(), model.getLocation(), model.getDeadlineISO(), memberUids);
-            case TaskConstants.VOTE:
-                return GrassrootRestService.getInstance().getApi().editVote(phoneNumber, code, model.getTaskUid(), model.getTitle(),
-                        model.getDescription(), model.getDeadlineISO());
-            case TaskConstants.TODO:
-                return GrassrootRestService.getInstance().getApi().editTodo(phoneNumber, code, model.getTitle(),
-                        model.getDeadlineISO(), null);
-            default:
-                throw new UnsupportedOperationException("Error! Missing task type in call");
-        }
     }
 
     private String generateSuccessString() {

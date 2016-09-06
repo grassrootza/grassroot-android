@@ -20,7 +20,6 @@
             android:padding="10dp"
             android:singleLine="true"
             android:textColorHint="@color/primaryColor"
-            android:ems="10"
             android:textColor="@color/black"
             android:drawableRight="@drawable/ic_key"
             android:drawablePadding="5dp"

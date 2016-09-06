@@ -181,12 +181,14 @@ public class GroupService {
 
     RealmUtils.saveDataToRealmSync(responseBody.getAddedAndUpdated());
 
+    List<Member> composedMembers = new ArrayList<>();
     for (Group g : responseBody.getAddedAndUpdated()) {
       for (Member m : g.getMembers()) {
         m.composeMemberGroupUid();;
-        RealmUtils.saveDataToRealm(m).subscribe();
+        composedMembers.add(m);
       }
     }
+    RealmUtils.saveDataToRealm(composedMembers, Schedulers.immediate()).subscribe();
   }
 
   private void cleanGroupFromDB(final String groupUid) {

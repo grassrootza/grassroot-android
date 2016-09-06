@@ -1,6 +1,7 @@
 package org.grassroot.android.services;
 
 import android.app.IntentService;
+import android.content.ActivityNotFoundException;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -11,6 +12,7 @@ import android.content.pm.ResolveInfo;
 import android.os.Parcelable;
 import android.text.TextUtils;
 import android.util.Log;
+import android.widget.Toast;
 
 import org.grassroot.android.R;
 import org.grassroot.android.interfaces.TaskConstants;
@@ -80,7 +82,7 @@ public class SharingService extends IntentService {
             Intent i = findOtherClients(getApplicationContext(), message);
             if (i != null) {
                 i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                startActivity(i);
+                safeShareTrigger(i);
             }
         }
     }
@@ -134,7 +136,16 @@ public class SharingService extends IntentService {
         shareIntent.putExtra(Intent.EXTRA_TEXT, message);
         shareIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         shareIntent.setPackage(appToShare);
-        startActivity(shareIntent);
+        safeShareTrigger(shareIntent);
+    }
+
+    private void safeShareTrigger(Intent shareIntent) {
+        try {
+            startActivity(shareIntent);
+        } catch (ActivityNotFoundException e) {
+            Toast.makeText(ApplicationLoader.applicationContext, R.string.share_error_no_app,
+                Toast.LENGTH_SHORT).show();
+        }
     }
 
     private String assembleShareMessage(final TaskModel task) {
@@ -238,7 +249,9 @@ public class SharingService extends IntentService {
                 switch (s.getPackageName()) {
                     case FB_PACKAGE_NAME:
                         preferenceObject.setHasFbInstalled(false);
-                        if (defaultPackage.equals(FB_PACKAGE_NAME)) hasDeletedDefaultPackage = true;
+                        if (defaultPackage.equals(FB_PACKAGE_NAME))
+                            hasDeletedDefaultPackage = true;
+
                         i.remove();
                         break;
                     case WAPP_PACKAGE_NAME:

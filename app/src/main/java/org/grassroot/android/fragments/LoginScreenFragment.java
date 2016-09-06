@@ -10,6 +10,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.AnimationUtils;
+import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
 
 import org.grassroot.android.R;
@@ -18,6 +19,7 @@ import org.grassroot.android.utils.Utilities;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
+import butterknife.OnEditorAction;
 import butterknife.Unbinder;
 
 /**
@@ -84,6 +86,19 @@ public class LoginScreenFragment extends Fragment {
 
     @OnClick(R.id.login_submit_number)
     public void onLoginButtonClick() {
+        validateAndNext();
+    }
+
+    @OnEditorAction(R.id.et_mobile_login)
+    public boolean onTextNext(int actionId) {
+        if (actionId == EditorInfo.IME_ACTION_NEXT) {
+            validateAndNext();
+            return true;
+        }
+        return false;
+    }
+
+    private void validateAndNext() {
         final String number = etNumberInput.getText().toString();
         if (TextUtils.isEmpty(number)) {
             etNumberInput.requestFocus();

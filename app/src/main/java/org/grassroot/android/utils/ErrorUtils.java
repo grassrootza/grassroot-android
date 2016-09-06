@@ -3,6 +3,8 @@ package org.grassroot.android.utils;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
 import android.graphics.Color;
 import android.support.design.widget.Snackbar;
 import android.text.TextUtils;
@@ -178,6 +180,15 @@ public class ErrorUtils {
         snackbar.setActionTextColor(Color.RED);
         snackbar.setAction(actionText, actionToTake);
         snackbar.show();
+    }
+
+    /*
+    Wrap intent calls in this to avoid crashes
+     */
+    public static boolean isCallable(Intent intent) {
+        List<ResolveInfo> list = ApplicationLoader.applicationContext.getPackageManager()
+            .queryIntentActivities(intent, PackageManager.MATCH_DEFAULT_ONLY);
+        return !list.isEmpty();
     }
 
     /*

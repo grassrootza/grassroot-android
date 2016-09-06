@@ -1,5 +1,7 @@
 package org.grassroot.android.utils;
 
+import android.util.Log;
+
 import org.grassroot.android.BuildConfig;
 import org.grassroot.android.models.responses.GenericResponse;
 import org.grassroot.android.models.PreferenceObject;
@@ -20,6 +22,8 @@ import rx.schedulers.Schedulers;
  */
 public class LoginRegUtils {
 
+	private static final String TAG = LoginRegUtils.class.getSimpleName();
+
 	public static final String OTP_ALREADY_SENT = "otp_already_sent";
 	public static final String OTP_PROD_SENT = "otp_sent_prod";
 	public static final String AUTH_HAS_GROUPS = "authenticated";
@@ -29,6 +33,7 @@ public class LoginRegUtils {
 		return Observable.create(new Observable.OnSubscribe<String>() {
 			@Override
 			public void call(Subscriber<? super String> subscriber) {
+				Log.e(TAG, "logging in ...");
 				final String msisdn = Utilities.formatNumberToE164(mobileNumber);
 				try {
 					Response<GenericResponse> response = GrassrootRestService.getInstance().getApi()

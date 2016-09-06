@@ -16,7 +16,6 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import org.grassroot.android.BuildConfig;
 import org.grassroot.android.R;
 import org.grassroot.android.activities.FAQActivity;
 import org.grassroot.android.activities.GroupSearchActivity;
@@ -136,7 +135,7 @@ public class NavigationDrawerFragment extends Fragment implements NavigationDraw
         unbinder = ButterKnife.bind(this, view);
 
         displayName.setText(RealmUtils.loadPreferencesFromDB().getUserName());
-        txtVersion.setText(String.format(getString(R.string.nav_bar_footer), BuildConfig.VERSION_NAME));
+        // txtVersion.setText(String.format(getString(R.string.nav_bar_footer), BuildConfig.VERSION_NAME));
 
         primaryItemsView.setHasFixedSize(true);
         primaryItemsView.setItemViewCacheSize(10);

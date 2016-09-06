@@ -442,7 +442,7 @@ public class NetworkUtils {
       public void call(List<TaskModel> tasks1) {
         for (final TaskModel model : tasks1) {
           TaskService.getInstance().sendTaskUpdateToServer(model, true, Schedulers.immediate())
-              .subscribe(); // todo : work out selected member change logic
+              .subscribe(); // todo : work out selected member change logic & harmonize w/ updates below
         }
       }
     });

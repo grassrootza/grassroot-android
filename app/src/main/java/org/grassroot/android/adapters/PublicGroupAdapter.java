@@ -18,9 +18,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import butterknife.BindView;
-import butterknife.ButterKnife;
-
 /**
  */
 public class PublicGroupAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
@@ -70,13 +67,16 @@ public class PublicGroupAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
         View v;
         RecyclerView.ViewHolder holder;
 
+        // has been buggy on some versions so am retaining some relatively verbose logging for now
         Log.d(TAG, "creating view holder ... of type = " + viewType);
         switch (viewType) {
             case 0 :
+                Log.d(TAG, "creating section header ...");
                 v = inflater.inflate(R.layout.row_public_group_sec_header, parent, false);
                 holder = new PublicGroupSectionHeader(v);
                 break;
             default:
+                Log.d(TAG, "creating public group itself ...");
                 v = inflater.inflate(R.layout.row_public_group, parent, false);
                 holder = new PublicGroupViewHolder(v);
                 break;
@@ -89,10 +89,12 @@ public class PublicGroupAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
     public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
         switch (getItemViewType(position)) {
             case 0:
-                bindPublicGroupHeader((PublicGroupSectionHeader) holder, position);
+                Log.d(TAG, "binding a public header at position = " + position);
+                bindPublicGroupHeader((PublicGroupSectionHeader) holder, holder.getAdapterPosition());
                 break;
             default:
-                int adjustedPosition = removeHeadersFromPosition(position);
+                int adjustedPosition = removeHeadersFromPosition(holder.getAdapterPosition());
+                Log.d(TAG, "binding a group, at position = " + position + " and adjusted position = " +adjustedPosition);
                 bindPublicGroup((PublicGroupViewHolder) holder, adjustedPosition);
         }
     }
@@ -104,14 +106,16 @@ public class PublicGroupAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
     }
 
     private void bindPublicGroup(PublicGroupViewHolder holder, int position) {
-
         PublicGroupModel model = publicGroupModels.get(position);
         final Context context = ApplicationLoader.applicationContext;
 
-        holder.sentReqIcon.setVisibility(model.isHasOpenRequest() ? View.VISIBLE : View.GONE);
+        if (holder.sentReqIcon != null) {
+            holder.sentReqIcon.setVisibility(model.isHasOpenRequest() ? View.VISIBLE : View.GONE);
+        } else {
+            Log.d(TAG, "holder has null icon! here is view: " + holder.toString());
+        }
 
-        final String groupName = String.format(inflater.getContext().getString(R.string.pgroup_name_format),
-            model.getGroupName());
+        final String groupName = String.format(inflater.getContext().getString(R.string.pgroup_name_format), model.getGroupName());
         holder.txtGroupname.setText(groupName);
 
         final String groupCreator = String.format(context.getString(R.string.pgroup_org_format), model.getGroupCreator());
@@ -137,14 +141,18 @@ public class PublicGroupAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
     }
 
     public static class PublicGroupViewHolder extends RecyclerView.ViewHolder {
-        @BindView(R.id.txt_groupname) TextView txtGroupname;
-        @BindView(R.id.txt_groupownername) TextView txtGroupownername;
-        @BindView(R.id.txt_groupdesc) TextView txtGroupdesc;
-        @BindView(R.id.public_group_req_sent) ImageView sentReqIcon;
+        TextView txtGroupname;
+        TextView txtGroupownername;
+        TextView txtGroupdesc;
+        ImageView sentReqIcon;
 
         public PublicGroupViewHolder(View view) {
             super(view);
-            ButterKnife.bind(this, view);
+
+            txtGroupname = (TextView) view.findViewById(R.id.txt_groupname);
+            txtGroupownername = (TextView) view.findViewById(R.id.txt_groupownername);
+            txtGroupdesc = (TextView) view.findViewById(R.id.txt_groupdesc);
+            sentReqIcon = (ImageView) view.findViewById(R.id.public_group_req_sent);
         }
     }
 

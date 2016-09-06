@@ -1,5 +1,6 @@
 package org.grassroot.android.activities;
 
+import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
@@ -9,9 +10,11 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.app.NavUtils;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
+import android.view.inputmethod.InputMethodManager;
 
 import org.grassroot.android.R;
 import org.grassroot.android.fragments.LoginScreenFragment;
@@ -239,6 +242,7 @@ public class LoginRegisterActivity extends AppCompatActivity implements LoginScr
     }
 
     private void handleRequestServerError(final String restMessage, String purpose) {
+        hideSoftKeyboard();
         final String errorMsg = ErrorUtils.serverErrorText(restMessage);
         if (LOGIN.equals(purpose) && restMessage.equals(ErrorUtils.USER_DOESNT_EXIST)) {
             ErrorUtils.snackBarWithAction(rootView, R.string.server_error_user_not_exist, R.string.bt_register,
@@ -261,6 +265,7 @@ public class LoginRegisterActivity extends AppCompatActivity implements LoginScr
     }
 
     private void handleAuthServerError(final String restMessage, final String purpose) {
+        hideSoftKeyboard();
         if (ErrorUtils.WRONG_OTP.equals(restMessage)) {
             ErrorUtils.snackBarWithAction(rootView, R.string.server_error_otp_wrong, R.string.resend_otp,
                 new View.OnClickListener() {
@@ -282,6 +287,7 @@ public class LoginRegisterActivity extends AppCompatActivity implements LoginScr
             otpFragment.setOtpDisplayed(otpToPass);
             otpFragment.setPurpose(purpose);
         } else {
+            Log.e("LRA", "switching to OTP fragment screen");
             OtpScreenFragment otpScreenFragment = OtpScreenFragment.newInstance(otpToPass, purpose);
             switchFragments(otpScreenFragment, true);
         }
@@ -314,6 +320,7 @@ public class LoginRegisterActivity extends AppCompatActivity implements LoginScr
     }
 
     private void launchHomeScreen(boolean userHasGroups) {
+        hideSoftKeyboard();
         if (userHasGroups) {
             NetworkUtils.registerForGCM(this).subscribe();
             NetworkUtils.syncAndStartTasks(this, false, true).subscribe();
@@ -337,6 +344,11 @@ public class LoginRegisterActivity extends AppCompatActivity implements LoginScr
             taskDepth--;
             super.onBackPressed();
         }
+    }
+
+    private void hideSoftKeyboard() {
+        InputMethodManager inputMethodManager = (InputMethodManager) getSystemService(Activity.INPUT_METHOD_SERVICE);
+        inputMethodManager.hideSoftInputFromWindow(getCurrentFocus().getWindowToken(), 0);
     }
 
 }

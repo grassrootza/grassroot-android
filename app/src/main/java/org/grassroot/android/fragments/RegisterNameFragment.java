@@ -63,7 +63,7 @@ public class RegisterNameFragment extends Fragment {
 
 	@OnEditorAction(R.id.input_display_name)
 	public boolean onTextNext(int actionId, KeyEvent keyEvent) {
-		if (actionId == EditorInfo.IME_ACTION_NEXT && keyEvent.getAction() == KeyEvent.ACTION_DOWN) {
+		if (actionId == EditorInfo.IME_ACTION_NEXT) {
 			validateAndNext();
 		}
 		return true;

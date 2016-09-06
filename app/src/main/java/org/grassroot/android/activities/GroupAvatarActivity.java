@@ -251,9 +251,17 @@ public class GroupAvatarActivity extends PortraitActivity {
     @OnClick({ R.id.gp_bt_other, R.id.iv_gp_avatar })
     public void selectImageForUpload() {
         if (NetworkUtils.isOnline()) {
-
             Intent galleryIntent = new Intent(Intent.ACTION_PICK, EXTERNAL_CONTENT_URI);
-            startActivityForResult(galleryIntent, IMAGE_RESULT_INT);
+            if (ErrorUtils.isCallable(galleryIntent)) {
+                startActivityForResult(galleryIntent, IMAGE_RESULT_INT);
+            } else {
+                galleryIntent = new Intent(Intent.ACTION_GET_CONTENT, EXTERNAL_CONTENT_URI);
+                if (ErrorUtils.isCallable(galleryIntent)) {
+                    startActivityForResult(galleryIntent, IMAGE_RESULT_INT);
+                } else {
+                    Snackbar.make(rootView, R.string.local_error_pick_activity, Snackbar.LENGTH_SHORT).show();
+                }
+            }
         } else {
             checkForOfflineFirst();
         }

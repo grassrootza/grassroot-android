@@ -4,9 +4,11 @@ import android.app.Application;
 import android.content.Context;
 import android.content.Intent;
 
+import com.crashlytics.android.Crashlytics;
 import com.jakewharton.picasso.OkHttp3Downloader;
 import com.squareup.picasso.Picasso;
 
+import io.fabric.sdk.android.Fabric;
 import org.grassroot.android.BuildConfig;
 import org.grassroot.android.receivers.TaskManagerReceiver;
 
@@ -28,6 +30,7 @@ public class ApplicationLoader extends Application {
 
   @Override public void onCreate() {
     super.onCreate();
+    Fabric.with(this, new Crashlytics());
 
     applicationContext = getApplicationContext();
 

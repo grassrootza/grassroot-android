@@ -68,7 +68,7 @@ public class RegisterPhoneFragment extends Fragment {
 
 	@OnEditorAction(R.id.input_mobile_phone)
 	public boolean onTextNext(int actionId, KeyEvent keyEvent) {
-		if (actionId == EditorInfo.IME_ACTION_NEXT && keyEvent.getAction() == KeyEvent.ACTION_DOWN) {
+		if (actionId == EditorInfo.IME_ACTION_NEXT) {
 			validateAndNext();
 		}
 		return true;

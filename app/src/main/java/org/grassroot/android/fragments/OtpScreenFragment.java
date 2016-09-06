@@ -8,6 +8,7 @@ import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.EditorInfo;
 
 import org.grassroot.android.BuildConfig;
 import org.grassroot.android.R;
@@ -16,6 +17,7 @@ import org.grassroot.android.utils.Constant;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
+import butterknife.OnEditorAction;
 import butterknife.Unbinder;
 
 /**
@@ -72,6 +74,7 @@ public class OtpScreenFragment extends Fragment {
         unbinder = ButterKnife.bind(this, view);
         otpInput.setText(getArguments().getString("verification_code"));
         purpose = getArguments().getString("purpose");
+        otpInput.requestFocus();
         return view;
     }
 
@@ -88,6 +91,20 @@ public class OtpScreenFragment extends Fragment {
 
     @OnClick(R.id.bt_submit_otp)
     public void submitButtonClicked(){
+        validateAndNext();
+    }
+
+    @OnEditorAction(R.id.otp_input_field)
+    public boolean onTextNext(int actionId) {
+        if (actionId == EditorInfo.IME_ACTION_NEXT || actionId == EditorInfo.IME_ACTION_DONE
+                || actionId == EditorInfo.IME_ACTION_UNSPECIFIED) {
+            validateAndNext();
+            return true;
+        }
+        return false;
+    }
+
+    private void validateAndNext() {
         if (TextUtils.isEmpty(otpInput.getText().toString())) {
             otpInput.setError(getResources().getString(R.string.input_error_otp_empty));
         } else {

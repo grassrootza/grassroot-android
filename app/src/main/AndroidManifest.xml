@@ -36,7 +36,7 @@
 
         <meta-data
             android:name="io.fabric.ApiKey"
-            android:value="a7c7f0c500c90b9563ff8801718ab0b391792bc3" />
+            android:value="6042aec4d8f789ae1bcc1fd78fdda96ab106e130" />
 
         <receiver
             android:name="com.google.android.gms.gcm.GcmReceiver"
@@ -109,6 +109,7 @@
             android:configChanges="keyboardHidden|orientation"
             android:label="@string/title_activity_nogroup_welcome"
             android:launchMode="singleTask"
+            android:windowSoftInputMode="stateAlwaysHidden"
             android:screenOrientation="portrait" />
 
         <activity
@@ -116,6 +117,7 @@
             android:configChanges="keyboardHidden|orientation"
             android:label="@string/app_name"
             android:launchMode="singleTask"
+            android:windowSoftInputMode="stateAlwaysHidden"
             android:screenOrientation="portrait" />
 
         <activity
@@ -202,7 +204,7 @@
         <activity
             android:name=".activities.EditTaskActivity"
             android:theme="@style/AppTheme"
-            android:windowSoftInputMode="adjustNothing" />
+            android:windowSoftInputMode="adjustResize" />
 
         <!-- Vote related activities -->
 

@@ -5,17 +5,17 @@ import android.text.TextUtils;
 import org.grassroot.android.events.TaskUpdatedEvent;
 import org.grassroot.android.events.TasksRefreshedEvent;
 import org.grassroot.android.interfaces.TaskConstants;
-import org.grassroot.android.models.responses.MemberListResponse;
-import org.grassroot.android.models.responses.GenericResponse;
 import org.grassroot.android.models.Group;
 import org.grassroot.android.models.Member;
 import org.grassroot.android.models.PreferenceObject;
 import org.grassroot.android.models.ResponseTotalsModel;
 import org.grassroot.android.models.RsvpListModel;
-import org.grassroot.android.models.responses.TaskChangedResponse;
 import org.grassroot.android.models.TaskModel;
-import org.grassroot.android.models.responses.TaskResponse;
 import org.grassroot.android.models.exceptions.ApiCallException;
+import org.grassroot.android.models.responses.GenericResponse;
+import org.grassroot.android.models.responses.MemberListResponse;
+import org.grassroot.android.models.responses.TaskChangedResponse;
+import org.grassroot.android.models.responses.TaskResponse;
 import org.grassroot.android.utils.ErrorUtils;
 import org.grassroot.android.utils.NetworkUtils;
 import org.grassroot.android.utils.RealmUtils;
@@ -23,6 +23,7 @@ import org.grassroot.android.utils.Utilities;
 import org.greenrobot.eventbus.EventBus;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -332,7 +333,8 @@ public class TaskService {
       case TaskConstants.TODO:
         return GrassrootRestService.getInstance()
             .getApi()
-            .editTodo(phoneNumber, code, model.getTitle(), model.getDeadlineISO(), null);
+            .editTodo(phoneNumber, code, model.getTaskUid(), model.getTitle(),
+                model.getDescription(), model.getDeadlineISO(), null);
       default:
         throw new UnsupportedOperationException("Error! Missing task type in call");
     }
@@ -523,6 +525,59 @@ public class TaskService {
     }).subscribeOn(Schedulers.io()).observeOn(observingThread);
   }
 
+  public Observable<String> editTask(final TaskModel updatedTask, final List<Member> selectedMembers,
+                                     Scheduler observingThread) {
+    observingThread = (observingThread == null) ? AndroidSchedulers.mainThread() : observingThread;
+    return Observable.create(new Observable.OnSubscribe<String>() {
+      @Override
+      public void call(Subscriber<? super String> subscriber) {
+        if (!NetworkUtils.isOnline()) {
+          throw new ApiCallException(NetworkUtils.OFFLINE_SELECTED);
+        } else {
+          try {
+            Response<TaskResponse> response = setUpUpdateApiCall(updatedTask, selectedMembers).execute();
+            if (response.isSuccessful()) {
+              // guarding against an index out of bounds on task list, just in case
+              TaskModel revisedTask = !response.body().getTasks().isEmpty() ? response.body().getTasks().first() : updatedTask;
+              RealmUtils.saveDataToRealmSync(revisedTask);
+              EventBus.getDefault().post(new TaskUpdatedEvent(revisedTask));
+              subscriber.onNext(NetworkUtils.SAVED_SERVER);
+            } else {
+              throw new ApiCallException(NetworkUtils.SERVER_ERROR, ErrorUtils.getRestMessage(response.errorBody()));
+            }
+          } catch (IOException e) {
+            throw new ApiCallException(NetworkUtils.SERVER_ERROR);
+          }
+        }
+      }
+    }).subscribeOn(Schedulers.io()).observeOn(observingThread);
+  }
+
+  @SuppressWarnings("unchecked") // todo : finally clean these unchecked warnings up
+  public Call<TaskResponse> setUpUpdateApiCall(final TaskModel model, List<Member> selectedMembers) {
+    List<String> memberUids = (selectedMembers == null) ? Collections.EMPTY_LIST :
+        new ArrayList<>(Utilities.convertMemberListToUids(selectedMembers));
+    final String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
+    final String code = RealmUtils.loadPreferencesFromDB().getToken();
+    switch (model.getType()) {
+      case TaskConstants.MEETING:
+        return GrassrootRestService.getInstance().getApi().editMeeting(phoneNumber, code, model.getTaskUid(),
+            model.getTitle(), model.getDescription(), model.getLocation(), model.getDeadlineISO(), memberUids);
+      case TaskConstants.VOTE:
+        return GrassrootRestService.getInstance().getApi().editVote(phoneNumber, code, model.getTaskUid(), model.getTitle(),
+            model.getDescription(), model.getDeadlineISO());
+      case TaskConstants.TODO:
+        return GrassrootRestService.getInstance().getApi().editTodo(phoneNumber, code, model.getTaskUid(),
+            model.getTitle(), model.getDescription(), model.getDeadlineISO(), null);
+      default:
+        throw new UnsupportedOperationException("Error! Missing task type in call");
+    }
+  }
+
+  /*
+  HELPER METHODS FOR SELECTING THE RIGHT API ENDPOINT TO CALL
+   */
+
   private Call<GenericResponse> setUpCancelApiCall(final String taskType, final String taskUid) {
     final String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
     final String code = RealmUtils.loadPreferencesFromDB().getToken();
@@ -537,6 +592,7 @@ public class TaskService {
         throw new UnsupportedOperationException("Error! Missing task type in call");
     }
   }
+
 
   private Call<TaskResponse> voteCall(String taskUid, String phoneNumber, String code,String response) {
     return GrassrootRestService.getInstance()

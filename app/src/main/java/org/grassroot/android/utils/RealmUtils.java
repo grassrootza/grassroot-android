@@ -352,13 +352,19 @@ public class RealmUtils {
                 final String userMsisdn = realm.where(PreferenceObject.class)
                     .findAll().get(0).getMobileNumber();
 
+                Log.e(TAG, "REALM: looking for msisdn ... " + userMsisdn);
+                Log.e(TAG, "REALM: total number of members in DB ... "
+                    + realm.where(Member.class).count());
+
                 RealmQuery<Member> query;
                 if (includeUser) {
                     query = realm
                         .where(Member.class)
                         .equalTo("groupUid", groupUid)
                         .equalTo("phoneNumber", userMsisdn);
-                    members.add(realm.copyFromRealm(query.findAll().first()));
+                    if (query.count() != 0) {
+                        members.add(realm.copyFromRealm(query.findAll().first()));
+                    }
                 }
 
                 query = realm

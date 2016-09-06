@@ -118,4 +118,12 @@ public class PublicGroupModel extends RealmObject {
     public int hashCode() {
         return id.hashCode();
     }
+
+    @Override
+    public String toString() {
+        return "PublicGroupModel{" +
+            "groupName='" + groupName + '\'' +
+            ", description='" + description + '\'' +
+            '}';
+    }
 }

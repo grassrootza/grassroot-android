@@ -12,10 +12,8 @@ import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 
-import org.grassroot.android.BuildConfig;
 import org.grassroot.android.models.GroupJoinRequest;
 import org.grassroot.android.models.Member;
-import org.grassroot.android.models.responses.MemberListResponse;
 import org.grassroot.android.models.NotificationList;
 import org.grassroot.android.models.Permission;
 import org.grassroot.android.models.RealmString;
@@ -26,6 +24,7 @@ import org.grassroot.android.models.responses.GroupResponse;
 import org.grassroot.android.models.responses.GroupSearchResponse;
 import org.grassroot.android.models.responses.GroupsChangedResponse;
 import org.grassroot.android.models.responses.JoinRequestResponse;
+import org.grassroot.android.models.responses.MemberListResponse;
 import org.grassroot.android.models.responses.PermissionResponse;
 import org.grassroot.android.models.responses.ProfileResponse;
 import org.grassroot.android.models.responses.TaskChangedResponse;
@@ -85,12 +84,13 @@ public class GrassrootRestService {
 
   private GrassrootRestService(Context context) {
     HttpLoggingInterceptor logging = new HttpLoggingInterceptor();
-    logging.setLevel(BuildConfig.BUILD_TYPE.equals("debug") ?
-        HttpLoggingInterceptor.Level.BODY : HttpLoggingInterceptor.Level.HEADERS);
+    //logging.setLevel(BuildConfig.BUILD_TYPE.equals("debug") ?
+        //HttpLoggingInterceptor.Level.BODY : HttpLoggingInterceptor.Level.HEADERS);
+
+    logging.setLevel(HttpLoggingInterceptor.Level.BODY);
 
     OkHttpClient client = new OkHttpClient.Builder()
         .addInterceptor(logging)
-        .addNetworkInterceptor(new ConnectivityInterceptor(context))
         .addNetworkInterceptor(new HeaderInterceptor())
         .build();
     Type token = new TypeToken<RealmList<RealmString>>() {
@@ -195,12 +195,6 @@ public class GrassrootRestService {
     @GET("user/profile/settings/{phoneNumber}/{code}")
     Call<ProfileResponse> getUserProfile(@Path("phoneNumber") String phoneNumber,
         @Path("code") String code);
-
-    //Update profile settings
-    @POST("user/profile/settings/update/{phoneNumber}/{code}")
-    Call<GenericResponse> updateProfile(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
-        @Query("displayName") String displayName, @Query("language") String language,
-        @Query("alertPreference") String preference);
 
     //Change user name
     @GET("user/profile/settings/rename/{phoneNumber}/{code}")
@@ -447,11 +441,11 @@ public class GrassrootRestService {
         @Query("members") List<String> assignedMemberUids);
 
     //edit action
-    @POST("todo/update/{phoneNumber}/{code}/{uid}")
+    @POST("todo/update/{phoneNumber}/{code}/{taskUid}")
     Call<TaskResponse> editTodo(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
-        @Query("title") String title,
-        @Query("dueDate") String dueDate,
-        @Query("members") Set<String> membersAssigned);
+                                @Path("taskUid") String taskUid, @Query("title") String title,
+                                @Query("description") String description, @Query("dueDate") String dueDate,
+                                @Query("members") Set<String> membersAssigned);
 
     @GET("task/assigned/{phoneNumber}/{code}/{taskUid}/{taskType}")
     Call<MemberListResponse> fetchAssignedMembers(@Path("phoneNumber") String phoneNumber, @Path("code") String code,

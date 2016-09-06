@@ -23,7 +23,7 @@
             android:textColor="#000"
             android:drawableRight="@drawable/ic_call"
             android:maxLength="10"
-            android:imeOptions="actionDone" />
+            android:imeOptions="actionNext" />
 
     </android.support.design.widget.TextInputLayout>
 
