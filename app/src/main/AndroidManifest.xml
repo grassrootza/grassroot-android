@@ -239,6 +239,17 @@
                 android:value=".activities.HomeScreenActivity" />
         </activity>
 
+        <activity
+            android:name=".activities.ViewChatMessageActivity"
+            android:configChanges="orientation|keyboardHidden"
+            android:label="@string/title_activity_view_chat_message"
+            android:theme="@style/AppTheme"
+            android:parentActivityName=".activities.HomeScreenActivity">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".activities.HomeScreenActivity" />
+        </activity>
+
         <!-- Navigation drawer / system activities -->
         <activity
             android:name=".activities.FAQActivity" />

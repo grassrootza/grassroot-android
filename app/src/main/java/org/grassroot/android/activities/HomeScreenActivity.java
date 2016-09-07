@@ -529,6 +529,11 @@ public class HomeScreenActivity extends PortraitActivity implements NavigationDr
     }
 
     @Override
+    public void onTaskLoaded(int position, String taskUid, String taskType, String taskTitle) {
+
+    }
+
+    @Override
     public void onFabClicked() {
         QuickTaskModalFragment modal = QuickTaskModalFragment.newInstance(false, null,
             new QuickTaskModalFragment.TaskModalListener() {

@@ -4,8 +4,12 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v4.app.NavUtils;
 import android.support.v4.view.MenuItemCompat;
+import android.support.v4.view.PagerAdapter;
+import android.support.v4.view.ViewPager;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
@@ -20,6 +24,8 @@ import android.widget.Toast;
 
 import org.grassroot.android.R;
 import org.grassroot.android.events.TaskCancelledEvent;
+import org.grassroot.android.fragments.GroupChatFragment;
+import org.grassroot.android.fragments.GroupTaskMasterFragment;
 import org.grassroot.android.fragments.JoinCodeFragment;
 import org.grassroot.android.fragments.NewTaskMenuFragment;
 import org.grassroot.android.fragments.TaskListFragment;
@@ -51,17 +57,23 @@ public class GroupTasksActivity extends PortraitActivity implements NewTaskMenuF
 
     private static final String TAG = GroupTasksActivity.class.getCanonicalName();
 
+
     private Group groupMembership;
     private TaskListFragment taskListFragment;
+    private GroupChatFragment groupChatFragment;
     private JoinCodeFragment joinCodeFragment;
     private NewTaskMenuFragment newTaskMenuFragment;
+    private GroupTaskMasterFragment groupTaskMasterFragment;
 
     private boolean showDescOption;
     private int descOptionText;
 
-    @BindView(R.id.gta_root_layout) ViewGroup rootLayout;
-    @BindView(R.id.gta_toolbar) Toolbar toolbar;
-    @BindView(R.id.progressBar) ProgressBar progressBar;
+    @BindView(R.id.gta_root_layout)
+    ViewGroup rootLayout;
+    @BindView(R.id.gta_toolbar)
+    Toolbar toolbar;
+    @BindView(R.id.progressBar)
+    ProgressBar progressBar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -159,10 +171,13 @@ public class GroupTasksActivity extends PortraitActivity implements NewTaskMenuF
     }
 
     private void setUpFragment() {
-        taskListFragment = TaskListFragment.newInstance(groupMembership.getGroupUid(), this);
+
+     groupTaskMasterFragment =
+                GroupTaskMasterFragment.newInstance(groupMembership.getGroupUid(), this);
         getSupportFragmentManager().beginTransaction()
-                .add(R.id.gta_fragment_holder, taskListFragment)
+                .add(R.id.gta_fragment_holder, groupTaskMasterFragment)
                 .commit();
+
     }
 
     @Override
@@ -339,6 +354,20 @@ public class GroupTasksActivity extends PortraitActivity implements NewTaskMenuF
     }
 
     @Override
+    public void onTaskLoaded(int position, String taskUid, String taskType, String taskTitle) {
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setHomeAsUpIndicator(R.drawable.btn_close_white);
+        }
+        ViewTaskFragment taskFragment = ViewTaskFragment.newInstance(taskType, taskUid);
+
+        getSupportFragmentManager().beginTransaction()
+                .setCustomAnimations(R.anim.up_from_bottom, R.anim.down_from_top)
+                .replace(R.id.gta_fragment_holder, taskFragment)
+                .addToBackStack(null)
+                .commit();
+    }
+
+    @Override
     public void onFabClicked() {
         if (newTaskMenuFragment == null) {
             newTaskMenuFragment = NewTaskMenuFragment.newInstance(groupMembership, true);
@@ -382,4 +411,6 @@ public class GroupTasksActivity extends PortraitActivity implements NewTaskMenuF
             return false;
         }
     }
+
+
 }

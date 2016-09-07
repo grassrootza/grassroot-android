@@ -15,6 +15,7 @@ public interface NotificationConstants {
     String ENTITY_UID = "id";
     String TITLE = "title";
     String ENTITY_TYPE = "entity_type";
+    String GROUP_UID= "group_uid";
     String BODY = "body";
     String NOTIFICATION_UID = "notificationUid";
     String PRIORITY = "priority";
@@ -26,6 +27,8 @@ public interface NotificationConstants {
     String TASK_CHANGED = "TASK_CHANGED";
     String TASK_CANCELLED = "TASK_CANCELLED";
     String TASK_RESULTS = "TASK_RESULTS";
+    String MESSAGE = "message";
+    String CHAT_MESSAGE = "CHAT_MESSAGE";
 
     String JOIN_REQUEST = "JOIN_REQUEST";
 }
