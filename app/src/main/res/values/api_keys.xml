@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="prod_sender_id">307655098455@gcm.googleapis.com</string>
+    <string name="prod_project_id">307655098455</string>
+    <string name="staging_sender_id">912600385183@gcm.googleapis.com</string>
+    <string name="staging_project_id">912600385183</string>
+    <string name="production_url">https://app.grassroot.org.za/api/</string>
+    <string name="staging_url">https://staging.grassroot.org.za/api/</string>
+    <string name="local_url">http://10.0.2.2:8080/api/</string>
+</resources>

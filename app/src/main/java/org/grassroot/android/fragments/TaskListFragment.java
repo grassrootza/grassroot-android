@@ -88,6 +88,7 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
 
   public interface TaskListListener {
     void onTaskLoaded(String taskName);
+    void onTaskLoaded(int position, String taskUid, String taskType, String taskTitle) ;
     void onFabClicked();
   }
 
@@ -385,13 +386,15 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
   @Override
   public void onCardClick(int position, String taskUid, String taskType, String taskTitle) {
     listener.onTaskLoaded(taskTitle);
-    ViewTaskFragment taskFragment = ViewTaskFragment.newInstance(taskType, taskUid);
+    listener.onTaskLoaded(position, taskUid,taskType,taskTitle);
+   /* ViewTaskFragment taskFragment = ViewTaskFragment.newInstance(taskType, taskUid);
     final int containerId = getView() != null ? ((ViewGroup) getView().getParent()).getId() : rootView.getId();
     getFragmentManager().beginTransaction()
         .setCustomAnimations(R.anim.up_from_bottom, R.anim.down_from_top)
         .add(containerId, taskFragment, ViewTaskFragment.class.getCanonicalName()) // must use tag so managing activities etc can retrieve
         .addToBackStack(null)
-        .commit();
+        .commit();*/
+
   }
 
   @Subscribe(threadMode = ThreadMode.MAIN)

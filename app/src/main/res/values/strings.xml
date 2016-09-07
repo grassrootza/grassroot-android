@@ -327,7 +327,7 @@
     <string name="gs_dialog_no_desc_format">Group \'%1$s\' has no public description. It was created
     on %2$s by %3$s and has %4$d members.</string>
 
-    <string name="gs_dialog_message_error">Please enter a message to send</string>
+    <string name="gs_dialog_message_error">Please enter a text to send</string>
     <string name="gs_dialog_send">SEND</string>
 
     <string name="gs_req_open_dialog">You\'ve sent a join request to this group already. The group organizer
@@ -821,6 +821,7 @@
 
     <!--FAQ-->
     <string name="fq_txt_toolbar">FAQs</string>
+    <string name="title_activity_view_chat_message">Group Name</string>
     <string-array name="fq_Header">
         <item>How do I get started?</item>
         <item>Okay, I\'ve part of some groups. What next?</item>
@@ -842,7 +843,7 @@
             \n\nSome groups, though, choose to restrict this to only committee members or organizers. In those groups, if you click on the group you will not have the function available to call a meeting or vote or record a to-do.
         </item>
 
-        <item>Grassroot will send notifications to any group members who have smartphones. Group members who only have basic phones will receive the notification by SMS. In each case, every single group member will receive the message, no matter the kind of phone they have.
+        <item>Grassroot will send notifications to any group members who have smartphones. Group members who only have basic phones will receive the notification by SMS. In each case, every single group member will receive the text, no matter the kind of phone they have.
         </item>
 
     </string-array>

@@ -58,7 +58,7 @@ public class RegisterPhoneFragment extends Fragment {
 	@Override
 	public void onDestroyView() {
 		super.onDestroyView();
-		unbinder.unbind();
+//		unbinder.unbind();
 	}
 
 	@OnClick(R.id.bt_register)

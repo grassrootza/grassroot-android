@@ -7,6 +7,7 @@ import android.util.Log;
 import org.grassroot.android.models.Group;
 import org.grassroot.android.models.GroupJoinRequest;
 import org.grassroot.android.models.Member;
+import org.grassroot.android.models.Message;
 import org.grassroot.android.models.PreferenceObject;
 import org.grassroot.android.models.RealmString;
 import org.grassroot.android.models.TaskModel;
@@ -379,6 +380,28 @@ public class RealmUtils {
             }
         }).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread());
     }
+
+
+    public static Observable<List<Message>> loadMessagesFromDb(final String groupUid) {
+        return Observable.create(new Observable.OnSubscribe<List<Message>>() {
+            @Override
+            public void call(Subscriber<? super List<Message>> subscriber) {
+                RealmList<Message> messages = new RealmList<>();
+                final Realm realm = Realm.getDefaultInstance();
+                RealmResults<Message> results = realm
+                        .where(Message.class)
+                        .equalTo("groupUid", groupUid).findAll();
+                messages.addAll(realm.copyFromRealm(results));
+                subscriber.onNext(messages);
+                subscriber.onCompleted();
+                realm.close();
+            }
+        }).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread());
+
+
+    }
+
+
 
     public static long countUpcomingTasksInDB() {
         Realm realm = Realm.getDefaultInstance();
