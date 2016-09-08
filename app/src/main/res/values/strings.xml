@@ -115,6 +115,7 @@
     <string name="local_error_load_contacts">Error loading your contacts. Please check address book permissions.</string>
     <string name="local_error_load_task_for_edit">Sorry, there was an error loading the task to edit, please retry later</string>
     <string name="local_error_pick_activity">Sorry, there\'s an error on the device that is preventing image selection</string>
+    <string name="local_error_no_rate_activity">Sorry, error loading the Play Store</string>
 
     <string name="snackbar_try_again">Retry</string>
     <string name="snackbar_try_connect">Connect</string>
@@ -144,6 +145,7 @@
     <string name="drawer_online_failed">Try reconnect</string>
     <string name="drawer_profile">Profile settings</string>
     <string name="drawer_faqs">FAQs</string>
+    <string name="drawer_rate_us">Rate us</string>
     <string name="drawer_logout">Logout</string>
     <string name="drawer_share">Share app</string>
     <string name="nav_bar_footer">Grassroot v1</string>
