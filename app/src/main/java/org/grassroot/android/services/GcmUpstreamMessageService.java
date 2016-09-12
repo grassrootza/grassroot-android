@@ -37,7 +37,7 @@ import rx.schedulers.Schedulers;
 public class GcmUpstreamMessageService {
 
     private final static int MAX_RETRIES = 10;
-    private final static int BACKOFF_INITIAL_DELAY = 1000;
+    private final static int BACKOFF_INITIAL_DELAY = 3000;
     private final static int MAX_BACKOFF_DELAY = 60 * 1000;
     private static final Random random = new Random();
     private static final String TAG = GcmUpstreamMessageService.class.getCanonicalName();
@@ -64,13 +64,15 @@ public class GcmUpstreamMessageService {
                             data.putString("phoneNumber", message.getPhoneNumber());
                             data.putString("groupUid", message.getGroupUid());
                             data.putString("time", message.getTime().toString());
+                            Log.d(TAG, "sender_id" + senderId);
                             GoogleCloudMessaging.getInstance(context).send(senderId, message.getId(),0, data);
-                            backoff = exponentialBackoffSleep(backoff);
+                            Log.d(TAG, "no_atempts" + noAttempts);
 
                         } catch (IOException e) {
                             Log.d(TAG, "Failed to send message");
-
                         }
+                        backoff = exponentialBackoffSleep(backoff);
+
                         } while ((!isMessageSent(message.getId()) && noAttempts <= MAX_RETRIES));
                 }
             }
@@ -81,7 +83,10 @@ public class GcmUpstreamMessageService {
 
     private static boolean isMessageSent(String uid){
         Message message = RealmUtils.loadObjectFromDB(Message.class, "id",uid);
-        return message.isDelivered();
+        if(message !=null) {
+            return message.isDelivered();
+        }
+        return false;
     }
 
     private static int exponentialBackoffSleep(int backoff) {

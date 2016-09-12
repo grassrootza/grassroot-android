@@ -8,6 +8,7 @@ import java.util.Date;
 import java.util.UUID;
 
 import io.realm.RealmObject;
+import io.realm.annotations.Index;
 import io.realm.annotations.PrimaryKey;
 
 /**
@@ -20,18 +21,23 @@ public class Message extends RealmObject implements Parcelable {
 
     private String phoneNumber;
     private String text;
+    @Index
     private String groupUid;
     private String displayName;
+    private String groupName;
     private Date time;
     private boolean delivered;
+    private boolean read;
+
 
     public Message(){}
 
-    public Message(String phoneNumber, String groupUid, String displayName, Date time, String text, boolean delivered){
+    public Message(String phoneNumber, String groupUid, String displayName, Date time, String text, boolean delivered, String groupName){
 
         this.id = UUID.randomUUID().toString();
         this.phoneNumber = phoneNumber;
         this.groupUid = groupUid;
+        this.groupName = groupName;
         this.displayName = displayName;
         this.text = text;
         this.time = time;
@@ -42,6 +48,7 @@ public class Message extends RealmObject implements Parcelable {
     public Message(Bundle bundle){
         this.id = bundle.getString("uid");
         this.phoneNumber = bundle.getString("phone_number");
+        this.groupName = bundle.getString("groupName");
         this.displayName = bundle.getString("title");
         this.groupUid = bundle.getString("groupUid");
         this.time = new Date(bundle.getString("time"));
@@ -67,6 +74,7 @@ public class Message extends RealmObject implements Parcelable {
         id=in.readString();
         text = in.readString();
         groupUid = in.readString();
+        groupName = in.readString();
         displayName = in.readString();
         phoneNumber= in.readString();
         long tmpDate = in.readLong();
@@ -114,6 +122,10 @@ public class Message extends RealmObject implements Parcelable {
         return delivered;
     }
 
+    public boolean isRead() {
+        return read;
+    }
+
     @Override
     public int describeContents() {
         return 0;
@@ -124,6 +136,7 @@ public class Message extends RealmObject implements Parcelable {
         dest.writeString(id);
         dest.writeString(text);
         dest.writeString(groupUid);
+        dest.writeString(groupName);
         dest.writeString(displayName);
         dest.writeString(phoneNumber);
         dest.writeLong(time != null ? time.getTime() : -1);

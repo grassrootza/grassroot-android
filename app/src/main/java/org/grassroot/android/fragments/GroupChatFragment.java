@@ -16,25 +16,19 @@ import android.widget.Button;
 import android.widget.TextView;
 
 
-import com.google.android.gms.gcm.GoogleCloudMessaging;
-
-import org.grassroot.android.BuildConfig;
 import org.grassroot.android.R;
 import org.grassroot.android.adapters.GroupChatAdapter;
 import org.grassroot.android.events.GroupChatEvent;
 import org.grassroot.android.models.Message;
 import org.grassroot.android.services.GcmListenerService;
 import org.grassroot.android.services.GcmUpstreamMessageService;
-import org.grassroot.android.utils.Constant;
 import org.grassroot.android.utils.RealmUtils;
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
-import java.io.IOException;
 import java.util.Date;
 import java.util.List;
-import java.util.Random;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -60,11 +54,9 @@ public class GroupChatFragment extends Fragment {
     private LinearLayoutManager layoutManager;
     private static final String TAG = GroupChatFragment.class.getCanonicalName();
 
-
     public static GroupChatFragment newInstance(final String parentUid) {
         GroupChatFragment fragment = new GroupChatFragment();
         fragment.groupUid = parentUid;
-
         return fragment;
     }
 
@@ -88,13 +80,12 @@ public class GroupChatFragment extends Fragment {
 
     }
 
-
     @OnClick(R.id.btn_send)
     public void sendMessage() {
 
         if(!TextUtils.isEmpty(txt_message.getText())) {
             final String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
-            Message message = new Message(phoneNumber, groupUid, null, new Date(), txt_message.getText().toString(), false);
+            Message message = new Message(phoneNumber, groupUid, null, new Date(), txt_message.getText().toString(), false, "");
             Log.d(TAG, "sending message, with ID  = " + message.getId());
             RealmUtils.saveDataToRealmSync(message);
             Log.e(TAG, "number of messages in DB : " + RealmUtils.countObjectsInDB(Message.class));
@@ -105,7 +96,6 @@ public class GroupChatFragment extends Fragment {
                         @Override
                         public void call(String s) {
                             groupChatAdapter.reloadFromdb(groupUid);
-
                         }
                     });
 
@@ -115,7 +105,6 @@ public class GroupChatFragment extends Fragment {
 
         }
     }
-
 
     public void loadMessages() {
         RealmUtils.loadMessagesFromDb(groupUid).subscribe(new Action1<List<Message>>() {
@@ -149,10 +138,14 @@ public class GroupChatFragment extends Fragment {
 
     }
 
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        EventBus.getDefault().unregister(this);
+    }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onEvent(GroupChatEvent groupChatEvent) {
-
         loadMessages();
         if(this.isVisible() && !groupChatEvent.getGroupUid().equals(groupUid)) {
             GcmListenerService.showNotification(groupChatEvent.getBundle(), getActivity()).subscribe();

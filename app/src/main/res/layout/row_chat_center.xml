@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/chat_row_view"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginTop="@dimen/margin_small"
+    android:layout_marginBottom="@dimen/margin_small"
+    android:background="@color/white"
+    android:clickable="true"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <ImageView
+        android:id="@+id/notification_icon"
+        android:layout_width="@dimen/group_icon_large"
+        android:layout_height="@dimen/group_icon_large"
+        android:layout_alignParentLeft="true"
+        android:layout_marginTop="@dimen/margin_small"
+        android:layout_marginBottom="@dimen/margin_small"
+        android:layout_marginLeft="@dimen/padding_half"
+        android:layout_marginStart="@dimen/padding_half"
+        android:src="@drawable/ic_groups_default_avatar"/>
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="@dimen/margin_large"
+        android:paddingLeft="@dimen/padding"
+        android:paddingRight="@dimen/padding"
+        android:layout_toRightOf="@+id/notification_icon">
+
+    <TextView
+        android:id="@+id/name"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:text = "Title"
+        android:textColor="#444444"
+        android:textStyle="bold"
+        android:textSize="16dp" />
+
+    <TextView android:id="@+id/message"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/name"
+        android:textColor="#888888"
+        android:layout_marginTop="5dp"
+        android:text="Seems gcm will take some time"/>
+
+    <TextView android:id="@+id/timestamp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="12:00 AM"
+        android:textSize="10dp"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentTop="true"/>
+
+    <TextView android:id="@+id/count"
+        android:layout_width="20dp"
+        android:layout_height="20dp"
+        android:gravity="center"
+        android:textSize="10dp"
+        android:textColor="@android:color/white"
+        android:layout_below="@id/timestamp"
+        android:layout_marginTop="5dp"
+        android:layout_alignParentRight="true"
+        android:text="5"
+        android:background="@drawable/notification_txt"/>
+
+    </RelativeLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/thin_separator_height"
+        android:layout_alignParentBottom="true"
+        android:background="@color/md_grey_200" />
+
+</RelativeLayout>
+
+

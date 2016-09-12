@@ -4,9 +4,13 @@ import android.os.Bundle;
 import android.widget.FrameLayout;
 
 import org.grassroot.android.R;
+import org.grassroot.android.events.GroupChatEvent;
 import org.grassroot.android.fragments.GroupChatFragment;
 import org.grassroot.android.interfaces.GroupConstants;
+import org.grassroot.android.services.GcmListenerService;
 import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
+import org.greenrobot.eventbus.ThreadMode;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -27,11 +31,11 @@ public class ViewChatMessageActivity extends PortraitActivity{
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chat_message_activtity);
         ButterKnife.bind(this);
-        
-    //    EventBus.getDefault().register(this);
+
 
         groupUid = getIntent().getStringExtra(GroupConstants.UID_FIELD);
         groupName = getIntent().getStringExtra(GroupConstants.NAME_FIELD);
+
         setView();
 
     }
@@ -40,11 +44,12 @@ public class ViewChatMessageActivity extends PortraitActivity{
     @Override
     protected void onDestroy() {
         super.onDestroy();
-      //  EventBus.getDefault().unregister(this);
+
     }
 
-
     private void setView(){
+
+        setTitle(groupName);
         GroupChatFragment groupChatFragment = GroupChatFragment.newInstance(groupUid);
         getSupportFragmentManager().beginTransaction().add(R.id.gca_fragment_holder,groupChatFragment).commit();
     }
@@ -56,4 +61,7 @@ public class ViewChatMessageActivity extends PortraitActivity{
 
 
 
-}
+
+
+
+    }

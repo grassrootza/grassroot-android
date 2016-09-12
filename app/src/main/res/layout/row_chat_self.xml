@@ -39,6 +39,20 @@
         android:layout_below="@id/text"
         android:layout_marginBottom="25dp"
         android:padding="10dp"
+        android:text="blah blah blah"
         android:textSize="10dp" />
+
+
+    <TextView
+        android:id="@+id/sent"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:padding="10dp"
+        android:text="Sent."
+        android:textSize="10dp"
+        android:layout_below="@+id/text"
+        android:layout_alignLeft="@+id/text"
+        android:layout_alignStart="@+id/text" />
+
 
 </RelativeLayout>

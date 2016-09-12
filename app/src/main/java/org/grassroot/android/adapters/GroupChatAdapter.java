@@ -60,7 +60,9 @@ public class GroupChatAdapter extends RecyclerView.Adapter<GroupChatAdapter.GCVi
             holder.user.setText(message.getDisplayName());
             holder.user.setVisibility(View.VISIBLE);
         }
-
+        if(getItemViewType(position)==SELF && message.isDelivered()) {
+            holder.sent.setVisibility(View.VISIBLE);
+        }
    }
 
     public void setGroupList(List<Message> messages) {
@@ -104,6 +106,9 @@ public class GroupChatAdapter extends RecyclerView.Adapter<GroupChatAdapter.GCVi
 
         @BindView(R.id.text)
         TextView message;
+
+        @BindView(R.id.sent)
+        TextView sent;
 
         public GCViewHolder(View view) {
             super(view);
