@@ -25,6 +25,7 @@ public class Message extends RealmObject implements Parcelable {
     private String groupUid;
     private String displayName;
     private String groupName;
+    private String groupIcon;
     private Date time;
     private boolean delivered;
     private boolean read;
@@ -49,6 +50,7 @@ public class Message extends RealmObject implements Parcelable {
         this.id = bundle.getString("uid");
         this.phoneNumber = bundle.getString("phone_number");
         this.groupName = bundle.getString("groupName");
+        this.groupIcon = bundle.getString("groupIcon");
         this.displayName = bundle.getString("title");
         this.groupUid = bundle.getString("groupUid");
         this.time = new Date(bundle.getString("time"));
@@ -120,6 +122,14 @@ public class Message extends RealmObject implements Parcelable {
 
     public boolean isDelivered() {
         return delivered;
+    }
+
+    public void setRead(boolean read) {
+        this.read = read;
+    }
+
+    public String getGroupName() {
+        return groupName;
     }
 
     public boolean isRead() {

@@ -59,7 +59,6 @@ public class GcmListenerService extends com.google.android.gms.gcm.GcmListenerSe
     private static List<String> notificationMessages = new ArrayList<>();
     private static List<String> chatMessages = new ArrayList<>();
     private static int displayedNotificationCount = 0;
-    ;
     private static int displayedMessagesCount = 0;
 
 
@@ -223,15 +222,18 @@ public class GcmListenerService extends com.google.android.gms.gcm.GcmListenerSe
         Intent resultIntent;
 
         if (displayedMessagesCount > 1 || displayedNotificationCount > 1) {
-            if(!entityType.equals(NotificationConstants.CHAT_MESSAGE)) {
-                Log.e(TAG, "its not a chat");
+            if (!entityType.equals(NotificationConstants.CHAT_MESSAGE)) {
                 resultIntent = new Intent(context, HomeScreenActivity.class);
                 resultIntent.putExtra(NavigationConstants.HOME_OPEN_ON_NAV, NavigationConstants.ITEM_NOTIFICATIONS);
                 EventBus.getDefault().post(new NotificationEvent());
-            }else{
-                Log.e(TAG, "its  a chat");
-               resultIntent = new Intent(context, ViewChatMessageActivity.class);
-        }
+            } else {
+                resultIntent = new Intent(context, ViewChatMessageActivity.class);
+                resultIntent.putExtra(GroupConstants.UID_FIELD, msg.getString(GroupConstants.UID_FIELD));
+                resultIntent.putExtra(GroupConstants.NAME_FIELD, msg.getString(GroupConstants.NAME_FIELD));
+                resultIntent.putExtra(NotificationConstants.CLICK_ACTION, NotificationConstants.CHAT_LIST);
+                Log.e(TAG, "getting chat list");
+
+            }
         } else {
             switch (entityType) {
                 case NotificationConstants.JOIN_REQUEST:
@@ -248,6 +250,7 @@ public class GcmListenerService extends com.google.android.gms.gcm.GcmListenerSe
                 default:
                     resultIntent = new Intent(context, ViewTaskActivity.class);
                     resultIntent.putExtra(NotificationConstants.NOTIFICATION_UID, msg.getString(NotificationConstants.NOTIFICATION_UID));
+                    resultIntent.putExtra(NotificationConstants.ENTITY_TYPE, msg.getString(NotificationConstants.ENTITY_TYPE));
                     break;
             }
             resultIntent.putExtra(NotificationConstants.ENTITY_UID, msg.getString(NotificationConstants.ENTITY_UID));
@@ -256,7 +259,6 @@ public class GcmListenerService extends com.google.android.gms.gcm.GcmListenerSe
         }
 
         PendingIntent resultPendingIntent;
-
         resultPendingIntent = (entityType.equals(NotificationConstants.CHAT_MESSAGE)) ? PendingIntent.getActivity(context, 100, resultIntent,
                 PendingIntent.FLAG_CANCEL_CURRENT) : PendingIntent.getActivity(context, 200, resultIntent,
                 PendingIntent.FLAG_CANCEL_CURRENT);

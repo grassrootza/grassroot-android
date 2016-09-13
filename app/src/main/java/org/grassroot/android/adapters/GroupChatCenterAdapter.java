@@ -9,19 +9,28 @@ import android.widget.TextView;
 
 import org.grassroot.android.R;
 import org.grassroot.android.models.Message;
+import org.grassroot.android.utils.RealmUtils;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import rx.functions.Action1;
 
 /**
  * Created by paballo on 2016/09/12.
  */
 public class GroupChatCenterAdapter extends RecyclerView.Adapter<GroupChatCenterAdapter.GCCViewHolder> {
 
-    private List<Message> messages = new ArrayList<>();
+    private List<Message> messages;
+
+
+
+    public GroupChatCenterAdapter(List<Message> messages){
+        this.messages = new ArrayList<>(messages);
+        notifyDataSetChanged();
+    }
 
 
     @Override
@@ -34,10 +43,28 @@ public class GroupChatCenterAdapter extends RecyclerView.Adapter<GroupChatCenter
     public void onBindViewHolder(GCCViewHolder holder, int position) {
         Message message = messages.get(position);
         holder.txt_message.setText(message.getText());
-        holder.txt_name.setText(message.getText());
+        holder.txt_name.setText(message.getGroupName());
+        long count = RealmUtils.countUnreadMessages(message.getGroupUid());
       //  holder
 
 
+    }
+
+
+    public void reloadFromDb(){
+       RealmUtils.loadDistinctMessages().subscribe(new Action1<List<Message>>() {
+            @Override
+            public void call(List<Message> messages) {
+                setList(messages);
+
+            }
+        });
+    }
+
+    private void setList(List<Message> messages){
+        messages.clear();
+        messages.addAll(messages);
+        notifyDataSetChanged();
     }
 
     @Override
@@ -45,7 +72,9 @@ public class GroupChatCenterAdapter extends RecyclerView.Adapter<GroupChatCenter
         return messages.size();
     }
 
-
+    public List<Message> getChatList(){
+        return messages;
+    }
 
 
     public class GCCViewHolder extends RecyclerView.ViewHolder {

@@ -31,4 +31,5 @@ public interface NotificationConstants {
     String CHAT_MESSAGE = "CHAT_MESSAGE";
 
     String JOIN_REQUEST = "JOIN_REQUEST";
+    String CHAT_LIST ="CHAT_LIST";
 }
