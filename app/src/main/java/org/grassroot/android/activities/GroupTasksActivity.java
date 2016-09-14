@@ -4,7 +4,6 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
-import android.support.v4.app.NavUtils;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.SearchView;
@@ -220,7 +219,9 @@ public class GroupTasksActivity extends PortraitActivity implements NewTaskMenuF
 
     private void handleUpButton() {
         if (!closeViewTaskFragment()) {
-            NavUtils.navigateUpFromSameTask(this);
+            // note : this is crashing on older devices, so am explicitly calling the home
+            Log.e(TAG, "okay, heading home");
+            startActivity(new Intent(this, HomeScreenActivity.class));
         }
     }
 

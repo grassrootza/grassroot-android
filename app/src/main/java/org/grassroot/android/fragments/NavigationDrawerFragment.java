@@ -1,8 +1,10 @@
 package org.grassroot.android.fragments;
 
+import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.AlertDialog;
@@ -75,6 +77,7 @@ public class NavigationDrawerFragment extends Fragment implements NavigationDraw
     public static final String ITEM_SHARE = "item_share";
 
     public static final String ITEM_FAQ = "item_faq";
+    public static final String ITEM_RATE = "item_rate";
     public static final String ITEM_LOGOUT = "item_logout";
 
     private NavigationDrawerCallbacks mCallbacks;
@@ -228,10 +231,13 @@ public class NavigationDrawerFragment extends Fragment implements NavigationDraw
 
         pos = addItemAndIncrement(pos, NavigationDrawerAdapter.SEPARATOR, new NavDrawerItem());
 
-        // setupOnlineSwitch();
-
         pos = addItemAndIncrement(pos, NavigationDrawerAdapter.SECONDARY,
             new NavDrawerItem(ITEM_FAQ, getString(R.string.drawer_faqs),R.drawable.ic_faq));
+
+        if (canRateApp()) {
+            pos = addItemAndIncrement(pos, NavigationDrawerAdapter.SECONDARY,
+                new NavDrawerItem(ITEM_RATE, getString(R.string.drawer_rate_us), R.drawable.ic_star));
+        }
 
         addItemAndIncrement(pos, NavigationDrawerAdapter.SECONDARY,
             new NavDrawerItem(ITEM_LOGOUT, getString(R.string.drawer_logout),R.drawable.ic_logout));
@@ -297,6 +303,14 @@ public class NavigationDrawerFragment extends Fragment implements NavigationDraw
                 break;
             case ITEM_FAQ:
                 startActivity(new Intent(getActivity(), FAQActivity.class));
+                break;
+            case ITEM_RATE:
+                try {
+                    startActivity(createRateIntent());
+                } catch (ActivityNotFoundException e) {
+                    Toast.makeText(ApplicationLoader.applicationContext, R.string.local_error_no_rate_activity,
+                        Toast.LENGTH_SHORT).show();
+                }
                 break;
             case ITEM_LOGOUT:
                 logout();
@@ -514,6 +528,15 @@ public class NavigationDrawerFragment extends Fragment implements NavigationDraw
                 Log.d(TAG, "recycler view called while animating");
             }
         }
+    }
+
+    private Intent createRateIntent() {
+        final Uri uri = Uri.parse("market://details?id=" + ApplicationLoader.applicationContext.getPackageName());
+        return new Intent(Intent.ACTION_VIEW, uri);
+    }
+
+    private boolean canRateApp() {
+        return !getActivity().getPackageManager().queryIntentActivities(createRateIntent(), 0).isEmpty();
     }
 
 }

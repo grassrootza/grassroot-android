@@ -338,8 +338,13 @@ public class LoginRegisterActivity extends AppCompatActivity implements LoginScr
     @Override
     public void onBackPressed() {
         if (taskDepth == 0) {
-            Intent backToIntro = NavUtils.getParentActivityIntent(this);
-            NavUtils.navigateUpTo(this, backToIntro);
+            try {
+                Intent backToIntro = NavUtils.getParentActivityIntent(this);
+                NavUtils.navigateUpTo(this, backToIntro);
+            } catch (NullPointerException e) {
+                // navutils causing crashes on old devices with low memory, so default to system behavior if it crashes
+                super.onBackPressed();
+            }
         } else {
             taskDepth--;
             super.onBackPressed();
