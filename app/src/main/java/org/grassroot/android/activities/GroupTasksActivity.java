@@ -4,12 +4,8 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v4.app.NavUtils;
 import android.support.v4.view.MenuItemCompat;
-import android.support.v4.view.PagerAdapter;
-import android.support.v4.view.ViewPager;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
@@ -173,7 +169,7 @@ public class GroupTasksActivity extends PortraitActivity implements NewTaskMenuF
     private void setUpFragment() {
 
      groupTaskMasterFragment =
-                GroupTaskMasterFragment.newInstance(groupMembership.getGroupUid(), this);
+                GroupTaskMasterFragment.newInstance(groupMembership.getGroupUid(), this, groupMembership.getGroupName());
         getSupportFragmentManager().beginTransaction()
                 .add(R.id.gta_fragment_holder, groupTaskMasterFragment)
                 .commit();
@@ -189,7 +185,8 @@ public class GroupTasksActivity extends PortraitActivity implements NewTaskMenuF
                 handleUpButton();
                 return true;
             case R.id.mi_icon_filter:
-                taskListFragment.filter();
+             //   taskListFragment.filter();
+                groupTaskMasterFragment.getTaskListFragment().filter();
                 return true;
             case R.id.mi_change_desc:
                 viewOrChangeDescription();

@@ -1,5 +1,6 @@
 package org.grassroot.android.fragments;
 
+import android.app.Activity;
 import android.content.Context;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -17,6 +18,7 @@ import android.widget.TextView;
 
 
 import org.grassroot.android.R;
+import org.grassroot.android.activities.ViewNotificationActivity;
 import org.grassroot.android.adapters.GroupChatAdapter;
 import org.grassroot.android.events.GroupChatEvent;
 import org.grassroot.android.models.Message;
@@ -42,6 +44,7 @@ import rx.functions.Action1;
 public class GroupChatFragment extends Fragment {
 
     private String groupUid;
+    private String groupName;
 
     @BindView(R.id.gc_recycler_view)
     RecyclerView gc_recycler_view;
@@ -54,9 +57,10 @@ public class GroupChatFragment extends Fragment {
     private LinearLayoutManager layoutManager;
     private static final String TAG = GroupChatFragment.class.getCanonicalName();
 
-    public static GroupChatFragment newInstance(final String parentUid) {
+    public static GroupChatFragment newInstance(final String groupUid, String groupName) {
         GroupChatFragment fragment = new GroupChatFragment();
-        fragment.groupUid = parentUid;
+        fragment.groupUid = groupUid;
+        fragment.groupName = groupName;
         return fragment;
     }
 
@@ -64,7 +68,7 @@ public class GroupChatFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_group_chat, container, false);
         ButterKnife.bind(this, view);
-        setview();
+        setView();
 
         return view;
     }
@@ -73,9 +77,14 @@ public class GroupChatFragment extends Fragment {
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         EventBus.getDefault().register(this);
+
     }
 
-    private void setview() {
+    private void setView() {
+        if (getActivity() instanceof ViewNotificationActivity) {
+            GcmListenerService.clearChatNotifications(getContext());
+            getActivity().setTitle(groupName);
+        }
         loadMessages();
 
     }
@@ -83,7 +92,7 @@ public class GroupChatFragment extends Fragment {
     @OnClick(R.id.btn_send)
     public void sendMessage() {
 
-        if(!TextUtils.isEmpty(txt_message.getText())) {
+        if (!TextUtils.isEmpty(txt_message.getText())) {
             final String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
             Message message = new Message(phoneNumber, groupUid, null, new Date(), txt_message.getText().toString(), false, "");
             Log.d(TAG, "sending message, with ID  = " + message.getId());
@@ -102,7 +111,6 @@ public class GroupChatFragment extends Fragment {
             txt_message.setText(""); //clear text
             InputMethodManager imm = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
             imm.hideSoftInputFromWindow(getActivity().getCurrentFocus().getWindowToken(), 0);
-
         }
     }
 
@@ -116,12 +124,10 @@ public class GroupChatFragment extends Fragment {
                     groupChatAdapter.reloadFromdb(groupUid);
                 }
                 gc_recycler_view.smoothScrollToPosition(groupChatAdapter.getItemCount());
-
             }
         });
+        RealmUtils.markMessagesAsRead(groupUid);
     }
-
-
     private void setUpListAndAdapter(List<Message> messages) {
         groupChatAdapter = new GroupChatAdapter(messages);
         layoutManager = new LinearLayoutManager(getActivity());
@@ -139,6 +145,11 @@ public class GroupChatFragment extends Fragment {
     }
 
     @Override
+    public void onAttach(Activity activity) {
+        super.onAttach(activity);
+    }
+
+    @Override
     public void onDestroyView() {
         super.onDestroyView();
         EventBus.getDefault().unregister(this);
@@ -147,7 +158,7 @@ public class GroupChatFragment extends Fragment {
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onEvent(GroupChatEvent groupChatEvent) {
         loadMessages();
-        if(this.isVisible() && !groupChatEvent.getGroupUid().equals(groupUid)) {
+        if (this.isVisible() && !groupChatEvent.getGroupUid().equals(groupUid)) {
             GcmListenerService.showNotification(groupChatEvent.getBundle(), getActivity()).subscribe();
         }
     }

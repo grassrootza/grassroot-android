@@ -1,5 +1,6 @@
 package org.grassroot.android.fragments;
 
+import android.content.Context;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.DefaultItemAnimator;
@@ -41,13 +42,11 @@ public class MessageCenterFragment extends Fragment {
         return fragment;
     }
 
-
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View viewToReturn = inflater.inflate(R.layout.fragment_message_center, container, false);
         unbinder = ButterKnife.bind(this, viewToReturn);
-        setHasOptionsMenu(true);
-//        GcmListenerService.clearChatNotifications(getContext());
+        GcmListenerService.clearChatNotifications(getContext());
         loadMessages();
         return viewToReturn;
     }
@@ -57,6 +56,11 @@ public class MessageCenterFragment extends Fragment {
         unbinder.unbind();
     }
 
+    @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        getActivity().setTitle(context.getString(R.string.chats_title));
+    }
 
     public void loadMessages() {
         RealmUtils.loadDistinctMessages().subscribe(new Action1<List<Message>>() {
@@ -85,7 +89,8 @@ public class MessageCenterFragment extends Fragment {
                     @Override
                     public void onClick(View view, int position) {
                         String groupUid = groupChatCenterAdapter.getChatList().get(position).getGroupUid();
-                        GroupChatFragment groupChatFragment = GroupChatFragment.newInstance(groupUid);
+                        String groupName = groupChatCenterAdapter.getChatList().get(position).getGroupName();
+                        GroupChatFragment groupChatFragment = GroupChatFragment.newInstance(groupUid,groupName );
                         getActivity().getSupportFragmentManager().beginTransaction()
                                 .replace(R.id.gca_fragment_holder, groupChatFragment).commitAllowingStateLoss();
 

@@ -16,16 +16,14 @@ import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 
 import org.grassroot.android.R;
-import org.grassroot.android.activities.HomeScreenActivity;
 import org.grassroot.android.activities.JoinRequestNoticeActivity;
-import org.grassroot.android.activities.ViewChatMessageActivity;
+import org.grassroot.android.activities.ViewNotificationActivity;
 import org.grassroot.android.activities.ViewTaskActivity;
 import org.grassroot.android.events.GroupChatEvent;
 import org.grassroot.android.events.JoinRequestEvent;
 import org.grassroot.android.events.NotificationCountChangedEvent;
 import org.grassroot.android.events.NotificationEvent;
 import org.grassroot.android.interfaces.GroupConstants;
-import org.grassroot.android.interfaces.NavigationConstants;
 import org.grassroot.android.interfaces.NotificationConstants;
 import org.grassroot.android.models.Message;
 import org.grassroot.android.models.responses.GenericResponse;
@@ -196,7 +194,6 @@ public class GcmListenerService extends com.google.android.gms.gcm.GcmListenerSe
                 isInBackground = false;
             }
         }
-
         return isInBackground;
     }
 
@@ -223,11 +220,11 @@ public class GcmListenerService extends com.google.android.gms.gcm.GcmListenerSe
 
         if (displayedMessagesCount > 1 || displayedNotificationCount > 1) {
             if (!entityType.equals(NotificationConstants.CHAT_MESSAGE)) {
-                resultIntent = new Intent(context, HomeScreenActivity.class);
-                resultIntent.putExtra(NavigationConstants.HOME_OPEN_ON_NAV, NavigationConstants.ITEM_NOTIFICATIONS);
+                resultIntent = new Intent(context, ViewNotificationActivity.class);
+                resultIntent.putExtra(NotificationConstants.CLICK_ACTION, NotificationConstants.NOTIFICATION_LIST);
                 EventBus.getDefault().post(new NotificationEvent());
             } else {
-                resultIntent = new Intent(context, ViewChatMessageActivity.class);
+                resultIntent = new Intent(context, ViewNotificationActivity.class);
                 resultIntent.putExtra(GroupConstants.UID_FIELD, msg.getString(GroupConstants.UID_FIELD));
                 resultIntent.putExtra(GroupConstants.NAME_FIELD, msg.getString(GroupConstants.NAME_FIELD));
                 resultIntent.putExtra(NotificationConstants.CLICK_ACTION, NotificationConstants.CHAT_LIST);
@@ -243,7 +240,7 @@ public class GcmListenerService extends com.google.android.gms.gcm.GcmListenerSe
                     EventBus.getDefault().post(new JoinRequestEvent(TAG));
                     break;
                 case NotificationConstants.CHAT_MESSAGE:
-                    resultIntent = new Intent(context, ViewChatMessageActivity.class);
+                    resultIntent = new Intent(context, ViewNotificationActivity.class);
                     resultIntent.putExtra(GroupConstants.UID_FIELD, msg.getString(GroupConstants.UID_FIELD));
                     resultIntent.putExtra(GroupConstants.NAME_FIELD, msg.getString(GroupConstants.NAME_FIELD));
                     break;
@@ -290,8 +287,7 @@ public class GcmListenerService extends com.google.android.gms.gcm.GcmListenerSe
         Message message = new Message(msg);
         String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
         RealmUtils.saveDataToRealmSync(message);
-        if (!isAppIsInBackground(context)) {
-            // if(isAppIsInBackground(context) && !message.getPhoneNumber().equals(phoneNumber)) {
+            if(isAppIsInBackground(context) && !message.getPhoneNumber().equals(phoneNumber)) {
             relayNotification(msg, context);
         } else {
             EventBus.getDefault().post(new GroupChatEvent(message.getGroupUid(), msg));
@@ -344,12 +340,16 @@ public class GcmListenerService extends com.google.android.gms.gcm.GcmListenerSe
     }
 
     public static void clearTaskNotifications(Context context) {
+        notification.number = notification.number-notificationMessages.size();
+        displayedNotificationCount=0;
         notificationMessages.clear();
         NotificationManager nMgr = (NotificationManager) context.getSystemService(NOTIFICATION_SERVICE);
         nMgr.cancel(TASKS);
     }
 
     public static void clearChatNotifications(Context context) {
+        notification.number = notification.number-chatMessages.size();
+        displayedMessagesCount = 0;
         chatMessages.clear();
         NotificationManager nMgr = (NotificationManager) context.getSystemService(NOTIFICATION_SERVICE);
         nMgr.cancel(CHATS);

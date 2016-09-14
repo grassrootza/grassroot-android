@@ -240,7 +240,7 @@
         </activity>
 
         <activity
-            android:name=".activities.ViewChatMessageActivity"
+            android:name=".activities.ViewNotificationActivity"
             android:configChanges="orientation|keyboardHidden"
             android:label="@string/title_activity_view_chat_message"
             android:theme="@style/AppTheme"

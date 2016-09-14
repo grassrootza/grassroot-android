@@ -409,24 +409,57 @@ public class RealmUtils {
                 realm.close();
             }
         }).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread());
-
     }
+
 
     public static Observable<List<Message>> loadDistinctMessages(){
         return Observable.create(new Observable.OnSubscribe<List<Message>>(){
             @Override
             public void call(Subscriber<? super List<Message>> subscriber) {
-                RealmList<Message> messages = new RealmList<Message>();
+                final RealmList<Message> messages = new RealmList<Message>();
                 final Realm realm = Realm.getDefaultInstance();
-                RealmResults<Message> results = realm.where(Message.class)
+
+                final RealmResults<Message> results = realm.where(Message.class)
                         .distinct("groupUid");
-                messages.addAll(realm.copyFromRealm(results));
+                final List<Message> tempList = new ArrayList<>();
+                realm.executeTransaction(new Realm.Transaction() {
+                    @Override
+                    public void execute(Realm realm) {
+                        for(Message message: results){
+                            Message lastMessage = realm
+                                    .where(Message.class)
+                                    .equalTo("groupUid", message.getGroupUid()).findAll().last();
+                            tempList.add(lastMessage);
+                        }
+                    }
+                });
+                messages.addAll(realm.copyFromRealm(tempList));
                 subscriber.onNext(messages);
                 subscriber.onCompleted();
                 realm.close();
 
             }
         }).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread());
+    }
+
+
+    public static void markMessagesAsRead(String groupUid){
+        final Realm realm = Realm.getDefaultInstance();
+        final RealmResults<Message> messages = realm
+                .where(Message.class)
+                .equalTo("groupUid", groupUid)
+                .equalTo("read", false).findAll();
+        realm.executeTransaction(new Realm.Transaction() {
+            @Override
+            public void execute(Realm realm) {
+                for(Message message:messages){
+                    message.setRead(true);
+                    realm.copyToRealm(message);
+            }}
+        });
+
+        realm.close();
+
     }
 
 

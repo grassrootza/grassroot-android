@@ -8,6 +8,7 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.view.LayoutInflater;
+import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
@@ -24,8 +25,9 @@ import butterknife.Unbinder;
  */
 public class GroupTaskMasterFragment extends Fragment implements TaskListFragment.TaskListListener{
 
-    private static final String TAG = JoinRequestMasterFragment.class.getSimpleName();
+    private static final String TAG = GroupTaskMasterFragment.class.getSimpleName();
     private String groupUid;
+    private String groupName;
     private static final int PAGERCOUNT = 2;
     Unbinder unbinder;
 
@@ -44,13 +46,15 @@ public class GroupTaskMasterFragment extends Fragment implements TaskListFragmen
     public void onAttach(Context context) {
         super.onAttach(context);
         groupUid = getArguments().getString("groupUid");
+        groupName = getArguments().getString("groupName");
         setHasOptionsMenu(true);
     }
 
-    public static GroupTaskMasterFragment newInstance(String groupUid, TaskListFragment.TaskListListener taskListListener){
+    public static GroupTaskMasterFragment newInstance(String groupUid, TaskListFragment.TaskListListener taskListListener, String groupName){
         GroupTaskMasterFragment groupTaskMasterFragment = new GroupTaskMasterFragment();
         Bundle args = new Bundle();
         args.putString("groupUid", groupUid);
+        args.putString("groupName", groupName);
         groupTaskMasterFragment.setArguments(args);
         groupTaskMasterFragment.taskListListener = taskListListener;
 
@@ -70,7 +74,7 @@ public class GroupTaskMasterFragment extends Fragment implements TaskListFragmen
         return view;
     }
 
-  /*  @Override
+   @Override
     public void onPrepareOptionsMenu(Menu menu) {
         super.onPrepareOptionsMenu(menu);
         if (menu.findItem(R.id.action_search) != null)
@@ -86,13 +90,11 @@ public class GroupTaskMasterFragment extends Fragment implements TaskListFragmen
         if (menu.findItem(R.id.mi_refresh_screen) != null)
             menu.findItem(R.id.mi_refresh_screen).setVisible(true);
     }
-*/
+
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.mi_refresh_screen:
-
-
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
@@ -124,6 +126,10 @@ public class GroupTaskMasterFragment extends Fragment implements TaskListFragmen
 
     }
 
+    public TaskListFragment getTaskListFragment() {
+        return taskListFragment;
+    }
+
     public class TaskPagerAdapter extends FragmentStatePagerAdapter {
 
         private final CharSequence[] titles=  { "Tasks", "Chat"};
@@ -143,7 +149,7 @@ public class GroupTaskMasterFragment extends Fragment implements TaskListFragmen
                     taskListFragment = TaskListFragment.newInstance(groupUid, GroupTaskMasterFragment.this);
                     return taskListFragment;
                 case 1:
-                    groupChatFragment = GroupChatFragment.newInstance(groupUid);
+                    groupChatFragment = GroupChatFragment.newInstance(groupUid, groupName);
                     return groupChatFragment;
                 default:
                     return taskListFragment;

@@ -136,6 +136,7 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
     taskView.setHasFixedSize(true);
     taskView.setDrawingCacheEnabled(true);
 
+
     loadTasksOnCreateView();
     return viewToReturn;
   }

@@ -42,14 +42,15 @@ public class GroupChatCenterAdapter extends RecyclerView.Adapter<GroupChatCenter
     @Override
     public void onBindViewHolder(GCCViewHolder holder, int position) {
         Message message = messages.get(position);
-        holder.txt_message.setText(message.getText());
+        String text = message.getText();
+        holder.txt_message.setText(text);
         holder.txt_name.setText(message.getGroupName());
         long count = RealmUtils.countUnreadMessages(message.getGroupUid());
-      //  holder
+        holder.txt_count.setText(Long.toString(count));
+      //  holder.txt_time.setText(message.getTime().toString());
 
 
     }
-
 
     public void reloadFromDb(){
        RealmUtils.loadDistinctMessages().subscribe(new Action1<List<Message>>() {
