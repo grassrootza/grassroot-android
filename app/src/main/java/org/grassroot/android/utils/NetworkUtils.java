@@ -55,6 +55,7 @@ public class NetworkUtils {
   public static final String SAVED_OFFLINE_MODE = "saved_offline_mode";
   public static final String SERVER_ERROR = "server_error";
   public static final String CONNECT_ERROR = "connection_error";
+  public static final String LOCAL_ERROR = "local_error"; // e.g., some parameter is missing
   public static final String NO_NETWORK = "no_network";
   public static final String FETCHED_SERVER = "fetched_from_server";
   public static final String FETCHED_CACHE = "fetched_local";

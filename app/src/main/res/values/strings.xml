@@ -34,6 +34,7 @@
     <!--Error descriptions -->
 
     <string name="application_crash_error">Sorry! Grassroot crashed (we\'ve reported it)</string>
+    <string name="application_notify_crash">Sorry, error loading task</string>
 
     <string name="error_generic">Sorry! Something went wrong in the request.</string> <!-- null pointer error, or who knows what -->
     <string name="server_error_general">Sorry, something went wrong with the request.</string> <!-- note : should never actually use this -->

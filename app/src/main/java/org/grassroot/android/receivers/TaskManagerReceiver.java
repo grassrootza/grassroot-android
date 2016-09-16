@@ -28,13 +28,15 @@ public class TaskManagerReceiver extends BroadcastReceiver {
         switch (intent.getAction()) {
             case ACTION_START:
                 gcmNetworkManager = GcmNetworkManager.getInstance(context);
-                gcmNetworkManager.cancelTask(TASK_TAG_PERIODIC,SyncService.class);
-                Task task = createPeriodicTask();
-                gcmNetworkManager.schedule(task);
-                Log.d(TAG,"Starting tasks");
+                if (gcmNetworkManager != null) {
+                    gcmNetworkManager.cancelTask(TASK_TAG_PERIODIC, SyncService.class);
+                    Task task = createPeriodicTask();
+                    gcmNetworkManager.schedule(task);
+                    Log.d(TAG, "Starting tasks");
+                }
                 break;
             case ACTION_DONE:
-                if(GcmListenerService.isAppIsInBackground(context)){
+                if(GcmListenerService.isAppIsInBackground(context) && gcmNetworkManager != null){
                     gcmNetworkManager.cancelTask(TASK_TAG_PERIODIC,SyncService.class);
                     Log.d(TAG,"App in background, cancelling tasks");
                 }

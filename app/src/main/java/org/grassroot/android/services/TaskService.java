@@ -1,6 +1,7 @@
 package org.grassroot.android.services;
 
 import android.text.TextUtils;
+import android.util.Log;
 
 import org.grassroot.android.events.TaskUpdatedEvent;
 import org.grassroot.android.events.TasksRefreshedEvent;
@@ -350,7 +351,11 @@ public class TaskService {
     return Observable.create(new Observable.OnSubscribe<String>() {
       @Override
       public void call(Subscriber<? super String> subscriber) {
-        if (!NetworkUtils.isOnline()) {
+        if (TextUtils.isEmpty(taskUid) || TextUtils.isEmpty(taskType)) {
+          Log.e(TAG, "Error! Faulty GCM packet or other cause has led to null taskUid or type, existing");
+          subscriber.onNext(NetworkUtils.LOCAL_ERROR);
+          subscriber.onCompleted();
+        } else if (!NetworkUtils.isOnline()) {
           subscriber.onNext(NetworkUtils.OFFLINE_SELECTED);
           subscriber.onCompleted();
         } else {

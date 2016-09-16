@@ -144,7 +144,8 @@ public class ViewTaskFragment extends Fragment {
             }
 
             if (taskType == null || taskUid == null) {
-                throw new UnsupportedOperationException("Error! View task fragment with type or UID missing");
+                Log.e(TAG, "Error! View task fragment with type or UID missing");
+                startActivity(ErrorUtils.gracefulExitToTasks(getActivity()));
             }
 
             if (task == null) {

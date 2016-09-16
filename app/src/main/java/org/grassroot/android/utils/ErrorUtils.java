@@ -17,11 +17,13 @@ import org.grassroot.android.R;
 import org.grassroot.android.activities.HomeScreenActivity;
 import org.grassroot.android.activities.NoGroupWelcomeActivity;
 import org.grassroot.android.activities.StartActivity;
+import org.grassroot.android.interfaces.NavigationConstants;
 import org.grassroot.android.models.Member;
 import org.grassroot.android.models.ServerErrorModel;
 import org.grassroot.android.models.exceptions.ApiCallException;
 import org.grassroot.android.services.ApplicationLoader;
 import org.grassroot.android.services.GrassrootRestService;
+import org.grassroot.android.services.TaskService;
 
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
@@ -30,6 +32,8 @@ import java.util.List;
 
 import okhttp3.ResponseBody;
 import retrofit2.Converter;
+import rx.android.schedulers.AndroidSchedulers;
+import rx.functions.Action1;
 
 
 /**
@@ -138,6 +142,24 @@ public class ErrorUtils {
             // just in case there is some error with Realm that makes this happen
             return new Intent(callingActivity, StartActivity.class);
         }
+    }
+
+    public static Intent gracefulExitToTasks(Activity callingActivity) {
+        Intent i = new Intent(callingActivity, HomeScreenActivity.class);
+        i.putExtra(NavigationConstants.HOME_OPEN_ON_NAV, NavigationConstants.ITEM_TASKS);
+        Toast.makeText(ApplicationLoader.applicationContext, R.string.application_notify_crash, Toast.LENGTH_SHORT).show();
+        TaskService.getInstance().fetchUpcomingTasks(AndroidSchedulers.mainThread()).subscribe(new Action1<String>() {
+            @Override
+            public void call(String s) {
+                Log.e(TAG, "At least the network call for refresh succeeded");
+            }
+        }, new Action1<Throwable>() {
+            @Override
+            public void call(Throwable throwable) {
+                Log.e(TAG, "Error! The call to refresh tasks also failed");
+            }
+        });
+        return i;
     }
 
     // remember : conversion will consume the JSON, so can call this at most once in a given flow
