@@ -26,7 +26,7 @@
         <item name="android:colorForeground">@color/md_grey_400</item>
     </style>
 
-    <style name="TextLabel" parent="TextAppearance.AppCompat">
+    <style name="TextLabel" parent="AppTheme">
         <item name="android:textColorHint">@color/white</item>
         <item name="android:textSize">20sp</item>
         <item name="colorAccent">@color/yellow</item>

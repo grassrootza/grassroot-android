@@ -23,6 +23,7 @@ import org.grassroot.android.models.PreferenceObject;
 import org.grassroot.android.models.TaskModel;
 import org.grassroot.android.services.NotificationUpdateService;
 import org.grassroot.android.services.TaskService;
+import org.grassroot.android.utils.ErrorUtils;
 import org.grassroot.android.utils.RealmUtils;
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
@@ -60,7 +61,8 @@ public class ViewTaskActivity extends PortraitActivity {
         EventBus.getDefault().register(this);
 
         if (getIntent().getExtras() == null) {
-            throw new UnsupportedOperationException("Error! View task activity started without arguments");
+            Log.e(TAG, "Error! View task activity started without arguments");
+            startActivity(ErrorUtils.gracefulExitToTasks(this));
         }
 
         taskUid =  getIntent().getStringExtra(NotificationConstants.ENTITY_UID);
@@ -72,7 +74,8 @@ public class ViewTaskActivity extends PortraitActivity {
         Log.d(TAG, "click action received : " + clickAction);
 
         if (TextUtils.isEmpty(taskUid) || TextUtils.isEmpty(taskType)) {
-            throw new UnsupportedOperationException("Error! View task activity started with empty type or UID");
+            Log.e(TAG, "Error! View task activity started with empty type or UID");
+            startActivity(ErrorUtils.gracefulExitToTasks(this));
         }
 
         setUpToolbar();
