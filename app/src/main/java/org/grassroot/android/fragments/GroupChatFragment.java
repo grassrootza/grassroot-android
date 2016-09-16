@@ -189,14 +189,12 @@ public class GroupChatFragment extends Fragment {
             gc_recycler_view.addOnItemTouchListener(new RecyclerTouchListener(getActivity(), gc_recycler_view, new ClickListener() {
                 @Override
                 public void onClick(View view, int position) {
-                    if (groupChatAdapter.getItemViewType(position) == GroupChatAdapter.OTHER) {
-
-                    }
-
                 }
-
                 @Override
                 public void onLongClick(View view, int position) {
+                    if (groupChatAdapter.getItemViewType(position) == GroupChatAdapter.SELF) {
+                        longClickOptions(groupChatAdapter.getMessages().get(position), GroupChatAdapter.SELF);
+                    }
 
                 }
             }));
@@ -284,27 +282,19 @@ public class GroupChatFragment extends Fragment {
 
         final String[] other = {"Mute User", "Delete Message"};
         final String[] self = {"Delete Message"};
-        if(viewType == GroupChatAdapter.OTHER){
-            MessengerSetting messengerSetting;
+        if(viewType == GroupChatAdapter.SELF){
+            builder.setItems(R.array.self_options, new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialogInterface, int i) {
+
+                }
+            });
           
         }
 
-
-
-
-        builder.setTitle("Options");
-
-
-        builder.setTitle("Options")
-                .setItems(R.array.group_sort_options, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-
-                    }
-                });
-
         builder.setCancelable(true)
                 .create();
+        builder.show();
 
     }
 

@@ -128,7 +128,7 @@ public class GroupChatAdapter extends RecyclerView.Adapter<GroupChatAdapter.GCVi
 
     }
 
-
-
-
+    public List<Message> getMessages() {
+        return messages;
+    }
 }
