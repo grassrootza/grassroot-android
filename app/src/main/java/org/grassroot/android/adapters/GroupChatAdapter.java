@@ -1,18 +1,23 @@
 package org.grassroot.android.adapters;
 
 
+import android.app.Activity;
+import android.content.res.Resources;
+import android.graphics.drawable.Drawable;
+import android.support.v4.content.res.ResourcesCompat;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
+import android.text.format.DateUtils;
+import android.view.ContextMenu;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
 import org.grassroot.android.R;
-import org.grassroot.android.models.Group;
 import org.grassroot.android.models.Message;
 import org.grassroot.android.utils.RealmUtils;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -26,13 +31,17 @@ import rx.functions.Action1;
  */
 public class GroupChatAdapter extends RecyclerView.Adapter<GroupChatAdapter.GCViewHolder> {
 
+    private SimpleDateFormat dateFormatter = new SimpleDateFormat("HH:mm");
+    private Activity activity;
 
     List<Message> messages;
-    private final int SELF = 100;
-    private final int OTHER = 200;
+    public final static int SELF = 100;
+    public final static int OTHER = 200;
 
 
-    public GroupChatAdapter(List<Message> messages) {
+    public GroupChatAdapter(List<Message> messages, Activity activity) {
+
+        this.activity = activity;
         this.messages = new ArrayList<>(messages);
         notifyDataSetChanged();
     }
@@ -51,25 +60,30 @@ public class GroupChatAdapter extends RecyclerView.Adapter<GroupChatAdapter.GCVi
     }
 
 
+    @SuppressWarnings("deprecation")
     @Override
     public void onBindViewHolder(GCViewHolder holder, int position) {
         Message message = messages.get(position);
         holder.message.setText(message.getText());
-        holder.timestamp.setText(message.getTime().toString());
+        String time = DateUtils.isToday(message.getTime().getTime())? dateFormatter.format(message.getTime()): (String)
+                DateUtils.getRelativeDateTimeString(activity, message.getTime().getTime(),
+                System.currentTimeMillis(), DateUtils.SECOND_IN_MILLIS, DateUtils.FORMAT_ABBREV_RELATIVE);
+        holder.timestamp.setText(time);
+
        if(getItemViewType(position)==OTHER) {
             holder.user.setText(message.getDisplayName());
             holder.user.setVisibility(View.VISIBLE);
         }
-        if(getItemViewType(position)==SELF && message.isDelivered()) {
-            holder.sent.setVisibility(View.VISIBLE);
-        }
+     /*   if(getItemViewType(position)==SELF && message.isDelivered()) {
+            Drawable drawable = ResourcesCompat.getDrawable(activity.getResources(),R.drawable.bg_bubble_lt_gray, null);
+            holder.message.setBackgroundDrawable(drawable);
+        }*/
    }
 
     public void setGroupList(List<Message> messages) {
         this.messages = new ArrayList<>(messages);
         this.notifyDataSetChanged();
     }
-
 
     public void reloadFromdb(String groupUid) {
         RealmUtils.loadMessagesFromDb(groupUid).subscribe(new Action1<List<Message>>() {
@@ -105,10 +119,7 @@ public class GroupChatAdapter extends RecyclerView.Adapter<GroupChatAdapter.GCVi
         TextView user;
 
         @BindView(R.id.text)
-        TextView message;
-
-        @BindView(R.id.sent)
-        TextView sent;
+        TextView message;;
 
         public GCViewHolder(View view) {
             super(view);

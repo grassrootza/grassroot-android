@@ -242,6 +242,21 @@
         <item>Default (latest change)</item>
     </string-array>
 
+
+    <string-array name="other_mute_options">
+        <item>Mute user</item>
+        <item>Delete message</item>
+    </string-array>
+
+    <string-array name="other_muted_options">
+        <item>Unmute user</item>
+        <item>Delete message</item>
+    </string-array>
+
+    <string-array name="self_options">
+        <item>Delete message</item>
+    </string-array>
+
     <string-array name="tasks_filter_options">
         <item>Meetings</item>
         <item>Votes</item>
@@ -821,10 +836,17 @@
 
     <string name="share_error_no_app">Sorry, there was an error sharing with that app</string>
 
-    <!--FAQ-->
-    <string name="fq_txt_toolbar">FAQs</string>
+    <!--Chat-->
     <string name="title_activity_view_chat_message">Group Name</string>
     <string name="chats_title">Chats</string>
+    <string name="gp_mute">Mute group chats</string>
+    <string name="gp_un_mute">Unmute group chats</string>
+    <string name="gp_delete_messages">Delete all messages</string>
+
+    <!--FAQ-->
+    <string name="fq_txt_toolbar">FAQs</string>
+
+
     <string-array name="fq_Header">
         <item>How do I get started?</item>
         <item>Okay, I\'ve part of some groups. What next?</item>

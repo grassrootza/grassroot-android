@@ -17,7 +17,7 @@ import android.util.Log;
 
 import org.grassroot.android.R;
 import org.grassroot.android.activities.JoinRequestNoticeActivity;
-import org.grassroot.android.activities.ViewNotificationActivity;
+import org.grassroot.android.activities.MultiMessageNotificationActivity;
 import org.grassroot.android.activities.ViewTaskActivity;
 import org.grassroot.android.events.GroupChatEvent;
 import org.grassroot.android.events.JoinRequestEvent;
@@ -54,8 +54,8 @@ public class GcmListenerService extends com.google.android.gms.gcm.GcmListenerSe
     private static final int TASKS = 100;
     private static final int CHATS = 200;
     private static Notification notification;
-    private static List<String> notificationMessages = new ArrayList<>();
-    private static List<String> chatMessages = new ArrayList<>();
+    private static final List<String> notificationMessages = new ArrayList<>();
+    private static final List<String> chatMessages = new ArrayList<>();
     private static int displayedNotificationCount = 0;
     private static int displayedMessagesCount = 0;
 
@@ -129,11 +129,9 @@ public class GcmListenerService extends com.google.android.gms.gcm.GcmListenerSe
                         .setGroupSummary(true)
                         .build();
             }
-
         } else {
             Log.d(TAG, "notification received, following KitKat branch");
-            NotificationCompat.Builder mNotifyBuilder = new NotificationCompat.Builder(context);
-            notification = mNotifyBuilder.setContentTitle(msg.getString(Constant.TITLE))
+            notification = mBuilder.setContentTitle(msg.getString(Constant.TITLE))
                     .setWhen(when)
                     .setContentText(msg.getString(Constant.BODY))
                     .setAutoCancel(true)
@@ -148,14 +146,8 @@ public class GcmListenerService extends com.google.android.gms.gcm.GcmListenerSe
         }
         notification.number = (entityType.equals(NotificationConstants.CHAT_MESSAGE))
                 ? displayedMessagesCount : displayedNotificationCount;
-
-        if (!entityType.equals(NotificationConstants.CHAT_MESSAGE)) {
-            mNotificationManager.notify(TASKS,
-                    notification);
-        } else {
-            mNotificationManager.notify(CHATS,
-                    notification);
-        }
+        mNotificationManager.notify(!entityType.equals(NotificationConstants.CHAT_MESSAGE) ? TASKS :
+                CHATS, notification);
 
         GrassrootRestService.getInstance()
                 .getApi()
@@ -220,15 +212,14 @@ public class GcmListenerService extends com.google.android.gms.gcm.GcmListenerSe
 
         if (displayedMessagesCount > 1 || displayedNotificationCount > 1) {
             if (!entityType.equals(NotificationConstants.CHAT_MESSAGE)) {
-                resultIntent = new Intent(context, ViewNotificationActivity.class);
+                resultIntent = new Intent(context, MultiMessageNotificationActivity.class);
                 resultIntent.putExtra(NotificationConstants.CLICK_ACTION, NotificationConstants.NOTIFICATION_LIST);
                 EventBus.getDefault().post(new NotificationEvent());
             } else {
-                resultIntent = new Intent(context, ViewNotificationActivity.class);
+                resultIntent = new Intent(context, MultiMessageNotificationActivity.class);
                 resultIntent.putExtra(GroupConstants.UID_FIELD, msg.getString(GroupConstants.UID_FIELD));
                 resultIntent.putExtra(GroupConstants.NAME_FIELD, msg.getString(GroupConstants.NAME_FIELD));
                 resultIntent.putExtra(NotificationConstants.CLICK_ACTION, NotificationConstants.CHAT_LIST);
-                Log.e(TAG, "getting chat list");
 
             }
         } else {
@@ -240,7 +231,7 @@ public class GcmListenerService extends com.google.android.gms.gcm.GcmListenerSe
                     EventBus.getDefault().post(new JoinRequestEvent(TAG));
                     break;
                 case NotificationConstants.CHAT_MESSAGE:
-                    resultIntent = new Intent(context, ViewNotificationActivity.class);
+                    resultIntent = new Intent(context, MultiMessageNotificationActivity.class);
                     resultIntent.putExtra(GroupConstants.UID_FIELD, msg.getString(GroupConstants.UID_FIELD));
                     resultIntent.putExtra(GroupConstants.NAME_FIELD, msg.getString(GroupConstants.NAME_FIELD));
                     break;
@@ -287,7 +278,8 @@ public class GcmListenerService extends com.google.android.gms.gcm.GcmListenerSe
         Message message = new Message(msg);
         String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
         RealmUtils.saveDataToRealmSync(message);
-            if(isAppIsInBackground(context) && !message.getPhoneNumber().equals(phoneNumber)) {
+        //  if (isAppIsInBackground(context) && !message.getPhoneNumber().equals(phoneNumber)) {
+        if (!isAppIsInBackground(context)) {
             relayNotification(msg, context);
         } else {
             EventBus.getDefault().post(new GroupChatEvent(message.getGroupUid(), msg));
@@ -295,14 +287,12 @@ public class GcmListenerService extends com.google.android.gms.gcm.GcmListenerSe
     }
 
     public static Observable showNotification(final Bundle bundle, final Context context) {
-        Observable observable =
-                Observable.create(new Observable.OnSubscribe<Boolean>() {
-                    @Override
-                    public void call(Subscriber<? super Boolean> subscriber) {
-                        relayNotification(bundle, context);
-                    }
-                }).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread());
-        return observable;
+        return Observable.create(new Observable.OnSubscribe<Boolean>() {
+            @Override
+            public void call(Subscriber<? super Boolean> subscriber) {
+                relayNotification(bundle, context);
+            }
+        }).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread());
     }
 
 
@@ -340,15 +330,15 @@ public class GcmListenerService extends com.google.android.gms.gcm.GcmListenerSe
     }
 
     public static void clearTaskNotifications(Context context) {
-        notification.number = notification.number-notificationMessages.size();
-        displayedNotificationCount=0;
+        notification.number = notification.number - notificationMessages.size();
+        displayedNotificationCount = 0;
         notificationMessages.clear();
         NotificationManager nMgr = (NotificationManager) context.getSystemService(NOTIFICATION_SERVICE);
         nMgr.cancel(TASKS);
     }
 
     public static void clearChatNotifications(Context context) {
-        notification.number = notification.number-chatMessages.size();
+        notification.number = notification.number - chatMessages.size();
         displayedMessagesCount = 0;
         chatMessages.clear();
         NotificationManager nMgr = (NotificationManager) context.getSystemService(NOTIFICATION_SERVICE);

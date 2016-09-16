@@ -54,8 +54,6 @@ public class GroupTasksActivity extends PortraitActivity implements NewTaskMenuF
 
 
     private Group groupMembership;
-    private TaskListFragment taskListFragment;
-    private GroupChatFragment groupChatFragment;
     private JoinCodeFragment joinCodeFragment;
     private NewTaskMenuFragment newTaskMenuFragment;
     private GroupTaskMasterFragment groupTaskMasterFragment;
@@ -124,13 +122,13 @@ public class GroupTasksActivity extends PortraitActivity implements NewTaskMenuF
             searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
                 @Override
                 public boolean onQueryTextSubmit(String query) {
-                    taskListFragment.searchStringChanged(query);
+                    groupTaskMasterFragment.getTaskListFragment().searchStringChanged(query);
                     return true;
                 }
 
                 @Override
                 public boolean onQueryTextChange(String newText) {
-                    taskListFragment.searchStringChanged(newText);
+                    groupTaskMasterFragment.getTaskListFragment().searchStringChanged(newText);
                     return true;
                 }
             });
@@ -162,6 +160,7 @@ public class GroupTasksActivity extends PortraitActivity implements NewTaskMenuF
         menu.findItem(R.id.mi_group_settings).setVisible(groupMembership.canEditGroup());
         menu.findItem(R.id.mi_group_unsubscribe).setVisible(!groupMembership.canEditGroup()); // organizers can't leave (refine in future)
         menu.findItem(R.id.mi_share_default).setVisible(false);
+        menu.findItem(R.id.mi_delete_messages).setVisible(false);
         return true;
     }
 
@@ -184,7 +183,6 @@ public class GroupTasksActivity extends PortraitActivity implements NewTaskMenuF
                 handleUpButton();
                 return true;
             case R.id.mi_icon_filter:
-             //   taskListFragment.filter();
                 groupTaskMasterFragment.getTaskListFragment().filter();
                 return true;
             case R.id.mi_change_desc:
@@ -282,6 +280,7 @@ public class GroupTasksActivity extends PortraitActivity implements NewTaskMenuF
             }).show(getSupportFragmentManager(), "dialog");
     }
 
+
     private void unsubscribeAndExit() {
         progressBar.setVisibility(View.VISIBLE);
         GroupService.getInstance().unsubscribeFromGroup(groupMembership.getGroupUid(), AndroidSchedulers.mainThread())
@@ -335,6 +334,8 @@ public class GroupTasksActivity extends PortraitActivity implements NewTaskMenuF
             .addToBackStack(null)
             .commit();
     }
+
+
 
     @Override
     public void joinCodeClose() {

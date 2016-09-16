@@ -10,20 +10,20 @@
 
     <item
         android:id="@+id/mi_icon_filter"
-        android:title="@string/menu_filter"
         android:icon="@drawable/btn_filter"
+        android:title="@string/menu_filter"
         app:showAsAction="ifRoom" />
 
     <item
         android:id="@+id/mi_refresh_screen"
-        android:title="@string/menu_refresh"
         android:icon="@drawable/ic_refresh"
+        android:title="@string/menu_refresh"
         app:showAsAction="ifRoom" />
 
     <item
         android:id="@+id/mi_share_default"
-        android:title="@string/share_ic_title"
         android:icon="@drawable/ic_share_white"
+        android:title="@string/share_ic_title"
         app:showAsAction="always" />
 
     <item
@@ -31,28 +31,45 @@
         android:title="@string/gta_menu_change_desc"
         app:showAsAction="never" />
 
-    <item android:id="@+id/mi_view_join_code"
+    <item
+        android:id="@+id/mi_view_join_code"
         android:title="@string/gta_view_code"
         app:showAsAction="never" />
 
-    <item android:id="@+id/mi_view_members"
+    <item
+        android:id="@+id/mi_view_members"
         android:title="@string/gta_view_members"
         app:showAsAction="never" />
 
-    <item android:id="@+id/mi_add_members"
+    <item
+        android:id="@+id/mi_add_members"
         android:title="@string/gta_add_members"
         app:showAsAction="never" />
 
-    <item android:id="@+id/mi_remove_members"
+    <item
+        android:id="@+id/mi_remove_members"
         android:title="@string/gta_del_members"
         app:showAsAction="never" />
 
-    <item android:id="@+id/mi_group_settings"
+    <item
+        android:id="@+id/mi_group_settings"
         android:title="@string/group_settings"
         app:showAsAction="never" />
 
-    <item android:id="@+id/mi_group_unsubscribe"
-          android:title="@string/gp_unsubscribe"
-          app:showAsAction="never" />
+    <item
+        android:id="@+id/mi_group_unsubscribe"
+        android:title="@string/gp_unsubscribe"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/mi_group_mute"
+        android:title="@string/gp_mute"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/mi_delete_messages"
+        android:title="@string/gp_delete_messages"
+        app:showAsAction="never" />
+
 
 </menu>

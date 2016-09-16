@@ -1,6 +1,8 @@
 package org.grassroot.android.adapters;
 
+import android.app.Activity;
 import android.support.v7.widget.RecyclerView;
+import android.text.format.DateUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -11,6 +13,7 @@ import org.grassroot.android.R;
 import org.grassroot.android.models.Message;
 import org.grassroot.android.utils.RealmUtils;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -21,17 +24,17 @@ import rx.functions.Action1;
 /**
  * Created by paballo on 2016/09/12.
  */
-public class GroupChatCenterAdapter extends RecyclerView.Adapter<GroupChatCenterAdapter.GCCViewHolder> {
+public class MultiGroupChatAdapter extends RecyclerView.Adapter<MultiGroupChatAdapter.GCCViewHolder> {
 
     private List<Message> messages;
+    private Activity activity;
+    private SimpleDateFormat dateFormatter = new SimpleDateFormat("HH:mm");
 
-
-
-    public GroupChatCenterAdapter(List<Message> messages){
+    public MultiGroupChatAdapter(Activity activity, List<Message> messages){
         this.messages = new ArrayList<>(messages);
+        this.activity = activity;
         notifyDataSetChanged();
     }
-
 
     @Override
     public GCCViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
@@ -46,9 +49,14 @@ public class GroupChatCenterAdapter extends RecyclerView.Adapter<GroupChatCenter
         holder.txt_message.setText(text);
         holder.txt_name.setText(message.getGroupName());
         long count = RealmUtils.countUnreadMessages(message.getGroupUid());
-        holder.txt_count.setText(Long.toString(count));
-      //  holder.txt_time.setText(message.getTime().toString());
-
+        if(count >0){
+            holder.txt_count.setText(Long.toString(count));
+            holder.txt_count.setVisibility(View.VISIBLE);
+        }
+        String time = DateUtils.isToday(message.getTime().getTime())? dateFormatter.format(message.getTime()): (String)
+                DateUtils.getRelativeDateTimeString(activity, message.getTime().getTime(),
+                        System.currentTimeMillis(), DateUtils.SECOND_IN_MILLIS, DateUtils.FORMAT_ABBREV_RELATIVE);
+        holder.txt_time.setText(time);
 
     }
 
@@ -61,7 +69,6 @@ public class GroupChatCenterAdapter extends RecyclerView.Adapter<GroupChatCenter
             }
         });
     }
-
     private void setList(List<Message> messages){
         messages.clear();
         messages.addAll(messages);

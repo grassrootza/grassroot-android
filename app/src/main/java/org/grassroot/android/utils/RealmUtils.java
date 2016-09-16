@@ -411,6 +411,27 @@ public class RealmUtils {
         }).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread());
     }
 
+    public static Observable<String> deleteMessagesFromDb(final String groupUid){
+        return Observable.create(new Observable.OnSubscribe<String>() {
+            @Override
+            public void call(Subscriber<? super String> subscriber) {
+                final Realm realm = Realm.getDefaultInstance();
+                final RealmResults<Message> results = realm
+                        .where(Message.class)
+                        .equalTo("groupUid", groupUid).findAll();
+
+                realm.executeTransaction(new Realm.Transaction() {
+                    @Override
+                    public void execute(Realm realm) {
+                        results.deleteAllFromRealm();
+                    }
+                });
+                subscriber.onNext("");
+                subscriber.onCompleted();
+            }
+        });
+    }
+
 
     public static Observable<List<Message>> loadDistinctMessages(){
         return Observable.create(new Observable.OnSubscribe<List<Message>>(){
@@ -454,12 +475,11 @@ public class RealmUtils {
             public void execute(Realm realm) {
                 for(Message message:messages){
                     message.setRead(true);
-                    realm.copyToRealm(message);
+                    realm.copyToRealmOrUpdate(message);
+
             }}
         });
-
         realm.close();
-
     }
 
 

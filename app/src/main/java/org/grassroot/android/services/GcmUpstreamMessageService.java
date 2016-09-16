@@ -55,7 +55,7 @@ public class GcmUpstreamMessageService {
                     String senderId = BuildConfig.FLAVOR.equals(Constant.PROD) ?
                             context.getString(R.string.prod_sender_id) : context.getString(R.string.staging_sender_id);
 
-                    do{
+                    do {
                         try {
                             noAttempts++;
                             Bundle data = new Bundle();
@@ -65,25 +65,24 @@ public class GcmUpstreamMessageService {
                             data.putString("groupUid", message.getGroupUid());
                             data.putString("time", message.getTime().toString());
                             Log.d(TAG, "sender_id" + senderId);
-                            GoogleCloudMessaging.getInstance(context).send(senderId, message.getId(),0, data);
-                            Log.d(TAG, "no_atempts" + noAttempts);
+                            GoogleCloudMessaging.getInstance(context).send(senderId, message.getId(), 0, data);
+                            Log.d(TAG, "Attempt no" + noAttempts);
 
                         } catch (IOException e) {
                             Log.d(TAG, "Failed to send message");
                         }
                         backoff = exponentialBackoffSleep(backoff);
 
-                        } while ((!isMessageSent(message.getId()) && noAttempts <= MAX_RETRIES));
+                    } while ((!isMessageSent(message.getId()) && noAttempts <= MAX_RETRIES));
                 }
             }
         }).subscribeOn(Schedulers.io()).observeOn(observingThread);
     }
 
 
-
-    private static boolean isMessageSent(String uid){
-        Message message = RealmUtils.loadObjectFromDB(Message.class, "id",uid);
-        if(message !=null) {
+    private static boolean isMessageSent(String uid) {
+        Message message = RealmUtils.loadObjectFromDB(Message.class, "id", uid);
+        if (message != null) {
             return message.isDelivered();
         }
         return false;
