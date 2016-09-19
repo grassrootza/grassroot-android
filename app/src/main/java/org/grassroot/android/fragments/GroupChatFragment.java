@@ -23,7 +23,6 @@ import android.widget.TextView;
 import org.grassroot.android.R;
 import org.grassroot.android.activities.MultiMessageNotificationActivity;
 import org.grassroot.android.adapters.GroupChatAdapter;
-import org.grassroot.android.adapters.GroupListAdapter;
 import org.grassroot.android.adapters.RecyclerTouchListener;
 import org.grassroot.android.events.GroupChatEvent;
 import org.grassroot.android.interfaces.ClickListener;
@@ -57,6 +56,7 @@ public class GroupChatFragment extends Fragment {
     private boolean canReceive;
     private boolean canSend;
 
+
     @BindView(R.id.gc_recycler_view)
     RecyclerView gc_recycler_view;
     @BindView(R.id.text)
@@ -89,7 +89,7 @@ public class GroupChatFragment extends Fragment {
         groupName = getArguments().getString("groupName");
         setHasOptionsMenu(true);
         setView();
-        loadUserSettings();
+        loadGroupSettings();
 
         return view;
     }
@@ -117,10 +117,9 @@ public class GroupChatFragment extends Fragment {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
 
-        if (item.getItemId() == R.id.mi_group_mute) {
+        if (item.getItemId() == R.id.mi_group_mute)
             mute(null, groupUid, true, item.getTitle().equals(getString(R.string.gp_mute)) ? false : true);
-        }
-        if (item.getItemId() == R.id.mi_delete_messages) deleteMessages(groupUid);
+        if (item.getItemId() == R.id.mi_delete_messages) deleteAllMessages(groupUid);
 
         return super.onOptionsItemSelected(item);
     }
@@ -141,7 +140,6 @@ public class GroupChatFragment extends Fragment {
         if (!TextUtils.isEmpty(txt_message.getText())) {
             final String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
             Message message = new Message(phoneNumber, groupUid, null, new Date(), txt_message.getText().toString(), false, "");
-            Log.d(TAG, "sending message, with ID  = " + message.getId());
             RealmUtils.saveDataToRealmSync(message);
             loadMessages();
             GcmUpstreamMessageService.sendMessage(message, getActivity(),
@@ -194,14 +192,14 @@ public class GroupChatFragment extends Fragment {
                 public void onLongClick(View view, int position) {
                     if (groupChatAdapter.getItemViewType(position) == GroupChatAdapter.SELF) {
                         longClickOptions(groupChatAdapter.getMessages().get(position), GroupChatAdapter.SELF);
+                    }else
+                    {longClickOptions(groupChatAdapter.getMessages().get(position), GroupChatAdapter.OTHER);
                     }
-
                 }
             }));
         }
 
     }
-
     @Override
     public void onDestroyView() {
         super.onDestroyView();
@@ -227,19 +225,17 @@ public class GroupChatFragment extends Fragment {
         return groupUid;
     }
 
-    private void loadUserSettings() {
-        GroupService.getInstance().fetchGroupChatSetting(groupUid, AndroidSchedulers.mainThread()).subscribe(new Subscriber<MessengerSetting>() {
+    private void loadGroupSettings() {
+        GroupService.getInstance().fetchGroupChatSetting(groupUid, AndroidSchedulers.mainThread(), null ).subscribe(new Subscriber<MessengerSetting>() {
             @Override
             public void onNext(MessengerSetting messengerSetting) {
                 canReceive = messengerSetting.isCanReceive();
                 canSend = messengerSetting.isCanSend();
                 ll_chat_entry.setVisibility(canSend ? View.VISIBLE : View.GONE);
             }
-
             @Override
             public void onCompleted() {
             }
-
             @Override
             public void onError(Throwable e) {
             }
@@ -254,18 +250,72 @@ public class GroupChatFragment extends Fragment {
      *                      but will not be able to participate, however if user initiated, no messages from the group will be delivered
      */
 
-    private void mute(@Nullable String userUid, String groupUid, boolean userInitiated, final boolean active) {
+    private void mute(@Nullable final String userUid, String groupUid, boolean userInitiated, final boolean active) {
         GroupService.getInstance().updateMemberChatSetting(groupUid, userUid, userInitiated, active, AndroidSchedulers.mainThread()).subscribe(new Action1<String>() {
             @Override
             public void call(String s) {
-                loadUserSettings();
-                getActivity().supportInvalidateOptionsMenu();
+                if(userUid == null) {
+                    loadGroupSettings();
+                    getActivity().supportInvalidateOptionsMenu();
+                }
             }
         });
     }
 
-    private void deleteMessages(final String groupUid) {
-        RealmUtils.deleteMessagesFromDb(groupUid).subscribe(new Action1<String>() {
+
+    private boolean isMuted; //other chat participant
+
+    private void longClickOptions(final Message message, int viewType) {
+
+        final AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+        builder.setTitle("Options");
+        if(viewType == GroupChatAdapter.SELF){
+            builder.setItems(R.array.self_options, new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialogInterface, int i) {
+                    deleteMessage(message.getId());
+                }
+            });
+        }
+        if(viewType == GroupChatAdapter.OTHER){
+            GroupService.getInstance().fetchGroupChatSetting(groupUid,AndroidSchedulers.mainThread(), message.getUserUid()).subscribe(new Subscriber<MessengerSetting>() {
+                @Override
+                public void onCompleted() {
+                }
+                @Override
+                public void onError(Throwable e) {
+                }
+                @Override
+                public void onNext(MessengerSetting messengerSetting) {
+                 isMuted = messengerSetting.isCanSend();
+                }
+            });
+
+            //0 - Delete Message
+            //1 = Mute or Unmute user
+            int otherOptions =(isMuted)?R.array.other_muted_options:R.array.other_mute_options;
+            builder.setItems(otherOptions, new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialogInterface, int i) {
+                    switch(i){
+                        case 0:
+                            deleteMessage(message.getId());
+                            break;
+                        case 1:
+                            mute(message.getUserUid(),groupUid,false,!isMuted);
+                            break;
+                    }
+                }
+            });
+        }
+        builder.setCancelable(true)
+                .create().show();
+
+    }
+
+
+    private void deleteAllMessages(final String groupUid) {
+        RealmUtils.deleteAllGroupMessagesFromDb(groupUid).subscribe(new Action1<String>() {
             @Override
             public void call(String s) {
                 loadMessages();
@@ -273,28 +323,13 @@ public class GroupChatFragment extends Fragment {
         });
 
     }
-
-
-    private void longClickOptions(Message message, int viewType) {
-
-        final AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-        builder.setTitle("Options");
-
-        final String[] other = {"Mute User", "Delete Message"};
-        final String[] self = {"Delete Message"};
-        if(viewType == GroupChatAdapter.SELF){
-            builder.setItems(R.array.self_options, new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialogInterface, int i) {
-
-                }
-            });
-          
-        }
-
-        builder.setCancelable(true)
-                .create();
-        builder.show();
+    private void deleteMessage(final String messageId){
+        RealmUtils.deleteMessageFromDb(messageId).subscribe(new Action1<String>() {
+            @Override
+            public void call(String s) {
+                loadMessages();
+            }
+        });
 
     }
 

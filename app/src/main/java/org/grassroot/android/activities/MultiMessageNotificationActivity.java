@@ -66,8 +66,7 @@ public class MultiMessageNotificationActivity extends PortraitActivity {
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
         menu.findItem(R.id.mi_group_mute).setVisible(false);
-        menu.findItem(R.id.mi_delete_messages).setVisible(true);
-
+        menu.findItem(R.id.mi_delete_messages).setVisible(false);
         return super.onPrepareOptionsMenu(menu);
     }
 

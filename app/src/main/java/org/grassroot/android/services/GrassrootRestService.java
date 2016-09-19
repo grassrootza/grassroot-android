@@ -330,7 +330,7 @@ public class GrassrootRestService {
 
     //fetch group chat settings of user
     @GET("group/messenger/fetch_settings/{phoneNumber}/{code}/{groupUid}")
-    Call<MessengerSetting> fetchGroupMessengerSettings(@Path("phoneNumber") String phoneNumber, @Path("code") String code, @Path("groupUid") String groupUid);
+    Call<MessengerSetting> fetchGroupMessengerSettings(@Path("phoneNumber") String phoneNumber, @Path("code") String code, @Path("groupUid") String groupUid, @Query("userUid") String userUid);
 
     //update user group chat settings mute and unmute
     @POST("group/messenger/update/{phoneNumber}/{code}/{groupUid}")

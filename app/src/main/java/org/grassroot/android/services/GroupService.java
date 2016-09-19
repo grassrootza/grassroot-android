@@ -2,6 +2,7 @@ package org.grassroot.android.services;
 
 import android.os.Looper;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.text.TextUtils;
 import android.util.Log;
 
@@ -183,7 +184,7 @@ public class GroupService {
        }).subscribeOn(Schedulers.io()).observeOn(observingThread);
      }
 
-  public Observable<MessengerSetting> fetchGroupChatSetting(final String groupUid, Scheduler observingThread){
+  public Observable<MessengerSetting> fetchGroupChatSetting(final String groupUid, Scheduler observingThread, final String userUid){
     return Observable.create(new Observable.OnSubscribe<MessengerSetting>(){
       @Override
       public void call(Subscriber<? super MessengerSetting> subscriber) {
@@ -193,7 +194,7 @@ public class GroupService {
           final String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
           final String code = RealmUtils.loadPreferencesFromDB().getToken();
           try{
-            Response<MessengerSetting> response = GrassrootRestService.getInstance().getApi().fetchGroupMessengerSettings(phoneNumber,code,groupUid).execute();
+            Response<MessengerSetting> response = GrassrootRestService.getInstance().getApi().fetchGroupMessengerSettings(phoneNumber,code,groupUid, userUid).execute();
             if(response.isSuccessful()){
               subscriber.onNext(response.body());
               subscriber.onCompleted();

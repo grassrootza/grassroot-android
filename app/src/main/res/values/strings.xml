@@ -245,13 +245,13 @@
 
 
     <string-array name="other_mute_options">
-        <item>Mute user</item>
         <item>Delete message</item>
+        <item>Mute user</item>
     </string-array>
 
     <string-array name="other_muted_options">
-        <item>Unmute user</item>
         <item>Delete message</item>
+        <item>Unmute user</item>
     </string-array>
 
     <string-array name="self_options">

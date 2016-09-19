@@ -24,7 +24,7 @@
         android:layout_below="@+id/user"
         android:layout_alignParentLeft="true"
         android:layout_marginLeft="10dp"
-        android:textIsSelectable="true"
+        android:textIsSelectable="false"
         android:background="@drawable/bg_bubble_white"
         android:textSize="14dp" />
 

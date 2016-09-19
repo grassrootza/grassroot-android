@@ -91,7 +91,6 @@ public class GcmListenerService extends com.google.android.gms.gcm.GcmListenerSe
 
         NotificationManager mNotificationManager = (NotificationManager) context.getSystemService(NOTIFICATION_SERVICE);
 
-        final String entityReferencedUid = msg.getString(NotificationConstants.ENTITY_UID);
         final String notificationUid = msg.getString(NotificationConstants.NOTIFICATION_UID);
         final String entityType = msg.getString(NotificationConstants.ENTITY_TYPE);
         final NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(context);
@@ -279,8 +278,8 @@ public class GcmListenerService extends com.google.android.gms.gcm.GcmListenerSe
         Message message = new Message(msg);
         String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
         RealmUtils.saveDataToRealmSync(message);
-        //  if (isAppIsInBackground(context) && !message.getPhoneNumber().equals(phoneNumber)) {
-        if (!isAppIsInBackground(context)) {
+        if (isAppIsInBackground(context) && !message.getPhoneNumber().equals(phoneNumber)) {
+      //  if (!isAppIsInBackground(context)) {
             relayNotification(msg, context);
         } else {
             EventBus.getDefault().post(new GroupChatEvent(message.getGroupUid(), msg));
