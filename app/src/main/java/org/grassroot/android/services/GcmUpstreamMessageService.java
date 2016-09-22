@@ -10,6 +10,7 @@ import com.google.android.gms.gcm.GoogleCloudMessaging;
 
 import org.grassroot.android.BuildConfig;
 import org.grassroot.android.R;
+import org.grassroot.android.events.MessageNotSentEvent;
 import org.grassroot.android.models.Message;
 import org.grassroot.android.models.exceptions.ApiCallException;
 import org.grassroot.android.models.responses.GenericResponse;
@@ -36,14 +37,15 @@ import rx.schedulers.Schedulers;
  */
 public class GcmUpstreamMessageService {
 
-    private final static int MAX_RETRIES = 10;
+    private final static int MAX_RETRIES = 5;
     private final static int BACKOFF_INITIAL_DELAY = 3000;
     private final static int MAX_BACKOFF_DELAY = 60 * 1000;
     private static final Random random = new Random();
     private static final String TAG = GcmUpstreamMessageService.class.getCanonicalName();
 
 
-    public static Observable<String> sendMessage(final Message message, final Context context, final Scheduler observingThread) {
+    public static Observable<String>
+    sendMessage(final Message message, final Context context, final Scheduler observingThread) {
         return Observable.create(new Observable.OnSubscribe<String>() {
             @Override
             public void call(Subscriber<? super String> subscriber) {
@@ -64,7 +66,9 @@ public class GcmUpstreamMessageService {
                             data.putString("phoneNumber", message.getPhoneNumber());
                             data.putString("groupUid", message.getGroupUid());
                             data.putString("time", message.getTime().toString());
-                            Log.d(TAG, "sender_id" + senderId);
+
+                            message.setNoAttempts(noAttempts);
+                            RealmUtils.saveDataToRealmSync(message);
                             GoogleCloudMessaging.getInstance(context).send(senderId, message.getId(), 0, data);
                             Log.d(TAG, "Attempt no" + noAttempts);
 
@@ -73,7 +77,7 @@ public class GcmUpstreamMessageService {
                         }
                         backoff = exponentialBackoffSleep(backoff);
 
-                    } while ((!isMessageSent(message.getId()) && noAttempts <= MAX_RETRIES));
+                    } while ((!isMessageSent(message.getId()) && noAttempts < MAX_RETRIES));
                 }
             }
         }).subscribeOn(Schedulers.io()).observeOn(observingThread);
@@ -83,10 +87,14 @@ public class GcmUpstreamMessageService {
     private static boolean isMessageSent(String uid) {
         Message message = RealmUtils.loadObjectFromDB(Message.class, "id", uid);
         if (message != null) {
+            if(message.getNoAttempts() == MAX_RETRIES && !message.isDelivered()){
+                EventBus.getDefault().post(new MessageNotSentEvent());
+            }
             return message.isDelivered();
         }
         return false;
     }
+
 
     private static int exponentialBackoffSleep(int backoff) {
         try {
@@ -100,6 +108,11 @@ public class GcmUpstreamMessageService {
         }
 
         return backoff;
+    }
+
+
+    private static boolean isCommand(String message){
+        return (message.startsWith("/"));
     }
 
 }

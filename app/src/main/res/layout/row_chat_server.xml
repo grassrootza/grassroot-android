@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:paddingTop="5dp"
+    android:paddingLeft="16dp"
+    android:paddingRight="16dp">
+
+    <TextView
+        android:id="@+id/user"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        android:paddingBottom="6dp"
+        android:textSize="15sp"
+        />
+
+    <TextView
+        android:id="@+id/text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/user"
+        android:layout_alignParentLeft="true"
+        android:layout_marginLeft="10dp"
+        android:textIsSelectable="false"
+        android:background="@drawable/bg_bubble_white"
+        android:textSize="14dp" />
+
+    <LinearLayout
+        android:id="@+id/button_layout"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="10dp"
+        android:layout_centerHorizontal="true"
+        android:layout_below="@+id/text"
+        android:paddingTop="1dp"
+        android:visibility="visible"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/bt_yes"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Yes"
+            android:visibility="gone"
+            />
+        <Button
+            android:id="@+id/bt_no"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:visibility="gone"
+            android:text="No"/>
+
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/timestamp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_below="@id/button_layout"
+        android:layout_marginBottom="25dp"
+        android:layout_marginLeft="10dp"
+        android:paddingLeft="10dp"
+        android:paddingTop="6dp"
+        android:text="16:00"
+        android:textSize="10dp" />
+
+</RelativeLayout>

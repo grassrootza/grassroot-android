@@ -8,10 +8,12 @@ import android.view.Menu;
 
 import org.grassroot.android.R;
 import org.grassroot.android.fragments.GroupChatFragment;
+import org.grassroot.android.fragments.JoinRequestListFragment;
 import org.grassroot.android.fragments.MultiGroupChatFragment;
 import org.grassroot.android.fragments.NotificationCenterFragment;
 import org.grassroot.android.interfaces.GroupConstants;
 import org.grassroot.android.interfaces.NotificationConstants;
+import org.grassroot.android.models.GroupJoinRequest;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -51,6 +53,10 @@ public class MultiMessageNotificationActivity extends PortraitActivity {
         if (NotificationConstants.NOTIFICATION_LIST.equals(clickAction)) {
             fragment = createNotificationCenterFragment();
         }
+        if (NotificationConstants.JOIN_REQUEST_LIST.equals(clickAction)) {
+            fragment = createNotificationCenterFragment();
+        }
+
 
         setUpToolbar();
         getSupportFragmentManager().beginTransaction().add(R.id.gca_fragment_holder, fragment,TAG)
@@ -94,6 +100,12 @@ public class MultiMessageNotificationActivity extends PortraitActivity {
         toolbar.setNavigationIcon(R.drawable.btn_back_wt);
         MultiGroupChatFragment multiGroupChatFragment = MultiGroupChatFragment.newInstance();
         return multiGroupChatFragment;
+    }
+    private Fragment createJoinRequestListFragment(){
+        this.setTitle(groupName);
+        toolbar.setNavigationIcon(R.drawable.btn_close_white);
+        JoinRequestListFragment joinRequestListFragment = JoinRequestListFragment.newInstance(GroupJoinRequest.REC_REQUEST);
+        return  joinRequestListFragment;
     }
 
     private Fragment createNotificationCenterFragment(){

@@ -906,4 +906,21 @@
         <item>NOTIFY_ONLY_NEW</item>
     </string-array>
 
+
+    <!-- commands-->
+
+    <string-array name="commands">
+        <item>/meeting</item>
+        <item>/vote</item>
+    </string-array>
+
+    <string-array name="command_hints">
+        <item>[subject, day time, place]</item>
+        <item>[subject, day time]</item>
+    </string-array>
+
+    <string-array name="command_descriptions">
+        <item>Call a meeting </item>
+        <item>Call a vote</item>
+    </string-array>
 </resources>

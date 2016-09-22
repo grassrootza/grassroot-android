@@ -161,6 +161,7 @@ public class GroupTasksActivity extends PortraitActivity implements NewTaskMenuF
         menu.findItem(R.id.mi_group_unsubscribe).setVisible(!groupMembership.canEditGroup()); // organizers can't leave (refine in future)
         menu.findItem(R.id.mi_share_default).setVisible(false);
         menu.findItem(R.id.mi_delete_messages).setVisible(false);
+        menu.findItem(R.id.mi_group_mute).setVisible(false);
         return true;
     }
 

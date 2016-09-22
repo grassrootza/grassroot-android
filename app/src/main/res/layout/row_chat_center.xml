@@ -45,7 +45,7 @@
         android:layout_below="@id/name"
         android:textColor="#888888"
         android:layout_marginTop="5dp"
-        android:text="Seems gcm will take some time"/>
+      />
 
     <TextView android:id="@+id/timestamp"
         android:layout_width="wrap_content"

@@ -5,7 +5,7 @@
 
     <!-- view background color -->
     <solid
-        android:color="@color/white" >
+        android:color="#ffffe0" >
     </solid>
     <padding
         android:left="10dp"

@@ -54,11 +54,14 @@ public class GcmListenerService extends com.google.android.gms.gcm.GcmListenerSe
     private static final String TAG = GcmListenerService.class.getCanonicalName();
     private static final int TASKS = 100;
     private static final int CHATS = 200;
+    private static final int JOIN_REQUESTS =300;
     private static Notification notification;
     private static final List<String> notificationMessages = new ArrayList<>();
     private static final List<String> chatMessages = new ArrayList<>();
+    private static final List<String> joinRequests = new ArrayList<>();
     private static int displayedNotificationCount = 0;
     private static int displayedMessagesCount = 0;
+    private static int displayedJoinRequestCount=0;
 
 
     @Override
@@ -106,12 +109,16 @@ public class GcmListenerService extends com.google.android.gms.gcm.GcmListenerSe
         long when = System.currentTimeMillis();
 
         if (Build.VERSION.SDK_INT >= 21) {
-            if (!entityType.equals(NotificationConstants.CHAT_MESSAGE) && displayedNotificationCount > 1) {
+            if ((!entityType.equals(NotificationConstants.CHAT_MESSAGE) && !entityType.equals(NotificationConstants.JOIN_REQUEST)) && displayedNotificationCount > 1) {
                 mNotificationManager.cancel(TASKS);
                 notification = generateMultiLineNotification(resultPendingIntent, context, notificationMessages, entityType, msg, displayedNotificationCount);
-            } else if (displayedMessagesCount > 1) {
+            } else if (entityType.equals(NotificationConstants.CHAT_MESSAGE )&&displayedMessagesCount > 1) {
                 mNotificationManager.cancel(CHATS);
                 notification = generateMultiLineNotification(resultPendingIntent, context, chatMessages, entityType, msg, displayedMessagesCount);
+            }
+            else if(entityType.equals(NotificationConstants.JOIN_REQUEST) && displayedJoinRequestCount >1){
+                mNotificationManager.cancel(JOIN_REQUESTS);
+                notification = generateMultiLineNotification(resultPendingIntent, context, joinRequests, entityType, msg, displayedJoinRequestCount);
             } else {
                 notification = mBuilder
                         .setTicker(msg.getString(Constant.TITLE))
@@ -210,17 +217,26 @@ public class GcmListenerService extends com.google.android.gms.gcm.GcmListenerSe
         final String entityType = msg.getString(NotificationConstants.ENTITY_TYPE);
         Intent resultIntent;
 
-        if (displayedMessagesCount > 1 || displayedNotificationCount > 1) {
+        if (displayedMessagesCount > 1 || displayedNotificationCount > 1 || displayedJoinRequestCount >1) {
             if (!entityType.equals(NotificationConstants.CHAT_MESSAGE)) {
                 resultIntent = new Intent(context, MultiMessageNotificationActivity.class);
-                resultIntent.putExtra(NotificationConstants.CLICK_ACTION, NotificationConstants.NOTIFICATION_LIST);
-                EventBus.getDefault().post(new NotificationEvent());
+                switch (entityType) {
+                    case NotificationConstants.JOIN_REQUEST:
+                        final String groupUid = msg.getString("group");
+                        handleJoinRequestInDB(entityType, groupUid);
+                        resultIntent.putExtra(NotificationConstants.CLICK_ACTION, NotificationConstants.JOIN_REQUEST_LIST);
+                        EventBus.getDefault().post(new JoinRequestEvent(TAG));
+                        break;
+                    default:
+                        resultIntent.putExtra(NotificationConstants.CLICK_ACTION, NotificationConstants.NOTIFICATION_LIST);
+                        EventBus.getDefault().post(new NotificationEvent());
+                        break;
+                }
             } else {
                 resultIntent = new Intent(context, MultiMessageNotificationActivity.class);
                 resultIntent.putExtra(GroupConstants.UID_FIELD, msg.getString(GroupConstants.UID_FIELD));
                 resultIntent.putExtra(GroupConstants.NAME_FIELD, msg.getString(GroupConstants.NAME_FIELD));
                 resultIntent.putExtra(NotificationConstants.CLICK_ACTION, NotificationConstants.CHAT_LIST);
-
             }
         } else {
             switch (entityType) {
@@ -275,11 +291,11 @@ public class GcmListenerService extends com.google.android.gms.gcm.GcmListenerSe
 
     private static void handleChatMessages(Bundle msg, Context context) {
         Log.d(TAG, "bundle message Id = " + msg.getString("uid") + ", of length = " + msg.getString("id").length());
+        Log.d(TAG, "Received a chat messageg from server, looks like: + " + msg.toString());
         Message message = new Message(msg);
         String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
         RealmUtils.saveDataToRealmSync(message);
         if (isAppIsInBackground(context) && !message.getPhoneNumber().equals(phoneNumber)) {
-      //  if (!isAppIsInBackground(context)) {
             relayNotification(msg, context);
         } else {
             EventBus.getDefault().post(new GroupChatEvent(message.getGroupUid(), msg));
@@ -300,13 +316,23 @@ public class GcmListenerService extends com.google.android.gms.gcm.GcmListenerSe
         NotificationCompat.InboxStyle inboxStyle = new NotificationCompat.InboxStyle();
         NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(context);
         NotificationCompat.InboxStyle style = new NotificationCompat.InboxStyle();
-        String summaryText = (entityType.equals(NotificationConstants.CHAT_MESSAGE))
-                ? Integer.toString(count).concat(" new messages.") : Integer.toString(count).concat(" new notifications.");
+        String summaryText;
         Collections.reverse(messages);
+        switch (entityType) {
+            case NotificationConstants.CHAT_MESSAGE:
+                summaryText = Integer.toString(count).concat(" new messages.");
+                break;
+            case NotificationConstants.JOIN_REQUEST:
+                summaryText = Integer.toString(count).concat(" new join requests.");
+                break;
+            default:
+                summaryText = Integer.toString(count).concat(" new notifications.");
+                break;
+        }
         for (String message : messages) {
             style.addLine(message);
         }
-        style.setBigContentTitle(msg.getString(Constant.TITLE));
+        style.setBigContentTitle("Grassroot");
         style.setSummaryText(summaryText);
 
         notification = mBuilder.setTicker(msg.getString(Constant.TITLE))
@@ -343,5 +369,12 @@ public class GcmListenerService extends com.google.android.gms.gcm.GcmListenerSe
         chatMessages.clear();
         NotificationManager nMgr = (NotificationManager) context.getSystemService(NOTIFICATION_SERVICE);
         nMgr.cancel(CHATS);
+    }
+    public static void clearJoinRequestNotifications(Context context) {
+        notification.number = notification.number - joinRequests.size();
+        displayedJoinRequestCount = 0;
+        joinRequests.clear();
+        NotificationManager nMgr = (NotificationManager) context.getSystemService(NOTIFICATION_SERVICE);
+        nMgr.cancel(JOIN_REQUESTS);
     }
 }

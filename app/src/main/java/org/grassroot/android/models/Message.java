@@ -3,10 +3,15 @@ package org.grassroot.android.models;
 import android.os.Bundle;
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.util.Log;
+
+import org.json.JSONArray;
+import org.json.JSONException;
 
 import java.util.Date;
 import java.util.UUID;
 
+import io.realm.RealmList;
 import io.realm.RealmObject;
 import io.realm.annotations.Index;
 import io.realm.annotations.PrimaryKey;
@@ -30,11 +35,15 @@ public class Message extends RealmObject implements Parcelable {
     private Date time;
     private boolean delivered;
     private boolean read;
+    private String type;
+    private int noAttempts;
+    private RealmList<RealmString> tokens;
 
 
-    public Message(){}
+    public Message() {
+    }
 
-    public Message(String phoneNumber, String groupUid, String displayName, Date time, String text, boolean delivered, String groupName){
+    public Message(String phoneNumber, String groupUid, String displayName, Date time, String text, boolean delivered, String groupName) {
 
         this.id = UUID.randomUUID().toString();
         this.phoneNumber = phoneNumber;
@@ -47,7 +56,7 @@ public class Message extends RealmObject implements Parcelable {
 
     }
 
-    public Message(Bundle bundle){
+    public Message(Bundle bundle) {
         this.id = bundle.getString("uid");
         this.phoneNumber = bundle.getString("phone_number");
         this.groupName = bundle.getString("groupName");
@@ -57,7 +66,24 @@ public class Message extends RealmObject implements Parcelable {
         this.userUid = bundle.getString("userUid");
         this.time = new Date(bundle.getString("time"));
         this.text = bundle.getString("body");
+        this.type = bundle.getString("type");
         this.delivered = true;
+
+        if (bundle.containsKey("tokens")) {
+            String tokenValues = bundle.getString("tokens");
+            Log.e("Has tokens", "has tokens");
+            try {
+                JSONArray jsonArray = new JSONArray(tokenValues);
+                jsonArray.toString();
+                tokens = new RealmList<>();
+                for (int i = 0; i < jsonArray.length(); i++) {
+                    tokens.add(new RealmString(jsonArray.getString(i)));
+
+                }
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
 
     }
 
@@ -75,12 +101,12 @@ public class Message extends RealmObject implements Parcelable {
     };
 
     protected Message(Parcel in) {
-        id=in.readString();
+        id = in.readString();
         text = in.readString();
         groupUid = in.readString();
         groupName = in.readString();
         displayName = in.readString();
-        phoneNumber= in.readString();
+        phoneNumber = in.readString();
         long tmpDate = in.readLong();
         time = tmpDate == -1 ? null : new Date(tmpDate);
 
@@ -140,6 +166,26 @@ public class Message extends RealmObject implements Parcelable {
 
     public boolean isRead() {
         return read;
+    }
+
+    public RealmList<RealmString> getTokens() {
+        return tokens;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public int getNoAttempts() {
+        return noAttempts;
+    }
+
+    public void setNoAttempts(int noAttempts) {
+        this.noAttempts = noAttempts;
+    }
+
+    public boolean exceedsMaximumSendingAttempts(){
+        return  noAttempts >4;
     }
 
     @Override

@@ -16,16 +16,21 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.ArrayAdapter;
+import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import org.grassroot.android.R;
 import org.grassroot.android.activities.MultiMessageNotificationActivity;
+import org.grassroot.android.adapters.CommandsAdapter;
 import org.grassroot.android.adapters.GroupChatAdapter;
 import org.grassroot.android.adapters.RecyclerTouchListener;
 import org.grassroot.android.events.GroupChatEvent;
+import org.grassroot.android.events.MessageNotSentEvent;
 import org.grassroot.android.interfaces.ClickListener;
+import org.grassroot.android.models.Command;
 import org.grassroot.android.models.Message;
 import org.grassroot.android.models.responses.MessengerSetting;
 import org.grassroot.android.services.GcmListenerService;
@@ -36,6 +41,7 @@ import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -51,6 +57,8 @@ import rx.functions.Action1;
  */
 public class GroupChatFragment extends Fragment {
 
+    private static final String TAG = GroupChatFragment.class.getCanonicalName();
+
     private String groupUid;
     private String groupName;
     private boolean canReceive;
@@ -60,15 +68,17 @@ public class GroupChatFragment extends Fragment {
     @BindView(R.id.gc_recycler_view)
     RecyclerView gc_recycler_view;
     @BindView(R.id.text)
-    TextView txt_message;
+    AutoCompleteTextView txt_message;
     @BindView(R.id.btn_send)
     Button bt_send;
     @BindView(R.id.chat_entry_layout)
     LinearLayout ll_chat_entry;
 
     private GroupChatAdapter groupChatAdapter;
+   private ArrayAdapter<Command> arrayAdapter;
+    private List<Command> commands;
     private LinearLayoutManager layoutManager;
-    private static final String TAG = GroupChatFragment.class.getCanonicalName();
+
 
     public static GroupChatFragment newInstance(final String groupUid, String groupName) {
         GroupChatFragment fragment = new GroupChatFragment();
@@ -87,11 +97,31 @@ public class GroupChatFragment extends Fragment {
 
         groupUid = getArguments().getString("groupUid");
         groupName = getArguments().getString("groupName");
+
+        String[]commandArray = getActivity().getResources().getStringArray(R.array.commands);
+        String[] hintArray = getActivity().getResources().getStringArray(R.array.command_hints);
+        String[] descriptionArrays = getActivity().getResources().getStringArray(R.array.command_descriptions);
+
+        if(commands == null){
+            commands = new ArrayList<>();
+            for(int i =0; i < commandArray.length; i++ ){
+                Command command = new Command(commandArray[i],hintArray[i],descriptionArrays[i]);
+                commands.add(command);
+            }
+        }
         setHasOptionsMenu(true);
+        arrayAdapter = new CommandsAdapter(getActivity(),commands);
         setView();
         loadGroupSettings();
 
         return view;
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+
+
     }
 
     @Override
@@ -130,6 +160,10 @@ public class GroupChatFragment extends Fragment {
             getActivity().setTitle(groupName);
         }
         loadMessages();
+        txt_message.setAdapter(arrayAdapter);
+        txt_message.setThreshold(1); //setting it in xml does not seem to be working
+
+
         RealmUtils.markMessagesAsRead(groupUid);
 
     }
@@ -190,11 +224,8 @@ public class GroupChatFragment extends Fragment {
                 }
                 @Override
                 public void onLongClick(View view, int position) {
-                    if (groupChatAdapter.getItemViewType(position) == GroupChatAdapter.SELF) {
-                        longClickOptions(groupChatAdapter.getMessages().get(position), GroupChatAdapter.SELF);
-                    }else
-                    {longClickOptions(groupChatAdapter.getMessages().get(position), GroupChatAdapter.OTHER);
-                    }
+                    int viewType = groupChatAdapter.getItemViewType(position);
+                    longClickOptions(groupChatAdapter.getMessages().get(position), viewType);
                 }
             }));
         }
@@ -214,6 +245,13 @@ public class GroupChatFragment extends Fragment {
         }
         loadMessages();
     }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onEvent(MessageNotSentEvent messageNotSentEvent){
+        loadMessages();
+    }
+
+
 
     @Override
     public void onDestroy() {
@@ -267,6 +305,8 @@ public class GroupChatFragment extends Fragment {
 
     private void longClickOptions(final Message message, int viewType) {
 
+        Log.e(TAG, "view type ="+viewType);
+
         final AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
         builder.setTitle("Options");
         if(viewType == GroupChatAdapter.SELF){
@@ -315,6 +355,7 @@ public class GroupChatFragment extends Fragment {
 
 
     private void deleteAllMessages(final String groupUid) {
+        Log.e(TAG, "deleting all messages");
         RealmUtils.deleteAllGroupMessagesFromDb(groupUid).subscribe(new Action1<String>() {
             @Override
             public void call(String s) {
@@ -332,5 +373,6 @@ public class GroupChatFragment extends Fragment {
         });
 
     }
+
 
 }
