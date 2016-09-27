@@ -2,7 +2,6 @@ package org.grassroot.android.models;
 
 import android.os.Bundle;
 import android.os.Parcel;
-import android.os.Parcelable;
 import android.util.Log;
 
 import org.json.JSONArray;
@@ -19,10 +18,10 @@ import io.realm.annotations.PrimaryKey;
 /**
  * Created by paballo on 2016/08/30.
  */
-public class Message extends RealmObject implements Parcelable {
+public class Message extends RealmObject {
 
     @PrimaryKey
-    private String id;
+    private String uid;
 
     private String phoneNumber;
     private String text;
@@ -45,7 +44,7 @@ public class Message extends RealmObject implements Parcelable {
 
     public Message(String phoneNumber, String groupUid, String displayName, Date time, String text, boolean delivered, String groupName) {
 
-        this.id = UUID.randomUUID().toString();
+        this.uid = UUID.randomUUID().toString().concat(phoneNumber);
         this.phoneNumber = phoneNumber;
         this.groupUid = groupUid;
         this.groupName = groupName;
@@ -57,7 +56,7 @@ public class Message extends RealmObject implements Parcelable {
     }
 
     public Message(Bundle bundle) {
-        this.id = bundle.getString("uid");
+        this.uid = bundle.getString("uid");
         this.phoneNumber = bundle.getString("phone_number");
         this.groupName = bundle.getString("groupName");
         this.groupIcon = bundle.getString("groupIcon");
@@ -88,20 +87,8 @@ public class Message extends RealmObject implements Parcelable {
     }
 
 
-    public static final Creator<Message> creator = new Creator<Message>() {
-        @Override
-        public Message createFromParcel(Parcel source) {
-            return new Message(source);
-        }
-
-        @Override
-        public Message[] newArray(int size) {
-            return new Message[size];
-        }
-    };
-
     protected Message(Parcel in) {
-        id = in.readString();
+        uid = in.readString();
         text = in.readString();
         groupUid = in.readString();
         groupName = in.readString();
@@ -112,17 +99,6 @@ public class Message extends RealmObject implements Parcelable {
 
     }
 
-    public static final Creator<Message> CREATOR = new Creator<Message>() {
-        @Override
-        public Message createFromParcel(Parcel in) {
-            return new Message(in);
-        }
-
-        @Override
-        public Message[] newArray(int size) {
-            return new Message[size];
-        }
-    };
 
     public String getText() {
         return text;
@@ -140,8 +116,8 @@ public class Message extends RealmObject implements Parcelable {
         return phoneNumber;
     }
 
-    public String getId() {
-        return id;
+    public String getUid() {
+        return uid;
     }
 
     public Date getTime() {
@@ -188,27 +164,12 @@ public class Message extends RealmObject implements Parcelable {
         return  noAttempts >4;
     }
 
-    @Override
-    public int describeContents() {
-        return 0;
-    }
-
-    @Override
-    public void writeToParcel(Parcel dest, int flags) {
-        dest.writeString(id);
-        dest.writeString(text);
-        dest.writeString(groupUid);
-        dest.writeString(groupName);
-        dest.writeString(displayName);
-        dest.writeString(phoneNumber);
-        dest.writeLong(time != null ? time.getTime() : -1);
-    }
 
     @Override
     public String toString() {
         return "Message{" +
                 "time='" + time + '\'' +
-                ", uid = " + id + '\'' +
+                ", uid = " + uid + '\'' +
                 ", groupUid='" + groupUid + '\'' +
                 ", text='" + text + '\'' +
                 ", phoneNumber='" + phoneNumber + '\'' +

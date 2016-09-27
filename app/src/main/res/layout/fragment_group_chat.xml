@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:emojicon="http://schemas.android.com/tools"
+    android:id="@+id/root_view"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     app:layout_behavior="@string/appbar_scrolling_view_behavior">
@@ -9,51 +11,52 @@
     <android.support.v7.widget.RecyclerView
         android:id="@+id/gc_recycler_view"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_above="@+id/chat_entry_layout"
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/emoji_btn"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true"
         android:paddingBottom="20dp"
         android:scrollbars="vertical" />
 
-    <LinearLayout
-        android:id="@+id/chat_entry_layout"
-        android:background="@android:color/white"
+
+    <hani.momanii.supernova_emoji_library.Helper.EmojiconMultiAutoCompleteTextView
+        android:id="@+id/text"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_below="@+id/gc_recycler_view"
+        android:layout_toLeftOf="@+id/btn_send"
+        android:layout_toRightOf="@+id/emoji_btn"
+        android:layout_toStartOf="@+id/btn_send"
+        android:background="@drawable/bg_bubble_white"
+        android:completionHint="Commands"
+        android:completionThreshold="1"
+        android:dropDownWidth="match_parent"
+        android:inputType="textCapSentences|textMultiLine"
+        android:maxLines="100"
+        android:padding="4dp"
+        android:paddingBottom="10dp"
+        android:paddingLeft="10dp"
+        emojicon:emojiconSize="40sp" />
+
+    <ImageView
+        android:id="@+id/emoji_btn"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
         android:layout_alignParentBottom="true"
-
-        android:layout_marginBottom="10dp"
-        android:orientation="horizontal"
-        android:weightSum="4"
         android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true">
+        android:layout_alignParentStart="true"
+        android:padding="4dp"
+        android:src="@drawable/smiley" />
 
-        <AutoCompleteTextView android:id="@+id/text"
-            android:layout_width="0dp"
-            android:inputType="textCapSentences|textMultiLine"
-            android:completionHint="Commands"
-            android:hint="Enter text"
-            android:paddingLeft="10dp"
-            android:background="@null"
-            android:completionThreshold="1"
-            android:layout_marginRight="10dp"
-            android:layout_marginLeft="16dp"
-            android:layout_marginBottom="16dp"
-            android:maxLines="100"
-            android:layout_height="wrap_content"
-            android:dropDownWidth="match_parent"
-            android:layout_weight="3"
+    <ImageView
+        android:id="@+id/btn_send"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentRight="true"
+        android:padding="4dp"
+        android:src="@android:drawable/ic_menu_send" />
 
-            />
-
-        <Button android:id="@+id/btn_send"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:background="@null"
-            android:text="SEND"
-            android:textSize="16dp"
-           />
-
-    </LinearLayout>
 
 </RelativeLayout>

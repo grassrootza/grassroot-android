@@ -57,7 +57,6 @@ public class MultiGroupChatFragment extends Fragment {
         return viewToReturn;
     }
 
-
     @Override
     public void onResume() {
         super.onResume();
@@ -69,7 +68,6 @@ public class MultiGroupChatFragment extends Fragment {
         super.onDestroyView();
         unbinder.unbind();
     }
-
 
 
     @Override
@@ -105,7 +103,6 @@ public class MultiGroupChatFragment extends Fragment {
         viewLayoutManager = new LinearLayoutManager(getActivity());
         recyclerView.setLayoutManager(viewLayoutManager);
         recyclerView.setItemAnimator(new DefaultItemAnimator());
-
 
         recyclerView.addOnItemTouchListener(new RecyclerTouchListener(getContext(), recyclerView,
                 new ClickListener() {

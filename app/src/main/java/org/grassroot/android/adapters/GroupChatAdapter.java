@@ -13,6 +13,7 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+
 import org.grassroot.android.R;
 import org.grassroot.android.interfaces.TaskConstants;
 import org.grassroot.android.models.Message;
@@ -31,6 +32,7 @@ import java.util.UUID;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import hani.momanii.supernova_emoji_library.Helper.EmojiconTextView;
 import io.realm.RealmList;
 import rx.Subscriber;
 import rx.android.schedulers.AndroidSchedulers;
@@ -90,15 +92,13 @@ public class GroupChatAdapter extends RecyclerView.Adapter<GroupChatAdapter.GCVi
         if (getItemViewType(position) == OTHER || getItemViewType(position) == SERVER) {
             holder.user.setText(message.getDisplayName());
             holder.user.setVisibility(View.VISIBLE);
-            holder.bt_yes.setVisibility(View.GONE);
-            holder.bt_no.setVisibility(View.GONE);
+            showButtons(holder, false);
             if (message.getTokens().size() > 0 && getItemViewType(position) == SERVER) {
-                holder.bt_yes.setVisibility(View.VISIBLE);
-                holder.bt_no.setVisibility(View.VISIBLE);
+                showButtons(holder, true);
                 holder.bt_no.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
-                        RealmUtils.deleteMessageFromDb(message.getId()).subscribe(new Action1<String>() {
+                        RealmUtils.deleteMessageFromDb(message.getUid()).subscribe(new Action1<String>() {
                             @Override
                             public void call(String s) {
                                 reloadFromdb(message.getGroupUid());
@@ -130,7 +130,7 @@ public class GroupChatAdapter extends RecyclerView.Adapter<GroupChatAdapter.GCVi
                             @Override
                             public void onNext(TaskModel taskModel) {
                                 Toast.makeText(activity, "Yebo its done", Toast.LENGTH_LONG).show();
-                                RealmUtils.deleteMessageFromDb(message.getId()).subscribe(new Action1<String>() {
+                                RealmUtils.deleteMessageFromDb(message.getUid()).subscribe(new Action1<String>() {
                                     @Override
                                     public void call(String s) {
                                         reloadFromdb(message.getGroupUid());
@@ -145,7 +145,7 @@ public class GroupChatAdapter extends RecyclerView.Adapter<GroupChatAdapter.GCVi
         }
         if (getItemViewType(position) == SELF && message.isDelivered()) {
             holder.timestamp.setText("Sent. ".concat(time));
-        }else if(getItemViewType(position) == SELF && (!message.isDelivered() && message.exceedsMaximumSendingAttempts())){
+        } else if (getItemViewType(position) == SELF && (!message.isDelivered() && message.exceedsMaximumSendingAttempts())) {
             holder.timestamp.setText("Not sent. ".concat(time));
         }
 
@@ -161,7 +161,6 @@ public class GroupChatAdapter extends RecyclerView.Adapter<GroupChatAdapter.GCVi
             @Override
             public void call(List<Message> messages) {
                 setGroupList(messages);
-
             }
         });
     }
@@ -217,6 +216,18 @@ public class GroupChatAdapter extends RecyclerView.Adapter<GroupChatAdapter.GCVi
         return model;
     }
 
+
+    private void showButtons(GCViewHolder holder, boolean show) {
+        if (show) {
+            holder.bt_yes.setVisibility(View.VISIBLE);
+            holder.bt_no.setVisibility(View.VISIBLE);
+        } else {
+            holder.bt_yes.setVisibility(View.GONE);
+            holder.bt_no.setVisibility(View.GONE);
+        }
+
+    }
+
     public class GCViewHolder extends RecyclerView.ViewHolder {
 
         @BindView(R.id.timestamp)
@@ -226,7 +237,7 @@ public class GroupChatAdapter extends RecyclerView.Adapter<GroupChatAdapter.GCVi
         TextView user;
 
         @BindView(R.id.text)
-        TextView message;
+        EmojiconTextView message;
 
         @Nullable
         @BindView(R.id.bt_yes)

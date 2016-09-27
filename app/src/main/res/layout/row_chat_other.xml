@@ -3,6 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    xmlns:emojicon="http://schemas.android.com/apk/res-auto"
     android:orientation="horizontal"
     android:paddingTop="5dp"
     android:paddingLeft="16dp"
@@ -17,7 +18,7 @@
         android:textSize="11dp"
         />
 
-    <TextView
+    <hani.momanii.supernova_emoji_library.Helper.EmojiconTextView
         android:id="@+id/text"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -27,6 +28,7 @@
         android:textIsSelectable="false"
         android:background="@drawable/bg_bubble_white"
         android:textSize="14dp" />
+
 
     <TextView
         android:id="@+id/timestamp"

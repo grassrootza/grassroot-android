@@ -3,7 +3,6 @@ package org.grassroot.android.activities;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.Menu;
 
 import org.grassroot.android.R;
@@ -44,20 +43,23 @@ public class MultiMessageNotificationActivity extends PortraitActivity {
         groupName = getIntent().getStringExtra(GroupConstants.NAME_FIELD);
         clickAction = getIntent().getStringExtra(NotificationConstants.CLICK_ACTION);
 
-        if (NotificationConstants.CHAT_MESSAGE.equals(clickAction)) {
-            fragment = createGroupChatFragment(groupUid, groupName);
+        switch (clickAction){
+            case NotificationConstants.CHAT_MESSAGE:
+                fragment = createGroupChatFragment(groupUid, groupName);
+                break;
+            case NotificationConstants.CHAT_LIST:
+                fragment = createGroupChatListFragment();
+                break;
+            case NotificationConstants.NOTIFICATION_LIST:
+                fragment = createNotificationCenterFragment();
+                break;
+            case NotificationConstants.JOIN_REQUEST_LIST:
+                fragment = createJoinRequestListFragment();
+                break;
+            default:
+                createNotificationCenterFragment();
+                break;
         }
-        if (NotificationConstants.CHAT_LIST.equals(clickAction)) {
-            fragment = createGroupChatListFragment();
-        }
-        if (NotificationConstants.NOTIFICATION_LIST.equals(clickAction)) {
-            fragment = createNotificationCenterFragment();
-        }
-        if (NotificationConstants.JOIN_REQUEST_LIST.equals(clickAction)) {
-            fragment = createNotificationCenterFragment();
-        }
-
-
         setUpToolbar();
         getSupportFragmentManager().beginTransaction().add(R.id.gca_fragment_holder, fragment,TAG)
                 .commit();
@@ -92,25 +94,22 @@ public class MultiMessageNotificationActivity extends PortraitActivity {
     private Fragment createGroupChatFragment(String groupUid, String groupName) {
         this.setTitle(groupName);
         toolbar.setNavigationIcon(R.drawable.btn_close_white);
-        GroupChatFragment groupChatFragment = GroupChatFragment.newInstance(groupUid, groupName);
-        return groupChatFragment;
+        return GroupChatFragment.newInstance(groupUid, groupName);
     }
 
     private Fragment createGroupChatListFragment() {
         toolbar.setNavigationIcon(R.drawable.btn_back_wt);
-        MultiGroupChatFragment multiGroupChatFragment = MultiGroupChatFragment.newInstance();
-        return multiGroupChatFragment;
+        return MultiGroupChatFragment.newInstance();
     }
     private Fragment createJoinRequestListFragment(){
         this.setTitle(groupName);
         toolbar.setNavigationIcon(R.drawable.btn_close_white);
-        JoinRequestListFragment joinRequestListFragment = JoinRequestListFragment.newInstance(GroupJoinRequest.REC_REQUEST);
-        return  joinRequestListFragment;
+        return JoinRequestListFragment.newInstance(GroupJoinRequest.REC_REQUEST);
     }
 
     private Fragment createNotificationCenterFragment(){
         this.setTitle(R.string.drawer_notis);
-        return  new NotificationCenterFragment();
+        return new NotificationCenterFragment();
     }
 
 

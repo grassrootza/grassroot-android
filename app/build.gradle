@@ -1,6 +1,7 @@
 buildscript {
     repositories {
         maven { url 'https://maven.fabric.io/public' }
+
     }
 
     dependencies {
@@ -12,6 +13,7 @@ apply plugin: 'io.fabric'
 
 repositories {
     maven { url 'https://maven.fabric.io/public' }
+    maven{ url "https://dl.bintray.com/hani-momanii/maven"}
 }
 
 apply plugin: 'realm-android'
@@ -91,6 +93,7 @@ dependencies {
   compile 'com.jakewharton.picasso:picasso2-okhttp3-downloader:1.0.2'
   compile 'io.reactivex:rxandroid:1.2.1'
   compile 'io.reactivex:rxjava:1.1.7'
+    compile 'hani.momanii.supernova_emoji_library:supernova-emoji-library:0.0.2'
 
   compile('com.crashlytics.sdk.android:crashlytics:2.6.2@aar') {
       transitive = true;

@@ -54,14 +54,15 @@ public class GcmListenerService extends com.google.android.gms.gcm.GcmListenerSe
     private static final String TAG = GcmListenerService.class.getCanonicalName();
     private static final int TASKS = 100;
     private static final int CHATS = 200;
-    private static final int JOIN_REQUESTS =300;
-    private static Notification notification;
+    private static final int JOIN_REQUESTS = 300;
     private static final List<String> notificationMessages = new ArrayList<>();
     private static final List<String> chatMessages = new ArrayList<>();
     private static final List<String> joinRequests = new ArrayList<>();
+
     private static int displayedNotificationCount = 0;
     private static int displayedMessagesCount = 0;
-    private static int displayedJoinRequestCount=0;
+    private static int displayedJoinRequestCount = 0;
+    private static Notification notification;
 
 
     @Override
@@ -112,11 +113,10 @@ public class GcmListenerService extends com.google.android.gms.gcm.GcmListenerSe
             if ((!entityType.equals(NotificationConstants.CHAT_MESSAGE) && !entityType.equals(NotificationConstants.JOIN_REQUEST)) && displayedNotificationCount > 1) {
                 mNotificationManager.cancel(TASKS);
                 notification = generateMultiLineNotification(resultPendingIntent, context, notificationMessages, entityType, msg, displayedNotificationCount);
-            } else if (entityType.equals(NotificationConstants.CHAT_MESSAGE )&&displayedMessagesCount > 1) {
+            } else if (entityType.equals(NotificationConstants.CHAT_MESSAGE) && displayedMessagesCount > 1) {
                 mNotificationManager.cancel(CHATS);
                 notification = generateMultiLineNotification(resultPendingIntent, context, chatMessages, entityType, msg, displayedMessagesCount);
-            }
-            else if(entityType.equals(NotificationConstants.JOIN_REQUEST) && displayedJoinRequestCount >1){
+            } else if (entityType.equals(NotificationConstants.JOIN_REQUEST) && displayedJoinRequestCount > 1) {
                 mNotificationManager.cancel(JOIN_REQUESTS);
                 notification = generateMultiLineNotification(resultPendingIntent, context, joinRequests, entityType, msg, displayedJoinRequestCount);
             } else {
@@ -217,7 +217,7 @@ public class GcmListenerService extends com.google.android.gms.gcm.GcmListenerSe
         final String entityType = msg.getString(NotificationConstants.ENTITY_TYPE);
         Intent resultIntent;
 
-        if (displayedMessagesCount > 1 || displayedNotificationCount > 1 || displayedJoinRequestCount >1) {
+        if (displayedMessagesCount > 1 || displayedNotificationCount > 1 || displayedJoinRequestCount > 1) {
             if (!entityType.equals(NotificationConstants.CHAT_MESSAGE)) {
                 resultIntent = new Intent(context, MultiMessageNotificationActivity.class);
                 switch (entityType) {
@@ -296,10 +296,14 @@ public class GcmListenerService extends com.google.android.gms.gcm.GcmListenerSe
         String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
         RealmUtils.saveDataToRealmSync(message);
         if (isAppIsInBackground(context) && !message.getPhoneNumber().equals(phoneNumber)) {
-            relayNotification(msg, context);
+            if (RealmUtils.hasMessage(message.getUid())) relayNotification(msg, context);
+
         } else {
             EventBus.getDefault().post(new GroupChatEvent(message.getGroupUid(), msg));
         }
+        if(!RealmUtils.hasMessage(message.getUid()) ||
+                !GcmUpstreamMessageService.isMessageSent(message.getUid()))
+            RealmUtils.saveDataToRealmSync(message);
     }
 
     public static Observable showNotification(final Bundle bundle, final Context context) {
@@ -370,6 +374,7 @@ public class GcmListenerService extends com.google.android.gms.gcm.GcmListenerSe
         NotificationManager nMgr = (NotificationManager) context.getSystemService(NOTIFICATION_SERVICE);
         nMgr.cancel(CHATS);
     }
+
     public static void clearJoinRequestNotifications(Context context) {
         notification.number = notification.number - joinRequests.size();
         displayedJoinRequestCount = 0;
@@ -377,4 +382,7 @@ public class GcmListenerService extends com.google.android.gms.gcm.GcmListenerSe
         NotificationManager nMgr = (NotificationManager) context.getSystemService(NOTIFICATION_SERVICE);
         nMgr.cancel(JOIN_REQUESTS);
     }
+
+
+
 }

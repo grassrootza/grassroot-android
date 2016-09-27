@@ -3,7 +3,6 @@ package org.grassroot.android.services;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
 import android.util.Log;
 
 import com.google.android.gms.gcm.GoogleCloudMessaging;
@@ -13,23 +12,17 @@ import org.grassroot.android.R;
 import org.grassroot.android.events.MessageNotSentEvent;
 import org.grassroot.android.models.Message;
 import org.grassroot.android.models.exceptions.ApiCallException;
-import org.grassroot.android.models.responses.GenericResponse;
 import org.grassroot.android.utils.Constant;
-import org.grassroot.android.utils.ErrorUtils;
 import org.grassroot.android.utils.NetworkUtils;
 import org.grassroot.android.utils.RealmUtils;
 import org.greenrobot.eventbus.EventBus;
 
 import java.io.IOException;
-import java.util.Date;
 import java.util.Random;
-import java.util.UUID;
 
-import retrofit2.Response;
 import rx.Observable;
 import rx.Scheduler;
 import rx.Subscriber;
-import rx.android.schedulers.AndroidSchedulers;
 import rx.schedulers.Schedulers;
 
 /**
@@ -66,10 +59,11 @@ public class GcmUpstreamMessageService {
                             data.putString("phoneNumber", message.getPhoneNumber());
                             data.putString("groupUid", message.getGroupUid());
                             data.putString("time", message.getTime().toString());
-
+                            context.sendBroadcast(new Intent("com.google.android.intent.action.GTALK_HEARTBEAT"));
+                            context.sendBroadcast(new Intent("com.google.android.intent.action.MCS_HEARTBEAT"));
                             message.setNoAttempts(noAttempts);
                             RealmUtils.saveDataToRealmSync(message);
-                            GoogleCloudMessaging.getInstance(context).send(senderId, message.getId(), 0, data);
+                            GoogleCloudMessaging.getInstance(context).send(senderId, message.getUid(), 0, data);
                             Log.d(TAG, "Attempt no" + noAttempts);
 
                         } catch (IOException e) {
@@ -77,15 +71,15 @@ public class GcmUpstreamMessageService {
                         }
                         backoff = exponentialBackoffSleep(backoff);
 
-                    } while ((!isMessageSent(message.getId()) && noAttempts < MAX_RETRIES));
+                    } while ((!isMessageSent(message.getUid()) && noAttempts < MAX_RETRIES));
                 }
             }
         }).subscribeOn(Schedulers.io()).observeOn(observingThread);
     }
 
 
-    private static boolean isMessageSent(String uid) {
-        Message message = RealmUtils.loadObjectFromDB(Message.class, "id", uid);
+    public static boolean isMessageSent(String uid) {
+        Message message = RealmUtils.loadObjectFromDB(Message.class, "uid", uid);
         if (message != null) {
             if(message.getNoAttempts() == MAX_RETRIES && !message.isDelivered()){
                 EventBus.getDefault().post(new MessageNotSentEvent());

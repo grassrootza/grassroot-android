@@ -19,7 +19,6 @@ import android.widget.Toast;
 
 import org.grassroot.android.R;
 import org.grassroot.android.events.TaskCancelledEvent;
-import org.grassroot.android.fragments.GroupChatFragment;
 import org.grassroot.android.fragments.GroupTaskMasterFragment;
 import org.grassroot.android.fragments.JoinCodeFragment;
 import org.grassroot.android.fragments.NewTaskMenuFragment;
@@ -48,8 +47,7 @@ import rx.android.schedulers.AndroidSchedulers;
 import rx.functions.Action1;
 import rx.observers.Subscribers;
 
-public class GroupTasksActivity extends PortraitActivity implements NewTaskMenuFragment.NewTaskMenuListener, JoinCodeFragment.JoinCodeListener, TaskListFragment.TaskListListener {
-
+public class GroupTasksActivity extends PortraitActivity implements NewTaskMenuFragment.NewTaskMenuListener, JoinCodeFragment.JoinCodeListener, TaskListFragment.TaskListListener{
     private static final String TAG = GroupTasksActivity.class.getCanonicalName();
 
 
@@ -411,6 +409,7 @@ public class GroupTasksActivity extends PortraitActivity implements NewTaskMenuF
             return false;
         }
     }
+
 
 
 }
