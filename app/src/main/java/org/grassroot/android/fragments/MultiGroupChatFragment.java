@@ -12,7 +12,7 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import org.grassroot.android.R;
-import org.grassroot.android.adapters.MultiGroupChatAdapter;
+import org.grassroot.android.adapters.IncomingChatMessageAdapter;
 import org.grassroot.android.adapters.RecyclerTouchListener;
 import org.grassroot.android.events.GroupChatEvent;
 import org.grassroot.android.interfaces.ClickListener;
@@ -35,7 +35,7 @@ import rx.functions.Action1;
 public class MultiGroupChatFragment extends Fragment {
     private static final String TAG = MultiGroupChatFragment.class.getCanonicalName();
 
-    private MultiGroupChatAdapter multiGroupChatAdapter;
+    private IncomingChatMessageAdapter incomingChatMessageAdapter;
     private LinearLayoutManager viewLayoutManager;
 
     Unbinder unbinder;
@@ -86,10 +86,10 @@ public class MultiGroupChatFragment extends Fragment {
         RealmUtils.loadDistinctMessages().subscribe(new Action1<List<Message>>() {
             @Override
             public void call(List<Message> msgs) {
-                if (multiGroupChatAdapter == null) {
-                    multiGroupChatAdapter = new MultiGroupChatAdapter(getActivity(),msgs);
+                if (incomingChatMessageAdapter == null) {
+                    incomingChatMessageAdapter = new IncomingChatMessageAdapter(getActivity(),msgs);
                 } else {
-                  multiGroupChatAdapter.reloadFromDb();
+                  incomingChatMessageAdapter.reloadFromDb();
                 }
                 setUpList();
             }
@@ -98,7 +98,7 @@ public class MultiGroupChatFragment extends Fragment {
 
     private void setUpList() {
 
-        recyclerView.setAdapter(multiGroupChatAdapter);
+        recyclerView.setAdapter(incomingChatMessageAdapter);
         recyclerView.setHasFixedSize(false);
         viewLayoutManager = new LinearLayoutManager(getActivity());
         recyclerView.setLayoutManager(viewLayoutManager);
@@ -108,8 +108,8 @@ public class MultiGroupChatFragment extends Fragment {
                 new ClickListener() {
                     @Override
                     public void onClick(View view, int position) {
-                        String groupUid = multiGroupChatAdapter.getChatList().get(position).getGroupUid();
-                        String groupName = multiGroupChatAdapter.getChatList().get(position).getGroupName();
+                        String groupUid = incomingChatMessageAdapter.getChatList().get(position).getGroupUid();
+                        String groupName = incomingChatMessageAdapter.getChatList().get(position).getGroupName();
                         GroupChatFragment groupChatFragment = GroupChatFragment.newInstance(groupUid,groupName );
                         getActivity().getSupportFragmentManager().beginTransaction().addToBackStack(TAG)
                                 .replace(R.id.gca_fragment_holder, groupChatFragment).commit();
@@ -125,7 +125,7 @@ public class MultiGroupChatFragment extends Fragment {
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onEvent(GroupChatEvent groupChatEvent){
         loadMessages();
-        multiGroupChatAdapter.notifyDataSetChanged();
+        incomingChatMessageAdapter.notifyDataSetChanged();
     }
 
     private void setTitle(){

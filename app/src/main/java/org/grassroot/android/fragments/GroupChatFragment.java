@@ -9,7 +9,6 @@ import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -65,6 +64,7 @@ public class GroupChatFragment extends Fragment {
     private String groupName;
     private boolean canReceive;
     private boolean canSend;
+
     private boolean isMuted; //other chat participant
     private Unbinder unbinder;
 
@@ -72,7 +72,7 @@ public class GroupChatFragment extends Fragment {
     ViewGroup rootView;
 
     @BindView(R.id.emoji_btn)
-    ImageView emojiButton;
+    ImageView bt_emoji;
     @BindView(R.id.gc_recycler_view)
     RecyclerView gc_recycler_view;
     @BindView(R.id.text)
@@ -84,7 +84,7 @@ public class GroupChatFragment extends Fragment {
     private ArrayAdapter<Command> arrayAdapter;
     private List<Command> commands;
     private LinearLayoutManager layoutManager;
-    private EmojIconMultiAutoCompleteActions emojIcon;
+    private EmojIconMultiAutoCompleteActions emojIconAction;
 
 
     public static GroupChatFragment newInstance(final String groupUid, String groupName) {
@@ -104,6 +104,7 @@ public class GroupChatFragment extends Fragment {
 
         groupUid = getArguments().getString(GroupConstants.UID_FIELD);
         groupName = getArguments().getString(GroupConstants.NAME_FIELD);
+
 
         String[] commandArray = getActivity().getResources().getStringArray(R.array.commands);
         String[] hintArray = getActivity().getResources().getStringArray(R.array.command_hints);
@@ -167,14 +168,16 @@ public class GroupChatFragment extends Fragment {
         loadMessages();
         txt_message.setAdapter(arrayAdapter);
         txt_message.setThreshold(1); //setting it in xml does not seem to be working
+        txt_message.requestFocus();
 
-        emojIcon=new EmojIconMultiAutoCompleteActions(getActivity(),rootView,txt_message,emojiButton);
+        emojIconAction = new EmojIconMultiAutoCompleteActions(getActivity(), rootView, txt_message, bt_emoji);
 
-        emojIcon.ShowEmojIcon();
-        emojIcon.setKeyboardListener(new EmojIconActions.KeyboardListener() {
+        emojIconAction.ShowEmojIcon();
+        emojIconAction.setKeyboardListener(new EmojIconActions.KeyboardListener() {
             @Override
             public void onKeyboardOpen() {
             }
+
             @Override
             public void onKeyboardClose() {
             }
@@ -203,6 +206,7 @@ public class GroupChatFragment extends Fragment {
                     });
 
             txt_message.setText(""); //clear text
+            txt_message.requestFocus();
             InputMethodManager imm = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
             imm.hideSoftInputFromWindow(getActivity().getCurrentFocus().getWindowToken(), 0);
         }
@@ -257,6 +261,12 @@ public class GroupChatFragment extends Fragment {
         EventBus.getDefault().unregister(this);
     }
 
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+
+    }
+
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onEvent(GroupChatEvent groupChatEvent) {
         if (this.isVisible() && !groupChatEvent.getGroupUid().equals(groupUid)) {
@@ -271,11 +281,6 @@ public class GroupChatFragment extends Fragment {
         loadMessages();
     }
 
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-
-    }
 
     public String getGroupUid() {
         return groupUid;
@@ -287,6 +292,9 @@ public class GroupChatFragment extends Fragment {
             public void onNext(MessengerSetting messengerSetting) {
                 canReceive = messengerSetting.isCanReceive();
                 canSend = messengerSetting.isCanSend();
+                txt_message.setEnabled(canSend);
+                bt_send.setEnabled(canSend);
+                bt_emoji.setEnabled(canSend);
 
             }
 
@@ -301,11 +309,11 @@ public class GroupChatFragment extends Fragment {
     }
 
     /**
-     * @param userUid       user whose activity status is to be changed can be null
-     * @param groupUid      //the uid of the group
-     * @param userInitiated // true if initiated by the user to stop receiving messages from the group
+     * @param userUid       user whose activity status is to be changed. null if own
+     * @param groupUid      uid of the group
+     * @param userInitiated true if initiated by self to stop receiving messages from the group
      * @param active        if set to false and user is muting  another user, the latter will continue to receive messages from the group
-     *                      but will not be able to participate, however if user initiated, no messages from the group will be delivered
+     *                      but will not be able to send messages, however if self initiated, user will stop receiving messages from group
      */
 
     private void mute(@Nullable final String userUid, String groupUid, boolean userInitiated, final boolean active) {
@@ -323,10 +331,9 @@ public class GroupChatFragment extends Fragment {
 
     private void longClickOptions(final Message message, int viewType) {
 
-        Log.e(TAG, "view type =" + viewType);
 
         final AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-        builder.setTitle("Options");
+        builder.setTitle(getString(R.string.chat_long_click_options_title));
         if (viewType == GroupChatAdapter.SELF) {
             builder.setItems(R.array.self_options, new DialogInterface.OnClickListener() {
                 @Override
@@ -393,7 +400,7 @@ public class GroupChatFragment extends Fragment {
 
     }
 
-    }
+}
 
 
 

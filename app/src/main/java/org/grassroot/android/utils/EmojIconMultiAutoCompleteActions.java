@@ -90,7 +90,6 @@ public class EmojIconMultiAutoCompleteActions{
             }
         });
 
-        //On emoji clicked, add it to edittext
         popup.setOnEmojiconClickedListener(new EmojiconGridView.OnEmojiconClickedListener() {
 
             @Override
@@ -111,7 +110,6 @@ public class EmojIconMultiAutoCompleteActions{
             }
         });
 
-        //On backspace clicked, emulate the KEYCODE_DEL key event
         popup.setOnEmojiconBackspaceClickedListener(new EmojiconsPopup.OnEmojiconBackspaceClickedListener() {
 
             @Override

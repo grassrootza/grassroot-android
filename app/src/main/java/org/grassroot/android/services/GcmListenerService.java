@@ -99,7 +99,8 @@ public class GcmListenerService extends com.google.android.gms.gcm.GcmListenerSe
         final String entityType = msg.getString(NotificationConstants.ENTITY_TYPE);
         final NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(context);
         if (entityType.equals(NotificationConstants.CHAT_MESSAGE)) {
-            chatMessages.add(msg.getString(Constant.BODY));
+            String title = msg.getString(Constant.TITLE).concat(": ");
+            chatMessages.add(title.concat(msg.getString(Constant.BODY)));
             displayedMessagesCount++;
         } else {
             notificationMessages.add(msg.getString(Constant.BODY));
@@ -290,8 +291,7 @@ public class GcmListenerService extends com.google.android.gms.gcm.GcmListenerSe
     }
 
     private static void handleChatMessages(Bundle msg, Context context) {
-        Log.d(TAG, "bundle message Id = " + msg.getString("uid") + ", of length = " + msg.getString("id").length());
-        Log.d(TAG, "Received a chat messageg from server, looks like: + " + msg.toString());
+        Log.d(TAG, "Received a chat message from server, looks like: + " + msg.toString());
         Message message = new Message(msg);
         String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
         RealmUtils.saveDataToRealmSync(message);
@@ -324,19 +324,19 @@ public class GcmListenerService extends com.google.android.gms.gcm.GcmListenerSe
         Collections.reverse(messages);
         switch (entityType) {
             case NotificationConstants.CHAT_MESSAGE:
-                summaryText = Integer.toString(count).concat(" new messages.");
+                summaryText = Integer.toString(count).concat(context.getString(R.string.messages_new));
                 break;
             case NotificationConstants.JOIN_REQUEST:
-                summaryText = Integer.toString(count).concat(" new join requests.");
+                summaryText = Integer.toString(count).concat(context.getString(R.string.notifications_new));
                 break;
             default:
-                summaryText = Integer.toString(count).concat(" new notifications.");
+                summaryText = Integer.toString(count).concat(context.getString(R.string.join_requests_new));
                 break;
         }
         for (String message : messages) {
             style.addLine(message);
         }
-        style.setBigContentTitle("Grassroot");
+        style.setBigContentTitle(context.getString(R.string.app_name));
         style.setSummaryText(summaryText);
 
         notification = mBuilder.setTicker(msg.getString(Constant.TITLE))

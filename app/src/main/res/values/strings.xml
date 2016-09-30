@@ -843,9 +843,19 @@
     <string name="gp_mute">Mute group chats</string>
     <string name="gp_un_mute">Unmute group chats</string>
     <string name="gp_delete_messages">Delete all messages</string>
+    <string name="chat_message_sent">"Sent. "</string>
+    <string name="chat_message_not_sent">"Not sent. "</string>
+    <string name="chat_long_click_options_title">Options</string>
+
+    <!--Notifications-->
+    <string name="messages_new">" new messages."</string>
+    <string name="notifications_new">" new notifications."</string>
+    <string name="join_requests_new">" new join requests."</string>
+
 
     <!--FAQ-->
     <string name="fq_txt_toolbar">FAQs</string>
+
 
 
     <string-array name="fq_Header">

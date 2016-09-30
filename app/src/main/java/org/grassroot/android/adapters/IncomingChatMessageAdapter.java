@@ -24,13 +24,13 @@ import rx.functions.Action1;
 /**
  * Created by paballo on 2016/09/12.
  */
-public class MultiGroupChatAdapter extends RecyclerView.Adapter<MultiGroupChatAdapter.GCCViewHolder> {
+public class IncomingChatMessageAdapter extends RecyclerView.Adapter<IncomingChatMessageAdapter.GCCViewHolder> {
 
     private List<Message> messages;
     private Activity activity;
     private SimpleDateFormat dateFormatter = new SimpleDateFormat("HH:mm");
 
-    public MultiGroupChatAdapter(Activity activity, List<Message> messages){
+    public IncomingChatMessageAdapter(Activity activity, List<Message> messages){
         this.messages = new ArrayList<>(messages);
         this.activity = activity;
         notifyDataSetChanged();

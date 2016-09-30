@@ -10,6 +10,7 @@ import com.google.android.gms.gcm.GoogleCloudMessaging;
 import org.grassroot.android.BuildConfig;
 import org.grassroot.android.R;
 import org.grassroot.android.events.MessageNotSentEvent;
+import org.grassroot.android.interfaces.GroupConstants;
 import org.grassroot.android.models.Message;
 import org.grassroot.android.models.exceptions.ApiCallException;
 import org.grassroot.android.utils.Constant;
@@ -30,12 +31,11 @@ import rx.schedulers.Schedulers;
  */
 public class GcmUpstreamMessageService {
 
-    private final static int MAX_RETRIES = 5;
+    private final static int MAX_RETRIES = 10;
     private final static int BACKOFF_INITIAL_DELAY = 3000;
     private final static int MAX_BACKOFF_DELAY = 60 * 1000;
     private static final Random random = new Random();
     private static final String TAG = GcmUpstreamMessageService.class.getCanonicalName();
-
 
     public static Observable<String>
     sendMessage(final Message message, final Context context, final Scheduler observingThread) {
@@ -49,7 +49,6 @@ public class GcmUpstreamMessageService {
                     int backoff = BACKOFF_INITIAL_DELAY;
                     String senderId = BuildConfig.FLAVOR.equals(Constant.PROD) ?
                             context.getString(R.string.prod_sender_id) : context.getString(R.string.staging_sender_id);
-
                     do {
                         try {
                             noAttempts++;
@@ -57,7 +56,7 @@ public class GcmUpstreamMessageService {
                             data.putString("action", "CHAT");
                             data.putString("message", message.getText());
                             data.putString("phoneNumber", message.getPhoneNumber());
-                            data.putString("groupUid", message.getGroupUid());
+                            data.putString(GroupConstants.UID_FIELD, message.getGroupUid());
                             data.putString("time", message.getTime().toString());
                             context.sendBroadcast(new Intent("com.google.android.intent.action.GTALK_HEARTBEAT"));
                             context.sendBroadcast(new Intent("com.google.android.intent.action.MCS_HEARTBEAT"));
@@ -70,7 +69,6 @@ public class GcmUpstreamMessageService {
                             Log.d(TAG, "Failed to send message");
                         }
                         backoff = exponentialBackoffSleep(backoff);
-
                     } while ((!isMessageSent(message.getUid()) && noAttempts < MAX_RETRIES));
                 }
             }
@@ -105,8 +103,5 @@ public class GcmUpstreamMessageService {
     }
 
 
-    private static boolean isCommand(String message){
-        return (message.startsWith("/"));
-    }
 
 }

@@ -48,14 +48,12 @@ public class GroupChatAdapter extends RecyclerView.Adapter<GroupChatAdapter.GCVi
     private SimpleDateFormat dateFormatter = new SimpleDateFormat("HH:mm");
     private Activity activity;
 
-    List<Message> messages;
+    private List<Message> messages;
     public final static int SELF = 100;
     public final static int OTHER = 200;
     public final static int SERVER = 300;
 
-
     public GroupChatAdapter(List<Message> messages, Activity activity) {
-
         this.activity = activity;
         this.messages = new ArrayList<>(messages);
         notifyDataSetChanged();
@@ -114,22 +112,19 @@ public class GroupChatAdapter extends RecyclerView.Adapter<GroupChatAdapter.GCVi
                         String date = message.getTokens().get(1).getString();
                         Calendar calendar = Calendar.getInstance();
                         calendar.add(Calendar.DAY_OF_YEAR, 1);
-                        Date time = calendar.getTime();
+                        Date time = Calendar.getInstance().getTime();
                         TaskModel taskModel = generateTaskObject(message.getGroupUid(), title, time, location);
                         taskModel.setDeadlineISO(date);
                         TaskService.getInstance().sendTaskToServer(taskModel, AndroidSchedulers.mainThread()).subscribe(new Subscriber<TaskModel>() {
                             @Override
-                            public void onCompleted() {
-                            }
-
+                            public void onCompleted() {}
                             public void onError(Throwable e) {
                                 Log.e(TAG, e.toString());
-                                Toast.makeText(activity, "Server error", Toast.LENGTH_LONG).show();
+                                Toast.makeText(activity, "Unfortunately something went wrong and were unable to fulfil the request.", Toast.LENGTH_LONG).show();
                             }
-
                             @Override
                             public void onNext(TaskModel taskModel) {
-                                Toast.makeText(activity, "Yebo its done", Toast.LENGTH_LONG).show();
+                                Toast.makeText(activity, "Success! Meeting was called.", Toast.LENGTH_LONG).show();
                                 RealmUtils.deleteMessageFromDb(message.getUid()).subscribe(new Action1<String>() {
                                     @Override
                                     public void call(String s) {
@@ -144,9 +139,9 @@ public class GroupChatAdapter extends RecyclerView.Adapter<GroupChatAdapter.GCVi
             }
         }
         if (getItemViewType(position) == SELF && message.isDelivered()) {
-            holder.timestamp.setText("Sent. ".concat(time));
+            holder.timestamp.setText(activity.getString(R.string.chat_message_sent).concat(time));
         } else if (getItemViewType(position) == SELF && (!message.isDelivered() && message.exceedsMaximumSendingAttempts())) {
-            holder.timestamp.setText("Not sent. ".concat(time));
+            holder.timestamp.setText(activity.getString(R.string.chat_message_not_sent).concat(time));
         }
 
     }
@@ -164,7 +159,6 @@ public class GroupChatAdapter extends RecyclerView.Adapter<GroupChatAdapter.GCVi
             }
         });
     }
-
 
     @Override
     public int getItemCount() {
@@ -190,7 +184,6 @@ public class GroupChatAdapter extends RecyclerView.Adapter<GroupChatAdapter.GCVi
     }
 
 
-    //for deve and testing purposes only
     private TaskModel generateTaskObject(String groupUid, String title, Date time, String venue) {
 
         TaskModel model = new TaskModel();
@@ -243,11 +236,9 @@ public class GroupChatAdapter extends RecyclerView.Adapter<GroupChatAdapter.GCVi
         @BindView(R.id.bt_yes)
         Button bt_yes;
 
-
         @Nullable
         @BindView(R.id.bt_no)
         Button bt_no;
-
 
         public GCViewHolder(View view) {
             super(view);
