@@ -139,38 +139,49 @@ public class GcmListenerService extends com.google.android.gms.gcm.GcmListenerSe
             }
         } else {
             Log.d(TAG, "notification received, following KitKat branch");
-            notification = mBuilder.setContentTitle(msg.getString(Constant.TITLE))
-                    .setWhen(when)
-                    .setContentText(msg.getString(Constant.BODY))
-                    .setAutoCancel(true)
-                    .setSmallIcon(R.drawable.app_icon)
-                    .setContentIntent(resultPendingIntent)
-                    .setDefaults(Notification.DEFAULT_ALL)
-                    .setSound(RingtoneManager.getActualDefaultRingtoneUri(context,
-                            RingtoneManager.TYPE_NOTIFICATION))
-                    .setGroupSummary(true)
-                    .build();
+            if ((!entityType.equals(NotificationConstants.CHAT_MESSAGE) && !entityType.equals(NotificationConstants.JOIN_REQUEST)) && displayedNotificationCount > 1) {
+                mNotificationManager.cancel(TASKS);
+                notification = generateMultiLineNotification(resultPendingIntent, context, notificationMessages, entityType, msg, displayedNotificationCount);
+            } else if (entityType.equals(NotificationConstants.CHAT_MESSAGE) && displayedMessagesCount > 1) {
+                mNotificationManager.cancel(CHATS);
+                notification = generateMultiLineNotification(resultPendingIntent, context, chatMessages, entityType, msg, displayedMessagesCount);
+            } else if (entityType.equals(NotificationConstants.JOIN_REQUEST) && displayedJoinRequestCount > 1) {
+                mNotificationManager.cancel(JOIN_REQUESTS);
+                notification = generateMultiLineNotification(resultPendingIntent, context, joinRequests, entityType, msg, displayedJoinRequestCount);
+            } else {
+                notification = mBuilder.setContentTitle(msg.getString(Constant.TITLE))
+                        .setWhen(when)
+                        .setContentText(msg.getString(Constant.BODY))
+                        .setAutoCancel(true)
+                        .setSmallIcon(R.drawable.app_icon)
+                        .setContentIntent(resultPendingIntent)
+                        .setDefaults(Notification.DEFAULT_ALL)
+                        .setSound(RingtoneManager.getActualDefaultRingtoneUri(context,
+                                RingtoneManager.TYPE_NOTIFICATION))
+                        .setGroupSummary(true)
+                        .build();
+            }
+            }
 
-        }
-        notification.number = (entityType.equals(NotificationConstants.CHAT_MESSAGE))
-                ? displayedMessagesCount : displayedNotificationCount;
-        mNotificationManager.notify(!entityType.equals(NotificationConstants.CHAT_MESSAGE) ? TASKS :
-                CHATS, notification);
+            notification.number = (entityType.equals(NotificationConstants.CHAT_MESSAGE))
+                    ? displayedMessagesCount : displayedNotificationCount;
+            mNotificationManager.notify(!entityType.equals(NotificationConstants.CHAT_MESSAGE) ? TASKS :
+                    CHATS, notification);
+            GrassrootRestService.getInstance()
+                    .getApi()
+                    .updateRead(RealmUtils.loadPreferencesFromDB().getMobileNumber(), RealmUtils.loadPreferencesFromDB().getToken(), notificationUid)
+                    .enqueue(new Callback<GenericResponse>() {
+                        @Override
+                        public void onResponse(Call<GenericResponse> call, Response<GenericResponse> response) {
+                            Log.d(TAG, response.isSuccessful() ? "Set message as read!" : "Failed: " + response.errorBody());
+                        }
 
-        GrassrootRestService.getInstance()
-                .getApi()
-                .updateRead(RealmUtils.loadPreferencesFromDB().getMobileNumber(), RealmUtils.loadPreferencesFromDB().getToken(), notificationUid)
-                .enqueue(new Callback<GenericResponse>() {
-                    @Override
-                    public void onResponse(Call<GenericResponse> call, Response<GenericResponse> response) {
-                        Log.d(TAG, response.isSuccessful() ? "Set message as read!" : "Failed: " + response.errorBody());
-                    }
+                        @Override
+                        public void onFailure(Call<GenericResponse> call, Throwable t) {
+                            Log.e(TAG, "Something went wrong updating it:");
+                        }
+                    });
 
-                    @Override
-                    public void onFailure(Call<GenericResponse> call, Throwable t) {
-                        Log.e(TAG, "Something went wrong updating it:");
-                    }
-                });
     }
 
     public static boolean isAppIsInBackground(Context context) {
@@ -290,16 +301,15 @@ public class GcmListenerService extends com.google.android.gms.gcm.GcmListenerSe
         }
     }
 
-    private static void handleChatMessages(Bundle msg, Context context) {
-        Log.d(TAG, "Received a chat message from server, looks like: + " + msg.toString());
-        Message message = new Message(msg);
+    private static void handleChatMessages(Bundle bundle, Context context) {
+        Log.d(TAG, "Received a chat message from server, looks like: + " + bundle.toString());
+        Message message = new Message(bundle);
         String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
         RealmUtils.saveDataToRealmSync(message);
         if (isAppIsInBackground(context) && !message.getPhoneNumber().equals(phoneNumber)) {
-            if (RealmUtils.hasMessage(message.getUid())) relayNotification(msg, context);
-
+            if (RealmUtils.hasMessage(message.getUid())) relayNotification(bundle, context);
         } else {
-            EventBus.getDefault().post(new GroupChatEvent(message.getGroupUid(), msg));
+            EventBus.getDefault().post(new GroupChatEvent(message.getGroupUid(), bundle,message));
         }
         if(!RealmUtils.hasMessage(message.getUid()) ||
                 !GcmUpstreamMessageService.isMessageSent(message.getUid()))

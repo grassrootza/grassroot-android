@@ -25,7 +25,7 @@ import org.grassroot.android.models.responses.GroupSearchResponse;
 import org.grassroot.android.models.responses.GroupsChangedResponse;
 import org.grassroot.android.models.responses.JoinRequestResponse;
 import org.grassroot.android.models.responses.MemberListResponse;
-import org.grassroot.android.models.responses.MessengerSetting;
+import org.grassroot.android.models.responses.GroupChatSettingResponse;
 import org.grassroot.android.models.responses.PermissionResponse;
 import org.grassroot.android.models.responses.ProfileResponse;
 import org.grassroot.android.models.responses.TaskChangedResponse;
@@ -330,7 +330,7 @@ public class GrassrootRestService {
 
     //fetch group chat settings of user
     @GET("group/messenger/fetch_settings/{phoneNumber}/{code}/{groupUid}")
-    Call<MessengerSetting> fetchGroupMessengerSettings(@Path("phoneNumber") String phoneNumber, @Path("code") String code, @Path("groupUid") String groupUid, @Query("userUid") String userUid);
+    Call<GroupChatSettingResponse> fetchGroupMessengerSettings(@Path("phoneNumber") String phoneNumber, @Path("code") String code, @Path("groupUid") String groupUid, @Query("userUid") String userUid);
 
     //update user group chat settings mute and unmute
     @POST("group/messenger/update/{phoneNumber}/{code}/{groupUid}")

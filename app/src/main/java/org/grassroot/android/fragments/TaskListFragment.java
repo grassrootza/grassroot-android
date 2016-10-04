@@ -183,8 +183,8 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
             menu.findItem(R.id.mi_only_unread).setVisible(false);
         if (menu.findItem(R.id.mi_refresh_screen) != null)
             menu.findItem(R.id.mi_refresh_screen).setVisible(true);
-        if (menu.findItem(R.id.mi_group_mute) != null) ;
-        menu.findItem(R.id.mi_group_mute).setVisible(false);
+        if (menu.findItem(R.id.mi_group_mute) != null)
+            menu.findItem(R.id.mi_group_mute).setVisible(false);
     }
 
     @Override

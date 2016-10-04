@@ -27,6 +27,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 
@@ -82,16 +83,16 @@ public class GroupChatAdapter extends RecyclerView.Adapter<GroupChatAdapter.GCVi
         final Message message = messages.get(position);
         holder.message.setText(message.getText());
         String time = DateUtils.isToday(message.getTime().getTime()) ? dateFormatter.format(message.getTime()) : (String)
-                DateUtils.getRelativeDateTimeString(activity, message.getTime().getTime(),
-                        System.currentTimeMillis(), DateUtils.SECOND_IN_MILLIS, DateUtils.FORMAT_ABBREV_RELATIVE);
+               DateUtils.getRelativeDateTimeString(activity, message.getTime().getTime(),
+                       System.currentTimeMillis(), DateUtils.SECOND_IN_MILLIS, DateUtils.FORMAT_ABBREV_RELATIVE);
         holder.timestamp.setText(time);
 
 
         if (getItemViewType(position) == OTHER || getItemViewType(position) == SERVER) {
             holder.user.setText(message.getDisplayName());
             holder.user.setVisibility(View.VISIBLE);
-            showButtons(holder, false);
-            if (message.getTokens().size() > 0 && getItemViewType(position) == SERVER) {
+            if(getItemViewType(position) == SERVER) showButtons(holder, false);
+            if (message.getTokens() != null && message.getTokens().size() > 0 && getItemViewType(position) == SERVER) {
                 showButtons(holder, true);
                 holder.bt_no.setOnClickListener(new View.OnClickListener() {
                     @Override
@@ -160,6 +161,34 @@ public class GroupChatAdapter extends RecyclerView.Adapter<GroupChatAdapter.GCVi
         });
     }
 
+
+    public void addMessage(Message message){
+        this.messages.add(message);
+        this.notifyItemInserted(getItemCount()-1);
+    }
+
+    public void deleteAll(){
+        this.messages.clear();
+        this.notifyDataSetChanged();
+    }
+
+    public void updateMessage(Message message){
+        for(int i=0; i<messages.size(); i++){
+            if(messages.get(i).getUid().equals(message.getUid())){
+                messages.set(i,message);
+                this.notifyItemChanged(i);
+            }
+             }
+    }
+
+    public void deleteOne(String messageUid){
+        for(int i=0; i<messages.size(); i++){
+            if(messages.get(i).getUid().equals(messageUid)){
+                messages.remove(i);
+                this.notifyItemRemoved(i);
+            }
+        }
+    }
     @Override
     public int getItemCount() {
         return messages.size();

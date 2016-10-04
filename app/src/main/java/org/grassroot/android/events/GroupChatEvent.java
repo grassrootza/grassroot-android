@@ -2,16 +2,20 @@ package org.grassroot.android.events;
 
 import android.os.Bundle;
 
+import org.grassroot.android.models.Message;
+
 /**
  * Created by paballo on 2016/09/02.
  */
 public class GroupChatEvent {
     private String groupUid;
     private Bundle bundle;
+    private Message message;
 
-    public GroupChatEvent(String groupUid, Bundle bundle){
+    public GroupChatEvent(String groupUid, Bundle bundle, Message message){
         this.groupUid = groupUid;
         this.bundle = bundle;
+        this.message = message;
     }
 
     public String getGroupUid() {
@@ -20,5 +24,9 @@ public class GroupChatEvent {
 
     public Bundle getBundle() {
         return bundle;
+    }
+
+    public Message getMessage() {
+        return message;
     }
 }

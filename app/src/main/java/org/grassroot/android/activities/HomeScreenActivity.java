@@ -20,6 +20,7 @@ import android.widget.TextView;
 
 import org.grassroot.android.R;
 import org.grassroot.android.adapters.GroupPickAdapter;
+import org.grassroot.android.events.GroupChatEvent;
 import org.grassroot.android.events.TaskAddedEvent;
 import org.grassroot.android.events.TaskCancelledEvent;
 import org.grassroot.android.events.UserLoggedOutEvent;
@@ -38,9 +39,11 @@ import org.grassroot.android.interfaces.GroupPickCallbacks;
 import org.grassroot.android.interfaces.NavigationConstants;
 import org.grassroot.android.interfaces.TaskConstants;
 import org.grassroot.android.models.Group;
+import org.grassroot.android.services.GcmListenerService;
 import org.grassroot.android.services.SharingService;
 import org.grassroot.android.utils.NetworkUtils;
 import org.grassroot.android.utils.PermissionUtils;
+import org.grassroot.android.utils.RealmUtils;
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
@@ -71,6 +74,7 @@ public class HomeScreenActivity extends PortraitActivity implements NavigationDr
     private ActionBarDrawerToggle drawerToggle;
     private int currentMainFragment;
     private int mainFragmentFromNewIntent = -1;
+    private boolean isVisible;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -162,6 +166,7 @@ public class HomeScreenActivity extends PortraitActivity implements NavigationDr
                     break;
             }
         }
+        isVisible = true;
     }
 
     @Override
@@ -199,6 +204,14 @@ public class HomeScreenActivity extends PortraitActivity implements NavigationDr
     protected void onDestroy() {
         EventBus.getDefault().unregister(this);
         super.onDestroy();
+    }
+
+
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        isVisible= false;
     }
 
     @Override
@@ -504,6 +517,13 @@ public class HomeScreenActivity extends PortraitActivity implements NavigationDr
         finish();
     }
 
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onEvent(GroupChatEvent groupChatEvent) {
+        if (this.isVisible) {
+            GcmListenerService.showNotification(groupChatEvent.getBundle(), this).subscribe();
+        }
+    }
+
     @Subscribe
     public void onTaskAddedEvent(TaskAddedEvent e) {
         Fragment frag = getSupportFragmentManager().findFragmentByTag(NewTaskMenuFragment.class.getCanonicalName());
@@ -560,6 +580,7 @@ public class HomeScreenActivity extends PortraitActivity implements NavigationDr
             closeViewTaskFragment();
         }
     }
+
 
     private void switchOffMenu() {
         showMenuOptions = false;

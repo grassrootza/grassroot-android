@@ -2,7 +2,6 @@ package org.grassroot.android.services;
 
 import android.os.Looper;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.text.TextUtils;
 import android.util.Log;
 
@@ -26,9 +25,9 @@ import org.grassroot.android.models.TaskModel;
 import org.grassroot.android.models.exceptions.ApiCallException;
 import org.grassroot.android.models.exceptions.InvalidNumberException;
 import org.grassroot.android.models.responses.GenericResponse;
+import org.grassroot.android.models.responses.GroupChatSettingResponse;
 import org.grassroot.android.models.responses.GroupResponse;
 import org.grassroot.android.models.responses.GroupsChangedResponse;
-import org.grassroot.android.models.responses.MessengerSetting;
 import org.grassroot.android.models.responses.PermissionResponse;
 import org.grassroot.android.utils.ErrorUtils;
 import org.grassroot.android.utils.NetworkUtils;
@@ -184,17 +183,17 @@ public class GroupService {
        }).subscribeOn(Schedulers.io()).observeOn(observingThread);
      }
 
-  public Observable<MessengerSetting> fetchGroupChatSetting(final String groupUid, Scheduler observingThread, final String userUid){
-    return Observable.create(new Observable.OnSubscribe<MessengerSetting>(){
+  public Observable<GroupChatSettingResponse> fetchGroupChatSetting(final String groupUid, Scheduler observingThread, final String userUid){
+    return Observable.create(new Observable.OnSubscribe<GroupChatSettingResponse>(){
       @Override
-      public void call(Subscriber<? super MessengerSetting> subscriber) {
+      public void call(Subscriber<? super GroupChatSettingResponse> subscriber) {
         if(!NetworkUtils.isOnline()){
           throw  new ApiCallException(NetworkUtils.CONNECT_ERROR);
         }else{
           final String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
           final String code = RealmUtils.loadPreferencesFromDB().getToken();
           try{
-            Response<MessengerSetting> response = GrassrootRestService.getInstance().getApi().fetchGroupMessengerSettings(phoneNumber,code,groupUid, userUid).execute();
+            Response<GroupChatSettingResponse> response = GrassrootRestService.getInstance().getApi().fetchGroupMessengerSettings(phoneNumber,code,groupUid, userUid).execute();
             if(response.isSuccessful()){
               subscriber.onNext(response.body());
               subscriber.onCompleted();

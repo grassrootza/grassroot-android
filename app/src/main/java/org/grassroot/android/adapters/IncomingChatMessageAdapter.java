@@ -3,6 +3,7 @@ package org.grassroot.android.adapters;
 import android.app.Activity;
 import android.support.v7.widget.RecyclerView;
 import android.text.format.DateUtils;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -15,10 +16,12 @@ import org.grassroot.android.utils.RealmUtils;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import hani.momanii.supernova_emoji_library.Helper.EmojiconTextView;
 import rx.functions.Action1;
 
 /**
@@ -94,7 +97,7 @@ public class IncomingChatMessageAdapter extends RecyclerView.Adapter<IncomingCha
         TextView txt_name;
 
         @BindView(R.id.message)
-        TextView txt_message;
+        EmojiconTextView txt_message;
 
         @BindView(R.id.timestamp)
         TextView txt_time;

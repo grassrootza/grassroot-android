@@ -36,7 +36,7 @@ public class GroupTaskMasterFragment extends Fragment implements TaskListFragmen
     @BindView(R.id.tasks_tab_layout)
     TabLayout tabLayout;
 
-    TaskPagerAdapter pagerAdapter;
+    public TaskPagerAdapter pagerAdapter;
 
     GroupChatFragment groupChatFragment;
     TaskListFragment taskListFragment;
@@ -164,4 +164,8 @@ public class GroupTaskMasterFragment extends Fragment implements TaskListFragmen
         }
     }
 
+
+    public ViewPager getRequestPager() {
+        return requestPager;
+    }
 }

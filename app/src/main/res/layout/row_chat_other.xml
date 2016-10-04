@@ -25,6 +25,7 @@
         android:layout_below="@+id/user"
         android:layout_alignParentLeft="true"
         android:layout_marginLeft="10dp"
+        emojicon:emojiconSize="28sp"
         android:textIsSelectable="false"
         android:background="@drawable/bg_bubble_white"
         android:textSize="14dp" />

@@ -9,11 +9,15 @@ import org.grassroot.android.utils.Constant;
 import org.json.JSONArray;
 import org.json.JSONException;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Locale;
 import java.util.UUID;
 
 import io.realm.RealmList;
 import io.realm.RealmObject;
+import io.realm.annotations.Ignore;
 import io.realm.annotations.Index;
 import io.realm.annotations.PrimaryKey;
 
@@ -38,6 +42,8 @@ public class Message extends RealmObject {
     private String type;
     private int noAttempts;
     private RealmList<RealmString> tokens;
+    @Ignore
+    SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
 
     public Message() {
     }
@@ -62,7 +68,15 @@ public class Message extends RealmObject {
         this.displayName = bundle.getString(Constant.TITLE);
         this.groupUid = bundle.getString(GroupConstants.UID_FIELD);
         this.userUid = bundle.getString("userUid");
-        this.time = new Date(bundle.getString("time"));
+        Log.e("datetime", bundle.getString("time"));
+        try {
+            String date = bundle.getString("time");
+            this.time = formatter.parse(date);
+
+        } catch (ParseException e) {
+            Log.e("date parserror", e.toString());
+        }
+
         this.text = bundle.getString(Constant.BODY);
         this.type = bundle.getString("type");
         this.delivered = true;
@@ -146,8 +160,12 @@ public class Message extends RealmObject {
         this.noAttempts = noAttempts;
     }
 
-    public boolean exceedsMaximumSendingAttempts(){
-        return  noAttempts >9;
+    public void setDelivered(boolean delivered) {
+        this.delivered = delivered;
+    }
+
+    public boolean exceedsMaximumSendingAttempts() {
+        return noAttempts > 9;
     }
 
 
@@ -161,4 +179,22 @@ public class Message extends RealmObject {
                 ", phoneNumber='" + phoneNumber + '\'' +
                 '}';
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Message)) return false;
+
+        Message message = (Message) o;
+
+        return uid.equals(message.uid);
+
+    }
+
+    @Override
+    public int hashCode() {
+        return uid.hashCode();
+    }
 }
+
+

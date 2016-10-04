@@ -1,9 +1,11 @@
 package org.grassroot.android.models.responses;
 
+import java.util.List;
+
 /**
  * Created by paballo on 2016/09/15.
  */
-public class MessengerSetting {
+public class GroupChatSettingResponse {
 
     private String groupUid;
     private String userUid;
@@ -11,6 +13,7 @@ public class MessengerSetting {
     private boolean canReceive;
     private boolean userInitiated;
     private boolean active;
+    private List<String> mutedUsersUids;
 
     public String getGroupUid() {
         return groupUid;
@@ -28,19 +31,20 @@ public class MessengerSetting {
         return canSend;
     }
 
+    public List<String> getMutedUsersUids() {
+        return mutedUsersUids;
+    }
+
     public boolean getUserInitiated() {
         return userInitiated;
     }
 
+
     @Override
     public String toString() {
-        return "MessengerSetting{" +
+        return "GroupChatSettingResponse{" +
                 "groupUid='" + groupUid + '\'' +
                 ", userUid='" + userUid + '\'' +
-                ", canSend=" + canSend +
-                ", canReceive=" + canReceive +
-                ", userInitiated=" + userInitiated +
-                ", active=" + active +
                 '}';
     }
 }

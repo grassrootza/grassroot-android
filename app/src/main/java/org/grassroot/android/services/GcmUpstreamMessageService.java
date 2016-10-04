@@ -57,7 +57,7 @@ public class GcmUpstreamMessageService {
                             data.putString("message", message.getText());
                             data.putString("phoneNumber", message.getPhoneNumber());
                             data.putString(GroupConstants.UID_FIELD, message.getGroupUid());
-                            data.putString("time", message.getTime().toString());
+                            data.putString("time", Constant.isoDateTimeSDF.format(message.getTime()));
                             context.sendBroadcast(new Intent("com.google.android.intent.action.GTALK_HEARTBEAT"));
                             context.sendBroadcast(new Intent("com.google.android.intent.action.MCS_HEARTBEAT"));
                             message.setNoAttempts(noAttempts);
@@ -80,7 +80,7 @@ public class GcmUpstreamMessageService {
         Message message = RealmUtils.loadObjectFromDB(Message.class, "uid", uid);
         if (message != null) {
             if(message.getNoAttempts() == MAX_RETRIES && !message.isDelivered()){
-                EventBus.getDefault().post(new MessageNotSentEvent());
+                EventBus.getDefault().post(new MessageNotSentEvent(message));
             }
             return message.isDelivered();
         }
