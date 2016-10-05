@@ -222,10 +222,10 @@ public class GroupChatFragment extends Fragment {
         RealmUtils.loadMessagesFromDb(groupUid).subscribe(new Action1<List<Message>>() {
             @Override
             public void call(List<Message> msgs) {
-                if (groupChatAdapter == null) {
-                    setUpListAndAdapter(msgs);
-                } else {
+                if (groupChatAdapter != null) {
                     groupChatAdapter.reloadFromdb(groupUid);
+                } else {
+                    setUpListAndAdapter(msgs);
                 }
                 gc_recycler_view.smoothScrollToPosition(groupChatAdapter.getItemCount());
             }
@@ -438,15 +438,13 @@ public class GroupChatFragment extends Fragment {
         if (getActivity() instanceof GroupTasksActivity) {
             GroupTaskMasterFragment masterFragment = (GroupTaskMasterFragment) this.getParentFragment();
             return masterFragment.getRequestPager().getCurrentItem() == 1;
-        }if(getActivity() instanceof  MultiMessageNotificationActivity){
-            return true;}
-        else {
-            return false;
         }
+        return getActivity() instanceof MultiMessageNotificationActivity ? true : false;
+    }
 
     }
 
-}
+
 
 
 
