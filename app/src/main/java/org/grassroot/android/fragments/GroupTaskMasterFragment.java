@@ -138,6 +138,7 @@ public class GroupTaskMasterFragment extends Fragment implements TaskListFragmen
         public TaskPagerAdapter(FragmentManager fragmentManager) {
             super(fragmentManager);
         }
+
         @Override
         public int getCount() {
             return PAGERCOUNT;

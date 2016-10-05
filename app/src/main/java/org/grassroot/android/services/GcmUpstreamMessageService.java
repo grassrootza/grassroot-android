@@ -62,9 +62,9 @@ public class GcmUpstreamMessageService {
                             context.sendBroadcast(new Intent("com.google.android.intent.action.MCS_HEARTBEAT"));
                             message.setNoAttempts(noAttempts);
                             RealmUtils.saveDataToRealmSync(message);
+                            // todo : fix null pointer error here
                             GoogleCloudMessaging.getInstance(context).send(senderId, message.getUid(), 0, data);
                             Log.d(TAG, "Attempt no" + noAttempts);
-
                         } catch (IOException e) {
                             Log.d(TAG, "Failed to send message");
                         }

@@ -13,7 +13,6 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
-
 import org.grassroot.android.R;
 import org.grassroot.android.interfaces.TaskConstants;
 import org.grassroot.android.models.Message;
@@ -27,7 +26,6 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 
@@ -77,7 +75,6 @@ public class GroupChatAdapter extends RecyclerView.Adapter<GroupChatAdapter.GCVi
     }
 
 
-    @SuppressWarnings("deprecation")
     @Override
     public void onBindViewHolder(GCViewHolder holder, int position) {
         final Message message = messages.get(position);
