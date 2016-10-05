@@ -169,20 +169,8 @@ public class GroupChatFragment extends Fragment {
         textView.setEnabled(!isMuted);
         sendMessage.setEnabled(!isMuted);
         openEmojis.setEnabled(!isMuted);
-
         emojIconAction = new EmojIconMultiAutoCompleteActions(getActivity(), rootView, textView, openEmojis);
-
         emojIconAction.ShowEmojIcon();
-        // todo : validate if / why this is needed (since empty)
-        emojIconAction.setKeyboardListener(new EmojIconActions.KeyboardListener() {
-            @Override
-            public void onKeyboardOpen() {
-            }
-
-            @Override
-            public void onKeyboardClose() {
-            }
-        });
         RealmUtils.markMessagesAsRead(groupUid);
 
     }
@@ -360,24 +348,10 @@ public class GroupChatFragment extends Fragment {
                     }
                 });
             } else if (messageType == GroupChatAdapter.OTHER) {
-                // todo : again, work out if/why this is needed
-                GroupService.getInstance().fetchGroupChatSetting(groupUid, AndroidSchedulers.mainThread(), message.getUserUid()).subscribe(new Subscriber<GroupChatSettingResponse>() {
-                    @Override
-                    public void onCompleted() {
-                    }
-
-                    @Override
-                    public void onError(Throwable e) {
-                    }
-
-                    @Override
-                    public void onNext(GroupChatSettingResponse groupChatSettingResponse) {
-                    }
-                });
 
                 //0 - Delete Message
                 //1 = Mute or Unmute user
-                int otherOptions = (isMuted) ? R.array.other_muted_options : R.array.other_mute_options;
+                int otherOptions = (mutedUsersUid.contains(message.getUid())) ? R.array.other_muted_options : R.array.other_mute_options;
                 builder.setItems(otherOptions, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialogInterface, int i) {

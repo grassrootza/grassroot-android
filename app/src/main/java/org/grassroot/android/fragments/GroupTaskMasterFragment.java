@@ -133,7 +133,7 @@ public class GroupTaskMasterFragment extends Fragment implements TaskListFragmen
 
     public class TaskPagerAdapter extends FragmentStatePagerAdapter {
 
-        private final CharSequence[] titles=  { "Tasks", "Chat"}; // todo : externalize
+        private final CharSequence[] titles=  getActivity().getResources().getStringArray(R.array.group_task_tab_titles);
 
         public TaskPagerAdapter(FragmentManager fragmentManager) {
             super(fragmentManager);
