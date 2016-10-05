@@ -249,12 +249,12 @@
     </string-array>
 
 
-    <string-array name="other_mute_options">
+    <string-array name="chat_msg_mute_available">
         <item>Delete message</item>
         <item>Mute user</item>
     </string-array>
 
-    <string-array name="other_muted_options">
+    <string-array name="chat_msg_already_muted">
         <item>Delete message</item>
         <item>Unmute user</item>
     </string-array>
@@ -802,7 +802,7 @@
     <string name="gp_social_move">Social movement</string>
     <string name="gp_savings_group">Burial society, stokvel</string>
     <string name="gp_faith_group">Faith group, church, mosque</string>
-    <string name="gp_school">School, creche, youth group</string>
+    <string name="gp_school">School, crèche, youth group</string>
     <string name="gp_hands">Community group</string>
 
     <string name="gp_bt_choose_own">PICK MY OWN</string>
@@ -851,6 +851,12 @@
     <string name="chat_message_sent">"Sent. "</string>
     <string name="chat_message_not_sent">"Not sent. "</string>
     <string name="chat_long_click_options_title">Options</string>
+
+    <string name="options_yes">Yes</string>
+    <string name="options_no">No</string>
+
+    <string name="chat_task_called">Done! %s called</string>
+    <string name="chat_task_failure">Sorry, there was an error on the server. Please try again later.</string>
 
     <!--Notifications-->
     <string name="messages_new">" new messages."</string>

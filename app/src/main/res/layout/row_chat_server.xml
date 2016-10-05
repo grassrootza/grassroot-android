@@ -25,7 +25,7 @@
         android:layout_below="@+id/user"
         android:layout_centerHorizontal="true"
         android:padding="@dimen/padding"
-        android:textColor="@color/red"
+        android:textColor="@color/primaryColor"
         android:textIsSelectable="false"
         android:background="@drawable/chat_bar_system_back"
         android:textSize="@dimen/txt_small"
@@ -46,7 +46,7 @@
             android:id="@+id/bt_yes"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Yes"
+            android:text="@string/options_yes"
             android:visibility="gone"/>
 
         <Button
@@ -54,7 +54,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:visibility="gone"
-            android:text="No"/>
+            android:text="@string/options_no"/>
 
     </LinearLayout>
 

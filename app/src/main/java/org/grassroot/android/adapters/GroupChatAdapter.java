@@ -18,6 +18,7 @@ import org.grassroot.android.interfaces.TaskConstants;
 import org.grassroot.android.models.Message;
 import org.grassroot.android.models.RealmString;
 import org.grassroot.android.models.TaskModel;
+import org.grassroot.android.services.ApplicationLoader;
 import org.grassroot.android.services.TaskService;
 import org.grassroot.android.utils.Constant;
 import org.grassroot.android.utils.RealmUtils;
@@ -62,14 +63,11 @@ public class GroupChatAdapter extends RecyclerView.Adapter<GroupChatAdapter.GCVi
     public GCViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         View message;
         if (viewType == SELF) {
-            message = LayoutInflater.from(parent.getContext())
-                    .inflate(R.layout.row_chat_self, parent, false);
+            message = LayoutInflater.from(parent.getContext()).inflate(R.layout.row_chat_self, parent, false);
         } else if (viewType == OTHER) {
-            message = LayoutInflater.from(parent.getContext())
-                    .inflate(R.layout.row_chat_other, parent, false);
+            message = LayoutInflater.from(parent.getContext()).inflate(R.layout.row_chat_other, parent, false);
         } else {
-            message = LayoutInflater.from(parent.getContext())
-                    .inflate(R.layout.row_chat_server, parent, false);
+            message = LayoutInflater.from(parent.getContext()).inflate(R.layout.row_chat_server, parent, false);
         }
         return new GCViewHolder(message);
     }
@@ -78,73 +76,34 @@ public class GroupChatAdapter extends RecyclerView.Adapter<GroupChatAdapter.GCVi
     @Override
     public void onBindViewHolder(GCViewHolder holder, int position) {
         final Message message = messages.get(position);
+        final int viewType = getItemViewType(position);
+
         holder.message.setText(message.getText());
-        String time = DateUtils.isToday(message.getTime().getTime()) ? dateFormatter.format(message.getTime()) : (String)
+        final String time = DateUtils.isToday(message.getTime().getTime()) ? dateFormatter.format(message.getTime()) : (String)
                DateUtils.getRelativeDateTimeString(activity, message.getTime().getTime(),
                        System.currentTimeMillis(), DateUtils.SECOND_IN_MILLIS, DateUtils.FORMAT_ABBREV_RELATIVE);
         holder.timestamp.setText(time);
 
-
-        if (getItemViewType(position) == OTHER || getItemViewType(position) == SERVER) {
-            holder.user.setText(message.getDisplayName());
-            holder.user.setVisibility(View.VISIBLE);
-            if(getItemViewType(position) == SERVER) showButtons(holder, false);
-            if (message.getTokens() != null && message.getTokens().size() > 0 && getItemViewType(position) == SERVER) {
-                showButtons(holder, true);
-                holder.bt_no.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View view) {
-                        RealmUtils.deleteMessageFromDb(message.getUid()).subscribe(new Action1<String>() {
-                            @Override
-                            public void call(String s) {
-                                reloadFromdb(message.getGroupUid());
-                            }
-                        });
-                    }
-                });
-                holder.bt_yes.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View view) {
-                        String title = message.getTokens().get(0).getString();
-                        String location = message.getTokens().get(2).getString();
-                        String date = message.getTokens().get(1).getString();
-                        Calendar calendar = Calendar.getInstance();
-                        calendar.add(Calendar.DAY_OF_YEAR, 1);
-                        Date time = Calendar.getInstance().getTime();
-                        TaskModel taskModel = generateTaskObject(message.getGroupUid(), title, time, location);
-                        taskModel.setDeadlineISO(date);
-                        TaskService.getInstance().sendTaskToServer(taskModel, AndroidSchedulers.mainThread()).subscribe(new Subscriber<TaskModel>() {
-                            @Override
-                            public void onCompleted() {}
-                            public void onError(Throwable e) {
-                                Log.e(TAG, e.toString());
-                                Toast.makeText(activity, "Unfortunately something went wrong and were unable to fulfil the request.", Toast.LENGTH_LONG).show();
-                            }
-                            @Override
-                            public void onNext(TaskModel taskModel) {
-                                Toast.makeText(activity, "Success! Meeting was called.", Toast.LENGTH_LONG).show();
-                                RealmUtils.deleteMessageFromDb(message.getUid()).subscribe(new Action1<String>() {
-                                    @Override
-                                    public void call(String s) {
-                                        reloadFromdb(message.getGroupUid());
-                                    }
-                                });
-                            }
-                        });
-
-                    }
-                });
-            }
+        switch (viewType) {
+            case OTHER:
+                holder.user.setText(message.getDisplayName());
+                holder.user.setVisibility(View.VISIBLE);
+                break;
+            case SERVER:
+                holder.user.setText(message.getDisplayName());
+                holder.user.setVisibility(View.VISIBLE);
+                final boolean validCommand = message.getTokens() != null && message.getTokens().size() > 0;
+                handleServerMessageBtns(holder, validCommand, message);
+                break;
+            case SELF:
+                final String subtitle = message.isDelivered() ? activity.getString(R.string.chat_message_sent)
+                    : message.exceedsMaximumSendingAttempts() ? activity.getString(R.string.chat_message_not_sent) : "";
+                holder.timestamp.setText(subtitle.concat(time));
+                break;
         }
-        if (getItemViewType(position) == SELF && message.isDelivered()) {
-            holder.timestamp.setText(activity.getString(R.string.chat_message_sent).concat(time));
-        } else if (getItemViewType(position) == SELF && (!message.isDelivered() && message.exceedsMaximumSendingAttempts())) {
-            holder.timestamp.setText(activity.getString(R.string.chat_message_not_sent).concat(time));
-        }
-
     }
 
-    public void setGroupList(List<Message> messages) {
+    private void setGroupList(List<Message> messages) {
         this.messages = new ArrayList<>(messages);
         this.notifyDataSetChanged();
     }
@@ -186,6 +145,7 @@ public class GroupChatAdapter extends RecyclerView.Adapter<GroupChatAdapter.GCVi
             }
         }
     }
+
     @Override
     public int getItemCount() {
         return messages.size();
@@ -204,11 +164,9 @@ public class GroupChatAdapter extends RecyclerView.Adapter<GroupChatAdapter.GCVi
         return SELF;
     }
 
-
     public List<Message> getMessages() {
         return messages;
     }
-
 
     private TaskModel generateTaskObject(String groupUid, String title, Date time, String venue) {
 
@@ -236,18 +194,70 @@ public class GroupChatAdapter extends RecyclerView.Adapter<GroupChatAdapter.GCVi
     }
 
 
-    private void showButtons(GCViewHolder holder, boolean show) {
-        if (show) {
+    private void handleServerMessageBtns(GCViewHolder holder, boolean buttonsVisible, final Message message) {
+
+        if (buttonsVisible && holder.bt_yes != null && holder.bt_no != null) {
             holder.bt_yes.setVisibility(View.VISIBLE);
             holder.bt_no.setVisibility(View.VISIBLE);
+
+            holder.bt_no.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    RealmUtils.deleteMessageFromDb(message.getUid()).subscribe(new Action1<String>() {
+                        @Override
+                        public void call(String s) {
+                            reloadFromdb(message.getGroupUid());
+                        }
+                    });
+                }
+            });
+
+            holder.bt_yes.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    String title = message.getTokens().get(0).getString();
+                    String location = message.getTokens().get(2).getString();
+                    String date = message.getTokens().get(1).getString();
+                    Calendar calendar = Calendar.getInstance();
+                    calendar.add(Calendar.DAY_OF_YEAR, 1);
+                    Date time = Calendar.getInstance().getTime();
+                    TaskModel taskModel = generateTaskObject(message.getGroupUid(), title, time, location);
+                    taskModel.setDeadlineISO(date);
+                    TaskService.getInstance().sendTaskToServer(taskModel, AndroidSchedulers.mainThread()).subscribe(new Subscriber<TaskModel>() {
+                        @Override
+                        public void onCompleted() {}
+
+                        @Override
+                        public void onError(Throwable e) {
+                            Log.e(TAG, e.toString());
+                            Toast.makeText(ApplicationLoader.applicationContext, R.string.chat_task_failure, Toast.LENGTH_LONG).show();
+                        }
+
+                        @Override
+                        public void onNext(TaskModel taskModel) {
+                            Toast.makeText(ApplicationLoader.applicationContext,
+                                activity.getString(R.string.chat_task_called, taskModel.getType().toLowerCase()), Toast.LENGTH_LONG).show();
+                            RealmUtils.deleteMessageFromDb(message.getUid()).subscribe(new Action1<String>() {
+                                @Override
+                                public void call(String s) {
+                                    reloadFromdb(message.getGroupUid());
+                                }
+                            });
+                        }
+                    });
+
+                }
+            });
         } else {
-            holder.bt_yes.setVisibility(View.GONE);
-            holder.bt_no.setVisibility(View.GONE);
+            if (holder.bt_no != null && holder.bt_yes != null) {
+                holder.bt_yes.setVisibility(View.GONE);
+                holder.bt_no.setVisibility(View.GONE);
+            }
         }
 
     }
 
-    public class GCViewHolder extends RecyclerView.ViewHolder {
+    class GCViewHolder extends RecyclerView.ViewHolder {
 
         @BindView(R.id.timestamp)
         TextView timestamp;
@@ -266,7 +276,7 @@ public class GroupChatAdapter extends RecyclerView.Adapter<GroupChatAdapter.GCVi
         @BindView(R.id.bt_no)
         Button bt_no;
 
-        public GCViewHolder(View view) {
+        GCViewHolder(View view) {
             super(view);
             ButterKnife.bind(this, view);
         }

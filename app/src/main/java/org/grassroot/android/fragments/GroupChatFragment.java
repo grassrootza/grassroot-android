@@ -9,6 +9,7 @@ import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -49,7 +50,6 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 import butterknife.Unbinder;
-import hani.momanii.supernova_emoji_library.Actions.EmojIconActions;
 import hani.momanii.supernova_emoji_library.Helper.EmojiconMultiAutoCompleteTextView;
 import rx.Subscriber;
 import rx.android.schedulers.AndroidSchedulers;
@@ -100,6 +100,7 @@ public class GroupChatFragment extends Fragment {
 
         groupUid = getArguments().getString(GroupConstants.UID_FIELD);
         groupName = getArguments().getString(GroupConstants.NAME_FIELD);
+        mutedUsersUid = new ArrayList<>();
 
         String[] commandArray = getActivity().getResources().getStringArray(R.array.commands);
         String[] hintArray = getActivity().getResources().getStringArray(R.array.command_hints);
@@ -112,10 +113,11 @@ public class GroupChatFragment extends Fragment {
                 commands.add(command);
             }
         }
+
         setHasOptionsMenu(true);
         arrayAdapter = new CommandsAdapter(getActivity(), commands);
-        setView();
 
+        setView();
         return view;
     }
 
@@ -308,6 +310,7 @@ public class GroupChatFragment extends Fragment {
      */
 
     private void mute(@Nullable final String userUid, String groupUid, boolean userInitiated, final boolean active) {
+        Log.e(TAG, "Grassroot: calling mute user of user");
         GroupService.getInstance().updateMemberChatSetting(groupUid, userUid, userInitiated, active, AndroidSchedulers.mainThread()).subscribe(new Action1<String>() {
             @Override
             public void call(String s) {
@@ -320,7 +323,6 @@ public class GroupChatFragment extends Fragment {
                     } else {
                         mutedUsersUid.add(userUid);
                     }
-
                 }
             }
         });
@@ -336,9 +338,7 @@ public class GroupChatFragment extends Fragment {
     private void longClickOptions(final Message message, int messageType) {
 
         if (messageType != GroupChatAdapter.SERVER) {
-
             final AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-            builder.setTitle(getString(R.string.chat_long_click_options_title));
 
             if (messageType == GroupChatAdapter.SELF) {
                 builder.setItems(R.array.self_options, new DialogInterface.OnClickListener() {
@@ -348,10 +348,12 @@ public class GroupChatFragment extends Fragment {
                     }
                 });
             } else if (messageType == GroupChatAdapter.OTHER) {
-
                 //0 - Delete Message
                 //1 = Mute or Unmute user
-                int otherOptions = (mutedUsersUid.contains(message.getUid())) ? R.array.other_muted_options : R.array.other_mute_options;
+
+                int otherOptions = (mutedUsersUid != null && mutedUsersUid.contains(message.getUid())) ?
+                    R.array.chat_msg_already_muted : R.array.chat_msg_mute_available;
+
                 builder.setItems(otherOptions, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialogInterface, int i) {
