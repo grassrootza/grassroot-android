@@ -1,7 +1,6 @@
 package org.grassroot.android.models;
 
 import android.os.Bundle;
-import android.os.Parcel;
 import android.util.Log;
 
 import org.grassroot.android.interfaces.GroupConstants;
@@ -12,7 +11,6 @@ import org.json.JSONException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.Locale;
 import java.util.UUID;
 
 import io.realm.RealmList;
@@ -70,9 +68,7 @@ public class Message extends RealmObject {
         this.userUid = bundle.getString("userUid");
         Log.e("datetime", bundle.getString("time"));
         try {
-            String date = bundle.getString("time");
-            this.time = formatter.parse(date);
-
+            this.time = formatter.parse(bundle.getString("time"));
         } catch (ParseException e) {
             Log.e("date parserror", e.toString());
         }
@@ -80,7 +76,6 @@ public class Message extends RealmObject {
         this.text = bundle.getString(Constant.BODY);
         this.type = bundle.getString("type");
         this.delivered = true;
-
 
         if (bundle.containsKey("tokens")) {
             String tokenValues = bundle.getString("tokens");
@@ -167,7 +162,6 @@ public class Message extends RealmObject {
     public boolean exceedsMaximumSendingAttempts() {
         return noAttempts > 9;
     }
-
 
     @Override
     public String toString() {

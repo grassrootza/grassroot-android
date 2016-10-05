@@ -113,8 +113,4 @@ public class MultiMessageNotificationActivity extends PortraitActivity {
     }
 
 
-
-
-
-
 }

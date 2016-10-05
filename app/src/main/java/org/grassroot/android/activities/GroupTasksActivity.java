@@ -50,7 +50,6 @@ import rx.observers.Subscribers;
 public class GroupTasksActivity extends PortraitActivity implements NewTaskMenuFragment.NewTaskMenuListener, JoinCodeFragment.JoinCodeListener, TaskListFragment.TaskListListener{
     private static final String TAG = GroupTasksActivity.class.getCanonicalName();
 
-
     private Group groupMembership;
     private JoinCodeFragment joinCodeFragment;
     private NewTaskMenuFragment newTaskMenuFragment;

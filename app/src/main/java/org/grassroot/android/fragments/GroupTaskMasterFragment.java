@@ -15,6 +15,7 @@ import android.view.ViewGroup;
 
 import org.grassroot.android.R;
 import org.grassroot.android.activities.GroupTasksActivity;
+import org.grassroot.android.interfaces.GroupConstants;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -45,16 +46,16 @@ public class GroupTaskMasterFragment extends Fragment implements TaskListFragmen
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
-        groupUid = getArguments().getString("groupUid");
-        groupName = getArguments().getString("groupName");
+        groupUid = getArguments().getString(GroupConstants.UID_FIELD);
+        groupName = getArguments().getString(GroupConstants.NAME_FIELD);
         setHasOptionsMenu(true);
     }
 
     public static GroupTaskMasterFragment newInstance(String groupUid, TaskListFragment.TaskListListener taskListListener, String groupName){
         GroupTaskMasterFragment groupTaskMasterFragment = new GroupTaskMasterFragment();
         Bundle args = new Bundle();
-        args.putString("groupUid", groupUid);
-        args.putString("groupName", groupName);
+        args.putString(GroupConstants.UID_FIELD, groupUid);
+        args.putString(GroupConstants.NAME_FIELD, groupName);
         groupTaskMasterFragment.setArguments(args);
         groupTaskMasterFragment.taskListListener = taskListListener;
 
@@ -132,7 +133,7 @@ public class GroupTaskMasterFragment extends Fragment implements TaskListFragmen
 
     public class TaskPagerAdapter extends FragmentStatePagerAdapter {
 
-        private final CharSequence[] titles=  { "Tasks", "Chat"};
+        private final CharSequence[] titles=  { "Tasks", "Chat"}; // todo : externalize
 
         public TaskPagerAdapter(FragmentManager fragmentManager) {
             super(fragmentManager);
@@ -157,13 +158,11 @@ public class GroupTaskMasterFragment extends Fragment implements TaskListFragmen
 
         }
 
-
         @Override
         public CharSequence getPageTitle(int position) {
             return titles[position];
         }
     }
-
 
     public ViewPager getRequestPager() {
         return requestPager;
