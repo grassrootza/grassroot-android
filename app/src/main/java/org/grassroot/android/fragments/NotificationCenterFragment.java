@@ -82,6 +82,7 @@ public class NotificationCenterFragment extends Fragment {
     private int cacheStoredFirstVisible, cacheStoredLastVisible;
     private boolean isLoading;
     private boolean isFiltering = false; // to prevent further calls if sort or filter is empty
+    private boolean hasSavedInstanceState = false;
 
     private CharSequence[] sharingOptions;
 
@@ -104,6 +105,13 @@ public class NotificationCenterFragment extends Fragment {
     public void onResume() {
         super.onResume();
         sharingOptions = SharingService.itemsForMultiChoice(); // in case user navigated away to change prefs / install app etc
+        hasSavedInstanceState = false;
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+        hasSavedInstanceState = false;
     }
 
     @Override
@@ -321,6 +329,12 @@ public class NotificationCenterFragment extends Fragment {
         getActivity().startService(intent);
     }
 
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        hasSavedInstanceState = true;
+    }
+
     private void getNotifications(final int page, final int size) {
         final String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
         final String code = RealmUtils.loadPreferencesFromDB().getToken();
@@ -338,21 +352,28 @@ public class NotificationCenterFragment extends Fragment {
             call = GrassrootRestService.getInstance().getApi().getUserNotifications(phoneNumber, code, page, size);
         }
 
+        // receiving crash reports of null pointer errors in here, hence adding the checks
         call.enqueue(new Callback<NotificationList>() {
             @Override
             public void onResponse(Call<NotificationList> call, Response<NotificationList> response) {
                 if (response.isSuccessful()) {
-                    progressBar.setVisibility(View.GONE);
+                    if (progressBar != null) {
+                        progressBar.setVisibility(View.GONE);
+                    }
                     notifications = response.body().getNotificationWrapper().getNotifications();
                     currentPage = response.body().getNotificationWrapper().getPageNumber();
                     totalPages = response.body().getNotificationWrapper().getTotalPages();
 
                     Log.d(TAG, "fetched the lists, total pages = " + totalPages);
-                    recyclerView.setVisibility(View.VISIBLE);
-                    if (currentPage > 1) {
-                        notificationAdapter.addNotifications(notifications);
-                    } else {
-                        notificationAdapter.setToNotifications(notifications);
+
+                    if (recyclerView != null) {
+                        recyclerView.setVisibility(View.VISIBLE);
+                        if (currentPage > 1) {
+                            notificationAdapter.addNotifications(notifications);
+                        } else {
+                            notificationAdapter.setToNotifications(notifications);
+                        }
+                        notificationAdapter.notifyDataSetChanged();
                     }
 
                     RealmUtils.saveNotificationsToRealm(notifications).subscribe();
@@ -360,17 +381,19 @@ public class NotificationCenterFragment extends Fragment {
                     preference.setLastTimeNotificationsFetched(Utilities.getCurrentTimeInMillisAtUTC());
                     RealmUtils.saveDataToRealm(preference).subscribe();
                     isLoading = false;
-                    notificationAdapter.notifyDataSetChanged();
                 } else {
-                    progressBar.setVisibility(View.GONE);
-                    final String errorMessage = ErrorUtils.serverErrorText(response.errorBody());
-                    Snackbar.make(recyclerView, errorMessage, Snackbar.LENGTH_SHORT).show();
+                    if (progressBar != null) {
+                        progressBar.setVisibility(View.GONE);
+                        final String errorMessage = ErrorUtils.serverErrorText(response.errorBody());
+                        Snackbar.make(recyclerView, errorMessage, Snackbar.LENGTH_SHORT).show();
+                    }
                 }
             }
+
             @Override
             public void onFailure(Call<NotificationList> call, Throwable t) {
                 // as usual, have to make sure the call back doesn't trigger a null
-                if (progressBar != null) {
+                if (progressBar != null && !hasSavedInstanceState) {
                     progressBar.setVisibility(View.GONE);
                     notificationAdapter.setToNotifications(RealmUtils.loadNotificationsSorted());
                     recyclerView.setVisibility(View.VISIBLE);
