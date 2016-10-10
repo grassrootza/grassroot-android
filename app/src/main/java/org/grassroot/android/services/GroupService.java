@@ -25,6 +25,7 @@ import org.grassroot.android.models.TaskModel;
 import org.grassroot.android.models.exceptions.ApiCallException;
 import org.grassroot.android.models.exceptions.InvalidNumberException;
 import org.grassroot.android.models.responses.GenericResponse;
+import org.grassroot.android.models.responses.GroupChatSettingResponse;
 import org.grassroot.android.models.responses.GroupResponse;
 import org.grassroot.android.models.responses.GroupsChangedResponse;
 import org.grassroot.android.models.responses.PermissionResponse;
@@ -154,6 +155,89 @@ public class GroupService {
       }
     }).subscribeOn(Schedulers.io()).observeOn(observingThread);
   }
+
+  public Observable<String> updateMemberChatSetting(final String groupUid, final String userUid, final boolean userInitiated, final boolean active, @NonNull Scheduler observingThread){
+     return Observable.create(new Observable.OnSubscribe<String>() {
+       @Override
+       public void call(Subscriber<? super String> subscriber) {
+         if (!NetworkUtils.isOnline()) {
+           throw new ApiCallException(NetworkUtils.CONNECT_ERROR);
+         } else {
+           final String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
+           final String code = RealmUtils.loadPreferencesFromDB().getToken();
+           try {
+             Response<GenericResponse> response = GrassrootRestService.getInstance().getApi()
+                     .updateUserGroupChatSettings(phoneNumber, code,groupUid,userUid,active,userInitiated).execute();
+             if(response.isSuccessful()){
+               subscriber.onNext(NetworkUtils.SAVED_SERVER);
+               subscriber.onCompleted();
+             }else{
+               throw  new ApiCallException(NetworkUtils.SERVER_ERROR, ErrorUtils.getRestMessage(response.errorBody()));
+             }
+           } catch (IOException e) {
+             throw new ApiCallException(NetworkUtils.CONNECT_ERROR);
+           }
+
+         }
+         }
+       }).subscribeOn(Schedulers.io()).observeOn(observingThread);
+     }
+
+  public Observable<GroupChatSettingResponse> fetchGroupChatSetting(final String groupUid, Scheduler observingThread, final String userUid){
+    return Observable.create(new Observable.OnSubscribe<GroupChatSettingResponse>(){
+      @Override
+      public void call(Subscriber<? super GroupChatSettingResponse> subscriber) {
+        if(!NetworkUtils.isOnline()){
+          throw  new ApiCallException(NetworkUtils.CONNECT_ERROR);
+        }else{
+          final String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
+          final String code = RealmUtils.loadPreferencesFromDB().getToken();
+          try{
+            Response<GroupChatSettingResponse> response = GrassrootRestService.getInstance().getApi().fetchGroupMessengerSettings(phoneNumber,code,groupUid, userUid).execute();
+            if(response.isSuccessful()){
+              subscriber.onNext(response.body());
+              subscriber.onCompleted();
+            }else {
+              throw new ApiCallException(NetworkUtils.SERVER_ERROR);
+            }
+          } catch (IOException e) {
+            subscriber.onError(e);
+            throw  new ApiCallException(NetworkUtils.CONNECT_ERROR);
+          }
+        }
+
+      }
+    }).subscribeOn(Schedulers.io()).observeOn(observingThread);
+  }
+
+  public Observable<Boolean> requestPing(final String groupUid, Scheduler observingThread){
+    return Observable.create(new Observable.OnSubscribe<Boolean>(){
+      @Override
+      public void call(Subscriber<? super Boolean> subscriber) {
+        if(!NetworkUtils.isOnline()){
+          throw  new ApiCallException(NetworkUtils.CONNECT_ERROR);
+        }else{
+          final String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
+          final String code = RealmUtils.loadPreferencesFromDB().getToken();
+          try{
+            Response<GenericResponse> response = GrassrootRestService.getInstance().getApi().requestPing(phoneNumber,code,groupUid).execute();
+            if(response.isSuccessful()){
+              subscriber.onNext(true);
+              subscriber.onCompleted();
+            }else {
+              throw new ApiCallException(NetworkUtils.SERVER_ERROR);
+            }
+          } catch (IOException e) {
+            subscriber.onError(e);
+            throw  new ApiCallException(NetworkUtils.CONNECT_ERROR);
+          }
+        }
+
+      }
+    }).subscribeOn(Schedulers.io()).observeOn(observingThread);
+  }
+
+
 
   private void persistGroupsAddedUpdated(GroupsChangedResponse responseBody) {
     if (Looper.myLooper() == Looper.getMainLooper()) {

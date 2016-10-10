@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <item
+        android:id="@+id/mi_group_mute"
+        android:title="@string/gp_mute"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/mi_delete_messages"
+        android:title="@string/gp_delete_messages"
+        app:showAsAction="never" />
+
+</menu>

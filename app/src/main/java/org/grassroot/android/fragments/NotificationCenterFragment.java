@@ -91,7 +91,7 @@ public class NotificationCenterFragment extends Fragment {
         View viewToReturn = inflater.inflate(R.layout.fragment_notification_center, container, false);
         unbinder = ButterKnife.bind(this, viewToReturn);
         setHasOptionsMenu(true);
-        GcmListenerService.clearNotifications(getContext()); // clears notifications in tray
+        GcmListenerService.clearTaskNotifications(getContext()); // clears notifications in tray
         setUpRecyclerView();
         return viewToReturn;
     }

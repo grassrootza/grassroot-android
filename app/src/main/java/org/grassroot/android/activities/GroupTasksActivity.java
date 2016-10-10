@@ -19,6 +19,7 @@ import android.widget.Toast;
 
 import org.grassroot.android.R;
 import org.grassroot.android.events.TaskCancelledEvent;
+import org.grassroot.android.fragments.GroupTaskMasterFragment;
 import org.grassroot.android.fragments.JoinCodeFragment;
 import org.grassroot.android.fragments.NewTaskMenuFragment;
 import org.grassroot.android.fragments.TaskListFragment;
@@ -46,21 +47,23 @@ import rx.android.schedulers.AndroidSchedulers;
 import rx.functions.Action1;
 import rx.observers.Subscribers;
 
-public class GroupTasksActivity extends PortraitActivity implements NewTaskMenuFragment.NewTaskMenuListener, JoinCodeFragment.JoinCodeListener, TaskListFragment.TaskListListener {
-
+public class GroupTasksActivity extends PortraitActivity implements NewTaskMenuFragment.NewTaskMenuListener, JoinCodeFragment.JoinCodeListener, TaskListFragment.TaskListListener{
     private static final String TAG = GroupTasksActivity.class.getCanonicalName();
 
     private Group groupMembership;
-    private TaskListFragment taskListFragment;
     private JoinCodeFragment joinCodeFragment;
     private NewTaskMenuFragment newTaskMenuFragment;
+    private GroupTaskMasterFragment groupTaskMasterFragment;
 
     private boolean showDescOption;
     private int descOptionText;
 
-    @BindView(R.id.gta_root_layout) ViewGroup rootLayout;
-    @BindView(R.id.gta_toolbar) Toolbar toolbar;
-    @BindView(R.id.progressBar) ProgressBar progressBar;
+    @BindView(R.id.gta_root_layout)
+    ViewGroup rootLayout;
+    @BindView(R.id.gta_toolbar)
+    Toolbar toolbar;
+    @BindView(R.id.progressBar)
+    ProgressBar progressBar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -85,6 +88,8 @@ public class GroupTasksActivity extends PortraitActivity implements NewTaskMenuF
             finish();
             return;
         }
+
+        requestPing(groupMembership.getGroupUid());
 
         setUpViews();
         setUpFragment();
@@ -116,13 +121,13 @@ public class GroupTasksActivity extends PortraitActivity implements NewTaskMenuF
             searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
                 @Override
                 public boolean onQueryTextSubmit(String query) {
-                    taskListFragment.searchStringChanged(query);
+                    groupTaskMasterFragment.getTaskListFragment().searchStringChanged(query);
                     return true;
                 }
 
                 @Override
                 public boolean onQueryTextChange(String newText) {
-                    taskListFragment.searchStringChanged(newText);
+                    groupTaskMasterFragment.getTaskListFragment().searchStringChanged(newText);
                     return true;
                 }
             });
@@ -154,14 +159,19 @@ public class GroupTasksActivity extends PortraitActivity implements NewTaskMenuF
         menu.findItem(R.id.mi_group_settings).setVisible(groupMembership.canEditGroup());
         menu.findItem(R.id.mi_group_unsubscribe).setVisible(!groupMembership.canEditGroup()); // organizers can't leave (refine in future)
         menu.findItem(R.id.mi_share_default).setVisible(false);
+        menu.findItem(R.id.mi_delete_messages).setVisible(false);
+        menu.findItem(R.id.mi_group_mute).setVisible(false);
         return true;
     }
 
     private void setUpFragment() {
-        taskListFragment = TaskListFragment.newInstance(groupMembership.getGroupUid(), this);
+
+     groupTaskMasterFragment =
+                GroupTaskMasterFragment.newInstance(groupMembership.getGroupUid(), this, groupMembership.getGroupName());
         getSupportFragmentManager().beginTransaction()
-                .add(R.id.gta_fragment_holder, taskListFragment)
+                .add(R.id.gta_fragment_holder, groupTaskMasterFragment)
                 .commit();
+
     }
 
     @Override
@@ -173,7 +183,7 @@ public class GroupTasksActivity extends PortraitActivity implements NewTaskMenuF
                 handleUpButton();
                 return true;
             case R.id.mi_icon_filter:
-                taskListFragment.filter();
+                groupTaskMasterFragment.getTaskListFragment().filter();
                 return true;
             case R.id.mi_change_desc:
                 viewOrChangeDescription();
@@ -270,6 +280,7 @@ public class GroupTasksActivity extends PortraitActivity implements NewTaskMenuF
             }).show(getSupportFragmentManager(), "dialog");
     }
 
+
     private void unsubscribeAndExit() {
         progressBar.setVisibility(View.VISIBLE);
         GroupService.getInstance().unsubscribeFromGroup(groupMembership.getGroupUid(), AndroidSchedulers.mainThread())
@@ -324,6 +335,8 @@ public class GroupTasksActivity extends PortraitActivity implements NewTaskMenuF
             .commit();
     }
 
+
+
     @Override
     public void joinCodeClose() {
         getSupportFragmentManager().beginTransaction()
@@ -337,6 +350,20 @@ public class GroupTasksActivity extends PortraitActivity implements NewTaskMenuF
         if (getSupportActionBar() != null) {
             getSupportActionBar().setHomeAsUpIndicator(R.drawable.btn_close_white);
         }
+    }
+
+    @Override
+    public void onTaskLoaded(int position, String taskUid, String taskType, String taskTitle) {
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setHomeAsUpIndicator(R.drawable.btn_close_white);
+        }
+        ViewTaskFragment taskFragment = ViewTaskFragment.newInstance(taskType, taskUid);
+
+        getSupportFragmentManager().beginTransaction()
+                .setCustomAnimations(R.anim.up_from_bottom, R.anim.down_from_top)
+                .replace(R.id.gta_fragment_holder, taskFragment)
+                .addToBackStack(null)
+                .commit();
     }
 
     @Override
@@ -383,4 +410,11 @@ public class GroupTasksActivity extends PortraitActivity implements NewTaskMenuF
             return false;
         }
     }
+
+    private void requestPing(String groupUid){
+        GroupService.getInstance().requestPing(groupUid, AndroidSchedulers.mainThread()).subscribe();
+    }
+
+
+
 }

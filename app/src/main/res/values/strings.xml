@@ -243,6 +243,26 @@
         <item>Default (latest change)</item>
     </string-array>
 
+    <string-array name="group_task_tab_titles">
+        <item>Tasks</item>
+        <item>Chat</item>
+    </string-array>
+
+
+    <string-array name="chat_msg_mute_available">
+        <item>Delete message</item>
+        <item>Mute user</item>
+    </string-array>
+
+    <string-array name="chat_msg_already_muted">
+        <item>Delete message</item>
+        <item>Unmute user</item>
+    </string-array>
+
+    <string-array name="self_options">
+        <item>Delete message</item>
+    </string-array>
+
     <string-array name="tasks_filter_options">
         <item>Meetings</item>
         <item>Votes</item>
@@ -330,7 +350,7 @@
     <string name="gs_dialog_no_desc_format">Group \'%1$s\' has no public description. It was created
     on %2$s by %3$s and has %4$d members.</string>
 
-    <string name="gs_dialog_message_error">Please enter a message to send</string>
+    <string name="gs_dialog_message_error">Please enter a text to send</string>
     <string name="gs_dialog_send">SEND</string>
 
     <string name="gs_req_open_dialog">You\'ve sent a join request to this group already. The group organizer
@@ -782,7 +802,7 @@
     <string name="gp_social_move">Social movement</string>
     <string name="gp_savings_group">Burial society, stokvel</string>
     <string name="gp_faith_group">Faith group, church, mosque</string>
-    <string name="gp_school">School, creche, youth group</string>
+    <string name="gp_school">School, crèche, youth group</string>
     <string name="gp_hands">Community group</string>
 
     <string name="gp_bt_choose_own">PICK MY OWN</string>
@@ -822,8 +842,33 @@
 
     <string name="share_error_no_app">Sorry, there was an error sharing with that app</string>
 
+    <!--Chat-->
+    <string name="title_activity_view_chat_message">Group Name</string>
+    <string name="chats_title">Chats</string>
+    <string name="gp_mute">Mute group chats</string>
+    <string name="gp_un_mute">Unmute group chats</string>
+    <string name="gp_delete_messages">Delete all messages</string>
+    <string name="chat_message_sent">"Sent. "</string>
+    <string name="chat_message_not_sent">"Not sent. "</string>
+    <string name="chat_long_click_options_title">Options</string>
+
+    <string name="options_yes">Yes</string>
+    <string name="options_no">No</string>
+
+    <string name="chat_task_called">Done! %s called</string>
+    <string name="chat_task_failure">Sorry, there was an error on the server. Please try again later.</string>
+
+    <!--Notifications-->
+    <string name="messages_new">" new messages."</string>
+    <string name="notifications_new">" new notifications."</string>
+    <string name="join_requests_new">" new join requests."</string>
+
+
     <!--FAQ-->
     <string name="fq_txt_toolbar">FAQs</string>
+
+
+
     <string-array name="fq_Header">
         <item>How do I get started?</item>
         <item>Okay, I\'ve part of some groups. What next?</item>
@@ -845,7 +890,7 @@
             \n\nSome groups, though, choose to restrict this to only committee members or organizers. In those groups, if you click on the group you will not have the function available to call a meeting or vote or record a to-do.
         </item>
 
-        <item>Grassroot will send notifications to any group members who have smartphones. Group members who only have basic phones will receive the notification by SMS. In each case, every single group member will receive the message, no matter the kind of phone they have.
+        <item>Grassroot will send notifications to any group members who have smartphones. Group members who only have basic phones will receive the notification by SMS. In each case, every single group member will receive the text, no matter the kind of phone they have.
         </item>
 
     </string-array>
@@ -882,4 +927,21 @@
         <item>NOTIFY_ONLY_NEW</item>
     </string-array>
 
+
+    <!-- commands-->
+
+    <string-array name="commands">
+        <item>/meeting</item>
+        <item>/vote</item>
+    </string-array>
+
+    <string-array name="command_hints">
+        <item>[subject, day time, place]</item>
+        <item>[subject, day time]</item>
+    </string-array>
+
+    <string-array name="command_descriptions">
+        <item>Call a meeting </item>
+        <item>Call a vote</item>
+    </string-array>
 </resources>

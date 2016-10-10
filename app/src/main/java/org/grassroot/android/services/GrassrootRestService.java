@@ -25,6 +25,7 @@ import org.grassroot.android.models.responses.GroupSearchResponse;
 import org.grassroot.android.models.responses.GroupsChangedResponse;
 import org.grassroot.android.models.responses.JoinRequestResponse;
 import org.grassroot.android.models.responses.MemberListResponse;
+import org.grassroot.android.models.responses.GroupChatSettingResponse;
 import org.grassroot.android.models.responses.PermissionResponse;
 import org.grassroot.android.models.responses.ProfileResponse;
 import org.grassroot.android.models.responses.TaskChangedResponse;
@@ -326,6 +327,19 @@ public class GrassrootRestService {
                                            @Query("changePublicPrivate") boolean changePubPriv, @Query("isPublic") boolean changeToPublic,
                                            @Query("closeJoinCode") boolean closeJoinCode, @Query("membersToRemove") List<String> memberUids,
                                            @Query("organizersToAdd") List<String> newOrganizerUids);
+
+    //fetch group chat settings of user
+    @GET("group/messenger/fetch_settings/{phoneNumber}/{code}/{groupUid}")
+    Call<GroupChatSettingResponse> fetchGroupMessengerSettings(@Path("phoneNumber") String phoneNumber, @Path("code") String code, @Path("groupUid") String groupUid, @Query("userUid") String userUid);
+
+    //update user group chat settings mute and unmute
+    @POST("group/messenger/update/{phoneNumber}/{code}/{groupUid}")
+    Call<GenericResponse> updateUserGroupChatSettings(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
+                                                      @Path("groupUid") String groupUid, @Query("userUid") String userUid,
+                                                      @Query("active") boolean active, @Query("userInitiated") boolean userInitated);
+    //request ping from server
+    @GET("group/messenger/ping/{phoneNumber}/{code}/{groupUid}")
+    Call<GenericResponse> requestPing(@Path("phoneNumber") String phoneNumber, @Path("code") String code, @Path("groupUid") String groupUid);
 
         /*
         SECTION: Fetch tasks, and task details

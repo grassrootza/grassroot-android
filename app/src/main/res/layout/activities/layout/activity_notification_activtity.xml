@@ -1,22 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:id="@+id/gta_root_layout"
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:fitsSystemWindows="true"
-    android:background="@color/md_grey_200"
-    tools:context=".activities.GroupTasksActivity">
+    android:background="#ccc"
+    android:fitsSystemWindows="true">
 
     <android.support.design.widget.AppBarLayout
-        android:id="@+id/gta_appbar"
+        android:id="@+id/vca_appbar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:theme="@style/AppTheme.AppBarOverlay">
 
         <android.support.v7.widget.Toolbar
-            android:id="@+id/gta_toolbar"
+            android:id="@+id/vca_toolbar"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
             android:background="?attr/colorPrimary"
@@ -25,22 +22,12 @@
 
     </android.support.design.widget.AppBarLayout>
 
-
-
     <FrameLayout
-        android:id="@+id/gta_fragment_holder"
+        android:id="@+id/gca_fragment_holder"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_below="@+id/gta_appbar">
+        android:layout_below="@+id/vca_appbar">
 
     </FrameLayout>
-
-    <ProgressBar
-        android:id="@+id/progressBar"
-        style="@style/ProgressBarMedium"
-        android:visibility="gone"
-        android:layout_gravity="center"
-        android:layout_centerVertical="true"
-        android:layout_centerHorizontal="true" />
 
 </RelativeLayout>

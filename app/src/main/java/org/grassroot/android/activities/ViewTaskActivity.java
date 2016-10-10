@@ -223,6 +223,7 @@ public class ViewTaskActivity extends PortraitActivity {
         return (task != null) ? RealmUtils.loadGroupFromDB(task.getParentUid()) : null;
     }
 
+
     private void setUpToolbar() {
         setTitle(taskType);
         setSupportActionBar(toolbar);
