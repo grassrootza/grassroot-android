@@ -4,6 +4,7 @@ import android.os.Bundle;
 import android.util.Log;
 
 import org.grassroot.android.interfaces.GroupConstants;
+import org.grassroot.android.services.GcmUpstreamMessageService;
 import org.grassroot.android.utils.Constant;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -54,6 +55,7 @@ public class Message extends RealmObject {
         this.displayName = displayName;
         this.text = text;
         this.time = time;
+        this.type="normal";
         this.delivered = delivered;
 
     }
@@ -160,7 +162,7 @@ public class Message extends RealmObject {
     }
 
     public boolean exceedsMaximumSendingAttempts() {
-        return noAttempts > 9;
+        return noAttempts == GcmUpstreamMessageService.MAX_RETRIES;
     }
 
     @Override

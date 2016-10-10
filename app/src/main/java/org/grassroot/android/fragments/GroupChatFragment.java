@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.LinearLayoutManager;
@@ -30,12 +31,17 @@ import org.grassroot.android.events.GroupChatEvent;
 import org.grassroot.android.events.MessageNotSentEvent;
 import org.grassroot.android.interfaces.ClickListener;
 import org.grassroot.android.interfaces.GroupConstants;
+import org.grassroot.android.interfaces.TaskConstants;
 import org.grassroot.android.models.Command;
 import org.grassroot.android.models.Message;
+import org.grassroot.android.models.RealmString;
+import org.grassroot.android.models.TaskModel;
 import org.grassroot.android.models.responses.GroupChatSettingResponse;
 import org.grassroot.android.services.GcmListenerService;
 import org.grassroot.android.services.GcmUpstreamMessageService;
 import org.grassroot.android.services.GroupService;
+import org.grassroot.android.services.TaskService;
+import org.grassroot.android.utils.Constant;
 import org.grassroot.android.utils.EmojIconMultiAutoCompleteActions;
 import org.grassroot.android.utils.RealmUtils;
 import org.greenrobot.eventbus.EventBus;
@@ -43,14 +49,17 @@ import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
+import java.util.UUID;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 import butterknife.Unbinder;
 import hani.momanii.supernova_emoji_library.Helper.EmojiconMultiAutoCompleteTextView;
+import io.realm.RealmList;
 import rx.Subscriber;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.functions.Action1;
@@ -58,7 +67,7 @@ import rx.functions.Action1;
 /**
  * Created by paballo on 2016/08/30.
  */
-public class GroupChatFragment extends Fragment {
+public class GroupChatFragment extends Fragment implements GroupChatAdapter.GroupChatAdapterListener {
 
     private static final String TAG = GroupChatFragment.class.getCanonicalName();
 
@@ -69,12 +78,17 @@ public class GroupChatFragment extends Fragment {
 
     private Unbinder unbinder;
 
-    @BindView(R.id.root_view) ViewGroup rootView;
+    @BindView(R.id.root_view)
+    ViewGroup rootView;
 
-    @BindView(R.id.emoji_btn) ImageView openEmojis;
-    @BindView(R.id.gc_recycler_view) RecyclerView chatMessageView;
-    @BindView(R.id.text) EmojiconMultiAutoCompleteTextView textView;
-    @BindView(R.id.btn_send) ImageView sendMessage;
+    @BindView(R.id.emoji_btn)
+    ImageView openEmojis;
+    @BindView(R.id.gc_recycler_view)
+    RecyclerView chatMessageView;
+    @BindView(R.id.text)
+    EmojiconMultiAutoCompleteTextView textView;
+    @BindView(R.id.btn_send)
+    ImageView sendMessage;
 
     private GroupChatAdapter groupChatAdapter;
     private ArrayAdapter<Command> arrayAdapter;
@@ -217,7 +231,7 @@ public class GroupChatFragment extends Fragment {
     }
 
     private void setUpListAndAdapter(List<Message> messages) {
-        groupChatAdapter = new GroupChatAdapter(messages, getActivity());
+        groupChatAdapter = new GroupChatAdapter(messages, this);
         layoutManager = new LinearLayoutManager(getActivity());
         layoutManager.setAutoMeasureEnabled(true);
         layoutManager.setStackFromEnd(true);
@@ -258,15 +272,16 @@ public class GroupChatFragment extends Fragment {
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onEvent(GroupChatEvent groupChatEvent) {
-        if ((this.isVisible() && !groupChatEvent.getGroupUid().equals(groupUid))) {
+        String groupUidInMessage = groupChatEvent.getGroupUid();
+        if ((this.isVisible() && !groupUidInMessage.equals(groupUid))) {
             GcmListenerService.showNotification(groupChatEvent.getBundle(), getActivity()).subscribe();
             RealmUtils.markMessagesAsRead(groupUid);
-        } else if (((this.isVisible() && groupChatEvent.getGroupUid().equals(groupUid)) && !isActiveTab())) {
+        } else if (((this.isVisible() && groupUidInMessage.equals(groupUid)) && !isActiveTab(groupUidInMessage))) {
             GcmListenerService.showNotification(groupChatEvent.getBundle(), getActivity()).subscribe();
             updateRecyclerView(groupChatEvent);
             RealmUtils.markMessagesAsRead(groupUid);
         } else {
-           updateRecyclerView(groupChatEvent);
+            updateRecyclerView(groupChatEvent);
         }
     }
 
@@ -276,6 +291,38 @@ public class GroupChatFragment extends Fragment {
         if (groupChatAdapter.getMessages().contains(message)) {
             groupChatAdapter.updateMessage(message);
         }
+    }
+
+    @Override
+    public void createTaskFromMessage(final Message message) {
+        String title = message.getTokens().get(0).getString();
+        String location = null;
+        if(message.getType().equals(TaskConstants.MEETING))location = message.getTokens()
+                .get(2).getString();
+        String time = message.getTokens().get(1).getString();
+        TaskModel taskModel = generateTaskObject(message.getGroupUid(), title,time , location,message.getType() );
+        TaskService.getInstance().sendTaskToServer(taskModel, AndroidSchedulers.mainThread()).subscribe(new Subscriber<TaskModel>() {
+            @Override
+            public void onCompleted() {}
+
+            @Override
+            public void onError(Throwable e) {
+                Snackbar.make(rootView,R.string.chat_task_failure,Snackbar.LENGTH_LONG).show();
+            }
+
+            @Override
+            public void onNext(TaskModel taskModel) {
+                Snackbar.make(rootView,getString(R.string.chat_task_called,
+                        taskModel.getType().toLowerCase()),Snackbar.LENGTH_LONG).show();
+                RealmUtils.deleteMessageFromDb(message.getUid()).subscribe(new Action1<String>() {
+                    @Override
+                    public void call(String s) {
+                        groupChatAdapter.reloadFromdb(message.getGroupUid());
+                    }
+                });
+            }
+        });
+
     }
 
 
@@ -352,7 +399,7 @@ public class GroupChatFragment extends Fragment {
                 //1 = Mute or Unmute user
 
                 int otherOptions = (mutedUsersUid != null && mutedUsersUid.contains(message.getUid())) ?
-                    R.array.chat_msg_already_muted : R.array.chat_msg_mute_available;
+                        R.array.chat_msg_already_muted : R.array.chat_msg_mute_available;
 
                 builder.setItems(otherOptions, new DialogInterface.OnClickListener() {
                     @Override
@@ -370,7 +417,7 @@ public class GroupChatFragment extends Fragment {
             }
 
             builder.setCancelable(true).create().show();
-       }
+        }
 
     }
 
@@ -404,12 +451,38 @@ public class GroupChatFragment extends Fragment {
         chatMessageView.smoothScrollToPosition(groupChatAdapter.getItemCount());
     }
 
-    private boolean isActiveTab() {
+    private boolean isActiveTab(String groupUid) {
         if (getActivity() instanceof GroupTasksActivity) {
             GroupTaskMasterFragment masterFragment = (GroupTaskMasterFragment) this.getParentFragment();
             return masterFragment.getRequestPager().getCurrentItem() == 1;
         }
-        return getActivity() instanceof MultiMessageNotificationActivity;
+        return (getActivity() instanceof MultiMessageNotificationActivity &&  this.groupUid == groupUid);
     }
+
+
+    private TaskModel generateTaskObject(String groupUid, String title, String time, @Nullable String venue, String type) {
+
+        TaskModel model = new TaskModel();
+        model.setTitle(title);
+        model.setDescription(title);
+        model.setCreatedByUserName(RealmUtils.loadPreferencesFromDB().getUserName());
+        model.setDeadlineISO(time);
+        model.setLocation(venue);
+        model.setParentUid(groupUid);
+        model.setTaskUid(UUID.randomUUID().toString());
+        model.setType(type);
+        model.setParentLocal(false);
+        model.setLocal(true);
+        model.setMinutes(0);
+        model.setCanEdit(true);
+        model.setCanAction(true);
+        model.setReply(TaskConstants.TODO_PENDING);
+        model.setHasResponded(false);
+        model.setWholeGroupAssigned(true);
+        model.setMemberUIDS(new RealmList<RealmString>());
+
+        return model;
+    }
+
 
 }

@@ -337,6 +337,9 @@ public class GrassrootRestService {
     Call<GenericResponse> updateUserGroupChatSettings(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
                                                       @Path("groupUid") String groupUid, @Query("userUid") String userUid,
                                                       @Query("active") boolean active, @Query("userInitiated") boolean userInitated);
+    //request ping from server
+    @GET("group/messenger/ping/{phoneNumber}/{code}/{groupUid}")
+    Call<GenericResponse> requestPing(@Path("phoneNumber") String phoneNumber, @Path("code") String code, @Path("groupUid") String groupUid);
 
         /*
         SECTION: Fetch tasks, and task details

@@ -89,6 +89,8 @@ public class GroupTasksActivity extends PortraitActivity implements NewTaskMenuF
             return;
         }
 
+        requestPing(groupMembership.getGroupUid());
+
         setUpViews();
         setUpFragment();
     }
@@ -407,6 +409,10 @@ public class GroupTasksActivity extends PortraitActivity implements NewTaskMenuF
         } else {
             return false;
         }
+    }
+
+    private void requestPing(String groupUid){
+        GroupService.getInstance().requestPing(groupUid, AndroidSchedulers.mainThread()).subscribe();
     }
 
 

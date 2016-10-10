@@ -210,6 +210,34 @@ public class GroupService {
     }).subscribeOn(Schedulers.io()).observeOn(observingThread);
   }
 
+  public Observable<Boolean> requestPing(final String groupUid, Scheduler observingThread){
+    return Observable.create(new Observable.OnSubscribe<Boolean>(){
+      @Override
+      public void call(Subscriber<? super Boolean> subscriber) {
+        if(!NetworkUtils.isOnline()){
+          throw  new ApiCallException(NetworkUtils.CONNECT_ERROR);
+        }else{
+          final String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
+          final String code = RealmUtils.loadPreferencesFromDB().getToken();
+          try{
+            Response<GenericResponse> response = GrassrootRestService.getInstance().getApi().requestPing(phoneNumber,code,groupUid).execute();
+            if(response.isSuccessful()){
+              subscriber.onNext(true);
+              subscriber.onCompleted();
+            }else {
+              throw new ApiCallException(NetworkUtils.SERVER_ERROR);
+            }
+          } catch (IOException e) {
+            subscriber.onError(e);
+            throw  new ApiCallException(NetworkUtils.CONNECT_ERROR);
+          }
+        }
+
+      }
+    }).subscribeOn(Schedulers.io()).observeOn(observingThread);
+  }
+
+
 
   private void persistGroupsAddedUpdated(GroupsChangedResponse responseBody) {
     if (Looper.myLooper() == Looper.getMainLooper()) {

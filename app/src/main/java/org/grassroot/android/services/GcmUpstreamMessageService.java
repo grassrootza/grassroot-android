@@ -31,11 +31,11 @@ import rx.schedulers.Schedulers;
  */
 public class GcmUpstreamMessageService {
 
-    private final static int MAX_RETRIES = 10;
+    public  final static int MAX_RETRIES = 5;
     private final static int BACKOFF_INITIAL_DELAY = 3000;
     private final static int MAX_BACKOFF_DELAY = 60 * 1000;
-    private static final Random random = new Random();
-    private static final String TAG = GcmUpstreamMessageService.class.getCanonicalName();
+    private final static Random random = new Random();
+    private final static String TAG = GcmUpstreamMessageService.class.getCanonicalName();
 
     public static Observable<String>
     sendMessage(final Message message, final Context context, final Scheduler observingThread) {
