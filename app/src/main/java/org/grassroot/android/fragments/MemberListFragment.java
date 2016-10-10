@@ -162,6 +162,10 @@ public class MemberListFragment extends Fragment {
         memberListAdapter.notifyDataSetChanged(); // by definition have to refresh whole dataset
     }
 
+    public void refreshMembersToDb() {
+        fetchGroupMembers();
+    }
+
     private void setUpRecyclerView() {
         memberListRecyclerView.setAdapter(memberListAdapter);
         memberListRecyclerView.setLayoutManager(new LinearLayoutManager(this.getContext()));
@@ -210,23 +214,27 @@ public class MemberListFragment extends Fragment {
                 if (filteredMembers != null) {
                     members.removeAll(filteredMembers);
                 }
-                memberListAdapter.setMembers(members);
 
-                if (preSelectedMembers != null && !selectedByDefault) {
-                    // todo : consider using list.contains on members when can trust hashing/equals
-                    final Map<String, Integer> positionMap = new HashMap<>();
-                    final int listSize = preSelectedMembers.size();
-                    for (int i = 0; i < listSize; i++) {
-                        positionMap.put((members.get(i)).getMemberUid(),i);
-                    }
-                    for (Member m : preSelectedMembers) {
-                        if (positionMap.containsKey(m.getMemberUid())) {
-                            memberListAdapter.toggleMemberSelected(positionMap.get(m.getMemberUid()));
+                if (memberListAdapter != null) {
+                    memberListAdapter.setMembers(members);
+                    if (preSelectedMembers != null && !selectedByDefault) {
+                        // todo : consider using list.contains on members when can trust hashing/equals
+                        final Map<String, Integer> positionMap = new HashMap<>();
+                        final int listSize = preSelectedMembers.size();
+                        for (int i = 0; i < listSize; i++) {
+                            positionMap.put((members.get(i)).getMemberUid(), i);
+                        }
+                        for (Member m : preSelectedMembers) {
+                            if (positionMap.containsKey(m.getMemberUid())) {
+                                memberListAdapter.toggleMemberSelected(positionMap.get(m.getMemberUid()));
+                            }
                         }
                     }
                 }
 
-                progressBar.setVisibility(View.INVISIBLE);
+                if (progressBar != null) {
+                    progressBar.setVisibility(View.INVISIBLE);
+                }
             }
         });
 

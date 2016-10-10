@@ -13,6 +13,9 @@ import android.support.v7.widget.SwitchCompat;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
@@ -88,6 +91,7 @@ public class GroupSettingsMainFragment extends Fragment implements MemberRoleAda
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View v = inflater.inflate(R.layout.fragment_group_settings_main, container, false);
+        setHasOptionsMenu(true);
         unbinder = ButterKnife.bind(this, v);
         setUpViews();
         return v;
@@ -123,6 +127,39 @@ public class GroupSettingsMainFragment extends Fragment implements MemberRoleAda
             changeDescription.setText(R.string.gset_desc_add);
         } else {
             changeDescription.setText(R.string.gset_desc_change);
+        }
+    }
+
+    @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        inflater.inflate(R.menu.menu_group_settings, menu);
+        super.onCreateOptionsMenu(menu, inflater);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem menuItem) {
+        if (menuItem.getItemId() == R.id.mi_refresh_settings) {
+            progressBar.setVisibility(View.VISIBLE);
+            GroupService.getInstance().refreshGroupMembers(group.getGroupUid()).subscribe(new Action1<String>() {
+                @Override
+                public void call(String s) {
+                    progressBar.setVisibility(View.GONE);
+                    roleAdapter.refreshToDB();
+                }
+            }, new Action1<Throwable>() {
+                @Override
+                public void call(Throwable e) {
+                    progressBar.setVisibility(View.GONE);
+                    if (NetworkUtils.SERVER_ERROR.equals(e.getMessage())) {
+                        Snackbar.make(mainRoot, ErrorUtils.serverErrorText(e), Snackbar.LENGTH_SHORT).show();
+                    } else if (NetworkUtils.CONNECT_ERROR.equals(e.getMessage())) {
+                        Snackbar.make(mainRoot, R.string.connect_error_offline_home, Snackbar.LENGTH_SHORT).show();
+                    }
+                }
+            });
+            return true;
+        } else {
+            return super.onOptionsItemSelected(menuItem);
         }
     }
 

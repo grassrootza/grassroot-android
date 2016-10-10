@@ -229,6 +229,7 @@ public class LoginRegisterActivity extends AppCompatActivity implements LoginScr
 
     private void handleConnectError(final String mobileNumber, final String purpose) {
         // don't use dialog here as "offline" makes little sense
+        hideSoftKeyboard();
         ErrorUtils.networkErrorSnackbar(rootView, R.string.connect_error_logreg, new View.OnClickListener() {
             @Override
             public void onClick(View v) {

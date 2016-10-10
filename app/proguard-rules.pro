@@ -52,6 +52,8 @@
 -keepattributes *Annotation*
 
 -keepattributes innerClasses
+-keepattributes EnclosingMethod
+
 -keep class butterknife.** { *; }
 -keep class **$$ViewInjector { *; }
 

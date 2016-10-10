@@ -12,6 +12,7 @@ import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 
+import org.grassroot.android.BuildConfig;
 import org.grassroot.android.models.GroupJoinRequest;
 import org.grassroot.android.models.Member;
 import org.grassroot.android.models.NotificationList;
@@ -84,10 +85,10 @@ public class GrassrootRestService {
 
   private GrassrootRestService(Context context) {
     HttpLoggingInterceptor logging = new HttpLoggingInterceptor();
-    //logging.setLevel(BuildConfig.BUILD_TYPE.equals("debug") ?
-        //HttpLoggingInterceptor.Level.BODY : HttpLoggingInterceptor.Level.HEADERS);
+    logging.setLevel(BuildConfig.BUILD_TYPE.equals("debug") ?
+        HttpLoggingInterceptor.Level.BODY : HttpLoggingInterceptor.Level.HEADERS);
 
-    logging.setLevel(HttpLoggingInterceptor.Level.BODY);
+    // logging.setLevel(HttpLoggingInterceptor.Level.BODY);
 
     OkHttpClient client = new OkHttpClient.Builder()
         .addInterceptor(logging)
@@ -258,6 +259,12 @@ public class GrassrootRestService {
     Call<GroupsChangedResponse> getUserGroupsChangedSince(@Path("phoneNumber") String phoneNumber,
                                                           @Path("code") String code,
                                                           @Query("changedSince") Long changedSince);
+
+    //refresh group members
+    @GET("group/members/list/{phoneNumber}/{code}/{groupUid}")
+    Call<MemberListResponse> fetchCurrentGroupMembers(@Path("phoneNumber") String phoneNumber,
+                                                      @Path("code") String code,
+                                                      @Path("groupUid") String groupUid);
 
     // leave a group
     @POST("group/members/unsubscribe/{phoneNumber}/{code}")

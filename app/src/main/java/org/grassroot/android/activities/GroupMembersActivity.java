@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
@@ -17,11 +18,15 @@ import org.grassroot.android.R;
 import org.grassroot.android.fragments.EditTaskFragment;
 import org.grassroot.android.fragments.MemberListFragment;
 import org.grassroot.android.fragments.NewTaskMenuFragment;
+import org.grassroot.android.fragments.dialogs.NetworkErrorDialogFragment;
 import org.grassroot.android.interfaces.GroupConstants;
 import org.grassroot.android.models.Group;
 import org.grassroot.android.models.Member;
+import org.grassroot.android.services.GroupService;
 import org.grassroot.android.utils.Constant;
+import org.grassroot.android.utils.ErrorUtils;
 import org.grassroot.android.utils.IntentUtils;
+import org.grassroot.android.utils.NetworkUtils;
 import org.grassroot.android.utils.RealmUtils;
 
 import java.util.ArrayList;
@@ -29,6 +34,7 @@ import java.util.ArrayList;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
+import rx.functions.Action1;
 
 /**
  * Created by luke on 2016/05/18.
@@ -50,6 +56,7 @@ public class GroupMembersActivity extends PortraitActivity implements NewTaskMen
 
     @BindView(R.id.lm_toolbar) Toolbar lmToolbar;
     @BindView(R.id.lm_tv_groupname) TextView tvGroupName;
+    @BindView(R.id.lm_member_list_container) SwipeRefreshLayout memberListContainer;
     @BindView(R.id.lm_tv_existing_members_title) TextView tvExistingMembers;
 
     private boolean menuOpen;
@@ -134,10 +141,40 @@ public class GroupMembersActivity extends PortraitActivity implements NewTaskMen
     }
 
     private void setUpMemberListFragment() {
+        memberListContainer.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                refreshMembers();
+            }
+        });
+
         memberListFragment = MemberListFragment.newInstance(groupUid, selectMembers, selectMembers, membersSelected, true, null);
         getSupportFragmentManager().beginTransaction()
                 .add(R.id.lm_member_list_container, memberListFragment)
                 .commit();
+    }
+
+    private void refreshMembers() {
+        GroupService.getInstance().refreshGroupMembers(groupUid).subscribe(new Action1<String>() {
+            @Override
+            public void call(String s) {
+                Log.e(TAG, "got a response back! looks like: " + s);
+                memberListContainer.setRefreshing(false);
+                if (NetworkUtils.FETCHED_SERVER.equals(s)) {
+                    memberListFragment.refreshMembersToDb();
+                }
+            }
+        }, new Action1<Throwable>() {
+            @Override
+            public void call(Throwable e) {
+                memberListContainer.setRefreshing(false);
+                if (NetworkUtils.SERVER_ERROR.equals(e.getMessage())) {
+                    Snackbar.make(memberListContainer, ErrorUtils.serverErrorText(e), Snackbar.LENGTH_SHORT).show();
+                } else if (NetworkUtils.CONNECT_ERROR.equals(e.getMessage())) {
+                    Snackbar.make(memberListContainer, R.string.connect_error_offline_home, Snackbar.LENGTH_SHORT).show();
+                }
+            }
+        });
     }
 
     @OnClick(R.id.lm_btn_check_all)
@@ -162,6 +199,10 @@ public class GroupMembersActivity extends PortraitActivity implements NewTaskMen
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
+            case (R.id.mi_refresh_members):
+                memberListContainer.setRefreshing(true);
+                refreshMembers();
+                return true;
             case (R.id.mi_add_members):
                 Intent i = IntentUtils.constructIntent(this, AddMembersActivity.class, groupUid, groupName);
                 startActivity(i);

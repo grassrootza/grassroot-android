@@ -92,13 +92,13 @@
 
             </LinearLayout>
 
-            <RelativeLayout
+            <android.support.v4.widget.SwipeRefreshLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginLeft="@dimen/padding_card_left"
                 android:layout_marginRight="@dimen/padding_card_left"
                 android:id="@+id/lm_member_list_container">
-            </RelativeLayout>
+            </android.support.v4.widget.SwipeRefreshLayout>
 
         </LinearLayout>
 

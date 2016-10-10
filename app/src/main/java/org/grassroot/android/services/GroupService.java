@@ -27,6 +27,7 @@ import org.grassroot.android.models.exceptions.InvalidNumberException;
 import org.grassroot.android.models.responses.GenericResponse;
 import org.grassroot.android.models.responses.GroupResponse;
 import org.grassroot.android.models.responses.GroupsChangedResponse;
+import org.grassroot.android.models.responses.MemberListResponse;
 import org.grassroot.android.models.responses.PermissionResponse;
 import org.grassroot.android.utils.ErrorUtils;
 import org.grassroot.android.utils.NetworkUtils;
@@ -216,6 +217,49 @@ public class GroupService {
     PreferenceObject preferenceObject = RealmUtils.loadPreferencesFromDB();
     preferenceObject.setHasGroups(hasGroups);
     RealmUtils.saveDataToRealmSync(preferenceObject);
+  }
+
+  public Observable<String> refreshGroupMembers(final String groupUid) {
+    return Observable.create(new Observable.OnSubscribe<String>() {
+      @Override
+      public void call(Subscriber<? super String> subscriber) {
+        final String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
+        final String code = RealmUtils.loadPreferencesFromDB().getToken();
+        try {
+          Response<MemberListResponse> response = GrassrootRestService.getInstance().getApi()
+              .fetchCurrentGroupMembers(phoneNumber, code, groupUid).execute();
+          if (response.isSuccessful()) {
+            List<Member> members = response.body().getMembers();
+
+            Map<String, Object> existingMap = new HashMap<>();
+            existingMap.put("groupUid", groupUid);
+            @SuppressWarnings("unchecked")
+            List<Member> removedMembers = RealmUtils.loadListFromDBInline(Member.class, existingMap);
+
+            for (Member m : members) {
+              m.composeMemberGroupUid();
+            }
+            RealmUtils.saveDataToRealmSync(members);
+
+            removedMembers.removeAll(members);
+            if (!removedMembers.isEmpty()) {
+              List<String> uidsToRemove = new ArrayList<>();
+              for (Member m : removedMembers) {
+                uidsToRemove.add(m.getMemberGroupUid()); // these have been stored, by definition, so must have composite key
+              }
+              RealmUtils.removeObjectsByUid(Member.class, "memberGroupUid", uidsToRemove);
+            }
+
+            subscriber.onNext(NetworkUtils.FETCHED_SERVER);
+            subscriber.onCompleted();
+          } else{
+            throw new ApiCallException(NetworkUtils.SERVER_ERROR, ErrorUtils.getRestMessage(response.errorBody()));
+          }
+        } catch (IOException e) {
+          throw new ApiCallException(NetworkUtils.CONNECT_ERROR);
+        }
+      }
+    }).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread());
   }
 
     /*

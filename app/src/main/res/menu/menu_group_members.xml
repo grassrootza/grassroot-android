@@ -2,16 +2,21 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
+    <item android:id="@+id/mi_refresh_members"
+          android:title="@string/menu_refresh"
+          android:icon="@drawable/ic_refresh"
+          app:showAsAction="ifRoom" />
+
     <item android:id="@+id/mi_add_members"
-        android:title="Add members"
+        android:title="@string/gta_add_members"
         app:showAsAction="never" />
 
     <item android:id="@+id/mi_remove_members"
-        android:title="Remove members"
+        android:title="@string/gta_del_members"
         app:showAsAction="never" />
 
     <item android:id="@+id/mi_group_settings"
-        android:title="Group settings"
+        android:title="@string/group_settings"
         app:showAsAction="never" />
 
 </menu>
