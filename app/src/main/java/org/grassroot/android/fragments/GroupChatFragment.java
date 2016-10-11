@@ -1,7 +1,9 @@
 package org.grassroot.android.fragments;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
@@ -21,6 +23,9 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.GoogleApiAvailability;
+
 import org.grassroot.android.R;
 import org.grassroot.android.activities.GroupTasksActivity;
 import org.grassroot.android.activities.MultiMessageNotificationActivity;
@@ -29,6 +34,7 @@ import org.grassroot.android.adapters.GroupChatAdapter;
 import org.grassroot.android.adapters.RecyclerTouchListener;
 import org.grassroot.android.events.GroupChatEvent;
 import org.grassroot.android.events.MessageNotSentEvent;
+import org.grassroot.android.fragments.dialogs.NetworkErrorDialogFragment;
 import org.grassroot.android.interfaces.ClickListener;
 import org.grassroot.android.interfaces.GroupConstants;
 import org.grassroot.android.interfaces.TaskConstants;
@@ -36,20 +42,22 @@ import org.grassroot.android.models.Command;
 import org.grassroot.android.models.Message;
 import org.grassroot.android.models.RealmString;
 import org.grassroot.android.models.TaskModel;
+import org.grassroot.android.models.exceptions.ApiCallException;
+import org.grassroot.android.models.exceptions.NoGcmException;
 import org.grassroot.android.models.responses.GroupChatSettingResponse;
 import org.grassroot.android.services.GcmListenerService;
 import org.grassroot.android.services.GcmUpstreamMessageService;
 import org.grassroot.android.services.GroupService;
 import org.grassroot.android.services.TaskService;
-import org.grassroot.android.utils.Constant;
 import org.grassroot.android.utils.EmojIconMultiAutoCompleteActions;
+import org.grassroot.android.utils.ErrorUtils;
+import org.grassroot.android.utils.NetworkUtils;
 import org.grassroot.android.utils.RealmUtils;
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
@@ -63,13 +71,14 @@ import io.realm.RealmList;
 import rx.Subscriber;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.functions.Action1;
+import rx.observers.Subscribers;
 
 /**
  * Created by paballo on 2016/08/30.
  */
 public class GroupChatFragment extends Fragment implements GroupChatAdapter.GroupChatAdapterListener {
 
-    private static final String TAG = GroupChatFragment.class.getCanonicalName();
+    private static final String TAG = GroupChatFragment.class.getSimpleName();
 
     private String groupUid;
     private String groupName;
@@ -90,20 +99,49 @@ public class GroupChatFragment extends Fragment implements GroupChatAdapter.Grou
     @BindView(R.id.btn_send)
     ImageView sendMessage;
 
-    private GroupChatAdapter groupChatAdapter;
-    private ArrayAdapter<Command> arrayAdapter;
-    private List<Command> commands;
-    private LinearLayoutManager layoutManager;
-    private EmojIconMultiAutoCompleteActions emojIconAction;
+    private boolean isGcmAvailable;
+    private static final int INSTALL_PLAY_SERVICES = 100;
+    private static final int SEND_MESSAGE = 200;
+    private static final int REFRESH_MSGS = 300;
 
-    public static GroupChatFragment newInstance(final String groupUid, String groupName) {
+    private GroupChatAdapter groupChatAdapter;
+    private ArrayAdapter<Command> commandsAdapter;
+    private List<Command> commands;
+
+    public static GroupChatFragment newInstance(final String groupUid, final String groupName) {
         GroupChatFragment fragment = new GroupChatFragment();
         Bundle bundle = new Bundle();
         bundle.putString(GroupConstants.UID_FIELD, groupUid);
         bundle.putString(GroupConstants.NAME_FIELD, groupName);
         fragment.setArguments(bundle);
-
         return fragment;
+    }
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        groupUid = getArguments().getString(GroupConstants.UID_FIELD);
+        groupName = getArguments().getString(GroupConstants.NAME_FIELD);
+        mutedUsersUid = new ArrayList<>();
+
+        loadGroupSettings();
+    }
+
+    private void loadGroupSettings() {
+        GroupService.getInstance().fetchGroupChatSetting(groupUid, AndroidSchedulers.mainThread(), null)
+            .subscribe(new Action1<GroupChatSettingResponse>() {
+                @Override
+                public void call(GroupChatSettingResponse groupChatSettingResponse) {
+                    isMuted = groupChatSettingResponse.isCanSend();
+                    mutedUsersUid = groupChatSettingResponse.getMutedUsersUids();
+                }
+            }, new Action1<Throwable>() {
+                @Override
+                public void call(Throwable throwable) {
+                    Log.e(TAG, "Error fetching group settings!");
+                }
+            });
     }
 
     @Override
@@ -112,10 +150,6 @@ public class GroupChatFragment extends Fragment implements GroupChatAdapter.Grou
         unbinder = ButterKnife.bind(this, view);
         EventBus.getDefault().register(this);
 
-        groupUid = getArguments().getString(GroupConstants.UID_FIELD);
-        groupName = getArguments().getString(GroupConstants.NAME_FIELD);
-        mutedUsersUid = new ArrayList<>();
-
         String[] commandArray = getActivity().getResources().getStringArray(R.array.commands);
         String[] hintArray = getActivity().getResources().getStringArray(R.array.command_hints);
         String[] descriptionArrays = getActivity().getResources().getStringArray(R.array.command_descriptions);
@@ -123,28 +157,65 @@ public class GroupChatFragment extends Fragment implements GroupChatAdapter.Grou
         if (commands == null) {
             commands = new ArrayList<>();
             for (int i = 0; i < commandArray.length; i++) {
-                Command command = new Command(commandArray[i], hintArray[i], descriptionArrays[i]);
-                commands.add(command);
+                commands.add(new Command(commandArray[i], hintArray[i], descriptionArrays[i]));
             }
         }
+        commandsAdapter = new CommandsAdapter(getActivity(), commands);
 
         setHasOptionsMenu(true);
-        arrayAdapter = new CommandsAdapter(getActivity(), commands);
-
         setView();
         return view;
     }
 
     @Override
-    public void onResume() {
-        super.onResume();
+    public void setUserVisibleHint(boolean isVisibleToUser) {
+        super.setUserVisibleHint(isVisibleToUser);
+        if (isVisibleToUser) {
+            checkForGcm();
+        }
+    }
+
+    private void checkForGcm() {
+        int gcmAvailability = GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(getContext());
+        if (gcmAvailability != ConnectionResult.SUCCESS) {
+            GoogleApiAvailability.getInstance().getErrorDialog(getActivity(), gcmAvailability, INSTALL_PLAY_SERVICES).show();
+            isGcmAvailable = false;
+            textView.setEnabled(false);
+        } else {
+            isGcmAvailable = true;
+        }
+    }
+
+    private void showNetworkDialog(final int originatingAction, final String auxText) {
+        NetworkErrorDialogFragment.newInstance(R.string.chat_connect_error, null, Subscribers.create(new Action1<String>() {
+            @Override
+            public void call(String s) {
+                if (s.equals(NetworkUtils.CONNECT_ERROR)) { // todo : add a progress bar
+                    Snackbar.make(rootView, R.string.connect_error_failed_retry, Snackbar.LENGTH_SHORT).show();
+                } else {
+                    if (originatingAction == SEND_MESSAGE) {
+                        Log.e(TAG, "okay, reconnected, sending message ...");
+                        sendMessageInBackground(auxText);
+                    } else if (originatingAction == REFRESH_MSGS) {
+                        // todo : fetch messages again from the server
+                        loadMessages();
+                    }
+                }
+            }
+        })).show(getFragmentManager(), "network");
     }
 
     @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        loadGroupSettings();
-
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == INSTALL_PLAY_SERVICES) {
+            if (resultCode == Activity.RESULT_OK) {
+                isGcmAvailable = true;
+                textView.setEnabled(true);
+            } else {
+                isGcmAvailable = false;
+                textView.setEnabled(false);
+            }
+        }
     }
 
     @Override
@@ -153,19 +224,22 @@ public class GroupChatFragment extends Fragment implements GroupChatAdapter.Grou
             menu.findItem(R.id.mi_group_mute).setVisible(true);
             menu.findItem(R.id.mi_group_mute).setTitle(!isMuted ? R.string.gp_mute : R.string.gp_un_mute);
         }
+
         if (menu.findItem(R.id.mi_delete_messages) != null)
             menu.findItem(R.id.mi_delete_messages).setVisible(true);
+
         if (menu.findItem(R.id.mi_refresh_screen) != null)
             menu.findItem(R.id.mi_refresh_screen).setVisible(false);
+
         super.onPrepareOptionsMenu(menu);
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-
         if (item.getItemId() == R.id.mi_group_mute)
-            mute(null, groupUid, true, !isMuted ? false : true);
-        if (item.getItemId() == R.id.mi_delete_messages) deleteAllMessages(groupUid);
+            mute(null, groupUid, true, isMuted);
+        if (item.getItemId() == R.id.mi_delete_messages)
+            deleteAllMessages(groupUid);
 
         return super.onOptionsItemSelected(item);
     }
@@ -175,43 +249,71 @@ public class GroupChatFragment extends Fragment implements GroupChatAdapter.Grou
             GcmListenerService.clearChatNotifications(getContext());
             getActivity().setTitle(groupName);
         }
+
         loadMessages();
         textView.setInputType(textView.getInputType() & (~EditorInfo.TYPE_TEXT_FLAG_AUTO_COMPLETE));
-        textView.setAdapter(arrayAdapter);
+        textView.setAdapter(commandsAdapter);
         textView.setThreshold(1); //setting it in xml does not seem to be working
         textView.requestFocus();
-
 
         textView.setEnabled(!isMuted);
         sendMessage.setEnabled(!isMuted);
         openEmojis.setEnabled(!isMuted);
-        emojIconAction = new EmojIconMultiAutoCompleteActions(getActivity(), rootView, textView, openEmojis);
+
+        EmojIconMultiAutoCompleteActions emojIconAction = new EmojIconMultiAutoCompleteActions(getActivity(), rootView, textView, openEmojis);
         emojIconAction.ShowEmojIcon();
         RealmUtils.markMessagesAsRead(groupUid);
-
     }
 
     @OnClick(R.id.btn_send)
     public void sendMessage() {
-
-        if (!TextUtils.isEmpty(textView.getText())) {
-            final String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
-            Message message = new Message(phoneNumber, groupUid, null, new Date(), textView.getText().toString(), false, "");
-            RealmUtils.saveDataToRealmSync(message);
-            groupChatAdapter.addMessage(message);
-            chatMessageView.smoothScrollToPosition(groupChatAdapter.getItemCount());
-            GcmUpstreamMessageService.sendMessage(message, getActivity(),
-                    AndroidSchedulers.mainThread())
-                    .subscribe(new Action1<String>() {
-                        @Override
-                        public void call(String s) {
-                        }
-                    });
-
+        if (!TextUtils.isEmpty(textView.getText()) && isGcmAvailable) {
+            sendMessageInBackground(textView.getText().toString());
             textView.setText(""); //clear text
             textView.requestFocus();
             InputMethodManager imm = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
             imm.hideSoftInputFromWindow(getActivity().getCurrentFocus().getWindowToken(), 0);
+        } else {
+            checkForGcm();
+        }
+    }
+
+    // todo : move this properly to background
+    private void sendMessageInBackground(final String msgText) {
+        Log.e(TAG, "sending message ....");
+        final String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
+        final String userName = RealmUtils.loadPreferencesFromDB().getUserName();
+        final Message message = new Message(phoneNumber, groupUid, userName, new Date(), msgText, "");
+        RealmUtils.saveDataToRealmSync(message);
+        groupChatAdapter.addMessage(message);
+        chatMessageView.smoothScrollToPosition(groupChatAdapter.getItemCount());
+        GcmUpstreamMessageService.sendMessage(message, getActivity(), AndroidSchedulers.mainThread())
+            .subscribe(new Action1<String>() {
+                @Override
+                public void call(String s) {
+                    message.setSent(true); // since this isn't reloaded ...
+                    groupChatAdapter.updateMessage(message);
+                }
+            }, new Action1<Throwable>() {
+                @Override
+                public void call(Throwable throwable) {
+                    if (getUserVisibleHint()) {
+                        handleMessageSendingError(throwable, msgText);
+                    }
+                }
+            });
+    }
+
+    private void handleMessageSendingError(Throwable e, String msgText) {
+        Log.e(TAG, "handling message sending error ..");
+        if (e instanceof NoGcmException) {
+            checkForGcm();
+        } else if (e instanceof ApiCallException) {
+            if (e.getMessage().equals(NetworkUtils.CONNECT_ERROR)) {
+                showNetworkDialog(SEND_MESSAGE, msgText);
+            } else {
+                Snackbar.make(rootView, ErrorUtils.serverErrorText(e), Snackbar.LENGTH_SHORT).show();
+            }
         }
     }
 
@@ -232,9 +334,10 @@ public class GroupChatFragment extends Fragment implements GroupChatAdapter.Grou
 
     private void setUpListAndAdapter(List<Message> messages) {
         groupChatAdapter = new GroupChatAdapter(messages, this);
-        layoutManager = new LinearLayoutManager(getActivity());
+        LinearLayoutManager layoutManager = new LinearLayoutManager(getActivity());
         layoutManager.setAutoMeasureEnabled(true);
         layoutManager.setStackFromEnd(true);
+
         if (chatMessageView != null) {
             chatMessageView.setAdapter(groupChatAdapter);
             chatMessageView.setLayoutManager(layoutManager);
@@ -245,6 +348,7 @@ public class GroupChatFragment extends Fragment implements GroupChatAdapter.Grou
             chatMessageView.addOnItemTouchListener(new RecyclerTouchListener(getActivity(), chatMessageView, new ClickListener() {
                 @Override
                 public void onClick(View view, int position) {
+                    // todo : slight colour shift to indicate long press options available
                 }
 
                 @Override
@@ -262,12 +366,6 @@ public class GroupChatFragment extends Fragment implements GroupChatAdapter.Grou
         super.onDestroyView();
         unbinder.unbind();
         EventBus.getDefault().unregister(this);
-    }
-
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
@@ -297,8 +395,8 @@ public class GroupChatFragment extends Fragment implements GroupChatAdapter.Grou
     public void createTaskFromMessage(final Message message) {
         String title = message.getTokens().get(0).getString();
         String location = null;
-        if(message.getType().equals(TaskConstants.MEETING))location = message.getTokens()
-                .get(2).getString();
+        if(message.getType().equals(TaskConstants.MEETING))
+            location = message.getTokens().get(2).getString();
         String time = message.getTokens().get(1).getString();
         TaskModel taskModel = generateTaskObject(message.getGroupUid(), title,time , location,message.getType() );
         TaskService.getInstance().sendTaskToServer(taskModel, AndroidSchedulers.mainThread()).subscribe(new Subscriber<TaskModel>() {
@@ -325,29 +423,6 @@ public class GroupChatFragment extends Fragment implements GroupChatAdapter.Grou
 
     }
 
-
-    public String getGroupUid() {
-        return groupUid;
-    }
-
-    private void loadGroupSettings() {
-        GroupService.getInstance().fetchGroupChatSetting(groupUid, AndroidSchedulers.mainThread(), null).subscribe(new Subscriber<GroupChatSettingResponse>() {
-            @Override
-            public void onNext(GroupChatSettingResponse groupChatSettingResponse) {
-                isMuted = groupChatSettingResponse.isCanSend();
-                mutedUsersUid = groupChatSettingResponse.getMutedUsersUids();
-            }
-
-            @Override
-            public void onCompleted() {
-            }
-
-            @Override
-            public void onError(Throwable e) {
-            }
-        });
-    }
-
     /**
      * @param userUid       user whose activity status is to be changed. null if own
      * @param groupUid      uid of the group
@@ -358,10 +433,11 @@ public class GroupChatFragment extends Fragment implements GroupChatAdapter.Grou
 
     private void mute(@Nullable final String userUid, String groupUid, boolean userInitiated, final boolean active) {
         Log.e(TAG, "Grassroot: calling mute user of user");
-        GroupService.getInstance().updateMemberChatSetting(groupUid, userUid, userInitiated, active, AndroidSchedulers.mainThread()).subscribe(new Action1<String>() {
+        GroupService.getInstance().updateMemberChatSetting(groupUid, userUid, userInitiated, active, AndroidSchedulers.mainThread())
+            .subscribe(new Action1<String>() {
             @Override
             public void call(String s) {
-                if (userUid == null) {
+                if (TextUtils.isEmpty(userUid)) {
                     updateEntryView(active);
                     getActivity().supportInvalidateOptionsMenu();
                 } else {

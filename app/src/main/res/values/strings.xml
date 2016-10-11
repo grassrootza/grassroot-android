@@ -844,12 +844,14 @@
 
     <!--Chat-->
     <string name="title_activity_view_chat_message">Group Name</string>
-    <string name="chats_title">Chats</string>
+    <string name="chat_messages">Chats</string>
     <string name="gp_mute">Mute group chats</string>
     <string name="gp_un_mute">Unmute group chats</string>
     <string name="gp_delete_messages">Delete all messages</string>
-    <string name="chat_message_sent">"Sent. "</string>
-    <string name="chat_message_not_sent">"Not sent. "</string>
+
+    <string name="chat_message_not_sent">Not sent. </string>
+    <string name="chat_message_sent">Sent. </string>
+    <string name="chat_message_delivered">Delivered. </string>
     <string name="chat_long_click_options_title">Options</string>
 
     <string name="options_yes">Yes</string>
@@ -857,6 +859,11 @@
 
     <string name="chat_task_called">Done! %s called</string>
     <string name="chat_task_failure">Sorry, there was an error on the server. Please try again later.</string>
+
+    <string name="no_gcm_message">Sorry, you need Google Play Services installed to use group chat</string>
+    <string name="install_gcm">Install Play Services</string>
+
+    <string name="chat_connect_error">Sorry, you must be connected to send chat messages. Try connect?</string>
 
     <!--Notifications-->
     <string name="messages_new">" new messages."</string>

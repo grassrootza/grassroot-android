@@ -1,13 +1,11 @@
 package org.grassroot.android.fragments;
 
-import android.content.Context;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
-import android.view.Menu;
 import android.view.View;
 import android.view.ViewGroup;
 
@@ -33,19 +31,16 @@ import rx.functions.Action1;
  * Created by paballo on 2016/09/12.
  */
 public class MultiGroupChatFragment extends Fragment {
-    private static final String TAG = MultiGroupChatFragment.class.getCanonicalName();
+    private static final String TAG = MultiGroupChatFragment.class.getSimpleName();
 
     private IncomingChatMessageAdapter incomingChatMessageAdapter;
-    private LinearLayoutManager viewLayoutManager;
 
     Unbinder unbinder;
-    @BindView(R.id.message_recycler_view)
-    RecyclerView recyclerView;
+    @BindView(R.id.message_recycler_view) RecyclerView recyclerView;
 
 
     public static MultiGroupChatFragment newInstance() {
-        MultiGroupChatFragment fragment = new MultiGroupChatFragment();
-        return fragment;
+        return new MultiGroupChatFragment();
     }
 
     @Override
@@ -64,22 +59,10 @@ public class MultiGroupChatFragment extends Fragment {
         loadMessages();
     }
 
+    @Override
     public void onDestroyView() {
         super.onDestroyView();
         unbinder.unbind();
-    }
-
-
-    @Override
-    public void onAttach(Context context) {
-        super.onAttach(context);
-    }
-
-    @Override
-    public void onPrepareOptionsMenu(Menu menu) {
-        if(menu.findItem(R.id.mi_group_mute)!=null)
-            menu.findItem(R.id.mi_group_mute).setVisible(false);
-        super.onPrepareOptionsMenu(menu);
     }
 
     public void loadMessages() {
@@ -97,10 +80,10 @@ public class MultiGroupChatFragment extends Fragment {
     }
 
     private void setUpList() {
-
         recyclerView.setAdapter(incomingChatMessageAdapter);
         recyclerView.setHasFixedSize(false);
-        viewLayoutManager = new LinearLayoutManager(getActivity());
+
+        LinearLayoutManager viewLayoutManager = new LinearLayoutManager(getActivity());
         recyclerView.setLayoutManager(viewLayoutManager);
         recyclerView.setItemAnimator(new DefaultItemAnimator());
 
@@ -111,9 +94,12 @@ public class MultiGroupChatFragment extends Fragment {
                         String groupUid = incomingChatMessageAdapter.getChatList().get(position).getGroupUid();
                         String groupName = incomingChatMessageAdapter.getChatList().get(position).getGroupName();
                         GroupChatFragment groupChatFragment = GroupChatFragment.newInstance(groupUid,groupName );
-                        getActivity().getSupportFragmentManager().beginTransaction().addToBackStack(TAG)
-                                .replace(R.id.gca_fragment_holder, groupChatFragment).commit();
+                        getActivity().getSupportFragmentManager()
+                            .beginTransaction()
+                            .addToBackStack(TAG)
+                            .replace(R.id.gca_fragment_holder, groupChatFragment).commit();
                     }
+
                     @Override
                     public void onLongClick(View view, int position) {
                     }
@@ -129,8 +115,7 @@ public class MultiGroupChatFragment extends Fragment {
     }
 
     private void setTitle(){
-        getActivity().setTitle(getActivity().getString(R.string.chats_title));
+        getActivity().setTitle(getActivity().getString(R.string.chat_messages));
     }
-
 
 }

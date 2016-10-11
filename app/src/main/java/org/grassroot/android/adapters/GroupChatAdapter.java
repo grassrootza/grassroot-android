@@ -5,6 +5,7 @@ import android.content.Context;
 import android.support.annotation.Nullable;
 import android.support.v7.widget.RecyclerView;
 import android.text.format.DateUtils;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -32,7 +33,7 @@ import rx.functions.Action1;
  */
 public class GroupChatAdapter extends RecyclerView.Adapter<GroupChatAdapter.GCViewHolder> {
 
-    private static final String TAG = GroupChatAdapter.class.getCanonicalName();
+    private static final String TAG = GroupChatAdapter.class.getSimpleName();
     private SimpleDateFormat dateFormatter = new SimpleDateFormat("HH:mm");
     private Context context;
     private GroupChatAdapterListener listener;
@@ -87,7 +88,10 @@ public class GroupChatAdapter extends RecyclerView.Adapter<GroupChatAdapter.GCVi
                 handleServerMessageBtns(holder, validCommand, message);
                 break;
             case SELF:
-                final String subtitle = message.isDelivered() ? context.getString(R.string.chat_message_sent)
+                // vLog.e(TAG, "setting subtitle, message state = " + message.isSent());
+                final String subtitle =
+                    message.isDelivered() ? context.getString(R.string.chat_message_delivered)
+                    : message.isSent() ? context.getString(R.string.chat_message_sent)
                         : message.exceedsMaximumSendingAttempts() ? context.getString(R.string.chat_message_not_sent) : "";
                 holder.timestamp.setText(subtitle.concat(time));
                 break;
@@ -108,10 +112,15 @@ public class GroupChatAdapter extends RecyclerView.Adapter<GroupChatAdapter.GCVi
         });
     }
 
-
     public void addMessage(Message message) {
         this.messages.add(message);
         this.notifyItemInserted(getItemCount() - 1);
+    }
+
+    public void setMessageDelivered(Message message) {
+        int currentPosition = messages.indexOf(message); // will use UID to find
+        messages.set(currentPosition, message);
+        notifyItemChanged(currentPosition);
     }
 
     public void deleteAll() {
@@ -125,6 +134,7 @@ public class GroupChatAdapter extends RecyclerView.Adapter<GroupChatAdapter.GCVi
                 messages.set(i, message);
             }
         }
+
         if (message.getType() != null && !message.getType().equals("normal")) {
             for (int i = 0; i < messages.size(); i++) {
                     if (!messages.get(i).equals(message) && !messages.get(i).getType().equals("normal")) {

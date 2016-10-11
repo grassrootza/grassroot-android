@@ -412,7 +412,8 @@ public class GroupTasksActivity extends PortraitActivity implements NewTaskMenuF
     }
 
     private void requestPing(String groupUid){
-        GroupService.getInstance().requestPing(groupUid, AndroidSchedulers.mainThread()).subscribe();
+        GroupService.getInstance().requestPing(groupUid, AndroidSchedulers.mainThread())
+            .subscribe();
     }
 
 

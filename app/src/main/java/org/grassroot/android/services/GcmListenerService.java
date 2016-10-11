@@ -25,9 +25,8 @@ import org.grassroot.android.events.NotificationCountChangedEvent;
 import org.grassroot.android.events.NotificationEvent;
 import org.grassroot.android.interfaces.GroupConstants;
 import org.grassroot.android.interfaces.NotificationConstants;
-import org.grassroot.android.models.Message;
-import org.grassroot.android.models.responses.GenericResponse;
 import org.grassroot.android.models.GroupJoinRequest;
+import org.grassroot.android.models.Message;
 import org.grassroot.android.models.PreferenceObject;
 import org.grassroot.android.models.responses.GenericResponse;
 import org.grassroot.android.utils.Constant;
@@ -51,7 +50,7 @@ import rx.schedulers.Schedulers;
  */
 public class GcmListenerService extends com.google.android.gms.gcm.GcmListenerService {
 
-    private static final String TAG = GcmListenerService.class.getCanonicalName();
+    private static final String TAG = GcmListenerService.class.getSimpleName();
     private static final int TASKS = 100;
     private static final int CHATS = 200;
     private static final int JOIN_REQUESTS = 300;
@@ -303,19 +302,17 @@ public class GcmListenerService extends com.google.android.gms.gcm.GcmListenerSe
     private static void handleChatMessages(Bundle bundle, Context context) {
         Log.d(TAG, "Received a chat message from server, looks like: " + bundle.getString(Constant.TITLE));
         Message message = new Message(bundle);
-        if(message.getType().equals("ping")){
-            return;
-        }else {
+
+        if (!message.getType().equals("ping")) {
             String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
             RealmUtils.saveDataToRealmSync(message);
-            if (isAppIsInBackground(context) && !message.getPhoneNumber().equals(phoneNumber)) {
-                if (RealmUtils.hasMessage(message.getUid())) relayNotification(bundle, context);
-            } else {
-                EventBus.getDefault().post(new GroupChatEvent(message.getGroupUid(), bundle, message));
+            if (!phoneNumber.equals(message.getPhoneNumber())) {
+                if (isAppIsInBackground(context)) {
+                    relayNotification(bundle, context);
+                } else {
+                    EventBus.getDefault().post(new GroupChatEvent(message.getGroupUid(), bundle, message));
+                }
             }
-            if (!RealmUtils.hasMessage(message.getUid()) ||
-                    !GcmUpstreamMessageService.isMessageSent(message.getUid()))
-                RealmUtils.saveDataToRealmSync(message);
         }
     }
 

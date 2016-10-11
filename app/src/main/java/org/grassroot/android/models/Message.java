@@ -36,18 +36,23 @@ public class Message extends RealmObject {
     private String groupName;
     private String groupIcon;
     private Date time;
-    private boolean delivered;
+
+    private boolean sent;
+    private boolean delivered; // this is to server
+    private int noAttempts;
+
     private boolean read;
     private String type;
-    private int noAttempts;
+
     private RealmList<RealmString> tokens;
+
     @Ignore
     SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
 
     public Message() {
     }
 
-    public Message(String phoneNumber, String groupUid, String displayName, Date time, String text, boolean delivered, String groupName) {
+    public Message(String phoneNumber, String groupUid, String displayName, Date time, String text, String groupName) {
         this.uid = UUID.randomUUID().toString().concat(phoneNumber); //concating phone number as uid is only unique per system
         this.phoneNumber = phoneNumber;
         this.groupUid = groupUid;
@@ -55,9 +60,9 @@ public class Message extends RealmObject {
         this.displayName = displayName;
         this.text = text;
         this.time = time;
-        this.type="normal";
-        this.delivered = delivered;
-
+        this.type = "normal";
+        this.sent = false;
+        this.delivered = false;
     }
 
     public Message(Bundle bundle) {
@@ -69,6 +74,7 @@ public class Message extends RealmObject {
         this.groupUid = bundle.getString(GroupConstants.UID_FIELD);
         this.userUid = bundle.getString("userUid");
         Log.e("datetime", bundle.getString("time"));
+
         try {
             this.time = formatter.parse(bundle.getString("time"));
         } catch (ParseException e) {
@@ -77,7 +83,11 @@ public class Message extends RealmObject {
 
         this.text = bundle.getString(Constant.BODY);
         this.type = bundle.getString("type");
-        this.delivered = true;
+
+        // by definition, since this is assembled from an incoming GCM packet, it is sent (since delivered to server)
+        this.sent = true;
+        // setting this false, as we're actually not sure ...
+        this.delivered = false;
 
         if (bundle.containsKey("tokens")) {
             String tokenValues = bundle.getString("tokens");
@@ -121,6 +131,8 @@ public class Message extends RealmObject {
         return time;
     }
 
+    public boolean isSent() { return sent; }
+
     public boolean isDelivered() {
         return delivered;
     }
@@ -156,6 +168,8 @@ public class Message extends RealmObject {
     public void setNoAttempts(int noAttempts) {
         this.noAttempts = noAttempts;
     }
+
+    public void setSent(boolean sent) { this.sent = sent; }
 
     public void setDelivered(boolean delivered) {
         this.delivered = delivered;

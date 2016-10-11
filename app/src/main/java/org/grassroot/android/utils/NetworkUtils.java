@@ -59,6 +59,7 @@ public class NetworkUtils {
   public static final String NO_NETWORK = "no_network";
   public static final String FETCHED_SERVER = "fetched_from_server";
   public static final String FETCHED_CACHE = "fetched_local";
+  public static final String SENT_UPSTREAM = "sent_upstream"; // for chat messages
 
   public static final long minIntervalBetweenSyncs = 15 * 60 * 1000; // 15 minutes, in millis
 

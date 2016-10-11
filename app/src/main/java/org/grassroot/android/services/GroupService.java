@@ -211,26 +211,26 @@ public class GroupService {
     }).subscribeOn(Schedulers.io()).observeOn(observingThread);
   }
 
-  public Observable<Boolean> requestPing(final String groupUid, Scheduler observingThread){
-    return Observable.create(new Observable.OnSubscribe<Boolean>(){
+  public Observable<String> requestPing(final String groupUid, Scheduler observingThread){
+    return Observable.create(new Observable.OnSubscribe<String>(){
       @Override
-      public void call(Subscriber<? super Boolean> subscriber) {
+      public void call(Subscriber<? super String> subscriber) {
         if(!NetworkUtils.isOnline()){
           throw  new ApiCallException(NetworkUtils.CONNECT_ERROR);
         }else{
           final String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
           final String code = RealmUtils.loadPreferencesFromDB().getToken();
-          try{
+          try {
             Response<GenericResponse> response = GrassrootRestService.getInstance().getApi().requestPing(phoneNumber,code,groupUid).execute();
             if(response.isSuccessful()){
-              subscriber.onNext(true);
-              subscriber.onCompleted();
-            }else {
-              throw new ApiCallException(NetworkUtils.SERVER_ERROR);
+              subscriber.onNext(NetworkUtils.ONLINE_DEFAULT);
+            } else {
+              subscriber.onNext(NetworkUtils.SERVER_ERROR);
             }
           } catch (IOException e) {
-            subscriber.onError(e);
-            throw  new ApiCallException(NetworkUtils.CONNECT_ERROR);
+            subscriber.onNext(NetworkUtils.CONNECT_ERROR);
+          } finally {
+            subscriber.onCompleted();
           }
         }
 

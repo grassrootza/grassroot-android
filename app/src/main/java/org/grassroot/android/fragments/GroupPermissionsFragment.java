@@ -33,6 +33,7 @@ import rx.observers.Subscribers;
 public class GroupPermissionsFragment extends Fragment {
 
     // note : with so many potential issues with conflicting changes etc., this should only ever be called while online
+    // todo : make sure "mute member" is included here
 
     private String groupUid;
     private String role;

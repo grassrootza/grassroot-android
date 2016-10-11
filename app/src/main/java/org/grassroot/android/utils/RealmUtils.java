@@ -358,9 +358,9 @@ public class RealmUtils {
 
     public static boolean hasMessage(final String messageUid){
         final Realm realm = Realm.getDefaultInstance();
-        return    realm
+        return realm
                 .where(Message.class)
-                .equalTo("uid", messageUid).count() >0;
+                .equalTo("uid", messageUid).count() > 0;
     }
 
     public static Observable<List<Member>> loadGroupMembers(final String groupUid, final boolean includeUser) {
