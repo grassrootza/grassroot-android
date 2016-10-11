@@ -24,6 +24,7 @@ import org.grassroot.android.fragments.dialogs.NetworkErrorDialogFragment;
 import org.grassroot.android.interfaces.GroupConstants;
 import org.grassroot.android.models.GroupJoinRequest;
 import org.grassroot.android.services.ApplicationLoader;
+import org.grassroot.android.services.GcmListenerService;
 import org.grassroot.android.services.GroupSearchService;
 import org.grassroot.android.services.GroupService;
 import org.grassroot.android.utils.ErrorUtils;
@@ -118,6 +119,7 @@ public class JoinRequestListFragment extends Fragment implements JoinRequestAdap
         unbinder = ButterKnife.bind(this, view);
         noRequestsMessage.setText(type.equals(GroupJoinRequest.SENT_REQUEST) ?
             R.string.jreq_no_requests_sent : R.string.jreq_no_requests);
+        GcmListenerService.clearJoinRequestNotifications(getActivity());
         setUpRecyclerView();
         return view;
     }

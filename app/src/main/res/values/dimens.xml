@@ -61,4 +61,10 @@
     <dimen name="md_button_textsize">16sp</dimen>
     <dimen name="md_icon_max_size">48dp</dimen>
 
+    <dimen name="emoji_button_size">32dp</dimen>
+    <dimen name="emoji_button_padding">4dp</dimen> <!-- should be half of difference to send button -->
+    <dimen name="chat_send_button">40dp</dimen>
+    <dimen name="chat_bar_cnr_radius">5dp</dimen>
+    <dimen name="chat_bar_stroke_width">2dp</dimen>
+
 </resources>

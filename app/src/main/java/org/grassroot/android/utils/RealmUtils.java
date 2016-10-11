@@ -7,6 +7,7 @@ import android.util.Log;
 import org.grassroot.android.models.Group;
 import org.grassroot.android.models.GroupJoinRequest;
 import org.grassroot.android.models.Member;
+import org.grassroot.android.models.Message;
 import org.grassroot.android.models.PreferenceObject;
 import org.grassroot.android.models.RealmString;
 import org.grassroot.android.models.TaskModel;
@@ -343,6 +344,25 @@ public class RealmUtils {
         return count;
     }
 
+    public static long countUnreadMessages(final String groupUid){
+        Realm realm = Realm.getDefaultInstance();
+        long count = realm
+                .where(Message.class)
+                .equalTo("groupUid", groupUid)
+                .equalTo("read", false)
+                .count();
+        realm.close();
+        return count;
+
+    }
+
+    public static boolean hasMessage(final String messageUid){
+        final Realm realm = Realm.getDefaultInstance();
+        return    realm
+                .where(Message.class)
+                .equalTo("uid", messageUid).count() >0;
+    }
+
     public static Observable<List<Member>> loadGroupMembers(final String groupUid, final boolean includeUser) {
         return Observable.create(new Observable.OnSubscribe<List<Member>>() {
             @Override
@@ -377,6 +397,119 @@ public class RealmUtils {
             }
         }).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread());
     }
+
+
+    public static Observable<List<Message>> loadMessagesFromDb(final String groupUid) {
+        return Observable.create(new Observable.OnSubscribe<List<Message>>() {
+            @Override
+            public void call(Subscriber<? super List<Message>> subscriber) {
+                RealmList<Message> messages = new RealmList<>();
+                final Realm realm = Realm.getDefaultInstance();
+                RealmResults<Message> results = realm
+                        .where(Message.class)
+                        .equalTo("groupUid", groupUid).findAll();
+                messages.addAll(realm.copyFromRealm(results));
+                subscriber.onNext(messages);
+                subscriber.onCompleted();
+                realm.close();
+            }
+        }).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread());
+    }
+
+    public static Observable<String> deleteAllGroupMessagesFromDb(final String groupUid){
+        return Observable.create(new Observable.OnSubscribe<String>() {
+            @Override
+            public void call(Subscriber<? super String> subscriber) {
+                final Realm realm = Realm.getDefaultInstance();
+                final RealmResults<Message> results = realm
+                        .where(Message.class)
+                        .equalTo("groupUid", groupUid).findAll();
+
+                realm.executeTransaction(new Realm.Transaction() {
+                    @Override
+                    public void execute(Realm realm) {
+                        results.deleteAllFromRealm();
+                    }
+                });
+                subscriber.onNext("");
+                subscriber.onCompleted();
+            }
+        });
+    }
+
+    public static Observable<String> deleteMessageFromDb(final String messageUid){
+        return Observable.create(new Observable.OnSubscribe<String>() {
+            @Override
+            public void call(Subscriber<? super String> subscriber) {
+                final Realm realm = Realm.getDefaultInstance();
+                final RealmResults<Message> results = realm
+                        .where(Message.class).equalTo("uid", messageUid).findAll();
+                realm.executeTransaction(new Realm.Transaction() {
+                    @Override
+                    public void execute(Realm realm) {
+                        results.deleteAllFromRealm();
+                    }
+                });
+                subscriber.onNext("");
+                subscriber.onCompleted();
+                realm.close();
+            }
+        }).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread());
+
+
+    }
+
+
+    public static Observable<List<Message>> loadDistinctMessages(){
+        return Observable.create(new Observable.OnSubscribe<List<Message>>(){
+            @Override
+            public void call(Subscriber<? super List<Message>> subscriber) {
+                final RealmList<Message> messages = new RealmList<Message>();
+                final Realm realm = Realm.getDefaultInstance();
+
+                final RealmResults<Message> results = realm.where(Message.class)
+                        .distinct("groupUid");
+                final List<Message> tempList = new ArrayList<>();
+                realm.executeTransaction(new Realm.Transaction() {
+                    @Override
+                    public void execute(Realm realm) {
+                        for(Message message: results){
+                            Message lastMessage = realm
+                                    .where(Message.class)
+                                    .equalTo("groupUid", message.getGroupUid()).findAll().last();
+                            tempList.add(lastMessage);
+                        }
+                    }
+                });
+                messages.addAll(realm.copyFromRealm(tempList));
+                subscriber.onNext(messages);
+                subscriber.onCompleted();
+                realm.close();
+
+            }
+        }).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread());
+    }
+
+
+    public static void markMessagesAsRead(String groupUid){
+        final Realm realm = Realm.getDefaultInstance();
+        final RealmResults<Message> messages = realm
+                .where(Message.class)
+                .equalTo("groupUid", groupUid)
+                .equalTo("read", false).findAll();
+        realm.executeTransaction(new Realm.Transaction() {
+            @Override
+            public void execute(Realm realm) {
+                for(Message message:messages){
+                    message.setRead(true);
+                    realm.copyToRealmOrUpdate(message);
+
+            }}
+        });
+        realm.close();
+    }
+
+
 
     public static long countUpcomingTasksInDB() {
         Realm realm = Realm.getDefaultInstance();
@@ -504,6 +637,7 @@ public class RealmUtils {
 
         return notifications;
     }
+
 
     public static void persistFullListJoinRequests(@NonNull final List<GroupJoinRequest> requests) {
         if (Looper.myLooper() == Looper.getMainLooper()) {

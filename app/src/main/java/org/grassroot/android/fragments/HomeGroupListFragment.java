@@ -119,7 +119,6 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
         unbinder = ButterKnife.bind(this, view);
         EventBus.getDefault().register(this);
         setHasOptionsMenu(true);
-
         setUpRecyclerView();
         return view;
     }

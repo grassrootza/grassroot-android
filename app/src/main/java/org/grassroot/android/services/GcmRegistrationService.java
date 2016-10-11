@@ -62,7 +62,9 @@ public class GcmRegistrationService extends IntentService {
         try {
 
             String gcmToken = InstanceID.getInstance(this)
-                    .getToken(projectId, GoogleCloudMessaging.INSTANCE_ID_SCOPE, null);
+                    .getToken(projectId, "GCM");
+
+
 
             Log.d(TAG, "got a GCM token : " + gcmToken);
 
@@ -84,8 +86,8 @@ public class GcmRegistrationService extends IntentService {
                                     data.putString(NotificationConstants.PHONE_NUMBER, phoneNumber);
                                     data.putString(NotificationConstants.ACTION, NotificationConstants.REGISTER);
                                     GoogleCloudMessaging.getInstance(GcmRegistrationService.this)
-                                            .send(senderId, messageId, data);
-                                } catch (IOException e1) {
+                                           .send(senderId, messageId, data);
+                                } catch (Exception e1) {
                                     e1.printStackTrace();
                                 }
                             }

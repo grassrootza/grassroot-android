@@ -26,6 +26,11 @@ public interface NotificationConstants {
     String TASK_CHANGED = "TASK_CHANGED";
     String TASK_CANCELLED = "TASK_CANCELLED";
     String TASK_RESULTS = "TASK_RESULTS";
+    String MESSAGE = "message";
+    String CHAT_MESSAGE = "CHAT_MESSAGE";
 
     String JOIN_REQUEST = "JOIN_REQUEST";
+    String CHAT_LIST ="CHAT_LIST";
+    String NOTIFICATION_LIST ="NOTIFICATION_LIST";
+    String JOIN_REQUEST_LIST ="JOIN_REQUEST_LIST";
 }

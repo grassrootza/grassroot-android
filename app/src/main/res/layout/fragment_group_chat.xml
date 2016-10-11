@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:emojicon="http://schemas.android.com/tools"
+    android:id="@+id/root_view"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/light_background"
+    app:layout_behavior="@string/appbar_scrolling_view_behavior">
+
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/gc_recycler_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_above="@+id/chat_entry_layout"
+        android:paddingBottom="20dp"
+        android:scrollbars="vertical" />
+
+    <LinearLayout
+        android:id="@+id/chat_entry_layout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+
+        android:layout_marginBottom="10dp"
+        android:orientation="horizontal"
+        android:weightSum="4"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true">
+
+        <ImageView
+            android:id="@+id/emoji_btn"
+            android:layout_width="@dimen/emoji_button_size"
+            android:layout_height="@dimen/emoji_button_size"
+            android:layout_gravity="bottom"
+            android:layout_marginBottom="@dimen/emoji_button_padding"
+            android:layout_marginLeft="@dimen/margin_small"
+            android:tint="@color/primaryColor"
+            android:src="@drawable/smiley" />
+
+        <hani.momanii.supernova_emoji_library.Helper.EmojiconMultiAutoCompleteTextView
+            android:id="@+id/text"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:inputType="textCapSentences|textMultiLine|textAutoComplete"
+            android:completionHint="Commands"
+            android:completionThreshold="1"
+            android:background="@drawable/chat_bar_background"
+            android:maxLines="10"
+            emojicon:emojiconSize="28sp"
+            android:layout_marginTop="5dp"
+            android:layout_marginLeft="@dimen/margin_small"
+            android:dropDownWidth="match_parent"
+            android:layout_weight="3.99"/>
+
+        <ImageView
+            android:id="@+id/btn_send"
+            android:tint="@color/primaryColor"
+            android:layout_width="@dimen/chat_send_button"
+            android:layout_height="@dimen/chat_send_button"
+            android:layout_gravity="bottom"
+            android:src="@android:drawable/ic_menu_send"/>
+
+    </LinearLayout>
+
+</RelativeLayout>
