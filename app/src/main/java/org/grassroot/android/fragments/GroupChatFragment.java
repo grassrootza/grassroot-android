@@ -28,6 +28,11 @@ import android.widget.Toast;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
 
+import com.espian.showcaseview.OnShowcaseEventListener;
+import com.espian.showcaseview.ShowcaseView;
+import com.espian.showcaseview.targets.Target;
+import com.espian.showcaseview.targets.ViewTarget;
+
 import org.grassroot.android.R;
 import org.grassroot.android.activities.GroupTasksActivity;
 import org.grassroot.android.activities.MultiMessageNotificationActivity;
@@ -171,7 +176,18 @@ public class GroupChatFragment extends Fragment implements GroupChatAdapter.Grou
 
         setHasOptionsMenu(true);
         setView();
+
+
         return view;
+    }
+
+
+    @Override
+    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+
+
+
     }
 
     @Override
@@ -612,6 +628,18 @@ public class GroupChatFragment extends Fragment implements GroupChatAdapter.Grou
         return (getActivity() instanceof MultiMessageNotificationActivity &&  this.groupUid.equals(groupUid));
     }
 
+    private void showCase(){
+        if (getActivity() instanceof GroupTasksActivity) {
+            GroupTaskMasterFragment masterFragment = (GroupTaskMasterFragment) this.getParentFragment();
+            if(masterFragment.getRequestPager().getCurrentItem() == 1){
+                ShowcaseView.ConfigOptions configOptions = new ShowcaseView.ConfigOptions();
+                configOptions.hideOnClickOutside = true;
+                ViewTarget target = new ViewTarget(R.id.btn_send, getActivity());
+                ShowcaseView.insertShowcaseView(target, getActivity(), "Hello", "Hello", configOptions);
+            }
+        }
+
+    }
 
     private TaskModel generateTaskObject(String groupUid, String title, String time, @Nullable String venue, String type) {
 
@@ -636,6 +664,7 @@ public class GroupChatFragment extends Fragment implements GroupChatAdapter.Grou
 
         return model;
     }
+
 
 
 }

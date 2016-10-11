@@ -2,6 +2,7 @@ package org.grassroot.android.fragments;
 
 import android.content.Context;
 import android.content.DialogInterface;
+import android.graphics.Point;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
@@ -22,6 +23,11 @@ import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import com.espian.showcaseview.ShowcaseView;
+import com.espian.showcaseview.ShowcaseViewBuilder;
+import com.espian.showcaseview.targets.Target;
+import com.espian.showcaseview.targets.ViewTarget;
 
 import org.grassroot.android.R;
 import org.grassroot.android.adapters.TasksAdapter;
@@ -154,6 +160,17 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
                 refreshTasksFromServer(false);
             }
         });
+
+        ShowcaseView.ConfigOptions configOptions = new ShowcaseView.ConfigOptions();
+        configOptions.centerText =true;
+        configOptions.hideOnClickOutside = true;
+
+        ViewTarget target = new ViewTarget(R.id.tl_fab, getActivity());
+        ShowcaseView v = ShowcaseView.insertShowcaseView(target, getActivity(), "Hello", "Hello", configOptions);
+        v.setButtonText("Got it");
+
+
+
     }
 
     @Override
