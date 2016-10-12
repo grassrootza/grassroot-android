@@ -862,6 +862,7 @@
     <string name="chat_message_delivered">Delivered. </string>
     <string name="chat_long_click_options_title">Options</string>
 
+    <string name="chat_message_server">Grassroot</string>
     <string name="options_yes">Yes</string>
     <string name="options_no">No</string>
 
@@ -874,6 +875,11 @@
     <string name="chat_connect_error">Sorry, you must be connected to send chat messages. Try connect?</string>
 
     <string name="chat_clipboard_label">Grassroot Chat Message</string>
+
+    <string name="chat_calling_meeting">Calling meeting &#8230;</string>
+    <string name="chat_calling_vote">Calling vote &#8230;</string>
+    <string name="chat_recording_action">Recording action &#8230;</string>
+    <string name="chat_calling_task">Creating task &#8230;</string>
 
     <!--Notifications-->
     <string name="messages_new">" new messages."</string>

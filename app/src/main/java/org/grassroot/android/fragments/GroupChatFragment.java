@@ -300,7 +300,6 @@ public class GroupChatFragment extends Fragment implements GroupChatAdapter.Grou
                 .subscribe(new Action1<String>() {
                     @Override
                     public void call(String s) {
-                        Log.e(TAG, "updating message after subscriber event called");
                         groupChatAdapter.updateMessage(RealmUtils.loadMessage(message.getUid()));
                     }
                 }, new Action1<Throwable>() {
@@ -410,7 +409,6 @@ public class GroupChatFragment extends Fragment implements GroupChatAdapter.Grou
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onEvent(MessageNotSentEvent messageNotSentEvent) {
-        Log.e(TAG, "message not sent event");
         Message message = messageNotSentEvent.getMessage();
         if (groupChatAdapter.getMessages().contains(message)) {
             groupChatAdapter.updateMessage(message);
@@ -419,7 +417,6 @@ public class GroupChatFragment extends Fragment implements GroupChatAdapter.Grou
 
     @Override
     public void createTaskFromMessage(final Message message) {
-        Log.e(TAG, "create task from message");
         String title = message.getTokens().get(0).getString();
         String location = null;
         if(message.getType().equals(TaskConstants.MEETING))
@@ -437,14 +434,19 @@ public class GroupChatFragment extends Fragment implements GroupChatAdapter.Grou
 
             @Override
             public void onNext(TaskModel taskModel) {
-                Snackbar.make(rootView,getString(R.string.chat_task_called,
-                        taskModel.getType().toLowerCase()),Snackbar.LENGTH_LONG).show();
-                RealmUtils.deleteMessageFromDb(message.getUid()).subscribe(new Action1<String>() {
-                    @Override
-                    public void call(String s) {
-                        groupChatAdapter.reloadFromdb(message.getGroupUid());
-                    }
-                });
+                // todo : check adapter is not null, here & everywhere (in case user navigates away)
+                if (isVisible() && groupChatAdapter != null) {
+                    final String text = TaskConstants.MEETING.equals(taskModel.getType()) ? getString(R.string.chat_calling_meeting) :
+                        TaskConstants.VOTE.equals(taskModel.getType()) ? getString(R.string.chat_calling_vote) :
+                            TaskConstants.TODO.equals(taskModel.getType()) ? getString(R.string.chat_recording_action)
+                                : getString(R.string.chat_calling_task);
+                    Message placeHolder = new Message(groupUid, message.getUid(), text);
+                    placeHolder.setToKeep(false);
+                    RealmUtils.saveDataToRealmSync(placeHolder);
+                    groupChatAdapter.updateMessage(placeHolder);
+                } else {
+                    RealmUtils.deleteMessageFromDb(message.getUid());
+                }
             }
         });
 
@@ -497,7 +499,6 @@ public class GroupChatFragment extends Fragment implements GroupChatAdapter.Grou
                         int optionChosen = message.isSent() ? i + 1 : i;
                         switch (optionChosen) {
                             case 0:
-                                Log.e(TAG, "resending message");
                                 message.setSending(true);
                                 groupChatAdapter.updateMessage(message);
                                 sendMessageInBackground(message.getText(), message.getUid());
@@ -547,7 +548,6 @@ public class GroupChatFragment extends Fragment implements GroupChatAdapter.Grou
     }
 
     private void deleteMessage(final String messageId) {
-        Log.e(TAG, "deleting a message");
         RealmUtils.deleteMessageFromDb(messageId).subscribe(new Action1<String>() {
             @Override
             public void call(String s) {

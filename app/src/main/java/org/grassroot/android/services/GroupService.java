@@ -216,7 +216,7 @@ public class GroupService {
       @Override
       public void call(Subscriber<? super String> subscriber) {
         if(!NetworkUtils.isOnline()){
-          throw  new ApiCallException(NetworkUtils.CONNECT_ERROR);
+          subscriber.onNext(NetworkUtils.CONNECT_ERROR);
         }else{
           final String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
           final String code = RealmUtils.loadPreferencesFromDB().getToken();
@@ -233,7 +233,6 @@ public class GroupService {
             subscriber.onCompleted();
           }
         }
-
       }
     }).subscribeOn(Schedulers.io()).observeOn(observingThread);
   }

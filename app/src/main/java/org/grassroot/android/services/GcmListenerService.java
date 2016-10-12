@@ -36,6 +36,7 @@ import org.greenrobot.eventbus.EventBus;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -87,7 +88,6 @@ public class GcmListenerService extends com.google.android.gms.gcm.GcmListenerSe
         Log.d(TAG, "message with id " + msgId + " not sent.");
     }
 
-
     private static void relayNotification(Bundle msg, Context context) {
 
         Log.d(TAG, "Received a push notification from server");
@@ -97,7 +97,8 @@ public class GcmListenerService extends com.google.android.gms.gcm.GcmListenerSe
         final String notificationUid = msg.getString(NotificationConstants.NOTIFICATION_UID);
         final String entityType = msg.getString(NotificationConstants.ENTITY_TYPE);
         final NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(context);
-        if (entityType.equals(NotificationConstants.CHAT_MESSAGE)) {
+
+        if (NotificationConstants.CHAT_MESSAGE.equals(entityType)) {
             String title = msg.getString(Constant.TITLE).concat(": ");
             chatMessages.add(title.concat(msg.getString(Constant.BODY)));
             displayedMessagesCount++;
@@ -105,6 +106,7 @@ public class GcmListenerService extends com.google.android.gms.gcm.GcmListenerSe
             notificationMessages.add(msg.getString(Constant.BODY));
             displayedNotificationCount++;
         }
+
         PendingIntent resultPendingIntent = generateResultIntent(msg, context);
         long when = System.currentTimeMillis();
 
@@ -224,9 +226,9 @@ public class GcmListenerService extends com.google.android.gms.gcm.GcmListenerSe
     private static PendingIntent generateResultIntent(Bundle msg, Context context) {
         Log.d(TAG, "generateResultIntent called, with message bundle: " + msg.toString());
 
-        final String entityType = msg.getString(NotificationConstants.ENTITY_TYPE);
-        Intent resultIntent;
+        final String entityType = msg.getString(NotificationConstants.ENTITY_TYPE, NotificationConstants.CHAT_MESSAGE);
 
+        Intent resultIntent;
         if (displayedMessagesCount > 1 || displayedNotificationCount > 1 || displayedJoinRequestCount > 1) {
             if (!entityType.equals(NotificationConstants.CHAT_MESSAGE)) {
                 resultIntent = new Intent(context, MultiMessageNotificationActivity.class);
@@ -262,6 +264,11 @@ public class GcmListenerService extends com.google.android.gms.gcm.GcmListenerSe
                     resultIntent.putExtra(GroupConstants.NAME_FIELD, msg.getString(GroupConstants.NAME_FIELD));
                     break;
                 default:
+                    String clickAction = msg.getString(NotificationConstants.CLICK_ACTION);
+                    // todo : also reminders & results?
+                    if (clickAction != null && clickAction.equals(NotificationConstants.TASK_CREATED)) {
+                        createChatMessageFromTask(msg);
+                    }
                     resultIntent = new Intent(context, ViewTaskActivity.class);
                     resultIntent.putExtra(NotificationConstants.NOTIFICATION_UID, msg.getString(NotificationConstants.NOTIFICATION_UID));
                     resultIntent.putExtra(NotificationConstants.ENTITY_TYPE, msg.getString(NotificationConstants.ENTITY_TYPE));
@@ -315,6 +322,18 @@ public class GcmListenerService extends com.google.android.gms.gcm.GcmListenerSe
                 }
             }
         }
+    }
+
+    private static void createChatMessageFromTask(Bundle bundle) {
+        Log.e(TAG, "creating a chat message from an incoming task");
+        final String groupUid = bundle.getString(GroupConstants.UID_FIELD);
+        final String taskUid = bundle.getString(NotificationConstants.ENTITY_UID);
+        final String text = bundle.getString(NotificationConstants.BODY);
+        Message message = new Message(groupUid, UUID.randomUUID().toString(), text);
+        Log.e(TAG, "okay, got the message, it looks like : " + message);
+        message.setToKeep(true);
+        RealmUtils.saveDataToRealmSync(message);
+        EventBus.getDefault().post(new GroupChatEvent(groupUid, bundle, message));
     }
 
     public static Observable showNotification(final Bundle bundle, final Context context) {

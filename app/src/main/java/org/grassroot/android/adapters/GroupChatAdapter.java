@@ -5,7 +5,6 @@ import android.content.Context;
 import android.support.annotation.Nullable;
 import android.support.v7.widget.RecyclerView;
 import android.text.format.DateUtils;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -50,6 +49,8 @@ public class GroupChatAdapter extends RecyclerView.Adapter<GroupChatAdapter.GCVi
     private final String sendingSub;
     private final String notSentSub;
 
+    private final String thisPhoneNumber;
+
     public interface GroupChatAdapterListener {
         void createTaskFromMessage(Message message);
     }
@@ -63,6 +64,8 @@ public class GroupChatAdapter extends RecyclerView.Adapter<GroupChatAdapter.GCVi
         sentSub = context.getString(R.string.chat_message_sent);
         sendingSub = context.getString(R.string.chat_message_sending);
         notSentSub = context.getString(R.string.chat_message_not_sent);
+
+        thisPhoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
 
         notifyDataSetChanged();
     }
@@ -99,8 +102,7 @@ public class GroupChatAdapter extends RecyclerView.Adapter<GroupChatAdapter.GCVi
                 holder.user.setVisibility(View.VISIBLE);
                 break;
             case SERVER:
-                Log.e(TAG, "showing a server message");
-                holder.user.setText(message.getDisplayName());
+                holder.user.setText(context.getText(R.string.chat_message_server));
                 holder.user.setVisibility(View.VISIBLE);
                 final boolean validCommand = message.getTokens() != null && message.getTokens().size() > 0;
                 handleServerMessageBtns(holder, validCommand, message);
@@ -131,10 +133,8 @@ public class GroupChatAdapter extends RecyclerView.Adapter<GroupChatAdapter.GCVi
 
     public void addOrUpdateMessage(Message message) {
         if (messages.contains(message)) {
-            Log.e(TAG, "message already in list");
             updateMessage(message);
         } else {
-            Log.e(TAG, "message not in list, updating");
             addMessage(message);
         }
     }
@@ -159,29 +159,29 @@ public class GroupChatAdapter extends RecyclerView.Adapter<GroupChatAdapter.GCVi
     }
 
     public void updateMessage(final Message message) {
-        Log.e(TAG, "inside update message, updating message : " + message);
         for (int i = 0; i < messages.size(); i++) {
             if (messages.get(i).getUid().equals(message.getUid())) {
-                Log.e(TAG, "replacing a message at position " + i);
                 messages.set(i, message);
             }
         }
 
-        if (message.getType() != null && !message.getType().equals("normal")) {
-            for (int i = 0; i < messages.size(); i++) {
-                if (!messages.get(i).equals(message) && !messages.get(i).getType().equals("normal")) {
-                    Log.e(TAG, "deleting message from DB at position ... " + i);
-                    RealmUtils.deleteMessageFromDb(messages.get(i).getUid()).subscribe();
-                    messages.remove(i);
-                }
-            }
+        if (message.isServerMessage()) {
+            removeOldSystemMessages(message);
         }
 
         this.notifyDataSetChanged();
     }
 
+    private void removeOldSystemMessages(Message messageToKeep) {
+        for (int i = messages.size() - 1; i >= 0; i--) {
+            if (!messages.get(i).equals(messageToKeep) && messages.get(i).isServerMessage() && !messages.get(i).isToKeep()) {
+                RealmUtils.deleteMessageFromDb(messages.get(i).getUid()).subscribe();
+                messages.remove(i);
+            }
+        }
+    }
+
     public void deleteOne(String messageUid) {
-        Log.e(TAG, "inside deleteOne");
         for (int i = 0; i < messages.size(); i++) {
             if (messages.get(i).getUid().equals(messageUid)) {
                 messages.remove(i);
@@ -209,14 +209,13 @@ public class GroupChatAdapter extends RecyclerView.Adapter<GroupChatAdapter.GCVi
     @Override
     public int getItemViewType(int position) {
         Message message = messages.get(position);
-        if (message != null && message.getPhoneNumber() == null) {
+        if (message != null && message.isServerMessage()) {
             return SERVER;
-        }
-        if (message != null && !message.getPhoneNumber().equals(RealmUtils.loadPreferencesFromDB().
-                getMobileNumber())) {
+        } else if (message != null && !message.getPhoneNumber().equals(thisPhoneNumber)) {
             return OTHER;
+        } else {
+            return SELF;
         }
-        return SELF;
     }
 
     public List<Message> getMessages() {

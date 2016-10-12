@@ -60,7 +60,6 @@ public class GcmUpstreamMessageService {
 
                     for (int i = 1; i <= MAX_RETRIES; i++) {
                         if (isMessageSent(msgUid)) {
-                            Log.e(TAG, "message is sent!");
                             messageSent = true;
                             break;
                         }
@@ -84,11 +83,10 @@ public class GcmUpstreamMessageService {
                         subscriber.onNext(NetworkUtils.SENT_UPSTREAM);
                         subscriber.onCompleted();
                     } else {
-                        Log.e(TAG, "message still not sent, assuming network error .. ");
+                        Log.d(TAG, "message still not sent, assuming network error .. ");
                         throw new ApiCallException(NetworkUtils.CONNECT_ERROR);
                     }
 
-                    Log.e(TAG, "message completed sending, saving to Realm again");
                     Message msgInDb = RealmUtils.loadMessage(msgUid);
                     if (msgInDb.getNoAttempts() != -1) {
                         message.setSending(false);

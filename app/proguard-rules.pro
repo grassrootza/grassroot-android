@@ -7,7 +7,7 @@
 # For more details, see
 #   http://developer.android.com/guide/developing/tools/proguard.html
 
-# Add any project specific keep options here:
+# Add any project specific toKeep options here:
 
 # If your project uses WebView with JS, uncomment the following
 # and specify the fully qualified class name to the JavaScript interface
@@ -23,16 +23,16 @@
 -dontwarn retrofit.appengine.UrlFetchClient
 -dontwarn okio.**
 -dontwarn com.viewpagerindicator.**
--keep class com.squareup.okhttp.** { *; }
--keep interface com.squareup.okhttp.** { *; }
--keep class retrofit2.** { *; }
+-toKeep class com.squareup.okhttp.** { *; }
+-toKeep interface com.squareup.okhttp.** { *; }
+-toKeep class retrofit2.** { *; }
 
--keep public class android.support.v7.widget.** { *; }
--keep public class android.support.v7.internal.widget.** { *; }
+-toKeep public class android.support.v7.widget.** { *; }
+-toKeep public class android.support.v7.internal.widget.** { *; }
 
 -keepnames class !android.support.v7.internal.view.menu.**, ** { *; }
 
--keep public class * extends android.support.v4.view.ActionProvider {
+-toKeep public class * extends android.support.v4.view.ActionProvider {
     public <init>(android.content.Context);
 }
 -keepattributes *Annotation*
@@ -41,7 +41,7 @@
     @org.greenrobot.eventbus.Subscribe <methods>;
 }
 
--keep enum org.greenrobot.eventbus.ThreadMode { *; }
+-toKeep enum org.greenrobot.eventbus.ThreadMode { *; }
 
 # Only required if you use AsyncExecutor
 -keepclassmembers class * extends org.greenrobot.eventbus.util.ThrowableFailureEvent {
@@ -54,8 +54,8 @@
 -keepattributes innerClasses
 -keepattributes EnclosingMethod
 
--keep class butterknife.** { *; }
--keep class **$$ViewInjector { *; }
+-toKeep class butterknife.** { *; }
+-toKeep class **$$ViewInjector { *; }
 
 -keepclasseswithmembernames class * {
     @butterknife.* <fields>;
@@ -67,10 +67,10 @@
     @retrofit.http.* <methods>;
 }
 -keepattributes Signature
--keep class com.google.gson.** { *;}
+-toKeep class com.google.gson.** { *;}
 
 -dontwarn sun.misc.**
--keep public class com.google.android.gms.* { public *; }
+-toKeep public class com.google.android.gms.* { public *; }
 -dontwarn com.google.android.gms.**
 -keepclassmembers class rx.internal.util.unsafe.*ArrayQueue*Field* {
    long producerIndex;

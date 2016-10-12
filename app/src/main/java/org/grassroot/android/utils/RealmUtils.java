@@ -97,7 +97,6 @@ public class RealmUtils {
     public static void saveDataToRealmSync(final List<? extends RealmObject> list) {
         Realm realm = Realm.getDefaultInstance();
         realm.beginTransaction();
-        Log.e(TAG, "okay and now saving the list to Realm ... has this many objects = " + list.size());
         realm.copyToRealmOrUpdate(list);
         realm.commitTransaction();
         realm.close();
@@ -127,7 +126,6 @@ public class RealmUtils {
     }
 
     public static void saveGroupToRealm(Group group) {
-        Log.d("REALM", "saving group: " + group.toString());
         saveDataToRealmSync(group);
     }
 
@@ -557,7 +555,6 @@ public class RealmUtils {
         return Observable.create(new Observable.OnSubscribe<List<TaskModel>>() {
             @Override
             public void call(Subscriber<? super List<TaskModel>> subscriber) {
-                Log.e(TAG, "retrieving tasks from DB for parentUID = " + parentUid);
                 RealmList<TaskModel> tasks = new RealmList<>();
                 final Realm realm = Realm.getDefaultInstance();
                 RealmResults<TaskModel> results = realm

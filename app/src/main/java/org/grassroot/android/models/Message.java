@@ -1,6 +1,7 @@
 package org.grassroot.android.models;
 
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.util.Log;
 
 import org.grassroot.android.interfaces.GroupConstants;
@@ -45,6 +46,9 @@ public class Message extends RealmObject {
     private boolean read;
     private String type;
 
+    private boolean server;
+    private boolean toKeep;
+
     private RealmList<RealmString> tokens;
 
     @Ignore
@@ -65,6 +69,18 @@ public class Message extends RealmObject {
         this.sending = false;
         this.sent = false;
         this.delivered = false;
+        this.server = false;
+    }
+
+    public Message(String groupUid, String messageUid, String text) {
+        this.uid = messageUid;
+        this.server = true;
+        this.groupUid = groupUid;
+        this.text = text;
+        this.time = new Date();
+        this.type = "server";
+        this.sent = true;
+        this.delivered = true;
     }
 
     public Message(Bundle bundle) {
@@ -93,6 +109,8 @@ public class Message extends RealmObject {
         this.delivered = false;
         this.noAttempts = -1;
 
+        this.server = phoneNumber == null;
+
         if (bundle.containsKey("tokens")) {
             String tokenValues = bundle.getString("tokens");
             try {
@@ -110,10 +128,11 @@ public class Message extends RealmObject {
 
     }
 
-
     public String getText() {
         return text;
     }
+
+    public void setText(String text) { this.text = text; }
 
     public String getGroupUid() {
         return groupUid;
@@ -183,8 +202,28 @@ public class Message extends RealmObject {
         this.delivered = delivered;
     }
 
+    public boolean isToKeep() {
+        return toKeep;
+    }
+
+    public void setToKeep(boolean toKeep) {
+        this.toKeep = toKeep;
+    }
+
+    public boolean isServer() {
+        return server;
+    }
+
+    public void setServer(boolean server) {
+        this.server = server;
+    }
+
     public boolean exceedsMaximumSendingAttempts() {
         return noAttempts == GcmUpstreamMessageService.MAX_RETRIES;
+    }
+
+    public boolean isServerMessage() {
+        return TextUtils.isEmpty(phoneNumber);
     }
 
     @Override
