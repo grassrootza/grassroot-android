@@ -1,7 +1,6 @@
 package org.grassroot.android.services;
 
 import android.content.Context;
-import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 
@@ -57,16 +56,21 @@ public class GcmUpstreamMessageService {
                     data.putString(GroupConstants.UID_FIELD, message.getGroupUid());
                     data.putString("time", Constant.isoDateTimeSDF.format(message.getTime()));
 
+                    final String msgUid = message.getUid();
+
                     for (int i = 1; i <= MAX_RETRIES; i++) {
-                        if (isMessageSent(message.getUid())) {
+                        if (isMessageSent(msgUid)) {
+                            Log.e(TAG, "message is sent!");
                             messageSent = true;
                             break;
                         }
 
-                        context.sendBroadcast(new Intent("com.google.android.intent.action.GTALK_HEARTBEAT"));
-                        context.sendBroadcast(new Intent("com.google.android.intent.action.MCS_HEARTBEAT"));
-                        message.setNoAttempts(i);
-                        RealmUtils.saveDataToRealmSync(message);
+                        Message msgInDb = RealmUtils.loadMessage(msgUid);
+                        if (msgInDb.getNoAttempts() != -1) {
+                            message.setNoAttempts(i);
+                            RealmUtils.saveDataToRealmSync(message);
+                        }
+
                         try {
                             GoogleCloudMessaging.getInstance(context).send(senderId, message.getUid(), 0, data);
                             Log.d(TAG, "Attempt no " + i);
@@ -83,6 +87,14 @@ public class GcmUpstreamMessageService {
                         Log.e(TAG, "message still not sent, assuming network error .. ");
                         throw new ApiCallException(NetworkUtils.CONNECT_ERROR);
                     }
+
+                    Log.e(TAG, "message completed sending, saving to Realm again");
+                    Message msgInDb = RealmUtils.loadMessage(msgUid);
+                    if (msgInDb.getNoAttempts() != -1) {
+                        message.setSending(false);
+                        message.setSent(true);
+                        RealmUtils.saveDataToRealm(message).subscribe();
+                    }
                 }
             }
         }).subscribeOn(Schedulers.io()).observeOn(observingThread);
@@ -92,7 +104,7 @@ public class GcmUpstreamMessageService {
     public static boolean isMessageSent(String uid) {
         Message message = RealmUtils.loadObjectFromDB(Message.class, "uid", uid);
         if (message != null) {
-            if (message.getNoAttempts() == MAX_RETRIES && !message.isDelivered()){
+            if (message.getNoAttempts() == MAX_RETRIES && !message.isSent()){
                 EventBus.getDefault().post(new MessageNotSentEvent(message));
             }
             return message.isSent();

@@ -37,6 +37,7 @@ public class Message extends RealmObject {
     private String groupIcon;
     private Date time;
 
+    private boolean sending;
     private boolean sent;
     private boolean delivered; // this is to server
     private int noAttempts;
@@ -61,6 +62,7 @@ public class Message extends RealmObject {
         this.text = text;
         this.time = time;
         this.type = "normal";
+        this.sending = false;
         this.sent = false;
         this.delivered = false;
     }
@@ -85,9 +87,11 @@ public class Message extends RealmObject {
         this.type = bundle.getString("type");
 
         // by definition, since this is assembled from an incoming GCM packet, it is sent (since delivered to server)
+        this.sending = false;
         this.sent = true;
         // setting this false, as we're actually not sure ...
         this.delivered = false;
+        this.noAttempts = -1;
 
         if (bundle.containsKey("tokens")) {
             String tokenValues = bundle.getString("tokens");
@@ -131,6 +135,8 @@ public class Message extends RealmObject {
         return time;
     }
 
+    public boolean isSending() { return sending; }
+
     public boolean isSent() { return sent; }
 
     public boolean isDelivered() {
@@ -168,6 +174,8 @@ public class Message extends RealmObject {
     public void setNoAttempts(int noAttempts) {
         this.noAttempts = noAttempts;
     }
+
+    public void setSending(boolean sending) { this.sending = sending; }
 
     public void setSent(boolean sent) { this.sent = sent; }
 

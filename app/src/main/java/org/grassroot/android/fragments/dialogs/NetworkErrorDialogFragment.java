@@ -19,6 +19,7 @@ import org.grassroot.android.utils.RealmUtils;
 import rx.Subscriber;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.functions.Action1;
+import rx.observers.Subscribers;
 
 /**
  * Created by paballo on 2016/06/02.
@@ -30,7 +31,44 @@ public class NetworkErrorDialogFragment extends DialogFragment {
 	Subscriber<String> subscriber;
 	ProgressBar progressBar;
 
-    public static NetworkErrorDialogFragment newInstance(int message, ProgressBar progressBar,
+	public static class NetworkDialogBuilder {
+		private int message;
+		private ProgressBar progressBar;
+		private Subscriber<String> subscriber;
+		private boolean syncOnConnect;
+
+		public NetworkDialogBuilder(int message) {
+			this.message = message;
+		}
+
+		public NetworkDialogBuilder progressBar(ProgressBar progressBar) {
+			this.progressBar = progressBar;
+			return this;
+		}
+
+		public NetworkDialogBuilder action(Action1<String> subscriber) {
+			this.subscriber = Subscribers.create(subscriber);
+			return this;
+		}
+
+		public NetworkDialogBuilder syncOnConnect(boolean syncOnConnect) {
+			this.syncOnConnect = syncOnConnect;
+			return this;
+		}
+
+		public NetworkErrorDialogFragment build() {
+			NetworkErrorDialogFragment frag = new NetworkErrorDialogFragment();
+			Bundle args = new Bundle();
+			args.putInt("message", this.message);
+			args.putBoolean("sync", this.syncOnConnect);
+			frag.setArguments(args);
+			frag.subscriber = subscriber;
+			frag.progressBar = progressBar; // todo : check memory leaks
+			return frag;
+		}
+	}
+
+		public static NetworkErrorDialogFragment newInstance(int message, ProgressBar progressBar,
 																												 Subscriber<String> subscriber) {
 			NetworkErrorDialogFragment frag = new NetworkErrorDialogFragment();
 			Bundle args = new Bundle();
@@ -44,7 +82,8 @@ public class NetworkErrorDialogFragment extends DialogFragment {
     @Override
 		@NonNull
     public Dialog onCreateDialog(Bundle savedInstanceState) {
-			int message = getArguments().getInt("message");
+			final int message = getArguments().getInt("message");
+			final boolean sync = getArguments().getBoolean("sync", true);
 
 			AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
 			final boolean offlineSelected = RealmUtils.loadPreferencesFromDB().getOnlineStatus().equals(NetworkUtils.OFFLINE_SELECTED);
@@ -65,8 +104,10 @@ public class NetworkErrorDialogFragment extends DialogFragment {
 										@Override
 										public void call(String s) {
 											subscriber.onNext(NetworkUtils.ONLINE_DEFAULT);
-											Log.e(TAG, "and now queuing up the send sync");
-											NetworkUtils.sendQueueAfterDelay();
+											if (sync) {
+												Log.e(TAG, "and now queuing up the send sync");
+												NetworkUtils.sendQueueAfterDelay();
+											}
 										}
 									}, new Action1<Throwable>() {
 										@Override

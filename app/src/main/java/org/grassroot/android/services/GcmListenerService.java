@@ -300,10 +300,11 @@ public class GcmListenerService extends com.google.android.gms.gcm.GcmListenerSe
     }
 
     private static void handleChatMessages(Bundle bundle, Context context) {
-        Log.d(TAG, "Received a chat message from server, looks like: " + bundle.getString(Constant.TITLE));
+        Log.d(TAG, "Received a chat message from server, with type: " + bundle.getString(Constant.TITLE));
         Message message = new Message(bundle);
 
         if (!message.getType().equals("ping")) {
+            Log.e(TAG, "saving message with UID: " + message.getUid());
             String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
             RealmUtils.saveDataToRealmSync(message);
             if (!phoneNumber.equals(message.getPhoneNumber())) {

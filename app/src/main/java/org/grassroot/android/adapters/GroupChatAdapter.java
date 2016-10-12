@@ -38,16 +38,32 @@ public class GroupChatAdapter extends RecyclerView.Adapter<GroupChatAdapter.GCVi
     private Context context;
     private GroupChatAdapterListener listener;
 
+    private int selectedPos = -1;
 
     private List<Message> messages;
     public final static int SELF = 100;
     public final static int OTHER = 200;
     public final static int SERVER = 300;
 
+    private final String deliveredSub;
+    private final String sentSub;
+    private final String sendingSub;
+    private final String notSentSub;
+
+    public interface GroupChatAdapterListener {
+        void createTaskFromMessage(Message message);
+    }
+
     public GroupChatAdapter(List<Message> messages, GroupChatFragment fragment) {
         this.context = ApplicationLoader.applicationContext;
         this.messages = new ArrayList<>(messages);
         this.listener = fragment;
+
+        deliveredSub = context.getString(R.string.chat_message_delivered);
+        sentSub = context.getString(R.string.chat_message_sent);
+        sendingSub = context.getString(R.string.chat_message_sending);
+        notSentSub = context.getString(R.string.chat_message_not_sent);
+
         notifyDataSetChanged();
     }
 
@@ -67,6 +83,7 @@ public class GroupChatAdapter extends RecyclerView.Adapter<GroupChatAdapter.GCVi
 
     @Override
     public void onBindViewHolder(GCViewHolder holder, int position) {
+        holder.itemView.setSelected(selectedPos == position);
         final Message message = messages.get(position);
         final int viewType = getItemViewType(position);
 
@@ -82,17 +99,17 @@ public class GroupChatAdapter extends RecyclerView.Adapter<GroupChatAdapter.GCVi
                 holder.user.setVisibility(View.VISIBLE);
                 break;
             case SERVER:
+                Log.e(TAG, "showing a server message");
                 holder.user.setText(message.getDisplayName());
                 holder.user.setVisibility(View.VISIBLE);
                 final boolean validCommand = message.getTokens() != null && message.getTokens().size() > 0;
                 handleServerMessageBtns(holder, validCommand, message);
                 break;
             case SELF:
-                // vLog.e(TAG, "setting subtitle, message state = " + message.isSent());
-                final String subtitle =
-                    message.isDelivered() ? context.getString(R.string.chat_message_delivered)
-                    : message.isSent() ? context.getString(R.string.chat_message_sent)
-                        : message.exceedsMaximumSendingAttempts() ? context.getString(R.string.chat_message_not_sent) : "";
+                final String subtitle = message.isDelivered() ? deliveredSub
+                    : message.isSent() ? sentSub
+                    : message.isSending() ? sendingSub
+                    : message.exceedsMaximumSendingAttempts() ? notSentSub : "";
                 holder.timestamp.setText(subtitle.concat(time));
                 break;
         }
@@ -112,15 +129,28 @@ public class GroupChatAdapter extends RecyclerView.Adapter<GroupChatAdapter.GCVi
         });
     }
 
+    public void addOrUpdateMessage(Message message) {
+        if (messages.contains(message)) {
+            Log.e(TAG, "message already in list");
+            updateMessage(message);
+        } else {
+            Log.e(TAG, "message not in list, updating");
+            addMessage(message);
+        }
+    }
+
     public void addMessage(Message message) {
         this.messages.add(message);
         this.notifyItemInserted(getItemCount() - 1);
     }
 
-    public void setMessageDelivered(Message message) {
-        int currentPosition = messages.indexOf(message); // will use UID to find
-        messages.set(currentPosition, message);
-        notifyItemChanged(currentPosition);
+    public Message findMessage(String messageUid) {
+        for (int  i = messages.size() - 1; i >= 0; i--) {
+            if (messages.get(i).getUid().equals(messageUid)) {
+                return messages.get(i);
+            }
+        }
+        return null;
     }
 
     public void deleteAll() {
@@ -129,31 +159,45 @@ public class GroupChatAdapter extends RecyclerView.Adapter<GroupChatAdapter.GCVi
     }
 
     public void updateMessage(final Message message) {
+        Log.e(TAG, "inside update message, updating message : " + message);
         for (int i = 0; i < messages.size(); i++) {
             if (messages.get(i).getUid().equals(message.getUid())) {
+                Log.e(TAG, "replacing a message at position " + i);
                 messages.set(i, message);
             }
         }
 
         if (message.getType() != null && !message.getType().equals("normal")) {
             for (int i = 0; i < messages.size(); i++) {
-                    if (!messages.get(i).equals(message) && !messages.get(i).getType().equals("normal")) {
-                        RealmUtils.deleteMessageFromDb(messages.get(i).getUid()).subscribe();
-                        messages.remove(i);
-                    }
+                if (!messages.get(i).equals(message) && !messages.get(i).getType().equals("normal")) {
+                    Log.e(TAG, "deleting message from DB at position ... " + i);
+                    RealmUtils.deleteMessageFromDb(messages.get(i).getUid()).subscribe();
+                    messages.remove(i);
                 }
             }
-            this.notifyDataSetChanged();
         }
 
-
+        this.notifyDataSetChanged();
+    }
 
     public void deleteOne(String messageUid) {
+        Log.e(TAG, "inside deleteOne");
         for (int i = 0; i < messages.size(); i++) {
             if (messages.get(i).getUid().equals(messageUid)) {
                 messages.remove(i);
                 this.notifyItemRemoved(i);
             }
+        }
+    }
+
+    public void selectPosition(int position) {
+        int oldPos = selectedPos;
+        if (position == selectedPos) {
+            selectedPos = -1;
+            notifyItemChanged(oldPos);
+        } else {
+            selectedPos = position;
+            notifyItemChanged(selectedPos);
         }
     }
 
@@ -178,7 +222,6 @@ public class GroupChatAdapter extends RecyclerView.Adapter<GroupChatAdapter.GCVi
     public List<Message> getMessages() {
         return messages;
     }
-
 
     private void handleServerMessageBtns(GCViewHolder holder, boolean buttonsVisible, final Message message) {
 
@@ -209,7 +252,6 @@ public class GroupChatAdapter extends RecyclerView.Adapter<GroupChatAdapter.GCVi
                 holder.bt_no.setVisibility(View.GONE);
             }
         }
-
     }
 
     class GCViewHolder extends RecyclerView.ViewHolder {
@@ -237,11 +279,5 @@ public class GroupChatAdapter extends RecyclerView.Adapter<GroupChatAdapter.GCVi
         }
 
     }
-
-    public interface GroupChatAdapterListener {
-        void createTaskFromMessage(Message message);
-
-    }
-
 
 }

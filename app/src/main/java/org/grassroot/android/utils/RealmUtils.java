@@ -398,6 +398,9 @@ public class RealmUtils {
         }).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread());
     }
 
+    public static Message loadMessage(final String messageUid) {
+        return loadObjectFromDB(Message.class, "uid", messageUid);
+    }
 
     public static Observable<List<Message>> loadMessagesFromDb(final String groupUid) {
         return Observable.create(new Observable.OnSubscribe<List<Message>>() {

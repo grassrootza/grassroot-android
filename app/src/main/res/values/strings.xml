@@ -260,6 +260,13 @@
     </string-array>
 
     <string-array name="self_options">
+        <item>Copy message</item>
+        <item>Delete message</item>
+    </string-array>
+
+    <string-array name="self_options_resend">
+        <item>Retry sending</item>
+        <item>Copy message</item>
         <item>Delete message</item>
     </string-array>
 
@@ -849,6 +856,7 @@
     <string name="gp_un_mute">Unmute group chats</string>
     <string name="gp_delete_messages">Delete all messages</string>
 
+    <string name="chat_message_sending">Sending. </string>
     <string name="chat_message_not_sent">Not sent. </string>
     <string name="chat_message_sent">Sent. </string>
     <string name="chat_message_delivered">Delivered. </string>
@@ -864,6 +872,8 @@
     <string name="install_gcm">Install Play Services</string>
 
     <string name="chat_connect_error">Sorry, you must be connected to send chat messages. Try connect?</string>
+
+    <string name="chat_clipboard_label">Grassroot Chat Message</string>
 
     <!--Notifications-->
     <string name="messages_new">" new messages."</string>

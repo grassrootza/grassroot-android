@@ -1,9 +1,14 @@
 package org.grassroot.android.utils;
 
+import android.content.ClipData;
+import android.content.ClipboardManager;
+import android.content.Context;
+import android.os.Build;
 import android.telephony.PhoneNumberUtils;
 import android.util.Log;
 
 import org.grassroot.android.models.Member;
+import org.grassroot.android.services.ApplicationLoader;
 
 import java.util.Date;
 import java.util.HashSet;
@@ -49,7 +54,6 @@ public class Utilities {
     }
 
     public static boolean checkIfLocalNumber(String phoneNumber) {
-
         // might be able to do this much quicker if use Google overall libPhoneNumber, but whole lib for this is heavy
         final String normalized = PhoneNumberUtils.stripSeparators(phoneNumber);
 
@@ -102,5 +106,16 @@ public class Utilities {
             }
         }
         return uids;
+    }
+
+    public static void copyTextToClipboard(final String label, final String text) {
+        if (Build.VERSION.SDK_INT >= 11) {
+            ClipboardManager cm = (ClipboardManager) ApplicationLoader.applicationContext.getSystemService(Context.CLIPBOARD_SERVICE);
+            cm.setPrimaryClip(ClipData.newPlainText(label, text));
+        } else {
+            @SuppressWarnings("deprecated")
+            android.text.ClipboardManager clipboard = (android.text.ClipboardManager) ApplicationLoader.applicationContext.getSystemService(Context.CLIPBOARD_SERVICE);
+            clipboard.setText(text);
+        }
     }
 }
