@@ -8,6 +8,7 @@ import android.text.TextUtils;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 
 import org.grassroot.android.R;
@@ -139,6 +140,17 @@ public class ViewTaskActivity extends PortraitActivity {
     }
 
     @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case android.R.id.home:
+                finish();
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+    }
+
+    @Override
     protected void onDestroy() {
         EventBus.getDefault().unregister(this);
         super.onDestroy();
@@ -222,7 +234,6 @@ public class ViewTaskActivity extends PortraitActivity {
         TaskModel task = RealmUtils.loadObjectFromDB(TaskModel.class, "taskUid", taskUid);
         return (task != null) ? RealmUtils.loadGroupFromDB(task.getParentUid()) : null;
     }
-
 
     private void setUpToolbar() {
         setTitle(taskType);

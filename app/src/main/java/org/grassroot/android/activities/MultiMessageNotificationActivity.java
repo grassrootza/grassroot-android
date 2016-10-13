@@ -4,6 +4,7 @@ import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
+import android.view.MenuItem;
 
 import org.grassroot.android.R;
 import org.grassroot.android.fragments.GroupChatFragment;
@@ -76,6 +77,18 @@ public class MultiMessageNotificationActivity extends PortraitActivity {
         menu.findItem(R.id.mi_group_mute).setVisible(false);
         menu.findItem(R.id.mi_delete_messages).setVisible(false);
         return super.onPrepareOptionsMenu(menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            // since we only trigger this from a notification activity, it should just go home
+            case android.R.id.home:
+                finish();
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
     }
 
     @Override

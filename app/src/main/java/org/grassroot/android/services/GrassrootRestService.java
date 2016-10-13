@@ -21,12 +21,12 @@ import org.grassroot.android.models.RealmString;
 import org.grassroot.android.models.ResponseTotalsModel;
 import org.grassroot.android.models.RsvpListModel;
 import org.grassroot.android.models.responses.GenericResponse;
+import org.grassroot.android.models.responses.GroupChatSettingResponse;
 import org.grassroot.android.models.responses.GroupResponse;
 import org.grassroot.android.models.responses.GroupSearchResponse;
 import org.grassroot.android.models.responses.GroupsChangedResponse;
 import org.grassroot.android.models.responses.JoinRequestResponse;
 import org.grassroot.android.models.responses.MemberListResponse;
-import org.grassroot.android.models.responses.GroupChatSettingResponse;
 import org.grassroot.android.models.responses.PermissionResponse;
 import org.grassroot.android.models.responses.ProfileResponse;
 import org.grassroot.android.models.responses.TaskChangedResponse;
@@ -216,6 +216,12 @@ public class GrassrootRestService {
     @GET("gcm/deregister/{phoneNumber}/{code}")
     Call<GenericResponse> pushUnregister(@Path("phoneNumber") String phoneNumber,
         @Path("code") String code);
+
+    // send a chat message (cannot trust GCM to handle this leg of journey)
+    @GET("gcm/chat/send/{phoneNumber}/{code}/{groupUid}")
+    Call<GenericResponse> sendChatMessage(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
+                                          @Path("groupUid") String groupUid, @Query("messageText") String message,
+                                          @Query("messageUid") String messageUid, @Query("gcmKey") String gcmKey);
 
     // update notification read status (for single notification, on open & view via click)
     @POST("notification/update/read/{phoneNumber}/{code}")

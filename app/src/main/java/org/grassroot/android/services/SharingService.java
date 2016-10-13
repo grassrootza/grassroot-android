@@ -75,6 +75,15 @@ public class SharingService extends IntentService {
         }
     }
 
+    public static Intent simpleTextShare(final String message) {
+        Intent shareIntent = new Intent();
+        shareIntent.setAction(Intent.ACTION_SEND);
+        shareIntent.setType("text/plain");
+        shareIntent.putExtra(Intent.EXTRA_TEXT, message);
+        shareIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        return shareIntent;
+    }
+
     private void assembleAndLaunchIntent(final String appToShare, final String message) {
         if (!OTHER.equals(appToShare)) {
             shareByStandardApp(appToShare, message);

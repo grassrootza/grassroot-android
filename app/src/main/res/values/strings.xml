@@ -62,6 +62,7 @@
     <string name="server_error_unsubscribe_error">You have already left, please refresh on the home screen</string>
     <string name="server_error_background_group_numbers">The group is created, but some numbers were invalid, please check the group and
     add them</string>
+    <string name="server_error_no_chat_settings">Error! You do not seem to be a member of this group</string>
 
     <string name="connect_error_group_unsubscribe">Sorry, we couldn\'t connect to the server. Please try later or unsubscribe through
     *134*1994#</string>
@@ -248,7 +249,6 @@
         <item>Chat</item>
     </string-array>
 
-
     <string-array name="chat_msg_mute_available">
         <item>Delete message</item>
         <item>Mute user</item>
@@ -257,6 +257,16 @@
     <string-array name="chat_msg_already_muted">
         <item>Delete message</item>
         <item>Unmute user</item>
+    </string-array>
+
+    <string-array name="chat_msg_server_not_keep">
+        <item>Delete message</item>
+    </string-array>
+
+    <string-array name="chat_msg_server_keep">
+        <item>Share message</item>
+        <item>Delete message</item>
+        <item>Copy text</item>
     </string-array>
 
     <string-array name="self_options">
@@ -880,6 +890,8 @@
     <string name="chat_calling_vote">Calling vote &#8230;</string>
     <string name="chat_recording_action">Recording action &#8230;</string>
     <string name="chat_calling_task">Creating task &#8230;</string>
+
+    <string name="chat_share_error">Sorry, no app found for sharing</string>
 
     <!--Notifications-->
     <string name="messages_new">" new messages."</string>

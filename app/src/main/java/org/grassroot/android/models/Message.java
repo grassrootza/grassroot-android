@@ -5,7 +5,8 @@ import android.text.TextUtils;
 import android.util.Log;
 
 import org.grassroot.android.interfaces.GroupConstants;
-import org.grassroot.android.services.GcmUpstreamMessageService;
+import org.grassroot.android.interfaces.NotificationConstants;
+import org.grassroot.android.services.GroupChatService;
 import org.grassroot.android.utils.Constant;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -36,7 +37,9 @@ public class Message extends RealmObject {
     private String displayName;
     private String groupName;
     private String groupIcon;
+
     private Date time;
+    private Date actionDateTime;
 
     private boolean sending;
     private boolean sent;
@@ -102,20 +105,27 @@ public class Message extends RealmObject {
         this.text = bundle.getString(Constant.BODY);
         this.type = bundle.getString("type");
 
-        // by definition, since this is assembled from an incoming GCM packet, it is sent (since delivered to server)
+        // by definition, since this is assembled from an incoming GCM packet, it is delivered to the topic
         this.sending = false;
         this.sent = true;
-        // setting this false, as we're actually not sure ...
-        this.delivered = false;
+        this.delivered = true;
         this.noAttempts = -1;
 
         this.server = phoneNumber == null;
+
+        if (this.server && bundle.containsKey(NotificationConstants.TASK_DATE_TIME)) {
+            try {
+                this.actionDateTime = formatter.parse(bundle.getString(NotificationConstants.TASK_DATE_TIME));
+            } catch (ParseException|NullPointerException e) {
+                e.printStackTrace();
+                this.actionDateTime = null;
+            }
+        }
 
         if (bundle.containsKey("tokens")) {
             String tokenValues = bundle.getString("tokens");
             try {
                 JSONArray jsonArray = new JSONArray(tokenValues);
-                jsonArray.toString();
                 tokens = new RealmList<>();
                 for (int i = 0; i < jsonArray.length(); i++) {
                     tokens.add(new RealmString(jsonArray.getString(i)));
@@ -218,8 +228,16 @@ public class Message extends RealmObject {
         this.server = server;
     }
 
+    public Date getActionDateTime() {
+        return actionDateTime != null ? actionDateTime : new Date(); // to avoid null pointer errors if something corrupted
+    }
+
+    public String getDeadlineISO() {
+        return formatter.format(getActionDateTime());
+    }
+
     public boolean exceedsMaximumSendingAttempts() {
-        return noAttempts == GcmUpstreamMessageService.MAX_RETRIES;
+        return noAttempts == GroupChatService.MAX_RETRIES;
     }
 
     public boolean isServerMessage() {

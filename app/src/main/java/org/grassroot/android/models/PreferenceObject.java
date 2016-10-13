@@ -17,6 +17,9 @@ public class PreferenceObject extends RealmObject {
   private boolean hasGroups;
   private boolean hasGcmRegistered;
 
+  private String gcmRegistrationId;
+  private int gcmAppVersionStored;
+
   private String userName;
   private String mobileNumber;
   private String token;
@@ -201,4 +204,19 @@ public class PreferenceObject extends RealmObject {
 
   public boolean isShowOnlineOfflinePicker() { return showOnlineOfflinePicker; }
 
+  public String getGcmRegistrationId() {
+    return gcmRegistrationId;
+  }
+
+  public void setGcmRegistrationId(String gcmRegistrationId) {
+    this.gcmRegistrationId = gcmRegistrationId;
+  }
+
+  public int getGcmAppVersionStored() {
+    return gcmAppVersionStored;
+  }
+
+  public void setGcmAppVersionStored(int gcmAppVersionStored) {
+    this.gcmAppVersionStored = gcmAppVersionStored;
+  }
 }

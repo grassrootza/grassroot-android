@@ -14,8 +14,9 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import org.grassroot.android.R;
-import org.grassroot.android.activities.GroupTasksActivity;
 import org.grassroot.android.interfaces.GroupConstants;
+import org.grassroot.android.models.Group;
+import org.grassroot.android.utils.ErrorUtils;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -24,12 +25,14 @@ import butterknife.Unbinder;
 /**
  * Created by paballo on 2016/09/05.
  */
-public class GroupTaskMasterFragment extends Fragment implements TaskListFragment.TaskListListener{
+public class GroupTaskMasterFragment extends Fragment {
 
     private static final String TAG = GroupTaskMasterFragment.class.getSimpleName();
     private String groupUid;
     private String groupName;
+
     private static final int PAGERCOUNT = 2;
+
     Unbinder unbinder;
 
     @BindView(R.id.tasks_pager)
@@ -41,7 +44,7 @@ public class GroupTaskMasterFragment extends Fragment implements TaskListFragmen
 
     GroupChatFragment groupChatFragment;
     TaskListFragment taskListFragment;
-    TaskListFragment.TaskListListener taskListListener;
+
 
     @Override
     public void onAttach(Context context) {
@@ -51,14 +54,12 @@ public class GroupTaskMasterFragment extends Fragment implements TaskListFragmen
         setHasOptionsMenu(true);
     }
 
-    public static GroupTaskMasterFragment newInstance(String groupUid, TaskListFragment.TaskListListener taskListListener, String groupName){
+    public static GroupTaskMasterFragment newInstance(Group group) {
         GroupTaskMasterFragment groupTaskMasterFragment = new GroupTaskMasterFragment();
         Bundle args = new Bundle();
-        args.putString(GroupConstants.UID_FIELD, groupUid);
-        args.putString(GroupConstants.NAME_FIELD, groupName);
+        args.putString(GroupConstants.UID_FIELD, group.getGroupUid());
+        args.putString(GroupConstants.NAME_FIELD, group.getGroupName());
         groupTaskMasterFragment.setArguments(args);
-        groupTaskMasterFragment.taskListListener = taskListListener;
-
         return groupTaskMasterFragment;
     }
 
@@ -108,23 +109,12 @@ public class GroupTaskMasterFragment extends Fragment implements TaskListFragmen
         unbinder.unbind();
     }
 
-    @Override
-    public void onTaskLoaded(String taskName) {
-        GroupTasksActivity groupTasksActivity = (GroupTasksActivity)getActivity();
-        groupTasksActivity.onTaskLoaded(taskName);
+    public boolean isOnChatView() {
+      return requestPager != null && requestPager.getCurrentItem() != 0;
     }
 
-    @Override
-    public void onTaskLoaded(int position, String taskUid, String taskType, String taskTitle) {
-        GroupTasksActivity groupTasksActivity = (GroupTasksActivity)getActivity();
-        groupTasksActivity.onTaskLoaded(position,taskUid,taskType,taskTitle);
-    }
-
-    @Override
-    public void onFabClicked() {
-        GroupTasksActivity groupTasksActivity = (GroupTasksActivity)getActivity();
-        groupTasksActivity.onFabClicked();
-
+    public void transitionToPage(int page) {
+      requestPager.setCurrentItem(page, true);
     }
 
     public TaskListFragment getTaskListFragment() {
@@ -148,11 +138,16 @@ public class GroupTaskMasterFragment extends Fragment implements TaskListFragmen
         public Fragment getItem(int position) {
             switch (position) {
                 case 0:
-                    taskListFragment = TaskListFragment.newInstance(groupUid, GroupTaskMasterFragment.this);
-                    return taskListFragment;
+                  try {
+                    taskListFragment = TaskListFragment.newInstance(groupUid,
+                        (TaskListFragment.TaskListListener) getActivity());
+                  } catch (ClassCastException e) {
+                    startActivity(ErrorUtils.gracefulExitToHome(getActivity()));
+                  }
+                  return taskListFragment;
                 case 1:
-                    groupChatFragment = GroupChatFragment.newInstance(groupUid, groupName);
-                    return groupChatFragment;
+                  groupChatFragment = GroupChatFragment.newInstance(groupUid, groupName);
+                  return groupChatFragment;
                 default:
                     return taskListFragment;
             }

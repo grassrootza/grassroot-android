@@ -12,11 +12,6 @@ public class GroupChatEvent {
     private Bundle bundle;
     private Message message;
 
-    public GroupChatEvent(String groupUid, Message message) {
-        this.groupUid = groupUid;
-        this.message = message;
-    }
-
     public GroupChatEvent(String groupUid, Bundle bundle, Message message){
         this.groupUid = groupUid;
         this.bundle = bundle;

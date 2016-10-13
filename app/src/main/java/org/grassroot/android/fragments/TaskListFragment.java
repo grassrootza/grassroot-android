@@ -94,10 +94,8 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
     ProgressBar progressBar;
 
     public interface TaskListListener {
-        void onTaskLoaded(String taskName);
-
-        void onTaskLoaded(int position, String taskUid, String taskType, String taskTitle);
-
+        void loadSingleTask(String taskName);
+        void loadSingleTask(String taskUid, String taskType);
         void onFabClicked();
     }
 
@@ -107,22 +105,18 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
 
     // pass null if this is a group-neutral task fragment
     public static TaskListFragment newInstance(String parentUid, TaskListListener listener) {
-
         TaskListFragment fragment = new TaskListFragment();
         fragment.groupUid = parentUid;
         fragment.listener = listener;
-
         return fragment;
     }
 
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
-
         if (groupUid != null) {
             group = RealmUtils.loadGroupFromDB(groupUid);
         }
-
         EventBus.getDefault().register(this);
     }
 
@@ -401,10 +395,7 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
 
     @Override
     public void onCardClick(int position, String taskUid, String taskType, String taskTitle) {
-        listener.onTaskLoaded(taskTitle);
-        listener.onTaskLoaded(position, taskUid, taskType, taskTitle);
-
-
+        listener.loadSingleTask(taskUid, taskType);
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)

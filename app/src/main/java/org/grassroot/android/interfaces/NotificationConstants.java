@@ -33,4 +33,6 @@ public interface NotificationConstants {
     String CHAT_LIST ="CHAT_LIST";
     String NOTIFICATION_LIST ="NOTIFICATION_LIST";
     String JOIN_REQUEST_LIST ="JOIN_REQUEST_LIST";
+
+    String TASK_DATE_TIME = "task_date_time";
 }

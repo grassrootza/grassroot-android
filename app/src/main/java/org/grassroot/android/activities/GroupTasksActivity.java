@@ -47,8 +47,10 @@ import rx.android.schedulers.AndroidSchedulers;
 import rx.functions.Action1;
 import rx.observers.Subscribers;
 
-public class GroupTasksActivity extends PortraitActivity implements NewTaskMenuFragment.NewTaskMenuListener, JoinCodeFragment.JoinCodeListener, TaskListFragment.TaskListListener{
-    private static final String TAG = GroupTasksActivity.class.getCanonicalName();
+public class GroupTasksActivity extends PortraitActivity implements NewTaskMenuFragment.NewTaskMenuListener, JoinCodeFragment.JoinCodeListener,
+    TaskListFragment.TaskListListener {
+
+    private static final String TAG = GroupTasksActivity.class.getSimpleName();
 
     private Group groupMembership;
     private JoinCodeFragment joinCodeFragment;
@@ -165,13 +167,10 @@ public class GroupTasksActivity extends PortraitActivity implements NewTaskMenuF
     }
 
     private void setUpFragment() {
-
-     groupTaskMasterFragment =
-                GroupTaskMasterFragment.newInstance(groupMembership.getGroupUid(), this, groupMembership.getGroupName());
+        groupTaskMasterFragment = GroupTaskMasterFragment.newInstance(groupMembership);
         getSupportFragmentManager().beginTransaction()
                 .add(R.id.gta_fragment_holder, groupTaskMasterFragment)
                 .commit();
-
     }
 
     @Override
@@ -215,10 +214,19 @@ public class GroupTasksActivity extends PortraitActivity implements NewTaskMenuF
         }
     }
 
+    @Override
+    public void onBackPressed() {
+        if (!closeViewTaskFragment()) {
+            if (groupTaskMasterFragment.isOnChatView()) {
+                groupTaskMasterFragment.transitionToPage(0);
+            } else {
+                super.onBackPressed();
+            }
+        }
+    }
+
     private void handleUpButton() {
         if (!closeViewTaskFragment()) {
-            // note : this is crashing on older devices, so am explicitly calling the home
-            Log.e(TAG, "okay, heading home");
             startActivity(new Intent(this, HomeScreenActivity.class));
         }
     }
@@ -346,24 +354,23 @@ public class GroupTasksActivity extends PortraitActivity implements NewTaskMenuF
     }
 
     @Override
-    public void onTaskLoaded(String taskName) {
-        if (getSupportActionBar() != null) {
-            getSupportActionBar().setHomeAsUpIndicator(R.drawable.btn_close_white);
-        }
+    public void loadSingleTask(String taskName) {
+        // empty as no purpose
     }
 
     @Override
-    public void onTaskLoaded(int position, String taskUid, String taskType, String taskTitle) {
-        if (getSupportActionBar() != null) {
-            getSupportActionBar().setHomeAsUpIndicator(R.drawable.btn_close_white);
-        }
+    public void loadSingleTask(String taskUid, String taskType) {
         ViewTaskFragment taskFragment = ViewTaskFragment.newInstance(taskType, taskUid);
 
         getSupportFragmentManager().beginTransaction()
-                .setCustomAnimations(R.anim.up_from_bottom, R.anim.down_from_top)
-                .replace(R.id.gta_fragment_holder, taskFragment)
+                .setCustomAnimations(R.anim.flyin_fast, R.anim.flyout_fast)
+                .add(R.id.gta_fragment_holder, taskFragment, ViewTaskFragment.class.getCanonicalName())
                 .addToBackStack(null)
                 .commit();
+
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setHomeAsUpIndicator(R.drawable.btn_close_white);
+        }
     }
 
     @Override
@@ -371,6 +378,7 @@ public class GroupTasksActivity extends PortraitActivity implements NewTaskMenuF
         if (newTaskMenuFragment == null) {
             newTaskMenuFragment = NewTaskMenuFragment.newInstance(groupMembership, true);
         }
+
         if (groupMembership != null && groupMembership.hasCreatePermissions()) {
             getSupportFragmentManager() .beginTransaction()
                 .setCustomAnimations(R.anim.flyin_fast, R.anim.flyout_fast)
@@ -394,12 +402,14 @@ public class GroupTasksActivity extends PortraitActivity implements NewTaskMenuF
     }
 
     private boolean closeViewTaskFragment() {
+        Log.e(TAG, "finding view task fragment");
         Fragment frag = getSupportFragmentManager().findFragmentByTag(ViewTaskFragment.class.getCanonicalName());
         if (frag != null && frag.isVisible()) {
             getSupportFragmentManager().beginTransaction()
                     .setCustomAnimations(R.anim.push_down_in, R.anim.push_down_out)
                     .remove(frag)
                     .commit();
+
             // keep null checks in place in case subscriber triggered after view destroyed
             if (getSupportActionBar() != null) {
                 getSupportActionBar().setHomeAsUpIndicator(R.drawable.btn_back_wt);

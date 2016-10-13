@@ -43,7 +43,6 @@ import org.grassroot.android.services.GcmListenerService;
 import org.grassroot.android.services.SharingService;
 import org.grassroot.android.utils.NetworkUtils;
 import org.grassroot.android.utils.PermissionUtils;
-import org.grassroot.android.utils.RealmUtils;
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
@@ -534,7 +533,7 @@ public class HomeScreenActivity extends PortraitActivity implements NavigationDr
     }
 
     @Override
-    public void onTaskLoaded(String taskName) {
+    public void loadSingleTask(String taskName) {
         setTitle(taskName);
         toggleClickableTitle(false);
         // switchOffMenu();
@@ -549,7 +548,7 @@ public class HomeScreenActivity extends PortraitActivity implements NavigationDr
     }
 
     @Override
-    public void onTaskLoaded(int position, String taskUid, String taskType, String taskTitle) {
+    public void loadSingleTask(String taskUid, String taskType) {
 
     }
 

@@ -1,6 +1,7 @@
 package org.grassroot.android.fragments;
 
 import android.app.Activity;
+import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -22,6 +23,7 @@ import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.ArrayAdapter;
 import android.widget.ImageView;
+import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
@@ -46,8 +48,9 @@ import org.grassroot.android.models.exceptions.ApiCallException;
 import org.grassroot.android.models.exceptions.NoGcmException;
 import org.grassroot.android.models.responses.GroupChatSettingResponse;
 import org.grassroot.android.services.GcmListenerService;
-import org.grassroot.android.services.GcmUpstreamMessageService;
+import org.grassroot.android.services.GroupChatService;
 import org.grassroot.android.services.GroupService;
+import org.grassroot.android.services.SharingService;
 import org.grassroot.android.services.TaskService;
 import org.grassroot.android.utils.EmojIconMultiAutoCompleteActions;
 import org.grassroot.android.utils.ErrorUtils;
@@ -296,8 +299,7 @@ public class GroupChatFragment extends Fragment implements GroupChatAdapter.Grou
             groupChatAdapter.addOrUpdateMessage(message);
             chatMessageView.smoothScrollToPosition(groupChatAdapter.getItemCount());
 
-            GcmUpstreamMessageService.sendMessage(message, getActivity(), AndroidSchedulers.mainThread())
-                .subscribe(new Action1<String>() {
+            GroupChatService.getInstance().sendMessageViaGR(message).subscribe(new Action1<String>() {
                     @Override
                     public void call(String s) {
                         groupChatAdapter.updateMessage(RealmUtils.loadMessage(message.getUid()));
@@ -383,6 +385,7 @@ public class GroupChatFragment extends Fragment implements GroupChatAdapter.Grou
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onEvent(GroupChatEvent groupChatEvent) {
+        Log.e(TAG, "group chat event triggered");
         String groupUidInMessage = groupChatEvent.getGroupUid();
         if ((this.isVisible() && !groupUidInMessage.equals(groupUid))) {
             GcmListenerService.showNotification(groupChatEvent.getBundle(), getActivity()).subscribe();
@@ -418,11 +421,8 @@ public class GroupChatFragment extends Fragment implements GroupChatAdapter.Grou
     @Override
     public void createTaskFromMessage(final Message message) {
         String title = message.getTokens().get(0).getString();
-        String location = null;
-        if(message.getType().equals(TaskConstants.MEETING))
-            location = message.getTokens().get(2).getString();
-        String time = message.getTokens().get(1).getString();
-        TaskModel taskModel = generateTaskObject(message.getGroupUid(), title,time , location,message.getType() );
+        String location = TaskConstants.MEETING.equals(message.getType()) ? message.getTokens().get(2).getString() : null;
+        TaskModel taskModel = generateTaskObject(message.getGroupUid(), title, message.getDeadlineISO(), location, message.getType() );
         TaskService.getInstance().sendTaskToServer(taskModel, AndroidSchedulers.mainThread()).subscribe(new Subscriber<TaskModel>() {
             @Override
             public void onCompleted() {}
@@ -434,7 +434,6 @@ public class GroupChatFragment extends Fragment implements GroupChatAdapter.Grou
 
             @Override
             public void onNext(TaskModel taskModel) {
-                // todo : check adapter is not null, here & everywhere (in case user navigates away)
                 if (isVisible() && groupChatAdapter != null) {
                     final String text = TaskConstants.MEETING.equals(taskModel.getType()) ? getString(R.string.chat_calling_meeting) :
                         TaskConstants.VOTE.equals(taskModel.getType()) ? getString(R.string.chat_calling_vote) :
@@ -488,53 +487,99 @@ public class GroupChatFragment extends Fragment implements GroupChatAdapter.Grou
     }
 
     private void longClickOptions(final Message message, int messageType) {
-        if (messageType != GroupChatAdapter.SERVER) {
-            final AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-
-            if (messageType == GroupChatAdapter.SELF) {
-                int selfOptions = message.isSent() ? R.array.self_options : R.array.self_options_resend;
-                builder.setItems(selfOptions, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialogInterface, int i) {
-                        int optionChosen = message.isSent() ? i + 1 : i;
-                        switch (optionChosen) {
-                            case 0:
-                                message.setSending(true);
-                                groupChatAdapter.updateMessage(message);
-                                sendMessageInBackground(message.getText(), message.getUid());
-                                break;
-                            case 1:
-                                Utilities.copyTextToClipboard(getString(R.string.chat_clipboard_label), message.getText());
-                                break;
-                            case 2:
-                                deleteMessage(message.getUid());
-                                break;
-                        }
-                    }
-                });
-            } else if (messageType == GroupChatAdapter.OTHER) {
-                //0 - Delete Message
-                //1 = Mute or Unmute user
-
-                int otherOptions = (mutedUsersUid != null && mutedUsersUid.contains(message.getUid())) ?
-                        R.array.chat_msg_already_muted : R.array.chat_msg_mute_available;
-
-                builder.setItems(otherOptions, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialogInterface, int i) {
-                        switch (i) {
-                            case 0:
-                                deleteMessage(message.getUid());
-                                break;
-                            case 1:
-                                mute(message.getUserUid(), groupUid, false, !mutedUsersUid.contains(message.getUid()));
-                                break;
-                        }
-                    }
-                });
-            }
-            builder.setCancelable(true).create().show();
+        switch (messageType) {
+            case GroupChatAdapter.SELF:
+                handleLongClickSelf(message);
+                break;
+            case GroupChatAdapter.OTHER:
+                handleLongClickOther(message);
+                break;
+            case GroupChatAdapter.SERVER:
+                handleLongClickServer(message);
+                break;
+            default:
+                handleLongClickSelf(message); // has least options, hence safest default
+                break;
         }
+    }
+
+    private void handleLongClickSelf(final Message message) {
+        final AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+        final int selfOptions = message.isSent() ? R.array.self_options : R.array.self_options_resend;
+        builder.setItems(selfOptions, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+                int optionChosen = message.isSent() ? i + 1 : i;
+                switch (optionChosen) {
+                    case 0:
+                        message.setSending(true);
+                        groupChatAdapter.updateMessage(message);
+                        sendMessageInBackground(message.getText(), message.getUid());
+                        break;
+                    case 1:
+                        Utilities.copyTextToClipboard(getString(R.string.chat_clipboard_label), message.getText());
+                        break;
+                    case 2:
+                        deleteMessage(message.getUid());
+                        break;
+                }
+            }
+        });
+        builder.setCancelable(true).create().show();
+    }
+
+    private void handleLongClickOther(final Message message) {
+        //0 - Delete Message // 1 = Mute or Unmute user
+        final AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+        int otherOptions = (mutedUsersUid != null && mutedUsersUid.contains(message.getUid())) ?
+            R.array.chat_msg_already_muted : R.array.chat_msg_mute_available;
+
+        builder.setItems(otherOptions, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+                switch (i) {
+                    case 0:
+                        deleteMessage(message.getUid());
+                        break;
+                    case 1:
+                        mute(message.getUserUid(), groupUid, false, !mutedUsersUid.contains(message.getUid()));
+                        break;
+                }
+            }
+        });
+
+        builder.setCancelable(true).create().show();
+    }
+
+    private void handleLongClickServer(final Message message) {
+        final AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+        builder.setItems(message.isToKeep() ? R.array.chat_msg_server_keep : R.array.chat_msg_server_not_keep,
+            new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+                switch (i) {
+                    case 0: // share or delete
+                        if (!message.isToKeep()) {
+                            deleteMessage(message.getUid());
+                        } else {
+                            try {
+                                startActivity(SharingService.simpleTextShare(message.getText()));
+                            } catch (ActivityNotFoundException e) {
+                                Toast.makeText(getContext(), R.string.chat_share_error, Toast.LENGTH_SHORT).show();
+                            }
+                        }
+                        break;
+                    case 1: // delete
+                        deleteMessage(message.getUid());
+                        break;
+                    case 2:
+                        Utilities.copyTextToClipboard(getString(R.string.chat_clipboard_label), message.getText());
+                        break;
+                }
+            }
+        });
+
+        builder.setCancelable(true).create().show();
     }
 
     private void deleteAllMessages(final String groupUid) {

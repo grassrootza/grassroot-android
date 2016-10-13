@@ -44,31 +44,32 @@ public class ErrorUtils {
     private static final String TAG = ErrorUtils.class.getSimpleName();
 
     // server errors
-    public static final String GENERIC_ERROR = "BAD_REQUEST";
-    public static final String USER_INVALID_MSISDN = "INVALID_MSISDN";
+    private static final String GENERIC_ERROR = "BAD_REQUEST";
+    private static final String USER_INVALID_MSISDN = "INVALID_MSISDN";
     public static final String USER_EXISTS = "USER_ALREADY_EXISTS";
     public static final String USER_DOESNT_EXIST = "USER_DOES_NOT_EXIST";
     public static final String WRONG_OTP = "INVALID_OTP";
-    public static final String OTP_EARLY_REQ = "OTP_REQ_BEFORE_ADD";
-    public static final String TOKEN_EXPIRED = "TOKEN_EXPIRED";
-    public static final String INVALID_TOKEN = "INVALID_TOKEN";
+    private static final String OTP_EARLY_REQ = "OTP_REQ_BEFORE_ADD";
+    private static final String TOKEN_EXPIRED = "TOKEN_EXPIRED";
+    private static final String INVALID_TOKEN = "INVALID_TOKEN";
 
-    public static final String GROUP_CREATE_ERROR = "GROUP_NOT_CREATED";
+    private static final String GROUP_CREATE_ERROR = "GROUP_NOT_CREATED";
     public static final String PERMISSION_DENIED = "PERMISSION_DENIED";
-    public static final String PART_GROUP = "USER_ALREADY_PART_OF_GROUP";
-    public static final String CANT_APPROVE_JOIN = "APPROVER_PERMISSIONS_CHANGED";
+    private static final String PART_GROUP = "USER_ALREADY_PART_OF_GROUP";
+    private static final String CANT_APPROVE_JOIN = "APPROVER_PERMISSIONS_CHANGED";
     public static final String GROUP_MEMBER_INVALID_PHONE = "GROUP_BAD_PHONE_NUMBER";
-    public static final String IMAGE_ERROR = "BAD_PICTURE_FORMAT";
-    public static final String NO_IMAGE_SENT = "PICTURE_NOT_RECEIVED";
-    public static final String DATE_IN_PAST = "TIME_CANNOT_BE_IN_THE_PAST";
-    public static final String MEETING_CANCELLED = "MEETING_ALREADY_CANCELLED";
-    public static final String MEETING_OVER = "PAST_DUE";
-    public static final String VOTE_DONE = "USER_HAS_ALREADY_VOTED";
-    public static final String VOTE_CLOSED = "VOTE_CLOSED";
-    public static final String VOTE_CANCELLED = "VOTE_ALREADY_CANCELLED";
-    public static final String TODO_DONE = "TODO_ALREADY_COMPLETED";
-    public static final String NOTIFICATIONS_DONE = "NOTIFICATIONS_FINISHED";
-    public static final String ALREADY_LEFT = "MEMBER_ALREADY_LEFT";
+    private static final String IMAGE_ERROR = "BAD_PICTURE_FORMAT";
+    private static final String NO_IMAGE_SENT = "PICTURE_NOT_RECEIVED";
+    private static final String DATE_IN_PAST = "TIME_CANNOT_BE_IN_THE_PAST";
+    private static final String MEETING_CANCELLED = "MEETING_ALREADY_CANCELLED";
+    private static final String MEETING_OVER = "PAST_DUE";
+    private static final String VOTE_DONE = "USER_HAS_ALREADY_VOTED";
+    private static final String VOTE_CLOSED = "VOTE_CLOSED";
+    private static final String VOTE_CANCELLED = "VOTE_ALREADY_CANCELLED";
+    private static final String TODO_DONE = "TODO_ALREADY_COMPLETED";
+    private static final String NOTIFICATIONS_DONE = "NOTIFICATIONS_FINISHED";
+    private static final String ALREADY_LEFT = "MEMBER_ALREADY_LEFT";
+    private static final String MESSAGE_SETTING_NOT_FOUND = "MESSAGE_SETTING_NOT_FOUND";
 
     public static final String JREQ_NOT_FOUND = "GROUP_JOIN_REQUEST_NOT_FOUND";
 
@@ -124,6 +125,8 @@ public class ErrorUtils {
                     return context.getString(R.string.server_error_notifications_done);
                 case ALREADY_LEFT:
                     return context.getString(R.string.server_error_unsubscribe_error);
+                case MESSAGE_SETTING_NOT_FOUND:
+                    return context.getString(R.string.server_error_no_chat_settings);
                 default:
                     return context.getString(R.string.server_error_general);
             }

@@ -72,6 +72,7 @@ public class GroupService {
   public static boolean isFetchingGroups = false;
 
   protected GroupService() {
+    // empty for instances
   }
 
   public static GroupService getInstance() {
