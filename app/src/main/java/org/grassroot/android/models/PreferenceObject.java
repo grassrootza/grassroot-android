@@ -17,6 +17,9 @@ public class PreferenceObject extends RealmObject {
   private boolean hasGroups;
   private boolean hasGcmRegistered;
 
+  private boolean isGroupChatFragmentShowCased;
+
+
   private String gcmRegistrationId;
   private int gcmAppVersionStored;
 
@@ -151,6 +154,14 @@ public class PreferenceObject extends RealmObject {
 
   public String getLanguagePreference() {
     return languagePreference;
+  }
+
+  public boolean isGroupChatFragmentShowCased() {
+    return isGroupChatFragmentShowCased;
+  }
+
+  public void setGroupChatFragmentShowCased(boolean groupChatFragmentShowCased) {
+    isGroupChatFragmentShowCased = groupChatFragmentShowCased;
   }
 
   public void setLanguagePreference(String languagePreference) {

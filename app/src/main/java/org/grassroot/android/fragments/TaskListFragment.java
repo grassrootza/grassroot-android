@@ -161,16 +161,6 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
             }
         });
 
-        ShowcaseView.ConfigOptions configOptions = new ShowcaseView.ConfigOptions();
-        configOptions.centerText =true;
-        configOptions.hideOnClickOutside = true;
-
-        ViewTarget target = new ViewTarget(R.id.tl_fab, getActivity());
-        ShowcaseView v = ShowcaseView.insertShowcaseView(target, getActivity(), "Hello", "Hello", configOptions);
-        v.setButtonText("Got it");
-
-
-
     }
 
     @Override

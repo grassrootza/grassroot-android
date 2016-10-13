@@ -30,7 +30,6 @@ import com.google.android.gms.common.GoogleApiAvailability;
 
 import com.espian.showcaseview.OnShowcaseEventListener;
 import com.espian.showcaseview.ShowcaseView;
-import com.espian.showcaseview.targets.Target;
 import com.espian.showcaseview.targets.ViewTarget;
 
 import org.grassroot.android.R;
@@ -47,6 +46,7 @@ import org.grassroot.android.interfaces.GroupConstants;
 import org.grassroot.android.interfaces.TaskConstants;
 import org.grassroot.android.models.Command;
 import org.grassroot.android.models.Message;
+import org.grassroot.android.models.PreferenceObject;
 import org.grassroot.android.models.RealmString;
 import org.grassroot.android.models.TaskModel;
 import org.grassroot.android.models.exceptions.ApiCallException;
@@ -105,7 +105,7 @@ public class GroupChatFragment extends Fragment implements GroupChatAdapter.Grou
     ImageView openEmojis;
     @BindView(R.id.gc_recycler_view)
     RecyclerView chatMessageView;
-    @BindView(R.id.text)
+    @BindView(R.id.text_chat)
     EmojiconMultiAutoCompleteTextView textView;
     @BindView(R.id.btn_send)
     ImageView sendMessage;
@@ -185,8 +185,6 @@ public class GroupChatFragment extends Fragment implements GroupChatAdapter.Grou
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
-
-
 
     }
 
@@ -280,6 +278,15 @@ public class GroupChatFragment extends Fragment implements GroupChatAdapter.Grou
         textView.setInputType(textView.getInputType() & (~EditorInfo.TYPE_TEXT_FLAG_AUTO_COMPLETE));
         textView.setAdapter(commandsAdapter);
         textView.setThreshold(1); //setting it in xml does not seem to be working
+        textView.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+            @Override
+            public void onFocusChange(View view, boolean hasFocus) {
+                boolean isShowCased = RealmUtils.loadPreferencesFromDB().isGroupChatFragmentShowCased();
+                if(hasFocus && !isShowCased){
+                    showCase();
+                }
+            }
+        });
         textView.requestFocus();
 
         textView.setEnabled(!isMutedSending);
@@ -628,16 +635,37 @@ public class GroupChatFragment extends Fragment implements GroupChatAdapter.Grou
         return (getActivity() instanceof MultiMessageNotificationActivity &&  this.groupUid.equals(groupUid));
     }
 
-    private void showCase(){
-        if (getActivity() instanceof GroupTasksActivity) {
-            GroupTaskMasterFragment masterFragment = (GroupTaskMasterFragment) this.getParentFragment();
-            if(masterFragment.getRequestPager().getCurrentItem() == 1){
-                ShowcaseView.ConfigOptions configOptions = new ShowcaseView.ConfigOptions();
-                configOptions.hideOnClickOutside = true;
-                ViewTarget target = new ViewTarget(R.id.btn_send, getActivity());
-                ShowcaseView.insertShowcaseView(target, getActivity(), "Hello", "Hello", configOptions);
+
+    private void showCase() {
+
+        final String[] chatShowCaseStrings = {"Chat Text box", "bla lananfnanfna"} ;//todo externalise
+        ShowcaseView.ConfigOptions configOptions = new ShowcaseView.ConfigOptions();
+        configOptions.hideOnClickOutside = true;
+        configOptions.fadeInDuration = 1000;
+        configOptions.fadeOutDuration = 1000;
+
+        ShowcaseView v;
+        ViewTarget target = new ViewTarget(R.id.text_chat, getActivity());
+        v= ShowcaseView.insertShowcaseView(target, getActivity(), chatShowCaseStrings[0], chatShowCaseStrings[1], configOptions);
+        v.animateGesture(target.getPoint().x, target.getPoint().y, target.getPoint().x, target.getPoint().y);
+        v.setOnShowcaseEventListener(new OnShowcaseEventListener() {
+            @Override
+            public void onShowcaseViewHide(ShowcaseView showcaseView) {}
+
+            @Override
+            public void onShowcaseViewDidHide(ShowcaseView showcaseView) {
+                PreferenceObject preferenceObject = RealmUtils.loadPreferencesFromDB();
+                preferenceObject.setGroupChatFragmentShowCased(true);
+                RealmUtils.saveDataToRealmSync(preferenceObject);
             }
-        }
+            @Override
+            public void onShowcaseViewShow(ShowcaseView showcaseView) {
+
+            }
+        });
+        v.setButtonText("Got it");
+
+
 
     }
 
