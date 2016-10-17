@@ -122,8 +122,6 @@ public class TextDrawerImpl implements TextDrawer {
     			largest = i;
     	}*/
 
-        Log.e("this here", "is the largest = 1");
-
         // Position text in largest area
     	switch(largest) {
     	case 0:

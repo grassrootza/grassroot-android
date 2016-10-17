@@ -275,20 +275,20 @@ public class GroupChatFragment extends Fragment implements GroupChatAdapter.Grou
         }
 
         loadMessages();
+        final boolean isShowCased = RealmUtils.loadPreferencesFromDB().isGroupChatFragmentShowCased();
         textView.setInputType(textView.getInputType() & (~EditorInfo.TYPE_TEXT_FLAG_AUTO_COMPLETE));
         textView.setAdapter(commandsAdapter);
         textView.setThreshold(1); //setting it in xml does not seem to be working
         textView.setOnFocusChangeListener(new View.OnFocusChangeListener() {
             @Override
             public void onFocusChange(View view, boolean hasFocus) {
-                boolean isShowCased = RealmUtils.loadPreferencesFromDB().isGroupChatFragmentShowCased();
                 if(hasFocus && !isShowCased){
                     showCase();
                 }
             }
         });
-        textView.requestFocus();
 
+        if(isShowCased) textView.requestFocus();
         textView.setEnabled(!isMutedSending);
         sendMessage.setEnabled(!isMutedSending);
         openEmojis.setEnabled(!isMutedSending);
@@ -638,7 +638,7 @@ public class GroupChatFragment extends Fragment implements GroupChatAdapter.Grou
 
     private void showCase() {
 
-        final String[] chatShowCaseStrings = {"Chat Text box", "bla lananfnanfna"} ;//todo externalise
+        final String[] chatShowCaseStrings = getActivity().getResources().getStringArray(R.array.chat_show_case);
         ShowcaseView.ConfigOptions configOptions = new ShowcaseView.ConfigOptions();
         configOptions.hideOnClickOutside = true;
         configOptions.fadeInDuration = 1000;
@@ -663,7 +663,7 @@ public class GroupChatFragment extends Fragment implements GroupChatAdapter.Grou
 
             }
         });
-        v.setButtonText("Got it");
+        v.setButtonText(getString(R.string.showCaseButtonText));
 
 
 
