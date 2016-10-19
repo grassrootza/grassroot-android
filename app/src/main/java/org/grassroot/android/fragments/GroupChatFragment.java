@@ -47,6 +47,7 @@ import org.grassroot.android.models.TaskModel;
 import org.grassroot.android.models.exceptions.ApiCallException;
 import org.grassroot.android.models.exceptions.NoGcmException;
 import org.grassroot.android.models.responses.GroupChatSettingResponse;
+import org.grassroot.android.services.ApplicationLoader;
 import org.grassroot.android.services.GcmListenerService;
 import org.grassroot.android.services.GroupChatService;
 import org.grassroot.android.services.GroupService;
@@ -298,6 +299,8 @@ public class GroupChatFragment extends Fragment implements GroupChatAdapter.Grou
             RealmUtils.saveDataToRealmSync(message);
             groupChatAdapter.addOrUpdateMessage(message);
             chatMessageView.smoothScrollToPosition(groupChatAdapter.getItemCount());
+
+
 
             GroupChatService.getInstance().sendMessageViaGR(message).subscribe(new Action1<String>() {
                     @Override

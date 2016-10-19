@@ -12,6 +12,7 @@ import android.media.RingtoneManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.PowerManager;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 
@@ -65,7 +66,15 @@ public class GcmListenerService extends com.google.android.gms.gcm.GcmListenerSe
     private static int displayedMessagesCount = 0;
     private static int displayedJoinRequestCount = 0;
     private static Notification notification;
+    private PowerManager pm;
+    private PowerManager.WakeLock wl;
 
+    @Override
+    public void onCreate() {
+        pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
+        wl = pm.newWakeLock(PowerManager.SCREEN_BRIGHT_WAKE_LOCK| PowerManager.ACQUIRE_CAUSES_WAKEUP, TAG);
+        wl.acquire();
+    }
 
     @Override
     public void onMessageReceived(String from, Bundle data) {
@@ -76,7 +85,10 @@ public class GcmListenerService extends com.google.android.gms.gcm.GcmListenerSe
         } else {
             relayNotification(data);
         }
+
     }
+
+
 
     @Override
     public void onMessageSent(String msgId) {
@@ -88,6 +100,12 @@ public class GcmListenerService extends com.google.android.gms.gcm.GcmListenerSe
     public void onSendError(String msgId, String error) {
         super.onSendError(msgId, error);
         Log.d(TAG, "message with id " + msgId + " not sent.");
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        wl.release();
     }
 
     private static void relayNotification(Bundle msg) {

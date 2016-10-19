@@ -93,6 +93,7 @@ public class GroupChatService {
                             throw new ApiCallException(NetworkUtils.SERVER_ERROR, ErrorUtils.getRestMessage(response.errorBody()));
                         }
                     } catch (IOException e) {
+                        Log.e(TAG,"ioeException" + e.getMessage());
                         throw new ApiCallException(NetworkUtils.CONNECT_ERROR);
                     }
                 }

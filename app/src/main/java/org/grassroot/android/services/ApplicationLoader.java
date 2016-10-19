@@ -9,6 +9,7 @@ import com.jakewharton.picasso.OkHttp3Downloader;
 import com.squareup.picasso.Picasso;
 
 import io.fabric.sdk.android.Fabric;
+
 import org.grassroot.android.BuildConfig;
 import org.grassroot.android.receivers.TaskManagerReceiver;
 
@@ -26,43 +27,51 @@ import okhttp3.Response;
  */
 public class ApplicationLoader extends Application {
 
-  public static volatile Context applicationContext;
+    public static volatile Context applicationContext;
 
-  @Override public void onCreate() {
-    super.onCreate();
-    Fabric.with(this, new Crashlytics());
+    @Override
+    public void onCreate() {
+        super.onCreate();
+        Fabric.with(this, new Crashlytics());
 
-    applicationContext = getApplicationContext();
+        applicationContext = getApplicationContext();
 
-    // Create a RealmConfiguration that saves the Realm file in the app's "files" directory.
-    RealmConfiguration.Builder realmConfigBuilder =
-        new RealmConfiguration.Builder(applicationContext);
+        // Create a RealmConfiguration that saves the Realm file in the app's "files" directory.
+        RealmConfiguration.Builder realmConfigBuilder =
+                new RealmConfiguration.Builder(applicationContext);
 
-      realmConfigBuilder.deleteRealmIfMigrationNeeded();
+        realmConfigBuilder.deleteRealmIfMigrationNeeded();
 
 
-    Realm.setDefaultConfiguration(realmConfigBuilder.build());
+        Realm.setDefaultConfiguration(realmConfigBuilder.build());
 
-    //create a custom okhttp client for picasso and instantiate singleton
-    OkHttpClient okHttpClient = new OkHttpClient.Builder().addNetworkInterceptor(new Interceptor() {
-      @Override public Response intercept(Chain chain) throws IOException {
-        Response originalResponse = chain.proceed(chain.request());
-        return originalResponse.newBuilder()
-            .header("Cache-Control", "max-age=" + (60 * 60 * 24 * 365))
-            .build();
-      }
-    }).cache(new Cache(applicationContext.getFilesDir(), Integer.MAX_VALUE)).build();
+        //create a custom okhttp client for picasso and instantiate singleton
+        OkHttpClient okHttpClient = new OkHttpClient.Builder().addNetworkInterceptor(new Interceptor() {
+            @Override
+            public Response intercept(Chain chain) throws IOException {
+                Response originalResponse = chain.proceed(chain.request());
+                return originalResponse.newBuilder()
+                        .header("Cache-Control", "max-age=" + (60 * 60 * 24 * 365))
+                        .build();
+            }
+        }).cache(new Cache(applicationContext.getFilesDir(), Integer.MAX_VALUE)).build();
 
-    Picasso.Builder builder = new Picasso.Builder(getApplicationContext());
-    builder.downloader(new OkHttp3Downloader(okHttpClient));
-    Picasso built = builder.build();
-    built.setIndicatorsEnabled(BuildConfig.BUILD_TYPE.equals("debug"));
-    built.setLoggingEnabled(false);
-    Picasso.setSingletonInstance(built);
+        Picasso.Builder builder = new Picasso.Builder(getApplicationContext());
+        builder.downloader(new OkHttp3Downloader(okHttpClient));
+        Picasso built = builder.build();
+        built.setIndicatorsEnabled(BuildConfig.BUILD_TYPE.equals("debug"));
+        built.setLoggingEnabled(false);
+        Picasso.setSingletonInstance(built);
 
-    Intent i = new Intent(this,TaskManagerReceiver.class);
-    i.setAction(TaskManagerReceiver.ACTION_START);
-    sendBroadcast(i);
-  }
+        Intent i = new Intent(this, TaskManagerReceiver.class);
+        i.setAction(TaskManagerReceiver.ACTION_START);
+        sendBroadcast(i);
+    }
+
+    public static void initPlayServices() {
+        Intent intent = new Intent(applicationContext, GcmRegistrationService.class);
+        applicationContext.startService(intent);
+
+    }
 
 }
