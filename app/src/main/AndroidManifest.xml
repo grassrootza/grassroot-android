@@ -18,6 +18,7 @@
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="android.permission.GET_TASKS" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
     <permission
         android:name="org.grassroot.android.permission.C2D_MESSAGE"
@@ -49,6 +50,14 @@
                 <category android:name="org.grassroot.android" />
             </intent-filter>
         </receiver>
+
+        <receiver android:name=".receivers.BootBroadCastReceiver" android:enabled="true">
+        <intent-filter>
+            <action android:name="android.intent.action.BOOT_COMPLETED" />
+            <action android:name="org.grassroot.start" />
+        </intent-filter>
+        </receiver>
+
 
         <service android:name=".services.GcmRegistrationService" />
 
@@ -242,6 +251,7 @@
         <activity
             android:name=".activities.MultiMessageNotificationActivity"
             android:configChanges="orientation|keyboardHidden"
+            android:launchMode="singleTop"
             android:label="@string/title_activity_view_chat_message"
             android:theme="@style/AppTheme"
             android:parentActivityName=".activities.HomeScreenActivity">
@@ -293,7 +303,10 @@
         </receiver>
 
         <service android:name=".services.SharingService"/>
-
+        <service android:name=".services.NotificationService"
+            android:process=":grassroot_process"
+            android:icon="@drawable/app_icon"
+            />
     </application>
 
 </manifest>
