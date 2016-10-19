@@ -23,16 +23,17 @@
 -dontwarn retrofit.appengine.UrlFetchClient
 -dontwarn okio.**
 -dontwarn com.viewpagerindicator.**
--toKeep class com.squareup.okhttp.** { *; }
--toKeep interface com.squareup.okhttp.** { *; }
--toKeep class retrofit2.** { *; }
 
--toKeep public class android.support.v7.widget.** { *; }
--toKeep public class android.support.v7.internal.widget.** { *; }
+-keep class com.squareup.okhttp.** { *; }
+-keep interface com.squareup.okhttp.** { *; }
+-keep class retrofit2.** { *; }
+
+-keep public class android.support.v7.widget.** { *; }
+-keep public class android.support.v7.internal.widget.** { *; }
 
 -keepnames class !android.support.v7.internal.view.menu.**, ** { *; }
 
--toKeep public class * extends android.support.v4.view.ActionProvider {
+-keep public class * extends android.support.v4.view.ActionProvider {
     public <init>(android.content.Context);
 }
 -keepattributes *Annotation*
@@ -41,7 +42,7 @@
     @org.greenrobot.eventbus.Subscribe <methods>;
 }
 
--toKeep enum org.greenrobot.eventbus.ThreadMode { *; }
+-keep enum org.greenrobot.eventbus.ThreadMode { *; }
 
 # Only required if you use AsyncExecutor
 -keepclassmembers class * extends org.greenrobot.eventbus.util.ThrowableFailureEvent {
@@ -54,8 +55,8 @@
 -keepattributes innerClasses
 -keepattributes EnclosingMethod
 
--toKeep class butterknife.** { *; }
--toKeep class **$$ViewInjector { *; }
+-keep class butterknife.** { *; }
+-keep class **$$ViewInjector { *; }
 
 -keepclasseswithmembernames class * {
     @butterknife.* <fields>;
@@ -67,10 +68,10 @@
     @retrofit.http.* <methods>;
 }
 -keepattributes Signature
--toKeep class com.google.gson.** { *;}
+-keep class com.google.gson.** { *;}
 
 -dontwarn sun.misc.**
--toKeep public class com.google.android.gms.* { public *; }
+-keep public class com.google.android.gms.* { public *; }
 -dontwarn com.google.android.gms.**
 -keepclassmembers class rx.internal.util.unsafe.*ArrayQueue*Field* {
    long producerIndex;

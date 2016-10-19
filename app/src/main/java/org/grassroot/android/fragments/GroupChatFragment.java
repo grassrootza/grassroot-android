@@ -385,7 +385,7 @@ public class GroupChatFragment extends Fragment implements GroupChatAdapter.Grou
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onEvent(GroupChatEvent groupChatEvent) {
-        Log.e(TAG, "group chat event triggered");
+        Log.d(TAG, "group chat event triggered");
         String groupUidInMessage = groupChatEvent.getGroupUid();
         if ((this.isVisible() && !groupUidInMessage.equals(groupUid))) {
             GcmListenerService.showNotification(groupChatEvent.getBundle(), getActivity()).subscribe();
@@ -400,7 +400,7 @@ public class GroupChatFragment extends Fragment implements GroupChatAdapter.Grou
     }
 
     private void updateRecyclerView(GroupChatEvent groupChatEvent) {
-        Log.e(TAG, "updating recycler view because of chat event");
+        Log.d(TAG, "updating recycler view because of chat event");
         Message message = groupChatEvent.getMessage();
         if (groupChatAdapter.getMessages().contains(message)) {
             groupChatAdapter.updateMessage(message);
@@ -460,7 +460,7 @@ public class GroupChatFragment extends Fragment implements GroupChatAdapter.Grou
      */
 
     private void mute(@Nullable final String userUid, String groupUid, boolean userInitiated, final boolean active) {
-        Log.e(TAG, "Grassroot: calling mute user of user");
+        Log.d(TAG, "Grassroot: calling mute user of user");
         GroupService.getInstance().updateMemberChatSetting(groupUid, userUid, userInitiated, active,
             AndroidSchedulers.mainThread()).subscribe(new Action1<String>() {
             @Override

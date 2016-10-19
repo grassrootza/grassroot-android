@@ -402,7 +402,6 @@ public class GroupTasksActivity extends PortraitActivity implements NewTaskMenuF
     }
 
     private boolean closeViewTaskFragment() {
-        Log.e(TAG, "finding view task fragment");
         Fragment frag = getSupportFragmentManager().findFragmentByTag(ViewTaskFragment.class.getCanonicalName());
         if (frag != null && frag.isVisible()) {
             getSupportFragmentManager().beginTransaction()

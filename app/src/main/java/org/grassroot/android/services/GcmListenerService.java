@@ -69,7 +69,7 @@ public class GcmListenerService extends com.google.android.gms.gcm.GcmListenerSe
 
     @Override
     public void onMessageReceived(String from, Bundle data) {
-        Log.e(TAG, "message received, from : " + from);
+        Log.d(TAG, "message received, from : " + from);
         incrementNotificationCounter();
         if (NotificationConstants.CHAT_MESSAGE.equals(data.get(NotificationConstants.ENTITY_TYPE))) {
             handleChatMessages(data, this);
@@ -327,7 +327,7 @@ public class GcmListenerService extends com.google.android.gms.gcm.GcmListenerSe
     }
 
     private static void createChatMessageIfFromTask(Bundle bundle) {
-        Log.e(TAG, "creating a chat message from an incoming task");
+        Log.d(TAG, "creating a chat message from an incoming task");
         String clickAction = bundle.getString(NotificationConstants.CLICK_ACTION);
         if (clickAction != null && clickAction.equals(NotificationConstants.TASK_CREATED)) {
             final String groupUid = bundle.getString(GroupConstants.UID_FIELD);
