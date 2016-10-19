@@ -90,7 +90,7 @@ public class GcmRegistrationService extends IntentService {
                             preferenceObject.setGcmAppVersionStored(BuildConfig.VERSION_CODE);
                             Log.e(TAG, "saving gcm registration ...");
                             RealmUtils.saveDataToRealmSync(preferenceObject);
-                            GroupChatService.getInstance().resetUserDetails();
+                            GroupChatService.getInstance().setUserDetails();
                         }
 
                         @Override

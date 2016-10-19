@@ -301,7 +301,6 @@ public class GroupChatFragment extends Fragment implements GroupChatAdapter.Grou
             chatMessageView.smoothScrollToPosition(groupChatAdapter.getItemCount());
 
 
-
             GroupChatService.getInstance().sendMessageViaGR(message).subscribe(new Action1<String>() {
                     @Override
                     public void call(String s) {

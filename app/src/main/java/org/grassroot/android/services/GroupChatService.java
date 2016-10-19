@@ -65,7 +65,7 @@ public class GroupChatService {
         return methodInstance;
     }
 
-    public void resetUserDetails() {
+    public void setUserDetails() {
         phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
         apiToken = RealmUtils.loadPreferencesFromDB().getToken();
         gcmRegistrationId = RealmUtils.loadPreferencesFromDB().getGcmRegistrationId();
@@ -80,6 +80,7 @@ public class GroupChatService {
                 } else {
                     Log.e(TAG, "okay sending via HTTP ... ");
                     try {
+                        if(phoneNumber == null) setUserDetails();
                         Response<GenericResponse> response = GrassrootRestService.getInstance().getApi()
                             .sendChatMessage(phoneNumber, apiToken, message.getGroupUid(), message.getText(),
                                 message.getUid(), gcmRegistrationId).execute();
@@ -93,9 +94,9 @@ public class GroupChatService {
                             throw new ApiCallException(NetworkUtils.SERVER_ERROR, ErrorUtils.getRestMessage(response.errorBody()));
                         }
                     } catch (IOException e) {
-                        Log.e(TAG,"ioeException" + e.getMessage());
                         throw new ApiCallException(NetworkUtils.CONNECT_ERROR);
                     }
+
                 }
             }
         }).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread());
