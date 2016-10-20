@@ -418,8 +418,7 @@ public class GcmListenerService extends com.google.android.gms.gcm.GcmListenerSe
     }
 
     public static void clearTaskNotifications(Context context) {
-        if (notification != null)
-            notification.number = notification.number - notificationMessages.size();
+        if (!(notification == null)) notification.number = notification.number - notificationMessages.size();
         displayedNotificationCount = 0;
         notificationMessages.clear();
         NotificationManager nMgr = (NotificationManager) context.getSystemService(NOTIFICATION_SERVICE);
@@ -427,7 +426,7 @@ public class GcmListenerService extends com.google.android.gms.gcm.GcmListenerSe
     }
 
     public static void clearChatNotifications(Context context) {
-        notification.number = notification.number - chatMessages.size();
+        if(!(notification == null))notification.number = notification.number - chatMessages.size();
         displayedMessagesCount = 0;
         chatMessages.clear();
         NotificationManager nMgr = (NotificationManager) context.getSystemService(NOTIFICATION_SERVICE);
@@ -435,7 +434,7 @@ public class GcmListenerService extends com.google.android.gms.gcm.GcmListenerSe
     }
 
     public static void clearJoinRequestNotifications(Context context) {
-        if(notification !=null) notification.number = notification.number - joinRequests.size();
+        if(!(notification == null)) notification.number = notification.number - joinRequests.size();
         displayedJoinRequestCount = 0;
         joinRequests.clear();
         NotificationManager nMgr = (NotificationManager) context.getSystemService(NOTIFICATION_SERVICE);

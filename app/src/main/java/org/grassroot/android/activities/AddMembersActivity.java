@@ -4,12 +4,14 @@ import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
+import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
@@ -86,6 +88,7 @@ public class AddMembersActivity extends AppCompatActivity implements
 
     @BindView(R.id.am_new_member_list_container) RelativeLayout newMemberContainer;
     @BindView(R.id.am_existing_member_list_container) RelativeLayout existingMemberContainer;
+    @Nullable @BindView(R.id.am_bt_save) Button saveMembersButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -218,6 +221,7 @@ public class AddMembersActivity extends AppCompatActivity implements
                     public void call(Boolean aBoolean) {
                         onMainScreen = false;
                         toolbarTitle.setText(R.string.cs_title);
+                        saveMembersButton.setVisibility(View.GONE);
                         getSupportFragmentManager()
                             .beginTransaction()
                             .add(R.id.am_body_container, contactSelectionFragment)
@@ -242,6 +246,7 @@ public class AddMembersActivity extends AppCompatActivity implements
     private void closeContactSelectionFragment() {
         onMainScreen = true;
         toolbarTitle.setText(R.string.am_title);
+        saveMembersButton.setVisibility(View.VISIBLE);
         getSupportFragmentManager()
                 .beginTransaction()
                 .remove(contactSelectionFragment)

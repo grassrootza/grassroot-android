@@ -14,7 +14,6 @@ public class NotificationService extends Service {
 
     private static NotificationService instance = null;
 
-
     @Override
     public void onCreate() {
         instance = this;
@@ -37,9 +36,7 @@ public class NotificationService extends Service {
         instance = null;
         Intent intent = new Intent("org.grassroot.start");
         sendBroadcast(intent);
-
     }
-
 
     public static boolean isNotificationServiceRunning() {
         return instance != null;
