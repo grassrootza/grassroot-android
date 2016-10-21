@@ -122,6 +122,7 @@ public class ShowcaseView extends RelativeLayout
         metricScale = getContext().getResources().getDisplayMetrics().density;
         mEndButton = (Button) LayoutInflater.from(context).inflate(R.layout.showcase_button, null);
 
+
         mShowcaseDrawer = new ClingDrawerImpl(getResources(), showcaseColor);
 
         // TODO: This isn't ideal, ClingDrawer and Calculator interfaces should be separate
@@ -157,12 +158,13 @@ public class ShowcaseView extends RelativeLayout
             RelativeLayout.LayoutParams lps = getConfigOptions().buttonLayoutParams;
             if (lps == null) {
                 lps = (LayoutParams) generateDefaultLayoutParams();
-                lps.addRule(RelativeLayout.CENTER_IN_PARENT);
+             //   lps.addRule(RelativeLayout.CENTER_IN_PARENT);
                 lps.addRule(RelativeLayout.ALIGN_PARENT_RIGHT);
                 int margin = ((Number) (metricScale * 12)).intValue();
                 lps.setMargins(margin, margin, margin, margin);
 
             }
+
             mEndButton.setLayoutParams(lps);
             mEndButton.setText(
                     buttonText != null ? buttonText : getResources().getString(R.string.ok));

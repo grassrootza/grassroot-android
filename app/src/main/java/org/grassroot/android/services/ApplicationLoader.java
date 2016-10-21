@@ -12,6 +12,7 @@ import io.fabric.sdk.android.Fabric;
 
 import org.grassroot.android.BuildConfig;
 import org.grassroot.android.receivers.TaskManagerReceiver;
+import org.grassroot.android.utils.RealmUtils;
 
 import java.io.IOException;
 
@@ -21,6 +22,8 @@ import okhttp3.Cache;
 import okhttp3.Interceptor;
 import okhttp3.OkHttpClient;
 import okhttp3.Response;
+
+import static org.grassroot.android.utils.RealmUtils.*;
 
 /**
  * Created by luke on 2016/06/17.
@@ -69,9 +72,10 @@ public class ApplicationLoader extends Application {
     }
 
     public static void initPlayServices() {
-        Intent intent = new Intent(applicationContext, GcmRegistrationService.class);
-        applicationContext.startService(intent);
-
+        if(!loadPreferencesFromDB().isHasGcmRegistered()) {
+            Intent intent = new Intent(applicationContext, GcmRegistrationService.class);
+            applicationContext.startService(intent);
+        }
     }
 
 }

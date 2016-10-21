@@ -10,6 +10,8 @@ import org.grassroot.android.services.NotificationService;
 import org.grassroot.android.utils.NetworkUtils;
 import org.grassroot.android.utils.RealmUtils;
 
+import static org.grassroot.android.services.NotificationService.*;
+
 /**
  * Created by luke on 15-June-2016.
  */
@@ -33,16 +35,17 @@ public class StartActivity extends AppCompatActivity {
     }
 
     private void userIsLoggedIn() {
-        if(NotificationService.isNotificationServiceRunning()){
-            Intent notificationServiceIntent = new Intent(this, NotificationService.class);
-            startService(notificationServiceIntent);
-        }
-        NetworkUtils.registerForGCM(this).subscribe();
+        if(!isNotificationServiceRunning())startNotificationService();
         NetworkUtils.syncAndStartTasks(this, false, false).subscribe();
         Intent i  = RealmUtils.loadPreferencesFromDB().isHasGroups() ?
                 new Intent(StartActivity.this, HomeScreenActivity.class) :
                 new Intent(StartActivity.this, NoGroupWelcomeActivity.class);
         startActivity(i);
+    }
+
+    private void startNotificationService(){
+        Intent notificationServiceIntent = new Intent(this, NotificationService.class);
+        startService(notificationServiceIntent);
     }
 
 }

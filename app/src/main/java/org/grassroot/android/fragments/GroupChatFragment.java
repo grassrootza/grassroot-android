@@ -354,6 +354,7 @@ public class GroupChatFragment extends Fragment implements GroupChatAdapter.Grou
         }
     }
 
+
     public void loadMessages() {
         RealmUtils.loadMessagesFromDb(groupUid).subscribe(new Action1<List<Message>>() {
             @Override
@@ -501,7 +502,13 @@ public class GroupChatFragment extends Fragment implements GroupChatAdapter.Grou
                     }
                 }
             }
-        });
+        }, new Action1<Throwable>() {
+            @Override
+            public void call(Throwable throwable) {
+
+
+            }}
+            );
     }
 
     private void updateEntryView(boolean active) {
@@ -644,11 +651,11 @@ public class GroupChatFragment extends Fragment implements GroupChatAdapter.Grou
         configOptions.fadeInDuration = 1000;
         configOptions.fadeOutDuration = 1000;
 
-        ShowcaseView v;
+        ShowcaseView chatShowCase;
         ViewTarget target = new ViewTarget(R.id.text_chat, getActivity());
-        v= ShowcaseView.insertShowcaseView(target, getActivity(), chatShowCaseStrings[0], chatShowCaseStrings[1], configOptions);
-        v.animateGesture(target.getPoint().x, target.getPoint().y, target.getPoint().x, target.getPoint().y);
-        v.setOnShowcaseEventListener(new OnShowcaseEventListener() {
+        chatShowCase= ShowcaseView.insertShowcaseView(target, getActivity(), chatShowCaseStrings[0], chatShowCaseStrings[1], configOptions);
+        chatShowCase.animateGesture(target.getPoint().x, target.getPoint().y, target.getPoint().x, target.getPoint().y);
+        chatShowCase.setOnShowcaseEventListener(new OnShowcaseEventListener() {
             @Override
             public void onShowcaseViewHide(ShowcaseView showcaseView) {}
 
@@ -663,7 +670,7 @@ public class GroupChatFragment extends Fragment implements GroupChatAdapter.Grou
 
             }
         });
-        v.setButtonText(getString(R.string.showCaseButtonText));
+        chatShowCase.setButtonText(getString(R.string.showCaseButtonText));
 
 
 

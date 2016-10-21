@@ -32,6 +32,7 @@ import org.grassroot.android.activities.GroupAvatarActivity;
 import org.grassroot.android.activities.GroupSearchActivity;
 import org.grassroot.android.activities.GroupTasksActivity;
 import org.grassroot.android.adapters.GroupListAdapter;
+import org.grassroot.android.events.BackgroundDataRestrictedEvent;
 import org.grassroot.android.events.GroupCreatedEvent;
 import org.grassroot.android.events.GroupDeletedEvent;
 import org.grassroot.android.events.GroupEditedEvent;
@@ -40,6 +41,8 @@ import org.grassroot.android.events.GroupsRefreshedEvent;
 import org.grassroot.android.events.LocalGroupToServerEvent;
 import org.grassroot.android.events.TaskAddedEvent;
 import org.grassroot.android.events.UserLoggedOutEvent;
+import org.grassroot.android.fragments.dialogs.ConfirmCancelDialogFragment;
+import org.grassroot.android.fragments.dialogs.NetworkErrorDialogFragment;
 import org.grassroot.android.interfaces.GroupConstants;
 import org.grassroot.android.interfaces.GroupPickCallbacks;
 import org.grassroot.android.interfaces.TaskConstants;
@@ -554,6 +557,16 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
     public void onEvent(UserLoggedOutEvent e) {
         // finish on main activity seems to not clear this
         groupListRowAdapter.setGroupList(new ArrayList<Group>());
+    }
+
+    @Subscribe
+    public void onEvent(BackgroundDataRestrictedEvent e){
+        ConfirmCancelDialogFragment.newInstance("bla bla", new ConfirmCancelDialogFragment.ConfirmDialogListener() {
+            @Override
+            public void doConfirmClicked() {
+
+            }
+        }).show(getFragmentManager(),TAG);
     }
 
     @OnClick(R.id.fab_menu_open)

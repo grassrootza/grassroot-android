@@ -15,6 +15,7 @@ import org.grassroot.android.models.PreferenceObject;
 import org.grassroot.android.models.exceptions.GcmRegistrationError;
 import org.grassroot.android.models.responses.GenericResponse;
 import org.grassroot.android.utils.Constant;
+import org.grassroot.android.utils.NetworkUtils;
 import org.grassroot.android.utils.RealmUtils;
 
 import java.io.IOException;

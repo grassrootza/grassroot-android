@@ -7,9 +7,11 @@ import android.net.NetworkInfo;
 import android.text.TextUtils;
 import android.util.Log;
 
+import org.grassroot.android.events.BackgroundDataRestrictedEvent;
 import org.grassroot.android.events.NetworkFailureEvent;
 import org.grassroot.android.events.OfflineActionsSent;
 import org.grassroot.android.events.OnlineOfflineToggledEvent;
+import org.grassroot.android.fragments.dialogs.NetworkErrorDialogFragment;
 import org.grassroot.android.interfaces.NotificationConstants;
 import org.grassroot.android.models.responses.GenericResponse;
 import org.grassroot.android.models.Group;
@@ -218,6 +220,7 @@ public class NetworkUtils {
   public static boolean isNetworkAvailable(Context context) {
     ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
     NetworkInfo ni = cm.getActiveNetworkInfo();
+    Log.e(TAG, "is connected "+ni.isConnected());
     return (ni != null && ni.isAvailable() && ni.isConnected());
   }
 
@@ -242,13 +245,15 @@ public class NetworkUtils {
     return Observable.create(new Observable.OnSubscribe() {
       @Override
       public void call(Object o) {
-        if (isOnline()) {
+        if (isOnline() && isNetworkAvailable(context)) {
           Intent gcmRegistrationIntent = new Intent(context, GcmRegistrationService.class);
           gcmRegistrationIntent.putExtra(NotificationConstants.ACTION, NotificationConstants.GCM_REGISTER);
           final String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
           gcmRegistrationIntent.putExtra(NotificationConstants.PHONE_NUMBER, phoneNumber);
           Log.d(TAG, "sending intent to GCM registration ...");
           context.startService(gcmRegistrationIntent);
+        }else{
+            EventBus.getDefault().post(new BackgroundDataRestrictedEvent());
         }
       }
     }).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread());
