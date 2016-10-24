@@ -15,8 +15,10 @@ import org.grassroot.android.models.TaskNotification;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import io.realm.Realm;
 import io.realm.RealmList;
@@ -492,22 +494,42 @@ public class RealmUtils {
     }
 
 
-    public static void markMessagesAsRead(String groupUid){
+    public static void markMessagesAsSeen(String groupUid){
         final Realm realm = Realm.getDefaultInstance();
         final RealmResults<Message> messages = realm
                 .where(Message.class)
                 .equalTo("groupUid", groupUid)
-                .equalTo("read", false).findAll();
+                .equalTo("seen", false).findAll();
         realm.executeTransaction(new Realm.Transaction() {
             @Override
             public void execute(Realm realm) {
                 for(Message message:messages){
-                    message.setRead(true);
+                    message.setSeen(true);
                     realm.copyToRealmOrUpdate(message);
 
             }}
         });
         realm.close();
+    }
+
+    public static Set<String> loadUnreadMessages(final String groupUid){
+
+                final Realm realm = Realm.getDefaultInstance();
+                final String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
+                final RealmResults<Message> results = realm.where(Message.class).notEqualTo("phoneNumber",phoneNumber)
+                        .equalTo("groupUid", groupUid).equalTo("read", false).findAll();
+
+                final Set<String> tempList = new HashSet<String>();
+                realm.executeTransaction(new Realm.Transaction() {
+                    @Override
+                    public void execute(Realm realm) {
+                        for(Message message: results){
+                            tempList.add(message.getUid());
+                        }
+                    }
+                });
+                return tempList;
+
     }
 
 

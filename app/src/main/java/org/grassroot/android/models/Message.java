@@ -46,6 +46,9 @@ public class Message extends RealmObject {
     private boolean delivered; // this is to server
     private int noAttempts;
 
+    private boolean seen;
+
+
     private boolean read;
     private String type;
 
@@ -69,6 +72,7 @@ public class Message extends RealmObject {
         this.text = text;
         this.time = time;
         this.type = "normal";
+        this.seen=true;
         this.sending = false;
         this.sent = false;
         this.delivered = false;
@@ -172,8 +176,8 @@ public class Message extends RealmObject {
         return delivered;
     }
 
-    public void setRead(boolean read) {
-        this.read = read;
+    public void setSeen(boolean seen) {
+        this.seen = seen;
     }
 
     public String getGroupName() {
@@ -182,6 +186,10 @@ public class Message extends RealmObject {
 
     public String getUserUid() {
         return userUid;
+    }
+
+    public boolean isSeen() {
+        return seen;
     }
 
     public boolean isRead() {
@@ -210,6 +218,10 @@ public class Message extends RealmObject {
 
     public void setDelivered(boolean delivered) {
         this.delivered = delivered;
+    }
+
+    public void setRead(boolean read) {
+        this.read = read;
     }
 
     public boolean isToKeep() {

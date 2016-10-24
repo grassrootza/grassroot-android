@@ -20,7 +20,6 @@ import android.widget.TextView;
 
 import org.grassroot.android.R;
 import org.grassroot.android.adapters.GroupPickAdapter;
-import org.grassroot.android.events.BackgroundDataRestrictedEvent;
 import org.grassroot.android.events.GroupChatEvent;
 import org.grassroot.android.events.TaskAddedEvent;
 import org.grassroot.android.events.TaskCancelledEvent;
@@ -35,7 +34,6 @@ import org.grassroot.android.fragments.QuickTaskModalFragment;
 import org.grassroot.android.fragments.TaskListFragment;
 import org.grassroot.android.fragments.ViewTaskFragment;
 import org.grassroot.android.fragments.dialogs.ConfirmCancelDialogFragment;
-import org.grassroot.android.fragments.dialogs.NetworkErrorDialogFragment;
 import org.grassroot.android.interfaces.GroupConstants;
 import org.grassroot.android.interfaces.GroupPickCallbacks;
 import org.grassroot.android.interfaces.NavigationConstants;

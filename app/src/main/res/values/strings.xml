@@ -876,6 +876,7 @@
     <string name="chat_message_not_sent">Not sent. </string>
     <string name="chat_message_sent">Sent. </string>
     <string name="chat_message_delivered">Delivered. </string>
+    <string name="chat_message_read">Read.</string>
     <string name="chat_long_click_options_title">Options</string>
 
     <string name="chat_message_server">Grassroot</string>
@@ -908,6 +909,7 @@
     <!--FAQ-->
     <string name="fq_txt_toolbar">FAQs</string>
     <string name="showCaseButtonText">Got it</string>
+
 
 
     <string-array name="fq_Header">

@@ -7,11 +7,9 @@ import android.net.NetworkInfo;
 import android.text.TextUtils;
 import android.util.Log;
 
-import org.grassroot.android.events.BackgroundDataRestrictedEvent;
 import org.grassroot.android.events.NetworkFailureEvent;
 import org.grassroot.android.events.OfflineActionsSent;
 import org.grassroot.android.events.OnlineOfflineToggledEvent;
-import org.grassroot.android.fragments.dialogs.NetworkErrorDialogFragment;
 import org.grassroot.android.interfaces.NotificationConstants;
 import org.grassroot.android.models.responses.GenericResponse;
 import org.grassroot.android.models.Group;
@@ -40,6 +38,7 @@ import retrofit2.Response;
 import rx.Observable;
 import rx.Scheduler;
 import rx.Subscriber;
+
 import rx.android.schedulers.AndroidSchedulers;
 import rx.functions.Action1;
 import rx.schedulers.Schedulers;
@@ -220,7 +219,7 @@ public class NetworkUtils {
   public static boolean isNetworkAvailable(Context context) {
     ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
     NetworkInfo ni = cm.getActiveNetworkInfo();
-    Log.e(TAG, "is connected "+ni.isConnected());
+//    Log.e(TAG, "is connected "+ni.isConnected());
     return (ni != null && ni.isAvailable() && ni.isConnected());
   }
 
@@ -252,8 +251,6 @@ public class NetworkUtils {
           gcmRegistrationIntent.putExtra(NotificationConstants.PHONE_NUMBER, phoneNumber);
           Log.d(TAG, "sending intent to GCM registration ...");
           context.startService(gcmRegistrationIntent);
-        }else{
-            EventBus.getDefault().post(new BackgroundDataRestrictedEvent());
         }
       }
     }).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread());
