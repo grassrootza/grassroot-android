@@ -354,9 +354,9 @@ public class GrassrootRestService {
     @GET("group/messenger/ping/{phoneNumber}/{code}/{groupUid}")
     Call<GenericResponse> requestPing(@Path("phoneNumber") String phoneNumber, @Path("code") String code, @Path("groupUid") String groupUid);
 
-    @POST("group/messenger/mark_read/{phoneNumber}/{code}/{groupUid}/{messageUid}")
+    @POST("group/messenger/mark_read/{phoneNumber}/{code}/{groupUid}")
     Call<GenericResponse> markAsRead(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
-                                     @Path("groupUid") String groupUid, @Query("messageUid") Set<String> messageUid);
+                                     @Path("groupUid") String groupUid, @Query("messageUids") Set<String> messageUid);
 
 
         /*

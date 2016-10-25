@@ -200,7 +200,7 @@ public class GroupChatFragment extends Fragment implements GroupChatAdapter.Grou
                     if(position==1){
                         final boolean isShowCased = RealmUtils.loadPreferencesFromDB().isGroupChatFragmentShowCased();
                         if (!isShowCased) showCase();
-                        notifyGroupMessagesAsRead(groupUid);
+                             notifyGroupMessagesAsRead(groupUid);
                     }
                 }
                 @Override
@@ -440,14 +440,17 @@ public class GroupChatFragment extends Fragment implements GroupChatAdapter.Grou
             RealmUtils.markMessagesAsSeen(groupUid);
         } else {
             updateRecyclerView(groupChatEvent);
+            notifyGroupMessagesAsRead(groupUid);
         }
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onEvent(GroupChatMessageReadEvent groupChatMessageReadEvent){
         String groupUidInMessage = groupChatMessageReadEvent.getMessage().getGroupUid();
+        Log.e(TAG,"messsage read "+groupChatMessageReadEvent.getMessage().isRead());
         if((this.isVisible() && groupUidInMessage.equals(groupUid))){
             updateRecyclerView(groupChatMessageReadEvent);
+            notifyGroupMessagesAsRead(groupUid);
         }
     }
 

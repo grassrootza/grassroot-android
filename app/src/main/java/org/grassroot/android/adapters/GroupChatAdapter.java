@@ -110,10 +110,10 @@ public class GroupChatAdapter extends RecyclerView.Adapter<GroupChatAdapter.GCVi
                 handleServerMessageBtns(holder, validCommand, message);
                 break;
             case SELF:
-                final String subtitle = message.isDelivered() ? deliveredSub
-                        : message.isSent() ? sentSub
+                final String subtitle = message.isRead() ? deliveredSub
+                        : message.isDelivered() ? deliveredSub
+                        : message.isSent() ? sendingSub
                         : message.isSending() ? sendingSub
-                        : message.isRead() ? readSub
                         : message.exceedsMaximumSendingAttempts() ? notSentSub : "";
                 holder.timestamp.setText(subtitle.concat(time));
                 break;

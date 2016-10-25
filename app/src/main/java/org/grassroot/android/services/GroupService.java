@@ -239,9 +239,7 @@ public class GroupService {
   }
 
   public Observable<String>  markMessagesAsRead(final String groupUid, Scheduler observingThread){
-    Log.e(TAG, "marking messages as read");
     return Observable.create(new Observable.OnSubscribe<String>(){
-
       @Override
       public void call(Subscriber<? super String> subscriber) {
         if(!NetworkUtils.isOnline()){
@@ -250,22 +248,23 @@ public class GroupService {
           final String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
           final String code = RealmUtils.loadPreferencesFromDB().getToken();
           final Set<String> messageUids = RealmUtils.loadUnreadMessages(groupUid);
-          try {
-            Response<GenericResponse> response = GrassrootRestService.getInstance().getApi()
-                    .markAsRead(phoneNumber,code,groupUid,messageUids).execute();
-            if(response.isSuccessful()){
-              subscriber.onNext(NetworkUtils.ONLINE_DEFAULT);
-            } else {
-              subscriber.onNext(NetworkUtils.SERVER_ERROR);
+          if(!messageUids.isEmpty()) {
+            try {
+              Response<GenericResponse> response = GrassrootRestService.getInstance().getApi()
+                      .markAsRead(phoneNumber, code, groupUid, messageUids).execute();
+              if (response.isSuccessful()) {
+                subscriber.onNext(NetworkUtils.ONLINE_DEFAULT);
+              } else {
+                subscriber.onNext(NetworkUtils.SERVER_ERROR);
+              }
+            } catch (IOException e) {
+              subscriber.onNext(NetworkUtils.CONNECT_ERROR);
+            } finally {
+              subscriber.onCompleted();
             }
-          } catch (IOException e) {
-            subscriber.onNext(NetworkUtils.CONNECT_ERROR);
-          } finally {
-            subscriber.onCompleted();
           }
-
       }
-    }});
+    }}).subscribeOn(Schedulers.io()).observeOn(observingThread);
   }
 
 

@@ -67,14 +67,14 @@ public class GcmListenerService extends com.google.android.gms.gcm.GcmListenerSe
     private static int displayedMessagesCount = 0;
     private static int displayedJoinRequestCount = 0;
     private static Notification notification;
-    private PowerManager pm;
-    private PowerManager.WakeLock wl;
+    private static PowerManager pm;
+    private static PowerManager.WakeLock wl;
 
     @Override
     public void onCreate() {
         pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
         wl = pm.newWakeLock(PowerManager.SCREEN_BRIGHT_WAKE_LOCK | PowerManager.ACQUIRE_CAUSES_WAKEUP, TAG);
-        wl.acquire();
+
     }
 
     @Override
@@ -334,17 +334,20 @@ public class GcmListenerService extends com.google.android.gms.gcm.GcmListenerSe
     private static void handleChatMessages(Bundle bundle, Context context) {
         Message message = new Message(bundle);
         String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
+        Log.e(TAG, "type "+message.getType());
         if (!message.getType().equals("ping")) {
             if (message.getType().equals("update_read_status")) {
-                if (RealmUtils.hasMessage(message.getUid())&& !phoneNumber.equals(message.getPhoneNumber())) {
+                if (RealmUtils.hasMessage(message.getUid())) {
                     Message existingMessage = RealmUtils.loadMessage(message.getUid());
-                    message.setRead(true);
+                    existingMessage.setRead(true);
                     RealmUtils.saveDataToRealmSync(existingMessage);
+                    Log.e(TAG, "received update read status for message with uid ="+message.getUid());
                     EventBus.getDefault().post(new GroupChatMessageReadEvent(existingMessage));
                 }
             } else {
                 RealmUtils.saveDataToRealmSync(message);
                 if (isAppIsInBackground(context) && !phoneNumber.equals(message.getPhoneNumber())) {
+                    wl.acquire();
                     relayNotification(bundle);
                 } else {
                     EventBus.getDefault().post(new GroupChatEvent(message.getGroupUid(), bundle, message));
