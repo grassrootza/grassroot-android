@@ -4,16 +4,21 @@ import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.Log;
 
+import com.google.gson.JsonParseException;
+
 import org.grassroot.android.interfaces.GroupConstants;
 import org.grassroot.android.interfaces.NotificationConstants;
 import org.grassroot.android.services.GroupChatService;
 import org.grassroot.android.utils.Constant;
 import org.json.JSONArray;
 import org.json.JSONException;
+import org.json.JSONObject;
 
+import java.io.Serializable;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Map;
 import java.util.UUID;
 
 import io.realm.RealmList;
@@ -25,7 +30,7 @@ import io.realm.annotations.PrimaryKey;
 /**
  * Created by paballo on 2016/08/30.
  */
-public class Message extends RealmObject {
+public class Message extends RealmObject implements Serializable {
 
     @PrimaryKey
     private String uid;
@@ -88,6 +93,55 @@ public class Message extends RealmObject {
         this.type = "server";
         this.sent = true;
         this.delivered = true;
+    }
+
+    public Message(JSONObject map) throws JSONException {
+        this.uid = String.valueOf(map.get("messageUid"));
+        this.phoneNumber = String.valueOf(map.get("phone_number"));
+        this.groupName = String.valueOf(map.get(GroupConstants.NAME_FIELD));
+        this.groupIcon = String.valueOf(map.get("groupIcon"));
+        this.displayName = String.valueOf(map.get(Constant.TITLE));
+        this.groupUid = String.valueOf(map.get(GroupConstants.UID_FIELD));
+        this.userUid = String.valueOf(map.get("userUid"));
+
+        try {
+            this.time = formatter.parse(String.valueOf(map.get("time")));
+        } catch (ParseException e) {
+            Log.e("date parserror", e.toString());
+        }
+
+        this.text = String.valueOf(map.get(Constant.BODY));
+        this.type = String.valueOf(map.get("type"));
+        this.sending = false;
+        this.sent = true;
+        this.delivered = true;
+        this.noAttempts = -1;
+
+        this.server = phoneNumber == null;
+
+        if (this.server && map.has(NotificationConstants.TASK_DATE_TIME)) {
+            try {
+                this.actionDateTime = formatter.parse(String.valueOf(map.get(NotificationConstants.TASK_DATE_TIME)));
+            } catch (ParseException|NullPointerException e) {
+                e.printStackTrace();
+                this.actionDateTime = null;
+            }
+        }
+
+        if (map.has("tokens")) {
+            String tokenValues = String.valueOf(map.get("tokens"));
+            try {
+                JSONArray jsonArray = new JSONArray(tokenValues);
+                tokens = new RealmList<>();
+                for (int i = 0; i < jsonArray.length(); i++) {
+                    tokens.add(new RealmString(jsonArray.getString(i)));
+
+                }
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
+
     }
 
     public Message(Bundle bundle) {

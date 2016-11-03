@@ -10,6 +10,7 @@ import com.squareup.picasso.Picasso;
 
 import io.fabric.sdk.android.Fabric;
 
+import org.eclipse.paho.android.service.MqttAndroidClient;
 import org.grassroot.android.BuildConfig;
 import org.grassroot.android.receivers.TaskManagerReceiver;
 import org.grassroot.android.utils.RealmUtils;
@@ -31,6 +32,7 @@ import static org.grassroot.android.utils.RealmUtils.*;
 public class ApplicationLoader extends Application {
 
     public static volatile Context applicationContext;
+
 
     @Override
     public void onCreate() {

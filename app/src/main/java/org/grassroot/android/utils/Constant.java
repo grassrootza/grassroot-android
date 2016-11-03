@@ -26,6 +26,9 @@ public class Constant {
     public static final String localUrl = ApplicationLoader.applicationContext
         .getString(R.string.local_url);
 
+    public static final String stagingBrokerUrl = ApplicationLoader.applicationContext
+            .getString(R.string.stagingBrokerUrl);
+
     public static final String restUrl = BuildConfig.BUILD_TYPE.equals("debug") ? localUrl
             : BuildConfig.FLAVOR.equals(PROD) ? productionUrl : stagingUrl;
 

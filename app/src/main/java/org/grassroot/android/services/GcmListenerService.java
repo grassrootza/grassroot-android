@@ -32,6 +32,7 @@ import org.grassroot.android.models.Message;
 import org.grassroot.android.models.PreferenceObject;
 import org.grassroot.android.models.responses.GenericResponse;
 import org.grassroot.android.utils.Constant;
+import org.grassroot.android.utils.MqttConnectionManager;
 import org.grassroot.android.utils.RealmUtils;
 import org.greenrobot.eventbus.EventBus;
 
@@ -105,7 +106,7 @@ public class GcmListenerService extends com.google.android.gms.gcm.GcmListenerSe
     @Override
     public void onDestroy() {
         super.onDestroy();
-        wl.release();
+//        wl.release();
     }
 
     private static void relayNotification(Bundle msg) {
@@ -345,7 +346,9 @@ public class GcmListenerService extends com.google.android.gms.gcm.GcmListenerSe
                     EventBus.getDefault().post(new GroupChatMessageReadEvent(existingMessage));
                 }
             } else {
-                RealmUtils.saveDataToRealmSync(message);
+                if(!MqttConnectionManager.getInstance(context).isConnected()){
+                    MqttConnectionManager.getInstance(context).connect();
+                }
                 if (isAppIsInBackground(context) && !phoneNumber.equals(message.getPhoneNumber())) {
                     wl.acquire();
                     relayNotification(bundle);

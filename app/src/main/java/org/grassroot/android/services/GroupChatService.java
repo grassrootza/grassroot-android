@@ -16,6 +16,7 @@ import org.grassroot.android.models.exceptions.NoGcmException;
 import org.grassroot.android.models.responses.GenericResponse;
 import org.grassroot.android.utils.Constant;
 import org.grassroot.android.utils.ErrorUtils;
+import org.grassroot.android.utils.MqttConnectionManager;
 import org.grassroot.android.utils.NetworkUtils;
 import org.grassroot.android.utils.RealmUtils;
 import org.greenrobot.eventbus.EventBus;
@@ -69,6 +70,7 @@ public class GroupChatService {
         phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
         apiToken = RealmUtils.loadPreferencesFromDB().getToken();
         gcmRegistrationId = RealmUtils.loadPreferencesFromDB().getGcmRegistrationId();
+
     }
 
     public Observable<String> sendMessageViaGR(final Message message) {
@@ -81,9 +83,11 @@ public class GroupChatService {
                     Log.e(TAG, "okay sending via HTTP ... ");
                     try {
                         if(phoneNumber == null) setUserDetails();
+                      //  MqttConnectionManager.getInstance(ApplicationLoader.applicationContext).sendMessage(message.getGroupUid(),message);
                         Response<GenericResponse> response = GrassrootRestService.getInstance().getApi()
                             .sendChatMessage(phoneNumber, apiToken, message.getGroupUid(), message.getText(),
                                 message.getUid(), gcmRegistrationId).execute();
+
                         if (response.isSuccessful()) {
                             message.setSending(false);
                             message.setSent(true);
@@ -166,6 +170,8 @@ public class GroupChatService {
             }
         }).subscribeOn(Schedulers.io()).observeOn(observingThread);
     }
+
+
 
 
     public static boolean isMessageSent(String uid) {

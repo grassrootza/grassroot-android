@@ -31,6 +31,7 @@ import org.grassroot.android.models.responses.GroupsChangedResponse;
 import org.grassroot.android.models.responses.MemberListResponse;
 import org.grassroot.android.models.responses.PermissionResponse;
 import org.grassroot.android.utils.ErrorUtils;
+import org.grassroot.android.utils.MqttConnectionManager;
 import org.grassroot.android.utils.NetworkUtils;
 import org.grassroot.android.utils.PermissionUtils;
 import org.grassroot.android.utils.RealmUtils;
@@ -302,6 +303,15 @@ public class GroupService {
         composedMembers.add(m);
       }
     }
+    List<String> groupUids = new ArrayList<>();
+    List<Integer> qosList = new ArrayList<>();
+    for (Group g : responseBody.getAddedAndUpdated()) {
+       groupUids.add(g.getGroupUid());
+       qosList.add(1);
+    }
+    MqttConnectionManager.getInstance(ApplicationLoader.applicationContext).subscribeToTopics(groupUids
+            .toArray(new String[groupUids.size()]),Utilities.convertIntegerArrayToPrimitiveArray(qosList));
+
     RealmUtils.saveDataToRealm(composedMembers, Schedulers.immediate()).subscribe();
   }
 

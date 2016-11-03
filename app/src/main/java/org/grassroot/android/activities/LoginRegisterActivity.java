@@ -22,6 +22,7 @@ import org.grassroot.android.fragments.OtpScreenFragment;
 import org.grassroot.android.fragments.RegisterNameFragment;
 import org.grassroot.android.fragments.RegisterPhoneFragment;
 import org.grassroot.android.models.exceptions.ApiCallException;
+import org.grassroot.android.services.NotificationService;
 import org.grassroot.android.utils.ErrorUtils;
 import org.grassroot.android.utils.LoginRegUtils;
 import org.grassroot.android.utils.NetworkUtils;
@@ -334,6 +335,9 @@ public class LoginRegisterActivity extends AppCompatActivity implements LoginScr
             welcomeScreenIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
             startActivity(welcomeScreenIntent);
         }
+        if(!NotificationService.isNotificationServiceRunning()) startNotificationService();
+
+
     }
 
     @Override
@@ -355,6 +359,10 @@ public class LoginRegisterActivity extends AppCompatActivity implements LoginScr
     private void hideSoftKeyboard() {
         InputMethodManager inputMethodManager = (InputMethodManager) getSystemService(Activity.INPUT_METHOD_SERVICE);
         inputMethodManager.hideSoftInputFromWindow(getCurrentFocus().getWindowToken(), 0);
+    }
+    private void startNotificationService(){
+        Intent notificationServiceIntent = new Intent(this, NotificationService.class);
+        startService(notificationServiceIntent);
     }
 
 }

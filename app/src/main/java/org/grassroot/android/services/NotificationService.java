@@ -4,7 +4,9 @@ import android.app.Service;
 import android.content.Intent;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
-import android.util.Log;
+
+import org.eclipse.paho.android.service.MqttAndroidClient;
+import org.grassroot.android.utils.Constant;
 
 /**
  * Created by paballo on 2016/10/18.
@@ -12,7 +14,12 @@ import android.util.Log;
 
 public class NotificationService extends Service {
 
+    private static final String TAG = NotificationService.class.getCanonicalName();
     private static NotificationService instance = null;
+    //todo return different value for each build variant
+    private static final String brokerUrl = Constant.stagingBrokerUrl;
+    private static MqttAndroidClient client;
+
 
     @Override
     public void onCreate() {
@@ -41,4 +48,7 @@ public class NotificationService extends Service {
     public static boolean isNotificationServiceRunning() {
         return instance != null;
     }
+
+
+
 }

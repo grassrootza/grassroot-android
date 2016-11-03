@@ -118,4 +118,12 @@ public class Utilities {
             clipboard.setText(text);
         }
     }
+
+    public static int[] convertIntegerArrayToPrimitiveArray(List<Integer> listOfIntegers){
+        int[] ret = new int[listOfIntegers.size()];
+        int i = 0;
+        for (Integer e : listOfIntegers)
+            ret[i++] = e.intValue();
+        return ret;
+    }
 }
