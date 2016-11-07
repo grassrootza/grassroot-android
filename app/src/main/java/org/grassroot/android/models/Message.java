@@ -10,6 +10,7 @@ import org.grassroot.android.interfaces.GroupConstants;
 import org.grassroot.android.interfaces.NotificationConstants;
 import org.grassroot.android.services.GroupChatService;
 import org.grassroot.android.utils.Constant;
+import org.grassroot.android.utils.JsonIgnore;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -45,24 +46,31 @@ public class Message extends RealmObject implements Serializable {
 
     private Date time;
     private Date actionDateTime;
-
-    private boolean sending;
-    private boolean sent;
-    private boolean delivered; // this is to server
-    private int noAttempts;
-
-    private boolean seen;
-
-
-    private boolean read;
     private String type;
 
+    @JsonIgnore
+    private boolean sending;
+    @JsonIgnore
+    private boolean sent;
+    @JsonIgnore
+    private boolean delivered; // this is to server
+    @JsonIgnore
+    private int noAttempts;
+    @JsonIgnore
+    private boolean seen;
+
+    @JsonIgnore
+    private boolean read;
+
+    @JsonIgnore
     private boolean server;
+    @JsonIgnore
     private boolean toKeep;
 
     private RealmList<RealmString> tokens;
 
     @Ignore
+    @JsonIgnore
     SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
 
     public Message() {
@@ -105,8 +113,10 @@ public class Message extends RealmObject implements Serializable {
         this.userUid = String.valueOf(map.get("userUid"));
 
         try {
-            this.time = formatter.parse(String.valueOf(map.get("time")));
-        } catch (ParseException e) {
+          //  this.time = new Date(Long.parseLong((String.valueOf(map.get("time")))));
+          //  this.time = formatter.parse(String.valueOf(map.get("time")));
+
+        } catch (Exception e) {
             Log.e("date parserror", e.toString());
         }
 

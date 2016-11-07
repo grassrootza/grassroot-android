@@ -46,6 +46,7 @@ import org.grassroot.android.services.ApplicationLoader;
 import org.grassroot.android.services.GcmRegistrationService;
 import org.grassroot.android.utils.Constant;
 import org.grassroot.android.utils.LoginRegUtils;
+import org.grassroot.android.utils.MqttConnectionManager;
 import org.grassroot.android.utils.NetworkUtils;
 import org.grassroot.android.utils.RealmUtils;
 import org.greenrobot.eventbus.EventBus;
@@ -432,6 +433,7 @@ public class NavigationDrawerFragment extends Fragment implements NavigationDraw
                         LoginRegUtils.logOutUser(mobileNumber, code).subscribe();
                         EventBus.getDefault().post(new UserLoggedOutEvent());
                         RealmUtils.deleteAllObjects();
+                        MqttConnectionManager.getInstance(ApplicationLoader.applicationContext).disconnect();
                         Intent open = new Intent(getActivity(), StartActivity.class);
                         startActivity(open);
                     }

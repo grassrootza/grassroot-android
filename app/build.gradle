@@ -93,7 +93,7 @@ dependencies {
     compile 'com.google.android.gms:play-services-location:7.5.0'
     compile 'com.squareup.picasso:picasso:2.5.2'
     compile 'com.squareup.okio:okio:1.9.0'
-    compile 'org.eclipse.paho:org.eclipse.paho.client.mqttv3:1.0.3-SNAPSHOT'
+    compile 'org.eclipse.paho:org.eclipse.paho.client.mqttv3:1.1.0'
     //requred for image caching
     compile 'com.jakewharton.picasso:picasso2-okhttp3-downloader:1.0.2'
     compile('org.eclipse.paho:org.eclipse.paho.android.service:1.0.3-SNAPSHOT') { exclude module: 'support-v4' }

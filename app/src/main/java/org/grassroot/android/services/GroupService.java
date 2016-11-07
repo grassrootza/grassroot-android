@@ -312,6 +312,7 @@ public class GroupService {
     MqttConnectionManager.getInstance(ApplicationLoader.applicationContext).subscribeToTopics(groupUids
             .toArray(new String[groupUids.size()]),Utilities.convertIntegerArrayToPrimitiveArray(qosList));
 
+
     RealmUtils.saveDataToRealm(composedMembers, Schedulers.immediate()).subscribe();
   }
 

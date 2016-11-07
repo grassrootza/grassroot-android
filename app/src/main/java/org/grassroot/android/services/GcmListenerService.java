@@ -109,7 +109,7 @@ public class GcmListenerService extends com.google.android.gms.gcm.GcmListenerSe
 //        wl.release();
     }
 
-    private static void relayNotification(Bundle msg) {
+    public static void relayNotification(Bundle msg) {
         Context context = ApplicationLoader.applicationContext;
 
         final String notificationUid = msg.getString(NotificationConstants.NOTIFICATION_UID);
@@ -154,6 +154,7 @@ public class GcmListenerService extends com.google.android.gms.gcm.GcmListenerSe
                 });
 
     }
+
 
     public static boolean isAppIsInBackground(Context context) {
         boolean isInBackground = true;
@@ -333,20 +334,24 @@ public class GcmListenerService extends com.google.android.gms.gcm.GcmListenerSe
     }
 
     private static void handleChatMessages(Bundle bundle, Context context) {
-        Message message = new Message(bundle);
+
+        if (!MqttConnectionManager.getInstance(context).isConnected()) {
+            MqttConnectionManager.getInstance(context).connect();
+        }
+      /*  Message message = new Message(bundle);
         String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
-        Log.e(TAG, "type "+message.getType());
+        Log.e(TAG, "type " + message.getType());
         if (!message.getType().equals("ping")) {
             if (message.getType().equals("update_read_status")) {
                 if (RealmUtils.hasMessage(message.getUid())) {
                     Message existingMessage = RealmUtils.loadMessage(message.getUid());
                     existingMessage.setRead(true);
                     RealmUtils.saveDataToRealmSync(existingMessage);
-                    Log.e(TAG, "received update read status for message with uid ="+message.getUid());
+                    Log.e(TAG, "received update read status for message with uid =" + message.getUid());
                     EventBus.getDefault().post(new GroupChatMessageReadEvent(existingMessage));
                 }
             } else {
-                if(!MqttConnectionManager.getInstance(context).isConnected()){
+                if (!MqttConnectionManager.getInstance(context).isConnected()) {
                     MqttConnectionManager.getInstance(context).connect();
                 }
                 if (isAppIsInBackground(context) && !phoneNumber.equals(message.getPhoneNumber())) {
@@ -356,7 +361,7 @@ public class GcmListenerService extends com.google.android.gms.gcm.GcmListenerSe
                     EventBus.getDefault().post(new GroupChatEvent(message.getGroupUid(), bundle, message));
                 }
             }
-        }
+        }*/
     }
 
     private static void createChatMessageIfFromTask(Bundle bundle) {

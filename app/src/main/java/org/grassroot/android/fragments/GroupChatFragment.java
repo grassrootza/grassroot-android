@@ -200,7 +200,7 @@ public class GroupChatFragment extends Fragment implements GroupChatAdapter.Grou
                     if(position==1){
                         final boolean isShowCased = RealmUtils.loadPreferencesFromDB().isGroupChatFragmentShowCased();
                         if (!isShowCased) showCase();
-                             notifyGroupMessagesAsRead(groupUid);
+                             //notifyGroupMessagesAsRead(groupUid);
                     }
                 }
                 @Override
@@ -342,7 +342,7 @@ public class GroupChatFragment extends Fragment implements GroupChatAdapter.Grou
             chatMessageView.smoothScrollToPosition(groupChatAdapter.getItemCount());
 
 
-            GroupChatService.getInstance().sendMessageViaGR(message).subscribe(new Action1<String>() {
+            GroupChatService.getInstance().sendMessageViaMQTT(message).subscribe(new Action1<String>() {
                     @Override
                     public void call(String s) {
                         groupChatAdapter.updateMessage(RealmUtils.loadMessage(message.getUid()));
@@ -437,10 +437,10 @@ public class GroupChatFragment extends Fragment implements GroupChatAdapter.Grou
         } else if (((this.isVisible() && groupUidInMessage.equals(groupUid)) && !isActiveTab(groupUidInMessage))) {
             GcmListenerService.showNotification(groupChatEvent.getBundle(), getActivity()).subscribe();
             updateRecyclerView(groupChatEvent);
-            RealmUtils.markMessagesAsSeen(groupUid);
+          //  RealmUtils.markMessagesAsSeen(groupUid);
         } else {
             updateRecyclerView(groupChatEvent);
-            notifyGroupMessagesAsRead(groupUid);
+           // notifyGroupMessagesAsRead(groupUid);
         }
     }
 
@@ -450,7 +450,7 @@ public class GroupChatFragment extends Fragment implements GroupChatAdapter.Grou
         Log.e(TAG,"messsage read "+groupChatMessageReadEvent.getMessage().isRead());
         if((this.isVisible() && groupUidInMessage.equals(groupUid))){
             updateRecyclerView(groupChatMessageReadEvent);
-            notifyGroupMessagesAsRead(groupUid);
+           // notifyGroupMessagesAsRead(groupUid);
         }
     }
 
