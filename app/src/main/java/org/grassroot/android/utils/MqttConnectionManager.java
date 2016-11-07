@@ -20,6 +20,7 @@ import org.eclipse.paho.client.mqttv3.MqttCallback;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
+import org.grassroot.android.R;
 import org.grassroot.android.events.GroupChatEvent;
 import org.grassroot.android.events.GroupChatMessageReadEvent;
 import org.grassroot.android.interfaces.GroupConstants;
@@ -104,6 +105,7 @@ public class MqttConnectionManager implements IMqttActionListener, MqttCallback 
                 IMqttToken token = mqttAndroidClient.connect(options);
                 token.setActionCallback(this);
 
+
             } catch (MqttException e) {
                 Log.e(TAG, e.getMessage());
             }
@@ -163,7 +165,6 @@ public class MqttConnectionManager implements IMqttActionListener, MqttCallback 
             mqttMessage.setRetained(false);
             mqttMessage.setQos(1);
             Log.e(TAG, "publishing to topic "+ topic);
-            Log.e(TAG, "my client id is "+mqttAndroidClient.getClientId());
             IMqttToken token = mqttAndroidClient.publish(topic, mqttMessage);
             token.setActionCallback(this);
 
@@ -197,7 +198,7 @@ public class MqttConnectionManager implements IMqttActionListener, MqttCallback 
        Log.e(TAG, "receive message from broker");
         try {
             Message message;
-            if(topic.equals("Grassroot")){
+            if(topic.equals(context.getString(R.string.app_name))){
             message = serverMessageDeserializer.fromJson(mqttMessage.toString(), Message.class);
             }else{
                 GsonBuilder builder = new GsonBuilder();
@@ -273,6 +274,7 @@ public class MqttConnectionManager implements IMqttActionListener, MqttCallback 
         bundle.putString(GroupConstants.NAME_FIELD, message.getGroupName());
         bundle.putString(Constant.TITLE, message.getDisplayName());
         bundle.putString(GroupConstants.UID_FIELD, message.getGroupUid());
+        bundle.putString(Constant.BODY, message.getText());
         bundle.putString("userUid", message.getUserUid());
         bundle.putString(NotificationConstants.ENTITY_TYPE, NotificationConstants.CHAT_MESSAGE);
 

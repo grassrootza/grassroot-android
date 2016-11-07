@@ -333,10 +333,11 @@ public class GroupChatFragment extends Fragment implements GroupChatAdapter.Grou
         final String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
         final String userName = RealmUtils.loadPreferencesFromDB().getUserName();
         final Message message = messageUid != null ? groupChatAdapter.findMessage(messageUid) :
-            new Message(phoneNumber, groupUid, userName, new Date(), msgText, "");
+            new Message(phoneNumber, groupUid, userName, new Date(), msgText, groupName);
 
         if (message != null) {
             message.setSending(true);
+
             RealmUtils.saveDataToRealmSync(message);
             groupChatAdapter.addOrUpdateMessage(message);
             chatMessageView.smoothScrollToPosition(groupChatAdapter.getItemCount());

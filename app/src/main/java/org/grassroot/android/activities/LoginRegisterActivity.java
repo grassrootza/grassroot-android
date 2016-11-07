@@ -25,7 +25,9 @@ import org.grassroot.android.models.exceptions.ApiCallException;
 import org.grassroot.android.services.NotificationService;
 import org.grassroot.android.utils.ErrorUtils;
 import org.grassroot.android.utils.LoginRegUtils;
+import org.grassroot.android.utils.MqttConnectionManager;
 import org.grassroot.android.utils.NetworkUtils;
+import org.grassroot.android.utils.RealmUtils;
 import org.grassroot.android.utils.Utilities;
 
 import rx.Subscriber;
@@ -335,6 +337,7 @@ public class LoginRegisterActivity extends AppCompatActivity implements LoginScr
             welcomeScreenIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
             startActivity(welcomeScreenIntent);
         }
+        connectToMqttAndSubscribe();
         if(!NotificationService.isNotificationServiceRunning()) startNotificationService();
 
 
@@ -363,6 +366,11 @@ public class LoginRegisterActivity extends AppCompatActivity implements LoginScr
     private void startNotificationService(){
         Intent notificationServiceIntent = new Intent(this, NotificationService.class);
         startService(notificationServiceIntent);
+    }
+    private void connectToMqttAndSubscribe(){
+        String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
+        MqttConnectionManager.getInstance(this).connect();
+        MqttConnectionManager.getInstance(this).subscribeToTopic(phoneNumber,1);
     }
 
 }

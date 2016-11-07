@@ -21,7 +21,6 @@ import org.grassroot.android.activities.JoinRequestNoticeActivity;
 import org.grassroot.android.activities.MultiMessageNotificationActivity;
 import org.grassroot.android.activities.ViewTaskActivity;
 import org.grassroot.android.events.GroupChatEvent;
-import org.grassroot.android.events.GroupChatMessageReadEvent;
 import org.grassroot.android.events.JoinRequestEvent;
 import org.grassroot.android.events.NotificationCountChangedEvent;
 import org.grassroot.android.events.NotificationEvent;
@@ -83,7 +82,7 @@ public class GcmListenerService extends com.google.android.gms.gcm.GcmListenerSe
         Log.d(TAG, "message received, from : " + from);
         incrementNotificationCounter();
         if (NotificationConstants.CHAT_MESSAGE.equals(data.get(NotificationConstants.ENTITY_TYPE))) {
-            handleChatMessages(data, this);
+            handleChatMessages(this);
         } else {
             relayNotification(data);
         }
@@ -333,35 +332,10 @@ public class GcmListenerService extends com.google.android.gms.gcm.GcmListenerSe
         }
     }
 
-    private static void handleChatMessages(Bundle bundle, Context context) {
-
+    private static void handleChatMessages(Context context) {
         if (!MqttConnectionManager.getInstance(context).isConnected()) {
             MqttConnectionManager.getInstance(context).connect();
         }
-      /*  Message message = new Message(bundle);
-        String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
-        Log.e(TAG, "type " + message.getType());
-        if (!message.getType().equals("ping")) {
-            if (message.getType().equals("update_read_status")) {
-                if (RealmUtils.hasMessage(message.getUid())) {
-                    Message existingMessage = RealmUtils.loadMessage(message.getUid());
-                    existingMessage.setRead(true);
-                    RealmUtils.saveDataToRealmSync(existingMessage);
-                    Log.e(TAG, "received update read status for message with uid =" + message.getUid());
-                    EventBus.getDefault().post(new GroupChatMessageReadEvent(existingMessage));
-                }
-            } else {
-                if (!MqttConnectionManager.getInstance(context).isConnected()) {
-                    MqttConnectionManager.getInstance(context).connect();
-                }
-                if (isAppIsInBackground(context) && !phoneNumber.equals(message.getPhoneNumber())) {
-                    wl.acquire();
-                    relayNotification(bundle);
-                } else {
-                    EventBus.getDefault().post(new GroupChatEvent(message.getGroupUid(), bundle, message));
-                }
-            }
-        }*/
     }
 
     private static void createChatMessageIfFromTask(Bundle bundle) {
