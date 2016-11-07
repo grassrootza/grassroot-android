@@ -79,8 +79,9 @@ public class GcmListenerService extends com.google.android.gms.gcm.GcmListenerSe
 
     @Override
     public void onMessageReceived(String from, Bundle data) {
-        Log.d(TAG, "message received, from : " + from);
+        Log.e(TAG, "message received, from : " + from);
         incrementNotificationCounter();
+        MqttConnectionManager.getInstance(this).connect();
         if (NotificationConstants.CHAT_MESSAGE.equals(data.get(NotificationConstants.ENTITY_TYPE))) {
             handleChatMessages(this);
         } else {
