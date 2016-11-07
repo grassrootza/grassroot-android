@@ -471,6 +471,7 @@ public class GroupService {
           Map<String, Object> map = new HashMap<>();
           map.put("groupUid", localGroupUid);
           List<Member> members = RealmUtils.loadListFromDBInline(Member.class, map);
+          Log.e(TAG, "adding members count "+members.size() );
           try {
             Response<GroupResponse> response = GrassrootRestService.getInstance().getApi().createGroup(phoneNumber, code,
                 localGroup.getGroupName(), localGroup.getDescription(), members).execute();

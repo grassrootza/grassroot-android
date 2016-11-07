@@ -164,7 +164,7 @@ public class MqttConnectionManager implements IMqttActionListener, MqttCallback 
             MqttMessage mqttMessage = new MqttMessage(jsonMessage.getBytes());
             mqttMessage.setRetained(false);
             mqttMessage.setQos(1);
-            Log.e(TAG, "publishing to topic "+ topic);
+            Log.e(TAG, "publishing to topic " + topic);
             IMqttToken token = mqttAndroidClient.publish(topic, mqttMessage);
             token.setActionCallback(this);
 
@@ -190,57 +190,51 @@ public class MqttConnectionManager implements IMqttActionListener, MqttCallback 
     public void connectionLost(Throwable cause) {
         mqqtConnectionStatus = MqqtConnectionStatus.DISCONNECTED;
         Log.e(TAG, "Disconnected from broker");
-      
+
     }
 
     @Override
     public void messageArrived(String topic, MqttMessage mqttMessage) {
-       Log.e(TAG, "receive message from broker");
+        Log.e(TAG, "receive message from broker");
+        Log.e(TAG, "received from topic " + topic);
+        String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
+        Message message;
         try {
-            Message message;
-            if(topic.equals(context.getString(R.string.app_name))){
             message = serverMessageDeserializer.fromJson(mqttMessage.toString(), Message.class);
-            }else{
-                GsonBuilder builder = new GsonBuilder();
-                builder.setExclusionStrategies(new AnnotationExclusionStrategy());
-                Gson gson = builder.create();
-                message = gson.fromJson(mqttMessage.toString(), Message.class);
-            }
+            Log.e(TAG, message.getTokens().toString());
+        } catch (JsonParseException e) {
+            GsonBuilder builder = new GsonBuilder();
+            builder.setExclusionStrategies(new AnnotationExclusionStrategy());
+            Gson gson = builder.create();
+            message = gson.fromJson(mqttMessage.toString(), Message.class);
+            Log.e(TAG, message.getTokens().toString());
+        }
+        message.setDelivered(true);
+        RealmUtils.saveDataToRealmSync(message);
+        Bundle bundle = createBundleFromMessage(message);
 
-            message.setDelivered(true);
-            RealmUtils.saveDataToRealmSync(message);
-            Bundle bundle = createBundleFromMessage(message);
-
-            String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
-
-            if (!message.getType().equals("ping")) {
-                if (message.getType().equals("update_read_status")) {
-                    if (RealmUtils.hasMessage(message.getUid())) {
-                        Message existingMessage = RealmUtils.loadMessage(message.getUid());
-                        existingMessage.setRead(true);
-                        existingMessage.setSent(true);
-                        existingMessage.setDelivered(true);
-                        RealmUtils.saveDataToRealmSync(existingMessage);
-                        EventBus.getDefault().post(new GroupChatMessageReadEvent(existingMessage));
-                    }
+        if (!message.getType().equals("ping")) {
+            if (message.getType().equals("update_read_status")) {
+                if (RealmUtils.hasMessage(message.getUid())) {
+                    Message existingMessage = RealmUtils.loadMessage(message.getUid());
+                    existingMessage.setRead(true);
+                    existingMessage.setSent(true);
+                    existingMessage.setDelivered(true);
+                    RealmUtils.saveDataToRealmSync(existingMessage);
+                    EventBus.getDefault().post(new GroupChatMessageReadEvent(existingMessage));
+                }
+            } else {
+                if (isAppIsInBackground(context) && !phoneNumber.equals(message.getPhoneNumber())) {
+                    relayNotification(bundle);
                 } else {
-                    if (isAppIsInBackground(context) && !phoneNumber.equals(message.getPhoneNumber())) {
-                        relayNotification(bundle);
-                    } else {
 
-                        EventBus.getDefault().post(new GroupChatEvent(message.getGroupUid(), bundle, message));
-                    }
+                    EventBus.getDefault().post(new GroupChatEvent(message.getGroupUid(), bundle, message));
                 }
             }
-
-
-        } catch (Exception e) {
-
-            Log.e(TAG, e.getMessage());
         }
 
 
-    }
+}
 
     @Override
     public void deliveryComplete(IMqttDeliveryToken token) {

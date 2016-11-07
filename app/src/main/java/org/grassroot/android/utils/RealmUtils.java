@@ -516,8 +516,11 @@ public class RealmUtils {
 
                 final Realm realm = Realm.getDefaultInstance();
                 final String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
-                final RealmResults<Message> results = realm.where(Message.class).notEqualTo("phoneNumber",phoneNumber)
-                        .equalTo("groupUid", groupUid).equalTo("read", false).findAll();
+                final RealmResults<Message> results = realm.where(Message.class)
+                        .notEqualTo("phoneNumber",phoneNumber)
+                        .notEqualTo("type","error")
+                        .equalTo("groupUid", groupUid)
+                        .equalTo("read", false).findAll();
 
                 final Set<String> tempList = new HashSet<String>();
                 realm.executeTransaction(new Realm.Transaction() {
@@ -525,14 +528,12 @@ public class RealmUtils {
                     public void execute(Realm realm) {
                         for(Message message: results){
                             tempList.add(message.getUid());
-                        }
-                    }
+
+                    }}
                 });
                 return tempList;
 
     }
-
-
 
     public static long countUpcomingTasksInDB() {
         Realm realm = Realm.getDefaultInstance();

@@ -213,6 +213,7 @@ public class CreateGroupActivity extends PortraitActivity implements ContactSele
             onMainScreen = false;
             progressBar.setVisibility(View.GONE);
             if (contactSelectionFragment != null) {
+              save.setVisibility(View.GONE);
               getSupportFragmentManager().beginTransaction()
                   .add(R.id.cg_body_root, contactSelectionFragment)
                   .addToBackStack(null)
@@ -229,6 +230,7 @@ public class CreateGroupActivity extends PortraitActivity implements ContactSele
 
   private void closeContactSelectionFragment() {
     onMainScreen = true;
+    save.setVisibility(View.VISIBLE);
     getSupportFragmentManager().beginTransaction().remove(contactSelectionFragment).commit();
   }
 
