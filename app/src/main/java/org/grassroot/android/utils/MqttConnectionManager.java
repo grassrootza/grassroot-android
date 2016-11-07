@@ -196,23 +196,26 @@ public class MqttConnectionManager implements IMqttActionListener, MqttCallback 
     @Override
     public void messageArrived(String topic, MqttMessage mqttMessage) {
         Log.e(TAG, "receive message from broker");
-        Log.e(TAG, "received from topic " + topic);
         String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
-        Message message;
-        try {
-            message = serverMessageDeserializer.fromJson(mqttMessage.toString(), Message.class);
-            Log.e(TAG, message.getTokens().toString());
-        } catch (JsonParseException e) {
+        Log.e(TAG, "mqttmessage " + mqttMessage.toString());
+        Message message = null;
+        if (topic.equals(phoneNumber)) {
+            try {
+                message = serverMessageDeserializer.fromJson(mqttMessage.toString(), Message.class);
+
+            } catch (JsonParseException e) {
+                Log.e(TAG, "parse exception" + e.getMessage());
+            }
+            message.setDelivered(true);
+        } else {
             GsonBuilder builder = new GsonBuilder();
             builder.setExclusionStrategies(new AnnotationExclusionStrategy());
             Gson gson = builder.create();
             message = gson.fromJson(mqttMessage.toString(), Message.class);
-            Log.e(TAG, message.getTokens().toString());
         }
         message.setDelivered(true);
         RealmUtils.saveDataToRealmSync(message);
         Bundle bundle = createBundleFromMessage(message);
-
         if (!message.getType().equals("ping")) {
             if (message.getType().equals("update_read_status")) {
                 if (RealmUtils.hasMessage(message.getUid())) {
@@ -232,9 +235,8 @@ public class MqttConnectionManager implements IMqttActionListener, MqttCallback 
                 }
             }
         }
+    }
 
-
-}
 
     @Override
     public void deliveryComplete(IMqttDeliveryToken token) {
