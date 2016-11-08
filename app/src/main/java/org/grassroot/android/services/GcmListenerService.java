@@ -81,13 +81,12 @@ public class GcmListenerService extends com.google.android.gms.gcm.GcmListenerSe
     public void onMessageReceived(String from, Bundle data) {
         Log.e(TAG, "message received, from : " + from);
         incrementNotificationCounter();
-        MqttConnectionManager.getInstance(this).connect();
         if (NotificationConstants.CHAT_MESSAGE.equals(data.get(NotificationConstants.ENTITY_TYPE))) {
             handleChatMessages(this);
         } else {
             relayNotification(data);
         }
-
+        MqttConnectionManager.getInstance(this).connect();
     }
 
 
@@ -112,6 +111,8 @@ public class GcmListenerService extends com.google.android.gms.gcm.GcmListenerSe
     public static void relayNotification(Bundle msg) {
         Context context = ApplicationLoader.applicationContext;
 
+
+        Log.e(TAG, "relaying notification");
         final String notificationUid = msg.getString(NotificationConstants.NOTIFICATION_UID);
         final String entityType = msg.getString(NotificationConstants.ENTITY_TYPE);
 
@@ -138,20 +139,20 @@ public class GcmListenerService extends com.google.android.gms.gcm.GcmListenerSe
         ((NotificationManager) context.getSystemService(NOTIFICATION_SERVICE))
                 .notify(isChat ? CHATS : TASKS, notification);
 
-        GrassrootRestService.getInstance()
-                .getApi()
-                .updateRead(RealmUtils.loadPreferencesFromDB().getMobileNumber(), RealmUtils.loadPreferencesFromDB().getToken(), notificationUid)
-                .enqueue(new Callback<GenericResponse>() {
-                    @Override
-                    public void onResponse(Call<GenericResponse> call, Response<GenericResponse> response) {
-                        Log.d(TAG, response.isSuccessful() ? "Set message as read!" : "Failed: " + response.errorBody());
-                    }
+            GrassrootRestService.getInstance()
+                    .getApi()
+                    .updateRead(RealmUtils.loadPreferencesFromDB().getMobileNumber(), RealmUtils.loadPreferencesFromDB().getToken(), notificationUid)
+                    .enqueue(new Callback<GenericResponse>() {
+                        @Override
+                        public void onResponse(Call<GenericResponse> call, Response<GenericResponse> response) {
+                            Log.d(TAG, response.isSuccessful() ? "Set message as read!" : "Failed: " + response.errorBody());
+                        }
 
-                    @Override
-                    public void onFailure(Call<GenericResponse> call, Throwable t) {
-                        Log.e(TAG, "Something went wrong updating it:");
-                    }
-                });
+                        @Override
+                        public void onFailure(Call<GenericResponse> call, Throwable t) {
+                            Log.e(TAG, "Something went wrong updating it:");
+                        }
+                    });
 
     }
 
@@ -348,7 +349,7 @@ public class GcmListenerService extends com.google.android.gms.gcm.GcmListenerSe
             Message message = new Message(groupUid, UUID.randomUUID().toString(), text);
             message.setToKeep(true);
             RealmUtils.saveDataToRealmSync(message);
-            EventBus.getDefault().post(new GroupChatEvent(groupUid, bundle, message));
+           // EventBus.getDefault().post(new GroupChatEvent(groupUid, bundle, message));
         }
     }
 

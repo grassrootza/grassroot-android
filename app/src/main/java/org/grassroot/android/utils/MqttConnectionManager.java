@@ -87,6 +87,7 @@ public class MqttConnectionManager implements IMqttActionListener, MqttCallback 
     }
 
     public void connect() {
+        Log.e(TAG, "connecting mqtt");
 
         final MqttConnectOptions options = new MqttConnectOptions();
         final String clientId = RealmUtils.loadPreferencesFromDB().getMobileNumber();
@@ -230,7 +231,6 @@ public class MqttConnectionManager implements IMqttActionListener, MqttCallback 
                 if (isAppIsInBackground(context) && !phoneNumber.equals(message.getPhoneNumber())) {
                     relayNotification(bundle);
                 } else {
-
                     EventBus.getDefault().post(new GroupChatEvent(message.getGroupUid(), bundle, message));
                 }
             }

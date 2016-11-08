@@ -410,7 +410,6 @@ public class GroupChatFragment extends Fragment implements GroupChatAdapter.Grou
                         groupChatAdapter.selectPosition(position);
                     }
                 }
-
                 @Override
                 public void onLongClick(View view, int position) {
                     int viewType = groupChatAdapter.getItemViewType(position);
@@ -418,7 +417,6 @@ public class GroupChatFragment extends Fragment implements GroupChatAdapter.Grou
                 }
             }));
         }
-
     }
 
     @Override
@@ -433,7 +431,7 @@ public class GroupChatFragment extends Fragment implements GroupChatAdapter.Grou
         Log.d(TAG, "group chat event triggered");
         String groupUidInMessage = groupChatEvent.getGroupUid();
         if ((this.isVisible() && !groupUidInMessage.equals(groupUid))) {
-            GcmListenerService.showNotification(groupChatEvent.getBundle(), getActivity()).subscribe();
+           GcmListenerService.showNotification(groupChatEvent.getBundle(), getActivity()).subscribe();
             RealmUtils.markMessagesAsSeen(groupUid);
         } else if (((this.isVisible() && groupUidInMessage.equals(groupUid)) && !isActiveTab(groupUidInMessage))) {
             GcmListenerService.showNotification(groupChatEvent.getBundle(), getActivity()).subscribe();

@@ -5,6 +5,7 @@ import android.text.TextUtils;
 import android.util.Log;
 
 import com.google.gson.JsonParseException;
+import com.google.gson.annotations.Expose;
 
 import org.grassroot.android.interfaces.GroupConstants;
 import org.grassroot.android.interfaces.NotificationConstants;
@@ -69,9 +70,11 @@ public class Message extends RealmObject implements Serializable {
 
     private RealmList<RealmString> tokens;
 
-    @Ignore
+
     @JsonIgnore
-    SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+    @Ignore //trying everything as this is not being ignored in some versions of android
+    @Expose(serialize = false, deserialize = false)
+    private transient SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
 
     public Message() {
     }
