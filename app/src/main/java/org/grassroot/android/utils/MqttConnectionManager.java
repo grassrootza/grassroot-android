@@ -20,13 +20,13 @@ import org.eclipse.paho.client.mqttv3.MqttCallback;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
-import org.grassroot.android.R;
 import org.grassroot.android.events.GroupChatEvent;
 import org.grassroot.android.events.GroupChatMessageReadEvent;
 import org.grassroot.android.interfaces.GroupConstants;
 import org.grassroot.android.interfaces.NotificationConstants;
 import org.grassroot.android.models.Message;
 import org.grassroot.android.models.RealmString;
+import org.grassroot.android.services.ApplicationLoader;
 import org.greenrobot.eventbus.EventBus;
 
 import java.lang.reflect.Type;
@@ -48,7 +48,7 @@ public class MqttConnectionManager implements IMqttActionListener, MqttCallback 
     private MqqtConnectionStatus mqqtConnectionStatus = MqqtConnectionStatus.NONE;
     private MqttAndroidClient mqttAndroidClient = null;
     private Gson serverMessageDeserializer;
-    private String brokerUrl = Constant.stagingBrokerUrl;
+    private String brokerUrl = Constant.brokerUrl;
     private Context context;
 
     public enum MqqtConnectionStatus {
@@ -87,39 +87,35 @@ public class MqttConnectionManager implements IMqttActionListener, MqttCallback 
     }
 
     public void connect() {
-        Log.e(TAG, "connecting mqtt");
-
+        Log.d(TAG, "connecting to mqtt broker");
         final MqttConnectOptions options = new MqttConnectOptions();
         final String clientId = RealmUtils.loadPreferencesFromDB().getMobileNumber();
         options.setCleanSession(false);
-        options.setKeepAliveInterval(0);
+        options.setKeepAliveInterval(60);
         options.setAutomaticReconnect(true);
-
-
-        if (mqttAndroidClient == null) {
-            mqttAndroidClient = new MqttAndroidClient(context, brokerUrl,
-                    clientId);
-            mqttAndroidClient.setCallback(this);
-        }
-        if (!mqttAndroidClient.isConnected()) {
             try {
-                IMqttToken token = mqttAndroidClient.connect(options);
-                token.setActionCallback(this);
-
-
+                if(mqttAndroidClient == null){
+                    mqttAndroidClient = new MqttAndroidClient(context, brokerUrl,
+                            clientId);
+                }
+                mqttAndroidClient.setCallback(this);
+                if(!mqttAndroidClient.isConnected()){
+                    IMqttToken token = mqttAndroidClient.connect(options);
+                    token.setActionCallback(this);
+                }
             } catch (MqttException e) {
                 Log.e(TAG, e.getMessage());
             }
         }
-    }
 
     public void disconnect() {
         if (mqttAndroidClient != null && mqttAndroidClient.isConnected()) {
             try {
                 mqttAndroidClient.disconnect();
                 mqttAndroidClient = null;
-            } catch (MqttException e) {
 
+            } catch (MqttException e) {
+                Log.e(TAG, e.getMessage());
             }
         }
     }
@@ -134,6 +130,7 @@ public class MqttConnectionManager implements IMqttActionListener, MqttCallback 
             }
         }
     }
+
 
     public void subscribeToTopic(String topic, int qos) {
         if (mqttAndroidClient != null && mqttAndroidClient.isConnected()) {
@@ -161,11 +158,11 @@ public class MqttConnectionManager implements IMqttActionListener, MqttCallback 
 
     public void sendMessage(String topic, Message message) {
         try {
+            Log.d(TAG, "publishing to topic " + topic);
             String jsonMessage = serverMessageDeserializer.toJson(message);
             MqttMessage mqttMessage = new MqttMessage(jsonMessage.getBytes());
             mqttMessage.setRetained(false);
             mqttMessage.setQos(1);
-            Log.e(TAG, "publishing to topic " + topic);
             IMqttToken token = mqttAndroidClient.publish(topic, mqttMessage);
             token.setActionCallback(this);
 
@@ -178,7 +175,7 @@ public class MqttConnectionManager implements IMqttActionListener, MqttCallback 
     @Override
     public void onSuccess(IMqttToken asyncActionToken) {
         mqqtConnectionStatus = MqqtConnectionStatus.CONNECTED;
-        Log.e(TAG, mqqtConnectionStatus.toString());
+        Log.d(TAG, mqqtConnectionStatus.toString());
 
     }
 
@@ -190,29 +187,26 @@ public class MqttConnectionManager implements IMqttActionListener, MqttCallback 
     @Override
     public void connectionLost(Throwable cause) {
         mqqtConnectionStatus = MqqtConnectionStatus.DISCONNECTED;
-        Log.e(TAG, "Disconnected from broker");
+        Log.d(TAG, "Disconnected from mqtt broker");
 
     }
 
     @Override
     public void messageArrived(String topic, MqttMessage mqttMessage) {
-        Log.e(TAG, "receive message from broker");
+        Log.d(TAG, "received message from broker");
         String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
-        Log.e(TAG, "mqttmessage " + mqttMessage.toString());
         Message message = null;
-        if (topic.equals(phoneNumber)) {
-            try {
-                message = serverMessageDeserializer.fromJson(mqttMessage.toString(), Message.class);
-
-            } catch (JsonParseException e) {
-                Log.e(TAG, "parse exception" + e.getMessage());
-            }
-            message.setDelivered(true);
-        } else {
+        if (!topic.equals(phoneNumber)) {
             GsonBuilder builder = new GsonBuilder();
             builder.setExclusionStrategies(new AnnotationExclusionStrategy());
             Gson gson = builder.create();
             message = gson.fromJson(mqttMessage.toString(), Message.class);
+        } else {
+            try {
+                message = serverMessageDeserializer.fromJson(mqttMessage.toString(), Message.class);
+            } catch (JsonParseException e) {
+                Log.e(TAG, e.getMessage());
+            }
         }
         message.setDelivered(true);
         RealmUtils.saveDataToRealmSync(message);
@@ -221,13 +215,14 @@ public class MqttConnectionManager implements IMqttActionListener, MqttCallback 
             if (message.getType().equals("update_read_status")) {
                 if (RealmUtils.hasMessage(message.getUid())) {
                     Message existingMessage = RealmUtils.loadMessage(message.getUid());
+                    Log.e(TAG, "update exisiting message");
                     existingMessage.setRead(true);
-                    existingMessage.setSent(true);
-                    existingMessage.setDelivered(true);
                     RealmUtils.saveDataToRealmSync(existingMessage);
                     EventBus.getDefault().post(new GroupChatMessageReadEvent(existingMessage));
                 }
             } else {
+                if (message.getType().equals("sync"))
+                    NetworkUtils.syncAndStartTasks(ApplicationLoader.applicationContext, true, true);
                 if (isAppIsInBackground(context) && !phoneNumber.equals(message.getPhoneNumber())) {
                     relayNotification(bundle);
                 } else {
@@ -240,27 +235,20 @@ public class MqttConnectionManager implements IMqttActionListener, MqttCallback 
 
     @Override
     public void deliveryComplete(IMqttDeliveryToken token) {
-        Log.e(TAG, "message sent");
         try {
-
             GsonBuilder builder = new GsonBuilder();
             builder.setExclusionStrategies(new AnnotationExclusionStrategy());
             Gson gson = builder.create();
-
             Message message = gson.fromJson(token.getMessage().toString(), Message.class);
             message.setSent(true);
             message.setDelivered(true);
-
             RealmUtils.saveDataToRealmSync(message);
             EventBus.getDefault().post(new GroupChatEvent(message.getGroupUid(),
                     createBundleFromMessage(message), message));
 
-
         } catch (MqttException e) {
             Log.e(TAG, e.getMessage());
         }
-
-
     }
 
     private Bundle createBundleFromMessage(Message message) {
@@ -272,6 +260,7 @@ public class MqttConnectionManager implements IMqttActionListener, MqttCallback 
         bundle.putString(GroupConstants.UID_FIELD, message.getGroupUid());
         bundle.putString(Constant.BODY, message.getText());
         bundle.putString("userUid", message.getUserUid());
+        bundle.putString(NotificationConstants.CLICK_ACTION, NotificationConstants.CHAT_MESSAGE);
         bundle.putString(NotificationConstants.ENTITY_TYPE, NotificationConstants.CHAT_MESSAGE);
 
         return bundle;

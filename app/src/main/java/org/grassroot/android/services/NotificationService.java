@@ -14,11 +14,7 @@ import org.grassroot.android.utils.Constant;
 
 public class NotificationService extends Service {
 
-    private static final String TAG = NotificationService.class.getCanonicalName();
     private static NotificationService instance = null;
-    //todo return different value for each build variant
-    private static final String brokerUrl = Constant.stagingBrokerUrl;
-    private static MqttAndroidClient client;
 
 
     @Override

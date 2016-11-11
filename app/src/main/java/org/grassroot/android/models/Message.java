@@ -106,56 +106,6 @@ public class Message extends RealmObject implements Serializable {
         this.delivered = true;
     }
 
-    public Message(JSONObject map) throws JSONException {
-        this.uid = String.valueOf(map.get("messageUid"));
-        this.phoneNumber = String.valueOf(map.get("phone_number"));
-        this.groupName = String.valueOf(map.get(GroupConstants.NAME_FIELD));
-        this.groupIcon = String.valueOf(map.get("groupIcon"));
-        this.displayName = String.valueOf(map.get(Constant.TITLE));
-        this.groupUid = String.valueOf(map.get(GroupConstants.UID_FIELD));
-        this.userUid = String.valueOf(map.get("userUid"));
-
-        try {
-          //  this.time = new Date(Long.parseLong((String.valueOf(map.get("time")))));
-          //  this.time = formatter.parse(String.valueOf(map.get("time")));
-
-        } catch (Exception e) {
-            Log.e("date parserror", e.toString());
-        }
-
-        this.text = String.valueOf(map.get(Constant.BODY));
-        this.type = String.valueOf(map.get("type"));
-        this.sending = false;
-        this.sent = true;
-        this.delivered = true;
-        this.noAttempts = -1;
-
-        this.server = phoneNumber == null;
-
-        if (this.server && map.has(NotificationConstants.TASK_DATE_TIME)) {
-            try {
-                this.actionDateTime = formatter.parse(String.valueOf(map.get(NotificationConstants.TASK_DATE_TIME)));
-            } catch (ParseException|NullPointerException e) {
-                e.printStackTrace();
-                this.actionDateTime = null;
-            }
-        }
-
-        if (map.has("tokens")) {
-            String tokenValues = String.valueOf(map.get("tokens"));
-            try {
-                JSONArray jsonArray = new JSONArray(tokenValues);
-                tokens = new RealmList<>();
-                for (int i = 0; i < jsonArray.length(); i++) {
-                    tokens.add(new RealmString(jsonArray.getString(i)));
-
-                }
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
-        }
-
-    }
 
     public Message(Bundle bundle) {
         this.uid = bundle.getString("messageUid");

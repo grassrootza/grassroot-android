@@ -5,6 +5,7 @@ import android.content.Context;
 import android.support.annotation.Nullable;
 import android.support.v7.widget.RecyclerView;
 import android.text.format.DateUtils;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -110,9 +111,9 @@ public class GroupChatAdapter extends RecyclerView.Adapter<GroupChatAdapter.GCVi
                 handleServerMessageBtns(holder, validCommand, message);
                 break;
             case SELF:
-                final String subtitle = message.isRead() ? deliveredSub
+                final String subtitle = message.isRead() ? readSub
                         : message.isDelivered() ? deliveredSub
-                        : message.isSent() ? sendingSub
+                        : message.isSent() ? sentSub
                         : message.isSending() ? sendingSub
                         : message.exceedsMaximumSendingAttempts() ? notSentSub : "";
                 holder.timestamp.setText(subtitle.concat(time));

@@ -909,7 +909,9 @@
     <!--FAQ-->
     <string name="fq_txt_toolbar">FAQs</string>
     <string name="showCaseButtonText">Got it</string>
-    <string name="stagingBrokerUrl">tcp://10.0.2.2:1883</string>
+    <string name="localBrokerUrl">tcp://10.0.2.2:1883</string>
+    <string name="stagingBrokerUrl">tcp://52.30.204.199:1883</string>
+    <string name="productionBrokerUrl">tcp://52.30.204.199:1883</string>
 
 
     <string-array name="fq_Header">
