@@ -82,11 +82,12 @@ public class GcmListenerService extends com.google.android.gms.gcm.GcmListenerSe
         Log.e(TAG, "message received, from : " + from);
         incrementNotificationCounter();
         if (NotificationConstants.CHAT_MESSAGE.equals(data.get(NotificationConstants.ENTITY_TYPE))) {
-            handleChatMessages(this);
+            handleChatMessages(ApplicationLoader.applicationContext);
         } else {
             relayNotification(data);
         }
-        MqttConnectionManager.getInstance(this).connect();
+
+        MqttConnectionManager.getInstance(ApplicationLoader.applicationContext).connect();
     }
 
 

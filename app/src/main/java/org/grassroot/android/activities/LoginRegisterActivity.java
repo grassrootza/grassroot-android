@@ -22,6 +22,7 @@ import org.grassroot.android.fragments.OtpScreenFragment;
 import org.grassroot.android.fragments.RegisterNameFragment;
 import org.grassroot.android.fragments.RegisterPhoneFragment;
 import org.grassroot.android.models.exceptions.ApiCallException;
+import org.grassroot.android.services.ApplicationLoader;
 import org.grassroot.android.services.NotificationService;
 import org.grassroot.android.utils.ErrorUtils;
 import org.grassroot.android.utils.LoginRegUtils;
@@ -369,8 +370,8 @@ public class LoginRegisterActivity extends AppCompatActivity implements LoginScr
     }
     private void connectToMqttAndSubscribe(){
         String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
-        MqttConnectionManager.getInstance(this).connect();
-        MqttConnectionManager.getInstance(this).subscribeToTopic(phoneNumber,1);
+        MqttConnectionManager.getInstance(ApplicationLoader.applicationContext).connect();
+        MqttConnectionManager.getInstance(ApplicationLoader.applicationContext).subscribeToTopic(phoneNumber,1);
     }
 
 }

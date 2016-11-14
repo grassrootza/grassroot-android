@@ -6,10 +6,6 @@ import android.util.Log;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.google.gson.JsonDeserializationContext;
-import com.google.gson.JsonDeserializer;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonParseException;
 import com.google.gson.reflect.TypeToken;
 
 import org.eclipse.paho.android.service.MqttAndroidClient;
@@ -29,9 +25,6 @@ import org.grassroot.android.models.RealmString;
 import org.grassroot.android.services.ApplicationLoader;
 import org.greenrobot.eventbus.EventBus;
 
-import java.lang.reflect.Type;
-import java.util.Date;
-
 import io.realm.RealmList;
 
 import static org.grassroot.android.services.GcmListenerService.isAppIsInBackground;
@@ -47,7 +40,7 @@ public class MqttConnectionManager implements IMqttActionListener, MqttCallback 
     private static MqttConnectionManager instance = null;
     private MqqtConnectionStatus mqqtConnectionStatus = MqqtConnectionStatus.NONE;
     private MqttAndroidClient mqttAndroidClient = null;
-    private Gson serverMessageDeserializer;
+    private Gson gson;
     private String brokerUrl = Constant.brokerUrl;
     private Context context;
 
@@ -60,19 +53,15 @@ public class MqttConnectionManager implements IMqttActionListener, MqttCallback 
         NONE
     }
 
-    public MqttConnectionManager(Context context) {
-        this.context = context.getApplicationContext();
+
+    private MqttConnectionManager(Context context){
         GsonBuilder builder = new GsonBuilder();
         builder.setExclusionStrategies(new AnnotationExclusionStrategy());
-
-        builder.registerTypeAdapter(Date.class, new JsonDeserializer<Date>() {
-            public Date deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
-                return new Date(json.getAsJsonPrimitive().getAsLong());
-            }
-        });
         builder.registerTypeAdapter(new TypeToken<RealmList<RealmString>>() {
         }.getType(), new RealmStringDeserializer());
-        serverMessageDeserializer = builder.create();
+        gson = builder.create();
+        this.context = context;
+
     }
 
     public static MqttConnectionManager getInstance(Context context) {
@@ -86,6 +75,10 @@ public class MqttConnectionManager implements IMqttActionListener, MqttCallback 
         return mqttAndroidClient != null && mqttAndroidClient.isConnected();
     }
 
+    public MqqtConnectionStatus getMqqtConnectionStatus() {
+        return mqqtConnectionStatus;
+    }
+
     public void connect() {
         Log.d(TAG, "connecting to mqtt broker");
         final MqttConnectOptions options = new MqttConnectOptions();
@@ -93,20 +86,20 @@ public class MqttConnectionManager implements IMqttActionListener, MqttCallback 
         options.setCleanSession(false);
         options.setKeepAliveInterval(60);
         options.setAutomaticReconnect(true);
-            try {
-                if(mqttAndroidClient == null){
-                    mqttAndroidClient = new MqttAndroidClient(context, brokerUrl,
-                            clientId);
-                }
-                mqttAndroidClient.setCallback(this);
-                if(!mqttAndroidClient.isConnected()){
-                    IMqttToken token = mqttAndroidClient.connect(options);
-                    token.setActionCallback(this);
-                }
-            } catch (MqttException e) {
-                Log.e(TAG, e.getMessage());
+        try {
+            if (mqttAndroidClient == null) {
+                mqttAndroidClient = new MqttAndroidClient(context, brokerUrl,
+                        clientId);
             }
+            mqttAndroidClient.setCallback(this);
+            if (!mqttAndroidClient.isConnected()) {
+                IMqttToken token = mqttAndroidClient.connect(options);
+                token.setActionCallback(this);
+            }
+        } catch (MqttException e) {
+            Log.e(TAG, e.getMessage());
         }
+    }
 
     public void disconnect() {
         if (mqttAndroidClient != null && mqttAndroidClient.isConnected()) {
@@ -159,7 +152,7 @@ public class MqttConnectionManager implements IMqttActionListener, MqttCallback 
     public void sendMessage(String topic, Message message) {
         try {
             Log.d(TAG, "publishing to topic " + topic);
-            String jsonMessage = serverMessageDeserializer.toJson(message);
+            String jsonMessage = gson.toJson(message);
             MqttMessage mqttMessage = new MqttMessage(jsonMessage.getBytes());
             mqttMessage.setRetained(false);
             mqttMessage.setQos(1);
@@ -193,21 +186,11 @@ public class MqttConnectionManager implements IMqttActionListener, MqttCallback 
 
     @Override
     public void messageArrived(String topic, MqttMessage mqttMessage) {
-        Log.d(TAG, "received message from broker");
+
+        Log.e(TAG, "received message from topic " + topic);
         String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
-        Message message = null;
-        if (!topic.equals(phoneNumber)) {
-            GsonBuilder builder = new GsonBuilder();
-            builder.setExclusionStrategies(new AnnotationExclusionStrategy());
-            Gson gson = builder.create();
-            message = gson.fromJson(mqttMessage.toString(), Message.class);
-        } else {
-            try {
-                message = serverMessageDeserializer.fromJson(mqttMessage.toString(), Message.class);
-            } catch (JsonParseException e) {
-                Log.e(TAG, e.getMessage());
-            }
-        }
+        Message message = gson.fromJson(mqttMessage.toString(), Message.class);
+        Log.e(TAG, "message "+message.toString());
         message.setDelivered(true);
         RealmUtils.saveDataToRealmSync(message);
         Bundle bundle = createBundleFromMessage(message);
@@ -232,13 +215,9 @@ public class MqttConnectionManager implements IMqttActionListener, MqttCallback 
         }
     }
 
-
     @Override
     public void deliveryComplete(IMqttDeliveryToken token) {
         try {
-            GsonBuilder builder = new GsonBuilder();
-            builder.setExclusionStrategies(new AnnotationExclusionStrategy());
-            Gson gson = builder.create();
             Message message = gson.fromJson(token.getMessage().toString(), Message.class);
             message.setSent(true);
             message.setDelivered(true);
