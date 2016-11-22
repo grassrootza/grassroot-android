@@ -19,25 +19,38 @@ public class Constant {
 
     public static final SimpleDateFormat isoDateTimeSDF = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
 
-    public static final String productionUrl = ApplicationLoader.applicationContext
+    private static final String productionUrl = ApplicationLoader.applicationContext
         .getString(R.string.production_url);
-    public static final String stagingUrl = ApplicationLoader.applicationContext
+    private static final String stagingUrl = ApplicationLoader.applicationContext
         .getString(R.string.staging_url);
-    public static final String localUrl = ApplicationLoader.applicationContext
+    private static final String localUrl = ApplicationLoader.applicationContext
         .getString(R.string.local_url);
 
-    public static final String localBrokerUrl = ApplicationLoader.applicationContext
+    private static final String localBrokerUrl = ApplicationLoader.applicationContext
             .getString(R.string.localBrokerUrl);
     public static final String stagingBrokerUrl = ApplicationLoader.applicationContext
             .getString(R.string.stagingBrokerUrl);
-    public static final String productionBrokerUrl = ApplicationLoader.applicationContext
+    private static final String productionBrokerUrl = ApplicationLoader.applicationContext
             .getString(R.string.productionBrokerUrl);
 
-    public static final String restUrl = BuildConfig.BUILD_TYPE.equals("debug") ? stagingUrl
+    private static final String localGcmSender = ApplicationLoader.applicationContext.getString(R.string.local_sender_id);
+    private static final String localGcmProject = ApplicationLoader.applicationContext.getString(R.string.local_project_id);
+    private static final String stagingGcmSender = ApplicationLoader.applicationContext.getString(R.string.staging_sender_id);
+    private static final String stagingGcmProject = ApplicationLoader.applicationContext.getString(R.string.staging_project_id);
+    private static final String prodGcmSender = ApplicationLoader.applicationContext.getString(R.string.prod_sender_id);
+    private static final String prodGcmProject = ApplicationLoader.applicationContext.getString(R.string.prod_project_id);
+
+    public static final String restUrl = BuildConfig.BUILD_TYPE.equals("debug") ? localUrl
             : BuildConfig.FLAVOR.equals(PROD) ? productionUrl : stagingUrl;
 
-    public static final String brokerUrl = BuildConfig.BUILD_TYPE.equals("debug") ? stagingBrokerUrl
+    public static final String brokerUrl = BuildConfig.BUILD_TYPE.equals("debug") ? localBrokerUrl
             : BuildConfig.FLAVOR.equals(PROD) ? productionBrokerUrl : productionBrokerUrl;
+
+    public static final String gcmProjectId = BuildConfig.BUILD_TYPE.equals("debug") ? localGcmProject
+            : BuildConfig.FLAVOR.equals(PROD) ? prodGcmProject : stagingGcmProject;
+
+    public static final String gcmSenderId = BuildConfig.BUILD_TYPE.equals("debug") ? localGcmSender
+            : BuildConfig.FLAVOR.equals(PROD) ? prodGcmSender : stagingGcmSender;
 
     public static final double testLatitude = 31.215263;
     public static final double testLongitude = 121.476291;

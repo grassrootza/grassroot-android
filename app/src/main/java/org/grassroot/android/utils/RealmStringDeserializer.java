@@ -18,17 +18,17 @@ import io.realm.RealmList;
 
 public class RealmStringDeserializer implements JsonDeserializer<RealmList<RealmString>> {
 
-@Override
-public RealmList<RealmString> deserialize(JsonElement json, Type typeOfT,
-                                          JsonDeserializationContext context) throws JsonParseException {
+    @Override
+    public RealmList<RealmString> deserialize(JsonElement json, Type typeOfT,
+                                              JsonDeserializationContext context) throws JsonParseException {
 
         RealmList<RealmString> realmStrings = new RealmList<>();
         JsonArray stringList = json.getAsJsonArray();
 
         for (JsonElement stringElement : stringList) {
-        realmStrings.add(new RealmString(stringElement.getAsString()));
+            realmStrings.add(new RealmString(stringElement.getAsString()));
         }
 
         return realmStrings;
-        }
-        }
+    }
+}

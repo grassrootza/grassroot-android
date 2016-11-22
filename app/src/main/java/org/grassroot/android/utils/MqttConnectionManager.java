@@ -5,6 +5,7 @@ import android.util.Log;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonSyntaxException;
 import com.google.gson.reflect.TypeToken;
 
 import org.eclipse.paho.android.service.MqttAndroidClient;
@@ -30,7 +31,6 @@ import java.util.Arrays;
 import java.util.List;
 
 import io.realm.RealmList;
-import rx.functions.Action1;
 
 import static org.grassroot.android.services.GcmListenerService.isAppIsInBackground;
 import static org.grassroot.android.services.GcmListenerService.relayNotification;
@@ -63,8 +63,10 @@ public class MqttConnectionManager implements IMqttActionListener, MqttCallback 
         GsonBuilder builder = new GsonBuilder();
 
         builder.setExclusionStrategies(new AnnotationExclusionStrategy());
-        builder.registerTypeAdapter(new TypeToken<RealmList<RealmString>>() {
-        }.getType(), new RealmStringDeserializer());
+        builder.registerTypeAdapter(
+                new TypeToken<RealmList<RealmString>>() {}.getType(),
+                new RealmStringDeserializer());
+        builder.setDateFormat("yyyy-MM-dd'T'HH:mm:ss");
 
         this.gson = builder.create();
     }
@@ -107,6 +109,7 @@ public class MqttConnectionManager implements IMqttActionListener, MqttCallback 
                     public void onSuccess(IMqttToken asyncActionToken) {
                         mqqtConnectionStatus = MqqtConnectionStatus.CONNECTED;
                         subscribeToAllGroups();
+                        subscribeToUserTopic();
                     }
 
                     @Override
@@ -122,12 +125,11 @@ public class MqttConnectionManager implements IMqttActionListener, MqttCallback 
         }
     }
 
-    public void disconnect() {
+    private void disconnect() {
         if (mqttAndroidClient != null && mqttAndroidClient.isConnected()) {
             try {
                 mqttAndroidClient.disconnect();
                 mqttAndroidClient = null;
-
             } catch (MqttException e) {
                 Log.e(TAG, e.getMessage());
             }
@@ -135,12 +137,10 @@ public class MqttConnectionManager implements IMqttActionListener, MqttCallback 
     }
 
     private void subscribeToAllGroups() {
-        RealmUtils.loadGroupsSorted().subscribe(new Action1<List<Group>>() {
-            @Override
-            public void call(List<Group> groups) {
-                subscribeToGroups(groups);
-            }
-        });
+        List<String> groupUids = RealmUtils.loadGroupUidsSync();
+        int[] qosList = new int[groupUids.size()];
+        Arrays.fill(qosList, 1);
+        subscribeToTopics(groupUids.toArray(new String[0]), qosList);
     }
 
     public void subscribeToGroups(List<Group> groups) {
@@ -156,23 +156,16 @@ public class MqttConnectionManager implements IMqttActionListener, MqttCallback 
                 Utilities.convertIntegerArrayToPrimitiveArray(qosList));
     }
 
+    private void subscribeToUserTopic() {
+        subscribeToTopics(new String[] { RealmUtils.loadPreferencesFromDB().getMobileNumber() },
+                new int[] { 1 });
+    }
+
     private void subscribeToTopics(String[] topics, int[] qos) {
         if (mqttAndroidClient != null && mqttAndroidClient.isConnected()) {
             try {
                 Log.e(TAG, "mqtt subscribing to topics: " + Arrays.toString(topics));
                 IMqttToken token = mqttAndroidClient.subscribe(topics, qos);
-                token.setActionCallback(this);
-            } catch (MqttException e) {
-                Log.e(TAG, e.getMessage());
-            }
-        }
-    }
-
-
-    public void subscribeToTopic(String topic, int qos) {
-        if (mqttAndroidClient != null && mqttAndroidClient.isConnected()) {
-            try {
-                IMqttToken token = mqttAndroidClient.subscribe(topic, qos);
                 token.setActionCallback(this);
             } catch (MqttException e) {
                 Log.e(TAG, e.getMessage());
@@ -186,6 +179,31 @@ public class MqttConnectionManager implements IMqttActionListener, MqttCallback 
                 IMqttToken token = mqttAndroidClient.unsubscribe(topic);
                 token.setActionCallback(this);
             } catch (MqttException e) {
+                Log.e(TAG, e.getMessage());
+            }
+        }
+    }
+
+    public void unsubscribeAllAndDisconnect(final List<String> topicsToUnsubscribe) {
+        if (mqttAndroidClient != null && mqttAndroidClient.isConnected()) {
+            try {
+                topicsToUnsubscribe.add(RealmUtils.loadPreferencesFromDB().getMobileNumber());
+                IMqttToken token = mqttAndroidClient.unsubscribe(topicsToUnsubscribe.toArray(new String[0]));
+                token.setActionCallback(new IMqttActionListener() {
+                    @Override
+                    public void onSuccess(IMqttToken asyncActionToken) {
+                        Log.e(TAG, "done! all groups unsubscribed");
+                        disconnect();
+                    }
+
+                    @Override
+                    public void onFailure(IMqttToken asyncActionToken, Throwable exception) {
+                        Log.e(TAG, "error in unsubscribing! disconnecting anyway");
+                        disconnect();
+                    }
+                });
+            } catch (MqttException e) {
+                disconnect();
                 Log.e(TAG, e.getMessage());
             }
         }
@@ -214,31 +232,39 @@ public class MqttConnectionManager implements IMqttActionListener, MqttCallback 
 
     @Override
     public void messageArrived(String topic, MqttMessage mqttMessage) {
-        Log.e(TAG, "received message from topic " + topic);
+        Log.e(TAG, "received message from topic " + topic + ", looks like : " + mqttMessage.toString());
         String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
-        Message message = gson.fromJson(mqttMessage.toString(), Message.class);
-        Log.e(TAG, "message " + message.toString());
-        message.setDelivered(true);
-        RealmUtils.saveDataToRealmSync(message);
-        Bundle bundle = createBundleFromMessage(message);
-        if (!message.getType().equals("ping")) {
-            if (message.getType().equals("update_read_status")) {
-                if (RealmUtils.hasMessage(message.getUid())) {
-                    Message existingMessage = RealmUtils.loadMessage(message.getUid());
-                    Log.e(TAG, "update exisiting message");
-                    existingMessage.setRead(true);
-                    RealmUtils.saveDataToRealmSync(existingMessage);
-                    EventBus.getDefault().post(new GroupChatMessageReadEvent(existingMessage));
-                }
-            } else {
-                if (message.getType().equals("sync"))
-                    NetworkUtils.syncAndStartTasks(ApplicationLoader.applicationContext, true, true);
-                if (isAppIsInBackground(ApplicationLoader.applicationContext) && !phoneNumber.equals(message.getPhoneNumber())) {
-                    relayNotification(bundle);
+        try {
+            Message message = gson.fromJson(mqttMessage.toString(), Message.class);
+            Log.e(TAG, "message " + message.toString());
+            message.setDelivered(true);
+            RealmUtils.saveDataToRealmSync(message);
+            Bundle bundle = createBundleFromMessage(message);
+
+            if (!message.getType().equals("ping")) {
+                if (message.getType().equals("update_read_status")) {
+                    if (RealmUtils.hasMessage(message.getUid())) {
+                        Message existingMessage = RealmUtils.loadMessage(message.getUid());
+                        Log.e(TAG, "update exisiting message");
+                        existingMessage.setRead(true);
+                        RealmUtils.saveDataToRealmSync(existingMessage);
+                        EventBus.getDefault().post(new GroupChatMessageReadEvent(existingMessage));
+                    }
                 } else {
-                    EventBus.getDefault().post(new GroupChatEvent(message.getGroupUid(), bundle, message));
+                    if (message.getType().equals("sync"))
+                        NetworkUtils.syncAndStartTasks(ApplicationLoader.applicationContext, true, true);
+                    if (isAppIsInBackground(ApplicationLoader.applicationContext) && !phoneNumber.equals(message.getPhoneNumber())) {
+                        relayNotification(bundle);
+                    } else {
+                        if (!RealmUtils.hasMessage(message.getUid())) {
+                            Log.e(TAG, "new message come in");
+                            EventBus.getDefault().post(new GroupChatEvent(message.getGroupUid(), bundle, message));
+                        }
+                    }
                 }
             }
+        } catch (JsonSyntaxException e) {
+            Log.e(TAG, "syntax exception! " + e.getMessage());
         }
     }
 

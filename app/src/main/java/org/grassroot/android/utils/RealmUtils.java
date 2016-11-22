@@ -147,6 +147,16 @@ public class RealmUtils {
         return observable;
     }
 
+    public static List<String> loadGroupUidsSync() {
+        final Realm realm = Realm.getDefaultInstance();
+        List<String> groupUids = new ArrayList<>();
+        RealmResults<Group> groups = realm.where(Group.class).findAll();
+        for (Group g : groups) {
+            groupUids.add(g.getGroupUid());
+        }
+        return groupUids;
+    }
+
     public static <T> Observable loadListFromDB(final Class<? extends RealmObject> model, Scheduler observingThread) {
         Observable<List<RealmObject>> observable = Observable.create(new Observable.OnSubscribe<List<RealmObject>>() {
             @Override

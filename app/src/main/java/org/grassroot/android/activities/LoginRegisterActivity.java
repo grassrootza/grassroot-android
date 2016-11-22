@@ -368,9 +368,7 @@ public class LoginRegisterActivity extends AppCompatActivity implements LoginScr
         startService(notificationServiceIntent);
     }
     private void connectToMqttAndSubscribe(){
-        String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
         MqttConnectionManager.getInstance().connect();
-        MqttConnectionManager.getInstance().subscribeToTopic(phoneNumber,1);
     }
 
 }

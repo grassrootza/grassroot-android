@@ -280,6 +280,7 @@ public class Message extends RealmObject implements Serializable {
                 ", uid = " + uid + '\'' +
                 ", groupUid='" + groupUid + '\'' +
                 ", text='" + text + '\'' +
+                ", actionDateTime='" + actionDateTime + '\'' +
                 ", phoneNumber='" + phoneNumber + '\'' +
                 '}';
     }

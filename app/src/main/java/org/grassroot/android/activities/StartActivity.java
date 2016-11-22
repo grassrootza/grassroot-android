@@ -39,10 +39,8 @@ public class StartActivity extends AppCompatActivity {
     private void userIsLoggedIn() {
         if(!isNotificationServiceRunning())startNotificationService();
         NetworkUtils.syncAndStartTasks(this, false, false).subscribe();
-        MqttConnectionManager.getInstance()
-                .connect();
+        MqttConnectionManager.getInstance().connect();
         String phone = RealmUtils.loadPreferencesFromDB().getMobileNumber();
-        MqttConnectionManager.getInstance().subscribeToTopic(phone,1);
         Intent i  = RealmUtils.loadPreferencesFromDB().isHasGroups() ?
                 new Intent(StartActivity.this, HomeScreenActivity.class) :
                 new Intent(StartActivity.this, NoGroupWelcomeActivity.class);

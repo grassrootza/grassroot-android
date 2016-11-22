@@ -425,15 +425,16 @@ public class NavigationDrawerFragment extends Fragment implements NavigationDraw
         ConfirmCancelDialogFragment confirmDialog = ConfirmCancelDialogFragment.newInstance(R.string.logout_message, new ConfirmCancelDialogFragment.ConfirmDialogListener() {
                     @Override
                     public void doConfirmClicked() {
-
                         final String mobileNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
                         final String code = RealmUtils.loadPreferencesFromDB().getToken();
-
+                        Log.e(TAG, "unsubscribing from everything ...");
+                        MqttConnectionManager.getInstance()
+                                .unsubscribeAllAndDisconnect(RealmUtils.loadGroupUidsSync());
+                        Log.e(TAG, "mqtt cleaned up, proceeding ...");
                         unregisterGcm(); // maybe do preference switch off in log out?
                         LoginRegUtils.logOutUser(mobileNumber, code).subscribe();
                         EventBus.getDefault().post(new UserLoggedOutEvent());
                         RealmUtils.deleteAllObjects();
-                        MqttConnectionManager.getInstance().disconnect();
                         Intent open = new Intent(getActivity(), StartActivity.class);
                         startActivity(open);
                     }

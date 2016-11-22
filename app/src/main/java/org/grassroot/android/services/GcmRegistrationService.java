@@ -9,7 +9,6 @@ import com.google.android.gms.gcm.GoogleCloudMessaging;
 import com.google.android.gms.iid.InstanceID;
 
 import org.grassroot.android.BuildConfig;
-import org.grassroot.android.R;
 import org.grassroot.android.interfaces.NotificationConstants;
 import org.grassroot.android.models.PreferenceObject;
 import org.grassroot.android.models.exceptions.GcmRegistrationError;
@@ -52,10 +51,8 @@ public class GcmRegistrationService extends IntentService {
     }
 
     private void register(Intent intent) {
-        final String senderId = BuildConfig.FLAVOR.equals(Constant.PROD) ?
-                getString(R.string.prod_sender_id) : getString(R.string.staging_sender_id);
-        final String projectId = BuildConfig.FLAVOR.equals(Constant.PROD) ?
-                getString(R.string.prod_project_id) : getString(R.string.staging_project_id);
+        final String senderId = Constant.gcmSenderId;
+        final String projectId = Constant.gcmProjectId;
 
         Log.e(TAG, "received registration intent ... trying to get a token");
 
