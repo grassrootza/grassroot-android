@@ -294,13 +294,13 @@ public class GroupService {
               responseBody.getRemovedUids()));
       for(String uid: RealmUtils.convertListOfRealmStringInListOfString(
               responseBody.getRemovedUids())){
-        MqttConnectionManager.getInstance(ApplicationLoader
-                .applicationContext).unsubscribeFromTopic(uid);
+        MqttConnectionManager.getInstance().unsubscribeFromTopic(uid);
       }
 
     }
 
     RealmUtils.saveDataToRealmSync(responseBody.getAddedAndUpdated());
+    MqttConnectionManager.getInstance().subscribeToGroups(responseBody.getAddedAndUpdated());
 
     List<Member> composedMembers = new ArrayList<>();
     for (Group g : responseBody.getAddedAndUpdated()) {
@@ -309,14 +309,6 @@ public class GroupService {
         composedMembers.add(m);
       }
     }
-    List<String> groupUids = new ArrayList<>();
-    List<Integer> qosList = new ArrayList<>();
-    for (Group g : responseBody.getAddedAndUpdated()) {
-       groupUids.add(g.getGroupUid());
-       qosList.add(1);
-    }
-    MqttConnectionManager.getInstance(ApplicationLoader.applicationContext).subscribeToTopics(groupUids
-            .toArray(new String[groupUids.size()]),Utilities.convertIntegerArrayToPrimitiveArray(qosList));
 
     RealmUtils.saveDataToRealm(composedMembers, Schedulers.immediate()).subscribe();
   }

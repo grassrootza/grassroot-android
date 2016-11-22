@@ -20,7 +20,6 @@ import org.grassroot.android.R;
 import org.grassroot.android.activities.JoinRequestNoticeActivity;
 import org.grassroot.android.activities.MultiMessageNotificationActivity;
 import org.grassroot.android.activities.ViewTaskActivity;
-import org.grassroot.android.events.GroupChatEvent;
 import org.grassroot.android.events.JoinRequestEvent;
 import org.grassroot.android.events.NotificationCountChangedEvent;
 import org.grassroot.android.events.NotificationEvent;
@@ -87,7 +86,9 @@ public class GcmListenerService extends com.google.android.gms.gcm.GcmListenerSe
             relayNotification(data);
         }
 
-        MqttConnectionManager.getInstance(ApplicationLoader.applicationContext).connect();
+        if (!MqttConnectionManager.getInstance().isConnected()) {
+            MqttConnectionManager.getInstance().connect();
+        }
     }
 
 
@@ -111,8 +112,6 @@ public class GcmListenerService extends com.google.android.gms.gcm.GcmListenerSe
 
     public static void relayNotification(Bundle msg) {
         Context context = ApplicationLoader.applicationContext;
-
-
         Log.e(TAG, "relaying notification");
         final String notificationUid = msg.getString(NotificationConstants.NOTIFICATION_UID);
         final String entityType = msg.getString(NotificationConstants.ENTITY_TYPE);
@@ -336,8 +335,8 @@ public class GcmListenerService extends com.google.android.gms.gcm.GcmListenerSe
     }
 
     private static void handleChatMessages(Context context) {
-        if (!MqttConnectionManager.getInstance(context).isConnected()) {
-            MqttConnectionManager.getInstance(context).connect();
+        if (!MqttConnectionManager.getInstance().isConnected()) {
+            MqttConnectionManager.getInstance().connect();
         }
     }
 

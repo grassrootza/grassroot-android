@@ -74,9 +74,10 @@ public class GroupTasksActivity extends PortraitActivity implements NewTaskMenuF
         setContentView(R.layout.activity_group_tasks);
         ButterKnife.bind(this);
         EventBus.getDefault().register(this);
-        if(!MqttConnectionManager.getInstance(ApplicationLoader.applicationContext)
+        if(!MqttConnectionManager.getInstance()
                 .getMqqtConnectionStatus().equals(MqttConnectionManager.MqqtConnectionStatus.CONNECTED)){
-            MqttConnectionManager.getInstance(ApplicationLoader.applicationContext).connect();
+            Log.e(TAG, "not connected to MQTT, trying to connect ....");
+            MqttConnectionManager.getInstance().connect();
         }
 
         final Bundle extras = getIntent().getExtras();

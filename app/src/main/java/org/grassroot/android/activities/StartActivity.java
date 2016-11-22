@@ -6,7 +6,6 @@ import android.os.SystemClock;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 
-import org.grassroot.android.services.ApplicationLoader;
 import org.grassroot.android.services.NotificationService;
 import org.grassroot.android.utils.MqttConnectionManager;
 import org.grassroot.android.utils.NetworkUtils;
@@ -40,10 +39,10 @@ public class StartActivity extends AppCompatActivity {
     private void userIsLoggedIn() {
         if(!isNotificationServiceRunning())startNotificationService();
         NetworkUtils.syncAndStartTasks(this, false, false).subscribe();
-        MqttConnectionManager.getInstance(ApplicationLoader.applicationContext)
+        MqttConnectionManager.getInstance()
                 .connect();
         String phone = RealmUtils.loadPreferencesFromDB().getMobileNumber();
-        MqttConnectionManager.getInstance(ApplicationLoader.applicationContext).subscribeToTopic(phone,1);
+        MqttConnectionManager.getInstance().subscribeToTopic(phone,1);
         Intent i  = RealmUtils.loadPreferencesFromDB().isHasGroups() ?
                 new Intent(StartActivity.this, HomeScreenActivity.class) :
                 new Intent(StartActivity.this, NoGroupWelcomeActivity.class);

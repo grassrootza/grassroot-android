@@ -15,7 +15,6 @@ import org.grassroot.android.models.PreferenceObject;
 import org.grassroot.android.models.exceptions.GcmRegistrationError;
 import org.grassroot.android.models.responses.GenericResponse;
 import org.grassroot.android.utils.Constant;
-import org.grassroot.android.utils.NetworkUtils;
 import org.grassroot.android.utils.RealmUtils;
 
 import java.io.IOException;
@@ -91,7 +90,6 @@ public class GcmRegistrationService extends IntentService {
                             preferenceObject.setGcmAppVersionStored(BuildConfig.VERSION_CODE);
                             Log.e(TAG, "saving gcm registration ...");
                             RealmUtils.saveDataToRealmSync(preferenceObject);
-                            GroupChatService.getInstance().setUserDetails();
                         }
 
                         @Override

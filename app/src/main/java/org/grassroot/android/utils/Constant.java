@@ -6,8 +6,6 @@ import org.grassroot.android.services.ApplicationLoader;
 
 import java.text.SimpleDateFormat;
 
-import static org.grassroot.android.R.string.stagingBrokerUrl;
-
 /**
  * Created by ravi on 7/4/16.
  */
@@ -35,14 +33,11 @@ public class Constant {
     public static final String productionBrokerUrl = ApplicationLoader.applicationContext
             .getString(R.string.productionBrokerUrl);
 
-
-    public static final String restUrl = BuildConfig.BUILD_TYPE.equals("debug") ? localUrl
+    public static final String restUrl = BuildConfig.BUILD_TYPE.equals("debug") ? stagingUrl
             : BuildConfig.FLAVOR.equals(PROD) ? productionUrl : stagingUrl;
 
-    public static final String brokerUrl = BuildConfig.BUILD_TYPE.equals("debug") ? localBrokerUrl
+    public static final String brokerUrl = BuildConfig.BUILD_TYPE.equals("debug") ? stagingBrokerUrl
             : BuildConfig.FLAVOR.equals(PROD) ? productionBrokerUrl : productionBrokerUrl;
-
-
 
     public static final double testLatitude = 31.215263;
     public static final double testLongitude = 121.476291;

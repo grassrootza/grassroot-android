@@ -197,10 +197,12 @@ public class GroupChatFragment extends Fragment implements GroupChatAdapter.Grou
                 }
                 @Override
                 public void onPageSelected(int position) {
-                    if(position==1){
+                    if (position==1) {
                         final boolean isShowCased = RealmUtils.loadPreferencesFromDB().isGroupChatFragmentShowCased();
-                        if (!isShowCased) showCase();
-                             notifyGroupMessagesAsRead(groupUid);
+                        //if (!isShowCased) {
+                            showCase();
+                        //}
+                        notifyGroupMessagesAsRead(groupUid);
                     }
                 }
                 @Override
@@ -317,7 +319,6 @@ public class GroupChatFragment extends Fragment implements GroupChatAdapter.Grou
 
     @OnClick(R.id.btn_send)
     public void sendMessage() {
-
         if (!TextUtils.isEmpty(textView.getText()) && isGcmAvailable && isNetworkAvailable(getContext()) ) {
             sendMessageInBackground(textView.getText().toString(), null);
             textView.setText(""); //clear text
@@ -342,10 +343,10 @@ public class GroupChatFragment extends Fragment implements GroupChatAdapter.Grou
             groupChatAdapter.addOrUpdateMessage(message);
             chatMessageView.smoothScrollToPosition(groupChatAdapter.getItemCount());
 
-
             GroupChatService.getInstance().sendMessageViaMQTT(message).subscribe(new Action1<String>() {
                     @Override
                     public void call(String s) {
+                        Log.e(TAG, "message sent succesfully via MQTT");
                         groupChatAdapter.updateMessage(RealmUtils.loadMessage(message.getUid()));
                     }
                 }, new Action1<Throwable>() {
@@ -685,31 +686,39 @@ public class GroupChatFragment extends Fragment implements GroupChatAdapter.Grou
 
     private void showCase() {
 
-        Log.e(TAG, "show casing");
-        final String[] chatShowCaseStrings = getActivity().getResources().getStringArray(R.array.chat_show_case);
+        final String[] chatShowCaseStrings = getActivity()
+                .getResources()
+                .getStringArray(R.array.chat_show_case);
+
         ShowcaseView.ConfigOptions configOptions = new ShowcaseView.ConfigOptions();
         configOptions.hideOnClickOutside = true;
         configOptions.fadeInDuration = 1000;
         configOptions.fadeOutDuration = 1000;
 
         ShowcaseView chatShowCase;
-        ViewTarget target = new ViewTarget(R.id.text_chat, getActivity());
-        chatShowCase= ShowcaseView.insertShowcaseView(target, getActivity(), chatShowCaseStrings[0], chatShowCaseStrings[1], configOptions);
-        chatShowCase.animateGesture(target.getPoint().x, target.getPoint().y, target.getPoint().x, target.getPoint().y);
-        chatShowCase.setOnShowcaseEventListener(new OnShowcaseEventListener() {
-            @Override
-            public void onShowcaseViewHide(ShowcaseView showcaseView) {}
 
+        ViewTarget target = new ViewTarget(R.id.text_chat, getActivity());
+        chatShowCase = ShowcaseView.insertShowcaseView(target, getActivity(),
+                chatShowCaseStrings[0],
+                chatShowCaseStrings[1],
+                configOptions);
+
+        chatShowCase.animateGesture(target.getPoint().x, target.getPoint().y,
+                target.getPoint().x,
+                target.getPoint().y);
+
+        chatShowCase.setOnShowcaseEventListener(new OnShowcaseEventListener() {
             @Override
             public void onShowcaseViewDidHide(ShowcaseView showcaseView) {
                 PreferenceObject preferenceObject = RealmUtils.loadPreferencesFromDB();
                 preferenceObject.setGroupChatFragmentShowCased(true);
                 RealmUtils.saveDataToRealmSync(preferenceObject);
             }
-            @Override
-            public void onShowcaseViewShow(ShowcaseView showcaseView) {
 
-            }
+            @Override
+            public void onShowcaseViewHide(ShowcaseView showcaseView) {}
+            @Override
+            public void onShowcaseViewShow(ShowcaseView showcaseView) { }
         });
         chatShowCase.setButtonText(getString(R.string.showCaseButtonText));
 

@@ -281,7 +281,7 @@
     </string-array>
 
     <string-array name="chat_show_case">
-        <item>Group Chat Command</item>
+        <item>Group Chat</item>
         <item>You can call meetings, votes and create todos by simply texting /meeting subject, day and time,
             location for meetings, /vote subject, closing time for votes or /todo description, due date for todos</item>
     </string-array>
@@ -909,10 +909,6 @@
     <!--FAQ-->
     <string name="fq_txt_toolbar">FAQs</string>
     <string name="showCaseButtonText">Got it</string>
-    <string name="localBrokerUrl">tcp://10.0.2.2:1883</string>
-    <string name="stagingBrokerUrl">tcp://52.30.204.199:1883</string>
-    <string name="productionBrokerUrl">tcp://52.30.204.199:1883</string>
-
 
     <string-array name="fq_Header">
         <item>How do I get started?</item>

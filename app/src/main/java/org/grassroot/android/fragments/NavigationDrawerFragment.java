@@ -433,7 +433,7 @@ public class NavigationDrawerFragment extends Fragment implements NavigationDraw
                         LoginRegUtils.logOutUser(mobileNumber, code).subscribe();
                         EventBus.getDefault().post(new UserLoggedOutEvent());
                         RealmUtils.deleteAllObjects();
-                        MqttConnectionManager.getInstance(ApplicationLoader.applicationContext).disconnect();
+                        MqttConnectionManager.getInstance().disconnect();
                         Intent open = new Intent(getActivity(), StartActivity.class);
                         startActivity(open);
                     }
