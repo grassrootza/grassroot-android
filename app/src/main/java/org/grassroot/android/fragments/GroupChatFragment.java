@@ -29,10 +29,6 @@ import android.widget.Toast;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
 
-import com.espian.showcaseview.OnShowcaseEventListener;
-import com.espian.showcaseview.ShowcaseView;
-import com.espian.showcaseview.targets.ViewTarget;
-
 import org.grassroot.android.R;
 import org.grassroot.android.activities.GroupTasksActivity;
 import org.grassroot.android.activities.MultiMessageNotificationActivity;
@@ -48,13 +44,11 @@ import org.grassroot.android.interfaces.GroupConstants;
 import org.grassroot.android.interfaces.TaskConstants;
 import org.grassroot.android.models.Command;
 import org.grassroot.android.models.Message;
-import org.grassroot.android.models.PreferenceObject;
 import org.grassroot.android.models.RealmString;
 import org.grassroot.android.models.TaskModel;
 import org.grassroot.android.models.exceptions.ApiCallException;
 import org.grassroot.android.models.exceptions.NoGcmException;
 import org.grassroot.android.models.responses.GroupChatSettingResponse;
-import org.grassroot.android.services.ApplicationLoader;
 import org.grassroot.android.services.GcmListenerService;
 import org.grassroot.android.services.GroupChatService;
 import org.grassroot.android.services.GroupService;
@@ -62,7 +56,6 @@ import org.grassroot.android.services.SharingService;
 import org.grassroot.android.services.TaskService;
 import org.grassroot.android.utils.EmojIconMultiAutoCompleteActions;
 import org.grassroot.android.utils.ErrorUtils;
-import org.grassroot.android.utils.NetworkUtils;
 import org.grassroot.android.utils.RealmUtils;
 import org.grassroot.android.utils.Utilities;
 import org.greenrobot.eventbus.EventBus;
@@ -84,7 +77,9 @@ import rx.Subscriber;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.functions.Action1;
 
-import static org.grassroot.android.utils.NetworkUtils.*;
+import static org.grassroot.android.utils.NetworkUtils.CONNECT_ERROR;
+import static org.grassroot.android.utils.NetworkUtils.ONLINE_DEFAULT;
+import static org.grassroot.android.utils.NetworkUtils.isNetworkAvailable;
 
 /**
  * Created by paballo on 2016/08/30.
@@ -199,9 +194,9 @@ public class GroupChatFragment extends Fragment implements GroupChatAdapter.Grou
                 public void onPageSelected(int position) {
                     if (position==1) {
                         final boolean isShowCased = RealmUtils.loadPreferencesFromDB().isGroupChatFragmentShowCased();
-                        //if (!isShowCased) {
-                            showCase();
-                        //}
+                        if (!isShowCased) {
+                            Log.e(TAG, "this is where we will insert our own view pager with some text");
+                        }
                         notifyGroupMessagesAsRead(groupUid);
                     }
                 }
@@ -681,49 +676,6 @@ public class GroupChatFragment extends Fragment implements GroupChatAdapter.Grou
             return masterFragment.getRequestPager().getCurrentItem() == 1;
         }
         return (getActivity() instanceof MultiMessageNotificationActivity &&  this.groupUid.equals(groupUid));
-    }
-
-
-    private void showCase() {
-
-        final String[] chatShowCaseStrings = getActivity()
-                .getResources()
-                .getStringArray(R.array.chat_show_case);
-
-        ShowcaseView.ConfigOptions configOptions = new ShowcaseView.ConfigOptions();
-        configOptions.hideOnClickOutside = true;
-        configOptions.fadeInDuration = 1000;
-        configOptions.fadeOutDuration = 1000;
-
-        ShowcaseView chatShowCase;
-
-        ViewTarget target = new ViewTarget(R.id.text_chat, getActivity());
-        chatShowCase = ShowcaseView.insertShowcaseView(target, getActivity(),
-                chatShowCaseStrings[0],
-                chatShowCaseStrings[1],
-                configOptions);
-
-        chatShowCase.animateGesture(target.getPoint().x, target.getPoint().y,
-                target.getPoint().x,
-                target.getPoint().y);
-
-        chatShowCase.setOnShowcaseEventListener(new OnShowcaseEventListener() {
-            @Override
-            public void onShowcaseViewDidHide(ShowcaseView showcaseView) {
-                PreferenceObject preferenceObject = RealmUtils.loadPreferencesFromDB();
-                preferenceObject.setGroupChatFragmentShowCased(true);
-                RealmUtils.saveDataToRealmSync(preferenceObject);
-            }
-
-            @Override
-            public void onShowcaseViewHide(ShowcaseView showcaseView) {}
-            @Override
-            public void onShowcaseViewShow(ShowcaseView showcaseView) { }
-        });
-        chatShowCase.setButtonText(getString(R.string.showCaseButtonText));
-
-
-
     }
 
     private TaskModel generateTaskObject(String groupUid, String title, String time, @Nullable String venue, String type) {

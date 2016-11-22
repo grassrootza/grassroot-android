@@ -2,7 +2,6 @@ package org.grassroot.android.fragments;
 
 import android.content.Context;
 import android.content.DialogInterface;
-import android.graphics.Point;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
@@ -23,11 +22,6 @@ import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
-
-import com.espian.showcaseview.ShowcaseView;
-import com.espian.showcaseview.ShowcaseViewBuilder;
-import com.espian.showcaseview.targets.Target;
-import com.espian.showcaseview.targets.ViewTarget;
 
 import org.grassroot.android.R;
 import org.grassroot.android.adapters.TasksAdapter;
