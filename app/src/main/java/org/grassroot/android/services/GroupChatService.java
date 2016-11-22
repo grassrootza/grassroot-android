@@ -5,6 +5,8 @@ import android.os.Bundle;
 import android.util.Log;
 
 import com.google.android.gms.gcm.GoogleCloudMessaging;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 
 import org.grassroot.android.BuildConfig;
 import org.grassroot.android.R;
@@ -14,8 +16,10 @@ import org.grassroot.android.models.Message;
 import org.grassroot.android.models.exceptions.ApiCallException;
 import org.grassroot.android.models.exceptions.NoGcmException;
 import org.grassroot.android.models.responses.GenericResponse;
+import org.grassroot.android.utils.AnnotationExclusionStrategy;
 import org.grassroot.android.utils.Constant;
 import org.grassroot.android.utils.ErrorUtils;
+import org.grassroot.android.utils.MqttConnectionManager;
 import org.grassroot.android.utils.NetworkUtils;
 import org.grassroot.android.utils.RealmUtils;
 import org.greenrobot.eventbus.EventBus;
@@ -48,6 +52,7 @@ public class GroupChatService {
     private final static int MAX_BACKOFF_DELAY = 60 * 1000;
     private final static Random random = new Random();
 
+
     protected GroupChatService() {
         // for singleton
     }
@@ -69,6 +74,7 @@ public class GroupChatService {
         phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
         apiToken = RealmUtils.loadPreferencesFromDB().getToken();
         gcmRegistrationId = RealmUtils.loadPreferencesFromDB().getGcmRegistrationId();
+
     }
 
     public Observable<String> sendMessageViaGR(final Message message) {
@@ -84,6 +90,7 @@ public class GroupChatService {
                         Response<GenericResponse> response = GrassrootRestService.getInstance().getApi()
                             .sendChatMessage(phoneNumber, apiToken, message.getGroupUid(), message.getText(),
                                 message.getUid(), gcmRegistrationId).execute();
+
                         if (response.isSuccessful()) {
                             message.setSending(false);
                             message.setSent(true);
@@ -102,70 +109,31 @@ public class GroupChatService {
         }).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread());
     }
 
-    public Observable<String> sendMessageViaGcm(final Message message, final Context context, final Scheduler observingThread) {
+
+    public Observable<String> sendMessageViaMQTT(final Message message) {
         return Observable.create(new Observable.OnSubscribe<String>() {
             @Override
             public void call(Subscriber<? super String> subscriber) {
-                Log.e(TAG, "about to send message to server");
-                if (!NetworkUtils.isNetworkAvailable(context) && !NetworkUtils.isOnline()) {
+                if (!NetworkUtils.isOnline()) {
                     throw new ApiCallException(NetworkUtils.CONNECT_ERROR);
                 } else {
-                    boolean messageSent = false;
-                    int backoff = BACKOFF_INITIAL_DELAY;
-                    String senderId = BuildConfig.FLAVOR.equals(Constant.PROD) ?
-                            context.getString(R.string.prod_sender_id) : context.getString(R.string.staging_sender_id);
-
-                    Bundle data = new Bundle();
-                    data.putString("action", "CHAT");
-                    data.putString("message", message.getText());
-                    data.putString("phoneNumber", message.getPhoneNumber());
-                    data.putString(GroupConstants.UID_FIELD, message.getGroupUid());
-                    data.putString("time", Constant.isoDateTimeSDF.format(message.getTime()));
-
-                    final String msgUid = message.getUid();
-
-                    for (int i = 1; i <= MAX_RETRIES; i++) {
-                        if (isMessageSent(msgUid)) {
-                            messageSent = true;
-                            break;
+                    Log.e(TAG, "okay sending via MQTT ... ");
+                    try {
+                        if(phoneNumber == null) setUserDetails();
+                        if(isCommand(message)){
+                            MqttConnectionManager.getInstance(ApplicationLoader.applicationContext).sendMessage("Grassroot", message);
+                        }else{
+                            MqttConnectionManager.getInstance(ApplicationLoader.applicationContext).sendMessage(message.getGroupUid(), message);
                         }
-
-                        Message msgInDb = RealmUtils.loadMessage(msgUid);
-                        if (msgInDb.getNoAttempts() != -1) {
-                            message.setNoAttempts(i);
-                            RealmUtils.saveDataToRealmSync(message);
-                        }
-
-                        try {
-                            Log.e(TAG, "Sending message: sender Id = " + gcmRegistrationId);
-                            Log.e(TAG, "Sending message: message Id = " + message.getUid());
-
-                            GoogleCloudMessaging.getInstance(context).send(senderId, message.getUid(), 0, data);
-                            Log.d(TAG, "Attempt no " + i);
-                        } catch (IOException|NullPointerException e) {
-                            throw new NoGcmException();
-                        }
-                        backoff = exponentialBackoffSleep(backoff);
-                    }
-
-                    if (messageSent) {
-                        subscriber.onNext(NetworkUtils.SENT_UPSTREAM);
-                        subscriber.onCompleted();
-                    } else {
-                        Log.d(TAG, "message still not sent, assuming network error .. ");
+                    } catch (Exception e) {
                         throw new ApiCallException(NetworkUtils.CONNECT_ERROR);
                     }
 
-                    Message msgInDb = RealmUtils.loadMessage(msgUid);
-                    if (msgInDb.getNoAttempts() != -1) {
-                        message.setSending(false);
-                        message.setSent(true);
-                        RealmUtils.saveDataToRealm(message).subscribe();
-                    }
                 }
             }
-        }).subscribeOn(Schedulers.io()).observeOn(observingThread);
+        }).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread());
     }
+
 
 
     public static boolean isMessageSent(String uid) {
@@ -177,6 +145,10 @@ public class GroupChatService {
             return message.isSent();
         }
         return false;
+    }
+
+    private static boolean isCommand(Message message){
+        return message.getText().startsWith("/");
     }
 
 

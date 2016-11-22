@@ -5,6 +5,7 @@ import android.content.Context;
 import android.support.annotation.Nullable;
 import android.support.v7.widget.RecyclerView;
 import android.text.format.DateUtils;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -48,6 +49,7 @@ public class GroupChatAdapter extends RecyclerView.Adapter<GroupChatAdapter.GCVi
     private final String sentSub;
     private final String sendingSub;
     private final String notSentSub;
+    private final String readSub;
 
     private final String thisPhoneNumber;
 
@@ -64,6 +66,7 @@ public class GroupChatAdapter extends RecyclerView.Adapter<GroupChatAdapter.GCVi
         sentSub = context.getString(R.string.chat_message_sent);
         sendingSub = context.getString(R.string.chat_message_sending);
         notSentSub = context.getString(R.string.chat_message_not_sent);
+        readSub = context.getString(R.string.chat_message_read);
 
         thisPhoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
 
@@ -108,10 +111,11 @@ public class GroupChatAdapter extends RecyclerView.Adapter<GroupChatAdapter.GCVi
                 handleServerMessageBtns(holder, validCommand, message);
                 break;
             case SELF:
-                final String subtitle = message.isDelivered() ? deliveredSub
-                    : message.isSent() ? sentSub
-                    : message.isSending() ? sendingSub
-                    : message.exceedsMaximumSendingAttempts() ? notSentSub : "";
+                final String subtitle = message.isRead() ? readSub
+                        : message.isDelivered() ? deliveredSub
+                        : message.isSent() ? sentSub
+                        : message.isSending() ? sendingSub
+                        : message.exceedsMaximumSendingAttempts() ? notSentSub : "";
                 holder.timestamp.setText(subtitle.concat(time));
                 break;
         }
@@ -145,7 +149,7 @@ public class GroupChatAdapter extends RecyclerView.Adapter<GroupChatAdapter.GCVi
     }
 
     public Message findMessage(String messageUid) {
-        for (int  i = messages.size() - 1; i >= 0; i--) {
+        for (int i = messages.size() - 1; i >= 0; i--) {
             if (messages.get(i).getUid().equals(messageUid)) {
                 return messages.get(i);
             }

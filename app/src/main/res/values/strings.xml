@@ -280,6 +280,12 @@
         <item>Delete message</item>
     </string-array>
 
+    <string-array name="chat_show_case">
+        <item>Group Chat Command</item>
+        <item>You can call meetings, votes and create todos by simply texting /meeting subject, day and time,
+            location for meetings, /vote subject, closing time for votes or /todo description, due date for todos</item>
+    </string-array>
+
     <string-array name="tasks_filter_options">
         <item>Meetings</item>
         <item>Votes</item>
@@ -870,6 +876,7 @@
     <string name="chat_message_not_sent">Not sent. </string>
     <string name="chat_message_sent">Sent. </string>
     <string name="chat_message_delivered">Delivered. </string>
+    <string name="chat_message_read">Read.</string>
     <string name="chat_long_click_options_title">Options</string>
 
     <string name="chat_message_server">Grassroot</string>
@@ -901,7 +908,10 @@
 
     <!--FAQ-->
     <string name="fq_txt_toolbar">FAQs</string>
-
+    <string name="showCaseButtonText">Got it</string>
+    <string name="localBrokerUrl">tcp://10.0.2.2:1883</string>
+    <string name="stagingBrokerUrl">tcp://52.30.204.199:1883</string>
+    <string name="productionBrokerUrl">tcp://52.30.204.199:1883</string>
 
 
     <string-array name="fq_Header">

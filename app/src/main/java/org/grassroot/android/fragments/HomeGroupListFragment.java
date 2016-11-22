@@ -40,6 +40,7 @@ import org.grassroot.android.events.GroupsRefreshedEvent;
 import org.grassroot.android.events.LocalGroupToServerEvent;
 import org.grassroot.android.events.TaskAddedEvent;
 import org.grassroot.android.events.UserLoggedOutEvent;
+import org.grassroot.android.fragments.dialogs.ConfirmCancelDialogFragment;
 import org.grassroot.android.interfaces.GroupConstants;
 import org.grassroot.android.interfaces.GroupPickCallbacks;
 import org.grassroot.android.interfaces.TaskConstants;
@@ -555,6 +556,7 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
         // finish on main activity seems to not clear this
         groupListRowAdapter.setGroupList(new ArrayList<Group>());
     }
+
 
     @OnClick(R.id.fab_menu_open)
     public void toggleFloatingMenu() {

@@ -31,6 +31,7 @@ import org.grassroot.android.models.responses.GroupsChangedResponse;
 import org.grassroot.android.models.responses.MemberListResponse;
 import org.grassroot.android.models.responses.PermissionResponse;
 import org.grassroot.android.utils.ErrorUtils;
+import org.grassroot.android.utils.MqttConnectionManager;
 import org.grassroot.android.utils.NetworkUtils;
 import org.grassroot.android.utils.PermissionUtils;
 import org.grassroot.android.utils.RealmUtils;
@@ -238,6 +239,35 @@ public class GroupService {
     }).subscribeOn(Schedulers.io()).observeOn(observingThread);
   }
 
+  public Observable<String>  markMessagesAsRead(final String groupUid, Scheduler observingThread){
+    return Observable.create(new Observable.OnSubscribe<String>(){
+      @Override
+      public void call(Subscriber<? super String> subscriber) {
+        if(!NetworkUtils.isOnline()){
+          subscriber.onNext(NetworkUtils.CONNECT_ERROR);
+        }else{
+          final String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
+          final String code = RealmUtils.loadPreferencesFromDB().getToken();
+          final Set<String> messageUids = RealmUtils.loadUnreadMessages(groupUid);
+          if(!messageUids.isEmpty()) {
+            try {
+              Response<GenericResponse> response = GrassrootRestService.getInstance().getApi()
+                      .markAsRead(phoneNumber, code, groupUid, messageUids).execute();
+              if (response.isSuccessful()) {
+                subscriber.onNext(NetworkUtils.ONLINE_DEFAULT);
+              } else {
+                subscriber.onNext(NetworkUtils.SERVER_ERROR);
+              }
+            } catch (IOException e) {
+              subscriber.onNext(NetworkUtils.CONNECT_ERROR);
+            } finally {
+              subscriber.onCompleted();
+            }
+          }
+      }
+    }}).subscribeOn(Schedulers.io()).observeOn(observingThread);
+  }
+
 
 
   private void persistGroupsAddedUpdated(GroupsChangedResponse responseBody) {
@@ -262,6 +292,12 @@ public class GroupService {
       RealmUtils.removeObjectsByUid(Group.class, "groupUid",
           RealmUtils.convertListOfRealmStringInListOfString(
               responseBody.getRemovedUids()));
+      for(String uid: RealmUtils.convertListOfRealmStringInListOfString(
+              responseBody.getRemovedUids())){
+        MqttConnectionManager.getInstance(ApplicationLoader
+                .applicationContext).unsubscribeFromTopic(uid);
+      }
+
     }
 
     RealmUtils.saveDataToRealmSync(responseBody.getAddedAndUpdated());
@@ -273,6 +309,15 @@ public class GroupService {
         composedMembers.add(m);
       }
     }
+    List<String> groupUids = new ArrayList<>();
+    List<Integer> qosList = new ArrayList<>();
+    for (Group g : responseBody.getAddedAndUpdated()) {
+       groupUids.add(g.getGroupUid());
+       qosList.add(1);
+    }
+    MqttConnectionManager.getInstance(ApplicationLoader.applicationContext).subscribeToTopics(groupUids
+            .toArray(new String[groupUids.size()]),Utilities.convertIntegerArrayToPrimitiveArray(qosList));
+
     RealmUtils.saveDataToRealm(composedMembers, Schedulers.immediate()).subscribe();
   }
 
@@ -426,6 +471,7 @@ public class GroupService {
           Map<String, Object> map = new HashMap<>();
           map.put("groupUid", localGroupUid);
           List<Member> members = RealmUtils.loadListFromDBInline(Member.class, map);
+          Log.e(TAG, "adding members count "+members.size() );
           try {
             Response<GroupResponse> response = GrassrootRestService.getInstance().getApi().createGroup(phoneNumber, code,
                 localGroup.getGroupName(), localGroup.getDescription(), members).execute();

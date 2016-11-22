@@ -38,6 +38,7 @@ import retrofit2.Response;
 import rx.Observable;
 import rx.Scheduler;
 import rx.Subscriber;
+
 import rx.android.schedulers.AndroidSchedulers;
 import rx.functions.Action1;
 import rx.schedulers.Schedulers;
@@ -218,6 +219,7 @@ public class NetworkUtils {
   public static boolean isNetworkAvailable(Context context) {
     ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
     NetworkInfo ni = cm.getActiveNetworkInfo();
+//    Log.e(TAG, "is connected "+ni.isConnected());
     return (ni != null && ni.isAvailable() && ni.isConnected());
   }
 
@@ -242,7 +244,7 @@ public class NetworkUtils {
     return Observable.create(new Observable.OnSubscribe() {
       @Override
       public void call(Object o) {
-        if (isOnline()) {
+        if (isOnline() && isNetworkAvailable(context)) {
           Intent gcmRegistrationIntent = new Intent(context, GcmRegistrationService.class);
           gcmRegistrationIntent.putExtra(NotificationConstants.ACTION, NotificationConstants.GCM_REGISTER);
           final String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();

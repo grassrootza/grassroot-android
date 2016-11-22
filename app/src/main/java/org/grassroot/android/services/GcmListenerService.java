@@ -31,6 +31,7 @@ import org.grassroot.android.models.Message;
 import org.grassroot.android.models.PreferenceObject;
 import org.grassroot.android.models.responses.GenericResponse;
 import org.grassroot.android.utils.Constant;
+import org.grassroot.android.utils.MqttConnectionManager;
 import org.grassroot.android.utils.RealmUtils;
 import org.greenrobot.eventbus.EventBus;
 
@@ -66,28 +67,28 @@ public class GcmListenerService extends com.google.android.gms.gcm.GcmListenerSe
     private static int displayedMessagesCount = 0;
     private static int displayedJoinRequestCount = 0;
     private static Notification notification;
-    private PowerManager pm;
-    private PowerManager.WakeLock wl;
+    private static PowerManager pm;
+    private static PowerManager.WakeLock wl;
 
     @Override
     public void onCreate() {
         pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
-        wl = pm.newWakeLock(PowerManager.SCREEN_BRIGHT_WAKE_LOCK| PowerManager.ACQUIRE_CAUSES_WAKEUP, TAG);
-        wl.acquire();
+        wl = pm.newWakeLock(PowerManager.SCREEN_BRIGHT_WAKE_LOCK | PowerManager.ACQUIRE_CAUSES_WAKEUP, TAG);
+
     }
 
     @Override
     public void onMessageReceived(String from, Bundle data) {
-        Log.d(TAG, "message received, from : " + from);
+        Log.e(TAG, "message received, from : " + from);
         incrementNotificationCounter();
         if (NotificationConstants.CHAT_MESSAGE.equals(data.get(NotificationConstants.ENTITY_TYPE))) {
-            handleChatMessages(data, this);
+            handleChatMessages(ApplicationLoader.applicationContext);
         } else {
             relayNotification(data);
         }
 
+        MqttConnectionManager.getInstance(ApplicationLoader.applicationContext).connect();
     }
-
 
 
     @Override
@@ -105,12 +106,14 @@ public class GcmListenerService extends com.google.android.gms.gcm.GcmListenerSe
     @Override
     public void onDestroy() {
         super.onDestroy();
-        wl.release();
+//        wl.release();
     }
 
-    private static void relayNotification(Bundle msg) {
+    public static void relayNotification(Bundle msg) {
         Context context = ApplicationLoader.applicationContext;
 
+
+        Log.e(TAG, "relaying notification");
         final String notificationUid = msg.getString(NotificationConstants.NOTIFICATION_UID);
         final String entityType = msg.getString(NotificationConstants.ENTITY_TYPE);
 
@@ -135,24 +138,25 @@ public class GcmListenerService extends com.google.android.gms.gcm.GcmListenerSe
 
         notification.number = isChat ? displayedMessagesCount : displayedNotificationCount;
         ((NotificationManager) context.getSystemService(NOTIFICATION_SERVICE))
-            .notify(isChat ? CHATS: TASKS, notification);
+                .notify(isChat ? CHATS : TASKS, notification);
 
-        GrassrootRestService.getInstance()
-            .getApi()
-            .updateRead(RealmUtils.loadPreferencesFromDB().getMobileNumber(), RealmUtils.loadPreferencesFromDB().getToken(), notificationUid)
-            .enqueue(new Callback<GenericResponse>() {
-                @Override
-                public void onResponse(Call<GenericResponse> call, Response<GenericResponse> response) {
-                    Log.d(TAG, response.isSuccessful() ? "Set message as read!" : "Failed: " + response.errorBody());
-                }
+            GrassrootRestService.getInstance()
+                    .getApi()
+                    .updateRead(RealmUtils.loadPreferencesFromDB().getMobileNumber(), RealmUtils.loadPreferencesFromDB().getToken(), notificationUid)
+                    .enqueue(new Callback<GenericResponse>() {
+                        @Override
+                        public void onResponse(Call<GenericResponse> call, Response<GenericResponse> response) {
+                            Log.d(TAG, response.isSuccessful() ? "Set message as read!" : "Failed: " + response.errorBody());
+                        }
 
-                @Override
-                public void onFailure(Call<GenericResponse> call, Throwable t) {
-                    Log.e(TAG, "Something went wrong updating it:");
-                }
-            });
+                        @Override
+                        public void onFailure(Call<GenericResponse> call, Throwable t) {
+                            Log.e(TAG, "Something went wrong updating it:");
+                        }
+                    });
 
     }
+
 
     public static boolean isAppIsInBackground(Context context) {
         boolean isInBackground = true;
@@ -194,19 +198,19 @@ public class GcmListenerService extends com.google.android.gms.gcm.GcmListenerSe
             notification = generateMultiLineNotification(resultPendingIntent, joinRequests, entityType, msg, displayedJoinRequestCount);
         } else {
             notification = mBuilder
-                .setTicker(msg.getString(Constant.TITLE))
-                .setWhen(System.currentTimeMillis())
-                .setAutoCancel(true)
-                .setContentTitle(msg.getString(Constant.TITLE))
-                .setContentIntent(resultPendingIntent)
-                .setSmallIcon((Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP)
-                    ? R.drawable.ic_notification_icon : R.drawable.app_icon)
-                .setDefaults(Notification.DEFAULT_ALL)
-                .setSound(RingtoneManager.getActualDefaultRingtoneUri(context, RingtoneManager.TYPE_NOTIFICATION))
-                .setLargeIcon(BitmapFactory.decodeResource(context.getResources(), R.drawable.app_icon))
-                .setContentText(msg.getString(Constant.BODY))
-                .setGroupSummary(true)
-                .build();
+                    .setTicker(msg.getString(Constant.TITLE))
+                    .setWhen(System.currentTimeMillis())
+                    .setAutoCancel(true)
+                    .setContentTitle(msg.getString(Constant.TITLE))
+                    .setContentIntent(resultPendingIntent)
+                    .setSmallIcon((Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP)
+                            ? R.drawable.ic_notification_icon : R.drawable.app_icon)
+                    .setDefaults(Notification.DEFAULT_ALL)
+                    .setSound(RingtoneManager.getActualDefaultRingtoneUri(context, RingtoneManager.TYPE_NOTIFICATION))
+                    .setLargeIcon(BitmapFactory.decodeResource(context.getResources(), R.drawable.app_icon))
+                    .setContentText(msg.getString(Constant.BODY))
+                    .setGroupSummary(true)
+                    .build();
         }
     }
 
@@ -226,15 +230,15 @@ public class GcmListenerService extends com.google.android.gms.gcm.GcmListenerSe
             notification = generateMultiLineNotification(resultPendingIntent, joinRequests, entityType, msg, displayedJoinRequestCount);
         } else {
             notification = mBuilder.setContentTitle(msg.getString(Constant.TITLE))
-                .setWhen(System.currentTimeMillis())
-                .setContentText(msg.getString(Constant.BODY))
-                .setAutoCancel(true)
-                .setSmallIcon(R.drawable.app_icon)
-                .setContentIntent(resultPendingIntent)
-                .setDefaults(Notification.DEFAULT_ALL)
-                .setSound(RingtoneManager.getActualDefaultRingtoneUri(context, RingtoneManager.TYPE_NOTIFICATION))
-                .setGroupSummary(true)
-                .build();
+                    .setWhen(System.currentTimeMillis())
+                    .setContentText(msg.getString(Constant.BODY))
+                    .setAutoCancel(true)
+                    .setSmallIcon(R.drawable.app_icon)
+                    .setContentIntent(resultPendingIntent)
+                    .setDefaults(Notification.DEFAULT_ALL)
+                    .setSound(RingtoneManager.getActualDefaultRingtoneUri(context, RingtoneManager.TYPE_NOTIFICATION))
+                    .setGroupSummary(true)
+                    .build();
         }
     }
 
@@ -255,7 +259,7 @@ public class GcmListenerService extends com.google.android.gms.gcm.GcmListenerSe
 
     private static PendingIntent generateResultIntent(Bundle msg, Context context) {
         final String entityType = msg.containsKey(NotificationConstants.ENTITY_TYPE) ?
-            msg.getString(NotificationConstants.ENTITY_TYPE) : NotificationConstants.CHAT_MESSAGE;
+                msg.getString(NotificationConstants.ENTITY_TYPE) : NotificationConstants.CHAT_MESSAGE;
 
         Intent resultIntent;
         if (displayedMessagesCount > 1 || displayedNotificationCount > 1 || displayedJoinRequestCount > 1) {
@@ -331,16 +335,9 @@ public class GcmListenerService extends com.google.android.gms.gcm.GcmListenerSe
         }
     }
 
-    private static void handleChatMessages(Bundle bundle, Context context) {
-        Message message = new Message(bundle);
-        if (!message.getType().equals("ping")) {
-            String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
-            RealmUtils.saveDataToRealmSync(message);
-            if (isAppIsInBackground(context) && !phoneNumber.equals(message.getPhoneNumber())) {
-                relayNotification(bundle);
-            } else {
-                EventBus.getDefault().post(new GroupChatEvent(message.getGroupUid(), bundle, message));
-            }
+    private static void handleChatMessages(Context context) {
+        if (!MqttConnectionManager.getInstance(context).isConnected()) {
+            MqttConnectionManager.getInstance(context).connect();
         }
     }
 
@@ -353,7 +350,7 @@ public class GcmListenerService extends com.google.android.gms.gcm.GcmListenerSe
             Message message = new Message(groupUid, UUID.randomUUID().toString(), text);
             message.setToKeep(true);
             RealmUtils.saveDataToRealmSync(message);
-            EventBus.getDefault().post(new GroupChatEvent(groupUid, bundle, message));
+           // EventBus.getDefault().post(new GroupChatEvent(groupUid, bundle, message));
         }
     }
 
@@ -418,7 +415,8 @@ public class GcmListenerService extends com.google.android.gms.gcm.GcmListenerSe
     }
 
     public static void clearTaskNotifications(Context context) {
-        if (!(notification == null)) notification.number = notification.number - notificationMessages.size();
+        if (!(notification == null))
+            notification.number = notification.number - notificationMessages.size();
         displayedNotificationCount = 0;
         notificationMessages.clear();
         NotificationManager nMgr = (NotificationManager) context.getSystemService(NOTIFICATION_SERVICE);
@@ -426,7 +424,8 @@ public class GcmListenerService extends com.google.android.gms.gcm.GcmListenerSe
     }
 
     public static void clearChatNotifications(Context context) {
-        if(!(notification == null))notification.number = notification.number - chatMessages.size();
+        if (!(notification == null))
+            notification.number = notification.number - chatMessages.size();
         displayedMessagesCount = 0;
         chatMessages.clear();
         NotificationManager nMgr = (NotificationManager) context.getSystemService(NOTIFICATION_SERVICE);
@@ -434,13 +433,13 @@ public class GcmListenerService extends com.google.android.gms.gcm.GcmListenerSe
     }
 
     public static void clearJoinRequestNotifications(Context context) {
-        if(!(notification == null)) notification.number = notification.number - joinRequests.size();
+        if (!(notification == null))
+            notification.number = notification.number - joinRequests.size();
         displayedJoinRequestCount = 0;
         joinRequests.clear();
         NotificationManager nMgr = (NotificationManager) context.getSystemService(NOTIFICATION_SERVICE);
         nMgr.cancel(JOIN_REQUESTS);
     }
-
 
 
 }

@@ -4,16 +4,23 @@ import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.Log;
 
+import com.google.gson.JsonParseException;
+import com.google.gson.annotations.Expose;
+
 import org.grassroot.android.interfaces.GroupConstants;
 import org.grassroot.android.interfaces.NotificationConstants;
 import org.grassroot.android.services.GroupChatService;
 import org.grassroot.android.utils.Constant;
+import org.grassroot.android.utils.JsonIgnore;
 import org.json.JSONArray;
 import org.json.JSONException;
+import org.json.JSONObject;
 
+import java.io.Serializable;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Map;
 import java.util.UUID;
 
 import io.realm.RealmList;
@@ -25,7 +32,7 @@ import io.realm.annotations.PrimaryKey;
 /**
  * Created by paballo on 2016/08/30.
  */
-public class Message extends RealmObject {
+public class Message extends RealmObject implements Serializable {
 
     @PrimaryKey
     private String uid;
@@ -40,22 +47,34 @@ public class Message extends RealmObject {
 
     private Date time;
     private Date actionDateTime;
-
-    private boolean sending;
-    private boolean sent;
-    private boolean delivered; // this is to server
-    private int noAttempts;
-
-    private boolean read;
     private String type;
 
+    @JsonIgnore
+    private boolean sending;
+    @JsonIgnore
+    private boolean sent;
+    @JsonIgnore
+    private boolean delivered; // this is to server
+    @JsonIgnore
+    private int noAttempts;
+    @JsonIgnore
+    private boolean seen;
+
+    @JsonIgnore
+    private boolean read;
+
+    @JsonIgnore
     private boolean server;
+    @JsonIgnore
     private boolean toKeep;
 
     private RealmList<RealmString> tokens;
 
-    @Ignore
-    SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+
+    @JsonIgnore
+    @Ignore //trying everything as this is not being ignored in some versions of android
+    @Expose(serialize = false, deserialize = false)
+    private transient SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
 
     public Message() {
     }
@@ -69,6 +88,7 @@ public class Message extends RealmObject {
         this.text = text;
         this.time = time;
         this.type = "normal";
+        this.seen=true;
         this.sending = false;
         this.sent = false;
         this.delivered = false;
@@ -85,6 +105,7 @@ public class Message extends RealmObject {
         this.sent = true;
         this.delivered = true;
     }
+
 
     public Message(Bundle bundle) {
         this.uid = bundle.getString("messageUid");
@@ -172,8 +193,8 @@ public class Message extends RealmObject {
         return delivered;
     }
 
-    public void setRead(boolean read) {
-        this.read = read;
+    public void setSeen(boolean seen) {
+        this.seen = seen;
     }
 
     public String getGroupName() {
@@ -182,6 +203,10 @@ public class Message extends RealmObject {
 
     public String getUserUid() {
         return userUid;
+    }
+
+    public boolean isSeen() {
+        return seen;
     }
 
     public boolean isRead() {
@@ -210,6 +235,10 @@ public class Message extends RealmObject {
 
     public void setDelivered(boolean delivered) {
         this.delivered = delivered;
+    }
+
+    public void setRead(boolean read) {
+        this.read = read;
     }
 
     public boolean isToKeep() {
