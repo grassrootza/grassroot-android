@@ -50,4 +50,10 @@ public interface GroupConstants {
     String SAVINGS_GROUP = "SAVINGS_GROUP";
     String EDUCATION_GROUP = "EDUCATION_GROUP";
 
+    // to control page that tasks opens on
+    String GROUP_OPEN_PAGE = "TASKS_OPEN_PAGE";
+    int OPEN_ON_USER_PREF = 100;
+    int OPEN_ON_TASKS = 101;
+    int OPEN_ON_CHAT = 102;
+
 }

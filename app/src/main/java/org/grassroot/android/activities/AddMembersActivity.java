@@ -70,7 +70,10 @@ public class AddMembersActivity extends AppCompatActivity implements
 
     private List<Contact> existingMemberContacts;
 
-    private boolean onMainScreen;
+    private int currentScreen;
+    private static final int MAIN_SCREEN = 0;
+    private static final int CONTACT_LIST = 1;
+
     private boolean menuOpen;
 
     ProgressDialog progressDialog;
@@ -117,7 +120,7 @@ public class AddMembersActivity extends AppCompatActivity implements
         contactSelectionFragment = new ContactSelectionFragment();
         membersFromContacts = new HashMap<>();
         manuallyAddedMembers = new ArrayList<>();
-        onMainScreen = true;
+        currentScreen = MAIN_SCREEN;
 
         progressDialog = new ProgressDialog(this);
         progressDialog.setMessage(getString(R.string.wait_message));
@@ -219,7 +222,7 @@ public class AddMembersActivity extends AppCompatActivity implements
                 .subscribe(new Action1<Boolean>() {
                     @Override
                     public void call(Boolean aBoolean) {
-                        onMainScreen = false;
+                        currentScreen = CONTACT_LIST;
                         toolbarTitle.setText(R.string.cs_title);
                         saveMembersButton.setVisibility(View.GONE);
                         getSupportFragmentManager()
@@ -244,7 +247,7 @@ public class AddMembersActivity extends AppCompatActivity implements
     }
 
     private void closeContactSelectionFragment() {
-        onMainScreen = true;
+        currentScreen = MAIN_SCREEN;
         toolbarTitle.setText(R.string.am_title);
         saveMembersButton.setVisibility(View.VISIBLE);
         getSupportFragmentManager()
@@ -314,12 +317,15 @@ public class AddMembersActivity extends AppCompatActivity implements
 
     @OnClick(R.id.am_iv_crossimage)
     public void closeMenu() {
-        if (onMainScreen) {
-            finish();
-        } else {
-            getSupportFragmentManager().popBackStack();
-            onMainScreen = true;
-            toolbarTitle.setText(R.string.am_title);
+        switch (currentScreen) {
+            case MAIN_SCREEN:
+                finish();
+                break;
+            case CONTACT_LIST:
+                closeContactSelectionFragment();
+                break;
+            default:
+                break;
         }
     }
 

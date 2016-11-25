@@ -1,6 +1,7 @@
 package org.grassroot.android.adapters;
 
 import android.content.Context;
+import android.graphics.Color;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -113,6 +114,7 @@ public class MemberListAdapter extends RecyclerView.Adapter<MemberListAdapter.Vi
 
         if (!canIncludeCurrentUser || !thisUserPhoneNumber.equals(member.getPhoneNumber())) {
             viewHolder.tvMemberName.setText(member.getDisplayName());
+            viewHolder.tvMemberName.setTextColor(Color.BLACK);
             isPhoneUser = false;
         } else {
             viewHolder.tvMemberName.setTextColor(ContextCompat.getColor(ApplicationLoader.applicationContext,

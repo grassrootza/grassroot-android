@@ -40,16 +40,16 @@ public class Constant {
     private static final String prodGcmSender = ApplicationLoader.applicationContext.getString(R.string.prod_sender_id);
     private static final String prodGcmProject = ApplicationLoader.applicationContext.getString(R.string.prod_project_id);
 
-    public static final String restUrl = BuildConfig.BUILD_TYPE.equals("debug") ? localUrl
+    public static final String restUrl = BuildConfig.BUILD_TYPE.equals("debug") ? stagingUrl
             : BuildConfig.FLAVOR.equals(PROD) ? productionUrl : stagingUrl;
 
-    public static final String brokerUrl = BuildConfig.BUILD_TYPE.equals("debug") ? localBrokerUrl
+    public static final String brokerUrl = BuildConfig.BUILD_TYPE.equals("debug") ? stagingBrokerUrl
             : BuildConfig.FLAVOR.equals(PROD) ? productionBrokerUrl : productionBrokerUrl;
 
-    public static final String gcmProjectId = BuildConfig.BUILD_TYPE.equals("debug") ? localGcmProject
+    public static final String gcmProjectId = BuildConfig.BUILD_TYPE.equals("debug") ? stagingGcmProject
             : BuildConfig.FLAVOR.equals(PROD) ? prodGcmProject : stagingGcmProject;
 
-    public static final String gcmSenderId = BuildConfig.BUILD_TYPE.equals("debug") ? localGcmSender
+    public static final String gcmSenderId = BuildConfig.BUILD_TYPE.equals("debug") ? stagingGcmSender
             : BuildConfig.FLAVOR.equals(PROD) ? prodGcmSender : stagingGcmSender;
 
     public static final double testLatitude = 31.215263;

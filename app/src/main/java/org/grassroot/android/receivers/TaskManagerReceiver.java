@@ -9,6 +9,7 @@ import com.google.android.gms.gcm.GcmNetworkManager;
 import com.google.android.gms.gcm.PeriodicTask;
 import com.google.android.gms.gcm.Task;
 
+import org.grassroot.android.services.ApplicationLoader;
 import org.grassroot.android.services.GcmListenerService;
 import org.grassroot.android.services.SyncService;
 
@@ -36,7 +37,7 @@ public class TaskManagerReceiver extends BroadcastReceiver {
                 }
                 break;
             case ACTION_DONE:
-                if(GcmListenerService.isAppIsInBackground(context) && gcmNetworkManager != null){
+                if(ApplicationLoader.isAppIsInBackground(context) && gcmNetworkManager != null){
                     gcmNetworkManager.cancelTask(TASK_TAG_PERIODIC,SyncService.class);
                     Log.d(TAG,"App in background, cancelling tasks");
                 }

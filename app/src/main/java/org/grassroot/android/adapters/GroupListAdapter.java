@@ -1,7 +1,9 @@
 package org.grassroot.android.adapters;
 
 import android.content.Context;
+import android.graphics.Color;
 import android.os.Build;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
@@ -53,12 +55,12 @@ public class GroupListAdapter extends RecyclerView.Adapter<GroupListAdapter.GHP_
     public static final String SORT_BY_SIZE = "sort_by_size";
     public static final String SORT_BY_TASK_DATE = "sort_by_task_date";
     public static final String SORT_BY_DATE_CHANGED = "sort_changed";
-    public static final String SORT_DEFAULT = "sort_default";
+    private static final String SORT_DEFAULT = "sort_default";
 
     private String currentSort;
 
-    List<Group> fullGroupList;
-    List<Group> displayedGroups;
+    private List<Group> fullGroupList;
+    private List<Group> displayedGroups;
 
     private static final SimpleDateFormat outputSDF = new SimpleDateFormat("EEE, d MMM", Locale.getDefault());
     private final float localGroupAlpha = 0.5f;
@@ -269,10 +271,17 @@ public class GroupListAdapter extends RecyclerView.Adapter<GroupListAdapter.GHP_
     }
 
     private void setUpTextDescriptions(GHP_ViewHolder holder, final Group group) {
-        final String groupOrganizerDescription =
-                String.format(context.getString(R.string.group_organizer_prefix), group.getGroupCreator());
         holder.txtGroupname.setText(group.getGroupName());
-        holder.txtGroupownername.setText(groupOrganizerDescription);
+
+        if (!RealmUtils.hasUnreadChats(group.getGroupUid())) {
+            final String groupOrganizerDescription =
+                    String.format(context.getString(R.string.group_organizer_prefix), group.getGroupCreator());
+            holder.txtGroupownername.setText(groupOrganizerDescription);
+            holder.txtGroupownername.setTextColor(Color.BLACK);
+        } else {
+            holder.txtGroupownername.setText(context.getString(R.string.group_unread_chats));
+            holder.txtGroupownername.setTextColor(ContextCompat.getColor(context, R.color.primaryColor));
+        }
 
         if (group.hasJoinCode()) {
             final String tokenCode = context.getString(R.string.join_code_prefix) + group.getJoinCode() + "#";

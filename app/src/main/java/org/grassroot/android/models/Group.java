@@ -2,6 +2,7 @@ package org.grassroot.android.models;
 
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.support.annotation.NonNull;
 import android.text.TextUtils;
 
 import org.grassroot.android.R;
@@ -48,6 +49,8 @@ public class Group extends RealmObject implements Parcelable, Comparable<Group> 
 
   private boolean isLocal; // i.e., is created local but not sent to server yet
   private boolean isEditedLocal; // i.e., has local changes (members etc) that aren't yet on server
+
+  private boolean openOnChat = false;
 
   @Ignore private Date date;
   private DateTime dateTime; // used in JSON conversion
@@ -168,6 +171,14 @@ public class Group extends RealmObject implements Parcelable, Comparable<Group> 
   public boolean isDiscoverable() { return this.discoverable; }
 
   public void setDiscoverable(boolean isPublic) { this.discoverable = isPublic; }
+
+  public boolean isOpenOnChat() {
+    return openOnChat;
+  }
+
+  public void setOpenOnChat(boolean openOnChat) {
+    this.openOnChat = openOnChat;
+  }
 
   public void setDateTimeStringISO(String dateTimeStringISO) {
     this.dateTimeStringISO = dateTimeStringISO;
@@ -356,6 +367,7 @@ public class Group extends RealmObject implements Parcelable, Comparable<Group> 
     dest.writeLong(lastMajorChangeMillis);
     dest.writeInt(defaultImageRes);
     dest.writeString(lastChangeDescription);
+    dest.writeInt(openOnChat ? 1 : 0);
   }
 
   protected Group(Parcel in) {
@@ -377,6 +389,7 @@ public class Group extends RealmObject implements Parcelable, Comparable<Group> 
     lastMajorChangeMillis = in.readLong();
     defaultImageRes = in.readInt();
     lastChangeDescription = in.readString();
+    openOnChat = in.readInt() != 0;
   }
 
   public static final Creator<Group> CREATOR = new Creator<Group>() {
@@ -390,7 +403,7 @@ public class Group extends RealmObject implements Parcelable, Comparable<Group> 
   };
 
   // note : this is going to sort like Java Dates usually do, i.e., from earliest to latest, so for most cases, use reverse order
-  @Override public int compareTo(Group g2) {
+  @Override public int compareTo(@NonNull Group g2) {
     return (this.lastMajorChangeMillis > g2.lastMajorChangeMillis) ? 1
             : (this.lastMajorChangeMillis < g2.lastMajorChangeMillis) ? -1 :
             this.getDate().compareTo(g2.getDate()); // last one just in case both are zero for some reason

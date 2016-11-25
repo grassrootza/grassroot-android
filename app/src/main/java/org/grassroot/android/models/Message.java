@@ -4,7 +4,6 @@ import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.Log;
 
-import com.google.gson.JsonParseException;
 import com.google.gson.annotations.Expose;
 
 import org.grassroot.android.interfaces.GroupConstants;
@@ -14,13 +13,11 @@ import org.grassroot.android.utils.Constant;
 import org.grassroot.android.utils.JsonIgnore;
 import org.json.JSONArray;
 import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.io.Serializable;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.Map;
 import java.util.UUID;
 
 import io.realm.RealmList;
@@ -156,7 +153,6 @@ public class Message extends RealmObject implements Serializable {
                 e.printStackTrace();
             }
         }
-
     }
 
     public String getText() {
@@ -218,7 +214,7 @@ public class Message extends RealmObject implements Serializable {
     }
 
     public String getType() {
-        return type;
+        return type == null ? "" : type;
     }
 
     public int getNoAttempts() {
@@ -277,6 +273,7 @@ public class Message extends RealmObject implements Serializable {
     public String toString() {
         return "Message{" +
                 "time='" + time + '\'' +
+                ", seen='" + seen + '\'' +
                 ", uid = " + uid + '\'' +
                 ", groupUid='" + groupUid + '\'' +
                 ", text='" + text + '\'' +

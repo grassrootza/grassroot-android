@@ -12,6 +12,7 @@ import android.support.design.widget.TextInputEditText;
 import android.support.v7.app.AlertDialog;
 import android.text.TextUtils;
 import android.util.Log;
+import android.util.SparseArray;
 import android.view.View;
 import android.widget.Button;
 import android.widget.LinearLayout;
@@ -42,9 +43,7 @@ import org.greenrobot.eventbus.EventBus;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 import butterknife.BindView;
@@ -61,6 +60,10 @@ public class CreateGroupActivity extends PortraitActivity implements ContactSele
 
   private static final String TAG = CreateGroupActivity.class.getSimpleName();
 
+  private int currentScreen;
+  private static final int MAIN_SCREEN = 0;
+  private static final int CONTACT_LIST = 1;
+
   @BindView(R.id.rl_cg_root) RelativeLayout rlCgRoot;
 
   @BindView(R.id.cg_add_member_options) FloatingActionButton addMemberOptions;
@@ -76,11 +79,10 @@ public class CreateGroupActivity extends PortraitActivity implements ContactSele
   @BindView(R.id.progressBar) ProgressBar progressBar;
 
   private List<Member> manuallyAddedMembers;
-  private Map<Integer, Member> mapMembersContacts;
+  private SparseArray<Member> mapMembersContacts;
   private MemberListFragment memberListFragment;
 
   private ContactSelectionFragment contactSelectionFragment;
-  private boolean onMainScreen;
   private boolean menuOpen;
 
   private String groupUid = UUID.randomUUID().toString();;
@@ -125,9 +127,9 @@ public class CreateGroupActivity extends PortraitActivity implements ContactSele
 
   private void init() {
     contactSelectionFragment = new ContactSelectionFragment();
-    mapMembersContacts = new HashMap<>();
+    mapMembersContacts = new SparseArray<>();
     manuallyAddedMembers = new ArrayList<>();
-    onMainScreen = true;
+    currentScreen = MAIN_SCREEN;
   }
 
   private void setUpMemberList() {
@@ -166,14 +168,18 @@ public class CreateGroupActivity extends PortraitActivity implements ContactSele
 
   @OnClick(R.id.cg_iv_crossimage)
   public void ivCrossimage() {
-    if (!onMainScreen) {
-      // note : this means we do not saveGroupIfNamed / return the contacts on cross clicked
-      getSupportFragmentManager().popBackStack();
-      onMainScreen = true;
-    } else {
-      progressDialog.dismiss();
-      cleanUpLocalEntities(!editingOfflineGroup); // i.e., delete anything cached unless editing a prior cached group
-      finish();
+    switch (currentScreen) {
+      case MAIN_SCREEN:
+        progressDialog.dismiss();
+        cleanUpLocalEntities(!editingOfflineGroup); // i.e., delete anything cached unless editing a prior cached group
+        finish();
+        break;
+      case CONTACT_LIST:
+        closeContactSelectionFragment(); // note : this means we do not saveGroupIfNamed / return the contacts on cross clicked
+        currentScreen = MAIN_SCREEN;
+        break;
+      default:
+        break;
     }
   }
 
@@ -210,7 +216,7 @@ public class CreateGroupActivity extends PortraitActivity implements ContactSele
         .subscribe(new Action1<Boolean>() {
           @Override
           public void call(Boolean aBoolean) {
-            onMainScreen = false;
+            currentScreen = CONTACT_LIST;
             progressBar.setVisibility(View.GONE);
             if (contactSelectionFragment != null) {
               save.setVisibility(View.GONE);
@@ -229,16 +235,19 @@ public class CreateGroupActivity extends PortraitActivity implements ContactSele
   }
 
   private void closeContactSelectionFragment() {
-    onMainScreen = true;
+    currentScreen = MAIN_SCREEN;
     save.setVisibility(View.VISIBLE);
-    getSupportFragmentManager().beginTransaction().remove(contactSelectionFragment).commit();
+    getSupportFragmentManager()
+            .beginTransaction()
+            .remove(contactSelectionFragment)
+            .commit();
   }
 
   @Override public void onContactSelectionComplete(List<Contact> contactsSelected) {
     progressDialog.show();
     List<Member> selectedMembers = new ArrayList<>(manuallyAddedMembers);
     for (Contact c : contactsSelected) {
-      if (mapMembersContacts.containsKey(c.id)) {
+      if (mapMembersContacts.indexOfKey(c.id) >= 0) {
         selectedMembers.add(mapMembersContacts.get(c.id));
       } else {
         Member m = new Member(UUID.randomUUID().toString(), groupUid, c.selectedMsisdn,

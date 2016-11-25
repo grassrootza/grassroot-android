@@ -32,6 +32,7 @@ import org.grassroot.android.activities.GroupAvatarActivity;
 import org.grassroot.android.activities.GroupSearchActivity;
 import org.grassroot.android.activities.GroupTasksActivity;
 import org.grassroot.android.adapters.GroupListAdapter;
+import org.grassroot.android.events.GroupChatEvent;
 import org.grassroot.android.events.GroupCreatedEvent;
 import org.grassroot.android.events.GroupDeletedEvent;
 import org.grassroot.android.events.GroupEditedEvent;
@@ -40,7 +41,6 @@ import org.grassroot.android.events.GroupsRefreshedEvent;
 import org.grassroot.android.events.LocalGroupToServerEvent;
 import org.grassroot.android.events.TaskAddedEvent;
 import org.grassroot.android.events.UserLoggedOutEvent;
-import org.grassroot.android.fragments.dialogs.ConfirmCancelDialogFragment;
 import org.grassroot.android.interfaces.GroupConstants;
 import org.grassroot.android.interfaces.GroupPickCallbacks;
 import org.grassroot.android.interfaces.TaskConstants;
@@ -86,6 +86,7 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
     @BindView(R.id.recycler_view)
     RecyclerView rcGroupList;
     private boolean triggeredGroupRefresh;
+    private boolean initialResumeCall;
 
     private boolean floatingMenuOpen = false;
     @BindView(R.id.fab_menu_open)
@@ -104,9 +105,9 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
-        Log.d(TAG, "home group list fragment ... on attach ... timer ... " + SystemClock.currentThreadTimeMillis());
         try {
             mCallbacks = (GroupPickCallbacks) context;
+            initialResumeCall = false;
         } catch (ClassCastException e) {
             throw new ClassCastException("Activity must implement group pick callbacks");
         }
@@ -128,6 +129,11 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
     public void onResume() {
         super.onResume();
         fabOpenMenu.setVisibility(View.VISIBLE);
+        if (!initialResumeCall && groupListRowAdapter != null) {
+            groupListRowAdapter.refreshGroupsToDB();
+        } else {
+            initialResumeCall = false; // so subsequent calls will refresh
+        }
     }
 
     @Override
@@ -557,6 +563,10 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
         groupListRowAdapter.setGroupList(new ArrayList<Group>());
     }
 
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onEvent(GroupChatEvent e) {
+        groupListRowAdapter.refreshSingleGroup(e.getGroupUid());
+    }
 
     @OnClick(R.id.fab_menu_open)
     public void toggleFloatingMenu() {

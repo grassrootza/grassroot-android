@@ -30,23 +30,23 @@ android {
         applicationId "org.grassroot.android"
         minSdkVersion 9
         targetSdkVersion 23
-        versionCode 23
-        versionName "1.0.6"
+        versionCode 25
+        versionName "1.1"
     }
     buildTypes {
         release {
-            minifyEnabled false
+            minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
     productFlavors {
         staging {
             applicationId "org.grassroot.android"
-            versionName "1.0-staging"
+            versionName "1.1-staging"
         }
         production {
             applicationId 'za.org.grassroot.android'
-            versionName "1.0"
+            versionName "1.1"
         }
     }
     splits {

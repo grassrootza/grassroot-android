@@ -150,7 +150,7 @@
     <string name="drawer_rate_us">Rate us</string>
     <string name="drawer_logout">Logout</string>
     <string name="drawer_share">Share app</string>
-    <string name="nav_bar_footer">Grassroot v1</string>
+    <string name="nav_bar_footer">Grassroot v1.1</string>
 
     <string name="online_go_offline">Switch to offline mode?</string>
     <string name="offline_go_online_failed">Try connect to server?</string>
@@ -286,6 +286,15 @@
             location for meetings, /vote subject, closing time for votes or /todo description, due date for todos</item>
     </string-array>
 
+    <string name="group_chat_empty_title">
+        Welcome to group chat!
+    </string>
+
+    <string name="group_chat_empty_message">
+        To get started, just enter a message. Please note that only other smartphone users will see the chat messages. Meeting calls, votes,
+        and all other kinds of message will still go out by SMS.
+    </string>
+
     <string-array name="tasks_filter_options">
         <item>Meetings</item>
         <item>Votes</item>
@@ -298,6 +307,7 @@
     <string name="group_description_prefix">Description: %s</string>
     <string name="group_organizer_prefix">Organizer: %s</string>
     <string name="group_member_count">%d members</string>
+    <string name="group_unread_chats">Unread messages!</string>
 
     <string name="join_code_prefix">Join code: *134*1994*</string>
     <string name="date_time_pattern">%1$s on %2$s</string>

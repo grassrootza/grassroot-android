@@ -29,7 +29,7 @@ public class AddContactManually extends PortraitActivity {
   private Member memberBeingEdited;
   private int positionBeingEdited;
 
-  @BindView(R.id.add_member_manual) RelativeLayout activityRegister;
+  @BindView(R.id.add_member_manual) RelativeLayout rootView;
 
   @BindView(R.id.amm_et_name) TextInputEditText displayName;
   @BindView(R.id.amm_et_number) TextInputEditText phoneNumber;
@@ -109,6 +109,6 @@ public class AddContactManually extends PortraitActivity {
   }
 
   private void showSnackBar(String string, int lengthShort) {
-    Snackbar.make(activityRegister, string, lengthShort).show();
+    Snackbar.make(rootView, string, lengthShort).show();
   }
 }

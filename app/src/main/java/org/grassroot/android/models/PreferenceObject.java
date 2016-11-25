@@ -19,7 +19,6 @@ public class PreferenceObject extends RealmObject {
 
   private boolean isGroupChatFragmentShowCased;
 
-
   private String gcmRegistrationId;
   private int gcmAppVersionStored;
 
@@ -230,4 +229,5 @@ public class PreferenceObject extends RealmObject {
   public void setGcmAppVersionStored(int gcmAppVersionStored) {
     this.gcmAppVersionStored = gcmAppVersionStored;
   }
+
 }

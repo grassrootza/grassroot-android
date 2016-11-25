@@ -14,13 +14,20 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import org.grassroot.android.R;
-import org.grassroot.android.interfaces.GroupConstants;
 import org.grassroot.android.models.Group;
 import org.grassroot.android.utils.ErrorUtils;
+import org.grassroot.android.utils.RealmUtils;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.Unbinder;
+
+import static org.grassroot.android.interfaces.GroupConstants.GROUP_OPEN_PAGE;
+import static org.grassroot.android.interfaces.GroupConstants.NAME_FIELD;
+import static org.grassroot.android.interfaces.GroupConstants.OPEN_ON_CHAT;
+import static org.grassroot.android.interfaces.GroupConstants.OPEN_ON_TASKS;
+import static org.grassroot.android.interfaces.GroupConstants.OPEN_ON_USER_PREF;
+import static org.grassroot.android.interfaces.GroupConstants.UID_FIELD;
 
 /**
  * Created by paballo on 2016/09/05.
@@ -28,6 +35,7 @@ import butterknife.Unbinder;
 public class GroupTaskMasterFragment extends Fragment {
 
     private static final String TAG = GroupTaskMasterFragment.class.getSimpleName();
+
     private String groupUid;
     private String groupName;
 
@@ -35,10 +43,8 @@ public class GroupTaskMasterFragment extends Fragment {
 
     Unbinder unbinder;
 
-    @BindView(R.id.tasks_pager)
-    ViewPager requestPager;
-    @BindView(R.id.tasks_tab_layout)
-    TabLayout tabLayout;
+    @BindView(R.id.tasks_pager) ViewPager requestPager;
+    @BindView(R.id.tasks_tab_layout) TabLayout tabLayout;
 
     public TaskPagerAdapter pagerAdapter;
 
@@ -49,16 +55,17 @@ public class GroupTaskMasterFragment extends Fragment {
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
-        groupUid = getArguments().getString(GroupConstants.UID_FIELD);
-        groupName = getArguments().getString(GroupConstants.NAME_FIELD);
+        groupUid = getArguments().getString(UID_FIELD);
+        groupName = getArguments().getString(NAME_FIELD);
         setHasOptionsMenu(true);
     }
 
-    public static GroupTaskMasterFragment newInstance(Group group) {
+    public static GroupTaskMasterFragment newInstance(Group group, int openingPage) {
         GroupTaskMasterFragment groupTaskMasterFragment = new GroupTaskMasterFragment();
         Bundle args = new Bundle();
-        args.putString(GroupConstants.UID_FIELD, group.getGroupUid());
-        args.putString(GroupConstants.NAME_FIELD, group.getGroupName());
+        args.putString(UID_FIELD, group.getGroupUid());
+        args.putString(NAME_FIELD, group.getGroupName());
+        args.putInt(GROUP_OPEN_PAGE, openingPage);
         groupTaskMasterFragment.setArguments(args);
         return groupTaskMasterFragment;
     }
@@ -69,8 +76,15 @@ public class GroupTaskMasterFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_tasks_pager, container, false);
         unbinder = ButterKnife.bind(this, view);
 
+        Bundle args = getArguments();
+        int openingPagePref = args == null ? OPEN_ON_USER_PREF :
+                args.getInt(GROUP_OPEN_PAGE, OPEN_ON_USER_PREF);
+        int openingPage = openingPagePref == OPEN_ON_TASKS ? 0 :
+                openingPagePref == OPEN_ON_CHAT ? 1 : (RealmUtils.openGroupOnChat(groupUid) ? 1 : 0);
+
         pagerAdapter = new TaskPagerAdapter(getChildFragmentManager());
         requestPager.setAdapter(pagerAdapter);
+        requestPager.setCurrentItem(openingPage);
         tabLayout.setupWithViewPager(requestPager);
 
         return view;
@@ -106,6 +120,7 @@ public class GroupTaskMasterFragment extends Fragment {
     @Override
     public void onDestroyView() {
         super.onDestroyView();
+        RealmUtils.setOpenGroupOnChat(groupUid, isOnChatView());
         unbinder.unbind();
     }
 

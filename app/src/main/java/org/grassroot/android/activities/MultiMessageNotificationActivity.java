@@ -14,6 +14,7 @@ import org.grassroot.android.fragments.NotificationCenterFragment;
 import org.grassroot.android.interfaces.GroupConstants;
 import org.grassroot.android.interfaces.NotificationConstants;
 import org.grassroot.android.models.GroupJoinRequest;
+import org.grassroot.android.services.GcmListenerService;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -44,8 +45,9 @@ public class MultiMessageNotificationActivity extends PortraitActivity {
         groupName = getIntent().getStringExtra(GroupConstants.NAME_FIELD);
         clickAction = getIntent().getStringExtra(NotificationConstants.CLICK_ACTION);
 
-        switch (clickAction){
+        switch (clickAction) {
             case NotificationConstants.CHAT_MESSAGE:
+                GcmListenerService.clearChatNotifications(this);
                 fragment = createGroupChatFragment(groupUid, groupName);
                 break;
             case NotificationConstants.CHAT_LIST:
@@ -114,6 +116,7 @@ public class MultiMessageNotificationActivity extends PortraitActivity {
         toolbar.setNavigationIcon(R.drawable.btn_back_wt);
         return MultiGroupChatFragment.newInstance();
     }
+
     private Fragment createJoinRequestListFragment(){
         this.setTitle(groupName);
         toolbar.setNavigationIcon(R.drawable.btn_close_white);

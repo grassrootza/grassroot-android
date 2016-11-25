@@ -41,7 +41,6 @@ import org.grassroot.android.interfaces.TaskConstants;
 import org.grassroot.android.models.Group;
 import org.grassroot.android.services.GcmListenerService;
 import org.grassroot.android.services.SharingService;
-import org.grassroot.android.utils.MqttConnectionManager;
 import org.grassroot.android.utils.NetworkUtils;
 import org.grassroot.android.utils.PermissionUtils;
 import org.greenrobot.eventbus.EventBus;
@@ -519,7 +518,7 @@ public class HomeScreenActivity extends PortraitActivity implements NavigationDr
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onEvent(GroupChatEvent groupChatEvent) {
         if (this.isVisible) {
-            GcmListenerService.showNotification(groupChatEvent.getBundle(), this).subscribe();
+            GcmListenerService.showNotification(groupChatEvent.getBundle()).subscribe();
         }
     }
 

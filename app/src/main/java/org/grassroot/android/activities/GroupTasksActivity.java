@@ -60,13 +60,11 @@ public class GroupTasksActivity extends PortraitActivity implements NewTaskMenuF
 
     private boolean showDescOption;
     private int descOptionText;
+    private int openingPage;
 
-    @BindView(R.id.gta_root_layout)
-    ViewGroup rootLayout;
-    @BindView(R.id.gta_toolbar)
-    Toolbar toolbar;
-    @BindView(R.id.progressBar)
-    ProgressBar progressBar;
+    @BindView(R.id.gta_root_layout) ViewGroup rootLayout;
+    @BindView(R.id.gta_toolbar) Toolbar toolbar;
+    @BindView(R.id.progressBar) ProgressBar progressBar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -91,16 +89,28 @@ public class GroupTasksActivity extends PortraitActivity implements NewTaskMenuF
 
         groupMembership = extras.getParcelable(GroupConstants.OBJECT_FIELD);
         if (groupMembership == null) {
-            Log.e(TAG, "Error! Group tasks activity called without group passed");
-            startActivity(ErrorUtils.gracefulExitToHome(this));
-            finish();
-            return;
+            try {
+                groupMembership = RealmUtils.loadGroupFromDB(extras.getString(GroupConstants.UID_FIELD));
+            } catch (Exception e) {
+                Log.e(TAG, "Error! Group tasks activity called without group passed or valid group UID");
+                startActivity(ErrorUtils.gracefulExitToHome(this));
+                finish();
+                return;
+            }
         }
 
+        openingPage = extras.getInt(GroupConstants.GROUP_OPEN_PAGE, GroupConstants.OPEN_ON_USER_PREF);
         requestPing(groupMembership.getGroupUid());
 
         setUpViews();
         setUpFragment();
+    }
+
+    private void setUpFragment() {
+        groupTaskMasterFragment = GroupTaskMasterFragment.newInstance(groupMembership, openingPage);
+        getSupportFragmentManager().beginTransaction()
+                .add(R.id.gta_fragment_holder, groupTaskMasterFragment)
+                .commit();
     }
 
     @Override
@@ -171,13 +181,6 @@ public class GroupTasksActivity extends PortraitActivity implements NewTaskMenuF
         menu.findItem(R.id.mi_delete_messages).setVisible(false);
         menu.findItem(R.id.mi_group_mute).setVisible(false);
         return true;
-    }
-
-    private void setUpFragment() {
-        groupTaskMasterFragment = GroupTaskMasterFragment.newInstance(groupMembership);
-        getSupportFragmentManager().beginTransaction()
-                .add(R.id.gta_fragment_holder, groupTaskMasterFragment)
-                .commit();
     }
 
     @Override

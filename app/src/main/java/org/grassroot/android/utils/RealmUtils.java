@@ -173,24 +173,6 @@ public class RealmUtils {
     }
 
     public static <T> Observable loadListFromDB(final Class<? extends RealmObject> model,
-                                                final String pName, final String pValue) {
-        Observable<List<RealmObject>> observable =
-                Observable.create(new Observable.OnSubscribe<List<RealmObject>>() {
-                    @Override
-                    public void call(Subscriber<? super List<RealmObject>> subscriber) {
-                        // System.out.println("load list " + Thread.currentThread().getName());
-                        final Realm realm = Realm.getDefaultInstance();
-                        List<RealmObject> realmResults = (List<RealmObject>) realm.copyFromRealm(
-                                (realm.where(model).equalTo(pName, pValue).findAll()));
-                        subscriber.onNext(realmResults);
-                        subscriber.onCompleted();
-                        realm.close();
-                    }
-                }).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread());
-        return observable;
-    }
-
-    public static <T> Observable loadListFromDB(final Class<? extends RealmObject> model,
                                                 final String pName, final boolean pValue, Scheduler returnThread) {
         return Observable.create(new Observable.OnSubscribe<List<RealmObject>>() {
                     @Override
@@ -335,6 +317,24 @@ public class RealmUtils {
         return loadObjectFromDB(Group.class, "groupUid", groupUid);
     }
 
+    public static boolean openGroupOnChat(final String groupUid) {
+        Realm realm = Realm.getDefaultInstance();
+        Group group = realm.where(Group.class).equalTo("groupUid", groupUid).findFirst();
+        boolean isChat = group.isOpenOnChat();
+        realm.close();
+        return isChat;
+    }
+
+    public static void setOpenGroupOnChat(final String groupUid, final boolean openOnChat) {
+        Realm realm = Realm.getDefaultInstance();
+        Group group = realm.where(Group.class).equalTo("groupUid", groupUid).findFirst();
+        realm.beginTransaction();
+        group.setOpenOnChat(openOnChat);
+        realm.copyToRealmOrUpdate(group);
+        realm.commitTransaction();
+        realm.close();
+    }
+
     public static long countGroupsInDB() {
         Realm realm = Realm.getDefaultInstance();
         long count = realm
@@ -342,6 +342,13 @@ public class RealmUtils {
             .count();
         realm.close();
         return count;
+    }
+
+    public static boolean groupExistsInDB(final String groupUid) {
+        Realm realm = Realm.getDefaultInstance();
+        long count = realm.where(Group.class).equalTo("groupUid", groupUid).count();
+        realm.close();
+        return count > 0;
     }
 
     public static long countGroupMembers(final String groupUid) {
@@ -472,7 +479,6 @@ public class RealmUtils {
 
     }
 
-
     public static Observable<List<Message>> loadDistinctMessages(){
         return Observable.create(new Observable.OnSubscribe<List<Message>>(){
             @Override
@@ -498,7 +504,6 @@ public class RealmUtils {
                 subscriber.onNext(messages);
                 subscriber.onCompleted();
                 realm.close();
-
             }
         }).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread());
     }
@@ -522,27 +527,35 @@ public class RealmUtils {
         realm.close();
     }
 
+    // note : pass null to groupUid to count all
+    public static boolean hasUnreadChats(final String groupUid) {
+        Realm realm = Realm.getDefaultInstance();
+        RealmQuery<Message> query = realm.where(Message.class)
+                .equalTo("seen", false);
+        if (groupUid != null) {
+            query = query.equalTo("groupUid", groupUid);
+        }
+        long count = query.count();
+        realm.close();
+        return count > 0;
+    }
+
     public static Set<String> loadUnreadMessages(final String groupUid){
+        Realm realm = Realm.getDefaultInstance();
+        final String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
+        final RealmResults<Message> results = realm.where(Message.class)
+                .notEqualTo("phoneNumber",phoneNumber)
+                .notEqualTo("type","error")
+                .equalTo("groupUid", groupUid)
+                .equalTo("read", false).findAll();
 
-                final Realm realm = Realm.getDefaultInstance();
-                final String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
-                final RealmResults<Message> results = realm.where(Message.class)
-                        .notEqualTo("phoneNumber",phoneNumber)
-                        .notEqualTo("type","error")
-                        .equalTo("groupUid", groupUid)
-                        .equalTo("read", false).findAll();
+        final Set<String> tempList = new HashSet<>();
+        for (Message message : results) {
+            tempList.add(message.getUid());
+        }
 
-                final Set<String> tempList = new HashSet<String>();
-                realm.executeTransaction(new Realm.Transaction() {
-                    @Override
-                    public void execute(Realm realm) {
-                        for(Message message: results){
-                            tempList.add(message.getUid());
-
-                    }}
-                });
-                return tempList;
-
+        realm.close();
+        return tempList;
     }
 
     public static long countUpcomingTasksInDB() {

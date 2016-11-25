@@ -32,8 +32,8 @@ import java.util.List;
 
 import io.realm.RealmList;
 
-import static org.grassroot.android.services.GcmListenerService.isAppIsInBackground;
-import static org.grassroot.android.services.GcmListenerService.relayNotification;
+import static org.grassroot.android.services.ApplicationLoader.isAppIsInBackground;
+import static org.grassroot.android.services.GcmListenerService.handleNotification;
 
 /**
  * Created by paballo on 2016/11/01.
@@ -92,7 +92,8 @@ public class MqttConnectionManager implements IMqttActionListener, MqttCallback 
         final MqttConnectOptions options = new MqttConnectOptions();
         final String clientId = RealmUtils.loadPreferencesFromDB().getMobileNumber();
         options.setCleanSession(false);
-        options.setKeepAliveInterval(60);
+        options.setKeepAliveInterval(240);
+        options.setConnectionTimeout(240);
         options.setAutomaticReconnect(true);
 
         try {
@@ -236,33 +237,34 @@ public class MqttConnectionManager implements IMqttActionListener, MqttCallback 
         String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
         try {
             Message message = gson.fromJson(mqttMessage.toString(), Message.class);
-            Log.e(TAG, "message " + message.toString());
-            message.setDelivered(true);
-            RealmUtils.saveDataToRealmSync(message);
-            Bundle bundle = createBundleFromMessage(message);
+            Log.d(TAG, "message " + message.toString());
 
-            if (!message.getType().equals("ping")) {
-                if (message.getType().equals("update_read_status")) {
-                    if (RealmUtils.hasMessage(message.getUid())) {
-                        Message existingMessage = RealmUtils.loadMessage(message.getUid());
-                        Log.e(TAG, "update exisiting message");
-                        existingMessage.setRead(true);
-                        RealmUtils.saveDataToRealmSync(existingMessage);
-                        EventBus.getDefault().post(new GroupChatMessageReadEvent(existingMessage));
-                    }
-                } else {
-                    if (message.getType().equals("sync"))
-                        NetworkUtils.syncAndStartTasks(ApplicationLoader.applicationContext, true, true);
+            message.setDelivered(true);
+            Bundle bundle = createBundleFromMessage(message);
+            switch (message.getType()) {
+                case "ping":
+                    break;
+                case "sync":
+                    NetworkUtils.syncAndStartTasks(ApplicationLoader.applicationContext, true, true);
+                    break;
+                case "update_read_status":
+                    Message existingMessage = RealmUtils.hasMessage(message.getUid()) ?
+                            RealmUtils.loadMessage(message.getUid()) : message;
+                    existingMessage.setRead(true);
+                    RealmUtils.saveDataToRealmSync(existingMessage);
+                    EventBus.getDefault().post(new GroupChatMessageReadEvent(existingMessage));
+                    break;
+                default:
+                    message.setSeen(RealmUtils.hasMessage(message.getUid())); // so a message we sent is not marked as seen
+                    RealmUtils.saveDataToRealmSync(message);
                     if (isAppIsInBackground(ApplicationLoader.applicationContext) && !phoneNumber.equals(message.getPhoneNumber())) {
-                        relayNotification(bundle);
+                        handleNotification(bundle);
                     } else {
-                        if (!RealmUtils.hasMessage(message.getUid())) {
-                            Log.e(TAG, "new message come in");
-                            EventBus.getDefault().post(new GroupChatEvent(message.getGroupUid(), bundle, message));
-                        }
+                        Log.e(TAG, "received a message, relaying it ...");
+                        EventBus.getDefault().post(new GroupChatEvent(message.getGroupUid(), bundle, message));
                     }
-                }
             }
+
         } catch (JsonSyntaxException e) {
             Log.e(TAG, "syntax exception! " + e.getMessage());
         }

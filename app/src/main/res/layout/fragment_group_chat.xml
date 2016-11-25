@@ -10,11 +10,44 @@
 
     <android.support.v7.widget.RecyclerView
         android:id="@+id/gc_recycler_view"
+        android:visibility="visible"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_above="@+id/chat_entry_layout"
         android:paddingBottom="20dp"
         android:scrollbars="vertical" />
+
+    <TextView
+        android:id="@+id/chat_welcome_message"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        android:layout_above="@+id/chat_welcome_message_body"
+
+        android:textColor="@color/primaryColor"
+        android:textSize="@dimen/txt_large"
+        android:textStyle="bold"
+        android:gravity="center"
+
+        android:paddingBottom="@dimen/padding"
+        android:text="@string/group_chat_empty_title"
+        />
+
+    <TextView
+        android:id="@+id/chat_welcome_message_body"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+
+        android:textColor="@color/primaryColor"
+        android:textSize="@dimen/txt_large"
+        android:layout_centerHorizontal="true"
+        android:layout_centerVertical="true"
+        android:gravity="start"
+
+        android:padding="@dimen/padding"
+        android:text="@string/group_chat_empty_message"
+        />
 
     <LinearLayout
         android:id="@+id/chat_entry_layout"
