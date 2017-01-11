@@ -3,7 +3,6 @@ buildscript {
         maven { url 'https://maven.fabric.io/public' }
         maven { url "https://jitpack.io" }
         maven { url "https://repo.eclipse.org/content/repositories/paho-snapshots/" }
-
     }
 
     dependencies {
@@ -15,7 +14,7 @@ apply plugin: 'io.fabric'
 
 repositories {
     maven { url 'https://maven.fabric.io/public' }
-    maven{ url "https://dl.bintray.com/hani-momanii/maven"}
+    maven { url "https://dl.bintray.com/hani-momanii/maven"}
     maven { url "https://jitpack.io" }
     maven { url "https://repo.eclipse.org/content/repositories/paho-snapshots/" }
 }
@@ -30,7 +29,7 @@ android {
         applicationId "org.grassroot.android"
         minSdkVersion 9
         targetSdkVersion 23
-        versionCode 25
+        versionCode 30
         versionName "1.1"
     }
     buildTypes {
@@ -93,14 +92,19 @@ dependencies {
     compile 'com.google.android.gms:play-services-location:7.5.0'
     compile 'com.squareup.picasso:picasso:2.5.2'
     compile 'com.squareup.okio:okio:1.9.0'
-    compile 'org.eclipse.paho:org.eclipse.paho.client.mqttv3:1.1.0'
-    //requred for image caching
     compile 'com.jakewharton.picasso:picasso2-okhttp3-downloader:1.0.2'
-    compile('org.eclipse.paho:org.eclipse.paho.android.service:1.0.3-SNAPSHOT') { exclude module: 'support-v4' }
+
     compile 'io.reactivex:rxandroid:1.2.1'
     compile 'io.reactivex:rxjava:1.1.7'
     compile 'hani.momanii.supernova_emoji_library:supernova-emoji-library:0.0.2'
     compile('com.crashlytics.sdk.android:crashlytics:2.6.2@aar') {
         transitive = true;
+    }
+
+    // compile 'org.eclipse.paho:org.eclipse.paho.client.mqttv3:1.1.1-SNAPSHOT'
+    // compile('org.eclipse.paho:org.eclipse.paho.android.service:1.1.1-SNAPSHOT') { exclude module: 'support-v4' }
+
+    compile (project(':org.eclipse.paho.android.service')) {
+        exclude module: 'org.eclipse.paho.client.mqttv3'
     }
 }

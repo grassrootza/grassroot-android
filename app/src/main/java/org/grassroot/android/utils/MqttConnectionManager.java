@@ -16,6 +16,7 @@ import org.eclipse.paho.client.mqttv3.MqttCallback;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
+import org.grassroot.android.events.GroupChatErrorEvent;
 import org.grassroot.android.events.GroupChatEvent;
 import org.grassroot.android.events.GroupChatMessageReadEvent;
 import org.grassroot.android.interfaces.GroupConstants;
@@ -23,6 +24,8 @@ import org.grassroot.android.interfaces.NotificationConstants;
 import org.grassroot.android.models.Group;
 import org.grassroot.android.models.Message;
 import org.grassroot.android.models.RealmString;
+import org.grassroot.android.models.exceptions.ApiCallException;
+import org.grassroot.android.models.exceptions.GroupChatException;
 import org.grassroot.android.services.ApplicationLoader;
 import org.greenrobot.eventbus.EventBus;
 
@@ -31,6 +34,10 @@ import java.util.Arrays;
 import java.util.List;
 
 import io.realm.RealmList;
+import rx.Observable;
+import rx.Subscriber;
+import rx.android.schedulers.AndroidSchedulers;
+import rx.schedulers.Schedulers;
 
 import static org.grassroot.android.services.ApplicationLoader.isAppIsInBackground;
 import static org.grassroot.android.services.GcmListenerService.handleNotification;
@@ -45,19 +52,17 @@ public class MqttConnectionManager implements IMqttActionListener, MqttCallback 
 
     private static MqttConnectionManager instance = null;
 
-    private MqqtConnectionStatus mqqtConnectionStatus = MqqtConnectionStatus.NONE;
-    private MqttAndroidClient mqttAndroidClient = null;
-    private Gson gson;
-    private String brokerUrl = Constant.brokerUrl;
+    private static final String CONNECTED = "connected";
+    private static final String ERROR = "error";
+    private static final String DISCONNECTED = "disconnected";
 
-    public enum MqqtConnectionStatus {
-        CONNECTING,
-        CONNECTED,
-        DISCONNECTING,
-        DISCONNECTED,
-        ERROR,
-        NONE
-    }
+    public static final String CHAT_SENT = "chat_sent";
+
+    private Gson gson;
+    private String mqqtConnectionStatus;
+    private MqttAndroidClient mqttAndroidClient;
+
+    private static final String brokerUrl = Constant.brokerUrl;
 
     private MqttConnectionManager() {
         GsonBuilder builder = new GsonBuilder();
@@ -72,57 +77,69 @@ public class MqttConnectionManager implements IMqttActionListener, MqttCallback 
     }
 
     public static MqttConnectionManager getInstance() {
-        if (instance == null) {
-            instance = new MqttConnectionManager();
+        MqttConnectionManager methodInstance = instance;
+        if (methodInstance == null) {
+            synchronized (MqttConnectionManager.class) {
+                methodInstance = instance;
+                if (methodInstance == null) {
+                    instance = methodInstance = new MqttConnectionManager();
+                }
+            }
         }
-        return instance;
+        return methodInstance;
     }
 
     public boolean isConnected() {
-        return mqttAndroidClient != null && mqttAndroidClient.isConnected();
+        return CONNECTED.equals(mqqtConnectionStatus) || (mqttAndroidClient != null && mqttAndroidClient.isConnected());
     }
 
-    public MqqtConnectionStatus getMqqtConnectionStatus() {
+    public String getMqqtConnectionStatus() {
         return mqqtConnectionStatus;
     }
 
     public void connect() {
-        Log.d(TAG, "connecting to mqtt broker at address: " + brokerUrl);
+        Log.e(TAG, "connecting to mqtt broker at address: " + brokerUrl);
 
         final MqttConnectOptions options = new MqttConnectOptions();
         final String clientId = RealmUtils.loadPreferencesFromDB().getMobileNumber();
         options.setCleanSession(false);
         options.setKeepAliveInterval(240);
-        options.setConnectionTimeout(240);
+        options.setConnectionTimeout(30);
         options.setAutomaticReconnect(true);
 
         try {
+            Log.e(TAG, "trying to connect ...");
             if (mqttAndroidClient == null) {
                 mqttAndroidClient = new MqttAndroidClient(ApplicationLoader.applicationContext,
                         brokerUrl, clientId);
             }
 
+            Log.e(TAG, "set up client");
+
             mqttAndroidClient.setCallback(this);
             if (!mqttAndroidClient.isConnected()) {
-                IMqttToken token = mqttAndroidClient.connect(options);
-                token.setActionCallback(new IMqttActionListener() {
+                Log.e(TAG, "not connected, trying to connect ...");
+                mqttAndroidClient.connect(options, null, new IMqttActionListener() {
                     @Override
                     public void onSuccess(IMqttToken asyncActionToken) {
-                        mqqtConnectionStatus = MqqtConnectionStatus.CONNECTED;
+                        Log.e(TAG, "success in mqtt connection");
+                        mqqtConnectionStatus = CONNECTED;
                         subscribeToAllGroups();
                         subscribeToUserTopic();
                     }
 
                     @Override
                     public void onFailure(IMqttToken asyncActionToken, Throwable exception) {
-                        mqqtConnectionStatus = MqqtConnectionStatus.ERROR;
-                        Log.e(TAG, "Failure connecting! : " + exception.toString());
+                        Log.e(TAG, "back in onfailure event ... calling handleFailure");
+                        mqqtConnectionStatus = ERROR;
+                        handleFailure(GroupChatErrorEvent.CONNECT_ERROR, asyncActionToken, exception);
                     }
                 });
             }
-
         } catch (MqttException e) {
             Log.e(TAG, e.getMessage());
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
@@ -133,6 +150,8 @@ public class MqttConnectionManager implements IMqttActionListener, MqttCallback 
                 mqttAndroidClient = null;
             } catch (MqttException e) {
                 Log.e(TAG, e.getMessage());
+            } catch (Exception e) {
+                e.printStackTrace();
             }
         }
     }
@@ -170,6 +189,8 @@ public class MqttConnectionManager implements IMqttActionListener, MqttCallback 
                 token.setActionCallback(this);
             } catch (MqttException e) {
                 Log.e(TAG, e.getMessage());
+            } catch (Exception e) {
+                e.printStackTrace();
             }
         }
     }
@@ -181,6 +202,8 @@ public class MqttConnectionManager implements IMqttActionListener, MqttCallback 
                 token.setActionCallback(this);
             } catch (MqttException e) {
                 Log.e(TAG, e.getMessage());
+            } catch (Exception e) {
+                e.printStackTrace();
             }
         }
     }
@@ -199,34 +222,62 @@ public class MqttConnectionManager implements IMqttActionListener, MqttCallback 
 
                     @Override
                     public void onFailure(IMqttToken asyncActionToken, Throwable exception) {
-                        Log.e(TAG, "error in unsubscribing! disconnecting anyway");
                         disconnect();
                     }
                 });
             } catch (MqttException e) {
                 disconnect();
                 Log.e(TAG, e.getMessage());
+            } catch (Exception e) {
+                e.printStackTrace();
             }
         }
     }
 
-    public void sendMessage(String topic, Message message) {
-        try {
-            Log.d(TAG, "publishing to topic " + topic);
-            String jsonMessage = gson.toJson(message);
-            MqttMessage mqttMessage = new MqttMessage(jsonMessage.getBytes());
-            mqttMessage.setRetained(false);
-            mqttMessage.setQos(1);
-            IMqttToken token = mqttAndroidClient.publish(topic, mqttMessage);
-            token.setActionCallback(this);
-        } catch (MqttException e) {
-            Log.e(TAG, e.getMessage());
-        }
+    public Observable<String> sendMessageInBackground(final Message message) {
+        return Observable.create(new Observable.OnSubscribe<String>() {
+            @Override
+            public void call(final Subscriber<? super String> subscriber) {
+                if (!NetworkUtils.isOnline()) {
+                    throw new ApiCallException(NetworkUtils.CONNECT_ERROR);
+                } else {
+                    final String topic = isCommand(message) ? "Grassroot" : message.getGroupUid();
+                    Log.d(TAG, "publishing to topic " + topic);
+                    String jsonMessage = gson.toJson(message);
+                    MqttMessage mqttMessage = new MqttMessage(jsonMessage.getBytes());
+                    mqttMessage.setRetained(false);
+                    mqttMessage.setQos(1);
+                    try {
+                        mqttAndroidClient.publish(topic, mqttMessage, null, new IMqttActionListener() {
+                            @Override
+                            public void onSuccess(IMqttToken asyncActionToken) {
+                                subscriber.onNext(CHAT_SENT);
+                            }
+
+                            // note : as currently implemented, this returns with no real information, hence handle in broadcast receiver
+                            @Override
+                            public void onFailure(IMqttToken asyncActionToken, Throwable exception) {
+                                Log.e(TAG, "error inside send message token");
+                                subscriber.onError(new GroupChatException(GroupChatException.MQTT_EXCEPTION, NetworkUtils.CONNECT_ERROR));
+                            }
+                        });
+                    } catch (MqttException e) {
+                        throw new GroupChatException(GroupChatException.MQTT_EXCEPTION, e.getMessage());
+                    } catch (Exception e) {
+                        throw new GroupChatException(GroupChatException.MISC_EXCEPTION, e.getMessage());
+                    }
+                }
+            }
+        }).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread());
+    }
+
+    private static boolean isCommand(Message message){
+        return message.getText().startsWith("/");
     }
 
     @Override
     public void connectionLost(Throwable cause) {
-        mqqtConnectionStatus = MqqtConnectionStatus.DISCONNECTED;
+        mqqtConnectionStatus = DISCONNECTED;
         Log.d(TAG, "Disconnected from mqtt broker");
 
     }
@@ -264,9 +315,10 @@ public class MqttConnectionManager implements IMqttActionListener, MqttCallback 
                         EventBus.getDefault().post(new GroupChatEvent(message.getGroupUid(), bundle, message));
                     }
             }
-
         } catch (JsonSyntaxException e) {
             Log.e(TAG, "syntax exception! " + e.getMessage());
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
@@ -279,9 +331,10 @@ public class MqttConnectionManager implements IMqttActionListener, MqttCallback 
             RealmUtils.saveDataToRealmSync(message);
             EventBus.getDefault().post(new GroupChatEvent(message.getGroupUid(),
                     createBundleFromMessage(message), message));
-
         } catch (MqttException e) {
             Log.e(TAG, e.getMessage());
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
@@ -302,14 +355,20 @@ public class MqttConnectionManager implements IMqttActionListener, MqttCallback 
 
     @Override
     public void onSuccess(IMqttToken asyncActionToken) {
-        mqqtConnectionStatus = MqqtConnectionStatus.CONNECTED;
-        Log.d(TAG, mqqtConnectionStatus.toString());
+        mqqtConnectionStatus = CONNECTED;
     }
 
     @Override
     public void onFailure(IMqttToken asyncActionToken, Throwable exception) {
-        Log.e(TAG, "error connecting: " + exception.toString());
-        mqqtConnectionStatus = MqqtConnectionStatus.ERROR;
+        mqqtConnectionStatus = ERROR;
+        handleFailure(GroupChatErrorEvent.MISC_ERROR, asyncActionToken, exception);
+    }
+
+    private void handleFailure(final String type, IMqttToken asyncActionToken, Throwable exception) {
+        final String description = exception == null ? exception.getMessage() :
+                asyncActionToken != null && asyncActionToken.getException() != null
+                        ? asyncActionToken.getException().getMessage() : "No message included";
+        EventBus.getDefault().post(new GroupChatErrorEvent(type, description));
     }
 
 

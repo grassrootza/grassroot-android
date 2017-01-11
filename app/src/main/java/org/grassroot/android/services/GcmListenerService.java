@@ -397,7 +397,7 @@ public class GcmListenerService extends com.google.android.gms.gcm.GcmListenerSe
         if (clickAction != null && clickAction.equals(TASK_CREATED)) {
             final String groupUid = bundle.getString(GroupConstants.UID_FIELD);
             final String text = bundle.getString(BODY);
-            Message message = new Message(groupUid, UUID.randomUUID().toString(), text);
+            Message message = new Message(groupUid, UUID.randomUUID().toString(), text, null);
             message.setToKeep(true);
             message.setSeen(true);
             RealmUtils.saveDataToRealmSync(message);

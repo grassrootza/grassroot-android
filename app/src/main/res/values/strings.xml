@@ -887,14 +887,19 @@
     <string name="chat_message_sent">Sent. </string>
     <string name="chat_message_delivered">Delivered. </string>
     <string name="chat_message_read">Read.</string>
+    <string name="chat_message_error">Error.</string>
+
     <string name="chat_long_click_options_title">Options</string>
 
     <string name="chat_message_server">Grassroot</string>
+    <string name="chat_error_header">Error</string>
+
     <string name="options_yes">Yes</string>
     <string name="options_no">No</string>
 
     <string name="chat_task_called">Done! %s called</string>
     <string name="chat_task_failure">Sorry, there was an error on the server. Please try again later.</string>
+    <string name="chat_error_connect">Sorry, there\'s a problem connecting to the chat server. Try again?</string>
 
     <string name="no_gcm_message">Sorry, you need Google Play Services installed to use group chat</string>
     <string name="install_gcm">Install Play Services</string>

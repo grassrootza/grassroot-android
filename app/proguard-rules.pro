@@ -27,6 +27,7 @@
 -keep class com.squareup.okhttp.** { *; }
 -keep interface com.squareup.okhttp.** { *; }
 -keep class retrofit2.** { *; }
+-keep class org.eclipse.paho.** { *; }
 
 -keep public class android.support.v7.widget.** { *; }
 -keep public class android.support.v7.internal.widget.** { *; }

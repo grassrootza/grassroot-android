@@ -8,7 +8,6 @@ import com.google.gson.annotations.Expose;
 
 import org.grassroot.android.interfaces.GroupConstants;
 import org.grassroot.android.interfaces.NotificationConstants;
-import org.grassroot.android.services.GroupChatService;
 import org.grassroot.android.utils.Constant;
 import org.grassroot.android.utils.JsonIgnore;
 import org.json.JSONArray;
@@ -84,7 +83,7 @@ public class Message extends RealmObject implements Serializable {
         this.displayName = displayName;
         this.text = text;
         this.time = time;
-        this.type = "normal";
+        this.type = Constant.MSG_NORMAL;
         this.seen=true;
         this.sending = false;
         this.sent = false;
@@ -92,13 +91,13 @@ public class Message extends RealmObject implements Serializable {
         this.server = false;
     }
 
-    public Message(String groupUid, String messageUid, String text) {
+    public Message(String groupUid, String messageUid, String text, String type) {
         this.uid = messageUid;
         this.server = true;
         this.groupUid = groupUid;
         this.text = text;
         this.time = new Date();
-        this.type = "server";
+        this.type = type == null ? Constant.MSG_SERVER : type;
         this.sent = true;
         this.delivered = true;
     }
@@ -262,11 +261,31 @@ public class Message extends RealmObject implements Serializable {
     }
 
     public boolean exceedsMaximumSendingAttempts() {
-        return noAttempts == GroupChatService.MAX_RETRIES;
+        return noAttempts == Constant.MAX_MSG_RETRIES;
     }
 
     public boolean isServerMessage() {
-        return TextUtils.isEmpty(phoneNumber);
+        return TextUtils.isEmpty(phoneNumber) && Constant.MSG_SERVER.equals(type);
+    }
+
+    public boolean isErrorMessage() {
+        return TextUtils.isEmpty(phoneNumber) && Constant.MSG_ERROR.equals(type);
+    }
+
+    public boolean hasCommands() {
+        return tokens != null && tokens.size() > 0;
+    }
+
+    // ignore annotation not working reliably enough, so kludging a bit
+    public void setHasCommands(boolean hasCommands) {
+        if (hasCommands) {
+            if (tokens == null) {
+                tokens = new RealmList<>();
+            }
+            tokens.add(new RealmString("dummy_string"));
+        } else {
+            tokens = null;
+        }
     }
 
     @Override

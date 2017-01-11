@@ -1,14 +1,16 @@
 package org.grassroot.android.fragments;
 
-import android.app.Activity;
 import android.content.ActivityNotFoundException;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.LinearLayoutManager;
@@ -27,9 +29,9 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.GoogleApiAvailability;
-
+import org.eclipse.paho.android.service.MqttServiceConstants;
+import org.eclipse.paho.android.service.Status;
+import org.eclipse.paho.client.mqttv3.MqttException;
 import org.grassroot.android.R;
 import org.grassroot.android.activities.GroupTasksActivity;
 import org.grassroot.android.activities.MultiMessageNotificationActivity;
@@ -49,15 +51,15 @@ import org.grassroot.android.models.PreferenceObject;
 import org.grassroot.android.models.RealmString;
 import org.grassroot.android.models.TaskModel;
 import org.grassroot.android.models.exceptions.ApiCallException;
-import org.grassroot.android.models.exceptions.NoGcmException;
 import org.grassroot.android.models.responses.GroupChatSettingResponse;
 import org.grassroot.android.services.GcmListenerService;
-import org.grassroot.android.services.GroupChatService;
 import org.grassroot.android.services.GroupService;
 import org.grassroot.android.services.SharingService;
 import org.grassroot.android.services.TaskService;
+import org.grassroot.android.utils.Constant;
 import org.grassroot.android.utils.EmojIconMultiAutoCompleteActions;
 import org.grassroot.android.utils.ErrorUtils;
+import org.grassroot.android.utils.MqttConnectionManager;
 import org.grassroot.android.utils.RealmUtils;
 import org.grassroot.android.utils.Utilities;
 import org.greenrobot.eventbus.EventBus;
@@ -79,6 +81,7 @@ import rx.Subscriber;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.functions.Action1;
 
+import static org.eclipse.paho.android.service.MqttServiceConstants.CALLBACK_TO_ACTIVITY;
 import static org.grassroot.android.utils.NetworkUtils.CONNECT_ERROR;
 import static org.grassroot.android.utils.NetworkUtils.ONLINE_DEFAULT;
 import static org.grassroot.android.utils.NetworkUtils.isNetworkAvailable;
@@ -97,6 +100,7 @@ public class GroupChatFragment extends Fragment implements GroupChatAdapter.Grou
     private boolean isMutedReceiving;
     private List<String> mutedUsersUid;
 
+    private BroadcastReceiver mqttReceiver;
     private Unbinder unbinder;
 
     @BindView(R.id.root_view) ViewGroup rootView;
@@ -109,10 +113,10 @@ public class GroupChatFragment extends Fragment implements GroupChatAdapter.Grou
     @BindView(R.id.text_chat) EmojiconMultiAutoCompleteTextView textView;
     @BindView(R.id.btn_send) ImageView sendMessage;
 
-    private boolean isGcmAvailable;
-    private static final int INSTALL_PLAY_SERVICES = 100;
     private static final int SEND_MESSAGE = 200;
     private static final int REFRESH_MSGS = 300;
+
+    private static final String MQTT_ERROR = "ERROR";
 
     private GroupChatAdapter groupChatAdapter;
     private ArrayAdapter<Command> commandsAdapter;
@@ -136,6 +140,7 @@ public class GroupChatFragment extends Fragment implements GroupChatAdapter.Grou
         mutedUsersUid = new ArrayList<>();
 
         loadGroupSettings();
+        registerMqttReceiver();
     }
 
     private void loadGroupSettings() {
@@ -180,9 +185,53 @@ public class GroupChatFragment extends Fragment implements GroupChatAdapter.Grou
     }
 
     @Override
+    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+
+        if (getActivity() instanceof GroupTasksActivity) {
+            GroupTaskMasterFragment masterFragment = (GroupTaskMasterFragment) this.getParentFragment();
+            masterFragment.getRequestPager().addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
+                @Override
+                public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
+                }
+                @Override
+                public void onPageSelected(int position) {
+                    if (position==1) {
+                        final boolean isShowCased = RealmUtils.loadPreferencesFromDB().isGroupChatFragmentShowCased();
+                        if (!isShowCased) {
+                            Log.e(TAG, "this is where we will insert our own view pager with some text");
+                            PreferenceObject preferenceObject = RealmUtils.loadPreferencesFromDB();
+                            preferenceObject.setGroupChatFragmentShowCased(true);
+                            RealmUtils.saveDataToRealmSync(preferenceObject);
+                        }
+                        notifyGroupMessagesAsRead(groupUid);
+                    }
+                }
+                @Override
+                public void onPageScrollStateChanged(int state) {
+
+                }
+            });
+        }
+    }
+
+    @Override
     public void onResume() {
         super.onResume();
         GcmListenerService.clearGroupsChatNotifications(groupUid);
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        unbinder.unbind();
+        EventBus.getDefault().unregister(this);
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        LocalBroadcastManager.getInstance(getContext()).unregisterReceiver(mqttReceiver);
     }
 
     private void setView() {
@@ -224,54 +273,51 @@ public class GroupChatFragment extends Fragment implements GroupChatAdapter.Grou
         }
     }
 
-    @Override
-    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
-        super.onActivityCreated(savedInstanceState);
-        if (getActivity() instanceof GroupTasksActivity) {
-            GroupTaskMasterFragment masterFragment = (GroupTaskMasterFragment) this.getParentFragment();
-            masterFragment.getRequestPager().addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
-                @Override
-                public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
-                }
-                @Override
-                public void onPageSelected(int position) {
-                    if (position==1) {
-                        final boolean isShowCased = RealmUtils.loadPreferencesFromDB().isGroupChatFragmentShowCased();
-                        if (!isShowCased) {
-                            Log.e(TAG, "this is where we will insert our own view pager with some text");
-                            PreferenceObject preferenceObject = RealmUtils.loadPreferencesFromDB();
-                            preferenceObject.setGroupChatFragmentShowCased(true);
-                            RealmUtils.saveDataToRealmSync(preferenceObject);
-                        }
-                        notifyGroupMessagesAsRead(groupUid);
+    private void registerMqttReceiver() {
+        IntentFilter intentFilter = new IntentFilter(CALLBACK_TO_ACTIVITY);
+        mqttReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                Bundle b = intent.getExtras();
+                Log.e(TAG, "mqtt broadcast: " + b.toString());
+                handleMessageResult(b);
+            }
+        };
+
+        LocalBroadcastManager.getInstance(getContext()).registerReceiver(mqttReceiver, intentFilter);
+    }
+
+    private void handleMessageResult(Bundle resultBundle) {
+        final String notConnected = "not connected";
+        if (resultBundle != null) {
+            final String callbackAction = resultBundle.getString(MqttServiceConstants.CALLBACK_ACTION);
+            if (MqttServiceConstants.SEND_ACTION.equals(callbackAction)) {
+                if (Status.ERROR.equals(resultBundle.get(MqttServiceConstants.CALLBACK_STATUS))) {
+                    final String errorMessage = resultBundle.getString(MqttServiceConstants.CALLBACK_ERROR_MESSAGE);
+                    if (notConnected.equals(errorMessage)) {
+                        showErrorMessage(getString(R.string.chat_error_connect), true);
                     }
                 }
-                @Override
-                public void onPageScrollStateChanged(int state) {
-
+            } else {
+                if (resultBundle.containsKey(MqttServiceConstants.CALLBACK_EXCEPTION)) {
+                    MqttException exception = (MqttException) resultBundle.getSerializable(MqttServiceConstants.CALLBACK_EXCEPTION);
+                    Log.e(TAG, "have an error exception: " + exception.toString());
+                    showErrorMessage(exception.toString(), false);
                 }
-            });
-        }
-
-    }
-
-    @Override
-    public void setUserVisibleHint(boolean isVisibleToUser) {
-        super.setUserVisibleHint(isVisibleToUser);
-        if (isVisibleToUser) {
-            checkForGcm();
+            }
         }
     }
 
-    private void checkForGcm() {
-        int gcmAvailability = GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(getContext());
-        if (gcmAvailability != ConnectionResult.SUCCESS) {
-            GoogleApiAvailability.getInstance().getErrorDialog(getActivity(), gcmAvailability, INSTALL_PLAY_SERVICES).show();
-            isGcmAvailable = false;
-            textView.setEnabled(false);
-        } else {
-            isGcmAvailable = true;
+    private void showErrorMessage(String message, boolean showButtons) {
+        Log.e(TAG, "showing an error message: " + message);
+        Message errorMsg = new Message(groupUid, UUID.randomUUID().toString(), message, Constant.MSG_ERROR);
+        errorMsg.setDelivered(false);
+        errorMsg.setSent(false);
+        if (showButtons) {
+            errorMsg.setHasCommands(true);
         }
+        groupChatAdapter.addMessage(errorMsg);
+        chatMessageView.smoothScrollToPosition(groupChatAdapter.getItemCount());
     }
 
     private void showNetworkDialog(final int originatingAction, final String auxText, final String msgUid) {
@@ -294,19 +340,6 @@ public class GroupChatFragment extends Fragment implements GroupChatAdapter.Grou
                     }
                 }
             }).build().show(getFragmentManager(), "network");
-    }
-
-    @Override
-    public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (requestCode == INSTALL_PLAY_SERVICES) {
-            if (resultCode == Activity.RESULT_OK) {
-                isGcmAvailable = true;
-                textView.setEnabled(true);
-            } else {
-                isGcmAvailable = false;
-                textView.setEnabled(false);
-            }
-        }
     }
 
     @Override
@@ -339,14 +372,17 @@ public class GroupChatFragment extends Fragment implements GroupChatAdapter.Grou
 
     @OnClick(R.id.btn_send)
     public void sendMessage() {
-        if (!TextUtils.isEmpty(textView.getText()) && isGcmAvailable && isNetworkAvailable(getContext()) ) {
-            sendMessageInBackground(textView.getText().toString(), null);
-            textView.setText(""); //clear text
-            textView.requestFocus();
-            InputMethodManager imm = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
-            imm.hideSoftInputFromWindow(getActivity().getCurrentFocus().getWindowToken(), 0);
-        } else {
-            checkForGcm();
+        try {
+            if (!TextUtils.isEmpty(textView.getText()) && isNetworkAvailable(getContext())) {
+                sendMessageInBackground(textView.getText().toString(), null);
+                textView.setText(""); //clear text
+                textView.requestFocus();
+                InputMethodManager imm = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
+                imm.hideSoftInputFromWindow(getActivity().getCurrentFocus().getWindowToken(), 0);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            Log.e(TAG, "error!");
         }
     }
 
@@ -360,10 +396,14 @@ public class GroupChatFragment extends Fragment implements GroupChatAdapter.Grou
             switchOffIntroText();
             message.setSending(true);
             RealmUtils.saveDataToRealmSync(message);
-            groupChatAdapter.addOrUpdateMessage(message);
-            chatMessageView.smoothScrollToPosition(groupChatAdapter.getItemCount());
 
-            GroupChatService.getInstance().sendMessageViaMQTT(message).subscribe(new Action1<String>() {
+            if (groupChatAdapter != null) {
+                groupChatAdapter.addOrUpdateMessage(message);
+                chatMessageView.smoothScrollToPosition(groupChatAdapter.getItemCount());
+            }
+
+            try {
+                MqttConnectionManager.getInstance().sendMessageInBackground(message).subscribe(new Action1<String>() {
                     @Override
                     public void call(String s) {
                         Log.e(TAG, "message sent succesfully via MQTT");
@@ -379,13 +419,15 @@ public class GroupChatFragment extends Fragment implements GroupChatAdapter.Grou
                         }
                     }
                 });
+            } catch (Exception e) {
+                Log.e(TAG, "Paho NPE strikes again");
+                e.printStackTrace();
+            }
         }
     }
 
     private void handleMessageSendingError(Throwable e, String msgText, String msgUid) {
-        if (e instanceof NoGcmException) {
-            checkForGcm();
-        } else if (e instanceof ApiCallException) {
+        if (e instanceof ApiCallException) {
             if (e.getMessage().equals(CONNECT_ERROR)) {
                 showNetworkDialog(SEND_MESSAGE, msgText, msgUid);
             } else {
@@ -442,13 +484,6 @@ public class GroupChatFragment extends Fragment implements GroupChatAdapter.Grou
                 }
             }));
         }
-    }
-
-    @Override
-    public void onDestroyView() {
-        super.onDestroyView();
-        unbinder.unbind();
-        EventBus.getDefault().unregister(this);
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
@@ -529,7 +564,7 @@ public class GroupChatFragment extends Fragment implements GroupChatAdapter.Grou
                         TaskConstants.VOTE.equals(taskModel.getType()) ? getString(R.string.chat_calling_vote) :
                             TaskConstants.TODO.equals(taskModel.getType()) ? getString(R.string.chat_recording_action)
                                 : getString(R.string.chat_calling_task);
-                    Message placeHolder = new Message(groupUid, message.getUid(), text);
+                    Message placeHolder = new Message(groupUid, message.getUid(), text, null);
                     placeHolder.setToKeep(false);
                     RealmUtils.saveDataToRealmSync(placeHolder);
                     groupChatAdapter.updateMessage(placeHolder);

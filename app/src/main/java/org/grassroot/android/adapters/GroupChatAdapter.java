@@ -15,6 +15,7 @@ import org.grassroot.android.R;
 import org.grassroot.android.fragments.GroupChatFragment;
 import org.grassroot.android.models.Message;
 import org.grassroot.android.services.ApplicationLoader;
+import org.grassroot.android.utils.MqttConnectionManager;
 import org.grassroot.android.utils.RealmUtils;
 
 import java.text.SimpleDateFormat;
@@ -43,12 +44,16 @@ public class GroupChatAdapter extends RecyclerView.Adapter<GroupChatAdapter.GCVi
     public final static int SELF = 100;
     public final static int OTHER = 200;
     public final static int SERVER = 300;
+    public final static int ERROR = 400;
 
     private final String deliveredSub;
     private final String sentSub;
     private final String sendingSub;
     private final String notSentSub;
     private final String readSub;
+    private final String errorSub;
+
+    private final String waitMsg;
 
     private final String thisPhoneNumber;
 
@@ -66,6 +71,9 @@ public class GroupChatAdapter extends RecyclerView.Adapter<GroupChatAdapter.GCVi
         sendingSub = context.getString(R.string.chat_message_sending);
         notSentSub = context.getString(R.string.chat_message_not_sent);
         readSub = context.getString(R.string.chat_message_read);
+        errorSub = context.getString(R.string.chat_message_error);
+
+        waitMsg = context.getString(R.string.wait_message);
 
         thisPhoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
 
@@ -109,11 +117,18 @@ public class GroupChatAdapter extends RecyclerView.Adapter<GroupChatAdapter.GCVi
                 final boolean validCommand = message.getTokens() != null && message.getTokens().size() > 0;
                 handleServerMessageBtns(holder, validCommand, message);
                 break;
+            case ERROR:
+                holder.user.setText(context.getString(R.string.chat_error_header));
+                holder.user.setVisibility(View.VISIBLE);
+                if (message.hasCommands()) {
+                    handleErrorMessageBtns(holder, message);
+                }
             case SELF:
                 final String subtitle = message.isRead() ? readSub
                         : message.isDelivered() ? deliveredSub
                         : message.isSent() ? sentSub
                         : message.isSending() ? sendingSub
+                        : message.isErrorMessage() ? errorSub
                         : message.exceedsMaximumSendingAttempts() ? notSentSub : "";
                 holder.timestamp.setText(subtitle.concat(time));
                 break;
@@ -214,6 +229,8 @@ public class GroupChatAdapter extends RecyclerView.Adapter<GroupChatAdapter.GCVi
         Message message = messages.get(position);
         if (message != null && message.isServerMessage()) {
             return SERVER;
+        } else if (message != null && message.isErrorMessage()) {
+            return ERROR;
         } else if (message != null && !message.getPhoneNumber().equals(thisPhoneNumber)) {
             return OTHER;
         } else {
@@ -226,7 +243,6 @@ public class GroupChatAdapter extends RecyclerView.Adapter<GroupChatAdapter.GCVi
     }
 
     private void handleServerMessageBtns(GCViewHolder holder, boolean buttonsVisible, final Message message) {
-
         if (buttonsVisible && holder.bt_yes != null && holder.bt_no != null) {
             holder.bt_yes.setVisibility(View.VISIBLE);
             holder.bt_no.setVisibility(View.VISIBLE);
@@ -254,6 +270,33 @@ public class GroupChatAdapter extends RecyclerView.Adapter<GroupChatAdapter.GCVi
                 holder.bt_no.setVisibility(View.GONE);
             }
         }
+    }
+
+    private void handleErrorMessageBtns(final GCViewHolder holder, final Message message) {
+        if (holder.bt_yes != null && holder.bt_no != null) {
+            holder.bt_yes.setVisibility(View.VISIBLE);
+            holder.bt_no.setVisibility(View.VISIBLE);
+
+            holder.bt_no.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    reloadFromdb(message.getGroupUid());
+                }
+            });
+
+            holder.bt_yes.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    MqttConnectionManager.getInstance().connect();
+                    holder.bt_yes.setVisibility(View.GONE);
+                    holder.bt_no.setVisibility(View.GONE);
+                    holder.message.setText(waitMsg);
+                    message.setHasCommands(false);
+                    message.setText(waitMsg);
+                }
+            });
+        }
+
     }
 
     class GCViewHolder extends RecyclerView.ViewHolder {

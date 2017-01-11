@@ -18,6 +18,7 @@ public class Constant {
     public static long serverSyncDelay = 3000L; // leave a decent margin (but also get optimistic locking more robust on server)
 
     public static final SimpleDateFormat isoDateTimeSDF = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+    public  final static int MAX_MSG_RETRIES = 3;
 
     private static final String productionUrl = ApplicationLoader.applicationContext
         .getString(R.string.production_url);
@@ -69,6 +70,14 @@ public class Constant {
     public static final String SUCCESS_MESSAGE = "success_message";
     public static final String TITLE = "title";
     public static final String BODY = "body";
+
+    /*
+     * CONSTANTS FOR MESSAGE TYPES
+     */
+
+    public static final String MSG_SERVER = "server";
+    public static final String MSG_ERROR = "local_error";
+    public static final String MSG_NORMAL = "normal";
 
 
 }
