@@ -20,6 +20,7 @@ import org.grassroot.android.models.Permission;
 import org.grassroot.android.models.RealmString;
 import org.grassroot.android.models.ResponseTotalsModel;
 import org.grassroot.android.models.RsvpListModel;
+import org.grassroot.android.models.responses.AccountResponse;
 import org.grassroot.android.models.responses.GenericResponse;
 import org.grassroot.android.models.responses.GroupChatSettingResponse;
 import org.grassroot.android.models.responses.GroupResponse;
@@ -539,6 +540,13 @@ public class GrassrootRestService {
     Call<GenericResponse> changeMemberRole(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
                                            @Query("groupUid") String groupUid, @Query("memberUid") String memberUid,
                                            @Query("roleName") String newRole);
+
+    /*
+    SECTION: Grassroot Extra settings, notifications, etc
+     */
+    @GET("extra/settings/fetch/{phoneNumber}/{code}")
+    Call<AccountResponse> getGrassrootExtraSettings(@Path("phoneNumber") String phoneNumber,
+                                                    @Path("code") String code);
 
   }
 }

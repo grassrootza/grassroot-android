@@ -66,7 +66,6 @@
             </intent-filter>
         </receiver>
 
-
         <service android:name=".services.GcmRegistrationService" />
 
         <service
@@ -287,6 +286,25 @@
         </activity>
 
         <activity android:name=".activities.GroupAvatarActivity" />
+
+        <activity
+            android:name=".activities.GrassrootExtraActivity"
+            android:label="@string/title_activity_grassroot_extra"
+            android:parentActivityName=".activities.HomeScreenActivity">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".activities.HomeScreenActivity" />
+        </activity>
+
+        <activity
+            android:name=".activities.AccountSignupActivity"
+            android:label="@string/title_activity_grassroot_extra"
+            android:windowSoftInputMode="stateAlwaysVisible|adjustResize"
+            android:parentActivityName=".activities.HomeScreenActivity">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".activities.HomeScreenActivity" />
+        </activity>
 
         <service
             android:name=".services.SyncService"

@@ -1,0 +1,136 @@
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/white">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingLeft="@dimen/padding"
+        android:paddingRight="@dimen/padding"
+        android:layout_marginLeft="@dimen/margin_large"
+        android:layout_marginStart="@dimen/margin_large">
+
+        <TextView
+            android:id="@+id/header"
+            style="@style/LargeHeader"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingLeft="@dimen/padding_small"
+            android:paddingRight="@dimen/padding_small"
+            android:layout_marginTop="@dimen/margin_xxlarge"
+            android:layout_alignParentTop="true"
+            android:text="@string/account_type_header"/>
+
+        <RadioButton
+            android:id="@+id/actype_standard_radio"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/header"
+            android:layout_marginTop="@dimen/margin_xxlarge"
+            android:layout_marginRight="@dimen/margin_medium"
+            android:layout_marginEnd="@dimen/margin_medium"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true"/>
+
+        <TextView
+            android:id="@+id/actype_standard_header"
+            style="@style/BoldHeader"
+            android:layout_toRightOf="@id/actype_standard_radio"
+            android:layout_toEndOf="@id/actype_standard_radio"
+            android:layout_marginTop="@dimen/margin_xxlarge"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/header"
+            android:text="@string/account_std_title" />
+
+        <TextView
+            android:id="@+id/actype_standard_body"
+            android:layout_below="@id/actype_standard_header"
+            android:layout_toRightOf="@id/actype_standard_radio"
+            android:layout_toEndOf="@id/actype_standard_radio"
+            android:layout_marginTop="@dimen/margin_small"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/account_std_body"/>
+
+        <RadioButton
+            android:id="@+id/actype_light_radio"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/actype_standard_body"
+            android:layout_marginTop="@dimen/margin_xlarge"
+            android:layout_marginRight="@dimen/margin_medium"
+            android:layout_marginEnd="@dimen/margin_medium"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true"/>
+
+        <TextView
+            android:id="@+id/actype_light_header"
+            style="@style/BoldHeader"
+            android:layout_toRightOf="@id/actype_light_radio"
+            android:layout_toEndOf="@id/actype_light_radio"
+            android:layout_marginTop="@dimen/margin_xlarge"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/actype_standard_body"
+            android:text="@string/account_light_title" />
+
+        <TextView
+            android:id="@+id/actype_light_body"
+            android:layout_below="@id/actype_light_header"
+            android:layout_toRightOf="@id/actype_light_radio"
+            android:layout_toEndOf="@id/actype_light_radio"
+            android:layout_marginTop="@dimen/margin_small"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/account_light_body"/>
+
+        <RadioButton
+            android:id="@+id/actype_heavy_radio"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/actype_light_body"
+            android:layout_marginTop="@dimen/margin_xlarge"
+            android:layout_marginRight="@dimen/margin_medium"
+            android:layout_marginEnd="@dimen/margin_medium"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true"/>
+
+        <TextView
+            android:id="@+id/actype_heavy_header"
+            style="@style/BoldHeader"
+            android:layout_toRightOf="@id/actype_heavy_radio"
+            android:layout_toEndOf="@id/actype_heavy_radio"
+            android:layout_marginTop="@dimen/margin_xlarge"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/actype_light_body"
+            android:text="@string/account_heavy_title" />
+
+        <TextView
+            android:id="@+id/actype_heavy_body"
+            android:layout_below="@id/actype_heavy_header"
+            android:layout_toRightOf="@id/actype_heavy_radio"
+            android:layout_toEndOf="@id/actype_heavy_radio"
+            android:layout_marginTop="@dimen/margin_small"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/account_heavy_body"/>
+
+
+        <Button
+            android:id="@+id/next"
+            android:layout_below="@id/actype_heavy_body"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="@color/white"
+            android:background="@drawable/buttonrounded_corner"
+            android:layout_marginTop="@dimen/margin_xxlarge"
+            android:layout_marginBottom="@dimen/margin_xxlarge"
+            android:text="@string/bt_next"
+            android:textSize="@dimen/txt_xlarge" />
+
+    </RelativeLayout>
+
+</ScrollView>

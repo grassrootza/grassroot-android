@@ -40,6 +40,7 @@ public class GiantMessageFragment extends Fragment {
 	private String bodyText;
 	private boolean btnOneVisible;
 	private boolean btnTwoVisible;
+	private boolean homeBtnVisible = true;
 
 	private int btnOneLabelRes;
 	private View.OnClickListener btnOneListener;
@@ -57,6 +58,8 @@ public class GiantMessageFragment extends Fragment {
 		private View.OnClickListener btnOneListener;
 		private int btnTwoLabelRes;
 		private View.OnClickListener btnTwoListener;
+
+		private boolean showHomeButton = true;
 
 		public Builder(int headerRes) {
 			this.headerRes = headerRes;
@@ -81,6 +84,11 @@ public class GiantMessageFragment extends Fragment {
 			return this;
 		}
 
+		public Builder showHomeButton(boolean showHomeButton) {
+			this.showHomeButton = showHomeButton;
+			return this;
+		}
+
 		public GiantMessageFragment build() {
 			return GiantMessageFragment.newInstance(this);
 		}
@@ -99,6 +107,8 @@ public class GiantMessageFragment extends Fragment {
 		fragment.btnTwoVisible = builder.btnTwoVisible;
 		fragment.btnTwoLabelRes = builder.btnTwoLabelRes;
 		fragment.btnTwoListener = builder.btnTwoListener;
+
+		fragment.homeBtnVisible = builder.showHomeButton;
 
 		return fragment;
 	}
@@ -132,17 +142,20 @@ public class GiantMessageFragment extends Fragment {
 			button2.setVisibility(View.GONE);
 		}
 
-		homeButton.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View v) {
-				boolean hasGroups = RealmUtils.loadPreferencesFromDB().isHasGroups();
-				Log.d(TAG, "going home ... has groups set to ... " + hasGroups);
-				Intent i = RealmUtils.loadPreferencesFromDB().isHasGroups() ?
-						new Intent(getActivity(), HomeScreenActivity.class) : new Intent(getActivity(), NoGroupWelcomeActivity.class);
-				startActivity(i);
-				getActivity().finish();
-			}
-		});
+		if (homeBtnVisible) {
+			homeButton.setOnClickListener(new View.OnClickListener() {
+				@Override
+				public void onClick(View v) {
+					boolean hasGroups = RealmUtils.loadPreferencesFromDB().isHasGroups();
+					Log.d(TAG, "going home ... has groups set to ... " + hasGroups);
+					Intent i = RealmUtils.loadPreferencesFromDB().isHasGroups() ?
+							new Intent(getActivity(), HomeScreenActivity.class) : new Intent(getActivity(), NoGroupWelcomeActivity.class);
+					startActivity(i);
+					getActivity().finish();
+				}
+			});
+		}
+		homeButton.setVisibility(homeBtnVisible ? View.VISIBLE : View.GONE);
 
 		return viewToReturn;
 	}

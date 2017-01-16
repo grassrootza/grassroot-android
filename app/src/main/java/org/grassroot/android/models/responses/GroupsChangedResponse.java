@@ -11,8 +11,8 @@ import io.realm.RealmObject;
  */
 public class GroupsChangedResponse extends RealmObject {
 
-    RealmList<Group> addedAndUpdated = new RealmList<>();
-    RealmList<RealmString> removedUids = new RealmList<>();
+    private RealmList<Group> addedAndUpdated = new RealmList<>();
+    private RealmList<RealmString> removedUids = new RealmList<>();
 
     public GroupsChangedResponse() {
 

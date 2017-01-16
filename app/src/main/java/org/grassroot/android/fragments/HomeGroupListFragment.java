@@ -114,8 +114,7 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                                       Bundle savedInstanceState) {
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 
         View view = inflater.inflate(R.layout.activity_group__homepage, container, false);
         unbinder = ButterKnife.bind(this, view);

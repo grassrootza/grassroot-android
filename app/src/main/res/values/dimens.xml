@@ -16,6 +16,8 @@
     <dimen name="margin_medium">6dp</dimen>
     <dimen name="margin_small">4dp</dimen>
 
+    <dimen name="margin_centering">144dp</dimen>
+
     <dimen name="txt_xsmall">11sp</dimen>
     <dimen name="txt_small">13sp</dimen>
     <dimen name="txt_medium">15sp</dimen>
@@ -46,6 +48,7 @@
     <dimen name="group_avatar_giant_margin">38dp</dimen>
     <dimen name="group_avatar_arrow">72dp</dimen>
 
+    <dimen name="expanded_title_height">72dp</dimen>
     <dimen name="expanded_title_margin_top">48dp</dimen>
     <dimen name="expanded_title_margin_bottom">12dp</dimen>
     <dimen name="thin_separator_height">1dp</dimen>

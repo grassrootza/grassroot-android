@@ -20,6 +20,7 @@ import android.widget.Toast;
 
 import org.grassroot.android.R;
 import org.grassroot.android.activities.FAQActivity;
+import org.grassroot.android.activities.GrassrootExtraActivity;
 import org.grassroot.android.activities.GroupSearchActivity;
 import org.grassroot.android.activities.ProfileSettingsActivity;
 import org.grassroot.android.activities.StartActivity;
@@ -72,6 +73,7 @@ public class NavigationDrawerFragment extends Fragment implements NavigationDraw
     private static final String ITEM_NOTIFICATIONS = NavigationConstants.ITEM_NOTIFICATIONS;
     private static final String ITEM_JOIN_REQS = NavigationConstants.ITEM_JOIN_REQS;
 
+    public static final String ITEM_GRASSROOT_EXTRA = "grassroot_extra";
     public static final String ITEM_FIND_GROUPS = "find_groups";
     public static final String ITEM_OFFLINE = "offline_online";
     public static final String ITEM_PROFILE = "profile_settings";
@@ -219,10 +221,13 @@ public class NavigationDrawerFragment extends Fragment implements NavigationDraw
         pos = addItemAndIncrement(pos, NavigationDrawerAdapter.SEPARATOR, new NavDrawerItem());
 
         pos = addItemAndIncrement(pos, NavigationDrawerAdapter.SECONDARY,
-            new NavDrawerItem(ITEM_SHARE, getString(R.string.drawer_share), R.drawable.ic_share));
+                new NavDrawerItem(ITEM_GRASSROOT_EXTRA, getString(R.string.drawer_grassroot_extra), R.drawable.ic_notification_icon));
 
         pos = addItemAndIncrement(pos, NavigationDrawerAdapter.SECONDARY,
             new NavDrawerItem(ITEM_FIND_GROUPS, getString(R.string.find_group_nav), R.drawable.ic_find_group_nav));
+
+        pos = addItemAndIncrement(pos, NavigationDrawerAdapter.SECONDARY,
+                new NavDrawerItem(ITEM_SHARE, getString(R.string.drawer_share), R.drawable.ic_share));
 
         pos = addItemAndIncrement(pos, NavigationDrawerAdapter.SECONDARY,
             new NavDrawerItem(ITEM_PROFILE, getString(R.string.drawer_profile),R.drawable.ic_profile));
@@ -292,6 +297,9 @@ public class NavigationDrawerFragment extends Fragment implements NavigationDraw
                 break;
             case ITEM_OFFLINE:
                 offlineSwitch();
+                break;
+            case ITEM_GRASSROOT_EXTRA:
+                openGrassrootExtra();
                 break;
             case ITEM_FIND_GROUPS:
                 findGroups();
@@ -405,6 +413,11 @@ public class NavigationDrawerFragment extends Fragment implements NavigationDraw
             }
         });
         builder.create().show();
+    }
+
+    private void openGrassrootExtra() {
+        Intent i = new Intent(getContext(), GrassrootExtraActivity.class);
+        startActivity(i);
     }
 
     private void findGroups() {

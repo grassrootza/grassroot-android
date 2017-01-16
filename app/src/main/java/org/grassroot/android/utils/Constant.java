@@ -41,7 +41,7 @@ public class Constant {
     private static final String prodGcmSender = ApplicationLoader.applicationContext.getString(R.string.prod_sender_id);
     private static final String prodGcmProject = ApplicationLoader.applicationContext.getString(R.string.prod_project_id);
 
-    public static final String restUrl = BuildConfig.BUILD_TYPE.equals("debug") ? stagingUrl
+    public static final String restUrl = BuildConfig.BUILD_TYPE.equals("debug") ? localUrl
             : BuildConfig.FLAVOR.equals(PROD) ? productionUrl : stagingUrl;
 
     public static final String brokerUrl = BuildConfig.BUILD_TYPE.equals("debug") ? stagingBrokerUrl

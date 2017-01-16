@@ -1,0 +1,59 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:paddingLeft="@dimen/padding"
+    android:paddingRight="@dimen/padding"
+    android:layout_marginLeft="@dimen/margin_xlarge"
+    android:layout_marginStart="@dimen/margin_xlarge"
+    android:gravity="center_vertical"
+    android:background="@color/white"
+    android:layout_centerInParent="true"
+    android:id="@+id/fragment_single_input_root">
+
+    <TextView
+        android:id="@+id/header"
+        style="@style/LargeHeader"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingLeft="@dimen/padding_small"
+        android:paddingRight="@dimen/padding_small"
+        tools:text="Hello"/>
+
+    <TextView
+        android:id="@+id/explanation"
+        style="@style/LargeSubHeader"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/margin_medium"
+        android:paddingLeft="@dimen/padding_small"
+        android:paddingRight="@dimen/padding_small"
+        tools:text="This is an explanation of what people should enter" />
+
+    <android.support.design.widget.TextInputEditText
+        android:id="@+id/text_input"
+        style="@style/SingleEditTextInput"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/margin_medium"
+
+        tools:hint="@string/et_userName"
+        android:imeOptions="actionNext"
+
+        android:textColorHint="@color/md_grey_400"
+        android:textColor="@color/black"
+        android:textSize="@dimen/txt_xlarge" />
+
+    <Button
+            android:id="@+id/next"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="@color/white"
+            android:background="@drawable/buttonrounded_corner"
+            android:layout_marginTop="@dimen/margin_xxlarge"
+            tools:text="@string/bt_next"
+            android:textSize="@dimen/txt_xlarge" />
+
+</LinearLayout>
+

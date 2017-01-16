@@ -39,10 +39,10 @@ public class NavigationDrawerAdapter extends RecyclerView.Adapter<RecyclerView.V
         void onItemClicked(final String tag);
     }
 
-    final int textSelectedColor;
-    final int rowSelectedBgColor;
-    final int textNormalColor;
-    final int rowNormalColor;
+    private final int textSelectedColor;
+    private final int rowSelectedBgColor;
+    private final int textNormalColor;
+    private final int rowNormalColor;
 
     public NavigationDrawerAdapter(Context context, List<NavDrawerItem> items, Map<Integer, Integer> positionTypeMap,
                                    NavDrawerItemListener listener) {
@@ -156,7 +156,7 @@ public class NavigationDrawerAdapter extends RecyclerView.Adapter<RecyclerView.V
         return data.size();
     }
 
-    public static class PrimaryViewHolder extends RecyclerView.ViewHolder {
+    private static class PrimaryViewHolder extends RecyclerView.ViewHolder {
         ViewGroup rootView;
         TextView label;
         TextView counter;
@@ -171,7 +171,7 @@ public class NavigationDrawerAdapter extends RecyclerView.Adapter<RecyclerView.V
         }
     }
 
-    public static class SecondaryViewHolder extends RecyclerView.ViewHolder {
+    private static class SecondaryViewHolder extends RecyclerView.ViewHolder {
         ViewGroup rootView;
         TextView label;
         ImageView icon;
@@ -184,7 +184,7 @@ public class NavigationDrawerAdapter extends RecyclerView.Adapter<RecyclerView.V
         }
     }
 
-    public static class SeparatorViewHolder extends RecyclerView.ViewHolder {
+    private static class SeparatorViewHolder extends RecyclerView.ViewHolder {
         // just make the separator isn't clickable
         View separator;
 

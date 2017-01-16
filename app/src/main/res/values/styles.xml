@@ -87,6 +87,23 @@
         <item name="android:textStyle">bold</item>
     </style>
 
+    <style name="LargeHeader">
+        <item name="android:textSize">@dimen/txt_xlarge</item>
+        <item name="android:textColor">@color/primaryColor</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <style name="LargeSubHeader">
+        <item name="android:textSize">@dimen/txt_medium</item>
+        <item name="android:textColor">@color/md_grey_900</item>
+    </style>
+
+    <style name="BoldHeader">
+        <item name="android:textSize">@dimen/txt_large</item>
+        <item name="android:textColor">@color/primaryColor</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
     <style name="CardViewHeader">
         <item name="android:layout_height">wrap_content</item>
         <item name="android:layout_width">wrap_content</item>
@@ -374,6 +391,11 @@
         <item name="android:background">@drawable/button_flat_white</item>
         <item name="android:textColor">@color/primaryColor</item>
         <item name="android:textSize">@dimen/txt_medium</item>
+    </style>
+
+    <!-- Stlying text input -->
+    <style name="SingleEditTextInput">
+        <item name="colorControlNormal">@color/primaryColor</item>
     </style>
 
     <!-- ANIMATIONS -->
