@@ -8,7 +8,7 @@ import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.text.TextUtils;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -19,11 +19,14 @@ import org.grassroot.android.models.Group;
 import org.grassroot.android.utils.RealmUtils;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.Unbinder;
+import io.realm.Sort;
 import rx.functions.Action1;
 
 /**
@@ -44,23 +47,44 @@ public class GroupPickFragment extends Fragment {
   private Unbinder unbinder;
 
   public static GroupPickFragment newInstance(final String permissionToFilter, final String returnTag) {
-    if (permissionToFilter == null || TextUtils.isEmpty(returnTag)) {
-      throw new UnsupportedOperationException(
-          "Error! Group picker called without groups or task type");
-    }
     final GroupPickFragment fragment = new GroupPickFragment();
-    fragment.returnTag = returnTag;
-    fragment.permissionToFilter = permissionToFilter;
+    Bundle args = new Bundle();
+    args.putString("TYPE", "PERMISSION");
+    args.putString("RETURN_TAG", returnTag);
+    args.putString("PERMISSION", permissionToFilter);
+    fragment.setArguments(args);
+    return fragment;
+  }
+
+  public static GroupPickFragment newInstance(boolean paidFor, final String returnTag) {
+    final GroupPickFragment fragment = new GroupPickFragment();
+    Bundle args = new Bundle();
+    args.putString("TYPE", "PAID");
+    args.putString("RETURN_TAG", returnTag);
+    args.putBoolean("PAID", paidFor);
+    fragment.setArguments(args);
     return fragment;
   }
 
   @Override public void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
-    filteredGroups = new ArrayList<>();
 
+    Bundle args = getArguments();
+    returnTag = args.getString("RETURN_TAG");
+
+
+    filteredGroups = new ArrayList<>();
     // note : activity must implement adapter's listener
     groupPickAdapter = new GroupPickAdapter(returnTag, filteredGroups, getActivity());
+    if ("PERMISSION".equals(args.getString("TYPE"))) {
+      loadGroupsByPermission(args.getString("PERMISSION"));
+    } else if ("PAID".equals(args.getString("TYPE"))) {
+      loadGroupsByPaidStatus(args.getBoolean("PAID"));
+    }
 
+  }
+
+  private void loadGroupsByPermission(final String permissionToFilter) {
     RealmUtils.loadGroupsSorted().subscribe(new Action1<List<Group>>() {
       @Override
       public void call(List<Group> groups) {
@@ -70,6 +94,19 @@ public class GroupPickFragment extends Fragment {
             filteredGroups.add(g);
           }
         }
+        groupPickAdapter.setGroupList(filteredGroups);
+      }
+    });
+  }
+
+  private void loadGroupsByPaidStatus(final boolean paidFor) {
+    final Map<String, Object> map = new HashMap<>();
+    map.put("paidFor", paidFor);
+    RealmUtils.loadGroupsFilteredSorted(map, "lastMajorChangeMillis", Sort.DESCENDING).subscribe(new Action1<List<Group>>() {
+      @Override
+      public void call(List<Group> groups) {
+        Log.e(TAG, "loaded paid groups! with flag : " + paidFor + " and " + groups.size() + " returned");
+        filteredGroups = groups;
         groupPickAdapter.setGroupList(filteredGroups);
       }
     });

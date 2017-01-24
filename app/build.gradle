@@ -93,18 +93,17 @@ dependencies {
     compile 'com.squareup.picasso:picasso:2.5.2'
     compile 'com.squareup.okio:okio:1.9.0'
     compile 'com.jakewharton.picasso:picasso2-okhttp3-downloader:1.0.2'
-
     compile 'io.reactivex:rxandroid:1.2.1'
     compile 'io.reactivex:rxjava:1.1.7'
     compile 'hani.momanii.supernova_emoji_library:supernova-emoji-library:0.0.2'
     compile('com.crashlytics.sdk.android:crashlytics:2.6.2@aar') {
         transitive = true;
     }
-
     // compile 'org.eclipse.paho:org.eclipse.paho.client.mqttv3:1.1.1-SNAPSHOT'
-    // compile('org.eclipse.paho:org.eclipse.paho.android.service:1.1.1-SNAPSHOT') { exclude module: 'support-v4' }
 
-    compile (project(':org.eclipse.paho.android.service')) {
+    // compile('org.eclipse.paho:org.eclipse.paho.android.service:1.1.1-SNAPSHOT') { exclude module: 'support-v4' }
+    compile(project(':org.eclipse.paho.android.service')) {
         exclude module: 'org.eclipse.paho.client.mqttv3'
     }
+    compile project(':oppwa.mobile.checkout')
 }

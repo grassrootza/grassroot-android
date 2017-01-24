@@ -239,7 +239,7 @@ public class TaskService {
               }
               subscriber.onCompleted();
             } else {
-              throw new ApiCallException(NetworkUtils.CONNECT_ERROR, ErrorUtils.getRestMessage(response.errorBody()));
+              throw new ApiCallException(NetworkUtils.SERVER_ERROR, ErrorUtils.getRestMessage(response.errorBody()));
             }
           } catch (IOException e) {
             RealmUtils.saveDataToRealmSync(task);

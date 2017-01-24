@@ -13,6 +13,7 @@ import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 
 import org.grassroot.android.BuildConfig;
+import org.grassroot.android.models.AccountBill;
 import org.grassroot.android.models.GroupJoinRequest;
 import org.grassroot.android.models.Member;
 import org.grassroot.android.models.NotificationList;
@@ -30,6 +31,7 @@ import org.grassroot.android.models.responses.JoinRequestResponse;
 import org.grassroot.android.models.responses.MemberListResponse;
 import org.grassroot.android.models.responses.PermissionResponse;
 import org.grassroot.android.models.responses.ProfileResponse;
+import org.grassroot.android.models.responses.RestResponse;
 import org.grassroot.android.models.responses.TaskChangedResponse;
 import org.grassroot.android.models.responses.TaskResponse;
 import org.grassroot.android.models.responses.TokenResponse;
@@ -544,9 +546,29 @@ public class GrassrootRestService {
     /*
     SECTION: Grassroot Extra settings, notifications, etc
      */
-    @GET("extra/settings/fetch/{phoneNumber}/{code}")
+    @GET("account/settings/fetch/{phoneNumber}/{code}")
     Call<AccountResponse> getGrassrootExtraSettings(@Path("phoneNumber") String phoneNumber,
                                                     @Path("code") String code);
+
+    @GET("account/payment/signup/initiate/{phoneNumber}/{code}")
+    Call<RestResponse<AccountBill>> initiateAccountSignup(@Path("phoneNumber") String phoneNumber,
+                                                          @Path("code") String code,
+                                                          @Query("accountName") String accountName,
+                                                          @Query("billingEmail") String billingEmail,
+                                                          @Query("accountType") String accountType);
+
+    @GET("account/groups/add/{phoneNumber}/{code}")
+    Call<GenericResponse> addGroupToAccount(@Path("phoneNumber") String phoneNumber,
+                                            @Path("code") String code,
+                                            @Query("accountUid") String accountUid,
+                                            @Query("groupUid") String groupUid);
+
+    @GET("account/message/send/{phoneNumber}/{code}")
+    Call<GenericResponse> sendFreeForm(@Path("phoneNumber") String phoneNumber,
+                                       @Path("code") String code,
+                                       @Query("accountUid") String accountUid,
+                                       @Query("groupUid") String groupUid,
+                                       @Query("message") String message);
 
   }
 }

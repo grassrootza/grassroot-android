@@ -30,7 +30,9 @@ import android.widget.TimePicker;
 
 import org.grassroot.android.R;
 import org.grassroot.android.activities.ActionCompleteActivity;
+import org.grassroot.android.activities.GrassrootExtraActivity;
 import org.grassroot.android.events.TaskAddedEvent;
+import org.grassroot.android.fragments.dialogs.AccountLimitDialogFragment;
 import org.grassroot.android.fragments.dialogs.DatePickerFragment;
 import org.grassroot.android.fragments.dialogs.TimePickerFragment;
 import org.grassroot.android.interfaces.GroupConstants;
@@ -290,14 +292,7 @@ public class CreateTaskFragment extends Fragment {
             @Override
             public void onError(Throwable e) {
                 if (e instanceof ApiCallException) {
-                    progressDialog.dismiss();
-                    final String type = e.getMessage();
-                    if (NetworkUtils.CONNECT_ERROR.equals(type)) {
-                        finishAndLaunchDoneFragment(model);
-                    } else {
-                        final String msg = ErrorUtils.serverErrorText(e);
-                        Snackbar.make(vContainer, msg, Snackbar.LENGTH_SHORT); // todo : add a "save and try again option"
-                    }
+                    handleError((ApiCallException) e, model);
                 }
             }
 
@@ -327,6 +322,32 @@ public class CreateTaskFragment extends Fragment {
         EventBus.getDefault().post(new TaskAddedEvent(model, generateSuccessString()));
         startActivity(i);
         getActivity().finish();
+    }
+
+    private void handleError(ApiCallException e, TaskModel model) {
+        progressDialog.dismiss();
+        final String type = e.getMessage();
+        if (NetworkUtils.CONNECT_ERROR.equals(type)) {
+            finishAndLaunchDoneFragment(model);
+        } else {
+            if (ErrorUtils.TODO_LIMIT_REACHED.equals(e.errorTag)) {
+                AccountLimitDialogFragment.showAccountLimitDialog(getFragmentManager(), R.string.account_todo_limit_reached)
+                        .subscribe(new Action1<String>() {
+                            @Override
+                            public void call(String s) {
+                                if (AccountLimitDialogFragment.GO_TO_GR.equals(s)) {
+                                    Intent i = new Intent(getContext(), GrassrootExtraActivity.class);
+                                    startActivity(i);
+                                } else if (AccountLimitDialogFragment.ABORT.equals(s)) {
+                                    getActivity().finish();
+                                }
+                            }
+                        });
+            } else {
+                final String msg = ErrorUtils.serverErrorText(e);
+                Snackbar.make(vContainer, msg, Snackbar.LENGTH_SHORT); // todo : add a "save and try again option"
+            }
+        }
     }
 
     private TaskModel generateTaskObject() {

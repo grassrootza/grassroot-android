@@ -44,8 +44,8 @@ public class Constant {
     public static final String restUrl = BuildConfig.BUILD_TYPE.equals("debug") ? localUrl
             : BuildConfig.FLAVOR.equals(PROD) ? productionUrl : stagingUrl;
 
-    public static final String brokerUrl = BuildConfig.BUILD_TYPE.equals("debug") ? stagingBrokerUrl
-            : BuildConfig.FLAVOR.equals(PROD) ? productionBrokerUrl : productionBrokerUrl;
+    public static final String brokerUrl = BuildConfig.BUILD_TYPE.equals("debug") ? localBrokerUrl
+            : BuildConfig.FLAVOR.equals(PROD) ? productionBrokerUrl : stagingBrokerUrl;
 
     public static final String gcmProjectId = BuildConfig.BUILD_TYPE.equals("debug") ? stagingGcmProject
             : BuildConfig.FLAVOR.equals(PROD) ? prodGcmProject : stagingGcmProject;

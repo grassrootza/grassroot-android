@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     package="org.grassroot.android">
 
     <supports-screens
@@ -21,6 +22,8 @@
     <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="android.permission.GET_TASKS" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+
+    <uses-sdk tools:overrideLibrary="com.oppwa.mobile.connect.checkout" />
 
     <permission
         android:name="org.grassroot.android.permission.C2D_MESSAGE"
@@ -332,10 +335,20 @@
         </receiver>
 
         <service android:name=".services.SharingService"/>
+
         <service android:name=".services.NotificationService"
             android:process=":grassroot_process"
-            android:icon="@drawable/app_icon"
-            />
+            android:icon="@drawable/app_icon"  />
+
+        <service
+            android:name="com.oppwa.mobile.connect.service.ConnectService"
+            android:exported="false"/>
+
+        <activity
+            android:name="com.oppwa.mobile.connect.checkout.dialog.CheckoutActivity"
+            android:theme="@style/Theme.Checkout.Light"
+            android:windowSoftInputMode="adjustPan"/>
+
     </application>
 
 </manifest>

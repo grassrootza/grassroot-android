@@ -35,6 +35,7 @@ public class GRExtraEnabledAccountFragment extends Fragment {
 
     private Account account;
     private Unbinder unbinder;
+    private GrExtraListener listener;
 
     @BindView(R.id.account_settings_header) TextView accounSettingsHeader;
     @BindView(R.id.account_type_field) TextView accountTypeDescription;
@@ -46,12 +47,18 @@ public class GRExtraEnabledAccountFragment extends Fragment {
     @BindView(R.id.account_limits_group_size) TextView groupSizeLimit;
     @BindView(R.id.account_limits_todos_month) TextView todosPerMonthLimit;
 
+    public interface GrExtraListener {
+        void sendFreeFormMessage();
+        void addGroupToAccount();
+        void changeAccountType();
+    }
 
-    public static GRExtraEnabledAccountFragment newInstance(@NonNull Account account) {
+    public static GRExtraEnabledAccountFragment newInstance(@NonNull Account account, @NonNull GrExtraListener listener) {
         GRExtraEnabledAccountFragment fragment = new GRExtraEnabledAccountFragment();
         Bundle bundle = new Bundle();
         bundle.putParcelable(ACCOUNT, account);
         fragment.setArguments(bundle);
+        fragment.listener = listener;
         return fragment;
     }
 
@@ -106,17 +113,17 @@ public class GRExtraEnabledAccountFragment extends Fragment {
 
     @OnClick(R.id.gextra_free_form_btn)
     public void sendFreeFormMsg() {
-        Log.e(TAG, "sending free form message!");
+        listener.sendFreeFormMessage();
     }
 
     @OnClick(R.id.gextra_add_group_btn)
     public void addGroupToAccount() {
-        Log.e(TAG, "adding group to account!");
+        listener.addGroupToAccount();
     }
 
     @OnClick(R.id.account_type_change)
     public void changeAccountType() {
-        Log.e(TAG, "change account clicked!");
+        listener.changeAccountType();
     }
 
 }

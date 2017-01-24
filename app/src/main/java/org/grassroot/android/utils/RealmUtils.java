@@ -132,19 +132,40 @@ public class RealmUtils {
     }
 
     public static Observable<List<Group>> loadGroupsSorted() {
-        Observable<List<Group>> observable =
-                Observable.create(new Observable.OnSubscribe<List<Group>>() {
-                    @Override
-                    public void call(Subscriber<? super List<Group>> subscriber) {
-                        final Realm realm = Realm.getDefaultInstance();
-                        List<Group> groups = realm.copyFromRealm(
-                                realm.where(Group.class).findAllSorted("lastMajorChangeMillis", Sort.DESCENDING));
-                        subscriber.onNext(groups);
-                        subscriber.onCompleted();
-                        realm.close();
+        return Observable.create(new Observable.OnSubscribe<List<Group>>() {
+            @Override
+            public void call(Subscriber<? super List<Group>> subscriber) {
+                final Realm realm = Realm.getDefaultInstance();
+                List<Group> groups = realm.copyFromRealm(
+                        realm.where(Group.class).findAllSorted("lastMajorChangeMillis", Sort.DESCENDING));
+                subscriber.onNext(groups);
+                subscriber.onCompleted();
+                realm.close();
+            }
+        }).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread());
+    }
+
+    public static Observable<List<Group>> loadGroupsFilteredSorted(final Map<String, Object> filterMap,
+                                                                   final String sortField, final Sort sortOrder) {
+        return Observable.create(new Observable.OnSubscribe<List<Group>>() {
+            @Override
+            public void call(Subscriber<? super List<Group>> subscriber) {
+                final Realm realm = Realm.getDefaultInstance();
+                RealmQuery<? extends RealmObject> query = realm.where(Group.class);
+                for (Map.Entry<String, Object> entry : filterMap.entrySet()) {
+                    if (entry.getValue() instanceof String) {
+                        query.equalTo(entry.getKey(), entry.getValue().toString());
+                    } else {
+                        query.equalTo(entry.getKey(), Boolean.valueOf(entry.getValue().toString()));
                     }
-                }).subscribeOn(Schedulers.computation()).observeOn(AndroidSchedulers.mainThread());
-        return observable;
+                }
+
+                List<Group> groups = (List<Group>) realm.copyFromRealm(query.findAllSorted(sortField, sortOrder));
+                subscriber.onNext(groups);
+                subscriber.onCompleted();
+                realm.close();
+            }
+        }).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread());
     }
 
     public static List<String> loadGroupUidsSync() {

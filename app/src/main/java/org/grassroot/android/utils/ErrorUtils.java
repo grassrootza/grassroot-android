@@ -73,6 +73,9 @@ public class ErrorUtils {
 
     public static final String JREQ_NOT_FOUND = "GROUP_JOIN_REQUEST_NOT_FOUND";
 
+    public static final String TODO_LIMIT_REACHED = "TODO_LIMIT_REACHED";
+    public static final String GROUP_SIZE_LIMIT = "GROUP_SIZE_LIMIT";
+
     public static String serverErrorText(final String restMessage) {
         final Context context = ApplicationLoader.applicationContext;
         if (TextUtils.isEmpty(restMessage)) {

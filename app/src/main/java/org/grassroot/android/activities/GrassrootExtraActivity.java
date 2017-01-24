@@ -11,11 +11,15 @@ import android.util.Log;
 import android.view.View;
 
 import org.grassroot.android.R;
+import org.grassroot.android.adapters.GroupPickAdapter;
 import org.grassroot.android.fragments.GRExtraEnabledAccountFragment;
 import org.grassroot.android.fragments.GiantMessageFragment;
+import org.grassroot.android.fragments.GroupPickFragment;
 import org.grassroot.android.fragments.NavigationDrawerFragment;
+import org.grassroot.android.fragments.dialogs.MultiLineTextDialog;
 import org.grassroot.android.interfaces.NavigationConstants;
 import org.grassroot.android.models.Account;
+import org.grassroot.android.models.Group;
 import org.grassroot.android.models.responses.AccountResponse;
 import org.grassroot.android.services.GrassrootRestService;
 import org.grassroot.android.utils.NetworkUtils;
@@ -26,14 +30,19 @@ import butterknife.ButterKnife;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
+import rx.functions.Action1;
 
 /**
  * Created by luke on 2017/01/11.
  */
 
-public class GrassrootExtraActivity extends PortraitActivity implements NavigationDrawerFragment.NavigationDrawerCallbacks {
+public class GrassrootExtraActivity extends PortraitActivity implements NavigationDrawerFragment.NavigationDrawerCallbacks,
+        GRExtraEnabledAccountFragment.GrExtraListener, GroupPickAdapter.GroupPickAdapterListener {
 
     private static final String TAG = GrassrootExtraActivity.class.getSimpleName();
+
+    private static final String FFORM = "FREEFORM";
+    private static final String ADDTOACC = "ADDTOACCCOUNT";
 
     @BindView(R.id.gextra_toolbar) Toolbar toolbar;
     @BindView(R.id.gextra_drawer_layout) DrawerLayout drawer;
@@ -65,7 +74,6 @@ public class GrassrootExtraActivity extends PortraitActivity implements Navigati
                     Log.e(TAG, "response body: " + response.body().getMessage());
                     Account account = response.body().getAccount();
                     if (account == null) {
-                        Log.e(TAG, "no account!");
                         redirectToSignup();
                     } else if (account.isEnabled()) {
                         showEnabledFragment(account);
@@ -83,6 +91,49 @@ public class GrassrootExtraActivity extends PortraitActivity implements Navigati
         } else {
             showNotConnectedMsg();
         }
+    }
+
+    public void sendFreeFormMessage() {
+        GroupPickFragment fragment = GroupPickFragment.newInstance(true, FFORM);
+        getSupportFragmentManager().beginTransaction()
+                .replace(R.id.gextra_fragment_holder, fragment, "group_pick")
+                .addToBackStack(null)
+                .commit();
+        setTitle(R.string.home_group_pick);
+    }
+
+    public void addGroupToAccount() {
+        GroupPickFragment fragment = GroupPickFragment.newInstance(false, ADDTOACC);
+        getSupportFragmentManager().beginTransaction()
+                .replace(R.id.gextra_fragment_holder, fragment, "group_pick")
+                .addToBackStack(null)
+                .commit();
+        setTitle(R.string.home_group_pick);
+
+    }
+
+    public void onGroupPicked(final Group group, String returnTag) {
+        if (FFORM.equals(returnTag)) {
+            String dialogBody = getString(R.string.free_form_body);
+            MultiLineTextDialog.showMultiLineDialog(getSupportFragmentManager(), R.string.free_form_title,
+                    dialogBody, R.string.free_form_hint, R.string.free_form_okay)
+                    .subscribe(new Action1<String>() {
+                        @Override
+                        public void call(String s) {
+                            confirmSendMessage(group);
+                        }
+                    });
+        } else if (ADDTOACC.equals(returnTag)) {
+
+        }
+    }
+
+    private void confirmSendMessage(Group group) {
+        Log.e(TAG, "okay, we're sending this thing");
+    }
+
+    public void changeAccountType() {
+
     }
 
     private void showProgress() {
@@ -105,7 +156,7 @@ public class GrassrootExtraActivity extends PortraitActivity implements Navigati
             getSupportActionBar().setDisplayShowTitleEnabled(true);
         }
 
-        GRExtraEnabledAccountFragment fragment = GRExtraEnabledAccountFragment.newInstance(account);
+        GRExtraEnabledAccountFragment fragment = GRExtraEnabledAccountFragment.newInstance(account, this);
         getSupportFragmentManager().beginTransaction()
                 .add(R.id.gextra_fragment_holder, fragment, "settings")
                 .commit();
@@ -113,6 +164,7 @@ public class GrassrootExtraActivity extends PortraitActivity implements Navigati
 
     private void redirectToSignup() {
         startActivity(new Intent(this, AccountSignupActivity.class));
+        finish();
     }
 
     private void showNotConnectedMsg() {

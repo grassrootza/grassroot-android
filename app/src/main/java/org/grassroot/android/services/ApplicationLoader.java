@@ -13,7 +13,7 @@ import com.jakewharton.picasso.OkHttp3Downloader;
 import com.squareup.picasso.Picasso;
 
 import org.grassroot.android.BuildConfig;
-import org.grassroot.android.models.RealmMigrationGroupChat;
+import org.grassroot.android.models.RealmMigrationGroupModel;
 import org.grassroot.android.receivers.TaskManagerReceiver;
 
 import java.io.IOException;
@@ -48,7 +48,8 @@ public class ApplicationLoader extends Application {
         RealmConfiguration.Builder realmConfigBuilder =
                 new RealmConfiguration.Builder(applicationContext);
 
-        realmConfigBuilder.schemaVersion(2).migration(new RealmMigrationGroupChat());
+        realmConfigBuilder.schemaVersion(3)
+                .migration(new RealmMigrationGroupModel());
         Realm.setDefaultConfiguration(realmConfigBuilder.build());
 
         // since there was some early confusion, try to open it, to trigger a Realm error, and wipe if needed
@@ -57,6 +58,7 @@ public class ApplicationLoader extends Application {
             realm.close();
         } catch (RealmMigrationNeededException|IllegalArgumentException e) {
             Log.e("GRASSROOT", "Error! Realm migration failed, wiping DB");
+            e.printStackTrace();
             Realm.deleteRealm(realmConfigBuilder.build());
         }
 

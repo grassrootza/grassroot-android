@@ -51,6 +51,7 @@ public class Group extends RealmObject implements Parcelable, Comparable<Group> 
   private boolean isEditedLocal; // i.e., has local changes (members etc) that aren't yet on server
 
   private boolean openOnChat = false;
+  private boolean paidFor = false;
 
   @Ignore private Date date;
   private DateTime dateTime; // used in JSON conversion
@@ -178,6 +179,14 @@ public class Group extends RealmObject implements Parcelable, Comparable<Group> 
 
   public void setOpenOnChat(boolean openOnChat) {
     this.openOnChat = openOnChat;
+  }
+
+  public boolean isPaidFor() {
+    return paidFor;
+  }
+
+  public void setPaidFor(boolean paidFor) {
+    this.paidFor = paidFor;
   }
 
   public void setDateTimeStringISO(String dateTimeStringISO) {
@@ -368,6 +377,7 @@ public class Group extends RealmObject implements Parcelable, Comparable<Group> 
     dest.writeInt(defaultImageRes);
     dest.writeString(lastChangeDescription);
     dest.writeInt(openOnChat ? 1 : 0);
+    dest.writeInt(paidFor ? 1 : 0);
   }
 
   protected Group(Parcel in) {
@@ -390,6 +400,7 @@ public class Group extends RealmObject implements Parcelable, Comparable<Group> 
     defaultImageRes = in.readInt();
     lastChangeDescription = in.readString();
     openOnChat = in.readInt() != 0;
+    paidFor = in.readInt() != 0;
   }
 
   public static final Creator<Group> CREATOR = new Creator<Group>() {

@@ -1,13 +1,30 @@
 package org.grassroot.android.activities;
 
+import android.app.AlertDialog;
+import android.content.ComponentName;
+import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.widget.Toolbar;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
+import android.widget.ProgressBar;
+
+import com.oppwa.mobile.connect.checkout.dialog.CheckoutActivity;
+import com.oppwa.mobile.connect.checkout.meta.CheckoutPaymentMethod;
+import com.oppwa.mobile.connect.checkout.meta.CheckoutSettings;
+import com.oppwa.mobile.connect.exception.PaymentError;
+import com.oppwa.mobile.connect.exception.PaymentException;
+import com.oppwa.mobile.connect.provider.Connect;
+import com.oppwa.mobile.connect.service.ConnectService;
+import com.oppwa.mobile.connect.service.IProviderBinder;
 
 import org.grassroot.android.R;
 import org.grassroot.android.fragments.AccountTypeFragment;
@@ -15,9 +32,16 @@ import org.grassroot.android.fragments.GiantMessageFragment;
 import org.grassroot.android.fragments.NavigationDrawerFragment;
 import org.grassroot.android.fragments.SingleInputFragment;
 import org.grassroot.android.interfaces.NavigationConstants;
+import org.grassroot.android.models.AccountBill;
+import org.grassroot.android.models.responses.RestResponse;
+import org.grassroot.android.services.GrassrootRestService;
+import org.grassroot.android.utils.RealmUtils;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 import rx.functions.Action1;
 
 /**
@@ -31,7 +55,39 @@ public class AccountSignupActivity extends PortraitActivity implements Navigatio
     @BindView(R.id.acs_toolbar) Toolbar toolbar;
     @BindView(R.id.navigation_drawer) DrawerLayout drawer;
 
-    // @BindView(R.id.progressBar) ProgressBar progressBar;
+    private String accountName;
+    private String billingEmail;
+    private String accountType;
+    private String paymentId;
+
+    @BindView(R.id.progressBar) ProgressBar progressBar;
+
+    private IProviderBinder binder;
+    private ServiceConnection serviceConnection = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
+            binder = (IProviderBinder) iBinder;
+            try {
+                binder.initializeProvider(Connect.ProviderMode.TEST);
+            } catch (PaymentException e) {
+                Log.e(TAG, "error initializing payment!");
+            }
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName componentName) {
+            binder = null;
+        }
+    };
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+
+        Intent intent = new Intent(this, ConnectService.class);
+        startService(intent);
+        bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE);
+    }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -49,6 +105,13 @@ public class AccountSignupActivity extends PortraitActivity implements Navigatio
         drawerToggle.syncState();
 
         welcomeAndStart();
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        unbindService(serviceConnection);
+        stopService(new Intent(this, ConnectService.class));
     }
 
     private void welcomeAndStart() {
@@ -88,6 +151,8 @@ public class AccountSignupActivity extends PortraitActivity implements Navigatio
     }
 
     private void validateNameAndNext(String name) {
+        accountName = name;
+
         SingleInputFragment fragment = new SingleInputFragment.SingleInputBuilder()
                 .header(R.string.billing_email_header)
                 .explanation(R.string.billing_email_expl)
@@ -108,6 +173,8 @@ public class AccountSignupActivity extends PortraitActivity implements Navigatio
     }
 
     private void validateEmailAndNext(String email) {
+        billingEmail = email;
+
         AccountTypeFragment fragment = AccountTypeFragment.newInstance(new Action1<String>() {
             @Override
             public void call(String s) {
@@ -121,8 +188,139 @@ public class AccountSignupActivity extends PortraitActivity implements Navigatio
                 .commit();
     }
 
-    private void initiatePayment(final String accountType) {
-        Log.e(TAG, "account type selected: " + accountType);
+    private void initiatePayment(final String type) {
+        accountType = type;
+
+        progressBar.setVisibility(View.VISIBLE);
+        if (!TextUtils.isEmpty(paymentId)) {
+            initiateCheckout(paymentId);
+        } else {
+            final String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
+            final String code = RealmUtils.loadPreferencesFromDB().getToken();
+            GrassrootRestService.getInstance().getApi().initiateAccountSignup(phoneNumber, code,
+                    accountName, billingEmail, accountType).enqueue(new Callback<RestResponse<AccountBill>>() {
+                @Override
+                public void onResponse(Call<RestResponse<AccountBill>> call, Response<RestResponse<AccountBill>> response) {
+                    paymentId = response.body().getData().getPaymentId();
+                    Log.e(TAG, "initating payment with ID : " + paymentId);
+                    initiateCheckout(paymentId);
+                }
+
+                @Override
+                public void onFailure(Call<RestResponse<AccountBill>> call, Throwable t) {
+
+                }
+            });
+        }
+    }
+
+    private void initiateCheckout(final String checkoutId) {
+        final String paymentTitle = getString(R.string.billing_signup_title);
+        CheckoutSettings settings = new CheckoutSettings(
+                checkoutId,
+                paymentTitle,
+                new CheckoutPaymentMethod[] {
+                        CheckoutPaymentMethod.VISA,
+                        CheckoutPaymentMethod.MASTERCARD
+                });
+
+        Intent intent = new Intent(AccountSignupActivity.this, CheckoutActivity.class);
+        intent.putExtra(CheckoutActivity.CHECKOUT_SETTINGS, settings);
+
+        progressBar.setVisibility(View.GONE);
+        startActivityForResult(intent, CheckoutActivity.CHECKOUT_ACTIVITY);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        switch (resultCode) {
+            case CheckoutActivity.RESULT_OK:
+                Log.e(TAG, "all okay!");
+                showSuccessDialogAndExit();
+                break;
+            case CheckoutActivity.RESULT_CANCELED:
+                Log.e(TAG, "nope, failure!");
+                showCancelledDialogAndOptions();
+                break;
+            case CheckoutActivity.RESULT_ERROR:
+                PaymentError error = data.getExtras().getParcelable(CheckoutActivity.CHECKOUT_RESULT_ERROR);
+                Log.e(TAG, "payment error! log: " + (error == null ? "null result" : error.getErrorMessage() + ", code: " + error.getErrorCode()));
+                showErrorDialogAndOptions();
+        }
+    }
+
+    private void showSuccessDialogAndExit() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setMessage(R.string.account_paid_success)
+                .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        exitToGrExtra();
+                    }
+                })
+                .setCancelable(true)
+                .setOnCancelListener(new DialogInterface.OnCancelListener() {
+                    @Override
+                    public void onCancel(DialogInterface dialogInterface) {
+                        exitToGrExtra();
+                    }
+                });
+        builder.show();
+    }
+
+    private void exitToGrExtra() {
+        startActivity(new Intent(AccountSignupActivity.this, GrassrootExtraActivity.class));
+        finish();
+    }
+
+    private void showCancelledDialogAndOptions() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setMessage(R.string.account_paid_cancelled)
+                .setPositiveButton(R.string.account_payment_error_tryagain, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        initiateCheckout(paymentId);
+                    }
+                })
+                .setNegativeButton(R.string.account_payment_error_exit, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        exitToHome(null, true);
+                    }
+                })
+                .setCancelable(true);
+        builder.show();
+    }
+
+    private void showErrorDialogAndOptions() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setMessage(R.string.account_paid_error)
+                .setPositiveButton(R.string.account_payment_error_tryagain, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        initiateCheckout(paymentId);
+                    }
+                })
+                .setNegativeButton(R.string.account_payment_error_exit, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        exitToHome(null, true);
+                    }
+                })
+                .setCancelable(true);
+        builder.show();
+    }
+
+    private void exitToHome(final String openOnTab, boolean finish) {
+        // consider just rewinding in stack
+        Intent i = new Intent(this, HomeScreenActivity.class);
+        if (!TextUtils.isEmpty(openOnTab)) {
+            i.putExtra(NavigationConstants.HOME_OPEN_ON_NAV, openOnTab);
+        }
+        startActivity(i);
+        if (finish) {
+            finish();
+        }
     }
 
     @Override
@@ -130,9 +328,7 @@ public class AccountSignupActivity extends PortraitActivity implements Navigatio
         if (drawer != null) {
             drawer.closeDrawer(GravityCompat.START);
         }
-        Intent i = new Intent(this, HomeScreenActivity.class);
-        i.putExtra(NavigationConstants.HOME_OPEN_ON_NAV, tag);
-        startActivity(i);
+        exitToHome(tag, false); // finish false so can tap back to this
     }
 
 }

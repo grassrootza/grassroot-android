@@ -9,6 +9,7 @@ import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -19,6 +20,7 @@ import android.widget.TextView;
 import org.grassroot.android.R;
 import org.grassroot.android.fragments.ContactSelectionFragment;
 import org.grassroot.android.fragments.MemberListFragment;
+import org.grassroot.android.fragments.dialogs.AccountLimitDialogFragment;
 import org.grassroot.android.interfaces.GroupConstants;
 import org.grassroot.android.interfaces.NavigationConstants;
 import org.grassroot.android.models.Contact;
@@ -364,15 +366,7 @@ public class AddMembersActivity extends AppCompatActivity implements
                             Intent i = null;
                             switch (e.getMessage()) {
                                 case NetworkUtils.SERVER_ERROR:
-                                    if (e instanceof InvalidNumberException) {
-                                        handleInvalidNumbers((String) ((InvalidNumberException) e).data);
-                                    } else if (e instanceof ApiCallException) {
-                                        final String errorMsg = ErrorUtils.serverErrorText(((ApiCallException) e).errorTag);
-                                        Snackbar.make(amRlRoot, errorMsg, Snackbar.LENGTH_LONG).show();
-                                    } else {
-                                        final String body = getString(R.string.am_server_other);
-                                        i = IntentUtils.offlineMessageIntent(AddMembersActivity.this, R.string.am_server_error_header, body, false, false);
-                                    }
+                                    i = handleServerError(((ApiCallException) e));
                                     break;
                                 case NetworkUtils.CONNECT_ERROR:
                                     i = IntentUtils.offlineMessageIntent(AddMembersActivity.this, R.string.am_offline_header, getString(R.string.am_offline_body_error), false, true);
@@ -397,6 +391,38 @@ public class AddMembersActivity extends AppCompatActivity implements
                 finish();
             }
         }
+    }
+
+    private Intent handleServerError(ApiCallException e) {
+        Intent i;
+        if (e instanceof InvalidNumberException) {
+            handleInvalidNumbers((String) ((InvalidNumberException) e).data);
+            i = null;
+        } else {
+            if (TextUtils.isEmpty(e.errorTag)) {
+                final String body = getString(R.string.am_server_other);
+                i = IntentUtils.offlineMessageIntent(AddMembersActivity.this, R.string.am_server_error_header, body, false, false);
+            } else if (ErrorUtils.GROUP_SIZE_LIMIT.equals(e.errorTag)) {
+                AccountLimitDialogFragment.showAccountLimitDialog(getSupportFragmentManager(), R.string.account_group_size_limit)
+                        .subscribe(new Action1<String>() {
+                            @Override
+                            public void call(String s) {
+                                if (AccountLimitDialogFragment.GO_TO_GR.equals(s)) {
+                                    Intent internalIntent = new Intent(AddMembersActivity.this, GrassrootExtraActivity.class);
+                                    startActivity(internalIntent);
+                                } else if (AccountLimitDialogFragment.ABORT.equals(s)) {
+                                    finish();
+                                }
+                            }
+                        });
+                i = null;
+            } else {
+                final String errorMsg = ErrorUtils.serverErrorText(e.errorTag);
+                Snackbar.make(amRlRoot, errorMsg, Snackbar.LENGTH_LONG).show();
+                i = null;
+            }
+        }
+        return i;
     }
 
     private void handleInvalidNumbers(String listOfNumbers) {

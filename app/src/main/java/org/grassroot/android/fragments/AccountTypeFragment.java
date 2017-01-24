@@ -25,9 +25,9 @@ public class AccountTypeFragment extends Fragment {
     private static final String TAG = AccountTypeFragment.class.getSimpleName();
 
     // type constants
-    public static final String STD = "standard";
-    public static final String LIGHT = "light";
-    public static final String HEAVY = "heavy";
+    public static final String STD = "STANDARD";
+    public static final String LIGHT = "LIGHT";
+    public static final String HEAVY = "HEAVY";
 
     private Action1<String> subscriber;
     private Unbinder unbinder;

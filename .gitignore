@@ -38,3 +38,6 @@ captures
 
 ### Ignore the entire org.eclipse folder (just using for now until next release fixes NPEs)
 org.eclipse.paho.android.service*/
+
+### Ignore the mobile payment SDK (since specific to this)
+oppwa.mobile.checkout/

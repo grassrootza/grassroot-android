@@ -968,6 +968,31 @@
     <string name="billing_email_expl">Please enter an email address to receive your monthly statements</string>
     <string name="billing_email_hint">Email</string>
 
+    <string name="account_paid_success">Success! Your payment has cleared and your account is active. You
+    can start using it right away. Your next payment will be in one month\'s time.</string>
+    <string name="account_paid_cancelled">Sorry, without completing payment the account will not be enabled.
+    Do you want to try again or exit to home?</string>
+    <string name="account_paid_error">Sorry, there was an error completing the payment. You can try again now,
+    or resume later by clicking on Grassroot Extra at any time</string>
+
+    <string name="account_payment_error_tryagain">Try again</string>
+    <string name="account_payment_error_exit">Exit to home</string>
+
+    <string name="billing_signup_title">Signup payment</string>
+
+    <string name="free_form_title">Enter message</string>
+    <string name="free_form_body">Enter the SMS to send to the group</string>
+    <string name="free_form_hint"></string>
+    <string name="free_form_okay">Send</string>
+
+    <!-- Account limits -->
+    <string name="account_limit_gotogr">Go to Grassroot Extra</string>
+    <string name="account_limit_abort">Cancel and home</string>
+    <string name="account_todo_limit_reached">Sorry, this group has reached its limit of todos for the month. To
+    increase its limit, please sign up for Grassroot Extra or upgrade your account.</string>
+    <string name="account_group_size_limit">Sorry, this group has reached its size limit. To add more members,
+    please sign up for Grassroot Extra or upgrade your account.</string>
+
     <!--Notifications-->
     <string name="messages_new">" new messages."</string>
     <string name="notifications_new">" new notifications."</string>

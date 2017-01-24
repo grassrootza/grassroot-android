@@ -316,8 +316,10 @@ public class GroupChatFragment extends Fragment implements GroupChatAdapter.Grou
         if (showButtons) {
             errorMsg.setHasCommands(true);
         }
-        groupChatAdapter.addMessage(errorMsg);
-        chatMessageView.smoothScrollToPosition(groupChatAdapter.getItemCount());
+        if (groupChatAdapter != null) {
+            groupChatAdapter.addMessage(errorMsg);
+            chatMessageView.smoothScrollToPosition(groupChatAdapter.getItemCount());
+        }
     }
 
     private void showNetworkDialog(final int originatingAction, final String auxText, final String msgUid) {
