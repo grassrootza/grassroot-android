@@ -187,6 +187,10 @@ public class NavigationDrawerFragment extends Fragment implements NavigationDraw
         }
     }
 
+    public void clearSelected() {
+        switchPrimarySelected("");
+    }
+
     public List<NavDrawerItem> setUpPrimaryItems() {
 
         itemList = new ArrayList<>();
@@ -221,7 +225,7 @@ public class NavigationDrawerFragment extends Fragment implements NavigationDraw
         pos = addItemAndIncrement(pos, NavigationDrawerAdapter.SEPARATOR, new NavDrawerItem());
 
         pos = addItemAndIncrement(pos, NavigationDrawerAdapter.SECONDARY,
-                new NavDrawerItem(ITEM_GRASSROOT_EXTRA, getString(R.string.drawer_grassroot_extra), R.drawable.ic_notification_icon));
+                new NavDrawerItem(ITEM_GRASSROOT_EXTRA, getString(R.string.drawer_grassroot_extra), R.drawable.ic_add_black_24dp));
 
         pos = addItemAndIncrement(pos, NavigationDrawerAdapter.SECONDARY,
             new NavDrawerItem(ITEM_FIND_GROUPS, getString(R.string.find_group_nav), R.drawable.ic_find_group_nav));

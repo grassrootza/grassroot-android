@@ -84,6 +84,7 @@ public class HomeScreenActivity extends PortraitActivity implements NavigationDr
         EventBus.getDefault().register(this);
         setUpToolbar();
         String openOn = getIntent().getStringExtra(NavigationConstants.HOME_OPEN_ON_NAV);
+
         if (openOn == null) {
             openOn = NavigationConstants.ITEM_SHOW_GROUPS;
         }
@@ -155,9 +156,21 @@ public class HomeScreenActivity extends PortraitActivity implements NavigationDr
         super.onResume();
         if (mainFragmentFromNewIntent != -1 && mainFragmentFromNewIntent != currentMainFragment) {
             switch(mainFragmentFromNewIntent) {
+                case NavigationConstants.HOME_NAV_GROUPS:
+                    switchToGroupFragment();
+                    setNavBarToItem(NavigationConstants.ITEM_SHOW_GROUPS);
+                    break;
                 case NavigationConstants.HOME_NAV_TASKS:
                     switchToTasksFragment();
                     setNavBarToItem(NavigationConstants.ITEM_TASKS);
+                    break;
+                case NavigationConstants.HOME_NAV_JOIN_REQUESTS:
+                    switchToJoinRequestsFragment();
+                    setNavBarToItem(NavigationConstants.ITEM_JOIN_REQS);
+                    break;
+                case NavigationConstants.HOME_NAV_NOTIFICATIONS:
+                    switchToNotificationFragment();
+                    setNavBarToItem(NavigationConstants.ITEM_NOTIFICATIONS);
                     break;
                 default:
                     // expand this if necessary so any other fragment / activity can do similar
@@ -203,7 +216,6 @@ public class HomeScreenActivity extends PortraitActivity implements NavigationDr
         EventBus.getDefault().unregister(this);
         super.onDestroy();
     }
-
 
 
     @Override

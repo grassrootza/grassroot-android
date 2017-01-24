@@ -38,9 +38,6 @@ public class GroupPickFragment extends Fragment {
 
   private List<Group> filteredGroups;
 
-  private String returnTag;
-  private String permissionToFilter;
-
   @BindView(R.id.gpick_recycler_view) RecyclerView recyclerView;
 
   private GroupPickAdapter groupPickAdapter;
@@ -70,8 +67,7 @@ public class GroupPickFragment extends Fragment {
     super.onCreate(savedInstanceState);
 
     Bundle args = getArguments();
-    returnTag = args.getString("RETURN_TAG");
-
+    String returnTag = args.getString("RETURN_TAG");
 
     filteredGroups = new ArrayList<>();
     // note : activity must implement adapter's listener

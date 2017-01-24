@@ -45,8 +45,9 @@ public class ApplicationLoader extends Application {
         applicationContext = getApplicationContext();
 
         // Create a RealmConfiguration that saves the Realm file in the app's "files" directory.
+        Realm.init(this);
         RealmConfiguration.Builder realmConfigBuilder =
-                new RealmConfiguration.Builder(applicationContext);
+                new RealmConfiguration.Builder();
 
         realmConfigBuilder.schemaVersion(3)
                 .migration(new RealmMigrationGroupModel());

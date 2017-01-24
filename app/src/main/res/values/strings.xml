@@ -984,6 +984,17 @@
     <string name="free_form_body">Enter the SMS to send to the group</string>
     <string name="free_form_hint"></string>
     <string name="free_form_okay">Send</string>
+    <string name="free_form_done">Done! Message sent</string>
+    <string name="free_form_noneleft">Sorry, you have run out of customized messages for this month.
+    Please upgrade your account if you want to send more this month.</string>
+
+    <string name="add_group_nospace">Sorry, you do not have space left on your account to add
+    a group. Please remove another group or upgrade.</string>
+    <string name="add_group_confirm">Are you sure you want to add this group? Afterwards your
+    account will have space left for %1$d groups.</string>
+    <string name="add_group_done">Done! Group added to account</string>
+
+    <string name="account_upgrade">Upgrade</string>
 
     <!-- Account limits -->
     <string name="account_limit_gotogr">Go to Grassroot Extra</string>

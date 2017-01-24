@@ -35,6 +35,9 @@ public class Account implements Parcelable {
     private long nextBillingDateMilli;
     private long lastPaymentDateMilli;
 
+    private int messagesLeft;
+    private int groupsLeft;
+
     protected Account(Parcel in) {
         uid = in.readString();
         createdByUserName = in.readString();
@@ -53,6 +56,8 @@ public class Account implements Parcelable {
         subscriptionFee = in.readInt();
         nextBillingDateMilli = in.readLong();
         lastPaymentDateMilli = in.readLong();
+        messagesLeft = in.readInt();
+        groupsLeft = in.readInt();
     }
 
     public static final Creator<Account> CREATOR = new Creator<Account>() {
@@ -91,6 +96,8 @@ public class Account implements Parcelable {
         parcel.writeInt(subscriptionFee);
         parcel.writeLong(nextBillingDateMilli);
         parcel.writeLong(lastPaymentDateMilli);
+        parcel.writeInt(messagesLeft);
+        parcel.writeInt(groupsLeft);
     }
 
     public String getUid() {
@@ -159,5 +166,11 @@ public class Account implements Parcelable {
 
     public Date getLastPaymentDate() { return new Date(lastPaymentDateMilli); }
 
+    public int getMessagesLeft() {
+        return messagesLeft;
+    }
 
+    public int getGroupsLeft() {
+        return groupsLeft;
+    }
 }
