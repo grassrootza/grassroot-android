@@ -13,7 +13,9 @@ import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 
 import org.grassroot.android.BuildConfig;
+import org.grassroot.android.models.Account;
 import org.grassroot.android.models.AccountBill;
+import org.grassroot.android.models.Group;
 import org.grassroot.android.models.GroupJoinRequest;
 import org.grassroot.android.models.Member;
 import org.grassroot.android.models.NotificationList;
@@ -21,7 +23,6 @@ import org.grassroot.android.models.Permission;
 import org.grassroot.android.models.RealmString;
 import org.grassroot.android.models.ResponseTotalsModel;
 import org.grassroot.android.models.RsvpListModel;
-import org.grassroot.android.models.responses.AccountResponse;
 import org.grassroot.android.models.responses.GenericResponse;
 import org.grassroot.android.models.responses.GroupChatSettingResponse;
 import org.grassroot.android.models.responses.GroupResponse;
@@ -547,7 +548,7 @@ public class GrassrootRestService {
     SECTION: Grassroot Extra settings, notifications, etc
      */
     @GET("account/settings/fetch/{phoneNumber}/{code}")
-    Call<AccountResponse> getGrassrootExtraSettings(@Path("phoneNumber") String phoneNumber,
+    Call<RestResponse<Account>> getGrassrootExtraSettings(@Path("phoneNumber") String phoneNumber,
                                                     @Path("code") String code);
 
     @GET("account/payment/signup/initiate/{phoneNumber}/{code}")
@@ -569,6 +570,23 @@ public class GrassrootRestService {
                                        @Query("accountUid") String accountUid,
                                        @Query("groupUid") String groupUid,
                                        @Query("message") String message);
+
+    @GET("account/type/change/{phoneNumber}/{code}")
+    Call<RestResponse<Account>> changeAccountType(@Path("phoneNumber") String phoneNumber,
+                                                  @Path("code") String code,
+                                                  @Query("accountUid") String accountUid,
+                                                  @Query("accountType") String accountType);
+
+    @GET("account/groups/list/{phoneNumber}/{code}")
+    Call<RestResponse<List<Group>>> fetchGroupsSponsored(@Path("phoneNumber") String phoneNumber,
+                                                       @Path("code") String code,
+                                                       @Query("accountUid") String accountUid);
+
+    @GET("account/groups/remove/{phoneNumber}/{code}")
+    Call<GenericResponse> removeGroupFromAccount(@Path("phoneNumber") String phoneNumber,
+                                                 @Path("code") String code,
+                                                 @Query("accountUid") String accountUid,
+                                                 @Query("groupUid") String groupUid);
 
   }
 }

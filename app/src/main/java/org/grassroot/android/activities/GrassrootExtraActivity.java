@@ -4,6 +4,7 @@ import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
@@ -15,6 +16,7 @@ import android.widget.Toast;
 
 import org.grassroot.android.R;
 import org.grassroot.android.adapters.GroupPickAdapter;
+import org.grassroot.android.fragments.AccountTypeFragment;
 import org.grassroot.android.fragments.GRExtraEnabledAccountFragment;
 import org.grassroot.android.fragments.GiantMessageFragment;
 import org.grassroot.android.fragments.GroupPickFragment;
@@ -23,11 +25,17 @@ import org.grassroot.android.fragments.dialogs.MultiLineTextDialog;
 import org.grassroot.android.interfaces.NavigationConstants;
 import org.grassroot.android.models.Account;
 import org.grassroot.android.models.Group;
-import org.grassroot.android.models.responses.AccountResponse;
 import org.grassroot.android.models.responses.GenericResponse;
+import org.grassroot.android.models.responses.RestResponse;
 import org.grassroot.android.services.GrassrootRestService;
+import org.grassroot.android.utils.ErrorUtils;
 import org.grassroot.android.utils.NetworkUtils;
 import org.grassroot.android.utils.RealmUtils;
+import org.grassroot.android.utils.Utilities;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -47,13 +55,19 @@ public class GrassrootExtraActivity extends PortraitActivity implements Navigati
 
     private static final String FFORM = "FREEFORM";
     private static final String ADDTOACC = "ADDTOACCCOUNT";
+    private static final String REMGROUP = "REMOVEGROUP";
 
     private String accountUid;
+    private String accountType;
     private int groupsLeft;
     private int messagesLeft;
 
+    private Map<String, String> accountTypeNames;
+    private Map<String, String> accountTypeFees;
+
     private GRExtraEnabledAccountFragment mainFragment;
     private GroupPickFragment pickFragment;
+    private AccountTypeFragment typeFragment;
     private ActionBarDrawerToggle drawerToggle;
 
     @BindView(R.id.gextra_toolbar) Toolbar toolbar;
@@ -80,26 +94,22 @@ public class GrassrootExtraActivity extends PortraitActivity implements Navigati
         showProgress();
         if (NetworkUtils.isNetworkAvailable(this)) {
             GrassrootRestService.getInstance().getApi().getGrassrootExtraSettings(RealmUtils.loadPreferencesFromDB().getMobileNumber(),
-                    RealmUtils.loadPreferencesFromDB().getToken()).enqueue(new Callback<AccountResponse>() {
+                    RealmUtils.loadPreferencesFromDB().getToken()).enqueue(new Callback<RestResponse<Account>>() {
                 @Override
-                public void onResponse(Call<AccountResponse> call, Response<AccountResponse> response) {
+                public void onResponse(Call<RestResponse<Account>> call, Response<RestResponse<Account>> response) {
                     hideProgress();
-                    Log.e(TAG, "response body: " + response.body().getMessage());
-                    Account account = response.body().getAccount();
+                    Account account = response.body().getData();
                     if (account == null) {
                         redirectToSignup();
                     } else if (account.isEnabled()) {
-                        accountUid = account.getUid();
-                        messagesLeft = account.getMessagesLeft();
-                        groupsLeft = account.getGroupsLeft();
-                        showEnabledFragment(account);
+                        setUpFieldsAndMainFragment(account);
                     } else {
                         Log.e(TAG, "disabled!");
                     }
                 }
 
                 @Override
-                public void onFailure(Call<AccountResponse> call, Throwable t) {
+                public void onFailure(Call<RestResponse<Account>> call, Throwable t) {
                     hideProgress();
                     showNotConnectedMsg();
                 }
@@ -107,6 +117,17 @@ public class GrassrootExtraActivity extends PortraitActivity implements Navigati
         } else {
             showNotConnectedMsg();
         }
+    }
+
+    private void setUpFieldsAndMainFragment(final Account account) {
+        accountUid = account.getUid();
+        accountType = account.getType();
+        messagesLeft = account.getMessagesLeft();
+        groupsLeft = account.getGroupsLeft();
+        showEnabledFragment(account);
+
+        accountTypeNames = Utilities.parseStringArray(R.array.account_type_names);
+        accountTypeFees = Utilities.parseStringArray(R.array.account_type_costs);
     }
 
     public void sendFreeFormMessage() {
@@ -123,6 +144,36 @@ public class GrassrootExtraActivity extends PortraitActivity implements Navigati
         } else {
             showLimitDialog(getString(R.string.add_group_nospace));
         }
+    }
+
+    @Override
+    public void removeGroupFromAccount() {
+        showProgress();
+        final String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
+        final String code = RealmUtils.loadPreferencesFromDB().getToken();
+        GrassrootRestService.getInstance().getApi().fetchGroupsSponsored(phoneNumber, code, accountUid)
+                .enqueue(new Callback<RestResponse<List<Group>>>() {
+                    @Override
+                    public void onResponse(Call<RestResponse<List<Group>>> call, Response<RestResponse<List<Group>>> response) {
+                        hideProgress();
+                        if (response.isSuccessful()) {
+                            manualPickFragment(new ArrayList<Group>(response.body().getData()), REMGROUP);
+                        } else {
+                            showServerErrorDialog(ErrorUtils.serverErrorText(response.errorBody()), true);
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(Call<RestResponse<List<Group>>> call, Throwable t) {
+                        hideProgress();
+                        showConnectionErrorDialog(new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialogInterface, int i) {
+                                removeGroupFromAccount();
+                            }
+                        });
+                    }
+                });
     }
 
     public void onGroupPicked(final Group group, String returnTag) {
@@ -153,6 +204,23 @@ public class GrassrootExtraActivity extends PortraitActivity implements Navigati
                     })
                     .setCancelable(true);
             builder.show();
+        } else if (REMGROUP.equals(returnTag)) {
+            AlertDialog.Builder builder = new AlertDialog.Builder(this)
+                    .setMessage(R.string.remove_group_confirm)
+                    .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                            removeGroupFromAccount(group.getGroupUid());
+                        }
+                    })
+                    .setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                            dialogInterface.cancel();
+                        }
+                    })
+                    .setCancelable(true);
+            builder.show();
         }
     }
 
@@ -164,28 +232,69 @@ public class GrassrootExtraActivity extends PortraitActivity implements Navigati
                 .enqueue(new Callback<GenericResponse>() {
                     @Override
                     public void onResponse(Call<GenericResponse> call, Response<GenericResponse> response) {
-                        // todo : switch group to paid for locally
                         hideProgress();
                         if (response.isSuccessful()) {
                             groupsLeft--;
                             closePickFragment();
                             showEnabledFragment(null);
                             Toast.makeText(GrassrootExtraActivity.this, R.string.add_group_done, Toast.LENGTH_SHORT).show();
+                            Group group = RealmUtils.loadGroupFromDB(groupUid);
+                            group.setPaidFor(true);
+                            RealmUtils.saveDataToRealm(group).subscribe();
                         } else {
-                            Log.e(TAG, "oops, went wrong");
+                            showServerErrorDialog(ErrorUtils.serverErrorText(response.errorBody()), false);
                         }
                     }
 
                     @Override
                     public void onFailure(Call<GenericResponse> call, Throwable t) {
-                        // todo : show an error message
                         hideProgress();
+                        showConnectionErrorDialog(new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialogInterface, int i) {
+                                addGroupToAccount(groupUid);
+                            }
+                        });
                     }
                 });
     }
 
-    private void confirmSendMessage(String grouUid, String message) {
-        Log.e(TAG, "okay, we're sending this thing");
+    public void removeGroupFromAccount(final String groupUid) {
+        showProgress();
+        final String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
+        final String token = RealmUtils.loadPreferencesFromDB().getToken();
+        GrassrootRestService.getInstance().getApi().removeGroupFromAccount(phoneNumber, token, accountUid, groupUid)
+                .enqueue(new Callback<GenericResponse>() {
+                    @Override
+                    public void onResponse(Call<GenericResponse> call, Response<GenericResponse> response) {
+                        hideProgress();
+                        if (response.isSuccessful()) {
+                            groupsLeft++;
+                            closePickFragment();
+                            showEnabledFragment(null);
+                            Toast.makeText(GrassrootExtraActivity.this, R.string.remove_group_done, Toast.LENGTH_SHORT).show();
+                            Group group = RealmUtils.loadGroupFromDB(groupUid);
+                            group.setPaidFor(false);
+                            RealmUtils.saveDataToRealm(group).subscribe();
+                        } else {
+                            showServerErrorDialog(ErrorUtils.serverErrorText(response.errorBody()), true);
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(Call<GenericResponse> call, Throwable t) {
+                        hideProgress();
+                        showConnectionErrorDialog(new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialogInterface, int i) {
+                                removeGroupFromAccount(groupUid);
+                            }
+                        });
+                    }
+                });
+    }
+
+    private void confirmSendMessage(final String grouUid, final String message) {
         showProgress();
         final String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
         final String token = RealmUtils.loadPreferencesFromDB().getToken();
@@ -199,20 +308,91 @@ public class GrassrootExtraActivity extends PortraitActivity implements Navigati
                             showEnabledFragment(null);
                             Toast.makeText(GrassrootExtraActivity.this, R.string.free_form_done, Toast.LENGTH_SHORT).show();
                         } else {
-                            Log.e(TAG, "okay that didn't work ...");
+                            showServerErrorDialog(ErrorUtils.serverErrorText(response.errorBody()), false);
                         }
                     }
 
                     @Override
                     public void onFailure(Call<GenericResponse> call, Throwable t) {
-                        // todo : fix this
                         hideProgress();
+                        showConnectionErrorDialog(new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialogInterface, int i) {
+                                confirmSendMessage(grouUid, message);
+                            }
+                        });
                     }
                 });
     }
 
     public void changeAccountType() {
+        typeFragment = AccountTypeFragment.newInstance(accountType, new Action1<String>() {
+            @Override
+            public void call(String s) {
+                confirmAccountTypeChange(s);
+            }
+        });
+        getSupportFragmentManager().beginTransaction()
+                .replace(R.id.gextra_fragment_holder, typeFragment, "account_type")
+                .addToBackStack(null)
+                .commit();
+    }
 
+    private void confirmAccountTypeChange(final String accountType) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        Log.e(TAG, "confirming change to account type: " + accountType);
+
+        builder.setMessage(getString(R.string.account_type_change_confirm, accountTypeNames.get(accountType), accountTypeFees.get(accountType)))
+                .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        executeAccountTypeChange(accountType);
+                    }
+                })
+                .setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        dialogInterface.cancel();
+                    }
+                })
+                .setCancelable(true);
+        builder.show();
+    }
+
+    private void executeAccountTypeChange(final String accountType) {
+        showProgress();
+        final String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
+        final String code = RealmUtils.loadPreferencesFromDB().getToken();
+        GrassrootRestService.getInstance().getApi().changeAccountType(phoneNumber, code,
+                accountUid, accountType).enqueue(new Callback<RestResponse<Account>>() {
+            @Override
+            public void onResponse(Call<RestResponse<Account>> call, Response<RestResponse<Account>> response) {
+                hideProgress();
+                if (response.isSuccessful()) {
+                    Account updatedAccount = response.body().getData();
+                    if (typeFragment != null) {
+                        getSupportFragmentManager().beginTransaction()
+                                .remove(typeFragment)
+                                .commit();
+                    }
+                    setUpFieldsAndMainFragment(updatedAccount);
+                    Toast.makeText(GrassrootExtraActivity.this, R.string.account_type_change_done, Toast.LENGTH_SHORT).show();
+                } else {
+                    showServerErrorDialog(ErrorUtils.serverErrorText(response.errorBody()), true);
+                }
+            }
+
+            @Override
+            public void onFailure(Call<RestResponse<Account>> call, Throwable t) {
+                hideProgress();
+                showConnectionErrorDialog(new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        executeAccountTypeChange(accountType);
+                    }
+                });
+            }
+        });
     }
 
     private void showEnabledFragment(final Account account) {
@@ -222,6 +402,8 @@ public class GrassrootExtraActivity extends PortraitActivity implements Navigati
 
         if (mainFragment == null && account != null) {
             mainFragment = GRExtraEnabledAccountFragment.newInstance(account, this);
+        } else if (account != null) {
+            mainFragment.resetAccount(account);
         }
 
         getSupportFragmentManager().beginTransaction()
@@ -236,6 +418,16 @@ public class GrassrootExtraActivity extends PortraitActivity implements Navigati
 
     private void openPickFragment(final boolean paidFor, final String returnTag) {
         pickFragment = GroupPickFragment.newInstance(paidFor, returnTag);
+        getSupportFragmentManager().beginTransaction()
+                .replace(R.id.gextra_fragment_holder, pickFragment, "group_pick")
+                .addToBackStack(null)
+                .commit();
+        setTitle(R.string.home_group_pick);
+        switchActionBarToClose();
+    }
+
+    private void manualPickFragment(ArrayList<Group> groups, final String returnTag) {
+        pickFragment = GroupPickFragment.newInstance(groups, returnTag);
         getSupportFragmentManager().beginTransaction()
                 .replace(R.id.gextra_fragment_holder, pickFragment, "group_pick")
                 .addToBackStack(null)
@@ -289,11 +481,61 @@ public class GrassrootExtraActivity extends PortraitActivity implements Navigati
                 .setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialogInterface, int i) {
-                        dialogInterface.dismiss();
+                        dialogInterface.cancel();
                     }
                 })
                 .setCancelable(true);
         builder.show();
+    }
+
+    private void showServerErrorDialog(final String message, boolean showWebLink) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this)
+                .setMessage(message)
+                .setNegativeButton(R.string.alert_close, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        dialogInterface.cancel();
+                    }
+                })
+                .setCancelable(true);
+
+        if (showWebLink) {
+            builder.setPositiveButton(R.string.account_try_webapp, new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialogInterface, int i) {
+                    openWebApp();
+                }
+            });
+        }
+
+        builder.show();
+    }
+
+    private void showConnectionErrorDialog(DialogInterface.OnClickListener retryListener) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this)
+                .setMessage(R.string.account_connect_error_short)
+                .setPositiveButton(R.string.snackbar_try_again, retryListener)
+                .setNeutralButton(R.string.account_try_webapp, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        openWebApp();
+                    }
+                })
+                .setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        dialogInterface.cancel();
+                    }
+                })
+                .setCancelable(true);
+        builder.show();
+    }
+
+    private void openWebApp() {
+        final String url = "https://app.grassroot.org.za"; // todo : include direct to account page
+        Intent i = new Intent(Intent.ACTION_VIEW);
+        i.setData(Uri.parse(url));
+        startActivity(i);
     }
 
     private void showNotConnectedMsg() {

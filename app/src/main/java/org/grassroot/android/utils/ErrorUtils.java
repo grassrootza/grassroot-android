@@ -76,6 +76,15 @@ public class ErrorUtils {
     public static final String TODO_LIMIT_REACHED = "TODO_LIMIT_REACHED";
     public static final String GROUP_SIZE_LIMIT = "GROUP_SIZE_LIMIT";
 
+    private static final String ACCOUNT_GROUPS_EXHAUSTED = "ACCOUNT_GROUPS_EXHAUSTED";
+    private static final String GROUP_ALREADY_PAID_FOR = "GROUP_ALREADY_PAID_FOR";
+    private static final String GROUP_ACCOUNT_WRONG = "GROUP_ACCOUNT_WRONG";
+    private static final String GROUP_NOT_PAID_FOR = "GROUP_NOT_PAID_FOR";
+    private static final String FREE_FORM_EXHAUSTED = "FREE_FORM_EXHAUSTED";
+    private static final String MUST_REMOVE_PAID_GROUPS = "MUST_REMOVE_PAID_GROUPS";
+    private static final String ERROR_REMOVING_GROUPS = "ERROR_REMOVING_GROUPS";
+
+
     public static String serverErrorText(final String restMessage) {
         final Context context = ApplicationLoader.applicationContext;
         if (TextUtils.isEmpty(restMessage)) {
@@ -130,6 +139,20 @@ public class ErrorUtils {
                     return context.getString(R.string.server_error_unsubscribe_error);
                 case MESSAGE_SETTING_NOT_FOUND:
                     return context.getString(R.string.server_error_no_chat_settings);
+                case ACCOUNT_GROUPS_EXHAUSTED:
+                    return context.getString(R.string.account_no_more_groups);
+                case GROUP_ALREADY_PAID_FOR:
+                    return context.getString(R.string.account_group_already_paid);
+                case GROUP_ACCOUNT_WRONG:
+                    return context.getString(R.string.account_group_mismatch);
+                case GROUP_NOT_PAID_FOR:
+                    return context.getString(R.string.account_group_not_paid_for);
+                case FREE_FORM_EXHAUSTED:
+                    return context.getString(R.string.account_no_more_fform);
+                case MUST_REMOVE_PAID_GROUPS:
+                    return context.getString(R.string.account_must_remove_groups);
+                case ERROR_REMOVING_GROUPS:
+                    return context.getString(R.string.account_group_remove_error);
                 default:
                     return context.getString(R.string.server_error_general);
             }

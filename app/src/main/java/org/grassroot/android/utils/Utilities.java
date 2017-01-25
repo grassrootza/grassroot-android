@@ -6,11 +6,13 @@ import android.content.Context;
 import android.os.Build;
 import android.telephony.PhoneNumberUtils;
 import android.util.Log;
+import android.util.SparseArray;
 
 import org.grassroot.android.models.Member;
 import org.grassroot.android.services.ApplicationLoader;
 
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -26,6 +28,16 @@ public class Utilities {
     private static final Pattern nationalRegex = Pattern.compile("0[6,7,8]\\d{8}");
 
     private static final Pattern alphaNumericRegex = Pattern.compile("[^a-z0-9 ]", Pattern.CASE_INSENSITIVE);
+
+    public static HashMap<String, String> parseStringArray(int stringArrayResourceId) {
+        String[] stringArray = ApplicationLoader.applicationContext.getResources().getStringArray(stringArrayResourceId);
+        HashMap<String, String> outputMap = new HashMap<>(stringArray.length);
+        for (String entry : stringArray) {
+            String[] splitResult = entry.split("\\|", 2);
+            outputMap.put(splitResult[0], splitResult[1]);
+        }
+        return outputMap;
+    }
 
     public static long getCurrentTimeInMillisAtUTC() {
         return (new Date()).getTime();
@@ -50,7 +62,6 @@ public class Utilities {
             Log.d(TAG, "error! tried to reformat, couldn't, here is phone number = " + normalizedNumber);
             return normalizedNumber;
         }
-
     }
 
     public static boolean checkIfLocalNumber(String phoneNumber) {

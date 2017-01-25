@@ -128,6 +128,8 @@
 
     <string name="alert_confirm">Confirm</string>
     <string name="alert_cancel">@android:string/cancel</string>
+    <string name="alert_close">Close</string>
+
     <string name="okay_button">@android:string/ok</string>
     <string name="button_save">Save</string>
     <string name="button_cancel">@android:string/cancel</string>
@@ -929,12 +931,13 @@
 
     <string name="gextra_send_msg">Send custom message</string>
     <string name="gextra_add_group">Add a group</string>
+    <string name="gextra_remove_group">Remove a group</string>
     <string name="account_type">Your account type is %1$s</string>
     <string name="account_change">Change account type</string>
 
     <string name="account_subs_fee">R%1$s subscription per month. </string>
-    <string name="account_billing_next">Next billing date is %1$s. </string>
-    <string name="account_payment_last">Last payment date was %1$s.</string>
+    <string name="account_billing_next"> Next billing date is %1$s. </string>
+    <string name="account_payment_last"> Last payment date was %1$s.</string>
 
     <string name="account_limits_header">Account limits:</string>
     <string name="account_limits_msgs">%1$d messages per month</string>
@@ -994,15 +997,51 @@
     account will have space left for %1$d groups.</string>
     <string name="add_group_done">Done! Group added to account</string>
 
-    <string name="account_upgrade">Upgrade</string>
+    <string name="remove_group_confirm">Are you sure you want to remove this group? Afterwards it will
+    lose access to Extra features and its size limit will be reduced.</string>
+    <string name="remove_group_done">Done! The group has been removed</string>
 
-    <!-- Account limits -->
+    <string name="account_upgrade">Upgrade</string>
+    <string name="account_try_webapp">Open browser</string>
+
+    <string name="account_type_change_confirm">You are changing your account type to %1$s. Your new monthly
+    fee will be %2$s. Are you sure?</string>
+    <string name="account_type_change_done">Done! Your account has been changed</string>
+
+    <string-array name="account_type_names">
+        <item>STANDARD|standard</item>
+        <item>LIGHT|light</item>
+        <item>HEAVY|heavy</item>
+    </string-array>
+
+    <string-array name="account_type_costs">
+        <item>STANDARD|R250</item>
+        <item>LIGHT|R100</item>
+        <item>HEAVY|R1,000</item>
+    </string-array>
+
+    <!-- Account limits and errors -->
     <string name="account_limit_gotogr">Go to Grassroot Extra</string>
     <string name="account_limit_abort">Cancel and home</string>
     <string name="account_todo_limit_reached">Sorry, this group has reached its limit of todos for the month. To
     increase its limit, please sign up for Grassroot Extra or upgrade your account.</string>
     <string name="account_group_size_limit">Sorry, this group has reached its size limit. To add more members,
     please sign up for Grassroot Extra or upgrade your account.</string>
+
+    <string name="account_no_more_groups">Sorry, you have run out of groups on your account
+        (the account might have been changed on the web).</string>
+    <string name="account_group_already_paid">Sorry, that group has already been added to an account</string>
+    <string name="account_group_mismatch">Sorry, it looks like that group is on another account</string>
+    <string name="account_group_not_paid_for">Sorry, that group is no longer on the account. Please add it and try again.</string>
+    <string name="account_no_more_fform">Sorry, you do not have enough messages left this month to send to that group. Send to a
+        smaller group, or upgrade your account.</string>
+    <string name="account_must_remove_groups">Your new account type will not have space for all of your groups.
+        Please remove groups in order to downgrade.</string>
+    <string name="account_group_remove_error">Sorry, there was an error removing the group from your account. Please retry in
+     the web app or try again later.</string>
+
+    <string name="account_connect_error_short">Sorry, we can\'t establish a connection to the server. You can retry or cancel and
+    try again later, or open the app in a browser.</string>
 
     <!--Notifications-->
     <string name="messages_new">" new messages."</string>

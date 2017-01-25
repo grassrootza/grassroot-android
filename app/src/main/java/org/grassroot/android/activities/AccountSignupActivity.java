@@ -175,7 +175,7 @@ public class AccountSignupActivity extends PortraitActivity implements Navigatio
     private void validateEmailAndNext(String email) {
         billingEmail = email;
 
-        AccountTypeFragment fragment = AccountTypeFragment.newInstance(new Action1<String>() {
+        AccountTypeFragment fragment = AccountTypeFragment.newInstance(AccountTypeFragment.STD, new Action1<String>() {
             @Override
             public void call(String s) {
                 initiatePayment(s);
@@ -235,11 +235,9 @@ public class AccountSignupActivity extends PortraitActivity implements Navigatio
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         switch (resultCode) {
             case CheckoutActivity.RESULT_OK:
-                Log.e(TAG, "all okay!");
                 showSuccessDialogAndExit();
                 break;
             case CheckoutActivity.RESULT_CANCELED:
-                Log.e(TAG, "nope, failure!");
                 showCancelledDialogAndOptions();
                 break;
             case CheckoutActivity.RESULT_ERROR:

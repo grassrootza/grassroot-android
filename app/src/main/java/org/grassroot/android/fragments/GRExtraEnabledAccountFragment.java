@@ -3,7 +3,7 @@ package org.grassroot.android.fragments;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
-import android.util.Log;
+import android.support.v7.widget.CardView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -47,9 +47,13 @@ public class GRExtraEnabledAccountFragment extends Fragment {
     @BindView(R.id.account_limits_group_size) TextView groupSizeLimit;
     @BindView(R.id.account_limits_todos_month) TextView todosPerMonthLimit;
 
+    @BindView(R.id.gextra_add_group_card) CardView addGroupsButton;
+    @BindView(R.id.gextra_remove_group_card) CardView removeGroupsButton;
+
     public interface GrExtraListener {
         void sendFreeFormMessage();
         void addGroupToAccount();
+        void removeGroupFromAccount();
         void changeAccountType();
     }
 
@@ -67,15 +71,37 @@ public class GRExtraEnabledAccountFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_account_settings, container, false);
         unbinder = ButterKnife.bind(this, view);
 
-        account = getArguments().getParcelable(ACCOUNT);
         if (account == null) {
-            Log.e(TAG, "error! null account passed to fragment");
+            account = getArguments().getParcelable(ACCOUNT);
+        }
+
+        if (account == null) {
             startActivity(ErrorUtils.gracefulExitToHome(getActivity()));
-        } else {
-            setTextFields();
         }
 
         return view;
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        toggleAddRemove();
+        setTextFields();
+    }
+
+    public void resetAccount(final Account updatedAccount) {
+        account = updatedAccount;
+
+        if (accounSettingsHeader != null) {
+            toggleAddRemove();
+            setTextFields();
+        }
+    }
+
+    public void toggleAddRemove() {
+        addGroupsButton.setVisibility(account.getGroupsLeft() != 0 ? View.VISIBLE : View.GONE);
+        removeGroupsButton.setVisibility(account.getGroupsLeft() != account.getMaxNumberGroups() ?
+                View.VISIBLE : View.GONE);
     }
 
     private void setTextFields() {
@@ -120,6 +146,9 @@ public class GRExtraEnabledAccountFragment extends Fragment {
     public void addGroupToAccount() {
         listener.addGroupToAccount();
     }
+
+    @OnClick(R.id.gextra_remove_group_btn)
+    public void removeGroupFromAccount() { listener.removeGroupFromAccount(); }
 
     @OnClick(R.id.account_type_change)
     public void changeAccountType() {

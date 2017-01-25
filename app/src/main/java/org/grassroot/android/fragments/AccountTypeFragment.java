@@ -2,6 +2,7 @@ package org.grassroot.android.fragments;
 
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -38,8 +39,11 @@ public class AccountTypeFragment extends Fragment {
 
     private String selectedType;
 
-    public static AccountTypeFragment newInstance(Action1<String> subscriber) {
+    public static AccountTypeFragment newInstance(String preSelectedType, Action1<String> subscriber) {
         AccountTypeFragment fragment = new AccountTypeFragment();
+        Bundle args = new Bundle();
+        args.putString("PRE_SELECTED", preSelectedType);
+        fragment.setArguments(args);
         fragment.subscriber = subscriber;
         return fragment;
     }
@@ -49,8 +53,19 @@ public class AccountTypeFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_account_type_select, container, false);
         unbinder = ButterKnife.bind(this, view);
 
-        selectedType = STD;
-        stdRadio.setChecked(true);
+        final String preSelect = getArguments().getString("PRE_SELECTED");
+        selectedType = TextUtils.isEmpty(preSelect) ? STD : preSelect;
+
+        switch (selectedType) {
+            case LIGHT:
+                lightRadio.setChecked(true);
+                break;
+            case HEAVY:
+                heavyRadio.setChecked(true);
+                break;
+            default:
+                stdRadio.setChecked(true);
+        }
 
         return view;
     }

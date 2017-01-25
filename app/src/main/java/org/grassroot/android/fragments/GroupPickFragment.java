@@ -63,6 +63,16 @@ public class GroupPickFragment extends Fragment {
     return fragment;
   }
 
+  public static GroupPickFragment newInstance(ArrayList<Group> groupsToPick, final String returnTag) {
+    final GroupPickFragment fragment = new GroupPickFragment();
+    Bundle args = new Bundle();
+    args.putString("TYPE", "MANUAL");
+    args.putString("RETURN_TAG", returnTag);
+    args.putParcelableArrayList("GROUPS", groupsToPick);
+    fragment.setArguments(args);
+    return fragment;
+  }
+
   @Override public void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
 
@@ -72,10 +82,15 @@ public class GroupPickFragment extends Fragment {
     filteredGroups = new ArrayList<>();
     // note : activity must implement adapter's listener
     groupPickAdapter = new GroupPickAdapter(returnTag, filteredGroups, getActivity());
-    if ("PERMISSION".equals(args.getString("TYPE"))) {
+    final String type = args.getString("TYPE");
+    if ("PERMISSION".equals(type)) {
       loadGroupsByPermission(args.getString("PERMISSION"));
-    } else if ("PAID".equals(args.getString("TYPE"))) {
+    } else if ("PAID".equals(type)) {
       loadGroupsByPaidStatus(args.getBoolean("PAID"));
+    } else if ("MANUAL".equals(type)) {
+      ArrayList<Group> groups = args.getParcelableArrayList("GROUPS");
+      filteredGroups = groups;
+      groupPickAdapter.setGroupList(filteredGroups);
     }
 
   }
