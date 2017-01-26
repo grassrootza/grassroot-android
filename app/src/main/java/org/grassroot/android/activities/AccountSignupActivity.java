@@ -18,8 +18,6 @@ import android.view.View;
 import android.widget.ProgressBar;
 
 import com.oppwa.mobile.connect.checkout.dialog.CheckoutActivity;
-import com.oppwa.mobile.connect.checkout.meta.CheckoutPaymentMethod;
-import com.oppwa.mobile.connect.checkout.meta.CheckoutSettings;
 import com.oppwa.mobile.connect.exception.PaymentError;
 import com.oppwa.mobile.connect.exception.PaymentException;
 import com.oppwa.mobile.connect.provider.Connect;
@@ -34,6 +32,7 @@ import org.grassroot.android.fragments.SingleInputFragment;
 import org.grassroot.android.interfaces.NavigationConstants;
 import org.grassroot.android.models.AccountBill;
 import org.grassroot.android.models.responses.RestResponse;
+import org.grassroot.android.services.AccountService;
 import org.grassroot.android.services.GrassrootRestService;
 import org.grassroot.android.utils.RealmUtils;
 
@@ -53,7 +52,7 @@ public class AccountSignupActivity extends PortraitActivity implements Navigatio
     private static final String TAG = GrassrootExtraActivity.class.getSimpleName();
 
     @BindView(R.id.acs_toolbar) Toolbar toolbar;
-    @BindView(R.id.navigation_drawer) DrawerLayout drawer;
+    @BindView(R.id.gextra_signup_drawerlayout) DrawerLayout drawer;
 
     private String accountName;
     private String billingEmail;
@@ -83,7 +82,6 @@ public class AccountSignupActivity extends PortraitActivity implements Navigatio
     @Override
     protected void onStart() {
         super.onStart();
-
         Intent intent = new Intent(this, ConnectService.class);
         startService(intent);
         bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE);
@@ -190,11 +188,10 @@ public class AccountSignupActivity extends PortraitActivity implements Navigatio
 
     private void initiatePayment(final String type) {
         accountType = type;
-
-        progressBar.setVisibility(View.VISIBLE);
         if (!TextUtils.isEmpty(paymentId)) {
             initiateCheckout(paymentId);
         } else {
+            progressBar.setVisibility(View.VISIBLE);
             final String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
             final String code = RealmUtils.loadPreferencesFromDB().getToken();
             GrassrootRestService.getInstance().getApi().initiateAccountSignup(phoneNumber, code,
@@ -203,6 +200,7 @@ public class AccountSignupActivity extends PortraitActivity implements Navigatio
                 public void onResponse(Call<RestResponse<AccountBill>> call, Response<RestResponse<AccountBill>> response) {
                     paymentId = response.body().getData().getPaymentId();
                     Log.e(TAG, "initating payment with ID : " + paymentId);
+                    progressBar.setVisibility(View.GONE);
                     initiateCheckout(paymentId);
                 }
 
@@ -216,18 +214,7 @@ public class AccountSignupActivity extends PortraitActivity implements Navigatio
 
     private void initiateCheckout(final String checkoutId) {
         final String paymentTitle = getString(R.string.billing_signup_title);
-        CheckoutSettings settings = new CheckoutSettings(
-                checkoutId,
-                paymentTitle,
-                new CheckoutPaymentMethod[] {
-                        CheckoutPaymentMethod.VISA,
-                        CheckoutPaymentMethod.MASTERCARD
-                });
-
-        Intent intent = new Intent(AccountSignupActivity.this, CheckoutActivity.class);
-        intent.putExtra(CheckoutActivity.CHECKOUT_SETTINGS, settings);
-
-        progressBar.setVisibility(View.GONE);
+        Intent intent = AccountService.initiateCheckout(this, checkoutId, paymentTitle);
         startActivityForResult(intent, CheckoutActivity.CHECKOUT_ACTIVITY);
     }
 

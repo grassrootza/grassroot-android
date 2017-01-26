@@ -982,6 +982,7 @@
     <string name="account_payment_error_exit">Exit to home</string>
 
     <string name="billing_signup_title">Signup payment</string>
+    <string name="billing_enable_title">Enable account payment</string>
 
     <string name="free_form_title">Enter message</string>
     <string name="free_form_body">Enter the SMS to send to the group</string>
@@ -1042,6 +1043,13 @@
 
     <string name="account_connect_error_short">Sorry, we can\'t establish a connection to the server. You can retry or cancel and
     try again later, or open the app in a browser.</string>
+
+    <string name="account_disabled_title">Account payment</string>
+    <string name="account_disabled_body">Your Grassroot Extra account has not been enabled yet. To enable
+    it, please complete payment by credit card, or go to the web app</string>
+    <string name="account_disabled_payment">Pay now</string>
+    <string name="account_disabled_online">Open web app</string>
+    <string name="account_enabled_async">Account has been enabled!</string>
 
     <!--Notifications-->
     <string name="messages_new">" new messages."</string>

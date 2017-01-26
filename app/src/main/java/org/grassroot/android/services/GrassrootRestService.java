@@ -588,5 +588,10 @@ public class GrassrootRestService {
                                                  @Query("accountUid") String accountUid,
                                                  @Query("groupUid") String groupUid);
 
+    @GET("account/payment/enable/initiate/{phoneNumber}/{code}")
+    Call<RestResponse<String>> initiateAccountEnablePayment(@Path("phoneNumber") String phoneNumber,
+                                                            @Path("code") String code,
+                                                            @Query("accountUid") String accountUid);
+
   }
 }
