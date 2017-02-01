@@ -16,6 +16,7 @@ import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
 import android.widget.ProgressBar;
+import android.widget.Toast;
 
 import com.oppwa.mobile.connect.checkout.dialog.CheckoutActivity;
 import com.oppwa.mobile.connect.exception.PaymentError;
@@ -30,10 +31,12 @@ import org.grassroot.android.fragments.GiantMessageFragment;
 import org.grassroot.android.fragments.NavigationDrawerFragment;
 import org.grassroot.android.fragments.SingleInputFragment;
 import org.grassroot.android.interfaces.NavigationConstants;
+import org.grassroot.android.models.Account;
 import org.grassroot.android.models.AccountBill;
 import org.grassroot.android.models.responses.RestResponse;
 import org.grassroot.android.services.AccountService;
 import org.grassroot.android.services.GrassrootRestService;
+import org.grassroot.android.utils.ErrorUtils;
 import org.grassroot.android.utils.RealmUtils;
 
 import butterknife.BindView;
@@ -57,6 +60,8 @@ public class AccountSignupActivity extends PortraitActivity implements Navigatio
     private String accountName;
     private String billingEmail;
     private String accountType;
+
+    private String accountUid;
     private String paymentId;
 
     @BindView(R.id.progressBar) ProgressBar progressBar;
@@ -102,7 +107,12 @@ public class AccountSignupActivity extends PortraitActivity implements Navigatio
         }
         drawerToggle.syncState();
 
-        welcomeAndStart();
+        Bundle args = getIntent().getExtras();
+        if (args != null && args.containsKey(AccountService.UID_FIELD)) {
+            showDisabledMsg(args.getString(AccountService.UID_FIELD));
+        } else {
+            welcomeAndStart();
+        }
     }
 
     @Override
@@ -198,18 +208,104 @@ public class AccountSignupActivity extends PortraitActivity implements Navigatio
                     accountName, billingEmail, accountType).enqueue(new Callback<RestResponse<AccountBill>>() {
                 @Override
                 public void onResponse(Call<RestResponse<AccountBill>> call, Response<RestResponse<AccountBill>> response) {
-                    paymentId = response.body().getData().getPaymentId();
-                    Log.e(TAG, "initating payment with ID : " + paymentId);
-                    progressBar.setVisibility(View.GONE);
-                    initiateCheckout(paymentId);
+                    if (response.isSuccessful()) {
+                        paymentId = response.body().getData().getPaymentId();
+                        Log.e(TAG, "initating payment with ID : " + paymentId);
+                        progressBar.setVisibility(View.GONE);
+                        initiateCheckout(paymentId);
+                    } else {
+                        AlertDialog.Builder builder = AccountService.showServerErrorDialog(AccountSignupActivity.this,
+                                ErrorUtils.serverErrorText(response.errorBody()), true);
+                        builder.show();
+                    }
                 }
 
                 @Override
                 public void onFailure(Call<RestResponse<AccountBill>> call, Throwable t) {
-
+                    AlertDialog.Builder builder = AccountService.showConnectionErrorDialog(AccountSignupActivity.this,
+                            new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialogInterface, int i) {
+                                  initiatePayment(type);
+                                }
+                            });
+                    builder.show();
                 }
             });
         }
+    }
+
+    private void showDisabledMsg(final String accountUid) {
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setDisplayShowTitleEnabled(false);
+        }
+
+        this.accountUid = accountUid;
+
+        GiantMessageFragment messageFragment = new GiantMessageFragment.Builder(R.string.account_disabled_title)
+                .setBody(getString(R.string.account_disabled_body))
+                .setButtonOne(R.string.account_disabled_payment, new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        paymentFragmentDisabledAccount(accountUid);
+                    }
+                })
+                .setButtonTwo(R.string.account_disabled_online, new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        startActivity(AccountService.openWebApp());
+                    }
+                })
+                .showHomeButton(false)
+                .build();
+
+        getSupportFragmentManager().beginTransaction()
+                .add(R.id.acs_fragment_holder, messageFragment, "message")
+                .commit();
+    }
+
+    private void paymentFragmentDisabledAccount(final String accountUid) {
+        final String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
+        final String code = RealmUtils.loadPreferencesFromDB().getToken();
+        progressBar.setVisibility(View.VISIBLE);
+        Log.e(TAG, "okay, trying to initiate payment ...");
+        GrassrootRestService.getInstance().getApi().initiateAccountEnablePayment(phoneNumber, code, accountUid)
+                .enqueue(new Callback<RestResponse<String>>() {
+                    @Override
+                    public void onResponse(Call<RestResponse<String>> call, Response<RestResponse<String>> response) {
+                        progressBar.setVisibility(View.GONE);
+                        Log.e(TAG, "got a response: " + response);
+                        if (response.isSuccessful()) {
+                            paymentId = response.body().getData();
+                            Intent i = AccountService.initiateCheckout(AccountSignupActivity.this,
+                                    paymentId, getString(R.string.billing_enable_title));
+                            startActivityForResult(i, CheckoutActivity.CHECKOUT_ACTIVITY);
+                        } else {
+                            final String restMessage = ErrorUtils.getRestMessage(response.errorBody());
+                            if ("ACCOUNT_ENABLED".equals(restMessage)) {
+                                Toast.makeText(AccountSignupActivity.this, R.string.account_enabled_async,
+                                        Toast.LENGTH_SHORT).show();
+                                showSuccessDialogAndExit(null);
+                            } else {
+                                AlertDialog.Builder builder = AccountService.showServerErrorDialog(AccountSignupActivity.this,
+                                        ErrorUtils.serverErrorText(response.errorBody()), true);
+                                builder.show();
+                            }
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(Call<RestResponse<String>> call, Throwable t) {
+                        progressBar.setVisibility(View.GONE);
+                        AlertDialog.Builder builder = AccountService.showConnectionErrorDialog(AccountSignupActivity.this,
+                                new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialogInterface, int i) { paymentFragmentDisabledAccount(accountUid);
+                                    }
+                        });
+                        builder.show();
+                    }
+                });
     }
 
     private void initiateCheckout(final String checkoutId) {
@@ -222,7 +318,7 @@ public class AccountSignupActivity extends PortraitActivity implements Navigatio
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         switch (resultCode) {
             case CheckoutActivity.RESULT_OK:
-                showSuccessDialogAndExit();
+                validateCheckoutResult(accountUid, paymentId);
                 break;
             case CheckoutActivity.RESULT_CANCELED:
                 showCancelledDialogAndOptions();
@@ -234,27 +330,62 @@ public class AccountSignupActivity extends PortraitActivity implements Navigatio
         }
     }
 
-    private void showSuccessDialogAndExit() {
+    private void validateCheckoutResult(final String accountUid, final String checkoutId) {
+        final String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
+        final String code = RealmUtils.loadPreferencesFromDB().getToken();
+        GrassrootRestService.getInstance().getApi().checkPaymentResult(phoneNumber, code, accountUid, checkoutId)
+                .enqueue(new Callback<RestResponse<Account>>() {
+                    @Override
+                    public void onResponse(Call<RestResponse<Account>> call, Response<RestResponse<Account>> response) {
+                        if (response.isSuccessful()) {
+                            Log.e(TAG, "and .... that's a wrap! payment done");
+                            showSuccessDialogAndExit(response.body().getData());
+                        } else {
+                            AlertDialog.Builder builder = AccountService.showServerErrorDialog(AccountSignupActivity.this,
+                                    ErrorUtils.serverErrorText(response.errorBody()), true);
+                            builder.show();
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(Call<RestResponse<Account>> call, Throwable t) {
+                        AlertDialog.Builder builder = AccountService.showConnectionErrorDialog(AccountSignupActivity.this,
+                                new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialogInterface, int i) {
+                                        validateCheckoutResult(accountUid, checkoutId);
+                                    }
+                                });
+                        builder.show();
+                    }
+                });
+    }
+
+    private void showSuccessDialogAndExit(final Account account) {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setMessage(R.string.account_paid_success)
                 .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialogInterface, int i) {
-                        exitToGrExtra();
+                        exitToGrExtra(account);
                     }
                 })
                 .setCancelable(true)
                 .setOnCancelListener(new DialogInterface.OnCancelListener() {
                     @Override
                     public void onCancel(DialogInterface dialogInterface) {
-                        exitToGrExtra();
+                        exitToGrExtra(account);
                     }
                 });
         builder.show();
     }
 
-    private void exitToGrExtra() {
-        startActivity(new Intent(AccountSignupActivity.this, GrassrootExtraActivity.class));
+    private void exitToGrExtra(final Account account) {
+        Intent i = new Intent(this, GrassrootExtraActivity.class);
+        if (account != null) {
+            i.putExtra(AccountService.OBJECT_FIELD, account);
+        }
+        startActivity(i);
         finish();
     }
 

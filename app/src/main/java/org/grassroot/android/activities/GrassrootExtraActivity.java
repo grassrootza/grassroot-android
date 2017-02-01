@@ -2,14 +2,9 @@ package org.grassroot.android.activities;
 
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
-import android.content.ComponentName;
-import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.ServiceConnection;
-import android.net.Uri;
 import android.os.Bundle;
-import android.os.IBinder;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
@@ -17,13 +12,6 @@ import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
-
-import com.oppwa.mobile.connect.checkout.dialog.CheckoutActivity;
-import com.oppwa.mobile.connect.exception.PaymentError;
-import com.oppwa.mobile.connect.exception.PaymentException;
-import com.oppwa.mobile.connect.provider.Connect;
-import com.oppwa.mobile.connect.service.ConnectService;
-import com.oppwa.mobile.connect.service.IProviderBinder;
 
 import org.grassroot.android.R;
 import org.grassroot.android.adapters.GroupPickAdapter;
@@ -87,25 +75,6 @@ public class GrassrootExtraActivity extends PortraitActivity implements Navigati
 
     ProgressDialog progressDialog;
 
-    // todo : work out a way to abstract / move this
-    private IProviderBinder binder;
-    private ServiceConnection serviceConnection = new ServiceConnection() {
-        @Override
-        public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
-            binder = (IProviderBinder) iBinder;
-            try {
-                binder.initializeProvider(Connect.ProviderMode.TEST);
-            } catch (PaymentException e) {
-                Log.e(TAG, "error initializing payment!");
-            }
-        }
-
-        @Override
-        public void onServiceDisconnected(ComponentName componentName) {
-            binder = null;
-        }
-    };
-
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -123,7 +92,12 @@ public class GrassrootExtraActivity extends PortraitActivity implements Navigati
         }
 
         showProgress();
-        if (NetworkUtils.isNetworkAvailable(this)) {
+        Bundle b = getIntent().getExtras();
+
+        if (b != null && b.getParcelable(AccountService.OBJECT_FIELD) != null) {
+            hideProgress();
+            redirectBasedOnAccount((Account) b.getParcelable(AccountService.OBJECT_FIELD));
+        } else if (NetworkUtils.isNetworkAvailable(this)) {
             fetchAccountAndStart();
         } else {
             showNotConnectedMsg();
@@ -139,10 +113,8 @@ public class GrassrootExtraActivity extends PortraitActivity implements Navigati
                 Account account = response.body().getData();
                 if (account == null) {
                     redirectToSignup();
-                } else if (account.isEnabled()) {
-                    setUpFieldsAndMainFragment(account);
                 } else {
-                    showDisabledMsg(account);
+                    redirectBasedOnAccount(account);
                 }
             }
 
@@ -152,6 +124,14 @@ public class GrassrootExtraActivity extends PortraitActivity implements Navigati
                 showNotConnectedMsg();
             }
         });
+    }
+
+    private void redirectBasedOnAccount(final Account account) {
+        if (account.isEnabled()) {
+            setUpFieldsAndMainFragment(account);
+        } else {
+            redirectToEnable(account.getUid());
+        }
     }
 
     private void setUpFieldsAndMainFragment(final Account account) {
@@ -451,6 +431,13 @@ public class GrassrootExtraActivity extends PortraitActivity implements Navigati
         finish();
     }
 
+    private void redirectToEnable(final String accountUid) {
+        Intent i = new Intent(this, AccountSignupActivity.class);
+        i.putExtra(AccountService.UID_FIELD, accountUid);
+        startActivity(i);
+        finish();
+    }
+
     private void openPickFragment(final boolean paidFor, final String returnTag) {
         pickFragment = GroupPickFragment.newInstance(paidFor, returnTag);
         getSupportFragmentManager().beginTransaction()
@@ -524,53 +511,17 @@ public class GrassrootExtraActivity extends PortraitActivity implements Navigati
     }
 
     private void showServerErrorDialog(final String message, boolean showWebLink) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this)
-                .setMessage(message)
-                .setNegativeButton(R.string.alert_close, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialogInterface, int i) {
-                        dialogInterface.cancel();
-                    }
-                })
-                .setCancelable(true);
-
-        if (showWebLink) {
-            builder.setPositiveButton(R.string.account_try_webapp, new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialogInterface, int i) {
-                    openWebApp();
-                }
-            });
-        }
-
+        AlertDialog.Builder builder = AccountService.showServerErrorDialog(this, message, showWebLink);
         builder.show();
     }
 
     private void showConnectionErrorDialog(DialogInterface.OnClickListener retryListener) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this)
-                .setMessage(R.string.account_connect_error_short)
-                .setPositiveButton(R.string.snackbar_try_again, retryListener)
-                .setNeutralButton(R.string.account_try_webapp, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialogInterface, int i) {
-                        openWebApp();
-                    }
-                })
-                .setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialogInterface, int i) {
-                        dialogInterface.cancel();
-                    }
-                })
-                .setCancelable(true);
+        AlertDialog.Builder builder = AccountService.showConnectionErrorDialog(this, retryListener);
         builder.show();
     }
 
     private void openWebApp() {
-        final String url = "https://app.grassroot.org.za"; // todo : include direct to account page
-        Intent i = new Intent(Intent.ACTION_VIEW);
-        i.setData(Uri.parse(url));
-        startActivity(i);
+        startActivity(AccountService.openWebApp());
     }
 
     private void showNotConnectedMsg() {
@@ -598,86 +549,6 @@ public class GrassrootExtraActivity extends PortraitActivity implements Navigati
         getSupportFragmentManager().beginTransaction()
                 .add(R.id.gextra_fragment_holder, messageFragment, "message")
                 .commit();
-    }
-
-    private void showDisabledMsg(final Account account) {
-        if (getSupportActionBar() != null) {
-            getSupportActionBar().setDisplayShowTitleEnabled(false);
-        }
-
-        GiantMessageFragment messageFragment = new GiantMessageFragment.Builder(R.string.account_disabled_title)
-                .setBody(getString(R.string.account_disabled_body))
-                .setButtonOne(R.string.account_disabled_payment, new View.OnClickListener() {
-                    @Override
-                    public void onClick(View view) {
-                        paymentFragmentDisabledAccount(account.getUid());
-                    }
-                })
-                .setButtonTwo(R.string.account_disabled_online, new View.OnClickListener() {
-                    @Override
-                    public void onClick(View view) {
-                        openWebApp();
-                    }
-                })
-                .showHomeButton(false)
-                .build();
-
-        getSupportFragmentManager().beginTransaction()
-                .add(R.id.gextra_fragment_holder, messageFragment, "message")
-                .commit();
-    }
-
-    private void paymentFragmentDisabledAccount(final String accountUid) {
-        final String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
-        final String code = RealmUtils.loadPreferencesFromDB().getToken();
-        showProgress();
-        Log.e(TAG, "okay, trying to initiate payment ...");
-        GrassrootRestService.getInstance().getApi().initiateAccountEnablePayment(phoneNumber, code, accountUid)
-                .enqueue(new Callback<RestResponse<String>>() {
-                    @Override
-                    public void onResponse(Call<RestResponse<String>> call, Response<RestResponse<String>> response) {
-                        hideProgress();
-                        Log.e(TAG, "got a response: " + response);
-                        if (response.isSuccessful()) {
-
-                            Intent serviceIntent = new Intent(GrassrootExtraActivity.this, ConnectService.class);
-                            startService(serviceIntent);
-                            bindService(serviceIntent, serviceConnection, Context.BIND_AUTO_CREATE);
-
-                            Intent i = AccountService.initiateCheckout(GrassrootExtraActivity.this,
-                                    response.body().getData(), getString(R.string.billing_enable_title));
-                            startActivityForResult(i, CheckoutActivity.CHECKOUT_ACTIVITY);
-                        } else {
-                            final String restMessage = ErrorUtils.getRestMessage(response.errorBody());
-                            if ("ACCOUNT_ENABLED".equals(restMessage)) {
-                                Toast.makeText(GrassrootExtraActivity.this, R.string.account_enabled_async,
-                                        Toast.LENGTH_SHORT).show();
-                                fetchAccountAndStart();
-                            } else {
-                                showServerErrorDialog(ErrorUtils.serverErrorText(response.errorBody()), true);
-                            }
-                        }
-                    }
-
-                    @Override
-                    public void onFailure(Call<RestResponse<String>> call, Throwable t) {
-                        hideProgress();
-                        showConnectionErrorDialog(new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialogInterface, int i) {
-                                paymentFragmentDisabledAccount(accountUid);
-                            }
-                        });
-                    }
-                });
-    }
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (requestCode == CheckoutActivity.CHECKOUT_ACTIVITY) {
-            unbindService(serviceConnection);
-            stopService(new Intent(this, ConnectService.class));
-        }
     }
 
     @Override

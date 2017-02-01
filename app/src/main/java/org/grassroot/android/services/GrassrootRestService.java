@@ -593,5 +593,11 @@ public class GrassrootRestService {
                                                             @Path("code") String code,
                                                             @Query("accountUid") String accountUid);
 
+    @GET("account/payment/result/{phoneNumber}/{code}")
+    Call<RestResponse<Account>> checkPaymentResult(@Path("phoneNumber") String phoneNumber,
+                                                   @Path("code") String code,
+                                                   @Query("accountUid") String accountUid,
+                                                   @Query("paymentId") String paymentId);
+
   }
 }

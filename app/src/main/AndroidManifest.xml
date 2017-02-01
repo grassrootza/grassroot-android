@@ -336,7 +336,8 @@
 
         <service android:name=".services.SharingService"/>
 
-        <service android:name=".services.NotificationService"
+        <service
+            android:name=".services.NotificationService"
             android:process=":grassroot_process"
             android:icon="@drawable/app_icon"  />
 
@@ -348,6 +349,19 @@
             android:name="com.oppwa.mobile.connect.checkout.dialog.CheckoutActivity"
             android:theme="@style/Theme.Checkout.Light"
             android:windowSoftInputMode="adjustPan"/>
+        
+        <activity
+            android:name=".activities.PaymentHandlingActivity"
+            android:launchMode="singleTask">
+
+            <intent-filter>
+                <data android:scheme="grassroot" />
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+            </intent-filter>
+
+        </activity>
 
     </application>
 
