@@ -94,7 +94,6 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
     ProgressBar progressBar;
 
     public interface TaskListListener {
-        void loadSingleTask(String taskName);
         void loadSingleTask(String taskUid, String taskType);
         void onFabClicked();
     }

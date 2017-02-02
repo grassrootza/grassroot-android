@@ -247,7 +247,6 @@ public class GroupListAdapter extends RecyclerView.Adapter<GroupListAdapter.GHP_
 
     @Override
     public void onBindViewHolder(final GHP_ViewHolder holder, final int position) {
-
         final Group group = displayedGroups.get(position);
 
         setUpTextDescriptions(holder, group);
@@ -301,19 +300,11 @@ public class GroupListAdapter extends RecyclerView.Adapter<GroupListAdapter.GHP_
     }
 
     private void setUpMemberCount(GHP_ViewHolder holder, final Group group) {
-        // note: check during drawing optimization if this is best way to do it (also need to handle X00)
-        final int height = holder.profileV1.getDrawable().getIntrinsicWidth();
-        final int width = holder.profileV1.getDrawable().getIntrinsicHeight();
-
-        RelativeLayout.LayoutParams params =
-                (RelativeLayout.LayoutParams) holder.profileV2.getLayoutParams();
-        params.height = height;
-        params.width = width;
-
-        holder.profileV2.setLayoutParams(params);
         // adding one for organizer if group is local (server includes in count)
-        holder.profileV2.setText(String.format(context.getString(R.string.member_count_pattern),
-            group.getGroupMemberCount() + (group.getIsLocal() ? 1 : 0)));
+        final String countString = context.getString(R.string.member_count_pattern, group.getGroupMemberCount() + (group.getIsLocal() ? 1 : 0));
+        holder.memberCountText.setText(countString);
+        final int iconHeight = holder.memberCountIcon.getDrawable().getIntrinsicHeight();
+        holder.memberCountText.setHeight(iconHeight);
     }
 
     private void setUpListeners(GHP_ViewHolder holder, final Group group) {
@@ -370,24 +361,15 @@ public class GroupListAdapter extends RecyclerView.Adapter<GroupListAdapter.GHP_
 
     public class GHP_ViewHolder extends RecyclerView.ViewHolder {
 
-        @BindView(R.id.task_card_view_root)
-        CardView cardView;
-        @BindView(R.id.txt_groupname)
-        TextView txtGroupname;
-        @BindView(R.id.txt_groupownername)
-        TextView txtGroupownername;
-        @BindView(R.id.txt_groupdesc)
-        TextView txtGroupdesc;
-        @BindView(R.id.profile_v1)
-        ImageView profileV1;
-        @BindView(R.id.profile_v2)
-        TextView profileV2;
-        @BindView(R.id.datetime)
-        TextView datetime;
-        @BindView(R.id.member_icons)
-        RelativeLayout memberIcons;
-        @BindView(R.id.iv_gp_avatar)
-        ImageView avatar;
+        @BindView(R.id.task_card_view_root) CardView cardView;
+        @BindView(R.id.txt_groupname) TextView txtGroupname;
+        @BindView(R.id.txt_groupownername) TextView txtGroupownername;
+        @BindView(R.id.txt_groupdesc) TextView txtGroupdesc;
+        @BindView(R.id.profile_v1) ImageView memberCountIcon;
+        @BindView(R.id.profile_v2) TextView memberCountText;
+        @BindView(R.id.datetime) TextView datetime;
+        @BindView(R.id.member_icons) RelativeLayout memberIcons;
+        @BindView(R.id.iv_gp_avatar) ImageView avatar;
 
         public GHP_ViewHolder(View view) {
             super(view);

@@ -255,7 +255,6 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
         GroupService.getInstance().fetchGroupList(null).subscribe(new Subscriber<String>() {
             @Override
             public void onNext(String s) {
-                Log.e(TAG, "came back from group list with string : " + s);
                 switch (s) {
                     case NetworkUtils.FETCHED_SERVER:
                         groupListRowAdapter.refreshGroupsToDB();

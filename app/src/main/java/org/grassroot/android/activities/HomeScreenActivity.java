@@ -544,10 +544,16 @@ public class HomeScreenActivity extends PortraitActivity implements NavigationDr
     }
 
     @Override
-    public void loadSingleTask(String taskName) {
-        setTitle(taskName);
+    public void loadSingleTask(String taskUid, String taskType) {
+        ViewTaskFragment taskFragment = ViewTaskFragment.newInstance(taskType, taskUid);
+
+        getSupportFragmentManager().beginTransaction()
+                .setCustomAnimations(R.anim.flyin_fast, R.anim.flyout_fast, R.anim.flyin_fast, R.anim.flyout_fast)
+                .add(R.id.home_fragment_container, taskFragment, ViewTaskFragment.class.getCanonicalName())
+                .addToBackStack(null)
+                .commit();
+
         toggleClickableTitle(false);
-        // switchOffMenu();
         drawerToggle.setDrawerIndicatorEnabled(false);
         drawerToggle.setHomeAsUpIndicator(R.drawable.btn_close_white);
         drawerToggle.setToolbarNavigationClickListener(new View.OnClickListener() {
@@ -556,11 +562,6 @@ public class HomeScreenActivity extends PortraitActivity implements NavigationDr
                 closeViewTaskFragment();
             }
         });
-    }
-
-    @Override
-    public void loadSingleTask(String taskUid, String taskType) {
-
     }
 
     @Override

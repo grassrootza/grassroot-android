@@ -4,6 +4,7 @@ package org.grassroot.android.adapters;
 import android.content.Context;
 import android.support.annotation.Nullable;
 import android.support.v7.widget.RecyclerView;
+import android.text.TextUtils;
 import android.text.format.DateUtils;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -231,7 +232,7 @@ public class GroupChatAdapter extends RecyclerView.Adapter<GroupChatAdapter.GCVi
             return SERVER;
         } else if (message != null && message.isErrorMessage()) {
             return ERROR;
-        } else if (message != null && !message.getPhoneNumber().equals(thisPhoneNumber)) {
+        } else if (message != null && (TextUtils.isEmpty(message.getPhoneNumber()) || !message.getPhoneNumber().equals(thisPhoneNumber))) {
             return OTHER;
         } else {
             return SELF;

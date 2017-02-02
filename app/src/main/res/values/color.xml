@@ -4,6 +4,7 @@
     <!--styles-->
     <color name="primaryColor">#207A33</color>
     <color name="primaryColorDark">#339661</color>
+    <color name="primaryColorLight">#68B579</color>
     <color name="textSecondaryColorDark">#8A000000</color>
     <color name="windowBackground">#fafafa</color>
 

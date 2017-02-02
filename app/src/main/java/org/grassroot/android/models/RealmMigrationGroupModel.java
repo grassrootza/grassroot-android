@@ -40,6 +40,13 @@ public class RealmMigrationGroupModel implements RealmMigration {
             Log.e(TAG, "v3 migrated");
         }
 
+        if (oldVersion == 3) {
+            schema.get("Message")
+                    .addField("taskType", String.class);
+            oldVersion++;
+            Log.e(TAG, "v4 migrated");
+        }
+
         if (oldVersion < newVersion) {
             throw new IllegalArgumentException(String.format("Migration missing from v%d to v%d", oldVersion, newVersion));
         }

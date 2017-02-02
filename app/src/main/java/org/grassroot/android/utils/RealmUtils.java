@@ -349,11 +349,13 @@ public class RealmUtils {
     public static void setOpenGroupOnChat(final String groupUid, final boolean openOnChat) {
         Realm realm = Realm.getDefaultInstance();
         Group group = realm.where(Group.class).equalTo("groupUid", groupUid).findFirst();
-        realm.beginTransaction();
-        group.setOpenOnChat(openOnChat);
-        realm.copyToRealmOrUpdate(group);
-        realm.commitTransaction();
-        realm.close();
+        if (group != null) { // since this gets called in an ondestroy view, and hence group might be null by then
+            realm.beginTransaction();
+            group.setOpenOnChat(openOnChat);
+            realm.copyToRealmOrUpdate(group);
+            realm.commitTransaction();
+            realm.close();
+        }
     }
 
     public static long countGroupsInDB() {

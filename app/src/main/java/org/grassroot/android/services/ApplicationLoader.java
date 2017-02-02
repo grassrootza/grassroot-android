@@ -49,7 +49,7 @@ public class ApplicationLoader extends Application {
         RealmConfiguration.Builder realmConfigBuilder =
                 new RealmConfiguration.Builder();
 
-        realmConfigBuilder.schemaVersion(3)
+        realmConfigBuilder.schemaVersion(4)
                 .migration(new RealmMigrationGroupModel());
         Realm.setDefaultConfiguration(realmConfigBuilder.build());
 

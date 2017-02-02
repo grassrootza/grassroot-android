@@ -44,6 +44,7 @@ public class Message extends RealmObject implements Serializable {
     private Date time;
     private Date actionDateTime;
     private String type;
+    private String taskType;
 
     @JsonIgnore
     private boolean sending;
@@ -97,7 +98,7 @@ public class Message extends RealmObject implements Serializable {
         this.groupUid = groupUid;
         this.text = text;
         this.time = new Date();
-        this.type = type == null ? Constant.MSG_SERVER : type;
+        this.type = type == null ? Constant.SERVER_MSG : type;
         this.sent = true;
         this.delivered = true;
     }
@@ -121,6 +122,7 @@ public class Message extends RealmObject implements Serializable {
 
         this.text = bundle.getString(Constant.BODY);
         this.type = bundle.getString("type");
+        this.taskType = bundle.getString("taskType");
 
         // by definition, since this is assembled from an incoming GCM packet, it is delivered to the topic
         this.sending = false;
@@ -252,6 +254,14 @@ public class Message extends RealmObject implements Serializable {
         this.server = server;
     }
 
+    public String getTaskType() {
+        return taskType;
+    }
+
+    public void setTaskType(String taskType) {
+        this.taskType = taskType;
+    }
+
     public Date getActionDateTime() {
         return actionDateTime != null ? actionDateTime : new Date(); // to avoid null pointer errors if something corrupted
     }
@@ -265,7 +275,11 @@ public class Message extends RealmObject implements Serializable {
     }
 
     public boolean isServerMessage() {
-        return TextUtils.isEmpty(phoneNumber) && Constant.MSG_SERVER.equals(type);
+        return Constant.SERVER_MSG.equals(type) || Constant.SERVER_PROMPT.equals(type);
+    }
+
+    public boolean isCommandPrompt() {
+        return !TextUtils.isEmpty(taskType) && Constant.SERVER_PROMPT.equals(type);
     }
 
     public boolean isErrorMessage() {

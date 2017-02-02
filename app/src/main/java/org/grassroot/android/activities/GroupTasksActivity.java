@@ -1,14 +1,9 @@
 package org.grassroot.android.activities;
 
-import android.content.BroadcastReceiver;
-import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
-import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
-import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.SearchView;
@@ -52,8 +47,6 @@ import rx.Subscriber;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.functions.Action1;
 import rx.observers.Subscribers;
-
-import static org.eclipse.paho.android.service.MqttServiceConstants.CALLBACK_TO_ACTIVITY;
 
 public class GroupTasksActivity extends PortraitActivity implements NewTaskMenuFragment.NewTaskMenuListener, JoinCodeFragment.JoinCodeListener,
     TaskListFragment.TaskListListener {
@@ -135,7 +128,6 @@ public class GroupTasksActivity extends PortraitActivity implements NewTaskMenuF
     protected void onDestroy() {
         super.onDestroy();
         EventBus.getDefault().unregister(this);
-
     }
 
     @Override
@@ -360,19 +352,12 @@ public class GroupTasksActivity extends PortraitActivity implements NewTaskMenuF
             .commit();
     }
 
-
-
     @Override
     public void joinCodeClose() {
         getSupportFragmentManager().beginTransaction()
             .setCustomAnimations(R.anim.flyin_fast, R.anim.flyout_fast)
                 .remove(joinCodeFragment)
                 .commit();
-    }
-
-    @Override
-    public void loadSingleTask(String taskName) {
-        // empty as no purpose
     }
 
     @Override

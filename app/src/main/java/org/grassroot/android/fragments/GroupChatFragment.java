@@ -161,30 +161,6 @@ public class GroupChatFragment extends Fragment implements GroupChatAdapter.Grou
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_group_chat, container, false);
-        unbinder = ButterKnife.bind(this, view);
-        EventBus.getDefault().register(this);
-
-        String[] commandArray = getActivity().getResources().getStringArray(R.array.commands);
-        String[] hintArray = getActivity().getResources().getStringArray(R.array.command_hints);
-        String[] descriptionArrays = getActivity().getResources().getStringArray(R.array.command_descriptions);
-
-        if (commands == null) {
-            commands = new ArrayList<>();
-            for (int i = 0; i < commandArray.length; i++) {
-                commands.add(new Command(commandArray[i], hintArray[i], descriptionArrays[i]));
-            }
-        }
-        commandsAdapter = new CommandsAdapter(getActivity(), commands);
-
-        setHasOptionsMenu(true);
-        setView();
-
-        return view;
-    }
-
-    @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
 
@@ -216,6 +192,30 @@ public class GroupChatFragment extends Fragment implements GroupChatAdapter.Grou
     }
 
     @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        View view = inflater.inflate(R.layout.fragment_group_chat, container, false);
+        unbinder = ButterKnife.bind(this, view);
+        EventBus.getDefault().register(this);
+
+        String[] commandArray = getActivity().getResources().getStringArray(R.array.commands);
+        String[] hintArray = getActivity().getResources().getStringArray(R.array.command_hints);
+        String[] descriptionArrays = getActivity().getResources().getStringArray(R.array.command_descriptions);
+
+        if (commands == null) {
+            commands = new ArrayList<>();
+            for (int i = 0; i < commandArray.length; i++) {
+                commands.add(new Command(commandArray[i], hintArray[i], descriptionArrays[i]));
+            }
+        }
+        commandsAdapter = new CommandsAdapter(getActivity(), commands);
+
+        setHasOptionsMenu(true);
+        setUpViews();
+
+        return view;
+    }
+
+    @Override
     public void onResume() {
         super.onResume();
         GcmListenerService.clearGroupsChatNotifications(groupUid);
@@ -234,12 +234,13 @@ public class GroupChatFragment extends Fragment implements GroupChatAdapter.Grou
         LocalBroadcastManager.getInstance(getContext()).unregisterReceiver(mqttReceiver);
     }
 
-    private void setView() {
+    private void setUpViews() {
         if (getActivity() instanceof MultiMessageNotificationActivity) {
             getActivity().setTitle(groupName);
         }
 
-        loadMessages();
+        loadMessagesAndInitAdapter();
+
         textView.setInputType(textView.getInputType() & (~EditorInfo.TYPE_TEXT_FLAG_AUTO_COMPLETE));
         textView.setAdapter(commandsAdapter);
         textView.setThreshold(1); //setting it in xml does not seem to be working
@@ -253,8 +254,60 @@ public class GroupChatFragment extends Fragment implements GroupChatAdapter.Grou
         emojIconAction.ShowEmojIcon();
         RealmUtils.markMessagesAsSeen(groupUid);
 
-        if(isActiveTab(groupUid) || (getActivity()
-                instanceof MultiMessageNotificationActivity) ) notifyGroupMessagesAsRead(groupUid);
+        if (isActiveTab(groupUid) || (getActivity() instanceof MultiMessageNotificationActivity)) {
+            notifyGroupMessagesAsRead(groupUid);
+        }
+    }
+
+    public void loadMessagesAndInitAdapter() {
+        RealmUtils.loadMessagesFromDb(groupUid).subscribe(new Action1<List<Message>>() {
+            @Override
+            public void call(List<Message> msgs) {
+                if (groupChatAdapter == null) {
+                    setUpListAndAdapter(msgs);
+                } else {
+                    groupChatAdapter.reloadFromdb(groupUid);
+                }
+
+                if (msgs.isEmpty()) {
+                    switchOnIntroText();
+                } else {
+                    switchOffIntroText();
+                    chatMessageView.smoothScrollToPosition(groupChatAdapter.getItemCount());
+                }
+            }
+        });
+    }
+
+    private void setUpListAndAdapter(List<Message> messages) {
+        groupChatAdapter = new GroupChatAdapter(messages, this);
+        LinearLayoutManager layoutManager = new LinearLayoutManager(getActivity());
+        layoutManager.setAutoMeasureEnabled(true);
+        layoutManager.setStackFromEnd(true);
+
+        if (chatMessageView != null) {
+            chatMessageView.setAdapter(groupChatAdapter);
+            chatMessageView.setLayoutManager(layoutManager);
+            chatMessageView.setItemViewCacheSize(20);
+            chatMessageView.setDrawingCacheEnabled(true);
+            chatMessageView.setDrawingCacheQuality(View.DRAWING_CACHE_QUALITY_HIGH);
+
+            chatMessageView.addOnItemTouchListener(new RecyclerTouchListener(getActivity(), chatMessageView, new ClickListener() {
+                @Override
+                public void onClick(View view, int position) {
+                    int viewType = groupChatAdapter.getItemViewType(position);
+                    // slight selection hint to indicate that the item can be chosen
+                    if (viewType != GroupChatAdapter.SERVER) {
+                        groupChatAdapter.selectPosition(position);
+                    }
+                }
+                @Override
+                public void onLongClick(View view, int position) {
+                    int viewType = groupChatAdapter.getItemViewType(position);
+                    longClickOptions(groupChatAdapter.getMessages().get(position), viewType);
+                }
+            }));
+        }
     }
 
     private void switchOnIntroText() {
@@ -337,7 +390,7 @@ public class GroupChatFragment extends Fragment implements GroupChatAdapter.Grou
                             sendMessageInBackground(auxText, msgUid);
                         } else if (originatingAction == REFRESH_MSGS) {
                             // todo : fetch messages again from the server
-                            loadMessages();
+                            loadMessagesAndInitAdapter();
                         }
                     }
                 }
@@ -367,7 +420,7 @@ public class GroupChatFragment extends Fragment implements GroupChatAdapter.Grou
         if (item.getItemId() == R.id.mi_delete_messages)
             deleteAllMessages(groupUid);
         if (item.getItemId() == R.id.mi_refresh_screen)
-            loadMessages();
+            loadMessagesAndInitAdapter();
 
         return super.onOptionsItemSelected(item);
     }
@@ -384,7 +437,6 @@ public class GroupChatFragment extends Fragment implements GroupChatAdapter.Grou
             }
         } catch (Exception e) {
             e.printStackTrace();
-            Log.e(TAG, "error!");
         }
     }
 
@@ -435,56 +487,6 @@ public class GroupChatFragment extends Fragment implements GroupChatAdapter.Grou
             } else {
                 Snackbar.make(rootView, ErrorUtils.serverErrorText(e), Snackbar.LENGTH_SHORT).show();
             }
-        }
-    }
-
-    public void loadMessages() {
-        RealmUtils.loadMessagesFromDb(groupUid).subscribe(new Action1<List<Message>>() {
-            @Override
-            public void call(List<Message> msgs) {
-            if (msgs.isEmpty()) {
-                switchOnIntroText();
-            } else {
-                switchOffIntroText();
-                if (groupChatAdapter != null) {
-                    groupChatAdapter.reloadFromdb(groupUid);
-                } else {
-                    setUpListAndAdapter(msgs);
-                }
-                chatMessageView.smoothScrollToPosition(groupChatAdapter.getItemCount());
-            }
-            }
-        });
-    }
-
-    private void setUpListAndAdapter(List<Message> messages) {
-        groupChatAdapter = new GroupChatAdapter(messages, this);
-        LinearLayoutManager layoutManager = new LinearLayoutManager(getActivity());
-        layoutManager.setAutoMeasureEnabled(true);
-        layoutManager.setStackFromEnd(true);
-
-        if (chatMessageView != null) {
-            chatMessageView.setAdapter(groupChatAdapter);
-            chatMessageView.setLayoutManager(layoutManager);
-            chatMessageView.setItemViewCacheSize(20);
-            chatMessageView.setDrawingCacheEnabled(true);
-            chatMessageView.setDrawingCacheQuality(View.DRAWING_CACHE_QUALITY_HIGH);
-
-            chatMessageView.addOnItemTouchListener(new RecyclerTouchListener(getActivity(), chatMessageView, new ClickListener() {
-                @Override
-                public void onClick(View view, int position) {
-                    int viewType = groupChatAdapter.getItemViewType(position);
-                    // slight selection hint to indicate that the item can be chosen
-                    if (viewType != GroupChatAdapter.SERVER) {
-                        groupChatAdapter.selectPosition(position);
-                    }
-                }
-                @Override
-                public void onLongClick(View view, int position) {
-                    int viewType = groupChatAdapter.getItemViewType(position);
-                    longClickOptions(groupChatAdapter.getMessages().get(position), viewType);
-                }
-            }));
         }
     }
 
@@ -548,15 +550,15 @@ public class GroupChatFragment extends Fragment implements GroupChatAdapter.Grou
     @Override
     public void createTaskFromMessage(final Message message) {
         String title = message.getTokens().get(0).getString();
-        String location = TaskConstants.MEETING.equals(message.getType()) ? message.getTokens().get(2).getString() : null;
-        TaskModel taskModel = generateTaskObject(message.getGroupUid(), title, message.getDeadlineISO(), location, message.getType() );
+        String location = TaskConstants.MEETING.equals(message.getTaskType()) ? message.getTokens().get(2).getString() : null;
+        TaskModel taskModel = generateTaskObject(message.getGroupUid(), title, message.getDeadlineISO(), location, message.getTaskType());
         TaskService.getInstance().sendTaskToServer(taskModel, AndroidSchedulers.mainThread()).subscribe(new Subscriber<TaskModel>() {
             @Override
             public void onCompleted() {}
 
             @Override
             public void onError(Throwable e) {
-                Snackbar.make(rootView,R.string.chat_task_failure,Snackbar.LENGTH_LONG).show();
+                Snackbar.make(rootView, ErrorUtils.serverErrorText(e), Snackbar.LENGTH_LONG).show();
             }
 
             @Override

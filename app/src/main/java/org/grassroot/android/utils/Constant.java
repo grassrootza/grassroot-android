@@ -75,7 +75,8 @@ public class Constant {
      * CONSTANTS FOR MESSAGE TYPES
      */
 
-    public static final String MSG_SERVER = "server";
+    public static final String SERVER_MSG = "SERVER_MESSAGE";
+    public static final String SERVER_PROMPT = "SERVER_PROMPT";
     public static final String MSG_ERROR = "local_error";
     public static final String MSG_NORMAL = "normal";
 

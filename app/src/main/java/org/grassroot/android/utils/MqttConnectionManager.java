@@ -184,7 +184,6 @@ public class MqttConnectionManager implements IMqttActionListener, MqttCallback 
     private void subscribeToTopics(String[] topics, int[] qos) {
         if (mqttAndroidClient != null && mqttAndroidClient.isConnected()) {
             try {
-                Log.e(TAG, "mqtt subscribing to topics: " + Arrays.toString(topics));
                 IMqttToken token = mqttAndroidClient.subscribe(topics, qos);
                 token.setActionCallback(this);
             } catch (MqttException e) {
