@@ -19,7 +19,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import org.grassroot.android.R;
-import org.grassroot.android.activities.FAQActivity;
 import org.grassroot.android.activities.GrassrootExtraActivity;
 import org.grassroot.android.activities.GroupSearchActivity;
 import org.grassroot.android.activities.ProfileSettingsActivity;
@@ -157,10 +156,8 @@ public class NavigationDrawerFragment extends Fragment implements NavigationDraw
     public void onResume() {
         super.onResume();
         if (!onStartUp) {
-            Log.e(TAG, "resuming with start up set false, refreshing counts");
             refreshCounts();
         } else {
-            Log.e(TAG, "on start up, not refreshing counts");
             onStartUp = false;
         }
     }
@@ -225,10 +222,10 @@ public class NavigationDrawerFragment extends Fragment implements NavigationDraw
         pos = addItemAndIncrement(pos, NavigationDrawerAdapter.SEPARATOR, new NavDrawerItem());
 
         pos = addItemAndIncrement(pos, NavigationDrawerAdapter.SECONDARY,
-                new NavDrawerItem(ITEM_GRASSROOT_EXTRA, getString(R.string.drawer_grassroot_extra), R.drawable.ic_add_black_24dp));
+            new NavDrawerItem(ITEM_FIND_GROUPS, getString(R.string.find_group_nav), R.drawable.ic_find_group_nav));
 
         pos = addItemAndIncrement(pos, NavigationDrawerAdapter.SECONDARY,
-            new NavDrawerItem(ITEM_FIND_GROUPS, getString(R.string.find_group_nav), R.drawable.ic_find_group_nav));
+                new NavDrawerItem(ITEM_GRASSROOT_EXTRA, getString(R.string.drawer_grassroot_extra), R.drawable.ic_add_black_24dp));
 
         pos = addItemAndIncrement(pos, NavigationDrawerAdapter.SECONDARY,
                 new NavDrawerItem(ITEM_SHARE, getString(R.string.drawer_share), R.drawable.ic_share));
@@ -240,9 +237,6 @@ public class NavigationDrawerFragment extends Fragment implements NavigationDraw
         pos = addItemAndIncrement(pos, NavigationDrawerAdapter.SECONDARY, onlineOffineSwitch);
 
         pos = addItemAndIncrement(pos, NavigationDrawerAdapter.SEPARATOR, new NavDrawerItem());
-
-        pos = addItemAndIncrement(pos, NavigationDrawerAdapter.SECONDARY,
-            new NavDrawerItem(ITEM_FAQ, getString(R.string.drawer_faqs),R.drawable.ic_faq));
 
         if (canRateApp()) {
             pos = addItemAndIncrement(pos, NavigationDrawerAdapter.SECONDARY,
@@ -313,9 +307,6 @@ public class NavigationDrawerFragment extends Fragment implements NavigationDraw
                 break;
             case ITEM_PROFILE:
                 startActivity(new Intent(getActivity(), ProfileSettingsActivity.class));
-                break;
-            case ITEM_FAQ:
-                startActivity(new Intent(getActivity(), FAQActivity.class));
                 break;
             case ITEM_RATE:
                 try {

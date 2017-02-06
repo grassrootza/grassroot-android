@@ -275,9 +275,6 @@
 
         <!-- Navigation drawer / system activities -->
         <activity
-            android:name=".activities.FAQActivity" />
-
-        <activity
             android:name=".activities.ProfileSettingsActivity"
             android:configChanges="orientation|keyboardHidden"
             android:theme="@style/AppTheme"
