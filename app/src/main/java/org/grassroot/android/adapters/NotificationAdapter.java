@@ -15,7 +15,7 @@ import org.grassroot.android.R;
 import org.grassroot.android.interfaces.TaskConstants;
 import org.grassroot.android.models.TaskNotification;
 import org.grassroot.android.services.ApplicationLoader;
-import org.grassroot.android.utils.ImageUtils;
+import org.grassroot.android.utils.image.ImageUtils;
 
 import java.util.ArrayList;
 import java.util.List;

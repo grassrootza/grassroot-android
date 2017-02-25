@@ -1,4 +1,4 @@
-package org.grassroot.android.models;
+package org.grassroot.android.models.helpers;
 
 /**
  * Created by paballo on 2016/09/20.

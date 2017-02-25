@@ -61,7 +61,7 @@ import rx.observers.Subscribers;
  */
 public class EditTaskFragment extends Fragment implements DatePickerDialog.OnDateSetListener, TimePickerDialog.OnTimeSetListener {
 
-    private static final String TAG = EditTaskFragment.class.getCanonicalName();
+    private static final String TAG = EditTaskFragment.class.getSimpleName();
     private static final int changeColor = ContextCompat.getColor(ApplicationLoader.applicationContext, R.color.red);
 
     private TaskModel task;
@@ -75,7 +75,6 @@ public class EditTaskFragment extends Fragment implements DatePickerDialog.OnDat
     private List<Member> selectedMembers;
 
     private Unbinder unbinder;
-    private boolean viewsBound;
 
     @BindView(R.id.etsk_til_location) TextInputLayout locationInput;
     @BindView(R.id.etsk_et_title) TextInputEditText etTitleInput;
@@ -126,7 +125,6 @@ public class EditTaskFragment extends Fragment implements DatePickerDialog.OnDat
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View viewToReturn = inflater.inflate(R.layout.fragment_edit_task, container, false);
         unbinder = ButterKnife.bind(this, viewToReturn);
-        viewsBound = true;
         vContainer = container;
         populateFields();
         fetchAssignedMembers();
@@ -136,7 +134,6 @@ public class EditTaskFragment extends Fragment implements DatePickerDialog.OnDat
     @Override
     public void onDestroyView() {
         super.onDestroyView();
-        viewsBound = false;
         unbinder.unbind();
     }
 

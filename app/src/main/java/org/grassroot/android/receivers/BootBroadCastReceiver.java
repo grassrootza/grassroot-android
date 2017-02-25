@@ -6,7 +6,7 @@ import android.content.Intent;
 
 import org.eclipse.paho.android.service.MqttService;
 import org.grassroot.android.services.NotificationService;
-import org.grassroot.android.utils.MqttConnectionManager;
+import org.grassroot.android.services.MqttConnectionManager;
 
 /**
  * Created by paballo on 2016/10/18.

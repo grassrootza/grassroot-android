@@ -16,7 +16,7 @@ import org.grassroot.android.R;
 import org.grassroot.android.fragments.GroupChatFragment;
 import org.grassroot.android.models.Message;
 import org.grassroot.android.services.ApplicationLoader;
-import org.grassroot.android.utils.MqttConnectionManager;
+import org.grassroot.android.services.MqttConnectionManager;
 import org.grassroot.android.utils.RealmUtils;
 
 import java.text.SimpleDateFormat;

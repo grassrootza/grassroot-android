@@ -40,7 +40,7 @@ import org.grassroot.android.interfaces.NavigationConstants;
 import org.grassroot.android.interfaces.TaskConstants;
 import org.grassroot.android.models.Group;
 import org.grassroot.android.models.Member;
-import org.grassroot.android.models.RealmString;
+import org.grassroot.android.models.helpers.RealmString;
 import org.grassroot.android.models.TaskModel;
 import org.grassroot.android.models.exceptions.ApiCallException;
 import org.grassroot.android.services.ApplicationLoader;

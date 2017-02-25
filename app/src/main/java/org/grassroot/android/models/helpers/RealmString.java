@@ -1,10 +1,10 @@
-package org.grassroot.android.models;
+package org.grassroot.android.models.helpers;
 
 import io.realm.RealmObject;
 
 public class RealmString extends RealmObject {
 
-  String string;
+  private String string;
 
   public RealmString() {
     this.string = "";

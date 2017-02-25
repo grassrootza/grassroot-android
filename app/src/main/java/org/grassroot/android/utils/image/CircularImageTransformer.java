@@ -1,4 +1,4 @@
-package org.grassroot.android.utils;
+package org.grassroot.android.utils.image;
 
 import android.graphics.Bitmap;
 

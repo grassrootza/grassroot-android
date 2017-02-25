@@ -1,4 +1,4 @@
-package org.grassroot.android.utils;
+package org.grassroot.android.utils.chat;
 
 import android.content.Context;
 import android.view.KeyEvent;

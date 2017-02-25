@@ -1,11 +1,9 @@
 package org.grassroot.android.models;
 
-import io.realm.RealmObject;
-
 /**
  * Created by paballo on 2016/05/19.
  */
-public class Profile extends RealmObject {
+public class Profile {
 
     private String displayName;
     private String language;

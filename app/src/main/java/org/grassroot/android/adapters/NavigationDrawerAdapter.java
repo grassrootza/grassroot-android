@@ -16,7 +16,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import org.grassroot.android.R;
-import org.grassroot.android.models.NavDrawerItem;
+import org.grassroot.android.models.helpers.NavDrawerItem;
 
 import java.util.List;
 import java.util.Map;

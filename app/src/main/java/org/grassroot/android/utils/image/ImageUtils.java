@@ -1,6 +1,8 @@
-package org.grassroot.android.utils;
+package org.grassroot.android.utils.image;
 
 import android.content.ContentResolver;
+import android.content.Intent;
+import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.BitmapShader;
@@ -8,6 +10,7 @@ import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.net.Uri;
 import android.os.Environment;
+import android.provider.MediaStore;
 import android.text.TextUtils;
 import android.util.Log;
 import android.webkit.MimeTypeMap;
@@ -23,6 +26,13 @@ import org.grassroot.android.services.ApplicationLoader;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
+import okhttp3.MediaType;
+import okhttp3.MultipartBody;
+import okhttp3.RequestBody;
 
 /**
  * Created by paballo on 2016/07/18.
@@ -77,6 +87,43 @@ public class ImageUtils {
                         .into(image);
                 }
             });
+    }
+
+    public static MultipartBody.Part getImageFromPath(final String path, final String mimeType) {
+        final File file = new File(path);
+        Log.d(TAG, "file size : " + (file.length() / 1024));
+        RequestBody requestFile = RequestBody.create(MediaType.parse(mimeType), file);
+        return MultipartBody.Part.createFormData("image", file.getName(), requestFile);
+    }
+
+    public static String getLocalFileNameFromURI(final Uri selectedImage) {
+        String[] filePathColumn = {MediaStore.Images.Media.DATA};
+        Cursor cursor = ApplicationLoader.applicationContext.getContentResolver().query(selectedImage, filePathColumn, null, null, null);
+        cursor.moveToFirst(); // if null, will throw error to subscriber, so check in here would be redundant
+        int columnIndex = cursor.getColumnIndex(filePathColumn[0]);
+        String localImagePath = cursor.getString(columnIndex);
+        cursor.close();
+        return localImagePath;
+    }
+
+    public static File createImageFileForCamera() throws IOException {
+        final String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+        final String imageFileName = "GRASSROOT_" + timeStamp + "_";
+        File storageDir = ApplicationLoader.applicationContext.getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+        return File.createTempFile(
+                imageFileName,
+                ".jpg",
+                storageDir
+        );
+    }
+
+    public static void addImageToGallery(String imagePath) {
+        Intent mediaScanIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
+        File f = new File(imagePath);
+        Uri contentUri = Uri.fromFile(f);
+        mediaScanIntent.setData(contentUri);
+        Log.e(TAG, "adding photo to gallery ...");
+        ApplicationLoader.applicationContext.sendBroadcast(mediaScanIntent);
     }
 
     public static String getCompressedFileFromImage(String path) {

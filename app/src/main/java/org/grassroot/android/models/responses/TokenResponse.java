@@ -2,8 +2,6 @@ package org.grassroot.android.models.responses;
 
 import com.google.gson.annotations.SerializedName;
 
-import org.grassroot.android.models.Token;
-
 public class TokenResponse extends AbstractResponse {
 
   @SerializedName("data") private Token token;

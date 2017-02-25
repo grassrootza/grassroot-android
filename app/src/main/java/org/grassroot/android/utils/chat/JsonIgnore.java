@@ -1,4 +1,4 @@
-package org.grassroot.android.utils;
+package org.grassroot.android.utils.chat;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Target;

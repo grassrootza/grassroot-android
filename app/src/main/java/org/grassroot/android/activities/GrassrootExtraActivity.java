@@ -289,8 +289,10 @@ public class GrassrootExtraActivity extends PortraitActivity implements Navigati
                             showEnabledFragment(null);
                             Toast.makeText(GrassrootExtraActivity.this, R.string.remove_group_done, Toast.LENGTH_SHORT).show();
                             Group group = RealmUtils.loadGroupFromDB(groupUid);
-                            group.setPaidFor(false);
-                            RealmUtils.saveDataToRealm(group).subscribe();
+                            if (group != null) {
+                                group.setPaidFor(false);
+                                RealmUtils.saveDataToRealm(group).subscribe();
+                            }
                         } else {
                             showServerErrorDialog(ErrorUtils.serverErrorText(response.errorBody()), true);
                         }

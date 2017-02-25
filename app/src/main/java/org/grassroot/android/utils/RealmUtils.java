@@ -6,12 +6,18 @@ import android.util.Log;
 
 import org.grassroot.android.models.Group;
 import org.grassroot.android.models.GroupJoinRequest;
+import org.grassroot.android.models.LocalGroupEdits;
 import org.grassroot.android.models.Member;
 import org.grassroot.android.models.Message;
+import org.grassroot.android.models.Permission;
 import org.grassroot.android.models.PreferenceObject;
-import org.grassroot.android.models.RealmString;
+import org.grassroot.android.models.PublicGroupModel;
+import org.grassroot.android.models.ResponseTotalsModel;
+import org.grassroot.android.models.ShareModel;
 import org.grassroot.android.models.TaskModel;
 import org.grassroot.android.models.TaskNotification;
+import org.grassroot.android.models.helpers.RealmString;
+import org.grassroot.android.models.responses.Token;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -55,6 +61,31 @@ public class RealmUtils {
         realm.deleteAll();
         realm.commitTransaction();
         realm.close();
+    }
+
+    public static String deleteAllExceptMessagesAndPhone() {
+        final String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
+        Realm realm = Realm.getDefaultInstance();
+        realm.beginTransaction();
+
+        realm.delete(Group.class);
+        realm.delete(GroupJoinRequest.class);
+        realm.delete(LocalGroupEdits.class);
+        realm.delete(Member.class);
+        realm.delete(Permission.class);
+        realm.delete(PublicGroupModel.class);
+        realm.delete(ResponseTotalsModel.class);
+
+        realm.delete(TaskModel.class);
+        realm.delete(TaskNotification.class);
+
+        realm.delete(ShareModel.class);
+        realm.delete(Token.class);
+        realm.delete(PreferenceObject.class);
+
+        realm.commitTransaction();
+        realm.close();
+        return phoneNumber;
     }
 
     public static Observable<Boolean> saveDataToRealm(final List<? extends RealmObject> list, Scheduler observingThread) {

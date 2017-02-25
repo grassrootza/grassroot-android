@@ -1,4 +1,4 @@
-package org.grassroot.android.utils;
+package org.grassroot.android.utils.chat;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonDeserializationContext;
@@ -6,7 +6,7 @@ import com.google.gson.JsonDeserializer;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParseException;
 
-import org.grassroot.android.models.RealmString;
+import org.grassroot.android.models.helpers.RealmString;
 
 import java.lang.reflect.Type;
 

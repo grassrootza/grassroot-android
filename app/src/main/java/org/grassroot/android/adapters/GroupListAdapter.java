@@ -20,7 +20,7 @@ import org.grassroot.android.R;
 import org.grassroot.android.fragments.HomeGroupListFragment;
 import org.grassroot.android.models.Group;
 import org.grassroot.android.services.ApplicationLoader;
-import org.grassroot.android.utils.ImageUtils;
+import org.grassroot.android.utils.image.ImageUtils;
 import org.grassroot.android.utils.RealmUtils;
 
 import java.text.SimpleDateFormat;

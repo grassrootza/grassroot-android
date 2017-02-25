@@ -19,26 +19,25 @@ import org.grassroot.android.models.LocalGroupEdits;
 import org.grassroot.android.models.Member;
 import org.grassroot.android.models.Permission;
 import org.grassroot.android.models.PreferenceObject;
-import org.grassroot.android.models.RealmString;
-import org.grassroot.android.models.ServerErrorModel;
 import org.grassroot.android.models.TaskModel;
 import org.grassroot.android.models.exceptions.ApiCallException;
 import org.grassroot.android.models.exceptions.InvalidNumberException;
+import org.grassroot.android.models.helpers.RealmString;
 import org.grassroot.android.models.responses.GenericResponse;
 import org.grassroot.android.models.responses.GroupChatSettingResponse;
 import org.grassroot.android.models.responses.GroupResponse;
 import org.grassroot.android.models.responses.GroupsChangedResponse;
-import org.grassroot.android.models.responses.MemberListResponse;
 import org.grassroot.android.models.responses.PermissionResponse;
+import org.grassroot.android.models.responses.RestResponse;
+import org.grassroot.android.models.responses.ServerErrorModel;
 import org.grassroot.android.utils.ErrorUtils;
-import org.grassroot.android.utils.MqttConnectionManager;
 import org.grassroot.android.utils.NetworkUtils;
 import org.grassroot.android.utils.PermissionUtils;
 import org.grassroot.android.utils.RealmUtils;
 import org.grassroot.android.utils.Utilities;
+import org.grassroot.android.utils.image.ImageUtils;
 import org.greenrobot.eventbus.EventBus;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -50,9 +49,7 @@ import java.util.Set;
 
 import io.realm.Realm;
 import io.realm.RealmList;
-import okhttp3.MediaType;
 import okhttp3.MultipartBody;
-import okhttp3.RequestBody;
 import retrofit2.Call;
 import retrofit2.Response;
 import rx.Observable;
@@ -347,10 +344,10 @@ public class GroupService {
         final String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
         final String code = RealmUtils.loadPreferencesFromDB().getToken();
         try {
-          Response<MemberListResponse> response = GrassrootRestService.getInstance().getApi()
+          Response<RestResponse<List<Member>>> response = GrassrootRestService.getInstance().getApi()
               .fetchCurrentGroupMembers(phoneNumber, code, groupUid).execute();
           if (response.isSuccessful()) {
-            List<Member> members = response.body().getMembers();
+            List<Member> members = response.body().getData();
 
             Map<String, Object> existingMap = new HashMap<>();
             existingMap.put("groupUid", groupUid);
@@ -889,17 +886,14 @@ public class GroupService {
         if (!NetworkUtils.isOnline()) {
           throw new ApiCallException(NetworkUtils.OFFLINE_SELECTED); // require online for this (maybe change later ...)
         } else {
-          final File file = new File(compressedFilePath);
-          Log.d(TAG, "file size : " + (file.length() / 1024));
-          RequestBody requestFile = RequestBody.create(MediaType.parse(mimeType), file);
-          MultipartBody.Part image = MultipartBody.Part.createFormData("image", file.getName(), requestFile);
 
+          MultipartBody.Part image = ImageUtils.getImageFromPath(compressedFilePath, mimeType);
           try {
             final String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
             final String code = RealmUtils.loadPreferencesFromDB().getToken();
 
             Response<GroupResponse> response = GrassrootRestService.getInstance().getApi()
-                .uploadImage(phoneNumber, code, groupUid, image).execute();
+                .uploadGroupImage(phoneNumber, code, groupUid, image).execute();
 
             if (response.isSuccessful()) {
               RealmUtils.saveGroupToRealm(response.body().getGroups().first());

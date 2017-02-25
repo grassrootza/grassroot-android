@@ -7,7 +7,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 
 import org.grassroot.android.services.NotificationService;
-import org.grassroot.android.utils.MqttConnectionManager;
+import org.grassroot.android.services.MqttConnectionManager;
 import org.grassroot.android.utils.NetworkUtils;
 import org.grassroot.android.utils.RealmUtils;
 

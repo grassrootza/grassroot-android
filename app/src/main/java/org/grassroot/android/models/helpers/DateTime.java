@@ -1,11 +1,11 @@
-package org.grassroot.android.models;
+package org.grassroot.android.models.helpers;
 
 import io.realm.RealmObject;
 
 /**
  * Created by paballo on 2016/05/04.
  */
-public class DateTime extends RealmObject{
+public class DateTime extends RealmObject {
 
     private String dayOfWeek;
     private Integer dayOfYear;

@@ -7,8 +7,10 @@ import android.text.TextUtils;
 
 import org.grassroot.android.R;
 import org.grassroot.android.interfaces.GroupConstants;
+import org.grassroot.android.models.helpers.DateTime;
+import org.grassroot.android.models.helpers.RealmString;
 import org.grassroot.android.utils.Constant;
-import org.grassroot.android.utils.ImageUtils;
+import org.grassroot.android.utils.image.ImageUtils;
 import org.grassroot.android.utils.RealmUtils;
 
 import java.text.ParseException;

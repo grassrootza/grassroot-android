@@ -1,4 +1,4 @@
-package org.grassroot.android.utils;
+package org.grassroot.android.utils.chat;
 
 import com.google.gson.ExclusionStrategy;
 import com.google.gson.FieldAttributes;

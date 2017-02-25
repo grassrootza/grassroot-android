@@ -9,7 +9,7 @@ import android.widget.Filter;
 import android.widget.TextView;
 
 import org.grassroot.android.R;
-import org.grassroot.android.models.Command;
+import org.grassroot.android.models.helpers.Command;
 
 import java.util.ArrayList;
 import java.util.List;

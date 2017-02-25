@@ -8,8 +8,9 @@ import com.google.gson.annotations.Expose;
 
 import org.grassroot.android.interfaces.GroupConstants;
 import org.grassroot.android.interfaces.NotificationConstants;
+import org.grassroot.android.models.helpers.RealmString;
 import org.grassroot.android.utils.Constant;
-import org.grassroot.android.utils.JsonIgnore;
+import org.grassroot.android.utils.chat.JsonIgnore;
 import org.json.JSONArray;
 import org.json.JSONException;
 

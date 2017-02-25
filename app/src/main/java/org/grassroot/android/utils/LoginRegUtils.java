@@ -1,12 +1,14 @@
 package org.grassroot.android.utils;
 
+import android.support.annotation.NonNull;
+import android.text.TextUtils;
 import android.util.Log;
 
 import org.grassroot.android.BuildConfig;
-import org.grassroot.android.models.responses.GenericResponse;
 import org.grassroot.android.models.PreferenceObject;
-import org.grassroot.android.models.responses.TokenResponse;
 import org.grassroot.android.models.exceptions.ApiCallException;
+import org.grassroot.android.models.responses.GenericResponse;
+import org.grassroot.android.models.responses.TokenResponse;
 import org.grassroot.android.services.GrassrootRestService;
 
 import java.io.IOException;
@@ -33,7 +35,6 @@ public class LoginRegUtils {
 		return Observable.create(new Observable.OnSubscribe<String>() {
 			@Override
 			public void call(Subscriber<? super String> subscriber) {
-				Log.e(TAG, "logging in ...");
 				final String msisdn = Utilities.formatNumberToE164(mobileNumber);
 				try {
 					Response<GenericResponse> response = GrassrootRestService.getInstance().getApi()
@@ -111,8 +112,7 @@ public class LoginRegUtils {
 					Response<TokenResponse> response = GrassrootRestService.getInstance().getApi()
 						.authenticate(msisdn, otpEntered).execute();
 					if (response.isSuccessful()) {
-						PreferenceObject preferenceObject = setupPreferences(msisdn, response.body());
-						RealmUtils.saveDataToRealmSync(preferenceObject);
+						checkUserArchiveAndSetupPrefs(msisdn, response.body());
 						subscriber.onNext(response.body().getHasGroups() ? AUTH_HAS_GROUPS : AUTH_NO_GROUPS);
 						subscriber.onCompleted();
 					} else {
@@ -135,8 +135,7 @@ public class LoginRegUtils {
 					Response<TokenResponse> response=  GrassrootRestService.getInstance().getApi()
 						.verify(msisdn, otpEntered).execute();
 					if (response.isSuccessful()) {
-						PreferenceObject preferenceObject = setupPreferences(msisdn, response.body());
-						RealmUtils.saveDataToRealmSync(preferenceObject);
+						checkUserArchiveAndSetupPrefs(msisdn, response.body());
 						subscriber.onNext(AUTH_NO_GROUPS);
 						subscriber.onCompleted();
 					} else {
@@ -148,6 +147,34 @@ public class LoginRegUtils {
 				}
 			}
 		}).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread());
+	}
+
+	private static void checkUserArchiveAndSetupPrefs(final String msisdn, final TokenResponse response) {
+		PreferenceObject preferences;
+		if (!checkIfSameMsisdnAsStored(msisdn)) {
+			RealmUtils.deleteAllObjects();
+			preferences = new PreferenceObject();
+		} else {
+			preferences = RealmUtils.loadPreferencesFromDB();
+		}
+		preferences.setToken(response.getToken().getCode());
+		preferences.setMobileNumber(msisdn);
+		preferences.setLoggedIn(true);
+		preferences.setHasGroups(response.getHasGroups());
+		preferences.setUserName(response.getDisplayName());
+		preferences.setNotificationCounter(response.getUnreadNotificationCount());
+		RealmUtils.saveDataToRealmSync(preferences);
+	}
+
+	private static boolean checkIfSameMsisdnAsStored(@NonNull final String returnedMsisdn) {
+		PreferenceObject storedPreferences = RealmUtils.loadPreferencesFromDB();
+		if (storedPreferences == null || TextUtils.isEmpty(storedPreferences.getMobileNumber())) {
+			Log.e(TAG, "nothing stored ... returning false");
+			return false;
+		} else {
+			Log.e(TAG, "okay, an msisdn stored, it is: " + storedPreferences.getMobileNumber());
+			return storedPreferences.getMobileNumber().equals(returnedMsisdn);
+		}
 	}
 
 	// note: (a) auth code may be wiped from Realm by the time this executes, so passing it makes more thread safe
@@ -175,15 +202,11 @@ public class LoginRegUtils {
 		}).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread());
 	}
 
-	private static PreferenceObject setupPreferences(final String msisdn, final TokenResponse response) {
-		PreferenceObject preferences = new PreferenceObject();
-		preferences.setToken(response.getToken().getCode());
-		preferences.setMobileNumber(msisdn);
-		preferences.setLoggedIn(true);
-		preferences.setHasGroups(response.getHasGroups());
-		preferences.setUserName(response.getDisplayName());
-		preferences.setNotificationCounter(response.getUnreadNotificationCount());
-		return preferences;
+	public static void wipeAllButMessagesAndMsisdn() {
+		final String phoneNumber = RealmUtils.deleteAllExceptMessagesAndPhone();
+		PreferenceObject storedMsisdn = new PreferenceObject();
+		storedMsisdn.setMobileNumber(phoneNumber);
+		RealmUtils.saveDataToRealmSync(storedMsisdn);
 	}
 
 }

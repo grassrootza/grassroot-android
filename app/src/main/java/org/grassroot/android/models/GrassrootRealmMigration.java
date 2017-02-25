@@ -3,6 +3,7 @@ package org.grassroot.android.models;
 import android.util.Log;
 
 import io.realm.DynamicRealm;
+import io.realm.FieldAttribute;
 import io.realm.RealmMigration;
 import io.realm.RealmSchema;
 
@@ -10,9 +11,9 @@ import io.realm.RealmSchema;
  * Created by luke on 2016/11/24.
  */
 
-public class RealmMigrationGroupModel implements RealmMigration {
+public class GrassrootRealmMigration implements RealmMigration {
 
-    private static final String TAG = RealmMigrationGroupModel.class.getSimpleName();
+    private static final String TAG = GrassrootRealmMigration.class.getSimpleName();
 
     @Override
     public void migrate(DynamicRealm realm, long oldVersion, long newVersion) {
@@ -45,6 +46,20 @@ public class RealmMigrationGroupModel implements RealmMigration {
                     .addField("taskType", String.class);
             oldVersion++;
             Log.e(TAG, "v4 migrated");
+        }
+
+        if (oldVersion == 4) {
+            Log.e(TAG, "about to create ImageRecord");
+            schema.create("ImageRecord")
+                    .addField("key", String.class, FieldAttribute.PRIMARY_KEY)
+                    .addField("actionLogType", String.class)
+                    .addField("taskUid", String.class)
+                    .addField("bucket", String.class)
+                    .addField("creationTime", Long.class)
+                    .addField("storageTime", Long.class)
+                    .addField("md5", String.class);
+            Log.e(TAG, "migrated to v5");
+            oldVersion++;
         }
 
         if (oldVersion < newVersion) {

@@ -2,12 +2,16 @@ package org.grassroot.android.fragments;
 
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
 import android.graphics.Typeface;
 import android.net.Uri;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.content.FileProvider;
 import android.support.v4.widget.TextViewCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.CardView;
@@ -22,6 +26,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.GridView;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
@@ -33,26 +38,33 @@ import org.grassroot.android.R;
 import org.grassroot.android.activities.EditTaskActivity;
 import org.grassroot.android.adapters.MemberListAdapter;
 import org.grassroot.android.adapters.MtgRsvpAdapter;
+import org.grassroot.android.adapters.PhotoGridAdapter;
 import org.grassroot.android.events.TaskCancelledEvent;
 import org.grassroot.android.events.TaskUpdatedEvent;
 import org.grassroot.android.fragments.dialogs.ConfirmCancelDialogFragment;
 import org.grassroot.android.fragments.dialogs.NetworkErrorDialogFragment;
 import org.grassroot.android.interfaces.TaskConstants;
+import org.grassroot.android.models.ImageRecord;
 import org.grassroot.android.models.Member;
 import org.grassroot.android.models.ResponseTotalsModel;
 import org.grassroot.android.models.RsvpListModel;
 import org.grassroot.android.models.TaskModel;
 import org.grassroot.android.models.exceptions.ApiCallException;
+import org.grassroot.android.models.responses.RestResponse;
 import org.grassroot.android.services.ApplicationLoader;
+import org.grassroot.android.services.GrassrootRestService;
 import org.grassroot.android.services.SharingService;
 import org.grassroot.android.services.TaskService;
 import org.grassroot.android.utils.ErrorUtils;
 import org.grassroot.android.utils.NetworkUtils;
 import org.grassroot.android.utils.RealmUtils;
+import org.grassroot.android.utils.image.ImageUtils;
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.Date;
 import java.util.List;
 
@@ -60,14 +72,24 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 import butterknife.Unbinder;
+import okhttp3.MultipartBody;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 import rx.Subscriber;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.functions.Action1;
 import rx.observers.Subscribers;
 
+import static android.app.Activity.RESULT_OK;
+import static android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
+
 public class ViewTaskFragment extends Fragment {
 
     private static final String TAG = ViewTaskFragment.class.getCanonicalName();
+
+    private static final int CAMERA_RESULT_INT = 1001;
+    private static final int GALLERY_RESULT_INT = 1002;
 
     private TaskModel task;
     private String taskType;
@@ -79,6 +101,8 @@ public class ViewTaskFragment extends Fragment {
     private ViewGroup mContainer;
     private Unbinder unbinder;
     private boolean viewsBound;
+
+    private String currentPhotoPath;
 
     @BindView(R.id.vt_title) TextView tvTitle;
     @BindView(R.id.vt_header) TextView tvHeader;
@@ -103,6 +127,8 @@ public class ViewTaskFragment extends Fragment {
 
     @BindView(R.id.vt_bt_modify) Button btModifyTask;
     @BindView(R.id.vt_bt_cancel) Button btCancelTask;
+
+    @BindView(R.id.vt_photo_grid) GridView taskPhotoGrid;
 
     @BindView(R.id.progressBar) ProgressBar progressBar;
 
@@ -471,6 +497,26 @@ public class ViewTaskFragment extends Fragment {
                 setViewForToDo(task);
                 break;
         }
+
+        TaskService.getInstance().fetchTaskImages(task.getType(), taskUid)
+                .subscribe(new Action1<List<ImageRecord>>() {
+                    @Override
+                    public void call(List<ImageRecord> imageRecords) {
+                        Log.e(TAG, "fetched image records, this many: " + imageRecords.size());
+                        if (!imageRecords.isEmpty()) {
+                            loadImageGrid(imageRecords);
+                        }
+                    }
+                });
+    }
+
+    private void loadImageGrid(List<ImageRecord> imageRecords) {
+        PhotoGridAdapter adapter = new PhotoGridAdapter(getContext(), imageRecords, task.getType());
+        taskPhotoGrid.setAdapter(adapter);
+        Log.e(TAG, "set up adapter, now flipping to visible");
+        taskPhotoGrid.setVisibility(View.VISIBLE);
+        Log.e(TAG, "notifying data changed");
+        adapter.notifyDataSetChanged();
     }
 
     private void setViewForMeeting(final TaskModel task) {
@@ -800,8 +846,108 @@ public class ViewTaskFragment extends Fragment {
     }
 
     /*
-    SECTION : METHODS FOR TRIGGERING MODIFY/CANCEL
+    SECTION : METHODS FOR TRIGGERING PHOTO/MODIFY/CANCEL
      */
+
+    @OnClick(R.id.vt_ll_photo)
+    public void taskPhoto() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+        builder.setItems(R.array.vt_add_photo_options, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+                if (i == 0) {
+                    try {
+                        Log.e(TAG, "loading camera ... about to start for result");
+                        startActivityForResult(generateCameraIntent(), CAMERA_RESULT_INT);
+                    } catch (IOException e) {
+                        // show a toast
+                        Toast.makeText(getContext(), "Sorry, error loading camera", Toast.LENGTH_SHORT).show();
+                    } catch (IllegalArgumentException e) {
+                        Toast.makeText(getContext(), "Illegal argument exception!", Toast.LENGTH_SHORT).show();
+                    }
+                } else if (i == 1) {
+                    startActivityForResult(generateGalleryIntent(), GALLERY_RESULT_INT);
+                }
+                dialogInterface.dismiss();
+            }
+        }).setCancelable(true);
+        builder.show();
+    }
+
+    private Intent generateGalleryIntent() {
+        return new Intent(Intent.ACTION_PICK, EXTERNAL_CONTENT_URI);
+    }
+
+    private Intent generateCameraIntent() throws IllegalArgumentException, IOException {
+        Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        if (takePictureIntent.resolveActivity(getActivity().getPackageManager()) != null) {
+            File photoFile = ImageUtils.createImageFileForCamera();
+            // Android Studio says this null check is unnecessary, but can't fully trust, so keeping it
+            if (photoFile != null) {
+                Uri currentPhotoUri = FileProvider.getUriForFile(getContext(),
+                        "org.grassroot.android.fileprovider",
+                        photoFile);
+                currentPhotoPath = photoFile.getAbsolutePath();
+                Log.e(TAG, "photo path : " + currentPhotoPath);
+                takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, currentPhotoUri);
+
+                List<ResolveInfo> resInfoList = getContext().getPackageManager().queryIntentActivities(takePictureIntent,
+                        PackageManager.MATCH_DEFAULT_ONLY);
+                for (ResolveInfo resolveInfo : resInfoList) {
+                    String packageName = resolveInfo.activityInfo.packageName;
+                    getContext().grantUriPermission(packageName, currentPhotoUri, Intent.FLAG_GRANT_WRITE_URI_PERMISSION | Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                }
+            } else {
+                throw new IOException("Error! File came back null");
+            }
+        }
+        return takePictureIntent;
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == GALLERY_RESULT_INT) {
+            if (resultCode == RESULT_OK && data != null) {
+                Uri selectedImage = data.getData();
+                Log.e(TAG, "selectedImage: " + selectedImage);
+                final String localImagePath = ImageUtils.getLocalFileNameFromURI(selectedImage);
+                uploadImageFromUri(localImagePath, ImageUtils.getMimeType(selectedImage));
+            }
+        } else if (requestCode == CAMERA_RESULT_INT) {
+            // todo : add a caption ? show size of image?
+            if (resultCode == RESULT_OK) {
+                uploadImageFromUri(currentPhotoPath, "image/jpeg");
+                ImageUtils.addImageToGallery(currentPhotoPath);
+            }
+        }
+    }
+
+    private void uploadImageFromUri(String localImagePath, String mimeType) {
+        final String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
+        final String token = RealmUtils.loadPreferencesFromDB().getToken();
+
+        MultipartBody.Part image = ImageUtils.getImageFromPath(localImagePath, mimeType);
+
+        progressBar.setVisibility(View.VISIBLE);
+        GrassrootRestService.getInstance().getApi().uploadImageForTask(phoneNumber, token,
+                task.getType(), task.getTaskUid(), image).enqueue(new Callback<RestResponse<String>>() {
+            @Override
+            public void onResponse(Call<RestResponse<String>> call, Response<RestResponse<String>> response) {
+                progressBar.setVisibility(View.GONE);
+                if (response.isSuccessful()) {
+                    Toast.makeText(getContext(), R.string.vt_mtg_photo_succeeded, Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(getContext(), R.string.vt_mtg_photo_failed, Toast.LENGTH_LONG).show();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<RestResponse<String>> call, Throwable t) {
+                progressBar.setVisibility(View.GONE);
+                Toast.makeText(getContext(), R.string.vt_mtg_photo_failed, Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
 
     @OnClick(R.id.vt_bt_modify)
     public void modifyTask() {

@@ -19,7 +19,7 @@ import org.grassroot.android.activities.NoGroupWelcomeActivity;
 import org.grassroot.android.activities.StartActivity;
 import org.grassroot.android.interfaces.NavigationConstants;
 import org.grassroot.android.models.Member;
-import org.grassroot.android.models.ServerErrorModel;
+import org.grassroot.android.models.responses.ServerErrorModel;
 import org.grassroot.android.models.exceptions.ApiCallException;
 import org.grassroot.android.services.ApplicationLoader;
 import org.grassroot.android.services.GrassrootRestService;

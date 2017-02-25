@@ -26,7 +26,7 @@ import org.grassroot.android.events.NotificationCountChangedEvent;
 import org.grassroot.android.fragments.dialogs.NetworkErrorDialogFragment;
 import org.grassroot.android.interfaces.ClickListener;
 import org.grassroot.android.interfaces.NotificationConstants;
-import org.grassroot.android.models.NotificationList;
+import org.grassroot.android.models.responses.NotificationList;
 import org.grassroot.android.models.PreferenceObject;
 import org.grassroot.android.models.TaskNotification;
 import org.grassroot.android.services.GcmListenerService;

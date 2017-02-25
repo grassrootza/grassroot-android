@@ -25,9 +25,8 @@ import org.grassroot.android.models.exceptions.ApiCallException;
 import org.grassroot.android.services.NotificationService;
 import org.grassroot.android.utils.ErrorUtils;
 import org.grassroot.android.utils.LoginRegUtils;
-import org.grassroot.android.utils.MqttConnectionManager;
+import org.grassroot.android.services.MqttConnectionManager;
 import org.grassroot.android.utils.NetworkUtils;
-import org.grassroot.android.utils.RealmUtils;
 import org.grassroot.android.utils.Utilities;
 
 import rx.Subscriber;

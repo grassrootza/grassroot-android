@@ -13,7 +13,7 @@ import com.jakewharton.picasso.OkHttp3Downloader;
 import com.squareup.picasso.Picasso;
 
 import org.grassroot.android.BuildConfig;
-import org.grassroot.android.models.RealmMigrationGroupModel;
+import org.grassroot.android.models.GrassrootRealmMigration;
 import org.grassroot.android.receivers.TaskManagerReceiver;
 
 import java.io.IOException;
@@ -48,8 +48,9 @@ public class ApplicationLoader extends Application {
         RealmConfiguration.Builder realmConfigBuilder =
                 new RealmConfiguration.Builder(applicationContext);
 
+        Log.e("GRASSROOT", "setting schema to version 5");
         realmConfigBuilder.schemaVersion(4)
-                .migration(new RealmMigrationGroupModel());
+                .migration(new GrassrootRealmMigration());
         Realm.setDefaultConfiguration(realmConfigBuilder.build());
 
         // since there was some early confusion, try to open it, to trigger a Realm error, and wipe if needed
@@ -77,7 +78,7 @@ public class ApplicationLoader extends Application {
         builder.downloader(new OkHttp3Downloader(okHttpClient));
         Picasso built = builder.build();
         built.setIndicatorsEnabled(BuildConfig.BUILD_TYPE.equals("debug"));
-        built.setLoggingEnabled(false);
+        built.setLoggingEnabled(true);
         Picasso.setSingletonInstance(built);
 
         Intent i = new Intent(this, TaskManagerReceiver.class);

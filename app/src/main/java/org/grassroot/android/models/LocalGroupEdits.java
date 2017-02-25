@@ -1,5 +1,7 @@
 package org.grassroot.android.models;
 
+import org.grassroot.android.models.helpers.RealmString;
+
 import java.util.UUID;
 
 import io.realm.RealmList;

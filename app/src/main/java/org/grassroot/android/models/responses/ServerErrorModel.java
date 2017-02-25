@@ -1,4 +1,4 @@
-package org.grassroot.android.models;
+package org.grassroot.android.models.responses;
 
 /**
  * Created by luke on 2016/08/07.

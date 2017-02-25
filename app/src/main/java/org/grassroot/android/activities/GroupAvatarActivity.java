@@ -2,13 +2,11 @@ package org.grassroot.android.activities;
 
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
-import android.provider.MediaStore;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -37,10 +35,10 @@ import org.grassroot.android.interfaces.GroupConstants;
 import org.grassroot.android.models.Group;
 import org.grassroot.android.models.exceptions.ApiCallException;
 import org.grassroot.android.services.GroupService;
-import org.grassroot.android.utils.CircularImageTransformer;
 import org.grassroot.android.utils.ErrorUtils;
-import org.grassroot.android.utils.ImageUtils;
 import org.grassroot.android.utils.NetworkUtils;
+import org.grassroot.android.utils.image.CircularImageTransformer;
+import org.grassroot.android.utils.image.ImageUtils;
 
 import java.io.File;
 
@@ -332,12 +330,7 @@ public class GroupAvatarActivity extends PortraitActivity {
             @Override
             public void call(Subscriber<? super Bitmap> subscriber) {
                 mimeType = ImageUtils.getMimeType(selectedImage);
-                String[] filePathColumn = {MediaStore.Images.Media.DATA};
-                Cursor cursor = getContentResolver().query(selectedImage, filePathColumn, null, null, null);
-                cursor.moveToFirst(); // if null, will throw error to subscriber, so check in here would be redundant
-                int columnIndex = cursor.getColumnIndex(filePathColumn[0]);
-                String localImagePath = cursor.getString(columnIndex);
-                cursor.close();
+                final String localImagePath = ImageUtils.getLocalFileNameFromURI(selectedImage);
                 compressedFilePath = ImageUtils.getCompressedFileFromImage(localImagePath);
                 Bitmap bitmap = BitmapFactory.decodeFile(compressedFilePath);
                 subscriber.onNext(bitmap);

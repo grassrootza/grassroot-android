@@ -1,4 +1,4 @@
-package org.grassroot.android.models;
+package org.grassroot.android.models.responses;
 
 import com.google.gson.annotations.SerializedName;
 

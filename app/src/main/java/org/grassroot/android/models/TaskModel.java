@@ -5,6 +5,7 @@ import android.os.Parcelable;
 import android.util.Log;
 
 import org.grassroot.android.interfaces.TaskConstants;
+import org.grassroot.android.models.helpers.RealmString;
 import org.grassroot.android.utils.Constant;
 
 import java.text.ParseException;

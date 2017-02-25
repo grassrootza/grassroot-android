@@ -2,7 +2,6 @@ package org.grassroot.android.activities;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.net.http.WelcomeFragment;
 import android.os.Build;
 import android.support.v4.widget.DrawerLayout;
 

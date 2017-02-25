@@ -558,12 +558,16 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
     @Subscribe
     public void onEvent(UserLoggedOutEvent e) {
         // finish on main activity seems to not clear this
-        groupListRowAdapter.setGroupList(new ArrayList<Group>());
+        if (groupListRowAdapter != null) {
+            groupListRowAdapter.setGroupList(new ArrayList<Group>());
+        }
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onEvent(GroupChatEvent e) {
-        groupListRowAdapter.refreshSingleGroup(e.getGroupUid());
+        if (groupListRowAdapter != null) {
+            groupListRowAdapter.refreshSingleGroup(e.getGroupUid());
+        }
     }
 
     @OnClick(R.id.fab_menu_open)

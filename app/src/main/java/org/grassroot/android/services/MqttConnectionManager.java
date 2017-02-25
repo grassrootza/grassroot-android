@@ -1,4 +1,4 @@
-package org.grassroot.android.utils;
+package org.grassroot.android.services;
 
 import android.os.Bundle;
 import android.util.Log;
@@ -23,10 +23,15 @@ import org.grassroot.android.interfaces.GroupConstants;
 import org.grassroot.android.interfaces.NotificationConstants;
 import org.grassroot.android.models.Group;
 import org.grassroot.android.models.Message;
-import org.grassroot.android.models.RealmString;
 import org.grassroot.android.models.exceptions.ApiCallException;
 import org.grassroot.android.models.exceptions.GroupChatException;
-import org.grassroot.android.services.ApplicationLoader;
+import org.grassroot.android.models.helpers.RealmString;
+import org.grassroot.android.utils.Constant;
+import org.grassroot.android.utils.NetworkUtils;
+import org.grassroot.android.utils.RealmUtils;
+import org.grassroot.android.utils.Utilities;
+import org.grassroot.android.utils.chat.AnnotationExclusionStrategy;
+import org.grassroot.android.utils.chat.RealmStringDeserializer;
 import org.greenrobot.eventbus.EventBus;
 
 import java.util.ArrayList;
@@ -56,13 +61,11 @@ public class MqttConnectionManager implements IMqttActionListener, MqttCallback 
     private static final String ERROR = "error";
     private static final String DISCONNECTED = "disconnected";
 
-    public static final String CHAT_SENT = "chat_sent";
+    private static final String CHAT_SENT = "chat_sent";
 
     private Gson gson;
     private String mqqtConnectionStatus;
     private MqttAndroidClient mqttAndroidClient;
-
-    private static final String brokerUrl = Constant.brokerUrl;
 
     private MqttConnectionManager() {
         GsonBuilder builder = new GsonBuilder();
@@ -93,12 +96,8 @@ public class MqttConnectionManager implements IMqttActionListener, MqttCallback 
         return CONNECTED.equals(mqqtConnectionStatus) || (mqttAndroidClient != null && mqttAndroidClient.isConnected());
     }
 
-    public String getMqqtConnectionStatus() {
-        return mqqtConnectionStatus;
-    }
-
     public void connect() {
-        Log.e(TAG, "connecting to mqtt broker at address: " + brokerUrl);
+        Log.e(TAG, "connecting to mqtt broker at address: " + Constant.brokerUrl);
 
         final MqttConnectOptions options = new MqttConnectOptions();
         final String clientId = RealmUtils.loadPreferencesFromDB().getMobileNumber();
@@ -111,7 +110,7 @@ public class MqttConnectionManager implements IMqttActionListener, MqttCallback 
             Log.e(TAG, "trying to connect ...");
             if (mqttAndroidClient == null) {
                 mqttAndroidClient = new MqttAndroidClient(ApplicationLoader.applicationContext,
-                        brokerUrl, clientId);
+                        Constant.brokerUrl, clientId);
             }
 
             Log.e(TAG, "set up client");

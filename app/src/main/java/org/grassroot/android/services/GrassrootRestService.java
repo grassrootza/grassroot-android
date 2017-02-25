@@ -17,19 +17,19 @@ import org.grassroot.android.models.Account;
 import org.grassroot.android.models.AccountBill;
 import org.grassroot.android.models.Group;
 import org.grassroot.android.models.GroupJoinRequest;
+import org.grassroot.android.models.ImageRecord;
 import org.grassroot.android.models.Member;
-import org.grassroot.android.models.NotificationList;
 import org.grassroot.android.models.Permission;
-import org.grassroot.android.models.RealmString;
 import org.grassroot.android.models.ResponseTotalsModel;
 import org.grassroot.android.models.RsvpListModel;
+import org.grassroot.android.models.helpers.RealmString;
 import org.grassroot.android.models.responses.GenericResponse;
 import org.grassroot.android.models.responses.GroupChatSettingResponse;
 import org.grassroot.android.models.responses.GroupResponse;
 import org.grassroot.android.models.responses.GroupSearchResponse;
 import org.grassroot.android.models.responses.GroupsChangedResponse;
 import org.grassroot.android.models.responses.JoinRequestResponse;
-import org.grassroot.android.models.responses.MemberListResponse;
+import org.grassroot.android.models.responses.NotificationList;
 import org.grassroot.android.models.responses.PermissionResponse;
 import org.grassroot.android.models.responses.ProfileResponse;
 import org.grassroot.android.models.responses.RestResponse;
@@ -89,6 +89,7 @@ public class GrassrootRestService {
   }
 
   private GrassrootRestService(Context context) {
+
     HttpLoggingInterceptor logging = new HttpLoggingInterceptor();
     logging.setLevel(BuildConfig.BUILD_TYPE.equals("debug") ?
         HttpLoggingInterceptor.Level.BODY : HttpLoggingInterceptor.Level.HEADERS);
@@ -122,7 +123,7 @@ public class GrassrootRestService {
 
           @Override
           public RealmList<RealmString> read(JsonReader in) throws IOException {
-            RealmList<RealmString> list = new RealmList<RealmString>();
+            RealmList<RealmString> list = new RealmList<>();
             in.beginArray();
             while (in.hasNext()) {
               list.add(new RealmString(in.nextString()));
@@ -221,12 +222,6 @@ public class GrassrootRestService {
     Call<GenericResponse> pushUnregister(@Path("phoneNumber") String phoneNumber,
         @Path("code") String code);
 
-    // send a chat message (cannot trust GCM to handle this leg of journey)
-    @GET("gcm/chat/send/{phoneNumber}/{code}/{groupUid}")
-    Call<GenericResponse> sendChatMessage(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
-                                          @Path("groupUid") String groupUid, @Query("messageText") String message,
-                                          @Query("messageUid") String messageUid, @Query("gcmKey") String gcmKey);
-
     // update notification read status (for single notification, on open & view via click)
     @POST("notification/update/read/{phoneNumber}/{code}")
     Call<GenericResponse> updateRead(@Path("phoneNumber") String phoneNumber,
@@ -254,8 +249,8 @@ public class GrassrootRestService {
 
     @Multipart
     @POST("group/image/upload/{phoneNumber}/{code}/{groupUid}")
-    Call<GroupResponse> uploadImage(@Path("phoneNumber") String phoneNumber, @Path("code") String code, @Path("groupUid") String groupUid,
-        @Part  MultipartBody.Part image);
+    Call<GroupResponse> uploadGroupImage(@Path("phoneNumber") String phoneNumber, @Path("code") String code, @Path("groupUid") String groupUid,
+                                         @Part MultipartBody.Part image);
     
     @POST("group/image/default/{phoneNumber}/{code}")
     Call<GroupResponse> changeDefaultImage(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
@@ -273,7 +268,7 @@ public class GrassrootRestService {
 
     //refresh group members
     @GET("group/members/list/{phoneNumber}/{code}/{groupUid}")
-    Call<MemberListResponse> fetchCurrentGroupMembers(@Path("phoneNumber") String phoneNumber,
+    Call<RestResponse<List<Member>>> fetchCurrentGroupMembers(@Path("phoneNumber") String phoneNumber,
                                                       @Path("code") String code,
                                                       @Path("groupUid") String groupUid);
 
@@ -454,9 +449,24 @@ public class GrassrootRestService {
         @Query("reminderMinutes") int reminderMinutes,
         @Query("members") Set<String> membersAssigned);
 
+    /*
+    HANDLE IMAGE TASKS
+     */
+  @Multipart
+  @POST("task/image/upload/{phoneNumber}/{code}/{taskType}/{taskUid}")
+  Call<RestResponse<String>> uploadImageForTask(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
+                                                @Path("taskType") String taskType, @Path("taskUid") String taskUid,
+                                                @Part MultipartBody.Part image);
+
+  @GET("task/image/list/{phoneNumber}/{code}/{taskType}/{taskUid}")
+  Call<RestResponse<List<ImageRecord>>> fetchImagesForTask(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
+                                                           @Path("taskType") String taskType, @Path("taskUid") String taskUid);
+
         /*
         SECTION : EDIT TASKS
          */
+
+    // upload an image for the meeting
 
     //edit vote
     @POST("vote/update/{uid}/{phoneNumber}/{code}")
@@ -484,7 +494,7 @@ public class GrassrootRestService {
                                 @Query("members") Set<String> membersAssigned);
 
     @GET("task/assigned/{phoneNumber}/{code}/{taskUid}/{taskType}")
-    Call<MemberListResponse> fetchAssignedMembers(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
+    Call<RestResponse<List<Member>>> fetchAssignedMembers(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
                                                   @Path("taskUid") String taskUid, @Path("taskType") String taskType);
 
     // should clearly consolidate / abstract / simplify these to one call in future versions
@@ -525,10 +535,6 @@ public class GrassrootRestService {
     @POST("group/edit/close_join/{phoneNumber}/{code}")
     Call<GenericResponse> closeJoinCode(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
                                         @Query("groupUid") String groupUid);
-
-    @POST("group/edit/add_organizer/{phoneNumber}/{code}")
-    Call<GenericResponse> addOrganizer(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
-                                       @Query("groupUid") String groupUid, @Query("memberUid") String memberUid);
 
     @POST("group/edit/fetch_permissions/{phoneNumber}/{code}")
     Call<PermissionResponse> fetchPermissions(@Path("phoneNumber") String phoneNumber, @Path("code") String code,

@@ -40,13 +40,13 @@ import org.grassroot.android.interfaces.NavigationConstants;
 import org.grassroot.android.interfaces.NotificationConstants;
 import org.grassroot.android.models.Group;
 import org.grassroot.android.models.GroupJoinRequest;
-import org.grassroot.android.models.NavDrawerItem;
 import org.grassroot.android.models.exceptions.ApiCallException;
+import org.grassroot.android.models.helpers.NavDrawerItem;
 import org.grassroot.android.services.ApplicationLoader;
 import org.grassroot.android.services.GcmRegistrationService;
+import org.grassroot.android.services.MqttConnectionManager;
 import org.grassroot.android.utils.Constant;
 import org.grassroot.android.utils.LoginRegUtils;
-import org.grassroot.android.utils.MqttConnectionManager;
 import org.grassroot.android.utils.NetworkUtils;
 import org.grassroot.android.utils.RealmUtils;
 import org.greenrobot.eventbus.EventBus;
@@ -442,7 +442,7 @@ public class NavigationDrawerFragment extends Fragment implements NavigationDraw
                         unregisterGcm(); // maybe do preference switch off in log out?
                         LoginRegUtils.logOutUser(mobileNumber, code).subscribe();
                         EventBus.getDefault().post(new UserLoggedOutEvent());
-                        RealmUtils.deleteAllObjects();
+                        LoginRegUtils.wipeAllButMessagesAndMsisdn();
                         Intent open = new Intent(getActivity(), StartActivity.class);
                         startActivity(open);
                     }

@@ -708,6 +708,16 @@
     <string name="vt_mtg_modify">Change meeting</string>
     <string name="vt_mtg_cancel">Cancel meeting</string>
 
+    <string name="vt_mtg_add_photo">Add photo</string>
+
+    <string-array name="vt_add_photo_options">
+        <item>Camera</item>
+        <item>Gallery</item>
+    </string-array>
+
+    <string name="vt_mtg_photo_succeeded">Done! Photo stored</string>
+    <string name="vt_mtg_photo_failed">Error! Photo not stored. Try again later</string>
+
     <string name="vt_vote_title">Vote on:</string>
     <string name="vt_vote_title_past">Old vote on:</string>
     <string name="vt_vote_posted">Called by %s</string>

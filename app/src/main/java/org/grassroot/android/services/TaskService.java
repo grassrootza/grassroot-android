@@ -7,6 +7,7 @@ import org.grassroot.android.events.TaskUpdatedEvent;
 import org.grassroot.android.events.TasksRefreshedEvent;
 import org.grassroot.android.interfaces.TaskConstants;
 import org.grassroot.android.models.Group;
+import org.grassroot.android.models.ImageRecord;
 import org.grassroot.android.models.Member;
 import org.grassroot.android.models.PreferenceObject;
 import org.grassroot.android.models.ResponseTotalsModel;
@@ -14,7 +15,7 @@ import org.grassroot.android.models.RsvpListModel;
 import org.grassroot.android.models.TaskModel;
 import org.grassroot.android.models.exceptions.ApiCallException;
 import org.grassroot.android.models.responses.GenericResponse;
-import org.grassroot.android.models.responses.MemberListResponse;
+import org.grassroot.android.models.responses.RestResponse;
 import org.grassroot.android.models.responses.TaskChangedResponse;
 import org.grassroot.android.models.responses.TaskResponse;
 import org.grassroot.android.utils.ErrorUtils;
@@ -444,10 +445,10 @@ public class TaskService {
           final String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
           final String code = RealmUtils.loadPreferencesFromDB().getToken();
           try {
-            Response<MemberListResponse> response = GrassrootRestService.getInstance().getApi()
+            Response<RestResponse<List<Member>>> response = GrassrootRestService.getInstance().getApi()
                 .fetchAssignedMembers(phoneNumber, code, taskUid, taskType).execute();
             if (response.isSuccessful()) {
-              subscriber.onNext(response.body().getMembers());
+              subscriber.onNext(response.body().getData());
               subscriber.onCompleted();
             } else {
               throw new ApiCallException(NetworkUtils.SERVER_ERROR,
@@ -559,7 +560,7 @@ public class TaskService {
   }
 
   @SuppressWarnings("unchecked") // todo : finally clean these unchecked warnings up
-  public Call<TaskResponse> setUpUpdateApiCall(final TaskModel model, List<Member> selectedMembers) {
+  private Call<TaskResponse> setUpUpdateApiCall(final TaskModel model, List<Member> selectedMembers) {
     List<String> memberUids = (selectedMembers == null) ? Collections.EMPTY_LIST :
         new ArrayList<>(Utilities.convertMemberListToUids(selectedMembers));
     final String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
@@ -577,6 +578,34 @@ public class TaskService {
       default:
         throw new UnsupportedOperationException("Error! Missing task type in call");
     }
+  }
+
+  /*
+  METHODS FOR STORING AND RETRIEVING IMAGES FOR TASKS
+   */
+
+  public Observable<List<ImageRecord>> fetchTaskImages(final String taskType, final String taskUid) {
+    return Observable.create(new Observable.OnSubscribe<List<ImageRecord>>() {
+      @Override
+      public void call(Subscriber<? super List<ImageRecord>> subscriber) {
+        final String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
+        final String code = RealmUtils.loadPreferencesFromDB().getToken();
+        try {
+          Response<RestResponse<List<ImageRecord>>> response = GrassrootRestService.getInstance().getApi()
+                  .fetchImagesForTask(phoneNumber, code, taskType, taskUid).execute();
+          if (response.isSuccessful()) {
+            Log.e(TAG, "returned succesful response!: " + response.body().getMessage());
+            subscriber.onNext(response.body().getData());
+          } else {
+            // as below (IOException), swallow error and report no images
+            subscriber.onNext(new ArrayList<ImageRecord>());
+          }
+        } catch (IOException e) {
+          // since this is just called in background, and will show no images if empty list, swallowing error instead of throwing it
+          subscriber.onNext(new ArrayList<ImageRecord>());
+        }
+      }
+    }).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread());
   }
 
   /*

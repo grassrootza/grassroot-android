@@ -31,7 +31,6 @@ import android.widget.Toast;
 
 import org.eclipse.paho.android.service.MqttServiceConstants;
 import org.eclipse.paho.android.service.Status;
-import org.eclipse.paho.client.mqttv3.MqttException;
 import org.grassroot.android.R;
 import org.grassroot.android.activities.GroupTasksActivity;
 import org.grassroot.android.activities.MultiMessageNotificationActivity;
@@ -45,23 +44,23 @@ import org.grassroot.android.fragments.dialogs.NetworkErrorDialogFragment;
 import org.grassroot.android.interfaces.ClickListener;
 import org.grassroot.android.interfaces.GroupConstants;
 import org.grassroot.android.interfaces.TaskConstants;
-import org.grassroot.android.models.Command;
 import org.grassroot.android.models.Message;
 import org.grassroot.android.models.PreferenceObject;
-import org.grassroot.android.models.RealmString;
 import org.grassroot.android.models.TaskModel;
 import org.grassroot.android.models.exceptions.ApiCallException;
+import org.grassroot.android.models.helpers.Command;
+import org.grassroot.android.models.helpers.RealmString;
 import org.grassroot.android.models.responses.GroupChatSettingResponse;
 import org.grassroot.android.services.GcmListenerService;
 import org.grassroot.android.services.GroupService;
+import org.grassroot.android.services.MqttConnectionManager;
 import org.grassroot.android.services.SharingService;
 import org.grassroot.android.services.TaskService;
 import org.grassroot.android.utils.Constant;
-import org.grassroot.android.utils.EmojIconMultiAutoCompleteActions;
 import org.grassroot.android.utils.ErrorUtils;
-import org.grassroot.android.utils.MqttConnectionManager;
 import org.grassroot.android.utils.RealmUtils;
 import org.grassroot.android.utils.Utilities;
+import org.grassroot.android.utils.chat.EmojIconMultiAutoCompleteActions;
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
@@ -353,7 +352,7 @@ public class GroupChatFragment extends Fragment implements GroupChatAdapter.Grou
                 }
             } else {
                 if (resultBundle.containsKey(MqttServiceConstants.CALLBACK_EXCEPTION)) {
-                    MqttException exception = (MqttException) resultBundle.getSerializable(MqttServiceConstants.CALLBACK_EXCEPTION);
+                    Exception exception = (Exception) resultBundle.getSerializable(MqttServiceConstants.CALLBACK_EXCEPTION);
                     Log.e(TAG, "have an error exception: " + exception.toString());
                     showErrorMessage(exception.toString(), false);
                 }
