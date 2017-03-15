@@ -15,6 +15,9 @@ public class ImageRecord extends RealmObject {
     private Long creationTime;
     private Long storageTime;
     private String md5;
+    private String userDisplayName;
+    private Double latitude;
+    private Double longitude;
 
     public String getKey() {
         return key;
@@ -70,5 +73,29 @@ public class ImageRecord extends RealmObject {
 
     public void setMd5(String md5) {
         this.md5 = md5;
+    }
+
+    public String getUserDisplayName() {
+        return userDisplayName;
+    }
+
+    public void setUserDisplayName(String userDisplayName) {
+        this.userDisplayName = userDisplayName;
+    }
+
+    public Double getLatitude() {
+        return latitude;
+    }
+
+    public void setLatitude(Double latitude) {
+        this.latitude = latitude;
+    }
+
+    public Double getLongitude() {
+        return longitude;
+    }
+
+    public void setLongitude(Double longitude) {
+        this.longitude = longitude;
     }
 }

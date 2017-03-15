@@ -15,6 +15,7 @@ import org.grassroot.android.R;
 import org.grassroot.android.events.NotificationCountChangedEvent;
 import org.grassroot.android.events.TaskCancelledEvent;
 import org.grassroot.android.fragments.GiantMessageFragment;
+import org.grassroot.android.fragments.ImageGridFragment;
 import org.grassroot.android.fragments.ViewTaskFragment;
 import org.grassroot.android.interfaces.GroupConstants;
 import org.grassroot.android.interfaces.NavigationConstants;
@@ -143,10 +144,24 @@ public class ViewTaskActivity extends PortraitActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case android.R.id.home:
-                finish();
+                if (!checkForImageFragment()) {
+                    finish();
+                }
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
+        }
+    }
+
+    private boolean checkForImageFragment() {
+        Fragment imageFrag = getSupportFragmentManager().findFragmentByTag(ImageGridFragment.class.getCanonicalName());
+        if (imageFrag != null && imageFrag.isVisible()) {
+            getSupportFragmentManager().beginTransaction()
+                    .remove(imageFrag)
+                    .commit();
+            return true;
+        } else {
+            return false;
         }
     }
 

@@ -552,7 +552,7 @@ public class TaskService {
               throw new ApiCallException(NetworkUtils.SERVER_ERROR, ErrorUtils.getRestMessage(response.errorBody()));
             }
           } catch (IOException e) {
-            throw new ApiCallException(NetworkUtils.SERVER_ERROR);
+            throw new ApiCallException(NetworkUtils.CONNECT_ERROR);
           }
         }
       }
@@ -583,6 +583,28 @@ public class TaskService {
   /*
   METHODS FOR STORING AND RETRIEVING IMAGES FOR TASKS
    */
+
+  public Observable<Long> countTaskImages(final String taskType, final String taskUid) {
+    return Observable.create(new Observable.OnSubscribe<Long>() {
+      @Override
+      public void call(Subscriber<? super Long> subscriber) {
+        final String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
+        final String code = RealmUtils.loadPreferencesFromDB().getToken();
+        try {
+          Response<RestResponse<Long>> response = GrassrootRestService.getInstance().getApi()
+                  .countImagesForTask(phoneNumber, code, taskType, taskUid).execute();
+          if (response.isSuccessful()) {
+            subscriber.onNext(response.body().getData());
+            subscriber.onCompleted();
+          } else {
+            throw new ApiCallException(NetworkUtils.SERVER_ERROR, ErrorUtils.getRestMessage(response.errorBody()));
+          }
+        } catch (IOException e) {
+          throw new ApiCallException(NetworkUtils.CONNECT_ERROR);
+        }
+      }
+    }).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread());
+  }
 
   public Observable<List<ImageRecord>> fetchTaskImages(final String taskType, final String taskUid) {
     return Observable.create(new Observable.OnSubscribe<List<ImageRecord>>() {

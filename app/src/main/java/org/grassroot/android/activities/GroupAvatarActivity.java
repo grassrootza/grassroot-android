@@ -30,7 +30,7 @@ import com.squareup.picasso.NetworkPolicy;
 import com.squareup.picasso.Picasso;
 
 import org.grassroot.android.R;
-import org.grassroot.android.fragments.ImageDetailFragment;
+import org.grassroot.android.fragments.AvatarViewFragment;
 import org.grassroot.android.interfaces.GroupConstants;
 import org.grassroot.android.models.Group;
 import org.grassroot.android.models.exceptions.ApiCallException;
@@ -122,7 +122,7 @@ public class GroupAvatarActivity extends PortraitActivity {
 
         @Override
         public Fragment getItem(int position) {
-            return ImageDetailFragment.newInstance(imageResIds[position]);
+            return AvatarViewFragment.newInstance(imageResIds[position]);
         }
 
         @Override

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <GridView
+        android:id="@+id/vt_photo_grid"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+
+        android:numColumns="2"
+        android:verticalSpacing="0dp"
+        android:horizontalSpacing="0dp"
+        android:stretchMode="columnWidth"
+        android:gravity="start"
+
+        android:background="@color/white"
+        tools:listitem="@layout/row_grid_photo" />
+
+    <ProgressBar
+        android:id="@+id/progressBar"
+        style="@style/ProgressBarMedium"
+        android:visibility="gone"
+        android:layout_gravity="center" />
+
+</FrameLayout>

@@ -48,17 +48,31 @@ public class GrassrootRealmMigration implements RealmMigration {
             Log.e(TAG, "v4 migrated");
         }
 
+        // another skip because of mess up in realm counting before [!]
+
         if (oldVersion == 4) {
-            Log.e(TAG, "about to create ImageRecord");
-            schema.create("ImageRecord")
-                    .addField("key", String.class, FieldAttribute.PRIMARY_KEY)
-                    .addField("actionLogType", String.class)
-                    .addField("taskUid", String.class)
-                    .addField("bucket", String.class)
-                    .addField("creationTime", Long.class)
-                    .addField("storageTime", Long.class)
-                    .addField("md5", String.class);
+            Log.e(TAG, "about to create ImageRecord, if it doesn't exist");
+            if (!schema.contains("ImageRecord")) {
+                schema.create("ImageRecord")
+                        .addField("key", String.class, FieldAttribute.PRIMARY_KEY)
+                        .addField("actionLogType", String.class)
+                        .addField("taskUid", String.class)
+                        .addField("bucket", String.class)
+                        .addField("creationTime", Long.class)
+                        .addField("storageTime", Long.class)
+                        .addField("md5", String.class);
+            }
             Log.e(TAG, "migrated to v5");
+            oldVersion++;
+        }
+
+        if (oldVersion == 5) {
+            Log.e(TAG, "about add fields to ImageRecord");
+            schema.get("ImageRecord")
+                    .addField("userDisplayName", String.class)
+                    .addField("latitude", Double.class)
+                    .addField("longitude", Double.class);
+            Log.e(TAG, "migrated to v6");
             oldVersion++;
         }
 

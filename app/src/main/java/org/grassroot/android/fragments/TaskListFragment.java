@@ -37,6 +37,7 @@ import org.grassroot.android.services.TaskService;
 import org.grassroot.android.utils.ErrorUtils;
 import org.grassroot.android.utils.NetworkUtils;
 import org.grassroot.android.utils.RealmUtils;
+import org.grassroot.android.utils.Utilities;
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
@@ -160,6 +161,17 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
     public void onResume() {
         super.onResume();
         floatingActionButton.setVisibility(group == null || group.hasCreatePermissions() ? View.VISIBLE : View.GONE);
+        if (rootView != null) {
+            Utilities.hideKeyboard(getContext(), rootView);
+        }
+    }
+
+    @Override
+    public void setUserVisibleHint(boolean isVisibleToUser) {
+        super.setUserVisibleHint(isVisibleToUser);
+        if (isVisibleToUser && rootView != null) {
+            Utilities.hideKeyboard(getContext(), rootView);
+        }
     }
 
     @Override

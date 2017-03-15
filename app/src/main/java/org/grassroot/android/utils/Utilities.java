@@ -1,12 +1,15 @@
 package org.grassroot.android.utils;
 
+import android.app.Activity;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
 import android.os.Build;
+import android.support.annotation.NonNull;
 import android.telephony.PhoneNumberUtils;
 import android.util.Log;
-import android.util.SparseArray;
+import android.view.View;
+import android.view.inputmethod.InputMethodManager;
 
 import org.grassroot.android.models.Member;
 import org.grassroot.android.services.ApplicationLoader;
@@ -28,6 +31,20 @@ public class Utilities {
     private static final Pattern nationalRegex = Pattern.compile("0[6,7,8]\\d{8}");
 
     private static final Pattern alphaNumericRegex = Pattern.compile("[^a-z0-9 ]", Pattern.CASE_INSENSITIVE);
+
+    public static void hideKeyboard(Activity activity) {
+        InputMethodManager imm = (InputMethodManager) activity.getSystemService(Activity.INPUT_METHOD_SERVICE);
+        View view = activity.getCurrentFocus();
+        if (view == null) {
+            view = new View(activity);
+        }
+        imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+    }
+
+    public static void hideKeyboard(Context context, @NonNull View view) {
+        InputMethodManager imm = (InputMethodManager) context.getSystemService(Activity.INPUT_METHOD_SERVICE);
+        imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+    }
 
     public static HashMap<String, String> parseStringArray(int stringArrayResourceId) {
         String[] stringArray = ApplicationLoader.applicationContext.getResources().getStringArray(stringArrayResourceId);
@@ -67,16 +84,7 @@ public class Utilities {
     public static boolean checkIfLocalNumber(String phoneNumber) {
         // might be able to do this much quicker if use Google overall libPhoneNumber, but whole lib for this is heavy
         final String normalized = PhoneNumberUtils.stripSeparators(phoneNumber);
-
-        if(zaPhoneE164.matcher(normalized).matches()) {
-            return true;
-        } else if (zaPhoneE164Plus.matcher(normalized).matches()) {
-            return true;
-        } else if (nationalRegex.matcher(normalized).matches()) {
-            return true;
-        } else {
-            return false;
-        }
+        return zaPhoneE164.matcher(normalized).matches() || (zaPhoneE164Plus.matcher(normalized).matches() || nationalRegex.matcher(normalized).matches());
     }
 
     public static String stripPrefixFromNumber(String phoneNumber) {

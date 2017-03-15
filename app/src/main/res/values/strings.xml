@@ -705,8 +705,8 @@
     <string name="vt_rlist_response_none">No response</string>
     <string name="vt_mtg_response_count">%1$d people invited, %2$d confirmed</string>
     <string name="vt_mtg_response_error">Can\'t fetch meeting responses</string>
-    <string name="vt_mtg_modify">Change meeting</string>
-    <string name="vt_mtg_cancel">Cancel meeting</string>
+    <string name="vt_mtg_modify">Change</string>
+    <string name="vt_mtg_cancel">Cancel</string>
 
     <string name="vt_mtg_add_photo">Add photo</string>
 
@@ -714,6 +714,10 @@
         <item>Camera</item>
         <item>Gallery</item>
     </string-array>
+
+    <string name="vt_mtg_view_photo">View photos</string>
+    <string name="vt_mtg_view_photo_count">View %1$d photos</string>
+    <string name="vt_mtg_view_no_photos">No photos yet</string>
 
     <string name="vt_mtg_photo_succeeded">Done! Photo stored</string>
     <string name="vt_mtg_photo_failed">Error! Photo not stored. Try again later</string>
@@ -738,7 +742,7 @@
     <string name="vt_row_no">Voted no</string>
     <string name="vt_row_abstain">Abstained</string>
     <string name="vt_row_no_reply">No response</string>
-    <string name="vt_vote_modify">Extend vote</string>
+    <string name="vt_vote_modify">Extend</string>
     <string name="vt_vote_totals_error">Cannot fetch results</string>
 
     <string name="vt_todo_title">Action:</string>
@@ -752,7 +756,7 @@
     <string name="vt_todo_members_assigned">View assigned members</string>
     <string name="vt_todo_group_assigned">Whole group assigned</string>
     <string name="vt_todo_assigned_error">Couldn\'t fetch who is assigned</string>
-    <string name="vt_todo_cancel">Cancel action</string>
+    <string name="vt_todo_cancel">Cancel</string>
 
     <!-- Section : Some strings for special display of notified tasks (e.g., cancelled) -->
     <string name="vt_cancel_title">Cancelled</string>
@@ -765,6 +769,13 @@
     <string name="vt_results_header">Results</string>
     <string name="vt_changed_task">View Details</string>
     <string name="vt_changed_group">View Group</string>
+
+    <!-- Images -->
+    <string name="ida_title">%s gallery</string>
+
+    <string name="ida_toast_error_exit">Sorry, error loading image activity</string>
+    <string name="taken_by_caption">Taken by %s</string>
+    <string name="taken_on_caption">Taken on %s</string>
 
     <!-- Section : edit task strings -->
 

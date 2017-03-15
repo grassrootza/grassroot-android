@@ -48,8 +48,8 @@ public class ApplicationLoader extends Application {
         RealmConfiguration.Builder realmConfigBuilder =
                 new RealmConfiguration.Builder(applicationContext);
 
-        Log.e("GRASSROOT", "setting schema to version 5");
-        realmConfigBuilder.schemaVersion(4)
+        Log.e("GRASSROOT", "setting schema to version 6");
+        realmConfigBuilder.schemaVersion(6)
                 .migration(new GrassrootRealmMigration());
         Realm.setDefaultConfiguration(realmConfigBuilder.build());
 
@@ -58,9 +58,9 @@ public class ApplicationLoader extends Application {
             Realm realm = Realm.getDefaultInstance();
             realm.close();
         } catch (RealmMigrationNeededException|IllegalArgumentException e) {
-            Log.e("GRASSROOT", "Error! Realm migration failed, wiping DB");
+            Log.e("GRASSROOT", "Error! Realm migration failed");
             e.printStackTrace();
-            Realm.deleteRealm(realmConfigBuilder.build());
+            // Realm.deleteRealm(realmConfigBuilder.build());
         }
 
         //create a custom okhttp client for picasso and instantiate singleton
@@ -78,7 +78,7 @@ public class ApplicationLoader extends Application {
         builder.downloader(new OkHttp3Downloader(okHttpClient));
         Picasso built = builder.build();
         built.setIndicatorsEnabled(BuildConfig.BUILD_TYPE.equals("debug"));
-        built.setLoggingEnabled(true);
+        built.setLoggingEnabled(false);
         Picasso.setSingletonInstance(built);
 
         Intent i = new Intent(this, TaskManagerReceiver.class);

@@ -24,13 +24,13 @@ apply plugin: 'realm-android'
 
 android {
     compileSdkVersion 23
-    buildToolsVersion "23.0.3"
+    buildToolsVersion "25.0.0"
     defaultConfig {
         applicationId "org.grassroot.android"
         minSdkVersion 9
         targetSdkVersion 23
-        versionCode 33
-        versionName "1.3"
+        versionCode 35
+        versionName "1.5"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
     buildTypes {
@@ -43,11 +43,11 @@ android {
     productFlavors {
         staging {
             applicationId "org.grassroot.android"
-            versionName "1.3-staging"
+            versionName "1.5-staging"
         }
         production {
             applicationId 'za.org.grassroot.android'
-            versionName "1.3"
+            versionName "1.5"
         }
     }
     splits {

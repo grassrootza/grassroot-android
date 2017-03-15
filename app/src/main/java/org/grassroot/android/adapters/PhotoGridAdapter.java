@@ -2,12 +2,14 @@ package org.grassroot.android.adapters;
 
 import android.content.Context;
 import android.support.annotation.NonNull;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.ImageView;
+import android.widget.TextView;
 
 import com.squareup.picasso.Callback;
 import com.squareup.picasso.Picasso;
@@ -18,7 +20,10 @@ import org.grassroot.android.services.ApplicationLoader;
 import org.grassroot.android.utils.Constant;
 import org.grassroot.android.utils.RealmUtils;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * Created by luke on 2017/02/25.
@@ -32,13 +37,14 @@ public class PhotoGridAdapter extends ArrayAdapter<ImageRecord> {
     private LayoutInflater inflater;
 
     private final String urlBase;
+    private static final SimpleDateFormat captionFormat = new SimpleDateFormat("EEE, d MMM", Locale.getDefault());
 
     public PhotoGridAdapter(Context context, List<ImageRecord> imageRecords, String taskType) {
         super(context, R.layout.row_grid_photo, imageRecords);
         this.imageRecords = imageRecords;
         this.inflater = LayoutInflater.from(context);
 
-        this.urlBase = Constant.restUrl + "task/image/fetch/"
+        this.urlBase = Constant.restUrl + "task/image/fetch/micro/"
                 + RealmUtils.loadPreferencesFromDB().getMobileNumber() + "/"
                 + RealmUtils.loadPreferencesFromDB().getToken() + "/"
                 + taskType + "/";
@@ -51,12 +57,26 @@ public class PhotoGridAdapter extends ArrayAdapter<ImageRecord> {
             convertView = inflater.inflate(R.layout.row_grid_photo, parent, false);
         }
 
+        final ImageView thumbnail = (ImageView) convertView.findViewById(R.id.photo_thumbnail);
+        final TextView caption = (TextView) convertView.findViewById(R.id.photo_taker);
+
         final ImageRecord record = imageRecords.get(position);
+
+        final String captionText = TextUtils.isEmpty(record.getUserDisplayName()) ?
+                getContext().getString(R.string.taken_on_caption, captionFormat.format(new Date(record.getCreationTime()))) :
+                getContext().getString(R.string.taken_by_caption, record.getUserDisplayName());
+
+        caption.setText(captionText);
+
         final String imageUrl = urlBase + record.getKey();
         Picasso
                 .with(ApplicationLoader.applicationContext)
                 .load(imageUrl)
-                .into((ImageView) convertView, new Callback() {
+                .placeholder(R.drawable.ic_logo_splashscreen)
+                .error(R.drawable.ic_logo_splashscreen)
+                .centerInside()
+                .fit()
+                .into(thumbnail, new Callback() {
                     @Override
                     public void onSuccess() {}
 

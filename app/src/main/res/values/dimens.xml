@@ -70,4 +70,7 @@
     <dimen name="chat_bar_cnr_radius">5dp</dimen>
     <dimen name="chat_bar_stroke_width">2dp</dimen>
 
+    <!-- include space for the caption -->
+    <dimen name="task_image_thumb_height">210dp</dimen>
+
 </resources>

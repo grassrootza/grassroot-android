@@ -41,12 +41,14 @@ import org.grassroot.android.utils.Constant;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import io.realm.RealmList;
 import io.realm.RealmObject;
 import okhttp3.MultipartBody;
 import okhttp3.OkHttpClient;
+import okhttp3.RequestBody;
 import okhttp3.logging.HttpLoggingInterceptor;
 import retrofit2.Call;
 import retrofit2.Retrofit;
@@ -57,6 +59,7 @@ import retrofit2.http.Headers;
 import retrofit2.http.Multipart;
 import retrofit2.http.POST;
 import retrofit2.http.Part;
+import retrofit2.http.PartMap;
 import retrofit2.http.Path;
 import retrofit2.http.Query;
 
@@ -92,7 +95,7 @@ public class GrassrootRestService {
 
     HttpLoggingInterceptor logging = new HttpLoggingInterceptor();
     logging.setLevel(BuildConfig.BUILD_TYPE.equals("debug") ?
-        HttpLoggingInterceptor.Level.BODY : HttpLoggingInterceptor.Level.HEADERS);
+        HttpLoggingInterceptor.Level.HEADERS : HttpLoggingInterceptor.Level.BASIC);
 
     // logging.setLevel(HttpLoggingInterceptor.Level.BODY);
 
@@ -419,7 +422,6 @@ public class GrassrootRestService {
         SECTION : CREATE TASKS
          */
 
-
     //create vote
     @POST("vote/create/{id}/{phoneNumber}/{code}")
     Call<TaskResponse> createVote(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
@@ -458,9 +460,19 @@ public class GrassrootRestService {
                                                 @Path("taskType") String taskType, @Path("taskUid") String taskUid,
                                                 @Part MultipartBody.Part image);
 
+  @Multipart
+  @POST("task/image/upload/{phoneNumber}/{code}/{taskType}/{taskUid}")
+  Call<RestResponse<String>> uploadImageWithLocation(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
+                                                     @Path("taskType") String taskType, @Path("taskUid") String taskUid,
+                                                     @PartMap() Map<String, RequestBody> location, @Part MultipartBody.Part image);
+
   @GET("task/image/list/{phoneNumber}/{code}/{taskType}/{taskUid}")
   Call<RestResponse<List<ImageRecord>>> fetchImagesForTask(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
                                                            @Path("taskType") String taskType, @Path("taskUid") String taskUid);
+
+    @GET("task/image/count/{phoneNumber}/{code}/{taskType}/{taskUid}")
+    Call<RestResponse<Long>> countImagesForTask(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
+                                                @Path("taskType") String taskType, @Path("taskUid") String taskUid);
 
         /*
         SECTION : EDIT TASKS

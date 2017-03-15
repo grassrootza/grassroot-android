@@ -12,21 +12,21 @@ import org.grassroot.android.R;
 /**
  * Created by luke on 2016/07/25.
  */
-public class ImageDetailFragment extends Fragment {
+public class AvatarViewFragment extends Fragment {
 
     public static final String IMAGE_DATA_EXTRA = "resId";
     private int imageResource;
     private ImageView imageView;
 
-    public static ImageDetailFragment newInstance(int imageRes) {
-        final ImageDetailFragment f = new ImageDetailFragment();
+    public static AvatarViewFragment newInstance(int imageRes) {
+        final AvatarViewFragment f = new AvatarViewFragment();
         final Bundle args = new Bundle();
         args.putInt(IMAGE_DATA_EXTRA, imageRes);
         f.setArguments(args);
         return f;
     }
 
-    public ImageDetailFragment() { }
+    public AvatarViewFragment() { }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -37,7 +37,7 @@ public class ImageDetailFragment extends Fragment {
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        final View v = inflater.inflate(R.layout.fragment_image_detail, container, false);
+        final View v = inflater.inflate(R.layout.fragment_view_avatar, container, false);
         imageView = (ImageView) v.findViewById(R.id.image_detail_view);
         return v;
     }

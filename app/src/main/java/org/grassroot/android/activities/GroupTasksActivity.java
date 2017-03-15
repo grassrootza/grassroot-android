@@ -20,6 +20,7 @@ import android.widget.Toast;
 import org.grassroot.android.R;
 import org.grassroot.android.events.TaskCancelledEvent;
 import org.grassroot.android.fragments.GroupTaskMasterFragment;
+import org.grassroot.android.fragments.ImageGridFragment;
 import org.grassroot.android.fragments.JoinCodeFragment;
 import org.grassroot.android.fragments.NewTaskMenuFragment;
 import org.grassroot.android.fragments.TaskListFragment;
@@ -31,10 +32,10 @@ import org.grassroot.android.interfaces.GroupConstants;
 import org.grassroot.android.models.Group;
 import org.grassroot.android.services.ApplicationLoader;
 import org.grassroot.android.services.GroupService;
+import org.grassroot.android.services.MqttConnectionManager;
 import org.grassroot.android.utils.Constant;
 import org.grassroot.android.utils.ErrorUtils;
 import org.grassroot.android.utils.IntentUtils;
-import org.grassroot.android.services.MqttConnectionManager;
 import org.grassroot.android.utils.NetworkUtils;
 import org.grassroot.android.utils.RealmUtils;
 import org.greenrobot.eventbus.EventBus;
@@ -404,11 +405,19 @@ public class GroupTasksActivity extends PortraitActivity implements NewTaskMenuF
     }
 
     private boolean closeViewTaskFragment() {
-        Fragment frag = getSupportFragmentManager().findFragmentByTag(ViewTaskFragment.class.getCanonicalName());
-        if (frag != null && frag.isVisible()) {
+        boolean closedSubFrag = false;
+        Fragment imageFrag = getSupportFragmentManager().findFragmentByTag(ImageGridFragment.class.getCanonicalName());
+        Fragment taskFrag = getSupportFragmentManager().findFragmentByTag(ViewTaskFragment.class.getCanonicalName());
+        if (imageFrag != null && imageFrag.isVisible()) {
+            // don't need to change title, and don't both with animation
+            getSupportFragmentManager().beginTransaction()
+                    .remove(imageFrag)
+                    .commit();
+            closedSubFrag = true;
+        } else if (taskFrag != null && taskFrag.isVisible()) {
             getSupportFragmentManager().beginTransaction()
                     .setCustomAnimations(R.anim.push_down_in, R.anim.push_down_out)
-                    .remove(frag)
+                    .remove(taskFrag)
                     .commit();
 
             // keep null checks in place in case subscriber triggered after view destroyed
@@ -416,10 +425,9 @@ public class GroupTasksActivity extends PortraitActivity implements NewTaskMenuF
                 getSupportActionBar().setHomeAsUpIndicator(R.drawable.btn_back_wt);
             }
             setTitle(groupMembership.getGroupName());
-            return true;
-        } else {
-            return false;
+            closedSubFrag = true;
         }
+        return closedSubFrag;
     }
 
     private void requestPing(String groupUid){

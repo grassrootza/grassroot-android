@@ -253,6 +253,14 @@
         <item name="android:layout_marginRight">10dp</item>
     </style>
 
+    <style name="Flat_Button_White">
+        <item name="android:textSize">@dimen/txt_medium</item>
+        <item name="android:textColor">@color/primaryColor</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textAppearance">@style/TextAppearance.AppCompat.Button</item>
+        <item name="android:singleLine">true</item>
+    </style>
+
     <style name="Button" tools:ignore="NewApi">
         <item name="android:textSize">@dimen/md_button_textsize</item>
         <item name="android:singleLine">true</item>

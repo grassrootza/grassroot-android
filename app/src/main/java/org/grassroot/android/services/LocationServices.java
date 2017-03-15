@@ -23,6 +23,10 @@ import org.grassroot.android.utils.Constant;
 import org.grassroot.android.utils.PermissionUtils;
 import org.grassroot.android.utils.RealmUtils;
 
+import java.util.HashMap;
+
+import okhttp3.MultipartBody;
+import okhttp3.RequestBody;
 import retrofit2.Response;
 import rx.Observable;
 import rx.Scheduler;
@@ -37,11 +41,14 @@ public class LocationServices implements GoogleApiClient.ConnectionCallbacks, Go
 
     private static final String TAG = LocationServices.class.getCanonicalName();
 
+    private long UPDATE_INTERVAL = 60 * 1000;  // 1 minute
+    private long FASTEST_INTERVAL = 10 * 1000; // 10 seconds
+
     private static LocationServices instance = null;
 
     private Context context;
     private GoogleApiClient googleApiClient;
-    private LocationRequest locationRequest;
+    private Location lastKnownLocation;
 
     public static LocationServices getInstance() {
         LocationServices localInstance = instance;
@@ -56,7 +63,7 @@ public class LocationServices implements GoogleApiClient.ConnectionCallbacks, Go
         return localInstance;
     }
 
-    public LocationServices(Context context) {
+    private LocationServices(Context context) {
         this.context = context;
         if (googleApiClient == null) {
             // call backs mean this is on the background thread
@@ -78,6 +85,9 @@ public class LocationServices implements GoogleApiClient.ConnectionCallbacks, Go
                 Log.d(TAG, "We are in test mode, fire off a random location!");
                 double latitude = Constant.testLatitude + Math.random();
                 double longitude = Constant.testLongitude + Math.random();
+                lastKnownLocation = new Location("");
+                lastKnownLocation.setLatitude(latitude);
+                lastKnownLocation.setLongitude(longitude);
                 storeUserLocation(latitude, longitude, Schedulers.io()).subscribe();
             }
         }
@@ -94,14 +104,6 @@ public class LocationServices implements GoogleApiClient.ConnectionCallbacks, Go
         }
     }
 
-    private LocationRequest createLocationRequest() {
-        locationRequest = new LocationRequest();
-        locationRequest.setPriority(LocationRequest.PRIORITY_LOW_POWER); // consider switching to no power
-        locationRequest.setInterval(60*60*1000); // once per hour, tops
-        locationRequest.setFastestInterval(15*60*1000); // fifteen minutes, tops
-        return locationRequest;
-    }
-
     @Override
     public void onConnectionSuspended(int i) {
         // don't need to worry about this
@@ -116,21 +118,52 @@ public class LocationServices implements GoogleApiClient.ConnectionCallbacks, Go
     @Override
     public void onLocationChanged(Location location) {
         if (location != null) {
-            storeUserLocation(location.getLatitude(), location.getLongitude(), Schedulers.immediate())
-                .subscribe();
+            lastKnownLocation = location;
+            storeUserLocation(location.getLatitude(),
+                    location.getLongitude(),
+                    Schedulers.immediate()).subscribe();
         }
     }
 
     @Override
     public void onResult(@NonNull LocationSettingsResult locationSettingsResult) {
         if (havePermission()) {
-            com.google.android.gms.location.LocationServices.FusedLocationApi.requestLocationUpdates(googleApiClient, this.locationRequest, this);
-            Location lastKnownLocation = com.google.android.gms.location.LocationServices.FusedLocationApi.getLastLocation(googleApiClient);
-            if (lastKnownLocation != null) {
-                storeUserLocation(lastKnownLocation.getLatitude(), lastKnownLocation.getLongitude(),
-                    Schedulers.io()).subscribe();
+            com.google.android.gms.location.LocationServices
+                    .FusedLocationApi
+                    .requestLocationUpdates(googleApiClient, createLocationRequest(), this);
+
+            Location apiLocation = com.google.android.gms.location.LocationServices.FusedLocationApi.getLastLocation(googleApiClient);
+
+            if (apiLocation != null) {
+                lastKnownLocation = apiLocation;
+                storeUserLocation(lastKnownLocation.getLatitude(), lastKnownLocation.getLongitude(), Schedulers.io())
+                        .subscribe();
             }
         }
+    }
+
+    public boolean hasLasKnownLocation() {
+        return lastKnownLocation != null;
+    }
+
+    public Location getLastKnownLocation() {
+        return lastKnownLocation;
+    }
+
+    public HashMap<String, RequestBody> getLocationAsRequestMap() {
+        RequestBody latitude = RequestBody.create(MultipartBody.FORM, String.valueOf(lastKnownLocation.getLatitude()));
+        RequestBody longitude = RequestBody.create(MultipartBody.FORM, String.valueOf(lastKnownLocation.getLongitude()));
+        HashMap<String, RequestBody> location = new HashMap<>();
+        location.put("latitude", latitude);
+        location.put("longitude", longitude);
+        return location;
+    }
+
+    private LocationRequest createLocationRequest() {
+        return LocationRequest.create()
+                .setPriority(LocationRequest.PRIORITY_LOW_POWER)
+                .setInterval(UPDATE_INTERVAL)
+                .setFastestInterval(FASTEST_INTERVAL);
     }
 
     private boolean havePermission() {
@@ -142,7 +175,6 @@ public class LocationServices implements GoogleApiClient.ConnectionCallbacks, Go
         return Observable.create(new Observable.OnSubscribe<Boolean>() {
             @Override
             public void call(Subscriber<? super Boolean> subscriber) {
-                Log.e(TAG, "trying to send a location");
                 String mobileNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
                 String code = RealmUtils.loadPreferencesFromDB().getToken();
                 try {

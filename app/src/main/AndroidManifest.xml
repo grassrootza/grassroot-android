@@ -202,9 +202,10 @@
             android:theme="@style/AppTheme" />
 
         <!-- General task activities -->
+        <!-- view task activity has label as App Name because it is often triggered from incoming GCM action -->
         <activity
             android:name=".activities.ViewTaskActivity"
-            android:label="@string/title_activity_view_task"
+            android:label="@string/app_name"
             android:launchMode="singleTop"
             android:parentActivityName=".activities.HomeScreenActivity"
             android:theme="@style/AppTheme">
@@ -307,6 +308,13 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value=".activities.HomeScreenActivity" />
         </activity>
+
+        <!-- Image activity -->
+        <activity
+            android:name=".activities.ImageDisplayActivity"
+            android:label="@string/app_name"
+            android:windowSoftInputMode="stateAlwaysHidden"
+            />
 
         <service
             android:name=".services.SyncService"

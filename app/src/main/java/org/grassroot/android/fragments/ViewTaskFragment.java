@@ -26,7 +26,6 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
-import android.widget.GridView;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
@@ -36,15 +35,14 @@ import android.widget.Toast;
 
 import org.grassroot.android.R;
 import org.grassroot.android.activities.EditTaskActivity;
+import org.grassroot.android.activities.ImageDisplayActivity;
 import org.grassroot.android.adapters.MemberListAdapter;
 import org.grassroot.android.adapters.MtgRsvpAdapter;
-import org.grassroot.android.adapters.PhotoGridAdapter;
 import org.grassroot.android.events.TaskCancelledEvent;
 import org.grassroot.android.events.TaskUpdatedEvent;
 import org.grassroot.android.fragments.dialogs.ConfirmCancelDialogFragment;
 import org.grassroot.android.fragments.dialogs.NetworkErrorDialogFragment;
 import org.grassroot.android.interfaces.TaskConstants;
-import org.grassroot.android.models.ImageRecord;
 import org.grassroot.android.models.Member;
 import org.grassroot.android.models.ResponseTotalsModel;
 import org.grassroot.android.models.RsvpListModel;
@@ -53,6 +51,7 @@ import org.grassroot.android.models.exceptions.ApiCallException;
 import org.grassroot.android.models.responses.RestResponse;
 import org.grassroot.android.services.ApplicationLoader;
 import org.grassroot.android.services.GrassrootRestService;
+import org.grassroot.android.services.LocationServices;
 import org.grassroot.android.services.SharingService;
 import org.grassroot.android.services.TaskService;
 import org.grassroot.android.utils.ErrorUtils;
@@ -66,6 +65,7 @@ import org.greenrobot.eventbus.ThreadMode;
 import java.io.File;
 import java.io.IOException;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 
 import butterknife.BindView;
@@ -73,6 +73,7 @@ import butterknife.ButterKnife;
 import butterknife.OnClick;
 import butterknife.Unbinder;
 import okhttp3.MultipartBody;
+import okhttp3.RequestBody;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -125,15 +126,15 @@ public class ViewTaskFragment extends Fragment {
     @BindView(R.id.td_rl_response_icon) RelativeLayout rlResponse;
     @BindView(R.id.bt_td_respond) ImageView btTodoRespond;
 
+    @BindView(R.id.vt_ll_photo) ViewGroup imageButtons;
+    @BindView(R.id.vt_bt_view_photos) Button btViewPhotos;
+    @BindView(R.id.vt_bt_modify_cancel) ViewGroup modifyCancelButtons;
     @BindView(R.id.vt_bt_modify) Button btModifyTask;
     @BindView(R.id.vt_bt_cancel) Button btCancelTask;
 
-    @BindView(R.id.vt_photo_grid) GridView taskPhotoGrid;
+    private boolean viewingImages;
 
     @BindView(R.id.progressBar) ProgressBar progressBar;
-
-    public ViewTaskFragment() {
-    }
 
     // use this if creating or calling the fragment without whole task object (e.g., entering from notification)
     public static ViewTaskFragment newInstance(String taskType, String taskUid) {
@@ -246,7 +247,7 @@ public class ViewTaskFragment extends Fragment {
         if ((item.getItemId() == R.id.mi_share_default)) {
             showAndHandleShareOptions();
             return true;
-        }else {
+        } else {
             return super.onOptionsItemSelected(item);
         }
     }
@@ -483,8 +484,8 @@ public class ViewTaskFragment extends Fragment {
     }
 
     private void setUpViews(TaskModel task) {
-        tvDescription.setVisibility(
-                TextUtils.isEmpty(task.getDescription()) ? View.GONE : View.VISIBLE);
+        tvDescription.setVisibility(TextUtils.isEmpty(task.getDescription()) ? View.GONE : View.VISIBLE);
+        modifyCancelButtons.setVisibility(task.isCanEdit() ? View.VISIBLE : View.GONE);
 
         switch (taskType) {
             case TaskConstants.MEETING:
@@ -498,25 +499,6 @@ public class ViewTaskFragment extends Fragment {
                 break;
         }
 
-        TaskService.getInstance().fetchTaskImages(task.getType(), taskUid)
-                .subscribe(new Action1<List<ImageRecord>>() {
-                    @Override
-                    public void call(List<ImageRecord> imageRecords) {
-                        Log.e(TAG, "fetched image records, this many: " + imageRecords.size());
-                        if (!imageRecords.isEmpty()) {
-                            loadImageGrid(imageRecords);
-                        }
-                    }
-                });
-    }
-
-    private void loadImageGrid(List<ImageRecord> imageRecords) {
-        PhotoGridAdapter adapter = new PhotoGridAdapter(getContext(), imageRecords, task.getType());
-        taskPhotoGrid.setAdapter(adapter);
-        Log.e(TAG, "set up adapter, now flipping to visible");
-        taskPhotoGrid.setVisibility(View.VISIBLE);
-        Log.e(TAG, "notifying data changed");
-        adapter.notifyDataSetChanged();
     }
 
     private void setViewForMeeting(final TaskModel task) {
@@ -566,13 +548,38 @@ public class ViewTaskFragment extends Fragment {
         }
 
         if (task.isCanEdit()) {
-            btModifyTask.setVisibility(View.VISIBLE);
             btModifyTask.setText(R.string.vt_mtg_modify);
-            btCancelTask.setVisibility(View.VISIBLE);
             btCancelTask.setText(R.string.vt_mtg_cancel);
         }
 
         setMeetingRsvpView();
+        setViewPhotoButton();
+    }
+
+    private void setViewPhotoButton() {
+        TaskService.getInstance().countTaskImages(taskType, taskUid).subscribe(new Action1<Long>() {
+            @Override
+            public void call(Long aLong) {
+                if (aLong != null && aLong > 0) {
+                    btViewPhotos.setEnabled(true);
+                    btViewPhotos.setTextColor(ContextCompat.getColor(getContext(), R.color.primaryColor));
+                    btViewPhotos.setText(getString(R.string.vt_mtg_view_photo_count, aLong));
+                } else {
+                    btViewPhotos.setText(R.string.vt_mtg_view_no_photos);
+                    disablePhotoButton();
+                }
+            }
+        }, new Action1<Throwable>() {
+            @Override
+            public void call(Throwable throwable) {
+                disablePhotoButton();
+            }
+        });
+    }
+
+    private void disablePhotoButton() {
+        btViewPhotos.setEnabled(false);
+        btViewPhotos.setTextColor(ContextCompat.getColor(getContext(), R.color.md_grey_400));
     }
 
     private void openLocationInMaps() {
@@ -617,6 +624,8 @@ public class ViewTaskFragment extends Fragment {
             diminishResponseCard();
         }
 
+        imageButtons.setVisibility(View.GONE);
+
         if (task.isCanEdit()) {
             btModifyTask.setVisibility(View.VISIBLE);
             btModifyTask.setText(R.string.vt_vote_modify);
@@ -650,11 +659,11 @@ public class ViewTaskFragment extends Fragment {
         }
 
         if (task.isCanEdit()) {
-            btModifyTask.setVisibility(View.VISIBLE);
             btModifyTask.setText(R.string.vt_todo_modify);
-            btCancelTask.setVisibility(View.VISIBLE);
             btCancelTask.setText(R.string.vt_todo_cancel);
         }
+
+        imageButtons.setVisibility(View.GONE); // for now
 
         setUpToDoAssignedMemberView();
     }
@@ -857,12 +866,12 @@ public class ViewTaskFragment extends Fragment {
             public void onClick(DialogInterface dialogInterface, int i) {
                 if (i == 0) {
                     try {
-                        Log.e(TAG, "loading camera ... about to start for result");
                         startActivityForResult(generateCameraIntent(), CAMERA_RESULT_INT);
                     } catch (IOException e) {
                         // show a toast
                         Toast.makeText(getContext(), "Sorry, error loading camera", Toast.LENGTH_SHORT).show();
                     } catch (IllegalArgumentException e) {
+                        Log.e(TAG, e.getMessage());
                         Toast.makeText(getContext(), "Illegal argument exception!", Toast.LENGTH_SHORT).show();
                     }
                 } else if (i == 1) {
@@ -911,26 +920,34 @@ public class ViewTaskFragment extends Fragment {
                 Uri selectedImage = data.getData();
                 Log.e(TAG, "selectedImage: " + selectedImage);
                 final String localImagePath = ImageUtils.getLocalFileNameFromURI(selectedImage);
-                uploadImageFromUri(localImagePath, ImageUtils.getMimeType(selectedImage));
+                uploadImageFromUri(localImagePath, ImageUtils.getMimeType(selectedImage), false);
             }
         } else if (requestCode == CAMERA_RESULT_INT) {
-            // todo : add a caption ? show size of image?
+            // todo : add a caption ? show size of image? give option to queue?
             if (resultCode == RESULT_OK) {
-                uploadImageFromUri(currentPhotoPath, "image/jpeg");
+                uploadImageFromUri(currentPhotoPath, "image/jpeg", true);
                 ImageUtils.addImageToGallery(currentPhotoPath);
             }
         }
     }
 
-    private void uploadImageFromUri(String localImagePath, String mimeType) {
+    private void uploadImageFromUri(String localImagePath, String mimeType, boolean tryUploadLongLat) {
         final String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
         final String token = RealmUtils.loadPreferencesFromDB().getToken();
 
         MultipartBody.Part image = ImageUtils.getImageFromPath(localImagePath, mimeType);
+        HashMap<String, RequestBody> location = tryUploadLongLat && LocationServices.getInstance().hasLasKnownLocation() ?
+                LocationServices.getInstance().getLocationAsRequestMap() : null;
 
         progressBar.setVisibility(View.VISIBLE);
-        GrassrootRestService.getInstance().getApi().uploadImageForTask(phoneNumber, token,
-                task.getType(), task.getTaskUid(), image).enqueue(new Callback<RestResponse<String>>() {
+
+        Call<RestResponse<String>> uploadCall = location == null ?
+                GrassrootRestService.getInstance().getApi().uploadImageForTask(phoneNumber, token,
+                        task.getType(), task.getTaskUid(), image) :
+                GrassrootRestService.getInstance().getApi().uploadImageWithLocation(phoneNumber, token,
+                        task.getType(), task.getTaskUid(), location, image);
+
+        uploadCall.enqueue(new Callback<RestResponse<String>>() {
             @Override
             public void onResponse(Call<RestResponse<String>> call, Response<RestResponse<String>> response) {
                 progressBar.setVisibility(View.GONE);
@@ -947,6 +964,14 @@ public class ViewTaskFragment extends Fragment {
                 Toast.makeText(getContext(), R.string.vt_mtg_photo_failed, Toast.LENGTH_SHORT).show();
             }
         });
+    }
+
+    @OnClick(R.id.vt_bt_view_photos)
+    public void viewPhotos() {
+        Intent viewIntent = new Intent(getActivity(), ImageDisplayActivity.class);
+        viewIntent.putExtra(TaskConstants.TASK_UID_FIELD, taskUid);
+        viewIntent.putExtra(TaskConstants.TASK_TYPE_FIELD, taskType);
+        startActivity(viewIntent);
     }
 
     @OnClick(R.id.vt_bt_modify)

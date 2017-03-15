@@ -339,6 +339,7 @@ public class GroupChatFragment extends Fragment implements GroupChatAdapter.Grou
         LocalBroadcastManager.getInstance(getContext()).registerReceiver(mqttReceiver, intentFilter);
     }
 
+    // this is a bit convoluted but needed to handle temperamental local MQTT client
     private void handleMessageResult(Bundle resultBundle) {
         final String notConnected = "not connected";
         if (resultBundle != null) {
@@ -353,15 +354,22 @@ public class GroupChatFragment extends Fragment implements GroupChatAdapter.Grou
             } else {
                 if (resultBundle.containsKey(MqttServiceConstants.CALLBACK_EXCEPTION)) {
                     Exception exception = (Exception) resultBundle.getSerializable(MqttServiceConstants.CALLBACK_EXCEPTION);
-                    Log.e(TAG, "have an error exception: " + exception.toString());
-                    showErrorMessage(exception.toString(), false);
+                    Log.e(TAG, "have an error exception: " + exception);
+                    if (exception != null && !isRoutineMessage(exception.toString())) {
+                        showErrorMessage(exception.toString(), false);
+                    }
                 }
             }
         }
     }
 
+    // since the above is showing spurious errors just when conntect is in progress or already connected
+    private boolean isRoutineMessage(String string) {
+        return string.contains("32110") || string.contains("32100");
+    }
+
     private void showErrorMessage(String message, boolean showButtons) {
-        Log.e(TAG, "showing an error message: " + message);
+        // Log.e(TAG, "showing an error message: " + message);
         Message errorMsg = new Message(groupUid, UUID.randomUUID().toString(), message, Constant.MSG_ERROR);
         errorMsg.setDelivered(false);
         errorMsg.setSent(false);
