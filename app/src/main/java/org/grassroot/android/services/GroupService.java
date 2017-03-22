@@ -35,7 +35,7 @@ import org.grassroot.android.utils.NetworkUtils;
 import org.grassroot.android.utils.PermissionUtils;
 import org.grassroot.android.utils.RealmUtils;
 import org.grassroot.android.utils.Utilities;
-import org.grassroot.android.utils.image.ImageUtils;
+import org.grassroot.android.utils.image.LocalImageUtils;
 import org.greenrobot.eventbus.EventBus;
 
 import java.io.IOException;
@@ -887,7 +887,7 @@ public class GroupService {
           throw new ApiCallException(NetworkUtils.OFFLINE_SELECTED); // require online for this (maybe change later ...)
         } else {
 
-          MultipartBody.Part image = ImageUtils.getImageFromPath(compressedFilePath, mimeType);
+          MultipartBody.Part image = LocalImageUtils.getImageFromPath(compressedFilePath, mimeType);
           try {
             final String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
             final String code = RealmUtils.loadPreferencesFromDB().getToken();

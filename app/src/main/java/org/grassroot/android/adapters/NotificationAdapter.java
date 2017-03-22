@@ -15,7 +15,7 @@ import org.grassroot.android.R;
 import org.grassroot.android.interfaces.TaskConstants;
 import org.grassroot.android.models.TaskNotification;
 import org.grassroot.android.services.ApplicationLoader;
-import org.grassroot.android.utils.image.ImageUtils;
+import org.grassroot.android.utils.image.LocalImageUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -122,13 +122,13 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
     }
 
     private void setIcon(TaskNotification notification, ImageView icon) {
-        int defaultImage = ImageUtils.convertDefaultImageTypeToResource(notification.getDefaultImage());
+        int defaultImage = LocalImageUtils.convertDefaultImageTypeToResource(notification.getDefaultImage());
         if (TextUtils.isEmpty(notification.getImageUrl())) {
             icon.setImageResource(defaultImage);
         } else {
             try {
                 // monitor performance of this too, likely want to pre-fetch & load
-                ImageUtils.setAvatarImage(icon, notification.getImageUrl(), defaultImage);
+                LocalImageUtils.setAvatarImage(icon, notification.getImageUrl(), defaultImage);
             } catch (OutOfMemoryError e) {
                 icon.setImageResource(defaultImage);
             }

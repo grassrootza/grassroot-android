@@ -10,7 +10,7 @@ import org.grassroot.android.interfaces.GroupConstants;
 import org.grassroot.android.models.helpers.DateTime;
 import org.grassroot.android.models.helpers.RealmString;
 import org.grassroot.android.utils.Constant;
-import org.grassroot.android.utils.image.ImageUtils;
+import org.grassroot.android.utils.image.LocalImageUtils;
 import org.grassroot.android.utils.RealmUtils;
 
 import java.text.ParseException;
@@ -218,7 +218,7 @@ public class Group extends RealmObject implements Parcelable, Comparable<Group> 
   }
 
   private void updateDefaultImageRes() {
-    defaultImageRes = ImageUtils.convertDefaultImageTypeToResource(defaultImage);
+    defaultImageRes = LocalImageUtils.convertDefaultImageTypeToResource(defaultImage);
   }
 
   public void setDefaultImageRes(int defaultImageRes) { this.defaultImageRes = defaultImageRes; }

@@ -11,7 +11,7 @@ public class CircularImageTransformer implements Transformation{
 
     @Override
     public Bitmap transform(Bitmap source) {
-        return ImageUtils.getRoundedShape(source);
+        return LocalImageUtils.getRoundedShape(source);
     }
 
     @Override

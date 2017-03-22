@@ -38,7 +38,7 @@ import org.grassroot.android.services.GroupService;
 import org.grassroot.android.utils.ErrorUtils;
 import org.grassroot.android.utils.NetworkUtils;
 import org.grassroot.android.utils.image.CircularImageTransformer;
-import org.grassroot.android.utils.image.ImageUtils;
+import org.grassroot.android.utils.image.LocalImageUtils;
 
 import java.io.File;
 
@@ -310,7 +310,7 @@ public class GroupAvatarActivity extends PortraitActivity {
             compressBitmap(selectedImage).subscribe(new Action1<Bitmap>() {
                 @Override
                 public void call(Bitmap bitmap) {
-                    ivAvatar.setImageBitmap(ImageUtils.getRoundedShape(bitmap));
+                    ivAvatar.setImageBitmap(LocalImageUtils.getRoundedShape(bitmap));
                     progressBar.setVisibility(View.GONE);
                     customImageChanged = true;
                     setViewToCustomImage();
@@ -329,9 +329,9 @@ public class GroupAvatarActivity extends PortraitActivity {
         return Observable.create(new Observable.OnSubscribe<Bitmap>() {
             @Override
             public void call(Subscriber<? super Bitmap> subscriber) {
-                mimeType = ImageUtils.getMimeType(selectedImage);
-                final String localImagePath = ImageUtils.getLocalFileNameFromURI(selectedImage);
-                compressedFilePath = ImageUtils.getCompressedFileFromImage(localImagePath);
+                mimeType = LocalImageUtils.getMimeType(selectedImage);
+                final String localImagePath = LocalImageUtils.getLocalFileNameFromURI(selectedImage);
+                compressedFilePath = LocalImageUtils.getCompressedFileFromImage(localImagePath, true);
                 Bitmap bitmap = BitmapFactory.decodeFile(compressedFilePath);
                 subscriber.onNext(bitmap);
                 subscriber.onCompleted();

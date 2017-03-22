@@ -12,7 +12,6 @@
         android:layout_width="match_parent"
         android:layout_height="200dp"
         android:contentDescription="Thumbnail"
-        android:padding="@dimen/padding_small"
         tools:src="@drawable/ic_logo_splashscreen">
     </ImageView>
 
@@ -23,7 +22,7 @@
 
         android:background="@color/md_grey_100"
         android:textColor="@color/primaryColor"
-        android:textSize="@dimen/txt_large"
+        android:textSize="@dimen/txt_small"
         android:padding="@dimen/padding_small"
 
         tools:text="Taken by Some Member"/>

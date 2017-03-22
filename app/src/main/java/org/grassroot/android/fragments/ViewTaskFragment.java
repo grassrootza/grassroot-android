@@ -1,5 +1,6 @@
 package org.grassroot.android.fragments;
 
+import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -43,44 +44,41 @@ import org.grassroot.android.events.TaskUpdatedEvent;
 import org.grassroot.android.fragments.dialogs.ConfirmCancelDialogFragment;
 import org.grassroot.android.fragments.dialogs.NetworkErrorDialogFragment;
 import org.grassroot.android.interfaces.TaskConstants;
+import org.grassroot.android.models.ImageRecord;
 import org.grassroot.android.models.Member;
 import org.grassroot.android.models.ResponseTotalsModel;
 import org.grassroot.android.models.RsvpListModel;
 import org.grassroot.android.models.TaskModel;
 import org.grassroot.android.models.exceptions.ApiCallException;
-import org.grassroot.android.models.responses.RestResponse;
 import org.grassroot.android.services.ApplicationLoader;
-import org.grassroot.android.services.GrassrootRestService;
-import org.grassroot.android.services.LocationServices;
 import org.grassroot.android.services.SharingService;
 import org.grassroot.android.services.TaskService;
 import org.grassroot.android.utils.ErrorUtils;
 import org.grassroot.android.utils.NetworkUtils;
 import org.grassroot.android.utils.RealmUtils;
-import org.grassroot.android.utils.image.ImageUtils;
+import org.grassroot.android.utils.RetryWithDelay;
+import org.grassroot.android.utils.image.LocalImageUtils;
+import org.grassroot.android.utils.image.NetworkImageUtils;
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
 import java.io.File;
 import java.io.IOException;
+import java.text.DecimalFormat;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 import butterknife.Unbinder;
-import okhttp3.MultipartBody;
-import okhttp3.RequestBody;
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
 import rx.Subscriber;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.functions.Action1;
 import rx.observers.Subscribers;
+import rx.schedulers.Schedulers;
 
 import static android.app.Activity.RESULT_OK;
 import static android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
@@ -103,6 +101,7 @@ public class ViewTaskFragment extends Fragment {
     private Unbinder unbinder;
     private boolean viewsBound;
 
+    private long photoCount;
     private String currentPhotoPath;
 
     @BindView(R.id.vt_title) TextView tvTitle;
@@ -126,15 +125,14 @@ public class ViewTaskFragment extends Fragment {
     @BindView(R.id.td_rl_response_icon) RelativeLayout rlResponse;
     @BindView(R.id.bt_td_respond) ImageView btTodoRespond;
 
-    @BindView(R.id.vt_ll_photo) ViewGroup imageButtons;
+    @BindView(R.id.vt_ll_photo) ViewGroup takePhotoButton;
     @BindView(R.id.vt_bt_view_photos) Button btViewPhotos;
     @BindView(R.id.vt_bt_modify_cancel) ViewGroup modifyCancelButtons;
     @BindView(R.id.vt_bt_modify) Button btModifyTask;
     @BindView(R.id.vt_bt_cancel) Button btCancelTask;
 
-    private boolean viewingImages;
-
     @BindView(R.id.progressBar) ProgressBar progressBar;
+    ProgressDialog progressDialog;
 
     // use this if creating or calling the fragment without whole task object (e.g., entering from notification)
     public static ViewTaskFragment newInstance(String taskType, String taskUid) {
@@ -179,6 +177,7 @@ public class ViewTaskFragment extends Fragment {
                 task = RealmUtils.loadObjectFromDB(TaskModel.class, "taskUid", taskUid);
             }
 
+            photoCount = 0; // until set otherwise
             canViewResponses = false;
         } else {
             throw new UnsupportedOperationException(
@@ -560,14 +559,7 @@ public class ViewTaskFragment extends Fragment {
         TaskService.getInstance().countTaskImages(taskType, taskUid).subscribe(new Action1<Long>() {
             @Override
             public void call(Long aLong) {
-                if (aLong != null && aLong > 0) {
-                    btViewPhotos.setEnabled(true);
-                    btViewPhotos.setTextColor(ContextCompat.getColor(getContext(), R.color.primaryColor));
-                    btViewPhotos.setText(getString(R.string.vt_mtg_view_photo_count, aLong));
-                } else {
-                    btViewPhotos.setText(R.string.vt_mtg_view_no_photos);
-                    disablePhotoButton();
-                }
+                updatePhotoCount(aLong);
             }
         }, new Action1<Throwable>() {
             @Override
@@ -575,6 +567,20 @@ public class ViewTaskFragment extends Fragment {
                 disablePhotoButton();
             }
         });
+    }
+
+    private void updatePhotoCount(Long count) {
+        if (count != null && count > 0) {
+            Log.e(TAG, "prior photo count: " + photoCount + ", new count: " + count);
+            photoCount = count;
+            btViewPhotos.setEnabled(true);
+            btViewPhotos.setTextColor(ContextCompat.getColor(getContext(), R.color.primaryColor));
+            btViewPhotos.setText(getString(R.string.vt_mtg_view_photo_count, count));
+        } else {
+            photoCount = 0;
+            btViewPhotos.setText(R.string.vt_mtg_view_no_photos);
+            disablePhotoButton();
+        }
     }
 
     private void disablePhotoButton() {
@@ -624,7 +630,8 @@ public class ViewTaskFragment extends Fragment {
             diminishResponseCard();
         }
 
-        imageButtons.setVisibility(View.GONE);
+        takePhotoButton.setVisibility(View.GONE);
+        btViewPhotos.setVisibility(View.GONE);
 
         if (task.isCanEdit()) {
             btModifyTask.setVisibility(View.VISIBLE);
@@ -663,7 +670,8 @@ public class ViewTaskFragment extends Fragment {
             btCancelTask.setText(R.string.vt_todo_cancel);
         }
 
-        imageButtons.setVisibility(View.GONE); // for now
+        takePhotoButton.setVisibility(View.GONE); // for now
+        btViewPhotos.setVisibility(View.GONE);
 
         setUpToDoAssignedMemberView();
     }
@@ -890,14 +898,13 @@ public class ViewTaskFragment extends Fragment {
     private Intent generateCameraIntent() throws IllegalArgumentException, IOException {
         Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
         if (takePictureIntent.resolveActivity(getActivity().getPackageManager()) != null) {
-            File photoFile = ImageUtils.createImageFileForCamera();
+            File photoFile = LocalImageUtils.createImageFileForCamera();
             // Android Studio says this null check is unnecessary, but can't fully trust, so keeping it
             if (photoFile != null) {
                 Uri currentPhotoUri = FileProvider.getUriForFile(getContext(),
                         "org.grassroot.android.fileprovider",
                         photoFile);
                 currentPhotoPath = photoFile.getAbsolutePath();
-                Log.e(TAG, "photo path : " + currentPhotoPath);
                 takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, currentPhotoUri);
 
                 List<ResolveInfo> resInfoList = getContext().getPackageManager().queryIntentActivities(takePictureIntent,
@@ -918,52 +925,110 @@ public class ViewTaskFragment extends Fragment {
         if (requestCode == GALLERY_RESULT_INT) {
             if (resultCode == RESULT_OK && data != null) {
                 Uri selectedImage = data.getData();
-                Log.e(TAG, "selectedImage: " + selectedImage);
-                final String localImagePath = ImageUtils.getLocalFileNameFromURI(selectedImage);
-                uploadImageFromUri(localImagePath, ImageUtils.getMimeType(selectedImage), false);
+                final String localImagePath = LocalImageUtils.getLocalFileNameFromURI(selectedImage);
+                checkImageSizeAndConfirmUpload(localImagePath, LocalImageUtils.getMimeType(selectedImage), false);
             }
         } else if (requestCode == CAMERA_RESULT_INT) {
-            // todo : add a caption ? show size of image? give option to queue?
             if (resultCode == RESULT_OK) {
-                uploadImageFromUri(currentPhotoPath, "image/jpeg", true);
-                ImageUtils.addImageToGallery(currentPhotoPath);
+                LocalImageUtils.addImageToGallery(currentPhotoPath);
+                checkImageSizeAndConfirmUpload(currentPhotoPath, "image/jpeg", true);
             }
         }
     }
 
+    private void checkImageSizeAndConfirmUpload(final String localImagePath, final String mimeType, final boolean tryUploadLongLat) {
+        double imageSizeMb = (double) LocalImageUtils.getImageFileSize(localImagePath) / (1024 * 1024);
+        Log.e(TAG, "image size on disk: " + LocalImageUtils.getImageFileSize(localImagePath));
+        final DecimalFormat df = new DecimalFormat("#.##");
+        final String message = getString(R.string.vt_photo_size, df.format(imageSizeMb));
+        AlertDialog.Builder builder = new AlertDialog.Builder(getContext())
+                .setMessage(message)
+                .setPositiveButton(R.string.vt_photo_upload_full, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        uploadImageFromUri(localImagePath, mimeType, tryUploadLongLat);
+                    }
+                })
+                .setNeutralButton(R.string.vt_photo_upload_small, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        String compressedFilePath = LocalImageUtils.getCompressedFileFromImage(localImagePath, false);
+                        uploadImageFromUri(compressedFilePath, mimeType, tryUploadLongLat);
+                    }
+                })
+                .setNegativeButton(R.string.vt_photo_upload_later, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        dialogInterface.cancel();
+                    }
+                })
+                .setCancelable(true);
+        builder.show();
+    }
+
     private void uploadImageFromUri(String localImagePath, String mimeType, boolean tryUploadLongLat) {
-        final String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
-        final String token = RealmUtils.loadPreferencesFromDB().getToken();
+        showUploadProgress();
+        // Log.e(TAG, "about to call upload image");
+        NetworkImageUtils.uploadTaskImage(task, localImagePath, mimeType, tryUploadLongLat)
+                .delay(1L, TimeUnit.SECONDS)
+                .subscribe(new Action1<String>() {
+                               @Override
+                               public void call(String s) {
+                                   dismissUploadProgress();
+                                   Toast.makeText(getContext(), R.string.vt_mtg_photo_succeeded, Toast.LENGTH_SHORT).show();
+                                   updatePhotoCount(photoCount + 1);
+                                   // Log.e(TAG, "back from upload image, about to call check analysis results");
+                                   checkForAnalysisResults(s);
+                               }
+                           }, new Action1<Throwable>() {
+                               @Override
+                               public void call(Throwable throwable) {
+                                   dismissUploadProgress();
+                                   Toast.makeText(getContext(), R.string.vt_mtg_photo_failed, Toast.LENGTH_LONG).show();
+                               }
+                           });
+    }
 
-        MultipartBody.Part image = ImageUtils.getImageFromPath(localImagePath, mimeType);
-        HashMap<String, RequestBody> location = tryUploadLongLat && LocationServices.getInstance().hasLasKnownLocation() ?
-                LocationServices.getInstance().getLocationAsRequestMap() : null;
-
-        progressBar.setVisibility(View.VISIBLE);
-
-        Call<RestResponse<String>> uploadCall = location == null ?
-                GrassrootRestService.getInstance().getApi().uploadImageForTask(phoneNumber, token,
-                        task.getType(), task.getTaskUid(), image) :
-                GrassrootRestService.getInstance().getApi().uploadImageWithLocation(phoneNumber, token,
-                        task.getType(), task.getTaskUid(), location, image);
-
-        uploadCall.enqueue(new Callback<RestResponse<String>>() {
+    // this retries 3 times, over 10 seconds, until it gets a result saying analysis complete
+    private void checkForAnalysisResults(final String logUid) {
+        NetworkImageUtils.checkForImageAnalysis(logUid, taskType)
+                .subscribeOn(Schedulers.io())
+                .retryWhen(new RetryWithDelay(3, 3000))
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Action1<ImageRecord>() {
             @Override
-            public void onResponse(Call<RestResponse<String>> call, Response<RestResponse<String>> response) {
-                progressBar.setVisibility(View.GONE);
-                if (response.isSuccessful()) {
-                    Toast.makeText(getContext(), R.string.vt_mtg_photo_succeeded, Toast.LENGTH_SHORT).show();
+            public void call(ImageRecord imageRecord) {
+                if (imageRecord.hasFoundFaces()) {
+                    showFaceCountDialog(imageRecord);
                 } else {
-                    Toast.makeText(getContext(), R.string.vt_mtg_photo_failed, Toast.LENGTH_LONG).show();
+                    Log.e(TAG, "nothing found ...");
                 }
             }
-
+        }, new Action1<Throwable>() {
             @Override
-            public void onFailure(Call<RestResponse<String>> call, Throwable t) {
-                progressBar.setVisibility(View.GONE);
-                Toast.makeText(getContext(), R.string.vt_mtg_photo_failed, Toast.LENGTH_SHORT).show();
+            public void call(Throwable throwable) {
+                Log.e(TAG, "call failed");
             }
         });
+    }
+
+    private void showFaceCountDialog(ImageRecord imageRecord) {
+        new AlertDialog.Builder(getContext())
+                .setMessage(getString(R.string.vt_photo_face_count, imageRecord.getNumberFaces()))
+                .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        // do something
+                    }
+                })
+                .setNegativeButton(android.R.string.no, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        // do something else
+                    }
+                })
+                .setCancelable(true)
+                .show();
     }
 
     @OnClick(R.id.vt_bt_view_photos)
@@ -1069,6 +1134,21 @@ public class ViewTaskFragment extends Fragment {
                 return R.string.vt_todo_done;
         }
         return -1;
+    }
+
+    private void showUploadProgress() {
+        if (progressDialog == null) {
+            progressDialog = new ProgressDialog(getContext());
+            progressDialog.setMessage(getString(R.string.vt_photo_uploading));
+            progressDialog.setIndeterminate(true);
+        }
+        progressDialog.show();
+    }
+
+    private void dismissUploadProgress() {
+        if (progressDialog != null) {
+            progressDialog.dismiss();
+        }
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)

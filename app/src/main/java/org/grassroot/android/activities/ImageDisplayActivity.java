@@ -1,6 +1,7 @@
 package org.grassroot.android.activities;
 
 import android.os.Bundle;
+import android.support.v4.app.FragmentManager;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -12,6 +13,7 @@ import org.grassroot.android.R;
 import org.grassroot.android.fragments.ImageGridFragment;
 import org.grassroot.android.fragments.PhotoViewFragment;
 import org.grassroot.android.interfaces.TaskConstants;
+import org.grassroot.android.models.ImageRecord;
 
 import rx.functions.Action1;
 
@@ -23,8 +25,15 @@ public class ImageDisplayActivity extends AppCompatActivity {
 
     private static final String TAG = ImageDisplayActivity.class.getSimpleName();
 
+    private static final String FULL_IMAGE_TAG = "view_full_image_fragment";
+    private static final String IMAGE_GRID_TAG = "task_image_grid_fragment";
+
     private String taskType;
     private String taskUid;
+
+    private Action1<ImageRecord> imageClickObserver;
+    private PhotoViewFragment photoViewFragment;
+    private ImageGridFragment imageGridFragment;
 
     private boolean isImageFullScreen;
 
@@ -46,27 +55,50 @@ public class ImageDisplayActivity extends AppCompatActivity {
 
         setUpToolbar();
 
-        ImageGridFragment fragment = ImageGridFragment.newInstance(taskType, taskUid, new Action1<String>() {
+        FragmentManager fm = getSupportFragmentManager();
+        imageGridFragment = (ImageGridFragment) fm.findFragmentByTag(IMAGE_GRID_TAG);
+        imageClickObserver = new Action1<ImageRecord>() {
             @Override
-            public void call(String s) {
-                displayFullImage(s);
+            public void call(ImageRecord record) {
+                photoViewFragment = PhotoViewFragment.newInstance(taskType, record);
+                displayFullImageFragment();
             }
-        });
+        };
 
-        getSupportFragmentManager()
-                .beginTransaction()
-                .add(R.id.ida_fragment_holder, fragment, ImageGridFragment.class.getCanonicalName())
-                .commit();
+        if (imageGridFragment == null) {
+            imageGridFragment = ImageGridFragment.newInstance(taskType, taskUid, imageClickObserver);
+        } else {
+            imageGridFragment.setImageClickObserver(imageClickObserver);
+        }
+
+        if (!imageGridFragment.isAdded()) {
+            getSupportFragmentManager()
+                    .beginTransaction()
+                    .add(R.id.ida_fragment_holder, imageGridFragment, IMAGE_GRID_TAG)
+                    .commit();
+        }
+
+        photoViewFragment = (PhotoViewFragment) fm.findFragmentByTag(FULL_IMAGE_TAG);
+        if (photoViewFragment != null) {
+            // photo fragment is non null, so must have been created before, hence display it
+            displayFullImageFragment();
+        }
     }
 
-    private void displayFullImage(String imageKey) {
-        Log.e(TAG, "displaying full image for key: " + imageKey);
-        PhotoViewFragment photoFragment = PhotoViewFragment.newInstance(taskType, imageKey);
-        getSupportFragmentManager()
-                .beginTransaction()
-                .add(R.id.ida_fragment_holder, photoFragment, PhotoViewFragment.class.getCanonicalName())
-                .addToBackStack("photo")
-                .commit();
+    private void displayFullImageFragment() {
+        if (photoViewFragment != null && !photoViewFragment.isAdded()) {
+            getSupportFragmentManager()
+                    .beginTransaction()
+                    .add(R.id.ida_fragment_holder, photoViewFragment, FULL_IMAGE_TAG)
+                    .addToBackStack("photo")
+                    .commit();
+        } else if (photoViewFragment != null && !photoViewFragment.isVisible()) {
+            getSupportFragmentManager()
+                    .beginTransaction()
+                    .show(photoViewFragment)
+                    .addToBackStack("photo") // docs aren't clear if showing counts as a transaction ... ugh, Android
+                    .commit();
+        }
         isImageFullScreen = true;
         setToolbarToPhoto();
     }
@@ -102,6 +134,8 @@ public class ImageDisplayActivity extends AppCompatActivity {
                     getSupportFragmentManager().popBackStack();
                     isImageFullScreen = false;
                     setToolbarToGrid();
+                    Log.e(TAG, "after closing, is it null? ... " +
+                            (getSupportFragmentManager().findFragmentByTag(FULL_IMAGE_TAG) == null));
                 }
                 return true;
             default:

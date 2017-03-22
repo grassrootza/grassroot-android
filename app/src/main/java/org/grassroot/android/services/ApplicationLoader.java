@@ -48,8 +48,8 @@ public class ApplicationLoader extends Application {
         RealmConfiguration.Builder realmConfigBuilder =
                 new RealmConfiguration.Builder(applicationContext);
 
-        Log.e("GRASSROOT", "setting schema to version 6");
-        realmConfigBuilder.schemaVersion(6)
+        Log.e("GRASSROOT", "setting schema to version 8");
+        realmConfigBuilder.schemaVersion(8)
                 .migration(new GrassrootRealmMigration());
         Realm.setDefaultConfiguration(realmConfigBuilder.build());
 

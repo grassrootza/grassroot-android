@@ -110,13 +110,14 @@
 
                         <ImageButton
                             android:id="@+id/bt_td_respond"
-                            android:layout_width="@dimen/md_icon_max_size"
-                            android:layout_height="@dimen/md_icon_max_size"
+                            android:layout_width="@dimen/md_icon_max_plus"
+                            android:layout_height="@dimen/md_icon_max_plus"
                             android:background="?android:selectableItemBackground"
                             android:padding="@dimen/padding_half"
                             android:layout_marginRight="@dimen/margin_small"
                             android:layout_centerHorizontal="true"
                             android:scaleType="fitCenter"
+                            tools:src="@drawable/respond_confirm_active"
                             />
 
                     </RelativeLayout>
@@ -132,21 +133,23 @@
 
                         <ImageButton
                             android:id="@+id/vt_left_response"
-                            android:layout_width="@dimen/md_icon_max_size"
-                            android:layout_height="@dimen/md_icon_max_size"
+                            android:layout_width="@dimen/md_icon_max_plus"
+                            android:layout_height="@dimen/md_icon_max_plus"
                             android:background="?android:selectableItemBackground"
                             android:padding="@dimen/padding_half"
                             android:scaleType="fitCenter"
-                            android:layout_marginRight="@dimen/margin_small" />
+                            android:layout_marginRight="@dimen/margin_small"
+                            tools:src="@drawable/respond_yes_active"/>
 
                         <!-- todo : figure out compatibility in here -->
                         <ImageButton
                             android:id="@+id/vt_right_response"
-                            android:layout_width="@dimen/md_icon_max_size"
-                            android:layout_height="@dimen/md_icon_max_size"
+                            android:layout_width="@dimen/md_icon_max_plus"
+                            android:layout_height="@dimen/md_icon_max_plus"
                             android:background="?android:selectableItemBackground"
                             android:padding="@dimen/padding_half"
-                            android:scaleType="fitCenter" />
+                            android:scaleType="fitCenter"
+                            tools:src="@drawable/respond_no_active"/>
 
                     </LinearLayout>
 

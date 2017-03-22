@@ -62,9 +62,11 @@ public class PhotoGridAdapter extends ArrayAdapter<ImageRecord> {
 
         final ImageRecord record = imageRecords.get(position);
 
+        final String dateTaken = captionFormat.format(new Date(record.getCreationTime()));
+
         final String captionText = TextUtils.isEmpty(record.getUserDisplayName()) ?
-                getContext().getString(R.string.taken_on_caption, captionFormat.format(new Date(record.getCreationTime()))) :
-                getContext().getString(R.string.taken_by_caption, record.getUserDisplayName());
+                getContext().getString(R.string.taken_on_caption, dateTaken) :
+                getContext().getString(R.string.taken_by_caption, record.getUserDisplayName(), dateTaken);
 
         caption.setText(captionText);
 

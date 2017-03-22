@@ -156,7 +156,7 @@
     <string name="drawer_rate_us">Rate us</string>
     <string name="drawer_logout">Logout</string>
     <string name="drawer_share">Share app</string>
-    <string name="nav_bar_footer">Grassroot v1.1</string>
+    <string name="nav_bar_footer">Grassroot v1.5</string>
 
     <string name="online_go_offline">Switch to offline mode?</string>
     <string name="offline_go_online_failed">Try connect to server?</string>
@@ -709,10 +709,22 @@
     <string name="vt_mtg_cancel">Cancel</string>
 
     <string name="vt_mtg_add_photo">Add photo</string>
-
     <string-array name="vt_add_photo_options">
         <item>Camera</item>
         <item>Gallery</item>
+    </string-array>
+
+    <string name="vt_photo_size">The photo is %1$s mb. If you are not on wifi, uploading will use data.
+        Continue?</string>
+    <string name="vt_photo_uploading">Uploading image</string>
+    <string name="vt_photo_upload_full">Upload full size</string>
+    <string name="vt_photo_upload_small">Upload small version</string>
+    <string name="vt_photo_upload_later">Upload later</string>
+
+    <string-array name="vt_upload_options">
+        <item>Upload full size</item>
+        <item>Upload small version</item>
+        <item>Upload later</item>
     </string-array>
 
     <string name="vt_mtg_view_photo">View photos</string>
@@ -721,6 +733,20 @@
 
     <string name="vt_mtg_photo_succeeded">Done! Photo stored</string>
     <string name="vt_mtg_photo_failed">Error! Photo not stored. Try again later</string>
+
+    <string name="vt_photo_face_count">We detected %1$d faces in the photo. Is that right, or do you
+        want to adjust it?</string>
+
+    <string name="vt_photo_caption_1">Photo taken on %1$s, by %2$s. </string>
+    <string name="vt_photo_faces_no_mod">%1$d people were detected in the photo.</string>
+    <string name="vt_photo_faces_mod">The photo was marked to contain %1$d people.</string>
+    <string name="vt_photo_faces_none">We couldn\'t detect any faces in the photo.</string>
+
+    <string name="vt_photo_edit_details"># PEOPLE</string>
+    <string name="vt_photo_delete">DELETE</string>
+
+    <string name="photo_delete_confirm">Are you sure you want to remove the photo from this meeting?</string>
+    <string name="photo_edit_faces_confirm">How many people are in the photo?</string>
 
     <string name="vt_vote_title">Vote on:</string>
     <string name="vt_vote_title_past">Old vote on:</string>
@@ -774,8 +800,8 @@
     <string name="ida_title">%s gallery</string>
 
     <string name="ida_toast_error_exit">Sorry, error loading image activity</string>
-    <string name="taken_by_caption">Taken by %s</string>
-    <string name="taken_on_caption">Taken on %s</string>
+    <string name="taken_by_caption">%1$s, on %2$s</string>
+    <string name="taken_on_caption">Taken %s</string>
 
     <!-- Section : edit task strings -->
 

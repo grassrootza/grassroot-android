@@ -474,6 +474,20 @@ public class GrassrootRestService {
     Call<RestResponse<Long>> countImagesForTask(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
                                                 @Path("taskType") String taskType, @Path("taskUid") String taskUid);
 
+    @GET("task/image/record/{phoneNumber}/{code}/{taskType}/{logUid}")
+    Call<RestResponse<ImageRecord>> fetchImageRecord(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
+                                                     @Path("taskType") String taskType, @Path("logUid") String logUid);
+
+    @GET("task/image/update/faces/{phoneNumber}/{code}/{taskType}/{logUid}")
+    Call<RestResponse<ImageRecord>> updateFaceCount(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
+                                                    @Path("taskType") String taskType, @Path("logUid") String logUid,
+                                                    @Query("numberFaces") int numberFaces);
+
+    @GET("task/image/delete/{phoneNumber}/{code}")
+    Call<RestResponse<String>> deleteImageRecord(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
+                                                 @Query("taskType") String taskType, @Query("logUid") String logUid,
+                                                 @Query("leaveStored") boolean leaveStored);
+
         /*
         SECTION : EDIT TASKS
          */

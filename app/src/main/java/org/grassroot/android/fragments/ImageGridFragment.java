@@ -40,9 +40,10 @@ public class ImageGridFragment extends Fragment {
     private String taskType;
     private String taskUid;
 
-    private Action1<String> imageClickObserver;
+    private List<ImageRecord> imageRecords;
+    private Action1<ImageRecord> imageClickObserver;
 
-    public static ImageGridFragment newInstance(final String taskType, final String taskUid, Action1<String> imageClickObserver) {
+    public static ImageGridFragment newInstance(final String taskType, final String taskUid, Action1<ImageRecord> imageClickObserver) {
         ImageGridFragment fragment = new ImageGridFragment();
         Bundle args = new Bundle();
         args.putString("TYPE", taskType);
@@ -50,6 +51,10 @@ public class ImageGridFragment extends Fragment {
         fragment.setArguments(args);
         fragment.imageClickObserver = imageClickObserver;
         return fragment;
+    }
+
+    public void setImageClickObserver(Action1<ImageRecord> imageClickObserver) {
+        this.imageClickObserver = imageClickObserver;
     }
 
     @Override
@@ -93,14 +98,15 @@ public class ImageGridFragment extends Fragment {
         unbinder.unbind();
     }
 
-    private void loadImageGrid(final List<ImageRecord> imageRecords) {
+    private void loadImageGrid(final List<ImageRecord> passedImageRecords) {
+        this.imageRecords = passedImageRecords;
         PhotoGridAdapter adapter = new PhotoGridAdapter(getContext(), imageRecords, taskType);
         taskPhotoGrid.setAdapter(adapter);
         taskPhotoGrid.setVisibility(View.VISIBLE);
         taskPhotoGrid.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-                imageClickObserver.call(imageRecords.get(i).getKey());
+                imageClickObserver.call(imageRecords.get(i));
             }
         });
         adapter.notifyDataSetChanged();

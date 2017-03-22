@@ -38,6 +38,7 @@ import org.grassroot.android.utils.ErrorUtils;
 import org.grassroot.android.utils.NetworkUtils;
 import org.grassroot.android.utils.PermissionUtils;
 import org.grassroot.android.utils.RealmUtils;
+import org.grassroot.android.utils.Utilities;
 import org.greenrobot.eventbus.EventBus;
 
 import java.util.ArrayList;
@@ -49,6 +50,7 @@ import java.util.UUID;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
+import butterknife.OnFocusChange;
 import butterknife.OnTextChanged;
 import rx.Subscriber;
 import rx.android.schedulers.AndroidSchedulers;
@@ -189,6 +191,22 @@ public class CreateGroupActivity extends PortraitActivity implements ContactSele
     addMemberFromContacts.setVisibility(menuOpen ? View.GONE : View.VISIBLE);
     addMemberManually.setVisibility(menuOpen ? View.GONE : View.VISIBLE);
     menuOpen = !menuOpen;
+  }
+
+  @OnFocusChange(R.id.et_group_description)
+  public void onFocusChangeTextEdit(View v, boolean hasFocus) {
+    Log.e(TAG, "et_group_description: focus change event!");
+    if (!hasFocus) {
+      Utilities.hideKeyboard(this);
+    }
+  }
+
+  @OnFocusChange(R.id.et2)
+  public void onFocusChangeTextEditContainer(View v, boolean hasFocus) {
+    Log.e(TAG, "et2: focus change event!");
+    if (!hasFocus) {
+      Utilities.hideKeyboard(this);
+    }
   }
 
   @OnClick(R.id.ll_add_member_contacts)

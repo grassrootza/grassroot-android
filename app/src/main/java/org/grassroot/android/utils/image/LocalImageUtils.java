@@ -37,12 +37,12 @@ import okhttp3.RequestBody;
 /**
  * Created by paballo on 2016/07/18.
  */
-public class ImageUtils {
+public class LocalImageUtils {
 
-    private static final String TAG = ImageUtils.class.getSimpleName();
+    private static final String TAG = LocalImageUtils.class.getSimpleName();
 
-    public static int JPEG_QUALITY = 70;
-    public static int MAX_DIMEN = 640;
+    private static int JPEG_QUALITY = 70;
+    private static int MAX_DIMEN = 640;
 
     public static int convertDefaultImageTypeToResource(final String defaultImage) {
         if (TextUtils.isEmpty(defaultImage)) {
@@ -117,6 +117,11 @@ public class ImageUtils {
         );
     }
 
+    public static long getImageFileSize(final String path) {
+        File f = new File(path);
+        return f.exists() ? f.length() : 0;
+    }
+
     public static void addImageToGallery(String imagePath) {
         Intent mediaScanIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
         File f = new File(imagePath);
@@ -126,7 +131,7 @@ public class ImageUtils {
         ApplicationLoader.applicationContext.sendBroadcast(mediaScanIntent);
     }
 
-    public static String getCompressedFileFromImage(String path) {
+    public static String getCompressedFileFromImage(String path, boolean cropToSquare) {
         String strMyImagePath = null;
         Bitmap scaledBitmap;
 
@@ -140,7 +145,7 @@ public class ImageUtils {
             options.inJustDecodeBounds = false;
             Bitmap unscaledBitmap = BitmapFactory.decodeFile(path, options);
 
-            scaledBitmap= cropScaleCenter(unscaledBitmap);
+            scaledBitmap = cropToSquare ? cropScaleCenter(unscaledBitmap) : halveImage(unscaledBitmap);
 
             String extr = Environment.getExternalStorageDirectory().toString();
             File mFolder = new File(extr + "/myTmpDir");
@@ -202,6 +207,12 @@ public class ImageUtils {
         }
 
         return destBitmap;
+    }
+
+    public static Bitmap halveImage(Bitmap unscaledBitmap) {
+        final int newHeight = unscaledBitmap.getHeight() / 2;
+        final int newWidth = unscaledBitmap.getWidth() / 2;
+        return Bitmap.createScaledBitmap(unscaledBitmap, newWidth, newHeight, true);
     }
 
     public static int calculateInSampleSize(BitmapFactory.Options options) {

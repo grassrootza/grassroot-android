@@ -20,7 +20,7 @@ import org.grassroot.android.R;
 import org.grassroot.android.fragments.HomeGroupListFragment;
 import org.grassroot.android.models.Group;
 import org.grassroot.android.services.ApplicationLoader;
-import org.grassroot.android.utils.image.ImageUtils;
+import org.grassroot.android.utils.image.LocalImageUtils;
 import org.grassroot.android.utils.RealmUtils;
 
 import java.text.SimpleDateFormat;
@@ -345,7 +345,7 @@ public class GroupListAdapter extends RecyclerView.Adapter<GroupListAdapter.GHP_
         final String imageUrl = group.getImageUrl();
         try {
             if (imageUrl != null) {
-                ImageUtils.setAvatarImage(holder.avatar, imageUrl, group.getDefaultImageRes());
+                LocalImageUtils.setAvatarImage(holder.avatar, imageUrl, group.getDefaultImageRes());
             } else {
                 holder.avatar.setImageResource(group.getDefaultImageRes());
             }
