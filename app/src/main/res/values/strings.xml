@@ -482,6 +482,10 @@
     <string name="rm_confirm_number">You are about to remove %d members. Are you sure?</string>
     <string name="member_list_you">You</string>
 
+    <string name="am_members_left_few">You have %1$d members left before upgrading your Grassroot Extra account</string>
+    <string name="am_members_over_limit">You\'re adding more members than your limit. Please upgrade or remove members before saving.</string>
+    <string name="am_gr_extra_btn">Grassroot Extra</string>
+
     <string name="amm_new_done">Add</string>
     <string name="amm_edit_done">Save</string>
 
@@ -747,6 +751,14 @@
 
     <string name="photo_delete_confirm">Are you sure you want to remove the photo from this meeting?</string>
     <string name="photo_edit_faces_confirm">How many people are in the photo?</string>
+
+    <string name="photo_delete_failed_access">Sorry, you don\'t have permission to delete this photo</string>
+    <string name="photo_delete_failed_other">Sorry, something went wrong removing the photo</string>
+    <string name="photo_delete_succeeded">Done! Photo deleted</string>
+
+    <string name="photo_count_update_failed_access">Sorry, you don\'t have permission to change the count</string>
+    <string name="photo_count_update_failed_other">Sorry, something went wrong updating the count</string>
+    <string name="photo_count_update_succeeded">Done! Count updated</string>
 
     <string name="vt_vote_title">Vote on:</string>
     <string name="vt_vote_title_past">Old vote on:</string>

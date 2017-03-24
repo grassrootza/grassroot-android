@@ -12,6 +12,7 @@ import io.realm.RealmObject;
 public class ImageRecord extends RealmObject implements Parcelable {
 
     private String key;
+
     private String actionLogType;
     private String taskUid;
     private String bucket;
@@ -36,10 +37,13 @@ public class ImageRecord extends RealmObject implements Parcelable {
         actionLogType = in.readString();
         taskUid = in.readString();
         bucket = in.readString();
+        creationTime = in.readLong();
+        storageTime = in.readLong();
         md5 = in.readString();
         userDisplayName = in.readString();
         userPhoneNumber = in.readString();
         analyzed = in.readByte() != 0;
+        numberFaces = in.readInt();
         countModified = in.readByte() != 0;
     }
 
@@ -49,10 +53,13 @@ public class ImageRecord extends RealmObject implements Parcelable {
         dest.writeString(actionLogType);
         dest.writeString(taskUid);
         dest.writeString(bucket);
+        dest.writeLong(creationTime);
+        dest.writeLong(storageTime);
         dest.writeString(md5);
         dest.writeString(userDisplayName);
         dest.writeString(userPhoneNumber);
         dest.writeByte((byte) (analyzed ? 1 : 0));
+        dest.writeInt(numberFaces);
         dest.writeByte((byte) (countModified ? 1 : 0));
     }
 
@@ -157,12 +164,12 @@ public class ImageRecord extends RealmObject implements Parcelable {
 
     public boolean isAnalyzed() { return analyzed; }
 
-    public void setNumberFaces(Integer numberFaces) { this.numberFaces = numberFaces; }
+    public void setNumberFaces(int numberFaces) { this.numberFaces = numberFaces; }
 
     public Integer getNumberFaces() { return numberFaces; }
 
     public boolean hasFoundFaces() {
-        return analyzed && numberFaces != null && numberFaces > 0;
+        return analyzed && numberFaces > 0;
     }
 
     public String getUserPhoneNumber() {
@@ -185,7 +192,32 @@ public class ImageRecord extends RealmObject implements Parcelable {
         return revisedFaces;
     }
 
-    public void setRevisedFaces(Integer revisedFaces) {
+    public void setRevisedFaces(int revisedFaces) {
         this.revisedFaces = revisedFaces;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        ImageRecord that = (ImageRecord) o;
+
+        return key != null ? key.equals(that.key) : that.key == null;
+
+    }
+
+    @Override
+    public int hashCode() {
+        return key != null ? key.hashCode() : 0;
+    }
+
+    @Override
+    public String toString() {
+        return "ImageRecord{" +
+                "key='" + key + '\'' +
+                ", creationTime=" + creationTime +
+                ", numberFaces=" + numberFaces +
+                '}';
     }
 }

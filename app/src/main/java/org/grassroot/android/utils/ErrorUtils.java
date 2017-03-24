@@ -19,8 +19,8 @@ import org.grassroot.android.activities.NoGroupWelcomeActivity;
 import org.grassroot.android.activities.StartActivity;
 import org.grassroot.android.interfaces.NavigationConstants;
 import org.grassroot.android.models.Member;
-import org.grassroot.android.models.responses.ServerErrorModel;
 import org.grassroot.android.models.exceptions.ApiCallException;
+import org.grassroot.android.models.responses.ServerErrorModel;
 import org.grassroot.android.services.ApplicationLoader;
 import org.grassroot.android.services.GrassrootRestService;
 import org.grassroot.android.services.TaskService;
@@ -217,6 +217,10 @@ public class ErrorUtils {
     public static String serverErrorText(Throwable e) {
         final String restMsg = (e instanceof ApiCallException) ? ((ApiCallException) e).errorTag : GENERIC_ERROR;
         return serverErrorText(restMsg);
+    }
+
+    public static boolean isAccessDeniedError(Throwable e) {
+        return e instanceof ApiCallException && PERMISSION_DENIED.equals(((ApiCallException) e).errorTag);
     }
 
     public static void networkErrorSnackbar(ViewGroup container, final int message, View.OnClickListener action) {

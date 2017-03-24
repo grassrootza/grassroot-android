@@ -111,7 +111,6 @@ public class MemberListFragment extends Fragment {
     }
 
     public void transitionToMemberList(List<Member> members) {
-        // todo : optimize this (get difference), maybe
         if (memberListAdapter != null) {
             memberListAdapter.setMembers(members);
         }

@@ -14,6 +14,7 @@ import org.grassroot.android.fragments.ImageGridFragment;
 import org.grassroot.android.fragments.PhotoViewFragment;
 import org.grassroot.android.interfaces.TaskConstants;
 import org.grassroot.android.models.ImageRecord;
+import org.grassroot.android.utils.RealmUtils;
 
 import rx.functions.Action1;
 
@@ -25,6 +26,7 @@ public class ImageDisplayActivity extends AppCompatActivity {
 
     private static final String TAG = ImageDisplayActivity.class.getSimpleName();
 
+    public static final String OPEN_ON_IMAGE = "open_on_image";
     private static final String FULL_IMAGE_TAG = "view_full_image_fragment";
     private static final String IMAGE_GRID_TAG = "task_image_grid_fragment";
 
@@ -32,6 +34,8 @@ public class ImageDisplayActivity extends AppCompatActivity {
     private String taskUid;
 
     private Action1<ImageRecord> imageClickObserver;
+    private Action1<ImageRecord> imageDeletionObserver;
+
     private PhotoViewFragment photoViewFragment;
     private ImageGridFragment imageGridFragment;
 
@@ -53,14 +57,23 @@ public class ImageDisplayActivity extends AppCompatActivity {
         taskUid =  getIntent().getStringExtra(TaskConstants.TASK_UID_FIELD);
         taskType = getIntent().getStringExtra(TaskConstants.TASK_TYPE_FIELD);
 
+        boolean openOnImageForEdit = getIntent().hasExtra(OPEN_ON_IMAGE);
+
         setUpToolbar();
 
         FragmentManager fm = getSupportFragmentManager();
         imageGridFragment = (ImageGridFragment) fm.findFragmentByTag(IMAGE_GRID_TAG);
+
+        imageDeletionObserver = new Action1<ImageRecord>() {
+            @Override
+            public void call(ImageRecord imageRecord) {
+                deleteImage(imageRecord);
+            }
+        };
         imageClickObserver = new Action1<ImageRecord>() {
             @Override
             public void call(ImageRecord record) {
-                photoViewFragment = PhotoViewFragment.newInstance(taskType, record);
+                photoViewFragment = PhotoViewFragment.newInstance(taskType, record, imageDeletionObserver, false);
                 displayFullImageFragment();
             }
         };
@@ -80,7 +93,10 @@ public class ImageDisplayActivity extends AppCompatActivity {
 
         photoViewFragment = (PhotoViewFragment) fm.findFragmentByTag(FULL_IMAGE_TAG);
         if (photoViewFragment != null) {
-            // photo fragment is non null, so must have been created before, hence display it
+            displayFullImageFragment(); // photo fragment is non null, so must have been created before, hence display it
+        } else if (openOnImageForEdit) {
+            ImageRecord record = getIntent().getParcelableExtra(OPEN_ON_IMAGE);
+            photoViewFragment = PhotoViewFragment.newInstance(taskType, record, imageDeletionObserver, true);
             displayFullImageFragment();
         }
     }
@@ -101,6 +117,12 @@ public class ImageDisplayActivity extends AppCompatActivity {
         }
         isImageFullScreen = true;
         setToolbarToPhoto();
+    }
+
+    private void deleteImage(ImageRecord record) {
+        closeFullScreen();
+        imageGridFragment.removeImage(record);
+        RealmUtils.removeObjectFromDatabase(ImageRecord.class, "key", record.getKey());
     }
 
     private void setUpToolbar() {
@@ -131,16 +153,19 @@ public class ImageDisplayActivity extends AppCompatActivity {
                 if (!isImageFullScreen) {
                     finish();
                 } else {
-                    getSupportFragmentManager().popBackStack();
-                    isImageFullScreen = false;
-                    setToolbarToGrid();
-                    Log.e(TAG, "after closing, is it null? ... " +
-                            (getSupportFragmentManager().findFragmentByTag(FULL_IMAGE_TAG) == null));
+                    closeFullScreen();
                 }
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
         }
+    }
+
+    private void closeFullScreen() {
+        getSupportFragmentManager().popBackStack();
+        isImageFullScreen = false;
+        setToolbarToGrid();
+        Log.e(TAG, "after closing, is it null? ... " + (getSupportFragmentManager().findFragmentByTag(FULL_IMAGE_TAG) == null));
     }
 
     private String getTitlePrefix() {

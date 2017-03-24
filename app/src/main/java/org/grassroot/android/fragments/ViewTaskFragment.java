@@ -85,10 +85,12 @@ import static android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
 
 public class ViewTaskFragment extends Fragment {
 
-    private static final String TAG = ViewTaskFragment.class.getCanonicalName();
+    private static final String TAG = ViewTaskFragment.class.getSimpleName();
 
     private static final int CAMERA_RESULT_INT = 1001;
     private static final int GALLERY_RESULT_INT = 1002;
+
+    private static final int VIEWING_PHOTOS_RESULT_INT = 1003;
 
     private TaskModel task;
     private String taskType;
@@ -556,6 +558,7 @@ public class ViewTaskFragment extends Fragment {
     }
 
     private void setViewPhotoButton() {
+        // todo : start using local DB for a bunch of these
         TaskService.getInstance().countTaskImages(taskType, taskUid).subscribe(new Action1<Long>() {
             @Override
             public void call(Long aLong) {
@@ -933,6 +936,8 @@ public class ViewTaskFragment extends Fragment {
                 LocalImageUtils.addImageToGallery(currentPhotoPath);
                 checkImageSizeAndConfirmUpload(currentPhotoPath, "image/jpeg", true);
             }
+        } else if (requestCode == VIEWING_PHOTOS_RESULT_INT) {
+            setViewPhotoButton(); // in case an image was deleted, this will reset the count
         }
     }
 
@@ -968,9 +973,10 @@ public class ViewTaskFragment extends Fragment {
 
     private void uploadImageFromUri(String localImagePath, String mimeType, boolean tryUploadLongLat) {
         showUploadProgress();
-        // Log.e(TAG, "about to call upload image");
         NetworkImageUtils.uploadTaskImage(task, localImagePath, mimeType, tryUploadLongLat)
+                .subscribeOn(Schedulers.io())
                 .delay(1L, TimeUnit.SECONDS)
+                .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(new Action1<String>() {
                                @Override
                                public void call(String s) {
@@ -1012,19 +1018,22 @@ public class ViewTaskFragment extends Fragment {
         });
     }
 
-    private void showFaceCountDialog(ImageRecord imageRecord) {
+    private void showFaceCountDialog(final ImageRecord imageRecord) {
+        Log.e(TAG, "analysis result found, record: " + imageRecord);
         new AlertDialog.Builder(getContext())
                 .setMessage(getString(R.string.vt_photo_face_count, imageRecord.getNumberFaces()))
                 .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialogInterface, int i) {
-                        // do something
+                        Intent intent = viewImageIntent();
+                        intent.putExtra(ImageDisplayActivity.OPEN_ON_IMAGE, imageRecord);
+                        startActivityForResult(intent, VIEWING_PHOTOS_RESULT_INT);
                     }
                 })
                 .setNegativeButton(android.R.string.no, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialogInterface, int i) {
-                        // do something else
+                        dialogInterface.cancel();
                     }
                 })
                 .setCancelable(true)
@@ -1033,10 +1042,14 @@ public class ViewTaskFragment extends Fragment {
 
     @OnClick(R.id.vt_bt_view_photos)
     public void viewPhotos() {
+        startActivityForResult(viewImageIntent(), VIEWING_PHOTOS_RESULT_INT);
+    }
+
+    private Intent viewImageIntent() {
         Intent viewIntent = new Intent(getActivity(), ImageDisplayActivity.class);
         viewIntent.putExtra(TaskConstants.TASK_UID_FIELD, taskUid);
         viewIntent.putExtra(TaskConstants.TASK_TYPE_FIELD, taskType);
-        startActivity(viewIntent);
+        return viewIntent;
     }
 
     @OnClick(R.id.vt_bt_modify)

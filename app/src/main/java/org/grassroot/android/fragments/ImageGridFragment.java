@@ -33,6 +33,7 @@ public class ImageGridFragment extends Fragment {
 
     Unbinder unbinder;
 
+    PhotoGridAdapter photoGridAdapter;
     @BindView(R.id.vt_photo_grid) GridView taskPhotoGrid;
     @BindView(R.id.progressBar) ProgressBar progressBar;
 
@@ -43,7 +44,8 @@ public class ImageGridFragment extends Fragment {
     private List<ImageRecord> imageRecords;
     private Action1<ImageRecord> imageClickObserver;
 
-    public static ImageGridFragment newInstance(final String taskType, final String taskUid, Action1<ImageRecord> imageClickObserver) {
+    public static ImageGridFragment newInstance(final String taskType, final String taskUid,
+                                                Action1<ImageRecord> imageClickObserver) {
         ImageGridFragment fragment = new ImageGridFragment();
         Bundle args = new Bundle();
         args.putString("TYPE", taskType);
@@ -98,10 +100,16 @@ public class ImageGridFragment extends Fragment {
         unbinder.unbind();
     }
 
+    public void removeImage(ImageRecord imageRecord) {
+        if (photoGridAdapter != null && taskPhotoGrid != null) {
+            photoGridAdapter.removeImage(imageRecord);
+        }
+    }
+
     private void loadImageGrid(final List<ImageRecord> passedImageRecords) {
         this.imageRecords = passedImageRecords;
-        PhotoGridAdapter adapter = new PhotoGridAdapter(getContext(), imageRecords, taskType);
-        taskPhotoGrid.setAdapter(adapter);
+        photoGridAdapter = new PhotoGridAdapter(getContext(), imageRecords, taskType);
+        taskPhotoGrid.setAdapter(photoGridAdapter);
         taskPhotoGrid.setVisibility(View.VISIBLE);
         taskPhotoGrid.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
@@ -109,7 +117,7 @@ public class ImageGridFragment extends Fragment {
                 imageClickObserver.call(imageRecords.get(i));
             }
         });
-        adapter.notifyDataSetChanged();
+        photoGridAdapter.notifyDataSetChanged();
     }
 
 }

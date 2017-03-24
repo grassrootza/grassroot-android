@@ -11,7 +11,6 @@ import org.grassroot.android.events.NetworkFailureEvent;
 import org.grassroot.android.events.OfflineActionsSent;
 import org.grassroot.android.events.OnlineOfflineToggledEvent;
 import org.grassroot.android.interfaces.NotificationConstants;
-import org.grassroot.android.models.responses.GenericResponse;
 import org.grassroot.android.models.Group;
 import org.grassroot.android.models.LocalGroupEdits;
 import org.grassroot.android.models.Member;
@@ -19,6 +18,7 @@ import org.grassroot.android.models.PreferenceObject;
 import org.grassroot.android.models.PublicGroupModel;
 import org.grassroot.android.models.TaskModel;
 import org.grassroot.android.models.exceptions.ApiCallException;
+import org.grassroot.android.models.responses.GenericResponse;
 import org.grassroot.android.services.ApplicationLoader;
 import org.grassroot.android.services.GcmRegistrationService;
 import org.grassroot.android.services.GrassrootRestService;
@@ -38,7 +38,6 @@ import retrofit2.Response;
 import rx.Observable;
 import rx.Scheduler;
 import rx.Subscriber;
-
 import rx.android.schedulers.AndroidSchedulers;
 import rx.functions.Action1;
 import rx.schedulers.Schedulers;
@@ -230,6 +229,7 @@ public class NetworkUtils {
       public void call(Object o) {
         if (!checkSyncTime || shouldAttemptSync(context)) {
           LocationServices.getInstance().connect();
+          checkForAndUpdateToken();
           if (!fetchOnly) {
             syncLocalAndServer(context);
           } else {
@@ -238,6 +238,22 @@ public class NetworkUtils {
         }
       }
     }).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread());
+  }
+
+  private static void checkForAndUpdateToken() {
+    try {
+      final String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
+      final String currentToken = RealmUtils.loadPreferencesFromDB().getToken();
+      Response<GenericResponse> response =
+              GrassrootRestService.getInstance().getApi().extendToken(phoneNumber, currentToken).execute();
+      if (response.isSuccessful()) {
+        Log.e(TAG, "Code extended");
+      } else {
+        Log.e(TAG, "Error extending code");
+      }
+    } catch (IOException e) {
+      Log.e(TAG, "no network, hence");
+    }
   }
 
   public static Observable registerForGCM(final Context context) {
@@ -260,7 +276,6 @@ public class NetworkUtils {
     Log.d(TAG, "inside network utils ... about to call sending queued entities ...");
     if (!sendingLocalQueue && isOnline(context)) {
       sendingLocalQueue = true;
-      Log.d(TAG, "now actually sending them ...");
       sendLocalGroups();
       sendLocallyAddedMembers();
       sendLocallyEditedGroups();

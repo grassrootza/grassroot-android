@@ -50,6 +50,11 @@ public class PhotoGridAdapter extends ArrayAdapter<ImageRecord> {
                 + taskType + "/";
     }
 
+    public void removeImage(ImageRecord imageRecord) {
+        this.imageRecords.remove(imageRecord);
+        notifyDataSetChanged(); // because images will move around
+    }
+
     @Override
     @NonNull
     public View getView(int position, View convertView, @NonNull ViewGroup parent) {

@@ -49,6 +49,7 @@ import butterknife.OnClick;
 import rx.Subscriber;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.functions.Action1;
+import rx.schedulers.Schedulers;
 
 /**
  * Created by luke on 2016/05/05.
@@ -77,6 +78,8 @@ public class AddMembersActivity extends AppCompatActivity implements
     private static final int CONTACT_LIST = 1;
 
     private boolean menuOpen;
+
+    private Integer membersLeftBeforeLimit;
 
     ProgressDialog progressDialog;
 
@@ -111,6 +114,7 @@ public class AddMembersActivity extends AppCompatActivity implements
             existingMemberListFragment = MemberListFragment.newInstance(groupUid, false, false, null, true, null);
             loadMembersIntoExistingMemberFragment(true);
             setupNewMemberRecyclerView();
+            fetchNumberMembersLeft();
         }
     }
 
@@ -137,6 +141,7 @@ public class AddMembersActivity extends AppCompatActivity implements
         menuOpen = !menuOpen;
     }
 
+    @SuppressWarnings("unchecked")
     private void loadMembersIntoExistingMemberFragment(final boolean addFragment) {
         Map<String, Object> validMemberMap = new HashMap<>();
         validMemberMap.put("groupUid", groupUid);
@@ -155,6 +160,41 @@ public class AddMembersActivity extends AppCompatActivity implements
                     }
                 }
             });
+    }
+
+    private void fetchNumberMembersLeft() {
+        if (NetworkUtils.isOnline()) {
+            GroupService.getInstance().numberMembersLeft(groupUid)
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe(new Action1<Integer>() {
+                        @Override
+                        public void call(Integer integer) {
+                            membersLeftBeforeLimit = integer;
+                            if (membersLeftBeforeLimit != null && membersLeftBeforeLimit < 50) {
+                                showFewMembersLeftSnackbar(getString(R.string.am_members_left_few,
+                                        membersLeftBeforeLimit));
+                            }
+                        }
+                    }, new Action1<Throwable>() {
+                        @Override
+                        public void call(Throwable throwable) {
+                            Log.e(TAG, "unhandled error fetching number of members");
+                        }
+                    });
+        }
+    }
+
+    private void showFewMembersLeftSnackbar(String snackbarMessage) {
+        Snackbar snackbar = Snackbar.make(amRlRoot, snackbarMessage, Snackbar.LENGTH_LONG);
+        snackbar.setAction(R.string.am_gr_extra_btn, new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent i = new Intent(AddMembersActivity.this, GrassrootExtraActivity.class);
+                startActivity(i);
+            }
+        });
+        snackbar.show();
     }
 
     private void setupNewMemberRecyclerView() {
@@ -299,10 +339,12 @@ public class AddMembersActivity extends AppCompatActivity implements
                 manuallyAddedMembers.add(newMember);
                 newMemberListFragment.addMembers(Collections.singletonList(newMember));
                 setNewMembersVisible();
+                checkNewMembersUnderLimit();
             } else if (requestCode == NavigationConstants.MANUAL_MEMBER_EDIT) {
                 Member revisedMember = data.getParcelableExtra(GroupConstants.MEMBER_OBJECT);
                 int position = data.getIntExtra(Constant.INDEX_FIELD, -1);
                 newMemberListFragment.updateMember(position, revisedMember);
+                checkNewMembersUnderLimit();
             }
         }
     }
@@ -314,6 +356,14 @@ public class AddMembersActivity extends AppCompatActivity implements
             existingMemberContainer.setVisibility(View.VISIBLE);
             separator.setVisibility(View.VISIBLE);
             newMemberListStarted = true;
+        }
+    }
+
+    private void checkNewMembersUnderLimit() {
+        if (membersLeftBeforeLimit != null && newMemberListFragment != null) {
+            if (newMemberListFragment.getSelectedMembers().size() > membersLeftBeforeLimit) {
+                showFewMembersLeftSnackbar(getString(R.string.am_members_over_limit));
+            }
         }
     }
 

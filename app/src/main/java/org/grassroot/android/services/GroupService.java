@@ -551,7 +551,33 @@ public class GroupService {
 
   /* METHODS FOR ADDING AND REMOVING MEMBERS */
 
-  public Observable addMembersToGroup(final String groupUid, final List<Member> members, final boolean priorSaved) {
+  public Observable<Integer> numberMembersLeft(final String groupUid) {
+    return Observable.create(new Observable.OnSubscribe<Integer>() {
+      @Override
+      public void call(Subscriber<? super Integer> subscriber) {
+        if (NetworkUtils.isOnline()) {
+          try {
+            final String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
+            final String code = RealmUtils.loadPreferencesFromDB().getToken();
+            Response<RestResponse<Integer>> response = GrassrootRestService.getInstance().getApi()
+                    .getNumberMembersLeft(phoneNumber, code, groupUid).execute();
+            if (response.isSuccessful()) {
+              subscriber.onNext(response.body().getData());
+            } else {
+              subscriber.onNext(null);
+            }
+          } catch (IOException e) {
+            subscriber.onNext(null);
+          }
+        } else {
+          subscriber.onNext(null);
+        }
+        subscriber.onCompleted();
+      }
+    });
+  }
+
+  public Observable<String> addMembersToGroup(final String groupUid, final List<Member> members, final boolean priorSaved) {
     return Observable.create(new Observable.OnSubscribe<String>() {
       @Override
       public void call(Subscriber<? super String> subscriber) {

@@ -21,6 +21,7 @@ import org.grassroot.android.fragments.dialogs.EditTextDialogFragment;
 import org.grassroot.android.interfaces.TaskConstants;
 import org.grassroot.android.models.ImageRecord;
 import org.grassroot.android.utils.Constant;
+import org.grassroot.android.utils.ErrorUtils;
 import org.grassroot.android.utils.RealmUtils;
 import org.grassroot.android.utils.image.NetworkImageUtils;
 
@@ -34,6 +35,7 @@ import butterknife.OnClick;
 import butterknife.Unbinder;
 import rx.Subscriber;
 import rx.android.schedulers.AndroidSchedulers;
+import rx.functions.Action1;
 import rx.schedulers.Schedulers;
 
 /**
@@ -56,12 +58,18 @@ public class PhotoViewFragment extends Fragment {
 
     private ProgressDialog progressDialog;
 
-    public static PhotoViewFragment newInstance(final String taskType, ImageRecord imageRecord) {
+    private Action1<ImageRecord> deletionSubscriber;
+    private boolean openOnFaceCountDialog;
+
+    public static PhotoViewFragment newInstance(final String taskType, ImageRecord imageRecord,
+                                                Action1<ImageRecord> deletionSubscriber, boolean openOnFaceCount) {
         PhotoViewFragment fragment = new PhotoViewFragment();
         Bundle args = new Bundle();
         args.putString(TaskConstants.TASK_TYPE_FIELD, taskType);
         args.putParcelable("RECORD", imageRecord);
+        args.putBoolean("OPEN_ON_FACES", openOnFaceCount);
         fragment.setArguments(args);
+        fragment.deletionSubscriber = deletionSubscriber;
         return fragment;
     }
 
@@ -87,9 +95,14 @@ public class PhotoViewFragment extends Fragment {
 
         imageRecord = getArguments().getParcelable("RECORD");
         taskType = getArguments().getString(TaskConstants.TASK_TYPE_FIELD);
+        openOnFaceCountDialog = getArguments().getBoolean("OPEN_ON_FACES", false);
 
         setCaptionAndButtons();
         loadTaskPhoto();
+
+        if (openOnFaceCountDialog) {
+            changePhotoCount();
+        }
 
         return v;
     }
@@ -134,7 +147,7 @@ public class PhotoViewFragment extends Fragment {
     @OnClick(R.id.photo_delete)
     public void deletePhoto() {
         new AlertDialog.Builder(getContext())
-                .setMessage(R.string.vt_photo_delete)
+                .setMessage(R.string.photo_delete_confirm)
                 .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialogInterface, int i) {
@@ -161,29 +174,66 @@ public class PhotoViewFragment extends Fragment {
 
                     @Override
                     public void onError(Throwable e) {
-                        Toast.makeText(getContext(), "Succeeded", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(getContext(), ErrorUtils.isAccessDeniedError(e) ?
+                                        R.string.photo_delete_failed_access : R.string.photo_delete_failed_other,
+                                Toast.LENGTH_SHORT).show();
                     }
 
                     @Override
                     public void onNext(String s) {
-                        Toast.makeText(getContext(), "Failed", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(getContext(), R.string.photo_delete_succeeded, Toast.LENGTH_SHORT).show();
+                        if (deletionSubscriber != null) {
+                            deletionSubscriber.call(imageRecord);
+                        }
                     }
                 });
     }
 
     @OnClick(R.id.photo_edit_count)
     public void changePhotoCount() {
+        editFaceCountDialog(R.string.photo_edit_faces_confirm);
+    }
+
+    private void editFaceCountDialog(int titleRes) {
         EditTextDialogFragment dialogFragment = EditTextDialogFragment.newInstance(
-                R.string.photo_edit_faces_confirm,
-                "" + imageRecord.getNumberFaces(),
+                titleRes,
+                "" + (imageRecord.getNumberFaces() == null ? "" : imageRecord.getNumberFaces()),
                 new EditTextDialogFragment.EditTextDialogListener() {
                     @Override
                     public void confirmClicked(String textEntered) {
-
+                        editPictureDo(textEntered);
                     }
                 }
         );
         dialogFragment.show(getFragmentManager(), "MODIFY_FACES");
+    }
+
+    private void editPictureDo(String textEntered) {
+        try {
+            NetworkImageUtils.updateImageFaceCount(imageRecord.getKey(), taskType, Integer.parseInt(textEntered))
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe(new Action1<ImageRecord>() {
+                        @Override
+                        public void call(ImageRecord alteredRecord) {
+                            Toast.makeText(getContext(), R.string.photo_count_update_succeeded, Toast.LENGTH_SHORT).show();
+                            RealmUtils.saveDataToRealm(alteredRecord);
+                            PhotoViewFragment.this.imageRecord = alteredRecord;
+                            setCaptionAndButtons();
+                        }
+                    }, new Action1<Throwable>() {
+                        @Override
+                        public void call(Throwable throwable) {
+                            Log.e(TAG, "inside error, which is: " + throwable);
+                            int toastText = ErrorUtils.isAccessDeniedError(throwable) ?
+                                    R.string.photo_count_update_failed_access : R.string.photo_count_update_failed_other;
+                            Toast.makeText(getContext(), toastText, Toast.LENGTH_SHORT).show();
+                        }
+                    });
+        } catch (NumberFormatException e) {
+            // show dialog again
+
+        }
     }
 
 }

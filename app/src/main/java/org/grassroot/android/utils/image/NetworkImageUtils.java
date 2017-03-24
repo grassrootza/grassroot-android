@@ -1,5 +1,7 @@
 package org.grassroot.android.utils.image;
 
+import android.util.Log;
+
 import org.grassroot.android.models.ImageRecord;
 import org.grassroot.android.models.TaskModel;
 import org.grassroot.android.models.exceptions.ApiCallException;
@@ -93,7 +95,7 @@ public class NetworkImageUtils {
                     throw new ApiCallException(NetworkUtils.CONNECT_ERROR);
                 }
             }
-        }).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread());
+        });
     }
 
     public static Observable<String> removeTaskImage(final String taskType, final ImageRecord imageRecord) {
@@ -106,6 +108,31 @@ public class NetworkImageUtils {
                     Response<RestResponse<String>> response = GrassrootRestService.getInstance().getApi()
                             .deleteImageRecord(phoneNumber, code, taskType, imageRecord.getKey(), false).execute();
                     if (response.isSuccessful()) {
+                        subscriber.onNext(response.body().getData());
+                        subscriber.onCompleted();
+                    } else {
+                        throw new ApiCallException(NetworkUtils.SERVER_ERROR,
+                                ErrorUtils.getRestMessage(response.errorBody()));
+                    }
+                } catch (IOException e) {
+                    throw new ApiCallException(NetworkUtils.CONNECT_ERROR);
+                }
+            }
+        });
+    }
+
+    public static Observable<ImageRecord> updateImageFaceCount(final String logUid, final String taskType,
+                                                               final int revisedFaceCount) {
+        return Observable.create(new Observable.OnSubscribe<ImageRecord>() {
+            @Override
+            public void call(Subscriber<? super ImageRecord> subscriber) {
+                final String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
+                final String code = RealmUtils.loadPreferencesFromDB().getToken();
+                try {
+                    Response<RestResponse<ImageRecord>> response = GrassrootRestService.getInstance().getApi()
+                            .updateFaceCount(phoneNumber, code, taskType, logUid, revisedFaceCount).execute();
+                    if (response.isSuccessful()) {
+                        Log.e(TAG, "response succeeded, exiting with onNext");
                         subscriber.onNext(response.body().getData());
                         subscriber.onCompleted();
                     } else {

@@ -97,8 +97,6 @@ public class GrassrootRestService {
     logging.setLevel(BuildConfig.BUILD_TYPE.equals("debug") ?
         HttpLoggingInterceptor.Level.HEADERS : HttpLoggingInterceptor.Level.BASIC);
 
-    // logging.setLevel(HttpLoggingInterceptor.Level.BODY);
-
     OkHttpClient client = new OkHttpClient.Builder()
         .addInterceptor(logging)
         .addNetworkInterceptor(new HeaderInterceptor())
@@ -181,6 +179,10 @@ public class GrassrootRestService {
     @GET("user/location/{phoneNumber}/{code}/{latitude}/{longitude}")
     Call<GenericResponse> logLocation(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
         @Path("latitude") double latitude, @Path("longitude") double longitude);
+
+    //refresh token if about to expire
+    @GET("user/auth/extend/{phoneNumber}/{code}")
+    Call<GenericResponse> extendToken(@Path("phoneNumber") String phoneNumber, @Path("code") String code);
 
     @POST("gcm/register/{phoneNumber}/{code}")
     Call<GenericResponse> pushRegistration(@Path("phoneNumber") String phoneNumber,
@@ -322,6 +324,10 @@ public class GrassrootRestService {
     Call<GenericResponse> remindJoinRequest(@Path("phoneNumber") String phoneNumber,
                                             @Path("code") String code,
                                             @Query("groupUid") String groupUid);
+
+    @GET("group/members/left/{phoneNumber}/{code}/{groupUid}")
+    Call<RestResponse<Integer>> getNumberMembersLeft(@Path("phoneNumber") String phoneNumber,
+                                                     @Path("code") String code, @Path("groupUid") String groupUid);
 
     // add members to a group
     @Headers("Content-Type: application/json")
