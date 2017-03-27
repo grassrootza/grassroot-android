@@ -18,7 +18,7 @@ import butterknife.ButterKnife;
 import butterknife.OnClick;
 import butterknife.OnEditorAction;
 import butterknife.Unbinder;
-import rx.functions.Action1;
+import io.reactivex.functions.Consumer;
 
 /**
  * Created by luke on 2017/01/13.
@@ -31,7 +31,7 @@ public class SingleInputFragment extends Fragment {
     private static final String HINT = "hint";
     private static final String NEXT = "next";
 
-    private Action1<String> subscriber;
+    private Consumer<String> subscriber;
     private Unbinder unbinder;
 
     @BindView(R.id.header) TextView header;
@@ -46,7 +46,7 @@ public class SingleInputFragment extends Fragment {
         private int inputHint;
         private int nextText;
 
-        private Action1<String> subscriber;
+        private Consumer<String> subscriber;
 
         public SingleInputBuilder header(int headerResource) {
             this.headerResource = headerResource;
@@ -68,7 +68,7 @@ public class SingleInputFragment extends Fragment {
             return this;
         }
 
-        public SingleInputBuilder subscriber(Action1<String> subscriber) {
+        public SingleInputBuilder subscriber(Consumer<String> subscriber) {
             this.subscriber = subscriber;
             return this;
         }
@@ -121,7 +121,11 @@ public class SingleInputFragment extends Fragment {
 
     @SuppressWarnings("unchecked")
     private void passToSubscriber() {
-        subscriber.call(input.getText().toString().trim());
+        try {
+            subscriber.accept(input.getText().toString().trim());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     protected void displayError(String errorText) {

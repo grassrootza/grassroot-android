@@ -22,14 +22,15 @@ import org.grassroot.android.fragments.OtpScreenFragment;
 import org.grassroot.android.fragments.RegisterNameFragment;
 import org.grassroot.android.fragments.RegisterPhoneFragment;
 import org.grassroot.android.models.exceptions.ApiCallException;
+import org.grassroot.android.services.MqttConnectionManager;
 import org.grassroot.android.services.NotificationService;
 import org.grassroot.android.utils.ErrorUtils;
 import org.grassroot.android.utils.LoginRegUtils;
-import org.grassroot.android.services.MqttConnectionManager;
 import org.grassroot.android.utils.NetworkUtils;
 import org.grassroot.android.utils.Utilities;
 
-import rx.Subscriber;
+import io.reactivex.annotations.NonNull;
+import io.reactivex.functions.Consumer;
 
 /**
  * Created by luke on 2016/06/15.
@@ -91,23 +92,20 @@ public class LoginRegisterActivity extends AppCompatActivity implements LoginScr
         // the fragment does a check for local number before passing, so this should be acceptable
         // however server will also do a check (as with register)
         this.msisdn = Utilities.formatNumberToE164(mobileNumber);
-        LoginRegUtils.reqLogin(msisdn).subscribe(new Subscriber<String>() {
+        LoginRegUtils.reqLogin(msisdn).subscribe(new Consumer<String>() {
             @Override
-            public void onNext(String s) {
+            public void accept(@NonNull String s) throws Exception {
                 progressDialog.dismiss();
                 final String otpToPass = (LoginRegUtils.OTP_ALREADY_SENT.equals(s) ||
-                    LoginRegUtils.OTP_PROD_SENT.equals(s)) ? "" : s;
+                        LoginRegUtils.OTP_PROD_SENT.equals(s)) ? "" : s;
                 switchToOtpFragment(otpToPass, LOGIN);
             }
-
+        }, new Consumer<Throwable>() {
             @Override
-            public void onError(Throwable e) {
+            public void accept(@NonNull Throwable throwable) throws Exception {
                 progressDialog.dismiss();
-                handleError(msisdn, LOGIN, false, e);
+                handleError(msisdn, LOGIN, false, throwable);
             }
-
-            @Override
-            public void onCompleted() { }
         });
     }
 
@@ -127,91 +125,80 @@ public class LoginRegisterActivity extends AppCompatActivity implements LoginScr
         progressDialog.show();
         this.enteredNumber = mobileNumber;
         this.msisdn = Utilities.formatNumberToE164(mobileNumber);
-        LoginRegUtils.reqRegister(msisdn, displayName).subscribe(new Subscriber<String>() {
+        LoginRegUtils.reqRegister(msisdn, displayName).subscribe(new Consumer<String>() {
             @Override
-            public void onNext(String s) {
+            public void accept(@NonNull String s) throws Exception {
                 progressDialog.dismiss();
                 final String otpToPass = (LoginRegUtils.OTP_ALREADY_SENT.equals(s) ||
-                    LoginRegUtils.OTP_PROD_SENT.equals(s)) ? "" : s;
+                        LoginRegUtils.OTP_PROD_SENT.equals(s)) ? "" : s;
                 switchToOtpFragment(otpToPass, REGISTER);
             }
-
+        }, new Consumer<Throwable>() {
             @Override
-            public void onError(Throwable e) {
+            public void accept(@NonNull Throwable throwable) throws Exception {
                 progressDialog.dismiss();
-                handleError(mobileNumber, REGISTER, false, e);
+                handleError(mobileNumber, REGISTER, false, throwable);
             }
-
-            @Override
-            public void onCompleted() { }
         });
+
     }
 
     @Override
     public void requestResendOtp(final String purpose) {
         progressDialog.show();
-        LoginRegUtils.resendRegistrationOtp(msisdn).subscribe(new Subscriber<String>() {
+        LoginRegUtils.resendRegistrationOtp(msisdn).subscribe(new Consumer<String>() {
             @Override
-            public void onNext(String s) {
+            public void accept(@NonNull String s) throws Exception {
                 progressDialog.dismiss();
                 final String otpToPass = (LoginRegUtils.OTP_ALREADY_SENT.equals(s) ||
-                    LoginRegUtils.OTP_PROD_SENT.equals(s)) ? "" : s;
+                        LoginRegUtils.OTP_PROD_SENT.equals(s)) ? "" : s;
                 switchToOtpFragment(otpToPass, purpose);
             }
-
+        }, new Consumer<Throwable>() {
             @Override
-            public void onError(Throwable e) {
+            public void accept(@NonNull Throwable throwable) throws Exception {
                 progressDialog.dismiss();
-                handleError(msisdn, purpose, false, e);
+                handleError(msisdn, purpose, false, throwable);
             }
-
-            @Override
-            public void onCompleted() { }
         });
     }
 
     private void authenticateLogin(String otpEntered) {
         progressDialog.show();
-        LoginRegUtils.authenticateLogin(msisdn, otpEntered).subscribe(new Subscriber<String>() {
+        LoginRegUtils.authenticateLogin(msisdn, otpEntered).subscribe(new Consumer<String>() {
             @Override
-            public void onNext(String s) {
+            public void accept(@NonNull String s) throws Exception {
                 progressDialog.dismiss();
                 launchHomeScreen(LoginRegUtils.AUTH_HAS_GROUPS.equals(s));
                 setResult(RESULT_OK);
                 finish();
             }
-
+        }, new Consumer<Throwable>() {
             @Override
-            public void onError(Throwable e) {
-                e.printStackTrace();
+            public void accept(@NonNull Throwable throwable) throws Exception {
+                throwable.printStackTrace();
                 progressDialog.dismiss();
-                handleError(msisdn, LOGIN, true, e);
+                handleError(msisdn, LOGIN, true, throwable);
             }
-
-            @Override
-            public void onCompleted() { }
         });
     }
 
     private void verifyRegistration(final String otpEntered) {
         progressDialog.show();
-        LoginRegUtils.authenticateRegister(msisdn, otpEntered).subscribe(new Subscriber<String>() {
+        LoginRegUtils.authenticateRegister(msisdn, otpEntered).subscribe(new Consumer<String>() {
             @Override
-            public void onNext(String s) {
+            public void accept(@NonNull String s) throws Exception {
                 progressDialog.dismiss();
                 launchHomeScreen(false); // by definition, registering means no group
                 setResult(RESULT_OK);
                 finish();
             }
-
+        }, new Consumer<Throwable>() {
             @Override
-            public void onError(Throwable e) {
+            public void accept(@NonNull Throwable throwable) throws Exception {
                 progressDialog.dismiss();
-                handleError(msisdn, REGISTER, true, e);
+                handleError(msisdn, REGISTER, true, throwable);
             }
-
-            @Override
-            public void onCompleted() { }
         });
     }
 

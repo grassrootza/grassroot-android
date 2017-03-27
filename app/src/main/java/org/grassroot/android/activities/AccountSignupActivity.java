@@ -41,10 +41,10 @@ import org.grassroot.android.utils.RealmUtils;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import io.reactivex.functions.Consumer;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
-import rx.functions.Action1;
 
 /**
  * Created by luke on 2017/01/13.
@@ -144,9 +144,9 @@ public class AccountSignupActivity extends PortraitActivity implements Navigatio
                 .explanation(R.string.account_name_expl)
                 .hint(R.string.account_name_hint)
                 .next(R.string.bt_next)
-                .subscriber(new Action1<String>() {
+                .subscriber(new Consumer<String>() {
                     @Override
-                    public void call(String s) {
+                    public void accept(String s) {
                         validateNameAndNext(s);
                     }
                 })
@@ -166,9 +166,9 @@ public class AccountSignupActivity extends PortraitActivity implements Navigatio
                 .explanation(R.string.billing_email_expl)
                 .next(R.string.bt_next)
                 .hint(R.string.billing_email_hint)
-                .subscriber(new Action1<String>() {
+                .subscriber(new Consumer<String>() {
                     @Override
-                    public void call(String s) {
+                    public void accept(String s) {
                         validateEmailAndNext(s);
                     }
                 })
@@ -183,9 +183,9 @@ public class AccountSignupActivity extends PortraitActivity implements Navigatio
     private void validateEmailAndNext(String email) {
         billingEmail = email;
 
-        AccountTypeFragment fragment = AccountTypeFragment.newInstance(AccountTypeFragment.STD, new Action1<String>() {
+        AccountTypeFragment fragment = AccountTypeFragment.newInstance(AccountTypeFragment.STD, new Consumer<String>() {
             @Override
-            public void call(String s) {
+            public void accept(String s) {
                 initiatePayment(s);
             }
         });

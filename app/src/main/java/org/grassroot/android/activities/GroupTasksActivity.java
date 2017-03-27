@@ -38,16 +38,16 @@ import org.grassroot.android.utils.ErrorUtils;
 import org.grassroot.android.utils.IntentUtils;
 import org.grassroot.android.utils.NetworkUtils;
 import org.grassroot.android.utils.RealmUtils;
+import org.grassroot.android.utils.rxutils.SingleObserverFromConsumer;
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
-import rx.Subscriber;
-import rx.android.schedulers.AndroidSchedulers;
-import rx.functions.Action1;
-import rx.observers.Subscribers;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.annotations.NonNull;
+import io.reactivex.functions.Consumer;
 
 public class GroupTasksActivity extends PortraitActivity implements NewTaskMenuFragment.NewTaskMenuListener, JoinCodeFragment.JoinCodeListener,
     TaskListFragment.TaskListListener {
@@ -257,9 +257,9 @@ public class GroupTasksActivity extends PortraitActivity implements NewTaskMenuF
         final String message = isEmptyDesc ? getString(R.string.gset_no_description) :
             getString(R.string.gset_has_desc_body, groupMembership.getDescription());
         MultiLineTextDialog.showMultiLineDialog(getSupportFragmentManager(), -1, message,
-            R.string.gset_desc_dialog_hint, R.string.gset_desc_dialog_done).subscribe(new Action1<String>() {
+            R.string.gset_desc_dialog_hint, R.string.gset_desc_dialog_done).subscribe(new Consumer<String>() {
             @Override
-            public void call(String s) {
+            public void accept(String s) {
                 progressBar.setVisibility(View.VISIBLE);
                 serviceCallChangeDesc(s);
             }
@@ -268,9 +268,9 @@ public class GroupTasksActivity extends PortraitActivity implements NewTaskMenuF
 
     private void serviceCallChangeDesc(final String newDescription) {
         GroupService.getInstance().changeGroupDescription(groupMembership.getGroupUid(), newDescription,
-            AndroidSchedulers.mainThread()).subscribe(new Action1<String>() {
+            AndroidSchedulers.mainThread()).subscribe(new Consumer<String>() {
             @Override
-            public void call(String s) {
+            public void accept(@NonNull String s) {
                 progressBar.setVisibility(View.GONE);
                 if (s.equals(NetworkUtils.SAVED_SERVER)) {
                     Toast.makeText(GroupTasksActivity.this, R.string.gset_desc_change_done, Toast.LENGTH_SHORT).show();
@@ -279,9 +279,9 @@ public class GroupTasksActivity extends PortraitActivity implements NewTaskMenuF
                 }
                 groupMembership.setDescription(newDescription);
             }
-        }, new Action1<Throwable>() {
+        }, new Consumer<Throwable>() {
             @Override
-            public void call(Throwable throwable) {
+            public void accept(@NonNull Throwable throwable) {
                 progressBar.setVisibility(View.GONE);
                 Snackbar.make(rootLayout, ErrorUtils.serverErrorText(throwable), Snackbar.LENGTH_SHORT).show();
             }
@@ -302,9 +302,9 @@ public class GroupTasksActivity extends PortraitActivity implements NewTaskMenuF
     private void unsubscribeAndExit() {
         progressBar.setVisibility(View.VISIBLE);
         GroupService.getInstance().unsubscribeFromGroup(groupMembership.getGroupUid(), AndroidSchedulers.mainThread())
-            .subscribe(new Subscriber<String>() {
+            .subscribe(new Consumer<String>() {
                 @Override
-                public void onNext(String s) {
+                public void accept(@NonNull String s) {
                     progressBar.setVisibility(View.GONE);
                     if (!RealmUtils.loadPreferencesFromDB().isHasGroups()) {
                         startActivity(new Intent(GroupTasksActivity.this, NoGroupWelcomeActivity.class));
@@ -312,21 +312,21 @@ public class GroupTasksActivity extends PortraitActivity implements NewTaskMenuF
                         startActivity(new Intent(GroupTasksActivity.this, HomeScreenActivity.class));
                     }
                     Toast.makeText(ApplicationLoader.applicationContext, R.string.gta_unsub_done, Toast.LENGTH_SHORT)
-                        .show();
+                            .show();
                     finish();
                 }
-
+            }, new Consumer<Throwable>() {
                 @Override
-                public void onError(Throwable e) {
+                public void accept(@NonNull Throwable e) {
                     progressBar.setVisibility(View.GONE);
                     if (NetworkUtils.SERVER_ERROR.equals(e.getMessage())) {
                         Snackbar.make(rootLayout, ErrorUtils.serverErrorText(e), Snackbar.LENGTH_SHORT).show();
                     } else {
                         final int dialogMsg = NetworkUtils.OFFLINE_SELECTED.equals(e.getMessage()) ?
                             R.string.connect_error_unsub_offline : R.string.connect_error_group_unsubscribe;
-                        NetworkErrorDialogFragment.newInstance(dialogMsg, progressBar, Subscribers.create(new Action1<String>() {
+                        NetworkErrorDialogFragment.newInstance(dialogMsg, progressBar, new SingleObserverFromConsumer<String>(new Consumer<String>() {
                                 @Override
-                                public void call(String s) {
+                                public void accept(String s) {
                                     progressBar.setVisibility(View.GONE);
                                     if (s.equals(NetworkUtils.CONNECT_ERROR)) {
                                         Snackbar.make(rootLayout, R.string.connect_error_failed_retry, Snackbar.LENGTH_SHORT).show();
@@ -338,8 +338,6 @@ public class GroupTasksActivity extends PortraitActivity implements NewTaskMenuF
                     }
                 }
 
-                @Override
-                public void onCompleted() { }
             });
     }
 

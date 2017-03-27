@@ -29,6 +29,7 @@ import org.grassroot.android.services.GroupSearchService;
 import org.grassroot.android.services.GroupService;
 import org.grassroot.android.utils.ErrorUtils;
 import org.grassroot.android.utils.NetworkUtils;
+import org.grassroot.android.utils.rxutils.SingleObserverFromConsumer;
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
@@ -36,10 +37,10 @@ import org.greenrobot.eventbus.ThreadMode;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.Unbinder;
-import rx.Subscriber;
-import rx.android.schedulers.AndroidSchedulers;
-import rx.functions.Action1;
-import rx.observers.Subscribers;
+import io.reactivex.SingleObserver;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.annotations.NonNull;
+import io.reactivex.functions.Consumer;
 
 /**
  * Created by luke on 2016/07/14.
@@ -164,38 +165,38 @@ public class JoinRequestListFragment extends Fragment implements JoinRequestAdap
     protected void refreshJoinRequests() {
         swipeRefreshLayout.setRefreshing(true);
         GroupService.getInstance().fetchGroupJoinRequests(AndroidSchedulers.mainThread())
-            .subscribe(new Action1<String>() {
+            .subscribe(new Consumer<String>() {
 				@Override
-				public void call(String s) {
-              switch (s) {
-                case NetworkUtils.FETCHED_SERVER:
-                  adapter.refreshList();
-									EventBus.getDefault().post(new JoinRequestEvent(TAG));
-                  break;
-                case NetworkUtils.OFFLINE_SELECTED:
-									NetworkErrorDialogFragment.newInstance(R.string.connect_error_jreqs_offline, progressBar,
-											goOnlineSubscriber());
-                  break;
-                case NetworkUtils.CONNECT_ERROR:
-                  ErrorUtils.networkErrorSnackbar(swipeRefreshLayout, R.string.connect_error_jreqs_list, new View.OnClickListener() {
-										@Override
-										public void onClick(View v) {
-											refreshJoinRequests();
-										}
-									});
-                  break;
-                case NetworkUtils.SERVER_ERROR:
-									Snackbar.make(swipeRefreshLayout, R.string.server_error_general, Snackbar.LENGTH_SHORT).show();
-              }
-              hideProgess();
+				public void accept(@NonNull String s) {
+                  switch (s) {
+                    case NetworkUtils.FETCHED_SERVER:
+                      adapter.refreshList();
+                                        EventBus.getDefault().post(new JoinRequestEvent(TAG));
+                      break;
+                    case NetworkUtils.OFFLINE_SELECTED:
+                                        NetworkErrorDialogFragment.newInstance(R.string.connect_error_jreqs_offline, progressBar,
+                                                goOnlineSubscriber());
+                      break;
+                    case NetworkUtils.CONNECT_ERROR:
+                      ErrorUtils.networkErrorSnackbar(swipeRefreshLayout, R.string.connect_error_jreqs_list, new View.OnClickListener() {
+                                            @Override
+                                            public void onClick(View v) {
+                                                refreshJoinRequests();
+                                            }
+                                        });
+                      break;
+                    case NetworkUtils.SERVER_ERROR:
+                                        Snackbar.make(swipeRefreshLayout, R.string.server_error_general, Snackbar.LENGTH_SHORT).show();
+                  }
+                  hideProgess();
 				}
 			});
     }
 
-	private Subscriber<String> goOnlineSubscriber() {
-		return Subscribers.create(new Action1<String>() {
+	private SingleObserver<String> goOnlineSubscriber() {
+		return new SingleObserverFromConsumer<>(new Consumer<String>() {
 			@Override
-			public void call(String s) {
+			public void accept(@NonNull String s) throws Exception {
 				progressBar.setVisibility(View.GONE);
 				if (s.equals(NetworkUtils.SERVER_ERROR)) {
 					Snackbar.make(swipeRefreshLayout, R.string.connect_error_failed_retry, Snackbar.LENGTH_SHORT).show();
@@ -209,20 +210,20 @@ public class JoinRequestListFragment extends Fragment implements JoinRequestAdap
     private void respondToJoinRequest(final String approvedOrDenied, final String requestUid, final int position) {
         showProgress();
         GroupService.getInstance().respondToJoinRequest(approvedOrDenied, requestUid, AndroidSchedulers.mainThread())
-            .subscribe(new Subscriber<String>() {
+            .subscribe(new Consumer<String>() {
                 @Override
-                public void onNext(String s) {
+                public void accept(@NonNull String s) {
                     adapter.clearRequest(position);
                     hideProgess();
                     int snackMsg = approvedOrDenied.equals(GroupConstants.APPROVE_JOIN_REQUEST) ?
-                        R.string.jreq_approved : R.string.jreq_denied;
+                            R.string.jreq_approved : R.string.jreq_denied;
                     Toast.makeText(ApplicationLoader.applicationContext, snackMsg, Toast.LENGTH_SHORT).show();
                     selectMessageOrList();
-										EventBus.getDefault().post(new JoinRequestEvent(TAG));
+                    EventBus.getDefault().post(new JoinRequestEvent(TAG));
                 }
-
+            }, new Consumer<Throwable>() {
                 @Override
-                public void onError(Throwable e) {
+                public void accept(@NonNull Throwable e) {
                     hideProgess();
                     if (NetworkUtils.CONNECT_ERROR.equals(e.getMessage())) {
                         Snackbar.make(swipeRefreshLayout, R.string.jreq_response_connect_error, Snackbar.LENGTH_SHORT).show();
@@ -230,24 +231,21 @@ public class JoinRequestListFragment extends Fragment implements JoinRequestAdap
                         Snackbar.make(swipeRefreshLayout, ErrorUtils.serverErrorText(e), Snackbar.LENGTH_SHORT).show();
                     }
                 }
-
-                @Override
-                public void onCompleted() {}
             });
     }
 
     private void remindAboutJoinRequest(final String groupUid) {
         progressBar.setVisibility(View.VISIBLE);
         GroupSearchService.getInstance().remindJoinRequest(groupUid, AndroidSchedulers.mainThread())
-            .subscribe(new Subscriber<String>() {
+            .subscribe(new Consumer<String>() {
                 @Override
-                public void onNext(String s) {
+                public void accept(@NonNull String s) {
                     progressBar.setVisibility(View.GONE);
                     Toast.makeText(ApplicationLoader.applicationContext, R.string.gs_req_remind, Toast.LENGTH_SHORT).show();
                 }
-
+            }, new Consumer<Throwable>() {
                 @Override
-                public void onError(Throwable e) {
+                public void accept(@NonNull Throwable e) {
                     progressBar.setVisibility(View.GONE);
                     if (NetworkUtils.CONNECT_ERROR.equals(e.getMessage())) {
                         final String errorMsg = getString(R.string.gs_req_remind_cancelled_connect_error);
@@ -257,42 +255,35 @@ public class JoinRequestListFragment extends Fragment implements JoinRequestAdap
                             Snackbar.LENGTH_LONG).show();
                     }
                 }
-
-                @Override
-                public void onCompleted() { }
             });
     }
 
     private void cancelJoinRequest(final String groupUid, final int position) {
         progressBar.setVisibility(View.VISIBLE);
         GroupSearchService.getInstance().cancelJoinRequest(groupUid, AndroidSchedulers.mainThread())
-            .subscribe(new Subscriber<String>() {
-                @Override
-                public void onNext(String s) {
-                  progressBar.setVisibility(View.GONE);
-                  Toast.makeText(ApplicationLoader.applicationContext, R.string.gs_req_cancelled,
-                      Toast.LENGTH_SHORT).show();
-                  adapter.clearRequest(position);
-                  selectMessageOrList();
-									EventBus.getDefault().post(new JoinRequestEvent(TAG));
-                }
-
-                @Override
-                public void onError(Throwable e) {
-                    progressBar.setVisibility(View.GONE);
-                    if (NetworkUtils.CONNECT_ERROR.equals(e.getMessage())) {
-                        final String errorMsg = getString(R.string.gs_req_remind_cancelled_connect_error);
-                        Snackbar.make(swipeRefreshLayout, errorMsg, Snackbar.LENGTH_SHORT).show();
-                    } else {
-                        Snackbar.make(swipeRefreshLayout, ErrorUtils.serverErrorText(e),
-                            Snackbar.LENGTH_LONG).show();
+                .subscribe(new Consumer<String>() {
+                    @Override
+                    public void accept(String s) {
+                        progressBar.setVisibility(View.GONE);
+                        Toast.makeText(ApplicationLoader.applicationContext, R.string.gs_req_cancelled,
+                                Toast.LENGTH_SHORT).show();
+                        adapter.clearRequest(position);
+                        selectMessageOrList();
+                        EventBus.getDefault().post(new JoinRequestEvent(TAG));
                     }
-                }
-
-                @Override
-                public void onCompleted() { }
-            });
-
+                }, new Consumer<Throwable>() {
+                    @Override
+                    public void accept(@NonNull Throwable e) {
+                        progressBar.setVisibility(View.GONE);
+                        if (NetworkUtils.CONNECT_ERROR.equals(e.getMessage())) {
+                            final String errorMsg = getString(R.string.gs_req_remind_cancelled_connect_error);
+                            Snackbar.make(swipeRefreshLayout, errorMsg, Snackbar.LENGTH_SHORT).show();
+                        } else {
+                            Snackbar.make(swipeRefreshLayout, ErrorUtils.serverErrorText(e),
+                                    Snackbar.LENGTH_LONG).show();
+                        }
+                    }
+                });
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)

@@ -27,7 +27,8 @@ import java.util.Set;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
-import rx.Subscriber;
+import io.reactivex.annotations.NonNull;
+import io.reactivex.functions.Consumer;
 
 /**
  * Created by luke on 2016/05/18.
@@ -137,45 +138,43 @@ public class RemoveMembersActivity extends PortraitActivity implements MemberLis
 
     private void saveRemoval() {
         progressDialog.show();
-        GroupService.getInstance().removeGroupMembers(groupUid, membersToRemove).subscribe(new Subscriber<String>() {
-            @Override
-            public void onCompleted() { }
-
-            @Override
-            public void onError(Throwable e) {
-                Intent i;
-                switch (e.getMessage()) {
-                    case NetworkUtils.SERVER_ERROR:
-                        ApiCallException error = (ApiCallException) e;
-                        final String body = ApiCallException.PERMISSION_ERROR.equals(error.errorTag) ?
-                            getString(R.string.rm_server_permission) : getString(R.string.rm_server_other);
-                        i = IntentUtils.offlineMessageIntent(RemoveMembersActivity.this, R.string.rm_server_error_header,
-                            body, false, false);
-                        break;
-                    case NetworkUtils.CONNECT_ERROR:
-                        i = IntentUtils.offlineMessageIntent(RemoveMembersActivity.this, R.string.rm_offline_header,
-                            getString(R.string.rm_offline_body_error), false, true);
-                        break;
-                    default:
-                        Log.e(TAG, "received strange error : " + e.toString());
-                        i = IntentUtils.offlineMessageIntent(RemoveMembersActivity.this, R.string.rm_server_error_header,
-                            getString(R.string.rm_server_other), false, true);
-                }
-                progressDialog.dismiss();
-                startActivity(i);
-                finish();
-            }
-
-            @Override
-            public void onNext(String s) {
-                Intent i = new Intent();
-                i.putExtra(GroupConstants.UID_FIELD, groupUid);
-                i.putExtra(Constant.INDEX_FIELD, groupPosition);
-                setResult(RESULT_OK, i);
-                progressDialog.dismiss();
-                finish();
-            }
-        });
+        GroupService.getInstance().removeGroupMembers(groupUid, membersToRemove).subscribe(
+                new Consumer<String>() {
+                    @Override
+                    public void accept(@NonNull String s) throws Exception {
+                        Intent i = new Intent();
+                        i.putExtra(GroupConstants.UID_FIELD, groupUid);
+                        i.putExtra(Constant.INDEX_FIELD, groupPosition);
+                        setResult(RESULT_OK, i);
+                        progressDialog.dismiss();
+                        finish();
+                    }
+                }, new Consumer<Throwable>() {
+                    @Override
+                    public void accept(@NonNull Throwable e) throws Exception {
+                        Intent i;
+                        switch (e.getMessage()) {
+                            case NetworkUtils.SERVER_ERROR:
+                                ApiCallException error = (ApiCallException) e;
+                                final String body = ApiCallException.PERMISSION_ERROR.equals(error.errorTag) ?
+                                        getString(R.string.rm_server_permission) : getString(R.string.rm_server_other);
+                                i = IntentUtils.offlineMessageIntent(RemoveMembersActivity.this, R.string.rm_server_error_header,
+                                        body, false, false);
+                                break;
+                            case NetworkUtils.CONNECT_ERROR:
+                                i = IntentUtils.offlineMessageIntent(RemoveMembersActivity.this, R.string.rm_offline_header,
+                                        getString(R.string.rm_offline_body_error), false, true);
+                                break;
+                            default:
+                                Log.e(TAG, "received strange error : " + e.toString());
+                                i = IntentUtils.offlineMessageIntent(RemoveMembersActivity.this, R.string.rm_server_error_header,
+                                        getString(R.string.rm_server_other), false, true);
+                        }
+                        progressDialog.dismiss();
+                        startActivity(i);
+                        finish();
+                    }
+                });
     }
 
     @Override

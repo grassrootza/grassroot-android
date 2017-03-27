@@ -75,10 +75,12 @@ import butterknife.ButterKnife;
 import butterknife.OnClick;
 import butterknife.Unbinder;
 import hani.momanii.supernova_emoji_library.Helper.EmojiconMultiAutoCompleteTextView;
+import io.reactivex.Observer;
+import io.reactivex.SingleObserver;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.disposables.Disposable;
+import io.reactivex.functions.Consumer;
 import io.realm.RealmList;
-import rx.Subscriber;
-import rx.android.schedulers.AndroidSchedulers;
-import rx.functions.Action1;
 
 import static org.eclipse.paho.android.service.MqttServiceConstants.CALLBACK_TO_ACTIVITY;
 import static org.grassroot.android.utils.NetworkUtils.CONNECT_ERROR;
@@ -144,16 +146,16 @@ public class GroupChatFragment extends Fragment implements GroupChatAdapter.Grou
 
     private void loadGroupSettings() {
         GroupService.getInstance().fetchGroupChatSetting(groupUid, AndroidSchedulers.mainThread(), null)
-            .subscribe(new Action1<GroupChatSettingResponse>() {
+            .subscribe(new Consumer<GroupChatSettingResponse>() {
                 @Override
-                public void call(GroupChatSettingResponse groupChatSettingResponse) {
+                public void accept(GroupChatSettingResponse groupChatSettingResponse) {
                     isMutedSending = groupChatSettingResponse.isCanSend();
                     isMutedReceiving = groupChatSettingResponse.isCanReceive();
                     mutedUsersUid = groupChatSettingResponse.getMutedUsersUids();
                 }
-            }, new Action1<Throwable>() {
+            }, new Consumer<Throwable>() {
                 @Override
-                public void call(Throwable throwable) {
+                public void accept(Throwable throwable) {
                     Log.e(TAG, "Error fetching group settings!");
                 }
             });
@@ -259,9 +261,9 @@ public class GroupChatFragment extends Fragment implements GroupChatAdapter.Grou
     }
 
     public void loadMessagesAndInitAdapter() {
-        RealmUtils.loadMessagesFromDb(groupUid).subscribe(new Action1<List<Message>>() {
+        RealmUtils.loadMessagesFromDb(groupUid).subscribe(new Consumer<List<Message>>() {
             @Override
-            public void call(List<Message> msgs) {
+            public void accept(List<Message> msgs) {
                 if (groupChatAdapter == null) {
                     setUpListAndAdapter(msgs);
                 } else {
@@ -386,9 +388,15 @@ public class GroupChatFragment extends Fragment implements GroupChatAdapter.Grou
         new NetworkErrorDialogFragment.NetworkDialogBuilder(R.string.chat_connect_error)
             .progressBar(null) // since we use the 'sending' tag on the subtitle, progress bar is overkill
             .syncOnConnect(false)
-            .action(new Action1<String>() {
+            .action(new SingleObserver<String>() {
                 @Override
-                public void call(String s) {
+                public void onSubscribe(Disposable d) {}
+
+                @Override
+                public void onError(Throwable e) { }
+
+                @Override
+                public void onSuccess(String s) {
                     if (s.equals(CONNECT_ERROR)) {
                         Snackbar.make(rootView, R.string.connect_error_failed_retry, Snackbar.LENGTH_SHORT).show();
                     } else if (s.equals(ONLINE_DEFAULT)) {
@@ -464,21 +472,23 @@ public class GroupChatFragment extends Fragment implements GroupChatAdapter.Grou
             }
 
             try {
-                MqttConnectionManager.getInstance().sendMessageInBackground(message).subscribe(new Action1<String>() {
-                    @Override
-                    public void call(String s) {
-                        Log.e(TAG, "message sent succesfully via MQTT");
-                        groupChatAdapter.updateMessage(RealmUtils.loadMessage(message.getUid()));
-                    }
-                }, new Action1<Throwable>() {
-                    @Override
-                    public void call(Throwable throwable) {
-                        message.setSending(false);
-                        groupChatAdapter.updateMessage(message);
-                        if (getUserVisibleHint()) {
-                            handleMessageSendingError(throwable, msgText, message.getUid());
-                        }
-                    }
+                MqttConnectionManager.getInstance()
+                        .sendMessageInBackground(message)
+                        .subscribe(new Consumer<String>() {
+                            @Override
+                            public void accept(String s) {
+                                Log.e(TAG, "message sent succesfully via MQTT");
+                                groupChatAdapter.updateMessage(RealmUtils.loadMessage(message.getUid()));
+                            }
+                        }, new Consumer<Throwable>() {
+                            @Override
+                            public void accept(Throwable throwable) {
+                                message.setSending(false);
+                                groupChatAdapter.updateMessage(message);
+                                if (getUserVisibleHint()) {
+                                    handleMessageSendingError(throwable, msgText, message.getUid());
+                                }
+                            }
                 });
             } catch (Exception e) {
                 Log.e(TAG, "Paho NPE strikes again");
@@ -559,9 +569,12 @@ public class GroupChatFragment extends Fragment implements GroupChatAdapter.Grou
         String title = message.getTokens().get(0).getString();
         String location = TaskConstants.MEETING.equals(message.getTaskType()) ? message.getTokens().get(2).getString() : null;
         TaskModel taskModel = generateTaskObject(message.getGroupUid(), title, message.getDeadlineISO(), location, message.getTaskType());
-        TaskService.getInstance().sendTaskToServer(taskModel, AndroidSchedulers.mainThread()).subscribe(new Subscriber<TaskModel>() {
+        TaskService.getInstance().sendTaskToServer(taskModel, AndroidSchedulers.mainThread()).subscribe(new Observer<TaskModel>() {
             @Override
-            public void onCompleted() {}
+            public void onSubscribe(Disposable d) {}
+
+            @Override
+            public void onComplete() {}
 
             @Override
             public void onError(Throwable e) {
@@ -598,9 +611,9 @@ public class GroupChatFragment extends Fragment implements GroupChatAdapter.Grou
     private void mute(@Nullable final String userUid, String groupUid, boolean userInitiated, final boolean active) {
         Log.d(TAG, "Grassroot: calling mute user of user");
         GroupService.getInstance().updateMemberChatSetting(groupUid, userUid, userInitiated, active,
-            AndroidSchedulers.mainThread()).subscribe(new Action1<String>() {
+            AndroidSchedulers.mainThread()).subscribe(new Consumer<String>() {
             @Override
-            public void call(String s) {
+            public void accept(String s) {
                 if (TextUtils.isEmpty(userUid)) {
                     updateEntryView(active);
                     getActivity().supportInvalidateOptionsMenu();
@@ -612,13 +625,10 @@ public class GroupChatFragment extends Fragment implements GroupChatAdapter.Grou
                     }
                 }
             }
-        }, new Action1<Throwable>() {
+        }, new Consumer<Throwable>() {
             @Override
-            public void call(Throwable throwable) {
-
-
-            }}
-            );
+            public void accept(Throwable throwable) { }}
+        );
     }
 
     private void updateEntryView(boolean active) {
@@ -725,9 +735,9 @@ public class GroupChatFragment extends Fragment implements GroupChatAdapter.Grou
     }
 
     private void deleteAllMessages(final String groupUid) {
-        RealmUtils.deleteAllGroupMessagesFromDb(groupUid).subscribe(new Action1<String>() {
+        RealmUtils.deleteAllGroupMessagesFromDb(groupUid).subscribe(new Consumer<String>() {
             @Override
-            public void call(String s) {
+            public void accept(String s) {
                 groupChatAdapter.deleteAll();
             }
         });
@@ -735,9 +745,9 @@ public class GroupChatFragment extends Fragment implements GroupChatAdapter.Grou
     }
 
     private void deleteMessage(final String messageId) {
-        RealmUtils.deleteMessageFromDb(messageId).subscribe(new Action1<String>() {
+        RealmUtils.deleteMessageFromDb(messageId).subscribe(new Consumer<String>() {
             @Override
-            public void call(String s) {
+            public void accept(String s) {
                 groupChatAdapter.deleteOne(messageId);
             }
         });

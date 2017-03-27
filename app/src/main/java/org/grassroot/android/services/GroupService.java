@@ -1,7 +1,6 @@
 package org.grassroot.android.services;
 
 import android.os.Looper;
-import android.support.annotation.NonNull;
 import android.text.TextUtils;
 import android.util.Log;
 
@@ -46,18 +45,24 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.Callable;
 
+import io.reactivex.Observable;
+import io.reactivex.ObservableEmitter;
+import io.reactivex.ObservableOnSubscribe;
+import io.reactivex.Scheduler;
+import io.reactivex.Single;
+import io.reactivex.SingleEmitter;
+import io.reactivex.SingleOnSubscribe;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.annotations.NonNull;
+import io.reactivex.functions.Consumer;
+import io.reactivex.schedulers.Schedulers;
 import io.realm.Realm;
 import io.realm.RealmList;
 import okhttp3.MultipartBody;
 import retrofit2.Call;
 import retrofit2.Response;
-import rx.Observable;
-import rx.Scheduler;
-import rx.Subscriber;
-import rx.android.schedulers.AndroidSchedulers;
-import rx.functions.Action1;
-import rx.schedulers.Schedulers;
 
 /**
  * Created by luke on 2016/07/01.
@@ -88,9 +93,9 @@ public class GroupService {
 
   public Observable<String> fetchGroupList(Scheduler observingThread) {
     observingThread = (observingThread == null) ? AndroidSchedulers.mainThread() : observingThread;
-    return Observable.create(new Observable.OnSubscribe<String>() {
+    return Observable.create(new ObservableOnSubscribe<String>() {
       @Override
-      public void call(Subscriber<? super String> subscriber) {
+      public void subscribe(ObservableEmitter<String> subscriber) {
         final String mobileNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
         final String userCode = RealmUtils.loadPreferencesFromDB().getToken();
         if (!NetworkUtils.isOfflineOrLoggedOut(subscriber, mobileNumber, userCode)) {
@@ -111,16 +116,13 @@ public class GroupService {
               subscriber.onNext(NetworkUtils.SERVER_ERROR); // use these so calling class can decide whether to handle errors or just subscribe
             }
             EventBus.getDefault().post(new GroupsRefreshedEvent());
-            subscriber.onCompleted();
           } catch (IOException e) {
             isFetchingGroups = false;
             NetworkUtils.setConnectionFailed();
             subscriber.onNext(NetworkUtils.CONNECT_ERROR);
-            subscriber.onCompleted();
           }
         } else {
           subscriber.onNext(NetworkUtils.OFFLINE_SELECTED);
-          subscriber.onCompleted();
         }
 
       }
@@ -128,9 +130,9 @@ public class GroupService {
   }
 
   public Observable<String> unsubscribeFromGroup(final String groupUid, @NonNull Scheduler observingThread) {
-    return Observable.create(new Observable.OnSubscribe<String>() {
+    return Observable.create(new ObservableOnSubscribe<String>() {
       @Override
-      public void call(Subscriber<? super String> subscriber) {
+      public void subscribe(ObservableEmitter<String> subscriber) {
         if (!NetworkUtils.isOnline()) {
           throw new ApiCallException(NetworkUtils.CONNECT_ERROR);
         } else {
@@ -142,8 +144,7 @@ public class GroupService {
             if (response.isSuccessful()) {
               cleanGroupFromDB(groupUid);
               subscriber.onNext(NetworkUtils.SAVED_SERVER);
-              fetchGroupList(Schedulers.immediate()).subscribe(); // to sync up removed UIDs and sync time
-              subscriber.onCompleted();
+              fetchGroupList(Schedulers.trampoline()).subscribe(); // to sync up removed UIDs and sync time
             } else {
               throw new ApiCallException(NetworkUtils.SERVER_ERROR,
                   ErrorUtils.getRestMessage(response.errorBody()));
@@ -157,9 +158,9 @@ public class GroupService {
   }
 
   public Observable<String> updateMemberChatSetting(final String groupUid, final String userUid, final boolean userInitiated, final boolean active, @NonNull Scheduler observingThread){
-     return Observable.create(new Observable.OnSubscribe<String>() {
+     return Observable.create(new ObservableOnSubscribe<String>() {
        @Override
-       public void call(Subscriber<? super String> subscriber) {
+       public void subscribe(ObservableEmitter<String> subscriber) {
          if (!NetworkUtils.isOnline()) {
            throw new ApiCallException(NetworkUtils.CONNECT_ERROR);
          } else {
@@ -170,7 +171,6 @@ public class GroupService {
                      .updateUserGroupChatSettings(phoneNumber, code,groupUid,userUid,active,userInitiated).execute();
              if(response.isSuccessful()){
                subscriber.onNext(NetworkUtils.SAVED_SERVER);
-               subscriber.onCompleted();
              }else{
                throw  new ApiCallException(NetworkUtils.SERVER_ERROR, ErrorUtils.getRestMessage(response.errorBody()));
              }
@@ -184,9 +184,9 @@ public class GroupService {
      }
 
   public Observable<GroupChatSettingResponse> fetchGroupChatSetting(final String groupUid, Scheduler observingThread, final String userUid){
-    return Observable.create(new Observable.OnSubscribe<GroupChatSettingResponse>(){
+    return Observable.create(new ObservableOnSubscribe<GroupChatSettingResponse>(){
       @Override
-      public void call(Subscriber<? super GroupChatSettingResponse> subscriber) {
+      public void subscribe(ObservableEmitter<GroupChatSettingResponse> subscriber) {
         if(!NetworkUtils.isOnline()){
           throw  new ApiCallException(NetworkUtils.CONNECT_ERROR);
         }else{
@@ -196,7 +196,6 @@ public class GroupService {
             Response<GroupChatSettingResponse> response = GrassrootRestService.getInstance().getApi().fetchGroupMessengerSettings(phoneNumber,code,groupUid, userUid).execute();
             if(response.isSuccessful()){
               subscriber.onNext(response.body());
-              subscriber.onCompleted();
             }else {
               throw new ApiCallException(NetworkUtils.SERVER_ERROR);
             }
@@ -211,9 +210,9 @@ public class GroupService {
   }
 
   public Observable<String> requestPing(final String groupUid, Scheduler observingThread){
-    return Observable.create(new Observable.OnSubscribe<String>(){
+    return Observable.create(new ObservableOnSubscribe<String>(){
       @Override
-      public void call(Subscriber<? super String> subscriber) {
+      public void subscribe(ObservableEmitter<String> subscriber) {
         if(!NetworkUtils.isOnline()){
           subscriber.onNext(NetworkUtils.CONNECT_ERROR);
         }else{
@@ -228,8 +227,6 @@ public class GroupService {
             }
           } catch (IOException e) {
             subscriber.onNext(NetworkUtils.CONNECT_ERROR);
-          } finally {
-            subscriber.onCompleted();
           }
         }
       }
@@ -237,9 +234,9 @@ public class GroupService {
   }
 
   public Observable<String>  markMessagesAsRead(final String groupUid, Scheduler observingThread){
-    return Observable.create(new Observable.OnSubscribe<String>(){
+    return Observable.create(new ObservableOnSubscribe<String>(){
       @Override
-      public void call(Subscriber<? super String> subscriber) {
+      public void subscribe(ObservableEmitter<String> subscriber) {
         if(!NetworkUtils.isOnline()){
           subscriber.onNext(NetworkUtils.CONNECT_ERROR);
         }else{
@@ -257,8 +254,6 @@ public class GroupService {
               }
             } catch (IOException e) {
               subscriber.onNext(NetworkUtils.CONNECT_ERROR);
-            } finally {
-              subscriber.onCompleted();
             }
           }
       }
@@ -307,7 +302,7 @@ public class GroupService {
       }
     }
 
-    RealmUtils.saveDataToRealm(composedMembers, Schedulers.immediate()).subscribe();
+    RealmUtils.saveDataToRealm(composedMembers, Schedulers.trampoline()).subscribe();
   }
 
   private void cleanGroupFromDB(final String groupUid) {
@@ -338,9 +333,9 @@ public class GroupService {
   }
 
   public Observable<String> refreshGroupMembers(final String groupUid) {
-    return Observable.create(new Observable.OnSubscribe<String>() {
+    return Observable.create(new ObservableOnSubscribe<String>() {
       @Override
-      public void call(Subscriber<? super String> subscriber) {
+      public void subscribe(ObservableEmitter<String> subscriber) {
         final String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
         final String code = RealmUtils.loadPreferencesFromDB().getToken();
         try {
@@ -369,7 +364,6 @@ public class GroupService {
             }
 
             subscriber.onNext(NetworkUtils.FETCHED_SERVER);
-            subscriber.onCompleted();
           } else{
             throw new ApiCallException(NetworkUtils.SERVER_ERROR, ErrorUtils.getRestMessage(response.errorBody()));
           }
@@ -447,12 +441,11 @@ public class GroupService {
 
   public Observable<String> sendNewGroupToServer(final String localGroupUid, Scheduler observingThread) {
     observingThread = (observingThread == null) ? AndroidSchedulers.mainThread() : observingThread;
-    return Observable.create(new Observable.OnSubscribe<String>() {
+    return Observable.create(new ObservableOnSubscribe<String>() {
       @Override
-      public void call(Subscriber<? super String> subscriber) {
+      public void subscribe(ObservableEmitter<String> subscriber) {
         if (!NetworkUtils.isOnline()) {
           subscriber.onNext(NetworkUtils.SAVED_OFFLINE_MODE);
-          subscriber.onCompleted();
         } else {
           final String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
           final String code = RealmUtils.loadPreferencesFromDB().getToken();
@@ -480,7 +473,6 @@ public class GroupService {
                 final String returnMessage = "ER-" + serverUid;
                 subscriber.onNext(returnMessage);
               }
-              subscriber.onCompleted();
             } else {
               ServerErrorModel errorModel = ErrorUtils.convertErrorBody(response.errorBody());
               if (errorModel == null) {
@@ -532,19 +524,19 @@ public class GroupService {
     RealmList<TaskModel> models = RealmUtils.loadListFromDBInline(TaskModel.class, findTasks);
     for (int i = 0; i < models.size(); i++) {
       (models.get(i)).setParentUid(groupFromServer.getGroupUid());
-      TaskService.getInstance().sendTaskToServer(models.get(i), Schedulers.immediate()).subscribe(new Subscriber<TaskModel>() {
-        @Override
-        public void onCompleted() { }
+      TaskService.getInstance().sendTaskToServer(models.get(i), Schedulers.trampoline())
+              .subscribe(new Consumer<TaskModel>() {
+                @Override
+                public void accept(@io.reactivex.annotations.NonNull TaskModel taskModel) throws Exception {
 
-        @Override
-        public void onError(Throwable e) {
-          Log.e(TAG, "task didn't send ... error in server or connection : ");
-          e.printStackTrace();
-        }
-
-        @Override
-        public void onNext(TaskModel taskModel) { }
-      });
+                }
+              }, new Consumer<Throwable>() {
+                @Override
+                public void accept(@io.reactivex.annotations.NonNull Throwable throwable) throws Exception {
+                  Log.e(TAG, "task didn't send ... error in server or connection : ");
+                  throwable.printStackTrace();
+                }
+              });
     }
     RealmUtils.removeObjectFromDatabase(Group.class, "groupUid", localGroupUid);
   }
@@ -552,9 +544,9 @@ public class GroupService {
   /* METHODS FOR ADDING AND REMOVING MEMBERS */
 
   public Observable<Integer> numberMembersLeft(final String groupUid) {
-    return Observable.create(new Observable.OnSubscribe<Integer>() {
+    return Observable.create(new ObservableOnSubscribe<Integer>() {
       @Override
-      public void call(Subscriber<? super Integer> subscriber) {
+      public void subscribe(ObservableEmitter<Integer> subscriber) {
         if (NetworkUtils.isOnline()) {
           try {
             final String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
@@ -572,21 +564,19 @@ public class GroupService {
         } else {
           subscriber.onNext(null);
         }
-        subscriber.onCompleted();
       }
     });
   }
 
   public Observable<String> addMembersToGroup(final String groupUid, final List<Member> members, final boolean priorSaved) {
-    return Observable.create(new Observable.OnSubscribe<String>() {
+    return Observable.create(new ObservableOnSubscribe<String>() {
       @Override
-      public void call(Subscriber<? super String> subscriber) {
+      public void subscribe(ObservableEmitter<String> subscriber) {
         if (!NetworkUtils.isOnline()) {
           if (!priorSaved) {
             saveAddedMembersLocal(groupUid, members);
           }
           subscriber.onNext(NetworkUtils.SAVED_OFFLINE_MODE);
-          subscriber.onCompleted();
         } else {
           try {
             final String msisdn = RealmUtils.loadPreferencesFromDB().getMobileNumber();
@@ -621,7 +611,6 @@ public class GroupService {
               }
               EventBus.getDefault().post(new GroupEditedEvent(GroupEditedEvent.MEMBERS_ADDED,
                   NetworkUtils.SAVED_SERVER, groupUid, null));
-              subscriber.onCompleted();
             } else {
               ServerErrorModel errorModel = ErrorUtils.convertErrorBody(serverCall.errorBody());
               if (errorModel == null) {
@@ -658,9 +647,9 @@ public class GroupService {
   }
 
   public void saveAddedMembersLocal(final String groupUid, List<Member> members) {
-    RealmUtils.saveDataToRealm(members, null).subscribe(new Action1<Boolean>() {
+    RealmUtils.saveDataToRealm(members, null).subscribe(new Consumer<Boolean>() {
       @Override
-      public void call(Boolean aBoolean) {
+      public void accept(Boolean aBoolean) {
         Group group = RealmUtils.loadGroupFromDB(groupUid);
         group.setEditedLocal(true);
         group.setGroupMemberCount((int) RealmUtils.countGroupMembers(groupUid));
@@ -701,9 +690,9 @@ public class GroupService {
 
   public Observable<String> cleanInvalidNumbersOnExit(final String groupUid, Scheduler observingThread) {
     observingThread = (observingThread == null) ? AndroidSchedulers.mainThread() : observingThread;
-    return Observable.create(new Observable.OnSubscribe<String>() {
+    return Observable.create(new ObservableOnSubscribe<String>() {
       @Override
-      public void call(Subscriber<? super String> subscriber) {
+      public void subscribe(ObservableEmitter<String> subscriber) {
         Map<String, Object> removalMap = new HashMap<>();
         removalMap.put("groupUid", groupUid);
         removalMap.put("isNumberInvalid", true);
@@ -719,21 +708,19 @@ public class GroupService {
 
         // and we're done
         subscriber.onNext("DONE");
-        subscriber.onCompleted();
       }
     }).subscribeOn(Schedulers.io()).observeOn(observingThread);
   }
 
   public Observable<String> removeGroupMembers(final String groupUid, final Set<String> membersToRemoveUIDs) {
-    return Observable.create(new Observable.OnSubscribe<String>() {
+    return Observable.create(new ObservableOnSubscribe<String>() {
       @Override
-      public void call(Subscriber<? super String> subscriber) {
+      public void subscribe(ObservableEmitter<String> subscriber) {
         if (!NetworkUtils.isOnline()) {
           removeMembersInDB(membersToRemoveUIDs, groupUid, true);
           subscriber.onNext(NetworkUtils.SAVED_OFFLINE_MODE);
           EventBus.getDefault().post(new GroupEditedEvent(GroupEditedEvent.MEMBERS_REMOVED,
               NetworkUtils.SAVED_OFFLINE_MODE, groupUid, null));
-          subscriber.onCompleted();
         } else {
           try {
             final String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
@@ -745,7 +732,6 @@ public class GroupService {
               subscriber.onNext(NetworkUtils.SAVED_SERVER);
               EventBus.getDefault().post(new GroupEditedEvent(GroupEditedEvent.MEMBERS_REMOVED,
                   NetworkUtils.SAVED_SERVER, groupUid, null));
-              subscriber.onCompleted();
             } else {
               // note : this may be because of permission denied, so don't remove locally
               throw new ApiCallException(NetworkUtils.SERVER_ERROR, ErrorUtils.getRestMessage(response.errorBody()));
@@ -799,12 +785,10 @@ public class GroupService {
   }
 
   public Observable<String> sendLocalEditsToServer(final LocalGroupEdits existingEdits, Scheduler observingThread) {
-    Observable<String> observable = Observable.create(new Observable.OnSubscribe<String>() {
+    return Observable.create(new ObservableOnSubscribe<String>() {
       @Override
-      public void call(Subscriber<? super String> subscriber) {
-        if (existingEdits == null || !NetworkUtils.isOnline()) {
-          subscriber.onCompleted();
-        } else {
+      public void subscribe(ObservableEmitter<String> subscriber) {
+        if (existingEdits != null && !NetworkUtils.isOnline()) {
           try {
             Response<GroupResponse> response = generateGroupEditSyncCall(existingEdits).execute();
             if (response.isSuccessful()) {
@@ -815,7 +799,6 @@ public class GroupService {
               subscriber.onNext(NetworkUtils.SAVED_SERVER);
               EventBus.getDefault().post(new GroupEditedEvent(GroupEditedEvent.MULTIPLE_TO_SERVER,
                   NetworkUtils.SAVED_SERVER, groupUid, ""));
-              subscriber.onCompleted();
             } else {
               throw new ApiCallException(NetworkUtils.SERVER_ERROR, ErrorUtils.getRestMessage(response.errorBody()));
             }
@@ -826,7 +809,6 @@ public class GroupService {
         }
       }
     }).subscribeOn(Schedulers.io()).observeOn(observingThread);
-    return observable;
   }
 
   private Call<GroupResponse> generateGroupEditSyncCall(LocalGroupEdits edits) {
@@ -854,9 +836,9 @@ public class GroupService {
 	 */
   public Observable<String> changeGroupDefaultImage(final Group group, final String defaultImage, final int defaultImageRes, Scheduler observingThread) {
     observingThread = (observingThread == null) ? AndroidSchedulers.mainThread() : observingThread;
-    return Observable.create(new Observable.OnSubscribe<String>() {
+    return Observable.create(new ObservableOnSubscribe<String>() {
       @Override
-      public void call(Subscriber<? super String> subscriber) {
+      public void subscribe(ObservableEmitter<String> subscriber) {
         // may be able to remove both of thse ...
         group.setDefaultImage(defaultImage);
         group.setDefaultImageRes(defaultImageRes);
@@ -867,7 +849,6 @@ public class GroupService {
           storeImageChangeLocally(groupUid, defaultImage);
           EventBus.getDefault().post(new GroupPictureChangedEvent(groupUid));
           subscriber.onNext(NetworkUtils.SAVED_OFFLINE_MODE);
-          subscriber.onCompleted();
         } else {
           try {
             final String mobile = RealmUtils.loadPreferencesFromDB().getMobileNumber();
@@ -880,7 +861,6 @@ public class GroupService {
               removeLocalEditsIfFound(groupUid);
               EventBus.getDefault().post(new GroupPictureChangedEvent(groupUid));
               subscriber.onNext(NetworkUtils.SAVED_SERVER);
-              subscriber.onCompleted();
             } else {
               throw new ApiCallException(NetworkUtils.SERVER_ERROR,
                   ErrorUtils.getRestMessage(response.errorBody()));
@@ -903,12 +883,12 @@ public class GroupService {
     RealmUtils.saveDataToRealm(editStore).subscribe();
   }
 
-  public Observable<String> uploadCustomImage(final String groupUid, final String compressedFilePath,
-                                              final String mimeType, Scheduler observingThread) {
+  public Single<String> uploadCustomImage(final String groupUid, final String compressedFilePath,
+                                          final String mimeType, Scheduler observingThread) {
     observingThread = (observingThread == null) ? AndroidSchedulers.mainThread() : observingThread;
-    return Observable.create(new Observable.OnSubscribe<String>() {
+    return Single.fromCallable(new Callable<String>() {
       @Override
-      public void call(Subscriber<? super String> subscriber) {
+      public String call() throws Exception {
         if (!NetworkUtils.isOnline()) {
           throw new ApiCallException(NetworkUtils.OFFLINE_SELECTED); // require online for this (maybe change later ...)
         } else {
@@ -919,13 +899,12 @@ public class GroupService {
             final String code = RealmUtils.loadPreferencesFromDB().getToken();
 
             Response<GroupResponse> response = GrassrootRestService.getInstance().getApi()
-                .uploadGroupImage(phoneNumber, code, groupUid, image).execute();
+                    .uploadGroupImage(phoneNumber, code, groupUid, image).execute();
 
             if (response.isSuccessful()) {
               RealmUtils.saveGroupToRealm(response.body().getGroups().first());
               EventBus.getDefault().post(new GroupPictureChangedEvent(groupUid));
-              subscriber.onNext(NetworkUtils.SAVED_SERVER);
-              subscriber.onCompleted();
+              return NetworkUtils.SAVED_SERVER;
             } else {
               throw new ApiCallException(NetworkUtils.SERVER_ERROR, ErrorUtils.getRestMessage(response.errorBody()));
             }
@@ -942,9 +921,9 @@ public class GroupService {
   // NB : this means must only ever be atomicity in here, i.e., don't call this method in sequence with others (else local edits deleted, and then ...)
   public Observable<String> renameGroup(final String groupUid, final String newName, Scheduler observingThread) {
     observingThread = (observingThread == null) ? AndroidSchedulers.mainThread() : observingThread;
-    return Observable.create(new Observable.OnSubscribe<String>() {
+    return Observable.create(new ObservableOnSubscribe<String>() {
       @Override
-      public void call(Subscriber<? super String> subscriber) {
+      public void subscribe(ObservableEmitter<String> subscriber) {
         Group group = RealmUtils.loadGroupFromDB(groupUid);
         GroupEditedEvent event = new GroupEditedEvent(GroupEditedEvent.RENAMED, null, groupUid, newName); // type of save set later
         String typeOfSave;
@@ -975,7 +954,6 @@ public class GroupService {
         subscriber.onNext(typeOfSave);
         event.setTypeOfSave(typeOfSave);
         EventBus.getDefault().post(event);
-        subscriber.onCompleted();
 
       }
     }).subscribeOn(Schedulers.io()).observeOn(observingThread);
@@ -998,9 +976,9 @@ public class GroupService {
   public Observable<String> changeGroupDescription(final String groupUid, final String newDescription,
                                                    Scheduler observingThread) {
     observingThread = (observingThread == null) ? AndroidSchedulers.mainThread() : observingThread;
-    return Observable.create(new Observable.OnSubscribe<String>() {
+    return Observable.create(new ObservableOnSubscribe<String>() {
       @Override
-      public void call(Subscriber<? super String> subscriber) {
+      public void subscribe(ObservableEmitter<String> subscriber) {
         String saveType;
         if (!NetworkUtils.isOnline()) {
           saveGroupDescToDB(groupUid, newDescription, true);
@@ -1026,7 +1004,6 @@ public class GroupService {
         subscriber.onNext(saveType);
         EventBus.getDefault().post(new GroupEditedEvent(GroupEditedEvent.DESCRIPTION, saveType,
             groupUid, newDescription));
-        subscriber.onCompleted();
       }
     }).subscribeOn(Schedulers.io()).observeOn(observingThread);
   }
@@ -1048,9 +1025,9 @@ public class GroupService {
 
   public Observable<String> switchGroupPublicPrivate(final String groupUid, final boolean isPublic, Scheduler observingThread) {
     observingThread = (observingThread == null) ? AndroidSchedulers.mainThread() : observingThread;
-    return Observable.create(new Observable.OnSubscribe<String>() {
+    return Observable.create(new ObservableOnSubscribe<String>() {
       @Override
-      public void call(Subscriber<? super String> subscriber) {
+      public void subscribe(ObservableEmitter<String> subscriber) {
         String saveType;
         if (!NetworkUtils.isOnline()) {
           storeSwitchPublicStatus(groupUid, isPublic, true);
@@ -1075,7 +1052,6 @@ public class GroupService {
           }
         }
         subscriber.onNext(saveType);
-        subscriber.onCompleted();
       }
     }).subscribeOn(Schedulers.io()).observeOn(observingThread);
   }
@@ -1095,9 +1071,9 @@ public class GroupService {
 
   public Observable<String> closeJoinCode(final String groupUid, Scheduler observingThread) {
     observingThread = (observingThread == null) ? AndroidSchedulers.mainThread() : observingThread;
-    return Observable.create(new Observable.OnSubscribe<String>() {
+    return Observable.create(new ObservableOnSubscribe<String>() {
       @Override
-      public void call(Subscriber<? super String> subscriber) {
+      public void subscribe(ObservableEmitter<String> subscriber) {
         if (!NetworkUtils.isOnline()) {
 			// shouldn't be allowed to happen ... too sensitive a task to allow via risky queueing
           throw new ApiCallException(NetworkUtils.CONNECT_ERROR);
@@ -1110,7 +1086,6 @@ public class GroupService {
             if (response.isSuccessful()) {
               subscriber.onNext(NetworkUtils.SAVED_SERVER);
               storeJoinCodeClosed(groupUid);
-			  subscriber.onCompleted();
             } else {
               throw new ApiCallException(NetworkUtils.SERVER_ERROR, ErrorUtils.getRestMessage(response.errorBody()));
             }
@@ -1131,9 +1106,9 @@ public class GroupService {
 
   public Observable<String> openJoinCode(final String groupUid, Scheduler observingThread) {
     observingThread = (observingThread == null) ? AndroidSchedulers.mainThread() : observingThread;
-    return Observable.create(new Observable.OnSubscribe<String>() {
+    return Observable.create(new ObservableOnSubscribe<String>() {
       @Override
-      public void call(Subscriber<? super String> subscriber) {
+      public void subscribe(ObservableEmitter<String> subscriber) {
         if (!NetworkUtils.isOnline()) {
           throw new ApiCallException(NetworkUtils.CONNECT_ERROR);
         } else {
@@ -1150,7 +1125,6 @@ public class GroupService {
               EventBus.getDefault().post(new GroupEditedEvent(GroupEditedEvent.JOIN_CODE_OPENED,
                   NetworkUtils.SAVED_SERVER, groupUid, newJoinCode));
               subscriber.onNext(newJoinCode);
-              subscriber.onCompleted();
             } else {
               throw new ApiCallException(NetworkUtils.SERVER_ERROR);
             }
@@ -1165,9 +1139,9 @@ public class GroupService {
 
   public Observable<String> addOrganizer(final String groupUid, final String memberUid, Scheduler observingThread) {
     observingThread = (observingThread == null) ? AndroidSchedulers.mainThread() : observingThread;
-    return Observable.create(new Observable.OnSubscribe<String>() {
+    return Observable.create(new ObservableOnSubscribe<String>() {
       @Override
-      public void call(Subscriber<? super String> subscriber) {
+      public void subscribe(ObservableEmitter<String> subscriber) {
 		  String saveType;
 		  if (!NetworkUtils.isOnline()) {
 			  storeAddedOrganizer(groupUid, memberUid, true);
@@ -1191,7 +1165,6 @@ public class GroupService {
 		  }
 		  subscriber.onNext(saveType);
 			EventBus.getDefault().post(new GroupEditedEvent(GroupEditedEvent.ORGANIZER_ADDED, saveType, groupUid, memberUid));
-			subscriber.onCompleted();
       }
     }).subscribeOn(Schedulers.io()).observeOn(observingThread);
   }
@@ -1210,9 +1183,9 @@ public class GroupService {
    */
 
   public Observable<List<Permission>> fetchGroupPermissions(final String groupUid, final String roleName) {
-    return Observable.create(new Observable.OnSubscribe<List<Permission>>() {
+    return Observable.create(new ObservableOnSubscribe<List<Permission>>() {
       @Override
-      public void call(Subscriber<? super List<Permission>> subscriber) {
+      public void subscribe(ObservableEmitter<List<Permission>> subscriber) {
         if (!NetworkUtils.isOnline()) {
           throw new ApiCallException(NetworkUtils.CONNECT_ERROR);
         } else {
@@ -1235,9 +1208,9 @@ public class GroupService {
   }
 
   public Observable<String> updateGroupPermissions(final String groupUid, final String roleName, final List<Permission> permissions) {
-    return Observable.create(new Observable.OnSubscribe<String>() {
+    return Observable.create(new ObservableOnSubscribe<String>() {
       @Override
-      public void call(Subscriber<? super String> subscriber) {
+      public void subscribe(ObservableEmitter<String> subscriber) {
         if (!NetworkUtils.isOnline()) {
           throw new ApiCallException(NetworkUtils.CONNECT_ERROR);
         } else {
@@ -1248,7 +1221,6 @@ public class GroupService {
                 .updatePermissions(mobileNumber, code, groupUid, roleName, permissions).execute();
             if (response.isSuccessful()) {
               subscriber.onNext(NetworkUtils.SAVED_SERVER);
-              subscriber.onCompleted();
             } else {
               throw new ApiCallException(NetworkUtils.SERVER_ERROR, ErrorUtils.getRestMessage(response.errorBody()));
             }
@@ -1262,9 +1234,9 @@ public class GroupService {
 
 	public Observable<String> changeMemberRole(final String groupUid, final String memberUid,
 																						 final String newRole) {
-		return Observable.create(new Observable.OnSubscribe<String>() {
+		return Observable.create(new ObservableOnSubscribe<String>() {
 			@Override
-			public void call(Subscriber<? super String> subscriber) {
+			public void subscribe(ObservableEmitter<String> subscriber) {
 				String typeOfSave;
 				if (!NetworkUtils.isOnline()) {
 					// storing these locally would require a complex hashset, in Realm, etc., so for now disable
@@ -1289,7 +1261,6 @@ public class GroupService {
 				subscriber.onNext(typeOfSave);
 				EventBus.getDefault().post(new GroupEditedEvent(GroupEditedEvent.ROLE_CHANGED, typeOfSave,
 						groupUid, memberUid));
-				subscriber.onCompleted();
 			}
 		}).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread());
 	}
@@ -1308,9 +1279,9 @@ public class GroupService {
 
   public Observable<String> fetchGroupJoinRequests(Scheduler observingThread) {
     observingThread = (observingThread == null) ? AndroidSchedulers.mainThread() : observingThread;
-    return Observable.create(new Observable.OnSubscribe<String>() {
+    return Observable.create(new ObservableOnSubscribe<String>() {
       @Override
-      public void call(Subscriber<? super String> subscriber) {
+      public void subscribe(ObservableEmitter<String> subscriber) {
         final String mobileNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
         final String code = RealmUtils.loadPreferencesFromDB().getToken();
         if (!NetworkUtils.isOfflineOrLoggedOut(subscriber, mobileNumber, code)) {
@@ -1320,12 +1291,10 @@ public class GroupService {
             if (response.isSuccessful()) {
               RealmUtils.persistFullListJoinRequests(response.body());
               subscriber.onNext(NetworkUtils.FETCHED_SERVER);
-              subscriber.onCompleted();
             }
           } catch (IOException e) {
             // note : not throwing an error here, as this isn't critical / don't want to enforce onError handling
             subscriber.onNext(NetworkUtils.CONNECT_ERROR);
-            subscriber.onCompleted();
           }
         }
       }
@@ -1334,9 +1303,9 @@ public class GroupService {
 
   public Observable<String> respondToJoinRequest(@NonNull final String approvedOrDenied, @NonNull final String requestUid,
                                                  @NonNull Scheduler observingThread) {
-    return Observable.create(new Observable.OnSubscribe<String>() {
+    return Observable.create(new ObservableOnSubscribe<String>() {
       @Override
-      public void call(Subscriber<? super String> subscriber) {
+      public void subscribe(ObservableEmitter<String> subscriber) {
         if (!NetworkUtils.isOnline()) {
           throw new ApiCallException(NetworkUtils.CONNECT_ERROR);
         } else {
@@ -1348,7 +1317,6 @@ public class GroupService {
             if (response.isSuccessful()) {
               RealmUtils.removeObjectFromDatabase(GroupJoinRequest.class, "requestUid", requestUid);
               subscriber.onNext(NetworkUtils.SAVED_SERVER);
-              subscriber.onCompleted();
             } else {
               throw new ApiCallException(NetworkUtils.SERVER_ERROR, ErrorUtils.getRestMessage(response.errorBody()));
             }

@@ -45,11 +45,15 @@ import java.io.File;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
-import rx.Observable;
-import rx.Subscriber;
-import rx.android.schedulers.AndroidSchedulers;
-import rx.functions.Action1;
-import rx.schedulers.Schedulers;
+import io.reactivex.Observable;
+import io.reactivex.ObservableEmitter;
+import io.reactivex.ObservableOnSubscribe;
+import io.reactivex.Observer;
+import io.reactivex.SingleObserver;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.disposables.Disposable;
+import io.reactivex.functions.Consumer;
+import io.reactivex.schedulers.Schedulers;
 
 import static android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
 
@@ -279,15 +283,15 @@ public class GroupAvatarActivity extends PortraitActivity {
                 public void onClick(DialogInterface dialog, int which) {
                     progressBar.setVisibility(View.VISIBLE);
                     NetworkUtils.trySwitchToOnline(GroupAvatarActivity.this, false, AndroidSchedulers.mainThread())
-                        .subscribe(new Action1<String>() {
+                        .subscribe(new Consumer<String>() {
                             @Override
-                            public void call(String s) {
+                            public void accept(String s) {
                                 progressBar.setVisibility(View.GONE);
                                 selectImageForUpload();
                             }
-                        }, new Action1<Throwable>() {
+                        }, new Consumer<Throwable>() {
                             @Override
-                            public void call(Throwable throwable) {
+                            public void accept(Throwable throwable) {
                                 Log.e(TAG, "error!");
                                 NetworkUtils.setOfflineSelected(); // i.e., resetting
                                 Snackbar.make(rootView, R.string.gp_offline_connect_fail,
@@ -307,17 +311,17 @@ public class GroupAvatarActivity extends PortraitActivity {
             cleanUpCompressedFileIfExists();
             progressBar.setVisibility(View.VISIBLE);
             Uri selectedImage = data.getData();
-            compressBitmap(selectedImage).subscribe(new Action1<Bitmap>() {
+            compressBitmap(selectedImage).subscribe(new Consumer<Bitmap>() {
                 @Override
-                public void call(Bitmap bitmap) {
+                public void accept(Bitmap bitmap) {
                     ivAvatar.setImageBitmap(LocalImageUtils.getRoundedShape(bitmap));
                     progressBar.setVisibility(View.GONE);
                     customImageChanged = true;
                     setViewToCustomImage();
                 }
-            }, new Action1<Throwable>() {
+            }, new Consumer<Throwable>() {
                 @Override
-                public void call(Throwable throwable) {
+                public void accept(Throwable throwable) {
                     throwable.printStackTrace();
                     Snackbar.make(rootView, R.string.process_error_image, Snackbar.LENGTH_SHORT);
                 }
@@ -326,15 +330,15 @@ public class GroupAvatarActivity extends PortraitActivity {
     }
 
     private Observable<Bitmap> compressBitmap(final Uri selectedImage) {
-        return Observable.create(new Observable.OnSubscribe<Bitmap>() {
+        return Observable.create(new ObservableOnSubscribe<Bitmap>() {
             @Override
-            public void call(Subscriber<? super Bitmap> subscriber) {
+            public void subscribe(ObservableEmitter<Bitmap> subscriber) {
                 mimeType = LocalImageUtils.getMimeType(selectedImage);
                 final String localImagePath = LocalImageUtils.getLocalFileNameFromURI(selectedImage);
                 compressedFilePath = LocalImageUtils.getCompressedFileFromImage(localImagePath, true);
                 Bitmap bitmap = BitmapFactory.decodeFile(compressedFilePath);
                 subscriber.onNext(bitmap);
-                subscriber.onCompleted();
+                subscriber.onComplete();
             }
         }).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread());
     }
@@ -360,7 +364,9 @@ public class GroupAvatarActivity extends PortraitActivity {
         if (defaultImageChanged || group.hasCustomImage()) {
             progressBar.setVisibility(View.VISIBLE);
             GroupService.getInstance().changeGroupDefaultImage(group, defaultSelected, defaultSelectedRes, null).
-                subscribe(new Subscriber<String>() {
+                subscribe(new Observer<String>() {
+                    @Override public void onSubscribe(Disposable d) { }
+
                     @Override
                     public void onError(Throwable e) {
                         progressBar.setVisibility(View.GONE);
@@ -384,7 +390,7 @@ public class GroupAvatarActivity extends PortraitActivity {
                     }
 
                     @Override
-                    public void onCompleted() { }
+                    public void onComplete() { }
                 });
         }
     }
@@ -404,9 +410,8 @@ public class GroupAvatarActivity extends PortraitActivity {
     private void sendCustomImageToServer() {
         progressBar.setVisibility(View.VISIBLE);
         GroupService.getInstance().uploadCustomImage(group.getGroupUid(), compressedFilePath, mimeType, null)
-            .subscribe(new Subscriber<String>() {
-                @Override
-                public void onCompleted() {}
+            .subscribe(new SingleObserver<String>() {
+                @Override public void onSubscribe(Disposable d) {}
 
                 @Override
                 public void onError(Throwable e) {
@@ -422,7 +427,7 @@ public class GroupAvatarActivity extends PortraitActivity {
                 }
 
                 @Override
-                public void onNext(String s) {
+                public void onSuccess(String s) {
                     progressBar.setVisibility(View.GONE);
                     finish();
                 }
@@ -437,15 +442,15 @@ public class GroupAvatarActivity extends PortraitActivity {
                 public void onClick(DialogInterface dialog, int which) {
                     progressBar.setVisibility(View.VISIBLE);
                     NetworkUtils.trySwitchToOnline(GroupAvatarActivity.this, false, null)
-                        .subscribe(new Action1<String>() {
+                        .subscribe(new Consumer<String>() {
                         @Override
-                        public void call(String s) {
+                        public void accept(String s) {
                             Log.e(TAG, "we are online ... send image to server");
                             sendCustomImageToServer();
                         }
-                    }, new Action1<Throwable>() {
+                    }, new Consumer<Throwable>() {
                         @Override
-                        public void call(Throwable throwable) {
+                        public void accept(Throwable throwable) {
                             handleConnectionErrorOnUpload();
                         }
                     });

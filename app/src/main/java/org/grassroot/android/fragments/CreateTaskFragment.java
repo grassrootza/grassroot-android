@@ -40,9 +40,9 @@ import org.grassroot.android.interfaces.NavigationConstants;
 import org.grassroot.android.interfaces.TaskConstants;
 import org.grassroot.android.models.Group;
 import org.grassroot.android.models.Member;
-import org.grassroot.android.models.helpers.RealmString;
 import org.grassroot.android.models.TaskModel;
 import org.grassroot.android.models.exceptions.ApiCallException;
+import org.grassroot.android.models.helpers.RealmString;
 import org.grassroot.android.services.ApplicationLoader;
 import org.grassroot.android.services.TaskService;
 import org.grassroot.android.utils.Constant;
@@ -68,9 +68,9 @@ import butterknife.OnCheckedChanged;
 import butterknife.OnClick;
 import butterknife.OnTextChanged;
 import butterknife.Unbinder;
+import io.reactivex.annotations.NonNull;
+import io.reactivex.functions.Consumer;
 import io.realm.RealmList;
-import rx.Subscriber;
-import rx.functions.Action1;
 
 /**
  * Created by luke on 2016/06/01.
@@ -213,9 +213,9 @@ public class CreateTaskFragment extends Fragment {
     public void selectAssignedMembers() {
         final ArrayList<Member> preSelectedMembers = new ArrayList<>();
         if (assignedMembers == null) {
-            RealmUtils.loadGroupMembers(groupUid, true).subscribe(new Action1<List<Member>>() {
+            RealmUtils.loadGroupMembers(groupUid, true).subscribe(new Consumer<List<Member>>() {
                 @Override
-                public void call(List<Member> members) {
+                public void accept(List<Member> members) {
                     preSelectedMembers.addAll(members);
                     startPickMemberActivity(preSelectedMembers);
                 }
@@ -282,23 +282,21 @@ public class CreateTaskFragment extends Fragment {
     public void createTask() {
         progressDialog.show();
         final TaskModel model = generateTaskObject();
-        TaskService.getInstance().sendTaskToServer(model, null).subscribe(new Subscriber<TaskModel>() {
+        TaskService.getInstance().sendTaskToServer(model, null).subscribe(new Consumer<TaskModel>() {
             @Override
-            public void onNext(TaskModel taskModel) {
+            public void accept(@NonNull TaskModel taskModel) throws Exception {
                 progressDialog.dismiss();
                 finishAndLaunchDoneFragment(taskModel);
             }
-
+        }, new Consumer<Throwable>() {
             @Override
-            public void onError(Throwable e) {
+            public void accept(@NonNull Throwable e) throws Exception {
                 if (e instanceof ApiCallException) {
                     handleError((ApiCallException) e, model);
                 }
             }
-
-            @Override
-            public void onCompleted() { }
         });
+
     }
 
     private void finishAndLaunchDoneFragment(TaskModel model) {
@@ -332,9 +330,9 @@ public class CreateTaskFragment extends Fragment {
         } else {
             if (ErrorUtils.TODO_LIMIT_REACHED.equals(e.errorTag)) {
                 AccountLimitDialogFragment.showAccountLimitDialog(getFragmentManager(), R.string.account_todo_limit_reached)
-                        .subscribe(new Action1<String>() {
+                        .subscribe(new Consumer<String>() {
                             @Override
-                            public void call(String s) {
+                            public void accept(String s) {
                                 if (AccountLimitDialogFragment.GO_TO_GR.equals(s)) {
                                     Intent i = new Intent(getContext(), GrassrootExtraActivity.class);
                                     startActivity(i);

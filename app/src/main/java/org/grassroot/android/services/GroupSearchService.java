@@ -18,12 +18,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import io.reactivex.Observable;
+import io.reactivex.ObservableEmitter;
+import io.reactivex.ObservableOnSubscribe;
+import io.reactivex.Scheduler;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.schedulers.Schedulers;
 import retrofit2.Response;
-import rx.Observable;
-import rx.Scheduler;
-import rx.Subscriber;
-import rx.android.schedulers.AndroidSchedulers;
-import rx.schedulers.Schedulers;
 
 /**
  * Created by luke on 2016/08/11.
@@ -68,9 +69,9 @@ public class GroupSearchService {
 
 	public Observable<String> searchForGroups(final String searchTerm, final boolean searchNamesAndTerms,
 											  final boolean restrictByLocation, final int searchRadius) {
-		return Observable.create(new Observable.OnSubscribe<String>() {
+		return Observable.create(new ObservableOnSubscribe<String>() {
 			@Override
-			public void call(Subscriber<? super String> subscriber) {
+			public void subscribe(ObservableEmitter<String> subscriber) {
 				if (NetworkUtils.isOnline()) {
 					try {
 						final String mobileNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
@@ -82,7 +83,6 @@ public class GroupSearchService {
 						if (searchResponse.isSuccessful()) {
 							separatePublicGroupResults(searchResponse.body().getGroups());
 							subscriber.onNext(NetworkUtils.FETCHED_SERVER);
-							subscriber.onCompleted();
 						} else {
 							throw new ApiCallException(NetworkUtils.SERVER_ERROR,
 								ErrorUtils.getRestMessage(searchResponse.errorBody()));
@@ -113,9 +113,9 @@ public class GroupSearchService {
 
 	public Observable<String> sendJoinRequest(final PublicGroupModel groupModel, Scheduler observingThread) {
 		observingThread = (observingThread == null) ? AndroidSchedulers.mainThread() : observingThread;
-		return Observable.create(new Observable.OnSubscribe<String>() {
+		return Observable.create(new ObservableOnSubscribe<String>() {
 			@Override
-			public void call(Subscriber<? super String> subscriber) {
+			public void subscribe(ObservableEmitter<String> subscriber) {
 				try {
 					final String mobileNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
 					final String code = RealmUtils.loadPreferencesFromDB().getToken();
@@ -126,7 +126,6 @@ public class GroupSearchService {
 						Log.e(TAG, "response = " + sendRequest.body().toString());
 						RealmUtils.saveDataToRealmSync(sendRequest.body().getRequests().first());
 						subscriber.onNext(NetworkUtils.SAVED_SERVER);
-						subscriber.onCompleted();
 					} else {
 						throw new ApiCallException(NetworkUtils.SERVER_ERROR,
 							ErrorUtils.getRestMessage(sendRequest.errorBody()));
@@ -142,9 +141,9 @@ public class GroupSearchService {
 
 	public Observable<String> cancelJoinRequest(final String groupUid, Scheduler observingThread) {
 		observingThread = (observingThread == null) ? AndroidSchedulers.mainThread() : observingThread;
-		return Observable.create(new Observable.OnSubscribe<String>() {
+		return Observable.create(new ObservableOnSubscribe<String>() {
 			@Override
-			public void call(Subscriber<? super String> subscriber) {
+			public void subscribe(ObservableEmitter<String> subscriber) {
 				try {
 					final String mobileNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
 					final String code = RealmUtils.loadPreferencesFromDB().getToken();
@@ -153,14 +152,12 @@ public class GroupSearchService {
 					if (response.isSuccessful()) {
 						RealmUtils.removeObjectFromDatabase(GroupJoinRequest.class, "groupUid", groupUid);
 						subscriber.onNext(NetworkUtils.SAVED_SERVER);
-						subscriber.onCompleted();
 					} else {
 						final String restMessage = ErrorUtils.getRestMessage(response.errorBody());
 						if (ErrorUtils.JREQ_NOT_FOUND.equals(restMessage)) {
 							// slight violence here, but just in case it was approved already (should display different msg in future .. todo)
 							subscriber.onNext(NetworkUtils.SAVED_SERVER);
 							RealmUtils.removeObjectFromDatabase(GroupJoinRequest.class, "groupUid", groupUid);
-							subscriber.onCompleted();
 						} else {
 							throw new ApiCallException(NetworkUtils.SERVER_ERROR,
 									ErrorUtils.getRestMessage(response.errorBody()));
@@ -176,9 +173,9 @@ public class GroupSearchService {
 
 	public Observable<String> remindJoinRequest(final String groupUid, Scheduler observingThread) {
 		observingThread = (observingThread == null) ? AndroidSchedulers.mainThread() : observingThread;
-		return Observable.create(new Observable.OnSubscribe<String>() {
+		return Observable.create(new ObservableOnSubscribe<String>() {
 			@Override
-			public void call(Subscriber<? super String> subscriber) {
+			public void subscribe(ObservableEmitter<String> subscriber) {
 				try {
 					final String mobileNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
 					final String code = RealmUtils.loadPreferencesFromDB().getToken();
@@ -186,7 +183,6 @@ public class GroupSearchService {
 						.remindJoinRequest(mobileNumber, code, groupUid).execute();
 					if (response.isSuccessful()) {
 						subscriber.onNext(NetworkUtils.SAVED_SERVER);
-						subscriber.onCompleted();
 					} else {
 						throw new ApiCallException(NetworkUtils.SERVER_ERROR,
 							ErrorUtils.getRestMessage(response.errorBody()));
@@ -201,9 +197,9 @@ public class GroupSearchService {
 
 	public Observable<String> sendStoredJoinRequests(Scheduler observingThread) {
 		observingThread = (observingThread == null) ? AndroidSchedulers.mainThread() : observingThread;
-		return Observable.create(new Observable.OnSubscribe<String>() {
+		return Observable.create(new ObservableOnSubscribe<String>() {
 			@Override
-			public void call(Subscriber<? super String> subscriber) {
+			public void subscribe(ObservableEmitter<String> subscriber) {
 				Map<String, Object> recallMap = new HashMap<>();
 				recallMap.put("isJoinReqLocal", true);
 				List<PublicGroupModel> storedModels = RealmUtils.loadListFromDBInline(PublicGroupModel.class, recallMap);

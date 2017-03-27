@@ -9,7 +9,6 @@ import android.support.v4.app.DialogFragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v7.app.AlertDialog;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
@@ -17,8 +16,9 @@ import android.widget.TextView;
 
 import org.grassroot.android.R;
 
-import rx.Observable;
-import rx.Subscriber;
+import io.reactivex.Single;
+import io.reactivex.SingleEmitter;
+import io.reactivex.SingleOnSubscribe;
 
 /**
  * Created by luke on 2016/07/13.
@@ -30,13 +30,13 @@ public class MultiLineTextDialog extends DialogFragment {
     private int hintRes;
     private int okayBtnRes;
 
-    private Subscriber<? super String> subscriber;
+    private SingleEmitter<String> subscriber;
 
-    public static Observable<String> showMultiLineDialog(final FragmentManager fragmentManager, final int titleRes,
-                                                         final String bodyText, final int hintRes, final int okayBtnRes) {
-        return Observable.create(new Observable.OnSubscribe<String>() {
+    public static Single<String> showMultiLineDialog(final FragmentManager fragmentManager, final int titleRes,
+                                                     final String bodyText, final int hintRes, final int okayBtnRes) {
+        return Single.create(new SingleOnSubscribe<String>() {
             @Override
-            public void call(Subscriber<? super String> subscriber) {
+            public void subscribe(SingleEmitter<String> subscriber) {
                 MultiLineTextDialog fragment = new MultiLineTextDialog();
                 fragment.titleRes = titleRes;
                 fragment.bodyText = bodyText;
@@ -88,8 +88,7 @@ public class MultiLineTextDialog extends DialogFragment {
                             textEdit.setError(getString(R.string.gs_dialog_message_error));
                             textEdit.requestFocus();
                         } else {
-                            subscriber.onNext(textEdit.getText().toString().trim());
-                            subscriber.onCompleted();
+                            subscriber.onSuccess(textEdit.getText().toString().trim());
                             createdDialog.dismiss();
                         }
                     }

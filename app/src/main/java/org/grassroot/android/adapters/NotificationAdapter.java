@@ -22,10 +22,11 @@ import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
-import rx.Observable;
-import rx.Subscriber;
-import rx.android.schedulers.AndroidSchedulers;
-import rx.schedulers.Schedulers;
+import io.reactivex.Observable;
+import io.reactivex.ObservableEmitter;
+import io.reactivex.ObservableOnSubscribe;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.schedulers.Schedulers;
 
 /**
  * Created by luke.
@@ -149,9 +150,9 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
     }
 
     public Observable<Boolean> filterByUnviewed() {
-        return Observable.create(new Observable.OnSubscribe<Boolean>() {
+        return Observable.create(new ObservableOnSubscribe<Boolean>() {
             @Override
-            public void call(Subscriber<? super Boolean> subscriber) {
+            public void subscribe(ObservableEmitter<Boolean> subscriber) {
                 long startTime = SystemClock.currentThreadTimeMillis();
                 if (storedNotifications == null || storedNotifications.isEmpty()) {
                     storedNotifications = new ArrayList<>(notifications);
@@ -173,15 +174,14 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
 
                 Log.e(TAG, "number of notifications after filter .... " + notifications.size() + " " +
                     "and it took ... " + (SystemClock.currentThreadTimeMillis() - startTime));
-                subscriber.onCompleted();
             }
         }).subscribeOn(Schedulers.computation()).observeOn(AndroidSchedulers.mainThread());
     }
 
     public Observable<Boolean> searchText(final String queryText) {
-        return Observable.create(new Observable.OnSubscribe<Boolean>() {
+        return Observable.create(new ObservableOnSubscribe<Boolean>() {
             @Override
-            public void call(Subscriber<? super Boolean> subscriber) {
+            public void subscribe(ObservableEmitter<Boolean> subscriber) {
                 if (storedNotifications == null || storedNotifications.isEmpty()) {
                     storedNotifications = new ArrayList<>(notifications);
                 } else {
@@ -201,7 +201,7 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
 
                 subscriber.onNext(true);
                 lowerCaseQuery = lCase; // stores it for future adds
-                subscriber.onCompleted();
+                subscriber.onComplete();
             }
         }).subscribeOn(Schedulers.computation()).observeOn(AndroidSchedulers.mainThread());
     }

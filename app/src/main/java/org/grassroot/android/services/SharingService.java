@@ -25,11 +25,12 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import io.reactivex.Observable;
+import io.reactivex.ObservableEmitter;
+import io.reactivex.ObservableOnSubscribe;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.schedulers.Schedulers;
 import io.realm.RealmList;
-import rx.Observable;
-import rx.Subscriber;
-import rx.android.schedulers.AndroidSchedulers;
-import rx.schedulers.Schedulers;
 
 public class SharingService extends IntentService {
 
@@ -183,9 +184,9 @@ public class SharingService extends IntentService {
     }
 
     private void findClients(final Context context) {
-        Observable.create(new Observable.OnSubscribe<Boolean>() {
+        Observable.create(new ObservableOnSubscribe<Boolean>() {
             @Override
-            public void call(Subscriber<? super Boolean> subscriber) {
+            public void subscribe(ObservableEmitter<Boolean> subscriber) {
                 boolean fbInstalled = false;
                 boolean wappInstalled = false;
                 Intent shareIntent = new Intent();

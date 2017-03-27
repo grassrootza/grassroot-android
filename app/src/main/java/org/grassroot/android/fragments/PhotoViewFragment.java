@@ -1,6 +1,5 @@
 package org.grassroot.android.fragments;
 
-import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -33,10 +32,11 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 import butterknife.Unbinder;
-import rx.Subscriber;
-import rx.android.schedulers.AndroidSchedulers;
-import rx.functions.Action1;
-import rx.schedulers.Schedulers;
+import io.reactivex.SingleObserver;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.annotations.NonNull;
+import io.reactivex.functions.Consumer;
+import io.reactivex.schedulers.Schedulers;
 
 /**
  * Created by luke on 2017/03/14.
@@ -56,13 +56,11 @@ public class PhotoViewFragment extends Fragment {
     @BindView(R.id.photo_caption_text) TextView caption;
     @BindView(R.id.photo_edit_buttons) ViewGroup editButtons;
 
-    private ProgressDialog progressDialog;
-
-    private Action1<ImageRecord> deletionSubscriber;
+    private SingleObserver<ImageRecord> deletionSubscriber;
     private boolean openOnFaceCountDialog;
 
     public static PhotoViewFragment newInstance(final String taskType, ImageRecord imageRecord,
-                                                Action1<ImageRecord> deletionSubscriber, boolean openOnFaceCount) {
+                                                SingleObserver<ImageRecord> deletionSubscriber, boolean openOnFaceCount) {
         PhotoViewFragment fragment = new PhotoViewFragment();
         Bundle args = new Bundle();
         args.putString(TaskConstants.TASK_TYPE_FIELD, taskType);
@@ -88,10 +86,6 @@ public class PhotoViewFragment extends Fragment {
         ButterKnife.bind(this, v);
 
         mobileNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
-        progressDialog = new ProgressDialog(getContext());
-        progressDialog.setIndeterminate(true);
-        progressDialog.setMessage(getString(R.string.wait_message)); // todo : make it say loading or something
-        progressDialog.show();
 
         imageRecord = getArguments().getParcelable("RECORD");
         taskType = getArguments().getString(TaskConstants.TASK_TYPE_FIELD);
@@ -115,19 +109,19 @@ public class PhotoViewFragment extends Fragment {
 
         Picasso.with(getContext())
                 .load(urlStart + urlEnd)
-                .placeholder(R.drawable.ic_logo_splashscreen) // todo : really need a loading ...
-                .error(R.drawable.ic_logo_splashscreen)
+                .placeholder(R.drawable.img_loading_photo)
+                .error(R.drawable.img_loading_photo)
                 .centerInside()
                 .fit()
                 .into(mainView, new Callback() {
                     @Override
                     public void onSuccess() {
-                        progressDialog.dismiss();
+                        // progressDialog.dismiss();
                     }
 
                     @Override
                     public void onError() {
-                        progressDialog.dismiss();
+                        // progressDialog.dismiss();
                     }
                 });
     }
@@ -168,23 +162,20 @@ public class PhotoViewFragment extends Fragment {
         NetworkImageUtils.removeTaskImage(taskType, imageRecord)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(new Subscriber<String>() {
+                .subscribe(new Consumer<String>() {
                     @Override
-                    public void onCompleted() { }
-
-                    @Override
-                    public void onError(Throwable e) {
-                        Toast.makeText(getContext(), ErrorUtils.isAccessDeniedError(e) ?
-                                        R.string.photo_delete_failed_access : R.string.photo_delete_failed_other,
-                                Toast.LENGTH_SHORT).show();
-                    }
-
-                    @Override
-                    public void onNext(String s) {
+                    public void accept(@NonNull String s) throws Exception {
                         Toast.makeText(getContext(), R.string.photo_delete_succeeded, Toast.LENGTH_SHORT).show();
                         if (deletionSubscriber != null) {
-                            deletionSubscriber.call(imageRecord);
+                            deletionSubscriber.onSuccess(imageRecord);
                         }
+                    }
+                }, new Consumer<Throwable>() {
+                    @Override
+                    public void accept(@NonNull Throwable throwable) throws Exception {
+                        Toast.makeText(getContext(), ErrorUtils.isAccessDeniedError(throwable) ?
+                                        R.string.photo_delete_failed_access : R.string.photo_delete_failed_other,
+                                Toast.LENGTH_SHORT).show();
                     }
                 });
     }
@@ -213,17 +204,17 @@ public class PhotoViewFragment extends Fragment {
             NetworkImageUtils.updateImageFaceCount(imageRecord.getKey(), taskType, Integer.parseInt(textEntered))
                     .subscribeOn(Schedulers.io())
                     .observeOn(AndroidSchedulers.mainThread())
-                    .subscribe(new Action1<ImageRecord>() {
+                    .subscribe(new Consumer<ImageRecord>() {
                         @Override
-                        public void call(ImageRecord alteredRecord) {
+                        public void accept(@NonNull ImageRecord alteredRecord) {
                             Toast.makeText(getContext(), R.string.photo_count_update_succeeded, Toast.LENGTH_SHORT).show();
                             RealmUtils.saveDataToRealm(alteredRecord);
                             PhotoViewFragment.this.imageRecord = alteredRecord;
                             setCaptionAndButtons();
                         }
-                    }, new Action1<Throwable>() {
+                    }, new Consumer<Throwable>() {
                         @Override
-                        public void call(Throwable throwable) {
+                        public void accept(@NonNull Throwable throwable) {
                             Log.e(TAG, "inside error, which is: " + throwable);
                             int toastText = ErrorUtils.isAccessDeniedError(throwable) ?
                                     R.string.photo_count_update_failed_access : R.string.photo_count_update_failed_other;

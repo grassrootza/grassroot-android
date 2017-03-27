@@ -26,9 +26,9 @@ import org.grassroot.android.events.NotificationCountChangedEvent;
 import org.grassroot.android.fragments.dialogs.NetworkErrorDialogFragment;
 import org.grassroot.android.interfaces.ClickListener;
 import org.grassroot.android.interfaces.NotificationConstants;
-import org.grassroot.android.models.responses.NotificationList;
 import org.grassroot.android.models.PreferenceObject;
 import org.grassroot.android.models.TaskNotification;
+import org.grassroot.android.models.responses.NotificationList;
 import org.grassroot.android.services.GcmListenerService;
 import org.grassroot.android.services.GrassrootRestService;
 import org.grassroot.android.services.NotificationUpdateService;
@@ -37,6 +37,7 @@ import org.grassroot.android.utils.ErrorUtils;
 import org.grassroot.android.utils.NetworkUtils;
 import org.grassroot.android.utils.RealmUtils;
 import org.grassroot.android.utils.Utilities;
+import org.grassroot.android.utils.rxutils.SingleObserverFromConsumer;
 import org.greenrobot.eventbus.EventBus;
 
 import java.util.ArrayList;
@@ -47,15 +48,16 @@ import java.util.Set;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.Unbinder;
+import io.reactivex.Observable;
+import io.reactivex.ObservableEmitter;
+import io.reactivex.ObservableOnSubscribe;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.annotations.NonNull;
+import io.reactivex.functions.Consumer;
+import io.reactivex.schedulers.Schedulers;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
-import rx.Observable;
-import rx.Subscriber;
-import rx.android.schedulers.AndroidSchedulers;
-import rx.functions.Action1;
-import rx.observers.Subscribers;
-import rx.schedulers.Schedulers;
 
 public class NotificationCenterFragment extends Fragment {
 
@@ -137,15 +139,15 @@ public class NotificationCenterFragment extends Fragment {
                 if (!isFiltering) {
                     item.setTitle(R.string.menu_all_notis);
                     isFiltering = true;
-                    notificationAdapter.filterByUnviewed().subscribe(new Action1<Boolean>() {
+                    notificationAdapter.filterByUnviewed().subscribe(new Consumer<Boolean>() {
                         @Override
-                        public void call(Boolean aBoolean) {
+                        public void accept(@NonNull Boolean aBoolean) {
                             Log.e(TAG, "resetting adapter ...");
                             notificationAdapter.notifyDataSetChanged();
                         }
-                    }, new Action1<Throwable>() {
+                    }, new Consumer<Throwable>() {
                         @Override
-                        public void call(Throwable throwable) {
+                        public void accept(@NonNull Throwable throwable) {
                             throwable.printStackTrace();
                         }
                     });
@@ -275,9 +277,9 @@ public class NotificationCenterFragment extends Fragment {
 
     private void handleAddingNotificationToBatchForUpdate(final int positionStart, final int positionEnd) {
         Log.v(TAG, String.format("handle adding notification ... %1d to %2d", positionStart, positionEnd));
-        updateNotificationToRead(positionStart, positionEnd).subscribe(new Action1<Integer>() {
+        updateNotificationToRead(positionStart, positionEnd).subscribe(new Consumer<Integer>() {
             @Override
-            public void call(Integer count) {
+            public void accept(@NonNull Integer count) {
                 PreferenceObject prefs = RealmUtils.loadPreferencesFromDB();
                 int revisedCounter = Math.max(0, prefs.getNotificationCounter() - count);
                 prefs.setNotificationCounter(revisedCounter);
@@ -290,9 +292,9 @@ public class NotificationCenterFragment extends Fragment {
 
     // returns how many were changed from not-viewed to viewed
     private Observable<Integer> updateNotificationToRead(final int positionStart, final int positionEnd) {
-        return Observable.create(new Observable.OnSubscribe<Integer>() {
+        return Observable.create(new ObservableOnSubscribe<Integer>() {
             @Override
-            public void call(Subscriber<? super Integer> subscriber) {
+            public void subscribe(ObservableEmitter<Integer> subscriber) {
                  // Log.e(TAG, String.format("entering the update batch ... %1d to %2d", positionStart, positionEnd));
                 int changedToViewCounter = 0;
                 for (int i = positionStart; i <= positionEnd; i++) {
@@ -310,7 +312,7 @@ public class NotificationCenterFragment extends Fragment {
                     }
                 }
                 subscriber.onNext(changedToViewCounter);
-                subscriber.onCompleted();
+                subscriber.onComplete();
             }
         }).subscribeOn(Schedulers.computation()).observeOn(AndroidSchedulers.mainThread());
     }
@@ -398,9 +400,9 @@ public class NotificationCenterFragment extends Fragment {
                     notificationAdapter.setToNotifications(RealmUtils.loadNotificationsSorted());
                     recyclerView.setVisibility(View.VISIBLE);
                     NetworkErrorDialogFragment.newInstance(R.string.connect_error_notifications,
-                        progressBar, Subscribers.create(new Action1<String>() {
+                        progressBar, new SingleObserverFromConsumer<>(new Consumer<String>() {
                             @Override
-                            public void call(String s) {
+                            public void accept(@NonNull String s) {
                                 progressBar.setVisibility(View.GONE);
                                 if (s.equals(NetworkUtils.CONNECT_ERROR)) {
                                     Snackbar.make(recyclerView, R.string.connect_error_failed_retry, Snackbar.LENGTH_SHORT).show();
@@ -435,14 +437,14 @@ public class NotificationCenterFragment extends Fragment {
             notificationAdapter.resetToStored();
         } else {
             notificationAdapter.searchText(queryText)
-                .subscribe(new Action1<Boolean>() {
+                .subscribe(new Consumer<Boolean>() {
                 @Override
-                public void call(Boolean aBoolean) {
+                public void accept(@NonNull Boolean aBoolean) {
                     notificationAdapter.notifyDataSetChanged();
                 }
-            }, new Action1<Throwable>() {
+            }, new Consumer<Throwable>() {
                 @Override
-                public void call(Throwable throwable) {
+                public void accept(@NonNull Throwable throwable) {
                     throwable.printStackTrace();
                 }
             });

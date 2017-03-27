@@ -61,7 +61,8 @@ import java.util.Map;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.Unbinder;
-import rx.Subscriber;
+import io.reactivex.Observer;
+import io.reactivex.disposables.Disposable;
 
 public class NavigationDrawerFragment extends Fragment implements NavigationDrawerAdapter.NavDrawerItemListener {
 
@@ -366,7 +367,10 @@ public class NavigationDrawerFragment extends Fragment implements NavigationDraw
     }
 
     private void handleOnlineToggle() {
-        NetworkUtils.toggleOnlineOfflineRx(getContext(), true, null).subscribe(new Subscriber<String>() {
+        NetworkUtils.toggleOnlineOfflineRx(getContext(), true, null).subscribe(new Observer<String>() {
+            @Override
+            public void onSubscribe(Disposable d) { }
+
             @Override
             public void onError(Throwable e) {
                 if (e instanceof ApiCallException) {
@@ -394,7 +398,7 @@ public class NavigationDrawerFragment extends Fragment implements NavigationDraw
             }
 
             @Override
-            public void onCompleted() { }
+            public void onComplete() { }
         });
     }
 

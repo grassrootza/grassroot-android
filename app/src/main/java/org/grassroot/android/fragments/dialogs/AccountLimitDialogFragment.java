@@ -10,8 +10,9 @@ import android.support.v4.app.FragmentManager;
 
 import org.grassroot.android.R;
 
-import rx.Observable;
-import rx.Subscriber;
+import io.reactivex.Observable;
+import io.reactivex.ObservableEmitter;
+import io.reactivex.ObservableOnSubscribe;
 
 /**
  * Created by luke on 2017/01/16.
@@ -23,13 +24,13 @@ public class AccountLimitDialogFragment extends DialogFragment {
     public static final String ABORT = "abort";
 
     private int bodyTextRes;
-    private Subscriber<? super String> subscriber;
+    private ObservableEmitter<String> subscriber;
 
     public static Observable<String> showAccountLimitDialog(final FragmentManager fragmentManager,
                                                             final int bodyTextRes) {
-        return Observable.create(new Observable.OnSubscribe<String>() {
+        return Observable.create(new ObservableOnSubscribe<String>() {
             @Override
-            public void call(Subscriber<? super String> subscriber) {
+            public void subscribe(ObservableEmitter<String> subscriber) {
                 AccountLimitDialogFragment fragment = new AccountLimitDialogFragment();
                 fragment.bodyTextRes = bodyTextRes;
                 fragment.subscriber = subscriber;

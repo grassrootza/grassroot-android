@@ -40,6 +40,7 @@ import org.grassroot.android.utils.Constant;
 import org.grassroot.android.utils.ErrorUtils;
 import org.grassroot.android.utils.IntentUtils;
 import org.grassroot.android.utils.NetworkUtils;
+import org.grassroot.android.utils.rxutils.SingleObserverFromConsumer;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -52,9 +53,9 @@ import butterknife.OnClick;
 import butterknife.OnEditorAction;
 import butterknife.OnTextChanged;
 import butterknife.Unbinder;
-import rx.android.schedulers.AndroidSchedulers;
-import rx.functions.Action1;
-import rx.observers.Subscribers;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.annotations.NonNull;
+import io.reactivex.functions.Consumer;
 
 /**
  * Created by paballo on 2016/06/21.
@@ -183,14 +184,14 @@ public class EditTaskFragment extends Fragment implements DatePickerDialog.OnDat
         selectedMembers = new ArrayList<>();
         if (!task.getWholeGroupAssigned()) {
             TaskService.getInstance().fetchAssignedMembers(task.getTaskUid(), taskType)
-                .subscribe(new Action1<List<Member>>() {
+                .subscribe(new Consumer<List<Member>>() {
                     @Override
-                    public void call(List<Member> members) {
+                    public void accept(@NonNull List<Member> members) {
                         selectedMembers = new ArrayList<>(members);
                     }
-                }, new Action1<Throwable>() {
+                }, new Consumer<Throwable>() {
                     @Override
-                    public void call(Throwable throwable) {
+                    public void accept(@NonNull Throwable throwable) {
                         // just display a snackbar (this is not a vital function, so that will be enough)
                         Snackbar.make(tvInviteeLabel, R.string.connect_error_members_assigned, Snackbar.LENGTH_SHORT);
                     }
@@ -345,15 +346,15 @@ public class EditTaskFragment extends Fragment implements DatePickerDialog.OnDat
         progressBar.setVisibility(View.VISIBLE);
         TaskModel model = generateTaskObject();
         TaskService.getInstance().editTask(model, selectedMembers, AndroidSchedulers.mainThread())
-            .subscribe(new Action1<String>() {
+            .subscribe(new Consumer<String>() {
                 @Override
-                public void call(String s) {
+                public void accept(@NonNull String s) {
                     progressBar.setVisibility(View.GONE);
                     generateSuccessIntent();
                 }
-            }, new Action1<Throwable>() {
+            }, new Consumer<Throwable>() {
                 @Override
-                public void call(Throwable e) {
+                public void accept(@NonNull Throwable e) {
                     progressBar.setVisibility(View.GONE);
                     switch (e.getMessage()) {
                         case NetworkUtils.CONNECT_ERROR:
@@ -378,9 +379,9 @@ public class EditTaskFragment extends Fragment implements DatePickerDialog.OnDat
 
     private void handleNetworkFail() {
         NetworkErrorDialogFragment.newInstance(R.string.connect_error_edit_task, progressBar,
-            Subscribers.create(new Action1<String>() {
+            new SingleObserverFromConsumer<>(new Consumer<String>() {
                 @Override
-                public void call(String s) {
+                public void accept(@NonNull String s) {
                     progressBar.setVisibility(View.GONE);
                     if (s.equals(NetworkUtils.CONNECT_ERROR)) {
                         Snackbar.make(vContainer, R.string.connect_error_failed_retry, Snackbar.LENGTH_SHORT).show();

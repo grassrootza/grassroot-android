@@ -64,10 +64,11 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 import butterknife.Unbinder;
-import rx.Subscriber;
-import rx.android.schedulers.AndroidSchedulers;
-import rx.functions.Action1;
-import rx.schedulers.Schedulers;
+import io.reactivex.Observer;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.disposables.Disposable;
+import io.reactivex.functions.Consumer;
+import io.reactivex.schedulers.Schedulers;
 
 public class HomeGroupListFragment extends android.support.v4.app.Fragment
         implements GroupListAdapter.GroupRowListener {
@@ -183,9 +184,9 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
         if (RealmUtils.countGroupsInDB() > 0) {
             loadGroupsFromDB(false);
             GroupService.getInstance().fetchGroupList(AndroidSchedulers.mainThread())
-                .subscribe(new Action1<String>() {
+                .subscribe(new Consumer<String>() {
                     @Override
-                    public void call(String s) {
+                    public void accept(String s) {
                         if (groupListRowAdapter != null) {
                             groupListRowAdapter.refreshGroupsToDB();
                         }
@@ -195,9 +196,9 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
         } else {
             showProgress();
             GroupService.getInstance().fetchGroupList(AndroidSchedulers.mainThread())
-                .subscribe(new Action1<String>() {
+                .subscribe(new Consumer<String>() {
                 @Override
-                public void call(String s) {
+                public void accept(String s) {
                     loadGroupsFromDB(true);
                     triggeredGroupRefresh = false;
                 }
@@ -214,9 +215,9 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
     }
 
     private void loadGroupsFromDB(final boolean toggleProgress) {
-        RealmUtils.loadGroupsSorted().subscribe(new Action1<List<Group>>() {
+        RealmUtils.loadGroupsSorted().subscribe(new Consumer<List<Group>>() {
             @Override
-            public void call(List<Group> groups) {
+            public void accept(List<Group> groups) {
                 Log.d(TAG, "loaded groups ... setting recycler parameters ... timer ... " + SystemClock.currentThreadTimeMillis());
                 if (groupListRowAdapter == null) {
                     setUpAdapterAndView(groups);
@@ -252,7 +253,9 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
         if (showProgressBar) {
             showProgress();
         }
-        GroupService.getInstance().fetchGroupList(null).subscribe(new Subscriber<String>() {
+        GroupService.getInstance().fetchGroupList(null).subscribe(new Observer<String>() {
+            @Override public void onSubscribe(Disposable d) { }
+
             @Override
             public void onNext(String s) {
                 switch (s) {
@@ -281,7 +284,7 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
             }
 
             @Override
-            public void onCompleted() { }
+            public void onComplete() { }
         });
     }
 
@@ -366,7 +369,9 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
         }
 
         GroupService.getInstance().sendNewGroupToServer(group.getGroupUid(), AndroidSchedulers.mainThread())
-            .subscribe(new Subscriber<String>() {
+            .subscribe(new Observer<String>() {
+                @Override public void onSubscribe(Disposable d) { }
+
                 @Override
                 public void onNext(String s) {
                     // final String serverUid = s.substring("OK-".length());
@@ -396,7 +401,7 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
                 }
 
                 @Override
-                public void onCompleted() { }
+                public void onComplete() { }
         });
     }
 

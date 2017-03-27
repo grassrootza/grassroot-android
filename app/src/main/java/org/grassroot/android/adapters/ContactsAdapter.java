@@ -12,7 +12,7 @@ import org.grassroot.android.R;
 import org.grassroot.android.models.Contact;
 import org.grassroot.android.services.ContactService;
 
-import rx.functions.Action1;
+import io.reactivex.functions.Consumer;
 
 /**
  * Created by luke on 2016/06/07.
@@ -55,9 +55,9 @@ public class ContactsAdapter extends RecyclerView.Adapter<ContactsAdapter.Contac
   }
 
   public void toggleSelected(final int position) {
-    ContactService.getInstance().toggleContactSelected(position).subscribe(new Action1<Boolean>() {
+    ContactService.getInstance().toggleContactSelected(position).subscribe(new Consumer<Boolean>() {
       @Override
-      public void call(Boolean aBoolean) {
+      public void accept(Boolean aBoolean) {
         notifyItemChanged(position);
       }
     });
@@ -65,9 +65,9 @@ public class ContactsAdapter extends RecyclerView.Adapter<ContactsAdapter.Contac
 
   public void setSelected(final int contactPosition, int selectedNumberIndex) {
     ContactService.getInstance().setContactSelected(contactPosition, selectedNumberIndex)
-        .subscribe(new Action1<Boolean>() {
+        .subscribe(new Consumer<Boolean>() {
           @Override
-          public void call(Boolean aBoolean) {
+          public void accept(Boolean aBoolean) {
             notifyItemChanged(contactPosition);
           }
         });

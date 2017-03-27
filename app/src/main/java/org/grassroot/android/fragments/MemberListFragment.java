@@ -23,7 +23,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import rx.functions.Action1;
+import io.reactivex.functions.Consumer;
 
 /**
  * Created by luke on 2016/05/08.
@@ -207,9 +207,9 @@ public class MemberListFragment extends Fragment {
             progressBar.setVisibility(View.VISIBLE);
         }
 
-        RealmUtils.loadGroupMembers(group.getGroupUid(), includeThisUser).subscribe(new Action1<List<Member>>() {
+        RealmUtils.loadGroupMembers(group.getGroupUid(), includeThisUser).subscribe(new Consumer<List<Member>>() {
             @Override
-            public void call(List<Member> members) {
+            public void accept(List<Member> members) {
                 if (filteredMembers != null) {
                     members.removeAll(filteredMembers);
                 }

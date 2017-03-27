@@ -15,8 +15,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import io.reactivex.functions.Consumer;
 import io.realm.RealmList;
-import rx.functions.Action1;
 
 /**
  * Created by luke on 2016/07/19.
@@ -41,8 +41,8 @@ public class MemberRoleAdapter extends RecyclerView.Adapter<MemberRoleAdapter.Me
     public MemberRoleAdapter(String groupUid, MemberRoleClickListener listener) {
         this.groupUid  = groupUid;
 
-        RealmUtils.loadGroupMembers(groupUid, true).subscribe(new Action1<List<Member>>() {
-            @Override public void call(List<Member> realmResults) {
+        RealmUtils.loadGroupMembers(groupUid, true).subscribe(new Consumer<List<Member>>() {
+            @Override public void accept(List<Member> realmResults) {
                 members.addAll(realmResults);
             }
         });
@@ -58,9 +58,9 @@ public class MemberRoleAdapter extends RecyclerView.Adapter<MemberRoleAdapter.Me
 
     public void refreshToDB() {
         members.clear();
-        RealmUtils.loadGroupMembers(groupUid, true).subscribe(new Action1<List<Member>>() {
+        RealmUtils.loadGroupMembers(groupUid, true).subscribe(new Consumer<List<Member>>() {
                 @Override
-                public void call(List<Member> realmResults) {
+                public void accept(List<Member> realmResults) {
                     members.addAll(realmResults);
                     notifyDataSetChanged();
                 }

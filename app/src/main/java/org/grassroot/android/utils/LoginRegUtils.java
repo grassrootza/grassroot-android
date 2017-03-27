@@ -13,11 +13,12 @@ import org.grassroot.android.services.GrassrootRestService;
 
 import java.io.IOException;
 
+import io.reactivex.Observable;
+import io.reactivex.ObservableEmitter;
+import io.reactivex.ObservableOnSubscribe;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.schedulers.Schedulers;
 import retrofit2.Response;
-import rx.Observable;
-import rx.Subscriber;
-import rx.android.schedulers.AndroidSchedulers;
-import rx.schedulers.Schedulers;
 
 /**
  * Created by luke on 2016/08/08.
@@ -32,9 +33,9 @@ public class LoginRegUtils {
 	public static final String AUTH_NO_GROUPS = "authenticated_no_groups";
 
 	public static Observable<String> reqLogin(final String mobileNumber) {
-		return Observable.create(new Observable.OnSubscribe<String>() {
+		return Observable.create(new ObservableOnSubscribe<String>() {
 			@Override
-			public void call(Subscriber<? super String> subscriber) {
+			public void subscribe(ObservableEmitter<String> subscriber) {
 				final String msisdn = Utilities.formatNumberToE164(mobileNumber);
 				try {
 					Response<GenericResponse> response = GrassrootRestService.getInstance().getApi()
@@ -43,7 +44,6 @@ public class LoginRegUtils {
 						final String returnTag = BuildConfig.FLAVOR.equals(Constant.STAGING) ? (String) response.body().getData() :
 							OTP_PROD_SENT;
 						subscriber.onNext(returnTag);
-						subscriber.onCompleted();
 					} else {
 						// to be safe, make sure the OTP is sent again next time (unless server overrides)
 						throw new ApiCallException(NetworkUtils.SERVER_ERROR, ErrorUtils.getRestMessage(response.errorBody()));
@@ -57,9 +57,9 @@ public class LoginRegUtils {
 	}
 
 	public static Observable<String> reqRegister(final String mobileNumber, final String displayName) {
-		return Observable.create(new Observable.OnSubscribe<String>() {
+		return Observable.create(new ObservableOnSubscribe<String>() {
 			@Override
-			public void call(Subscriber<? super String> subscriber) {
+			public void subscribe(ObservableEmitter<String> subscriber) {
 				final String msisdn = Utilities.formatNumberToE164(mobileNumber);
 				try {
 					Response<GenericResponse> response = GrassrootRestService.getInstance().getApi()
@@ -68,7 +68,6 @@ public class LoginRegUtils {
 						final String returnTag = BuildConfig.FLAVOR.equals(Constant.STAGING) ?
 							(String) response.body().getData() : OTP_PROD_SENT;
 						subscriber.onNext(returnTag);
-						subscriber.onCompleted();
 					} else {
 						throw new ApiCallException(NetworkUtils.SERVER_ERROR, ErrorUtils.getRestMessage(response.errorBody()));
 					}
@@ -80,9 +79,9 @@ public class LoginRegUtils {
 	}
 
 	public static Observable<String> resendRegistrationOtp(final String mobileNumber) {
-		return Observable.create(new Observable.OnSubscribe<String>() {
+		return Observable.create(new ObservableOnSubscribe<String>() {
 			@Override
-			public void call(Subscriber<? super String> subscriber) {
+			public void subscribe(ObservableEmitter<String> subscriber) {
 				final String msisdn = Utilities.formatNumberToE164(mobileNumber);
 				try {
 					Response<GenericResponse> resend = GrassrootRestService.getInstance().getApi()
@@ -91,7 +90,6 @@ public class LoginRegUtils {
 						final String returnTag = BuildConfig.FLAVOR.equals(Constant.STAGING) ?
 							(String) resend.body().getData() : OTP_PROD_SENT;
 						subscriber.onNext(returnTag);
-						subscriber.onCompleted();
 					} else {
 						throw new ApiCallException(NetworkUtils.SERVER_ERROR,
 							ErrorUtils.getRestMessage(resend.errorBody()));
@@ -104,9 +102,9 @@ public class LoginRegUtils {
 	}
 
 	public static Observable<String> authenticateLogin(final String mobileNumber, final String otpEntered) {
-		return Observable.create(new Observable.OnSubscribe<String>() {
+		return Observable.create(new ObservableOnSubscribe<String>() {
 			@Override
-			public void call(Subscriber<? super String> subscriber) {
+			public void subscribe(ObservableEmitter<String> subscriber) {
 				try {
 					final String msisdn = Utilities.formatNumberToE164(mobileNumber);
 					Response<TokenResponse> response = GrassrootRestService.getInstance().getApi()
@@ -114,7 +112,6 @@ public class LoginRegUtils {
 					if (response.isSuccessful()) {
 						checkUserArchiveAndSetupPrefs(msisdn, response.body());
 						subscriber.onNext(response.body().getHasGroups() ? AUTH_HAS_GROUPS : AUTH_NO_GROUPS);
-						subscriber.onCompleted();
 					} else {
 						throw new ApiCallException(NetworkUtils.SERVER_ERROR,
 							ErrorUtils.getRestMessage(response.errorBody()));
@@ -127,9 +124,9 @@ public class LoginRegUtils {
 	}
 
 	public static Observable<String> authenticateRegister(final String mobileNumber, final String otpEntered) {
-		return Observable.create(new Observable.OnSubscribe<String>() {
+		return Observable.create(new ObservableOnSubscribe<String>() {
 			@Override
-			public void call(Subscriber<? super String> subscriber) {
+			public void subscribe(ObservableEmitter<String> subscriber) {
 				try {
 					final String msisdn = Utilities.formatNumberToE164(mobileNumber);
 					Response<TokenResponse> response=  GrassrootRestService.getInstance().getApi()
@@ -137,7 +134,6 @@ public class LoginRegUtils {
 					if (response.isSuccessful()) {
 						checkUserArchiveAndSetupPrefs(msisdn, response.body());
 						subscriber.onNext(AUTH_NO_GROUPS);
-						subscriber.onCompleted();
 					} else {
 						throw new ApiCallException(NetworkUtils.SERVER_ERROR,
 							ErrorUtils.getRestMessage(response.errorBody()));
@@ -180,9 +176,9 @@ public class LoginRegUtils {
 	// note: (a) auth code may be wiped from Realm by the time this executes, so passing it makes more thread safe
 	// (b) need to pass auth code to make sure user can't be logged out by impersonation
 	public static Observable<String> logOutUser(final String msisdn, final String currentAuthCode) {
-		return Observable.create(new Observable.OnSubscribe<String>() {
+		return Observable.create(new ObservableOnSubscribe<String>() {
 			@Override
-			public void call(Subscriber<? super String> subscriber) {
+			public void subscribe(ObservableEmitter<String> subscriber) {
 				try {
 					Response<GenericResponse> logout = GrassrootRestService.getInstance().getApi()
 						.logoutUser(msisdn, currentAuthCode).execute();
@@ -195,8 +191,6 @@ public class LoginRegUtils {
 				} catch (IOException e) {
 					// not much we can do with it, so just fail quietly ...
 					subscriber.onNext(NetworkUtils.CONNECT_ERROR);
-				} finally {
-					subscriber.onCompleted();
 				}
 			}
 		}).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread());

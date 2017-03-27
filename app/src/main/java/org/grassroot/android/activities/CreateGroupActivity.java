@@ -52,9 +52,10 @@ import butterknife.ButterKnife;
 import butterknife.OnClick;
 import butterknife.OnFocusChange;
 import butterknife.OnTextChanged;
-import rx.Subscriber;
-import rx.android.schedulers.AndroidSchedulers;
-import rx.functions.Action1;
+import io.reactivex.Observer;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.disposables.Disposable;
+import io.reactivex.functions.Consumer;
 
 import static butterknife.OnTextChanged.Callback.AFTER_TEXT_CHANGED;
 
@@ -231,9 +232,9 @@ public class CreateGroupActivity extends PortraitActivity implements ContactSele
   private void launchContactSelectionFragment() {
     progressBar.setVisibility(View.VISIBLE);
     ContactService.getInstance().syncContactList(null, false, AndroidSchedulers.mainThread())
-        .subscribe(new Action1<Boolean>() {
+        .subscribe(new Consumer<Boolean>() {
           @Override
-          public void call(Boolean aBoolean) {
+          public void accept(Boolean aBoolean) {
             currentScreen = CONTACT_LIST;
             progressBar.setVisibility(View.GONE);
             if (contactSelectionFragment != null) {
@@ -244,9 +245,9 @@ public class CreateGroupActivity extends PortraitActivity implements ContactSele
                   .commit();
             }
           }
-        }, new Action1<Throwable>() {
+        }, new Consumer<Throwable>() {
           @Override
-          public void call(Throwable throwable) {
+          public void accept(Throwable throwable) {
             Snackbar.make(rlCgRoot, R.string.process_error_loading_contacts, Snackbar.LENGTH_LONG);
           }
         });
@@ -350,7 +351,9 @@ public class CreateGroupActivity extends PortraitActivity implements ContactSele
     progressDialog.show();
     progressDialog.setCancelable(false);
     GroupService.getInstance().sendNewGroupToServer(groupUid, AndroidSchedulers.mainThread())
-        .subscribe(new Subscriber<String>() {
+        .subscribe(new Observer<String>() {
+          @Override
+          public void onSubscribe(Disposable d) { }
 
           @Override
           public void onError(Throwable e) {
@@ -390,7 +393,7 @@ public class CreateGroupActivity extends PortraitActivity implements ContactSele
           }
 
           @Override
-          public void onCompleted() { }
+          public void onComplete() { }
         });
   }
 
@@ -454,9 +457,9 @@ public class CreateGroupActivity extends PortraitActivity implements ContactSele
     serverGroupUid = serverUid;
     EventBus.getDefault().post(new GroupCreatedEvent(serverGroupUid));
     groupCreatedEventIssued = true;
-    RealmUtils.loadMembersSortedInvalid(serverUid).subscribe(new Action1<List<Member>>() {
+    RealmUtils.loadMembersSortedInvalid(serverUid).subscribe(new Consumer<List<Member>>() {
       @Override
-      public void call(List<Member> members) {
+      public void accept(List<Member> members) {
         AlertDialog.Builder builder = new AlertDialog.Builder(CreateGroupActivity.this);
         builder.setMessage(R.string.input_error_member_phone_saved)
             .setCancelable(true)
@@ -476,7 +479,9 @@ public class CreateGroupActivity extends PortraitActivity implements ContactSele
   private void retryInvalidNumbers(final String serverUid) {
     progressDialog.show();
     GroupService.getInstance().addMembersToGroup(serverUid, memberListFragment.getSelectedMembers(), true)
-        .subscribe(new Subscriber<String>() {
+        .subscribe(new Observer<String>() {
+          @Override public void onSubscribe(Disposable d) { }
+
           @Override
           public void onNext(String s) {
             progressDialog.dismiss();
@@ -496,15 +501,15 @@ public class CreateGroupActivity extends PortraitActivity implements ContactSele
           }
 
           @Override
-          public void onCompleted() { }
+          public void onComplete() { }
         });
   }
 
   private void giveUpOnInvalidNumbersAndExit(final Group group) {
     GroupService.getInstance().cleanInvalidNumbersOnExit(group.getGroupUid(),
-        AndroidSchedulers.mainThread()).subscribe(new Action1<String>() {
+        AndroidSchedulers.mainThread()).subscribe(new Consumer<String>() {
       @Override
-      public void call(String s) {
+      public void accept(String s) {
         EventBus.getDefault().post(new GroupCreatedEvent(group));
         Intent i = new Intent(CreateGroupActivity.this, ActionCompleteActivity.class);
         String completionMessage = getString(R.string.input_error_still_invalid);
@@ -529,9 +534,9 @@ public class CreateGroupActivity extends PortraitActivity implements ContactSele
 
   private void cleanUpLocalEntities(final boolean deleteLocalGroup){
     if (cachedGroup != null && !editingOfflineGroup) {
-      GroupService.getInstance().cleanInvalidNumbersOnExit(groupUid, null).subscribe(new Action1<String>() {
+      GroupService.getInstance().cleanInvalidNumbersOnExit(groupUid, null).subscribe(new Consumer<String>() {
         @Override
-        public void call(String s) {
+        public void accept(String s) {
           if (deleteLocalGroup) {
             GroupService.getInstance().deleteLocallyCreatedGroup(groupUid);
           }

@@ -79,8 +79,8 @@ public class PhotoGridAdapter extends ArrayAdapter<ImageRecord> {
         Picasso
                 .with(ApplicationLoader.applicationContext)
                 .load(imageUrl)
-                .placeholder(R.drawable.ic_logo_splashscreen)
-                .error(R.drawable.ic_logo_splashscreen)
+                .placeholder(R.drawable.img_loading_photo)
+                .error(R.drawable.img_loading_photo)
                 .centerInside()
                 .fit()
                 .into(thumbnail, new Callback() {

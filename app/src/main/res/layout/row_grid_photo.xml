@@ -12,7 +12,8 @@
         android:layout_width="match_parent"
         android:layout_height="200dp"
         android:contentDescription="Thumbnail"
-        tools:src="@drawable/ic_logo_splashscreen">
+        android:background="@color/white"
+        tools:src="@drawable/img_loading_photo">
     </ImageView>
 
     <TextView

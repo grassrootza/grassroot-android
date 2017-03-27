@@ -23,6 +23,7 @@ import org.grassroot.android.utils.NetworkUtils;
 import org.grassroot.android.utils.RealmUtils;
 import org.grassroot.android.utils.Utilities;
 import org.greenrobot.eventbus.EventBus;
+import org.reactivestreams.Subscriber;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -30,15 +31,16 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 
+import io.reactivex.Observable;
+import io.reactivex.ObservableEmitter;
+import io.reactivex.ObservableOnSubscribe;
+import io.reactivex.Scheduler;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.functions.Consumer;
+import io.reactivex.schedulers.Schedulers;
 import io.realm.RealmList;
 import retrofit2.Call;
 import retrofit2.Response;
-import rx.Observable;
-import rx.Scheduler;
-import rx.Subscriber;
-import rx.android.schedulers.AndroidSchedulers;
-import rx.functions.Action1;
-import rx.schedulers.Schedulers;
 
 /**
  * Created by luke on 2016/07/06.
@@ -77,9 +79,9 @@ public class TaskService {
 
   private Observable<String> fetchUpcomingTasksForFirstTime(Scheduler observingThread) {
     observingThread = (observingThread == null) ? AndroidSchedulers.mainThread() : observingThread;
-    return Observable.create(new Observable.OnSubscribe<String>() {
+    return Observable.create(new ObservableOnSubscribe<String>() {
       @Override
-      public void call(Subscriber<? super String> subscriber) {
+      public void subscribe(ObservableEmitter<String> subscriber) {
         final String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
         final String code = RealmUtils.loadPreferencesFromDB().getToken();
         if (!NetworkUtils.isOfflineOrLoggedOut(subscriber, phoneNumber, code)) {
@@ -90,16 +92,13 @@ public class TaskService {
               updateTasksFetchedTime(null);
               persistUpcomingTasks(tasks.body().getTasks());
               subscriber.onNext(NetworkUtils.FETCHED_SERVER);
-              subscriber.onCompleted();
             } else {
               subscriber.onNext(NetworkUtils.SERVER_ERROR);
-              subscriber.onCompleted();
             }
           } catch (IOException e) {
             handleFetchConnectionError(subscriber);
           } catch (Exception e) {
             subscriber.onNext(NetworkUtils.CONNECT_ERROR); // in case get strange, "phone number not null"
-            subscriber.onCompleted();
           }
         }
       }
@@ -108,9 +107,9 @@ public class TaskService {
 
   private Observable<String> fetchUpcomingTasksAndCancelled(final long changedSince, Scheduler observingThread) {
     observingThread = (observingThread == null) ? AndroidSchedulers.mainThread() : observingThread;
-    return Observable.create(new Observable.OnSubscribe<String>() {
+    return Observable.create(new ObservableOnSubscribe<String>() {
       @Override
-      public void call(Subscriber<? super String> subscriber) {
+      public void subscribe(ObservableEmitter<String> subscriber) {
         if (!NetworkUtils.isOnline()) {
           subscriber.onNext(NetworkUtils.OFFLINE_SELECTED);
         } else {
@@ -124,11 +123,9 @@ public class TaskService {
               RealmUtils.removeObjectsByUid(TaskModel.class, "taskUid", response.body().getRemovedUids());
               persistUpcomingTasks(response.body().getAddedAndUpdated());
               subscriber.onNext(NetworkUtils.FETCHED_SERVER);
-              subscriber.onCompleted();
             } else {
               final String restMessage = ErrorUtils.getRestMessage(response.errorBody());
               subscriber.onNext(restMessage);
-              subscriber.onCompleted();
             }
           } catch (IOException e) {
             handleFetchConnectionError(subscriber);
@@ -140,9 +137,9 @@ public class TaskService {
 
   private Observable<String> fetchGroupTasks(final String groupUid, Scheduler observingThread) {
     observingThread = (observingThread == null) ? AndroidSchedulers.mainThread() : observingThread;
-    return Observable.create(new Observable.OnSubscribe<String>() {
+    return Observable.create(new ObservableOnSubscribe<String>() {
       @Override
-      public void call(Subscriber<? super String> subscriber) {
+      public void subscribe(ObservableEmitter<String> subscriber) {
         if (!NetworkUtils.isOnline()) {
           subscriber.onNext(NetworkUtils.OFFLINE_SELECTED);
         } else {
@@ -154,11 +151,9 @@ public class TaskService {
             if (response.isSuccessful()) {
               updateAndRemoveTasks(response.body(), groupUid);
               subscriber.onNext(NetworkUtils.FETCHED_SERVER);
-              subscriber.onCompleted();
             } else {
               final String restMessage = ErrorUtils.getRestMessage(response.errorBody());
               subscriber.onNext(restMessage);
-              subscriber.onCompleted();
             }
 
           } catch (IOException e) {
@@ -169,10 +164,9 @@ public class TaskService {
     }).subscribeOn(Schedulers.io()).observeOn(observingThread);
   }
 
-  private void handleFetchConnectionError(Subscriber<? super String> subscriber) {
+  private void handleFetchConnectionError(ObservableEmitter<String> subscriber) {
     NetworkUtils.setConnectionFailed();
     subscriber.onNext(NetworkUtils.CONNECT_ERROR);
-    subscriber.onCompleted();
   }
 
   @SuppressWarnings("unchecked")
@@ -180,9 +174,9 @@ public class TaskService {
     for (TaskModel task : tasks) {
       task.calcDeadlineDate(); // triggers processing & store of Date object (maybe move into a JSON converter)
     }
-    RealmUtils.saveDataToRealm(tasks, Schedulers.immediate()).subscribe(new Action1() {
+    RealmUtils.saveDataToRealm(tasks, Schedulers.trampoline()).subscribe(new Consumer<Boolean>() {
       @Override
-      public void call(Object o) {
+      public void accept(Boolean b) {
         // do the post in here to make sure count updates etc refresh to correct count
         EventBus.getDefault().post(new TasksRefreshedEvent());
       }
@@ -219,13 +213,12 @@ public class TaskService {
 
   public Observable<TaskModel> sendTaskToServer(final TaskModel task, Scheduler observingThread) {
     observingThread = (observingThread == null) ? AndroidSchedulers.mainThread() : observingThread;
-    return Observable.create(new Observable.OnSubscribe<TaskModel>() {
+    return Observable.create(new ObservableOnSubscribe<TaskModel>() {
       @Override
-      public void call(Subscriber<? super TaskModel> subscriber) {
+      public void subscribe(ObservableEmitter<TaskModel> subscriber) {
         if (!NetworkUtils.isOnline()) {
           RealmUtils.saveDataToRealmSync(task);
           subscriber.onNext(task);
-          subscriber.onCompleted();
         } else {
           try {
             Response<TaskResponse> response = newTaskApiCall(task).execute();
@@ -238,7 +231,6 @@ public class TaskService {
               if (task.isLocal() && !task.getTaskUid().equals(taskFromServer.getTaskUid())) {
                 RealmUtils.removeObjectFromDatabase(TaskModel.class, "taskUid", task.getTaskUid());
               }
-              subscriber.onCompleted();
             } else {
               throw new ApiCallException(NetworkUtils.SERVER_ERROR, ErrorUtils.getRestMessage(response.errorBody()));
             }
@@ -289,27 +281,23 @@ public class TaskService {
   public Observable<String> sendTaskUpdateToServer(final TaskModel model, final boolean selectedMembersChanged,
                                                    Scheduler observingThread) {
     observingThread = (observingThread == null) ? AndroidSchedulers.mainThread() : observingThread;
-    return Observable.create(new Observable.OnSubscribe<String>() {
+    return Observable.create(new ObservableOnSubscribe<String>() {
       @Override
-      public void call(Subscriber<? super String> subscriber) {
+      public void subscribe(ObservableEmitter<String> subscriber) {
         if (!NetworkUtils.isOnline()) {
           subscriber.onNext(NetworkUtils.OFFLINE_SELECTED);
-          subscriber.onCompleted();
         } else {
           try {
             Response<TaskResponse> editedTask = updateTaskApiCall(model, selectedMembersChanged).execute();
             if (editedTask.isSuccessful()) {
               RealmUtils.saveDataToRealmSync(editedTask.body().getTasks().first());
               subscriber.onNext(NetworkUtils.SAVED_SERVER);
-              subscriber.onCompleted();
             } else {
               subscriber.onNext(NetworkUtils.SERVER_ERROR);
-              subscriber.onCompleted();
             }
           } catch (IOException e) {
             NetworkUtils.setConnectionFailed();
             subscriber.onNext(NetworkUtils.CONNECT_ERROR);
-            subscriber.onCompleted();
           }
         }
       }
@@ -349,16 +337,14 @@ public class TaskService {
 
   public Observable<String> fetchAndStoreTask(final String taskUid, final String taskType, Scheduler observingThread) {
     observingThread = (observingThread == null) ? AndroidSchedulers.mainThread() : observingThread;
-    return Observable.create(new Observable.OnSubscribe<String>() {
+    return Observable.create(new ObservableOnSubscribe<String>() {
       @Override
-      public void call(Subscriber<? super String> subscriber) {
+      public void subscribe(ObservableEmitter<String> subscriber) {
         if (TextUtils.isEmpty(taskUid) || TextUtils.isEmpty(taskType)) {
           Log.e(TAG, "Error! Faulty GCM packet or other cause has led to null taskUid or type, existing");
           subscriber.onNext(NetworkUtils.LOCAL_ERROR);
-          subscriber.onCompleted();
         } else if (!NetworkUtils.isOnline()) {
           subscriber.onNext(NetworkUtils.OFFLINE_SELECTED);
-          subscriber.onCompleted();
         } else {
           final String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
           final String code = RealmUtils.loadPreferencesFromDB().getToken();
@@ -368,15 +354,12 @@ public class TaskService {
             if (taskResponse.isSuccessful()) {
               RealmUtils.saveDataToRealmSync(taskResponse.body().getTasks().first());
               subscriber.onNext(NetworkUtils.FETCHED_SERVER);
-              subscriber.onCompleted();
             } else {
               subscriber.onNext(NetworkUtils.SERVER_ERROR);
-              subscriber.onCompleted();
             }
           } catch (IOException e) {
             NetworkUtils.setConnectionFailed();
             subscriber.onNext(NetworkUtils.CONNECT_ERROR);
-            subscriber.onCompleted();
           }
         }
       }
@@ -384,9 +367,9 @@ public class TaskService {
   }
 
   public Observable<RsvpListModel> fetchMeetingRsvps(final String taskUid) {
-    return Observable.create(new Observable.OnSubscribe<RsvpListModel>() {
+    return Observable.create(new ObservableOnSubscribe<RsvpListModel>() {
       @Override
-      public void call(Subscriber<? super RsvpListModel> subscriber) {
+      public void subscribe(ObservableEmitter<RsvpListModel> subscriber) {
         if (!NetworkUtils.isOnline()) {
           throw new ApiCallException(NetworkUtils.CONNECT_ERROR); // switch to offline_selected
         } else {
@@ -397,7 +380,6 @@ public class TaskService {
                 .fetchMeetingRsvps(phoneNumber, code, taskUid).execute();
             if (response.isSuccessful()) {
               subscriber.onNext(response.body());
-              subscriber.onCompleted();
             } else {
               throw new ApiCallException(NetworkUtils.SERVER_ERROR,
                   ErrorUtils.getRestMessage(response.errorBody()));
@@ -411,9 +393,9 @@ public class TaskService {
   }
 
   public Observable<ResponseTotalsModel> fetchVoteTotals(final String taskUid) {
-    return Observable.create(new Observable.OnSubscribe<ResponseTotalsModel>() {
+    return Observable.create(new ObservableOnSubscribe<ResponseTotalsModel>() {
       @Override
-      public void call(Subscriber<? super ResponseTotalsModel> subscriber) {
+      public void subscribe(ObservableEmitter<ResponseTotalsModel> subscriber) {
         if (!NetworkUtils.isOnline()) {
           throw new ApiCallException(NetworkUtils.CONNECT_ERROR);
         } else {
@@ -424,7 +406,6 @@ public class TaskService {
                 .fetchVoteTotals(phoneNumber, code, taskUid).execute();
             if (response.isSuccessful()) {
               subscriber.onNext(response.body());
-              subscriber.onCompleted();
             } else {
               throw new ApiCallException(NetworkUtils.SERVER_ERROR,
                   ErrorUtils.getRestMessage(response.errorBody()));
@@ -438,9 +419,9 @@ public class TaskService {
   }
 
   public Observable<List<Member>> fetchAssignedMembers(final String taskUid, final String taskType) {
-    return Observable.create(new Observable.OnSubscribe<List<Member>>() {
+    return Observable.create(new ObservableOnSubscribe<List<Member>>() {
       @Override
-      public void call(Subscriber<? super List<Member>> subscriber) {
+      public void subscribe(ObservableEmitter<List<Member>> subscriber) {
         if (NetworkUtils.isOnline()) {
           final String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
           final String code = RealmUtils.loadPreferencesFromDB().getToken();
@@ -449,7 +430,6 @@ public class TaskService {
                 .fetchAssignedMembers(phoneNumber, code, taskUid, taskType).execute();
             if (response.isSuccessful()) {
               subscriber.onNext(response.body().getData());
-              subscriber.onCompleted();
             } else {
               throw new ApiCallException(NetworkUtils.SERVER_ERROR,
                   ErrorUtils.getRestMessage(response.errorBody()));
@@ -471,15 +451,14 @@ public class TaskService {
 
   public Observable<String> respondToTask(final String taskUid, final String response, Scheduler observingThread) {
     observingThread = (observingThread == null) ? AndroidSchedulers.mainThread() : observingThread;
-    return Observable.create(new Observable.OnSubscribe<String>() {
+    return Observable.create(new ObservableOnSubscribe<String>() {
       @Override
-      public void call(Subscriber<? super String> subscriber) {
+      public void subscribe(ObservableEmitter<String> subscriber) {
         TaskModel task = RealmUtils.loadObjectFromDB(TaskModel.class, "taskUid", taskUid);
         if (!NetworkUtils.isOnline()) {
           storeTaskResponseOffline(task, response);
           EventBus.getDefault().post(new TaskUpdatedEvent(task));
           subscriber.onNext(NetworkUtils.SAVED_OFFLINE_MODE);
-          subscriber.onCompleted();
         } else {
           try {
             final String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
@@ -493,7 +472,6 @@ public class TaskService {
               RealmUtils.saveDataToRealmSync(apiCall.body().getTasks().get(0));
               subscriber.onNext(NetworkUtils.SAVED_SERVER);
               EventBus.getDefault().post(new TaskUpdatedEvent(apiCall.body().getTasks().get(0)));
-              subscriber.onCompleted();
             } else {
               throw new ApiCallException(NetworkUtils.SERVER_ERROR, ErrorUtils.getRestMessage(apiCall.errorBody()));
             }
@@ -509,16 +487,15 @@ public class TaskService {
 
   public Observable<String> cancelTask(final String taskUid, final String taskType, Scheduler observingThread) {
     observingThread = (observingThread == null) ? AndroidSchedulers.mainThread() : observingThread;
-    return Observable.create(new Observable.OnSubscribe<String>() {
+    return Observable.create(new ObservableOnSubscribe<String>() {
       @Override
-      public void call(Subscriber<? super String> subscriber) {
+      public void subscribe(ObservableEmitter<String> subscriber) {
         try {
           Response<GenericResponse> response = setUpCancelApiCall(taskType, taskUid).execute();
           if (response.isSuccessful()) {
             RealmUtils.removeObjectFromDatabase(TaskModel.class, "taskUid", taskUid);
             // subscriber must issue event, to trigger view removal, etc
             subscriber.onNext(NetworkUtils.SAVED_SERVER);
-            subscriber.onCompleted();
           } else {
             throw new ApiCallException(NetworkUtils.SERVER_ERROR,
                 ErrorUtils.getRestMessage(response.errorBody()));
@@ -534,9 +511,9 @@ public class TaskService {
   public Observable<String> editTask(final TaskModel updatedTask, final List<Member> selectedMembers,
                                      Scheduler observingThread) {
     observingThread = (observingThread == null) ? AndroidSchedulers.mainThread() : observingThread;
-    return Observable.create(new Observable.OnSubscribe<String>() {
+    return Observable.create(new ObservableOnSubscribe<String>() {
       @Override
-      public void call(Subscriber<? super String> subscriber) {
+      public void subscribe(ObservableEmitter<String> subscriber) {
         if (!NetworkUtils.isOnline()) {
           throw new ApiCallException(NetworkUtils.OFFLINE_SELECTED);
         } else {
@@ -585,9 +562,9 @@ public class TaskService {
    */
 
   public Observable<Long> countTaskImages(final String taskType, final String taskUid) {
-    return Observable.create(new Observable.OnSubscribe<Long>() {
+    return Observable.create(new ObservableOnSubscribe<Long>() {
       @Override
-      public void call(Subscriber<? super Long> subscriber) {
+      public void subscribe(ObservableEmitter<Long> subscriber) {
         final String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
         final String code = RealmUtils.loadPreferencesFromDB().getToken();
         try {
@@ -595,7 +572,6 @@ public class TaskService {
                   .countImagesForTask(phoneNumber, code, taskType, taskUid).execute();
           if (response.isSuccessful()) {
             subscriber.onNext(response.body().getData());
-            subscriber.onCompleted();
           } else {
             throw new ApiCallException(NetworkUtils.SERVER_ERROR, ErrorUtils.getRestMessage(response.errorBody()));
           }
@@ -607,9 +583,9 @@ public class TaskService {
   }
 
   public Observable<List<ImageRecord>> fetchTaskImages(final String taskType, final String taskUid) {
-    return Observable.create(new Observable.OnSubscribe<List<ImageRecord>>() {
+    return Observable.create(new ObservableOnSubscribe<List<ImageRecord>>() {
       @Override
-      public void call(Subscriber<? super List<ImageRecord>> subscriber) {
+      public void subscribe(ObservableEmitter<List<ImageRecord>> subscriber) {
         final String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
         final String code = RealmUtils.loadPreferencesFromDB().getToken();
         try {

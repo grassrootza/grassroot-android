@@ -30,11 +30,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.functions.Consumer;
 import okhttp3.ResponseBody;
 import retrofit2.Converter;
-import rx.android.schedulers.AndroidSchedulers;
-import rx.functions.Action1;
-
 
 /**
  * Created by luke on 2016/05/15.
@@ -177,14 +176,14 @@ public class ErrorUtils {
         Intent i = new Intent(callingActivity, HomeScreenActivity.class);
         i.putExtra(NavigationConstants.HOME_OPEN_ON_NAV, NavigationConstants.ITEM_TASKS);
         Toast.makeText(ApplicationLoader.applicationContext, R.string.application_notify_crash, Toast.LENGTH_SHORT).show();
-        TaskService.getInstance().fetchUpcomingTasks(AndroidSchedulers.mainThread()).subscribe(new Action1<String>() {
+        TaskService.getInstance().fetchUpcomingTasks(AndroidSchedulers.mainThread()).subscribe(new Consumer<String>() {
             @Override
-            public void call(String s) {
+            public void accept(String s) {
                 Log.e(TAG, "At least the network call for refresh succeeded");
             }
-        }, new Action1<Throwable>() {
+        }, new Consumer<Throwable>() {
             @Override
-            public void call(Throwable throwable) {
+            public void accept(Throwable throwable) {
                 Log.e(TAG, "Error! The call to refresh tasks also failed");
             }
         });

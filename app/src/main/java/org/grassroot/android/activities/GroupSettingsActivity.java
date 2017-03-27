@@ -35,10 +35,10 @@ import java.util.Map;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
-import rx.Subscriber;
-import rx.android.schedulers.AndroidSchedulers;
-import rx.functions.Action1;
-import rx.observers.Subscribers;
+import io.reactivex.SingleObserver;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.disposables.Disposable;
+import io.reactivex.functions.Consumer;
 
 /**
  * Created by luke on 2016/07/15.
@@ -116,9 +116,9 @@ public class GroupSettingsActivity extends PortraitActivity implements
         Map<String, Object> organizerMap = new HashMap<>();
         organizerMap.put("groupUid", group.getGroupUid());
         organizerMap.put("roleName", GroupConstants.ROLE_GROUP_ORGANIZER);
-        RealmUtils.loadListFromDB(Member.class, organizerMap).subscribe(new Action1<List<Member>>() {
+        RealmUtils.loadListFromDB(Member.class, organizerMap).subscribe(new Consumer<List<Member>>() {
             @Override
-            public void call(List<Member> organizers) {
+            public void accept(List<Member> organizers) {
                 MemberListFragment memberListFragment = MemberListFragment.newInstance(group, false, false, organizers,
                     new MemberListFragment.MemberClickListener() {
                         @Override
@@ -143,9 +143,9 @@ public class GroupSettingsActivity extends PortraitActivity implements
     private void addOrganizer(final String memberUid) {
         progressBar.setVisibility(View.VISIBLE);
         GroupService.getInstance().addOrganizer(group.getGroupUid(), memberUid, AndroidSchedulers.mainThread())
-            .subscribe(new Action1<String>() {
+            .subscribe(new Consumer<String>() {
                 @Override
-                public void call(String s) {
+                public void accept(String s) {
                     progressBar.setVisibility(View.GONE);
 
                     getSupportFragmentManager().beginTransaction()
@@ -160,9 +160,9 @@ public class GroupSettingsActivity extends PortraitActivity implements
                             .show();
                     }
                 }
-            }, new Action1<Throwable>() {
+            }, new Consumer<Throwable>() {
                 @Override
-                public void call(Throwable throwable) {
+                public void accept(Throwable throwable) {
                     progressBar.setVisibility(View.GONE);
                     Snackbar.make(container, ErrorUtils.serverErrorText(throwable), Snackbar.LENGTH_SHORT)
                         .show();
@@ -174,15 +174,15 @@ public class GroupSettingsActivity extends PortraitActivity implements
     public void changePermissions(final String role) {
         progressBar.setVisibility(View.VISIBLE);
         GroupService.getInstance().fetchGroupPermissions(group.getGroupUid(), role)
-            .subscribe(new Action1<List<Permission>>() {
+            .subscribe(new Consumer<List<Permission>>() {
                 @Override
-                public void call(List<Permission> permissions) {
+                public void accept(List<Permission> permissions) {
                     progressBar.setVisibility(View.GONE);
                     launchPermissionsFragment(group.getGroupUid(), role, permissions);
                 }
-            }, new Action1<Throwable>() {
+            }, new Consumer<Throwable>() {
                 @Override
-                public void call(Throwable e) {
+                public void accept(Throwable e) {
                     progressBar.setVisibility(View.GONE);
                     if (NetworkUtils.CONNECT_ERROR.equals(e.getMessage())) {
                         handlePermissionRetry(role);
@@ -196,25 +196,34 @@ public class GroupSettingsActivity extends PortraitActivity implements
 
     private void handlePermissionRetry(final String roleName) {
         NetworkErrorDialogFragment.newInstance(R.string.gset_perms_error_connect, progressBar,
-            Subscribers.create(new Action1<String>() {
-                @Override
-                public void call(String s) {
-                    progressBar.setVisibility(View.GONE);
-                    if (s.equals(NetworkUtils.CONNECT_ERROR)) {
-                        Snackbar.make(container, R.string.connect_error_failed_retry, Snackbar.LENGTH_SHORT).show();
-                    } else {
-                        changePermissions(roleName);
+                new SingleObserver<String>() {
+                    @Override
+                    public void onSubscribe(Disposable d) {
+
                     }
-                }
-            })).show(getSupportFragmentManager(), "dialog");
+
+                    @Override
+                    public void onSuccess(String s) {
+                        progressBar.setVisibility(View.GONE);
+                        if (s.equals(NetworkUtils.CONNECT_ERROR)) {
+                            Snackbar.make(container, R.string.connect_error_failed_retry, Snackbar.LENGTH_SHORT).show();
+                        } else {
+                            changePermissions(roleName);
+                        }
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+
+                    }
+                }).show(getSupportFragmentManager(), "dialog");
     }
 
     // using a subscriber here was an experiment that worked well, consider replacing eventbus elsewhere that the link is so direct
     private void launchPermissionsFragment(final String groupUid, final String roleName, List<Permission> permissions) {
         GroupPermissionsFragment fragment = GroupPermissionsFragment.newInstance(groupUid, roleName, permissions,
-            new Subscriber<String>() {
-                @Override
-                public void onCompleted() { }
+            new SingleObserver<String>() {
+                @Override public void onSubscribe(Disposable d) { }
 
                 @Override
                 public void onError(Throwable e) {
@@ -224,7 +233,7 @@ public class GroupSettingsActivity extends PortraitActivity implements
                 }
 
                 @Override
-                public void onNext(String s) {
+                public void onSuccess(String s) {
                     Toast.makeText(ApplicationLoader.applicationContext, R.string.gset_perms_done,
                         Toast.LENGTH_LONG).show();
                     getSupportFragmentManager().popBackStack();

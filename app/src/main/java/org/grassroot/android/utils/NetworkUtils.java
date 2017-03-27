@@ -27,6 +27,7 @@ import org.grassroot.android.services.GroupService;
 import org.grassroot.android.services.LocationServices;
 import org.grassroot.android.services.TaskService;
 import org.greenrobot.eventbus.EventBus;
+import org.reactivestreams.Subscriber;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -34,13 +35,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+import io.reactivex.Observable;
+import io.reactivex.ObservableEmitter;
+import io.reactivex.ObservableOnSubscribe;
+import io.reactivex.Scheduler;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.annotations.NonNull;
+import io.reactivex.functions.Consumer;
+import io.reactivex.schedulers.Schedulers;
 import retrofit2.Response;
-import rx.Observable;
-import rx.Scheduler;
-import rx.Subscriber;
-import rx.android.schedulers.AndroidSchedulers;
-import rx.functions.Action1;
-import rx.schedulers.Schedulers;
 
 public class NetworkUtils {
 
@@ -90,16 +93,15 @@ public class NetworkUtils {
 
   public static Observable<String> switchToOfflineMode(Scheduler observingThread) {
     observingThread = (observingThread == null) ? AndroidSchedulers.mainThread() : observingThread;
-    return Observable.create(new Observable.OnSubscribe<String>() {
+    return Observable.create(new ObservableOnSubscribe<String>() {
       @Override
-      public void call(Subscriber<? super String> subscriber) {
+      public void subscribe(ObservableEmitter<String> subscriber) {
         PreferenceObject prefs = RealmUtils.loadPreferencesFromDB();
         prefs.setOnlineStatus(OFFLINE_SELECTED);
         prefs.setLastTimeSyncPerformed(0L);
         RealmUtils.saveDataToRealmSync(prefs);
         EventBus.getDefault().post(new OnlineOfflineToggledEvent(false));
         subscriber.onNext(OFFLINE_SELECTED);
-        subscriber.onCompleted();
       }
     }).subscribeOn(Schedulers.io()).observeOn(observingThread);
   }
@@ -108,8 +110,8 @@ public class NetworkUtils {
     PreferenceObject prefs = RealmUtils.loadPreferencesFromDB();
     prefs.setOnlineStatus(OFFLINE_ON_FAIL);
     prefs.setLastTimeSyncPerformed(0L);
-    RealmUtils.saveDataToRealm(prefs).subscribe(new Action1() {
-      @Override public void call(Object o) {
+    RealmUtils.saveDataToRealm(prefs).subscribe(new Consumer<Boolean>() {
+      @Override public void accept(Boolean b) {
         EventBus.getDefault().post(new NetworkFailureEvent());
       }
     });
@@ -119,8 +121,8 @@ public class NetworkUtils {
     PreferenceObject prefs = RealmUtils.loadPreferencesFromDB();
     prefs.setOnlineStatus(OFFLINE_SELECTED);
     prefs.setLastTimeSyncPerformed(0L);
-    RealmUtils.saveDataToRealm(prefs).subscribe(new Action1() {
-      @Override public void call(Object o) {
+    RealmUtils.saveDataToRealm(prefs).subscribe(new Consumer<Boolean>() {
+      @Override public void accept(Boolean b) {
         EventBus.getDefault().post(new OnlineOfflineToggledEvent(false));
       }
     });
@@ -128,29 +130,26 @@ public class NetworkUtils {
 
   public static void trySwitchToOnlineQuiet(final Context context, final boolean sendQueue,
                                             Scheduler observingThread) {
-    trySwitchToOnline(context, sendQueue, observingThread).subscribe(new Subscriber<String>() {
+    trySwitchToOnline(context, sendQueue, observingThread).subscribe(new Consumer<String>() {
       @Override
-      public void onError(Throwable e) {
-        NetworkUtils.setConnectionFailed();
-      }
-
-      @Override
-      public void onNext(String s) {
-        Log.e(TAG, "switching to online finished, all looks fine");
+      public void accept(@NonNull String s) throws Exception {
+        Log.d(TAG, "switching to online finished, all looks fine");
         EventBus.getDefault().post(new OnlineOfflineToggledEvent(true));
       }
-
+    }, new Consumer<Throwable>() {
       @Override
-      public void onCompleted() { }
+      public void accept(@NonNull Throwable throwable) throws Exception {
+        NetworkUtils.setConnectionFailed();
+      }
     });
   }
 
   public static Observable<String> trySwitchToOnline(final Context context, final boolean sendQueue,
                                                      Scheduler observingThread) {
     observingThread = (observingThread == null) ? AndroidSchedulers.mainThread() : observingThread;
-    return Observable.create(new Observable.OnSubscribe<String>() {
+    return Observable.create(new ObservableOnSubscribe<String>() {
       @Override
-      public void call(Subscriber<? super String> subscriber) {
+      public void subscribe(ObservableEmitter<String> subscriber) {
         if (!isNetworkAvailable(context)) {
           setConnectionFailed();
           throw new ApiCallException(NO_NETWORK);
@@ -171,7 +170,6 @@ public class NetworkUtils {
                 Log.e(TAG, "really sending the queue ...");
                 syncLocalAndServer(context);
               }
-              subscriber.onCompleted();
             } else {
               throw new ApiCallException(SERVER_ERROR);
             }
@@ -188,10 +186,10 @@ public class NetworkUtils {
     Observable
         .timer(Constant.serverSyncDelay, TimeUnit.MILLISECONDS)
         .observeOn(Schedulers.io())
-        .subscribe(new Action1<Long>() {
+        .subscribe(new Consumer<Long>() {
           @Override
-          public void call(Long aLong) {
-            Log.e(TAG, "timer done! calling sync to server");
+          public void accept(Long aLong) {
+            Log.d(TAG, "timer done! calling sync to server");
             syncLocalAndServer(ApplicationLoader.applicationContext);
           }
         });
@@ -202,14 +200,12 @@ public class NetworkUtils {
     return (!OFFLINE_SELECTED.equals(status)); // this means we try to connect every time, unless told not to (i.e., we trigger an error even if data turned off
   }
 
-  public static boolean isOfflineOrLoggedOut(Subscriber<? super String> sub, final String phoneNumber, final String code) {
+  public static boolean isOfflineOrLoggedOut(ObservableEmitter<String> sub, final String phoneNumber, final String code) {
     if (!isOnline()) {
       sub.onNext(OFFLINE_SELECTED);
-      sub.onCompleted();
       return true;
     } else if (TextUtils.isEmpty(phoneNumber) || TextUtils.isEmpty(code)) {
       sub.onNext(DB_EMPTY);
-      sub.onCompleted();
       return true;
     } else
       return false;
@@ -224,9 +220,9 @@ public class NetworkUtils {
 
   public static Observable syncAndStartTasks(final Context context, final boolean checkSyncTime,
                                              final boolean fetchOnly) {
-    return Observable.create(new Observable.OnSubscribe() {
+    return Observable.create(new ObservableOnSubscribe<Boolean>() {
       @Override
-      public void call(Object o) {
+      public void subscribe(ObservableEmitter<Boolean> e) {
         if (!checkSyncTime || shouldAttemptSync(context)) {
           LocationServices.getInstance().connect();
           checkForAndUpdateToken();
@@ -256,10 +252,10 @@ public class NetworkUtils {
     }
   }
 
-  public static Observable registerForGCM(final Context context) {
-    return Observable.create(new Observable.OnSubscribe() {
+  public static Observable<Boolean> registerForGCM(final Context context) {
+    return Observable.create(new ObservableOnSubscribe<Boolean>() {
       @Override
-      public void call(Object o) {
+      public void subscribe(ObservableEmitter<Boolean> e) {
         if (isOnline() && isNetworkAvailable(context)) {
           Intent gcmRegistrationIntent = new Intent(context, GcmRegistrationService.class);
           gcmRegistrationIntent.putExtra(NotificationConstants.ACTION, NotificationConstants.GCM_REGISTER);
@@ -294,9 +290,9 @@ public class NetworkUtils {
     if (!fetchingServerEntities) {
       fetchingServerEntities = true;
       if (isOnline(context)) {
-        GroupService.getInstance().fetchGroupList(Schedulers.immediate()).subscribe();
-        GroupService.getInstance().fetchGroupJoinRequests(Schedulers.immediate()).subscribe();
-        TaskService.getInstance().fetchUpcomingTasks(Schedulers.immediate()).subscribe();
+        GroupService.getInstance().fetchGroupList(Schedulers.trampoline()).subscribe();
+        GroupService.getInstance().fetchGroupJoinRequests(Schedulers.trampoline()).subscribe();
+        TaskService.getInstance().fetchUpcomingTasks(Schedulers.trampoline()).subscribe();
       }
     }
     fetchingServerEntities = false;
@@ -320,23 +316,20 @@ public class NetworkUtils {
   }
 
   private static void sendLocalGroups() {
-    RealmUtils.loadListFromDB(Group.class, "isLocal", true, Schedulers.immediate())
-        .subscribe(new Action1<List<Group>>() {
-      @Override public void call(List<Group> realmResults) {
-        Log.e(TAG, "sendLocalGroups ... found this many groups ... " + realmResults.size());
+    RealmUtils.loadListFromDB(Group.class, "isLocal", true, Schedulers.trampoline())
+        .subscribe(new Consumer<List<Group>>() {
+      @Override public void accept(List<Group> realmResults) {
         for (final Group g : realmResults) {
-          GroupService.getInstance().sendNewGroupToServer(g.getGroupUid(), Schedulers.immediate())
-              .subscribe(new Subscriber<String>() {
+          GroupService.getInstance().sendNewGroupToServer(g.getGroupUid(), Schedulers.trampoline())
+              .subscribe(new Consumer<String>() {
                 @Override
-                public void onError(Throwable e) {
-                  setConnectionFailed();
+                public void accept(@NonNull String s) throws Exception {
+
                 }
-
+              }, new Consumer<Throwable>() {
                 @Override
-                public void onCompleted() { }
-
-                @Override
-                public void onNext(String s) {
+                public void accept(@NonNull Throwable throwable) throws Exception {
+                  setConnectionFailed();
                 }
               });
         }
@@ -345,10 +338,10 @@ public class NetworkUtils {
   }
 
   private static void sendLocallyAddedMembers() {
-    RealmUtils.loadListFromDB(Group.class, "isEditedLocal", true, Schedulers.immediate())
-        .subscribe(new Action1<List<Group>>() {
+    RealmUtils.loadListFromDB(Group.class, "isEditedLocal", true, Schedulers.trampoline())
+        .subscribe(new Consumer<List<Group>>() {
       @Override
-      public void call(List<Group> realmResults) {
+      public void accept(List<Group> realmResults) {
         if (!realmResults.isEmpty()) {
           Log.e(TAG, "found a locally edited group! this many : " + realmResults.size());
           final Map<String, Object> queryMap = new HashMap<>();
@@ -368,29 +361,24 @@ public class NetworkUtils {
 
   private static void processStoredNewMembers(final String groupUid, final List<Member> members) {
     GroupService.getInstance().addMembersToGroup(groupUid, members, true)
-        .subscribe(new Subscriber() {
+        .subscribe(new Consumer<String>() {
           @Override
-          public void onCompleted() {
+          public void accept(@NonNull String s) throws Exception {
 
           }
-
+        }, new Consumer<Throwable>() {
           @Override
-          public void onError(Throwable e) {
+          public void accept(@NonNull Throwable throwable) throws Exception {
             setConnectionFailed(); // todo : interrupt sequence of calls
-          }
-
-          @Override
-          public void onNext(Object o) {
-            Log.e(TAG, "group edited locally returned okay ... sent to server"); // todo : flag as locally edit
           }
         });
   }
 
   private static void sendLocallyEditedGroups() {
-    RealmUtils.loadListFromDB(LocalGroupEdits.class, Schedulers.immediate())
-        .subscribe(new Action1<List<LocalGroupEdits>>() {
+    RealmUtils.loadListFromDB(LocalGroupEdits.class, Schedulers.trampoline())
+        .subscribe(new Consumer<List<LocalGroupEdits>>() {
           @Override
-          public void call(List<LocalGroupEdits> results) {
+          public void accept(List<LocalGroupEdits> results) {
             if (results != null && !results.isEmpty()) {
               processLocalGroupEdits(results);
             }
@@ -400,22 +388,19 @@ public class NetworkUtils {
 
   private static void processLocalGroupEdits(List<LocalGroupEdits> edits) {
     for (LocalGroupEdits edit : edits) {
-      GroupService.getInstance().sendLocalEditsToServer(edit, Schedulers.immediate())
-          .subscribe(new Subscriber<String>() {
+      GroupService.getInstance().sendLocalEditsToServer(edit, Schedulers.trampoline())
+          .subscribe(new Consumer<String>() {
             @Override
-            public void onError(Throwable e) {
-              if (CONNECT_ERROR.equals(e.getMessage())) {
+            public void accept(@NonNull String s) throws Exception {
+              Log.d(TAG, "successfully sent edits to server ...");
+            }
+          }, new Consumer<Throwable>() {
+            @Override
+            public void accept(@NonNull Throwable throwable) throws Exception {
+              if (CONNECT_ERROR.equals(throwable.getMessage())) {
                 setConnectionFailed();
               }
             }
-
-            @Override
-            public void onNext(String s) {
-              Log.d(TAG, "successfully sent edits to server ...");
-            }
-
-            @Override
-            public void onCompleted() { }
           });
     }
   }
@@ -425,27 +410,24 @@ public class NetworkUtils {
     map.put("isLocal", true);
     map.put("isEdited", false);
     map.put("isParentLocal", false);
-     RealmUtils.loadListFromDB(TaskModel.class, map).subscribe(new Action1<List<TaskModel>>() {
+     RealmUtils.loadListFromDB(TaskModel.class, map).subscribe(new Consumer<List<TaskModel>>() {
        @Override
-       public void call(List<TaskModel> tasks) {
+       public void accept(List<TaskModel> tasks) {
          for (final TaskModel model : tasks) {
            final String localUid = model.getTaskUid();
-           TaskService.getInstance().sendTaskToServer(model, Schedulers.immediate()).subscribe(new Subscriber<TaskModel>() {
-             @Override
-             public void onError(Throwable e) {
-               if (e instanceof ApiCallException && NetworkUtils.CONNECT_ERROR.equals(e.getMessage())) {
-                 setConnectionFailed();
-               }
-             }
-
-             @Override
-             public void onNext(TaskModel taskModel) {
-               RealmUtils.removeObjectFromDatabase(TaskModel.class, "taskUid", localUid);
-             }
-
-             @Override
-             public void onCompleted() { }
-           });
+           TaskService.getInstance().sendTaskToServer(model, Schedulers.trampoline()).subscribe(new Consumer<TaskModel>() {
+                @Override
+                  public void accept(@NonNull TaskModel taskModel) throws Exception {
+                    RealmUtils.removeObjectFromDatabase(TaskModel.class, "taskUid", localUid);
+                  }
+                }, new Consumer<Throwable>() {
+                  @Override
+                  public void accept(@NonNull Throwable throwable) throws Exception {
+                    if (throwable instanceof ApiCallException && NetworkUtils.CONNECT_ERROR.equals(throwable.getMessage())) {
+                      setConnectionFailed();
+                    }
+                  }
+                });
          }
        }
      });
@@ -456,11 +438,11 @@ public class NetworkUtils {
     map1.put("isLocal", true);
     map1.put("isEdited", true);
     map1.put("isParentLocal", false);
-    RealmUtils.loadListFromDB(TaskModel.class, map1).subscribe(new Action1<List<TaskModel>>() {
+    RealmUtils.loadListFromDB(TaskModel.class, map1).subscribe(new Consumer<List<TaskModel>>() {
       @Override
-      public void call(List<TaskModel> tasks1) {
+      public void accept(List<TaskModel> tasks1) {
         for (final TaskModel model : tasks1) {
-          TaskService.getInstance().sendTaskUpdateToServer(model, true, Schedulers.immediate())
+          TaskService.getInstance().sendTaskUpdateToServer(model, true, Schedulers.trampoline())
               .subscribe(); // todo : work out selected member change logic & harmonize w/ updates below
         }
       }
@@ -471,25 +453,23 @@ public class NetworkUtils {
     Map<String, Object> map1 = new HashMap<>();
     map1.put("isActionLocal", true);
     map1.put("isLocal",false);
-    RealmUtils.loadListFromDB(TaskModel.class,map1).subscribe(new Action1<List<TaskModel>>() {
+    RealmUtils.loadListFromDB(TaskModel.class,map1).subscribe(new Consumer<List<TaskModel>>() {
       @Override
-      public void call(List<TaskModel> tasks) {
+      public void accept(List<TaskModel> tasks) {
         for(TaskModel taskModel : tasks) {
-          TaskService.getInstance().respondToTask(taskModel.getTaskUid(), taskModel.getReply(), Schedulers.immediate())
-              .subscribe(new Subscriber<String>() {
+          TaskService.getInstance().respondToTask(taskModel.getTaskUid(), taskModel.getReply(),
+                  Schedulers.trampoline())
+                  .subscribe(new Consumer<String>() {
                 @Override
-                public void onCompleted() { }
-
-                @Override
-                public void onError(Throwable e) {
-                  if (NetworkUtils.CONNECT_ERROR.equals(e.getMessage())) {
-                    setConnectionFailed();
-                  }
-                }
-
-                @Override
-                public void onNext(String s) { }
-              });
+                public void accept(@NonNull String s) throws Exception { }
+              }, new Consumer<Throwable>() {
+                    @Override
+                    public void accept(@NonNull Throwable throwable) throws Exception {
+                      if (NetworkUtils.CONNECT_ERROR.equals(throwable.getMessage())) {
+                        setConnectionFailed();
+                      }
+                    }
+                  });
         }
       }
     });
@@ -501,7 +481,7 @@ public class NetworkUtils {
     Log.d(TAG, "checking for join requests ...");
     if (RealmUtils.countListInDB(PublicGroupModel.class, map1) > 0) {
       Log.d(TAG, "found join requests stored locally ... sending ...");
-      GroupSearchService.getInstance().sendStoredJoinRequests(Schedulers.immediate()).subscribe();
+      GroupSearchService.getInstance().sendStoredJoinRequests(Schedulers.trampoline()).subscribe();
     }
   }
 

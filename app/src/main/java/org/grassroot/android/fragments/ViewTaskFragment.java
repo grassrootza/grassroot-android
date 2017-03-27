@@ -59,6 +59,7 @@ import org.grassroot.android.utils.RealmUtils;
 import org.grassroot.android.utils.RetryWithDelay;
 import org.grassroot.android.utils.image.LocalImageUtils;
 import org.grassroot.android.utils.image.NetworkImageUtils;
+import org.grassroot.android.utils.rxutils.SingleObserverFromConsumer;
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
@@ -74,11 +75,10 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 import butterknife.Unbinder;
-import rx.Subscriber;
-import rx.android.schedulers.AndroidSchedulers;
-import rx.functions.Action1;
-import rx.observers.Subscribers;
-import rx.schedulers.Schedulers;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.annotations.NonNull;
+import io.reactivex.functions.Consumer;
+import io.reactivex.schedulers.Schedulers;
 
 import static android.app.Activity.RESULT_OK;
 import static android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
@@ -302,9 +302,9 @@ public class ViewTaskFragment extends Fragment {
         } else {
             progressBar.setVisibility(View.VISIBLE);
             TaskService.getInstance().fetchAndStoreTask(taskUid, taskType, AndroidSchedulers.mainThread())
-                .subscribe(new Action1<String>() {
+                .subscribe(new Consumer<String>() {
                     @Override
-                    public void call(String s) {
+                    public void accept(@NonNull String s) {
                         if (NetworkUtils.FETCHED_SERVER.equals(s)) {
                             task = RealmUtils.loadObjectFromDB(TaskModel.class, "taskUid", taskUid);
                             setUpViews(task);
@@ -330,62 +330,58 @@ public class ViewTaskFragment extends Fragment {
         rcResponseList.setItemAnimator(null);
 
         TaskService.getInstance().fetchMeetingRsvps(taskUid)
-            .subscribe(new Subscriber<RsvpListModel>() {
-            @Override
-            public void onNext(RsvpListModel meetingResponses) {
-                if (viewsBound) {
-                    tvResponsesCount.setText(String.format(getString(R.string.vt_mtg_response_count),
-                        meetingResponses.getNumberInvited(), meetingResponses.getNumberYes()));
-                    if (meetingResponses.isCanViewRsvps()) {
-                        icResponsesExpand.setVisibility(View.VISIBLE);
-                        mtgRsvpAdapter.setMapOfResponses(meetingResponses.getRsvpResponses());
-                        canViewResponses = true;
-                        mtgRsvpAdapter.notifyDataSetChanged();
-                    } else {
+            .subscribe(new Consumer<RsvpListModel>() {
+                @Override
+                public void accept(@NonNull RsvpListModel meetingResponses) throws Exception {
+                    if (viewsBound) {
+                        tvResponsesCount.setText(String.format(getString(R.string.vt_mtg_response_count),
+                                meetingResponses.getNumberInvited(), meetingResponses.getNumberYes()));
+                        if (meetingResponses.isCanViewRsvps()) {
+                            icResponsesExpand.setVisibility(View.VISIBLE);
+                            mtgRsvpAdapter.setMapOfResponses(meetingResponses.getRsvpResponses());
+                            canViewResponses = true;
+                            mtgRsvpAdapter.notifyDataSetChanged();
+                        } else {
+                            icResponsesExpand.setVisibility(View.GONE);
+                            canViewResponses = false;
+                            cvResponseList.setClickable(false);
+                        }
+                    }
+                }
+            }, new Consumer<Throwable>() {
+                @Override
+                public void accept(@NonNull Throwable throwable) throws Exception {
+                    if (viewsBound) {
+                        tvResponsesCount.setText(R.string.vt_mtg_response_error); // add a button for retry in future
                         icResponsesExpand.setVisibility(View.GONE);
-                        canViewResponses = false;
                         cvResponseList.setClickable(false);
                     }
-                }
-            }
 
-            @Override
-            public void onError(Throwable e) {
-
-                if (viewsBound) {
-                    tvResponsesCount.setText(R.string.vt_mtg_response_error); // add a button for retry in future
-                    icResponsesExpand.setVisibility(View.GONE);
-                    cvResponseList.setClickable(false);
-                }
-
-                if (e instanceof ApiCallException) {
-                    if (NetworkUtils.CONNECT_ERROR.equals(e.getMessage())) {
-                        // to remain somewhat discreet use the snackbar here, rather than dialog
-                        ErrorUtils.networkErrorSnackbar(mContainer, R.string.connect_error_view_task_snackbar,
-                            new View.OnClickListener() {
-                                @Override
-                                public void onClick(View v) {
-                                    setMeetingRsvpView();
-                                }
-                            });
-                    } else {
-                        Snackbar.make(mContainer, ErrorUtils.serverErrorText(((ApiCallException) e).errorTag),
-                            Snackbar.LENGTH_SHORT).show();
+                    if (throwable instanceof ApiCallException) {
+                        if (NetworkUtils.CONNECT_ERROR.equals(throwable.getMessage())) {
+                            // to remain somewhat discreet use the snackbar here, rather than dialog
+                            ErrorUtils.networkErrorSnackbar(mContainer, R.string.connect_error_view_task_snackbar,
+                                new View.OnClickListener() {
+                                    @Override
+                                    public void onClick(View v) {
+                                        setMeetingRsvpView();
+                                    }
+                                });
+                        } else {
+                            Snackbar.make(mContainer, ErrorUtils.serverErrorText(((ApiCallException) throwable).errorTag),
+                                Snackbar.LENGTH_SHORT).show();
+                        }
                     }
-                }
             }
-
-            @Override
-            public void onCompleted() { }
         });
     }
 
     private void setVoteResponseView() {
         tvResponsesCount.setText(task.getDeadlineDate().after(new Date()) ? R.string.vt_vote_count_open
             : R.string.vt_vote_count_closed);
-        TaskService.getInstance().fetchVoteTotals(taskUid).subscribe(new Subscriber<ResponseTotalsModel>() {
+        TaskService.getInstance().fetchVoteTotals(taskUid).subscribe(new Consumer<ResponseTotalsModel>() {
             @Override
-            public void onNext(ResponseTotalsModel responseTotalsModel) {
+            public void accept(@NonNull ResponseTotalsModel responseTotalsModel) throws Exception {
                 if (viewsBound) {
                     TextView tvYes = (TextView) llVoteResponseDetails.findViewById(R.id.count_yes);
                     TextView tvNo = (TextView) llVoteResponseDetails.findViewById(R.id.count_no);
@@ -400,17 +396,17 @@ public class ViewTaskFragment extends Fragment {
                     canViewResponses = true;
                 }
             }
-
+        }, new Consumer<Throwable>() {
             @Override
-            public void onError(Throwable e) {
+            public void accept(@NonNull Throwable throwable) throws Exception {
                 if (viewsBound) {
                     tvResponsesCount.setText(R.string.vt_vote_totals_error); // add a button for retry in future
                     icResponsesExpand.setVisibility(View.GONE);
                     cvResponseList.setClickable(false);
                 }
 
-                if (e instanceof ApiCallException) {
-                    if (NetworkUtils.CONNECT_ERROR.equals(e.getMessage())) {
+                if (throwable instanceof ApiCallException) {
+                    if (NetworkUtils.CONNECT_ERROR.equals(throwable.getMessage())) {
                         ErrorUtils.networkErrorSnackbar(mContainer, R.string.connect_error_view_task_snackbar,
                             new View.OnClickListener() {
                                 @Override
@@ -419,14 +415,12 @@ public class ViewTaskFragment extends Fragment {
                                 }
                             });
                     } else {
-                        Snackbar.make(mContainer, ErrorUtils.serverErrorText(((ApiCallException) e).errorTag),
+                        Snackbar.make(mContainer, ErrorUtils.serverErrorText(((ApiCallException) throwable).errorTag),
                             Snackbar.LENGTH_SHORT).show();
                     }
                 }
             }
 
-            @Override
-            public void onCompleted() { }
         });
 
     }
@@ -438,9 +432,9 @@ public class ViewTaskFragment extends Fragment {
         rcResponseList.setItemAnimator(null);
 
         TaskService.getInstance().fetchAssignedMembers(taskUid, TaskConstants.TODO)
-            .subscribe(new Subscriber<List<Member>>() {
+            .subscribe(new Consumer<List<Member>>() {
                 @Override
-                public void onNext(List<Member> members) {
+                public void accept(@NonNull List<Member> members) throws Exception {
                     if (viewsBound) {
                         if (!members.isEmpty()) {
                             Log.e(TAG, "returned these members : " + members.toString());
@@ -454,17 +448,17 @@ public class ViewTaskFragment extends Fragment {
                         }
                     }
                 }
-
+            }, new Consumer<Throwable>() {
                 @Override
-                public void onError(Throwable e) {
+                public void accept(@NonNull Throwable throwable) throws Exception {
                     if (viewsBound) {
                         tvResponsesCount.setText(R.string.vt_todo_assigned_error);
                         icResponsesExpand.setVisibility(View.GONE);
                         cvResponseList.setClickable(false);
                     }
 
-                    if (e instanceof ApiCallException) {
-                        if (NetworkUtils.CONNECT_ERROR.equals(e.getMessage())) {
+                    if (throwable instanceof ApiCallException) {
+                        if (NetworkUtils.CONNECT_ERROR.equals(throwable.getMessage())) {
                             ErrorUtils.networkErrorSnackbar(mContainer, R.string.connect_error_view_task_snackbar,
                                 new View.OnClickListener() {
                                 @Override
@@ -473,14 +467,11 @@ public class ViewTaskFragment extends Fragment {
                                 }
                             });
                         } else {
-                            Snackbar.make(mContainer, ErrorUtils.serverErrorText(((ApiCallException) e).errorTag), Snackbar.LENGTH_SHORT)
+                            Snackbar.make(mContainer, ErrorUtils.serverErrorText(((ApiCallException) throwable).errorTag), Snackbar.LENGTH_SHORT)
                                 .show();
                         }
                     }
             }
-
-            @Override
-            public void onCompleted() { }
         });
     }
 
@@ -559,14 +550,14 @@ public class ViewTaskFragment extends Fragment {
 
     private void setViewPhotoButton() {
         // todo : start using local DB for a bunch of these
-        TaskService.getInstance().countTaskImages(taskType, taskUid).subscribe(new Action1<Long>() {
+        TaskService.getInstance().countTaskImages(taskType, taskUid).subscribe(new Consumer<Long>() {
             @Override
-            public void call(Long aLong) {
+            public void accept(@NonNull Long aLong) {
                 updatePhotoCount(aLong);
             }
-        }, new Action1<Throwable>() {
+        }, new Consumer<Throwable>() {
             @Override
-            public void call(Throwable throwable) {
+            public void accept(@NonNull Throwable throwable) {
                 disablePhotoButton();
             }
         });
@@ -714,9 +705,9 @@ public class ViewTaskFragment extends Fragment {
     public void respondToTask(final String response) {
         progressBar.setVisibility(View.VISIBLE);
         TaskService.getInstance().respondToTask(task.getTaskUid(), response, null)
-            .subscribe(new Subscriber<String>() {
+            .subscribe(new Consumer<String>() {
                 @Override
-                public void onNext(String s) {
+                public void accept(@NonNull String s) throws Exception {
                     progressBar.setVisibility(View.GONE);
                     task = RealmUtils.loadObjectFromDB(TaskModel.class, "taskUid", task.getTaskUid());
                     if (NetworkUtils.SAVED_SERVER.equals(s)) {
@@ -725,9 +716,9 @@ public class ViewTaskFragment extends Fragment {
                         handleSavedOffline(response);
                     }
                 }
-
+            }, new Consumer<Throwable>() {
                 @Override
-                public void onError(Throwable e) {
+                public void accept(@NonNull Throwable e) throws Exception {
                     progressBar.setVisibility(View.GONE);
                     if (NetworkUtils.CONNECT_ERROR.equals(e.getMessage())) {
                         task = RealmUtils.loadObjectFromDB(TaskModel.class, "taskUid", task.getTaskUid());
@@ -736,9 +727,6 @@ public class ViewTaskFragment extends Fragment {
                         Snackbar.make(mContainer, ErrorUtils.serverErrorText(e), Snackbar.LENGTH_SHORT).show();
                     }
                 }
-
-                @Override
-                public void onCompleted() { }
         });
     }
 
@@ -782,9 +770,9 @@ public class ViewTaskFragment extends Fragment {
     }
 
     private void handleNoNetworkResponse(final String retryTag, int snackbarMsg) {
-        NetworkErrorDialogFragment.newInstance(snackbarMsg, progressBar, Subscribers.create(new Action1<String>() {
+        NetworkErrorDialogFragment.newInstance(snackbarMsg, progressBar, new SingleObserverFromConsumer<>(new Consumer<String>() {
             @Override
-            public void call(String s) {
+            public void accept(@NonNull String s) throws Exception {
                 progressBar.setVisibility(View.GONE);
                 if (s.equals(NetworkUtils.CONNECT_ERROR)) {
                     Snackbar.make(mContainer, R.string.connect_error_failed_retry, Snackbar.LENGTH_SHORT).show();
@@ -977,45 +965,45 @@ public class ViewTaskFragment extends Fragment {
                 .subscribeOn(Schedulers.io())
                 .delay(1L, TimeUnit.SECONDS)
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(new Action1<String>() {
+                .subscribe(new Consumer<String>() {
                                @Override
-                               public void call(String s) {
+                               public void accept(@NonNull String s) throws Exception {
                                    dismissUploadProgress();
                                    Toast.makeText(getContext(), R.string.vt_mtg_photo_succeeded, Toast.LENGTH_SHORT).show();
                                    updatePhotoCount(photoCount + 1);
                                    // Log.e(TAG, "back from upload image, about to call check analysis results");
                                    checkForAnalysisResults(s);
                                }
-                           }, new Action1<Throwable>() {
+                           }, new Consumer<Throwable>() {
                                @Override
-                               public void call(Throwable throwable) {
+                               public void accept(@NonNull Throwable throwable) throws Exception{
                                    dismissUploadProgress();
                                    Toast.makeText(getContext(), R.string.vt_mtg_photo_failed, Toast.LENGTH_LONG).show();
                                }
                            });
     }
 
-    // this retries 3 times, over 10 seconds, until it gets a result saying analysis complete
+    // this retries 3 times, over 15 seconds, until it gets a result saying analysis complete (watch for nulls)
     private void checkForAnalysisResults(final String logUid) {
         NetworkImageUtils.checkForImageAnalysis(logUid, taskType)
                 .subscribeOn(Schedulers.io())
-                .retryWhen(new RetryWithDelay(3, 3000))
+                .retryWhen(new RetryWithDelay(3, 5000))
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(new Action1<ImageRecord>() {
-            @Override
-            public void call(ImageRecord imageRecord) {
-                if (imageRecord.hasFoundFaces()) {
-                    showFaceCountDialog(imageRecord);
-                } else {
-                    Log.e(TAG, "nothing found ...");
-                }
-            }
-        }, new Action1<Throwable>() {
-            @Override
-            public void call(Throwable throwable) {
-                Log.e(TAG, "call failed");
-            }
-        });
+                .subscribe(new Consumer<ImageRecord>() {
+                    @Override
+                    public void accept(@NonNull ImageRecord imageRecord) {
+                        if (imageRecord.hasFoundFaces()) {
+                            showFaceCountDialog(imageRecord);
+                        } else {
+                            Log.e(TAG, "nothing found ...");
+                        }
+                    }
+                }, new Consumer<Throwable>() {
+                    @Override
+                    public void accept(@NonNull Throwable throwable) {
+                        Log.e(TAG, "call failed");
+                    }
+                });
     }
 
     private void showFaceCountDialog(final ImageRecord imageRecord) {
@@ -1088,15 +1076,15 @@ public class ViewTaskFragment extends Fragment {
     private void cancelTask() {
         progressBar.setVisibility(View.VISIBLE);
         TaskService.getInstance().cancelTask(taskUid, taskType, AndroidSchedulers.mainThread())
-            .subscribe(new Action1<String>() {
+            .subscribe(new Consumer<String>() {
                 @Override
-                public void call(String s) {
+                public void accept(@NonNull String s) {
                     progressBar.setVisibility(View.GONE);
                     EventBus.getDefault().post(new TaskCancelledEvent(taskUid));
                 }
-            }, new Action1<Throwable>() {
+            }, new Consumer<Throwable>() {
                 @Override
-                public void call(Throwable e) {
+                public void accept(@NonNull Throwable e) {
                     progressBar.setVisibility(View.GONE);
                     if (NetworkUtils.CONNECT_ERROR.equals(e.getMessage())) {
                         handleRetryCancel();
@@ -1109,9 +1097,9 @@ public class ViewTaskFragment extends Fragment {
 
     private void handleRetryCancel() {
         NetworkErrorDialogFragment.newInstance(R.string.connect_error_task_cancelled, progressBar,
-            Subscribers.create(new Action1<String>() {
+            new SingleObserverFromConsumer<>(new Consumer<String>() {
                 @Override
-                public void call(String s) {
+                public void accept(@NonNull String s) throws Exception {
                     progressBar.setVisibility(View.GONE);
                     if (s.equals(NetworkUtils.CONNECT_ERROR)) {
                         Snackbar.make(mContainer, R.string.connect_error_failed_retry, Snackbar.LENGTH_SHORT).show();

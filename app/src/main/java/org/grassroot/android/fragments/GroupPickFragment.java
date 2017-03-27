@@ -26,8 +26,8 @@ import java.util.Map;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.Unbinder;
+import io.reactivex.functions.Consumer;
 import io.realm.Sort;
-import rx.functions.Action1;
 
 /**
  * Created by luke on 2016/06/29.
@@ -96,9 +96,9 @@ public class GroupPickFragment extends Fragment {
   }
 
   private void loadGroupsByPermission(final String permissionToFilter) {
-    RealmUtils.loadGroupsSorted().subscribe(new Action1<List<Group>>() {
+    RealmUtils.loadGroupsSorted().subscribe(new Consumer<List<Group>>() {
       @Override
-      public void call(List<Group> groups) {
+      public void accept(List<Group> groups) {
         for (Group g : groups) {
           List<String> permissions = g.getPermissionsList();
           if (permissions.contains(permissionToFilter)) {
@@ -113,9 +113,9 @@ public class GroupPickFragment extends Fragment {
   private void loadGroupsByPaidStatus(final boolean paidFor) {
     final Map<String, Object> map = new HashMap<>();
     map.put("paidFor", paidFor);
-    RealmUtils.loadGroupsFilteredSorted(map, "lastMajorChangeMillis", Sort.DESCENDING).subscribe(new Action1<List<Group>>() {
+    RealmUtils.loadGroupsFilteredSorted(map, "lastMajorChangeMillis", Sort.DESCENDING).subscribe(new Consumer<List<Group>>() {
       @Override
-      public void call(List<Group> groups) {
+      public void accept(List<Group> groups) {
         Log.e(TAG, "loaded paid groups! with flag : " + paidFor + " and " + groups.size() + " returned");
         filteredGroups = groups;
         groupPickAdapter.setGroupList(filteredGroups);

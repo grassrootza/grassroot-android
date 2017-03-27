@@ -15,8 +15,12 @@ import org.grassroot.android.fragments.PhotoViewFragment;
 import org.grassroot.android.interfaces.TaskConstants;
 import org.grassroot.android.models.ImageRecord;
 import org.grassroot.android.utils.RealmUtils;
+import org.grassroot.android.utils.rxutils.ObserverFromConsumer;
+import org.grassroot.android.utils.rxutils.SingleObserverFromConsumer;
 
-import rx.functions.Action1;
+import io.reactivex.SingleObserver;
+import io.reactivex.annotations.NonNull;
+import io.reactivex.functions.Consumer;
 
 /**
  * Created by luke on 2017/03/14.
@@ -33,8 +37,8 @@ public class ImageDisplayActivity extends AppCompatActivity {
     private String taskType;
     private String taskUid;
 
-    private Action1<ImageRecord> imageClickObserver;
-    private Action1<ImageRecord> imageDeletionObserver;
+    private Consumer<ImageRecord> imageClickConsumer;
+    private SingleObserver<ImageRecord> imageDeletionObserver;
 
     private PhotoViewFragment photoViewFragment;
     private ImageGridFragment imageGridFragment;
@@ -64,24 +68,24 @@ public class ImageDisplayActivity extends AppCompatActivity {
         FragmentManager fm = getSupportFragmentManager();
         imageGridFragment = (ImageGridFragment) fm.findFragmentByTag(IMAGE_GRID_TAG);
 
-        imageDeletionObserver = new Action1<ImageRecord>() {
+        imageDeletionObserver = new SingleObserverFromConsumer<>(new Consumer<ImageRecord>() {
             @Override
-            public void call(ImageRecord imageRecord) {
+            public void accept(@NonNull ImageRecord imageRecord) {
                 deleteImage(imageRecord);
             }
-        };
-        imageClickObserver = new Action1<ImageRecord>() {
+        });
+        imageClickConsumer = new Consumer<ImageRecord>() {
             @Override
-            public void call(ImageRecord record) {
+            public void accept(@NonNull ImageRecord record) {
                 photoViewFragment = PhotoViewFragment.newInstance(taskType, record, imageDeletionObserver, false);
                 displayFullImageFragment();
             }
         };
 
         if (imageGridFragment == null) {
-            imageGridFragment = ImageGridFragment.newInstance(taskType, taskUid, imageClickObserver);
+            imageGridFragment = ImageGridFragment.newInstance(taskType, taskUid, new ObserverFromConsumer<>(imageClickConsumer));
         } else {
-            imageGridFragment.setImageClickObserver(imageClickObserver);
+            imageGridFragment.setImageClickObserver(new ObserverFromConsumer<>(imageClickConsumer));
         }
 
         if (!imageGridFragment.isAdded()) {
@@ -135,7 +139,8 @@ public class ImageDisplayActivity extends AppCompatActivity {
     }
 
     private void setToolbarToPhoto() {
-        toolbar.setBackgroundColor(ContextCompat.getColor(this, R.color.black));
+        // toolbar.setBackgroundColor(ContextCompat.getColor(this, R.color.black));
+        toolbar.setBackgroundColor(ContextCompat.getColor(this, R.color.primaryColor));
         toolbar.setTitleTextColor(ContextCompat.getColor(this, R.color.white));
         toolbar.setNavigationIcon(R.drawable.btn_back_wt);
     }

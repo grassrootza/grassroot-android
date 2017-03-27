@@ -25,7 +25,8 @@ import java.util.List;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.Unbinder;
-import rx.functions.Action1;
+import io.reactivex.annotations.NonNull;
+import io.reactivex.functions.Consumer;
 
 /**
  * Created by paballo on 2016/09/12.
@@ -66,9 +67,9 @@ public class MultiGroupChatFragment extends Fragment {
     }
 
     public void loadMessages() {
-        RealmUtils.loadDistinctMessages().subscribe(new Action1<List<Message>>() {
+        RealmUtils.loadDistinctMessages().subscribe(new Consumer<List<Message>>() {
             @Override
-            public void call(List<Message> msgs) {
+            public void accept(@NonNull List<Message> msgs) throws Exception {
                 if (incomingChatMessageAdapter == null) {
                     incomingChatMessageAdapter = new IncomingChatMessageAdapter(getActivity(),msgs);
                 } else {

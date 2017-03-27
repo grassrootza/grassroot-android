@@ -21,8 +21,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
-import rx.Observable;
-import rx.functions.Action1;
+import io.reactivex.Observable;
+import io.reactivex.functions.Consumer;
 
 /**
  * Created by luke on 2016/07/14.
@@ -56,9 +56,9 @@ public class JoinRequestAdapter extends RecyclerView.Adapter<JoinRequestAdapter.
 
         dataLoader = RealmUtils.loadListFromDB(GroupJoinRequest.class, requestMap);
         openRequests = new ArrayList<>();
-        dataLoader.subscribe(new Action1<List<GroupJoinRequest>>() {
+        dataLoader.subscribe(new Consumer<List<GroupJoinRequest>>() {
             @Override
-            public void call(List<GroupJoinRequest> requests) {
+            public void accept(List<GroupJoinRequest> requests) {
                 openRequests.addAll(requests);
                 notifyDataSetChanged();
                 listener.backgroundCallComplete();
@@ -126,9 +126,9 @@ public class JoinRequestAdapter extends RecyclerView.Adapter<JoinRequestAdapter.
     }
 
     public void refreshList() {
-        dataLoader.subscribe(new Action1<List<GroupJoinRequest>>() {
+        dataLoader.subscribe(new Consumer<List<GroupJoinRequest>>() {
             @Override
-            public void call(List<GroupJoinRequest> requests) {
+            public void accept(List<GroupJoinRequest> requests) {
                 openRequests.clear();
                 openRequests.addAll(requests);
                 notifyDataSetChanged();

@@ -28,8 +28,9 @@ import org.greenrobot.eventbus.Subscribe;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
-import rx.Subscriber;
-import rx.android.schedulers.AndroidSchedulers;
+import io.reactivex.Observer;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.disposables.Disposable;
 
 /**
  * Created by luke on 2016/07/07.
@@ -109,9 +110,11 @@ public class NoGroupWelcomeActivity extends PortraitActivity implements
 
     private void checkIfStillNoGroups() {
         GroupService.getInstance().fetchGroupList(AndroidSchedulers.mainThread())
-            .subscribe(new Subscriber<String>() {
+            .subscribe(new Observer<String>() {
+                @Override public void onSubscribe(Disposable d) { }
+
                 @Override
-                public void onCompleted() { }
+                public void onComplete() { }
 
                 @Override
                 public void onError(Throwable e) {

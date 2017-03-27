@@ -32,8 +32,9 @@ import org.greenrobot.eventbus.EventBus;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
-import rx.Subscriber;
-import rx.android.schedulers.AndroidSchedulers;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.annotations.NonNull;
+import io.reactivex.functions.Consumer;
 
 public class GroupSearchActivity extends PortraitActivity implements GroupSearchStartFragment.GroupSearchInputListener,
     GroupSearchResultsFragment.SearchResultsListener {
@@ -161,9 +162,9 @@ public class GroupSearchActivity extends PortraitActivity implements GroupSearch
 
         progressDialog.show();
         GroupSearchService.getInstance().searchForGroups(searchOption, includeTopics, geoFilter, geoRadius)
-            .subscribe(new Subscriber<String>() {
+            .subscribe(new Consumer<String>() {
                 @Override
-                public void onNext(String s) {
+                public void accept(String s) {
                     progressDialog.dismiss();
                     if (GroupSearchService.getInstance().hasResults()) {
                         switchToFragment(RESULTS, false, true);
@@ -171,16 +172,16 @@ public class GroupSearchActivity extends PortraitActivity implements GroupSearch
                     } else {
                         AlertDialog.Builder builder = new AlertDialog.Builder(GroupSearchActivity.this);
                         int message = geoFilter ? R.string.find_group_none_location_on
-                            : !includeTopics ? R.string.find_group_none_name_only : R.string.find_group_none_found;
+                                : !includeTopics ? R.string.find_group_none_name_only : R.string.find_group_none_found;
                         builder.setMessage(message)
-                            .setCancelable(true)
-                            .create()
-                            .show();
+                                .setCancelable(true)
+                                .create()
+                                .show();
                     }
                 }
-
+            }, new Consumer<Throwable>() {
                 @Override
-                public void onError(Throwable e) {
+                public void accept(Throwable e) {
                     progressDialog.dismiss();
                     if (e instanceof ApiCallException) {
                         if (NetworkUtils.CONNECT_ERROR.equals(e.getMessage())) {
@@ -205,9 +206,6 @@ public class GroupSearchActivity extends PortraitActivity implements GroupSearch
                         }
                     }
                 }
-
-                @Override
-                public void onCompleted() { }
             });
     }
 
@@ -216,15 +214,15 @@ public class GroupSearchActivity extends PortraitActivity implements GroupSearch
         progressDialog.show();
         final String groupName = groupModel.getGroupName();
         GroupSearchService.getInstance().sendJoinRequest(groupModel, AndroidSchedulers.mainThread())
-            .subscribe(new Subscriber<String>() {
+            .subscribe(new Consumer<String>() {
                 @Override
-                public void onNext(String s) {
+                public void accept(String s) {
                     progressDialog.dismiss();
                     showDoneMessage(groupName, true);
                 }
-
+            }, new Consumer<Throwable>() {
                 @Override
-                public void onError(Throwable e) {
+                public void accept(@NonNull Throwable e) throws Exception {
                     progressDialog.dismiss();
                     Log.d(TAG, "send join request error thrown, with message ... " + e.getMessage());
                     if (e instanceof ApiCallException) {
@@ -236,9 +234,6 @@ public class GroupSearchActivity extends PortraitActivity implements GroupSearch
                         }
                     }
                 }
-
-                @Override
-                public void onCompleted() { }
             });
     }
 
@@ -246,16 +241,16 @@ public class GroupSearchActivity extends PortraitActivity implements GroupSearch
     public void cancelJoinRequest(PublicGroupModel groupModel) {
         progressDialog.show(); // should really switch to just a prog bar
         GroupSearchService.getInstance().cancelJoinRequest(groupModel.getId(), AndroidSchedulers.mainThread())
-            .subscribe(new Subscriber<String>() {
+            .subscribe(new Consumer<String>() {
                 @Override
-                public void onNext(String s) {
+                public void accept(String s) {
                     progressDialog.dismiss();
                     Toast.makeText(ApplicationLoader.applicationContext, R.string.gs_req_cancelled, Toast.LENGTH_SHORT).show();
                     EventBus.getDefault().post(new JoinRequestEvent(TAG));
                 }
-
+            }, new Consumer<Throwable>() {
                 @Override
-                public void onError(Throwable e) {
+                public void accept(Throwable e) {
                     progressDialog.dismiss();
                     if (NetworkUtils.CONNECT_ERROR.equals(e.getMessage())) {
                         final String errorMsg = getString(R.string.gs_req_remind_cancelled_connect_error);
@@ -265,9 +260,6 @@ public class GroupSearchActivity extends PortraitActivity implements GroupSearch
                             Snackbar.LENGTH_LONG).show();
                     }
                 }
-
-                @Override
-                public void onCompleted() { }
             });
     }
 
@@ -275,15 +267,15 @@ public class GroupSearchActivity extends PortraitActivity implements GroupSearch
     public void remindJoinRequest(PublicGroupModel groupModel) {
         progressDialog.show();
         GroupSearchService.getInstance().remindJoinRequest(groupModel.getId(), AndroidSchedulers.mainThread())
-            .subscribe(new Subscriber<String>() {
+            .subscribe(new Consumer<String>() {
                 @Override
-                public void onNext(String s) {
+                public void accept(String s) {
                     progressDialog.dismiss();
                     Toast.makeText(ApplicationLoader.applicationContext, R.string.gs_req_remind, Toast.LENGTH_SHORT).show();
                 }
-
+            }, new Consumer<Throwable>() {
                 @Override
-                public void onError(Throwable e) {
+                public void accept(Throwable e) {
                     progressDialog.dismiss();
                     if (NetworkUtils.CONNECT_ERROR.equals(e.getMessage())) {
                         final String errorMsg = getString(R.string.gs_req_remind_cancelled_connect_error);
@@ -293,9 +285,6 @@ public class GroupSearchActivity extends PortraitActivity implements GroupSearch
                             Snackbar.LENGTH_LONG).show();
                     }
                 }
-
-                @Override
-                public void onCompleted() { }
             });
     }
 

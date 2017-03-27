@@ -20,8 +20,8 @@ import org.grassroot.android.R;
 import org.grassroot.android.fragments.HomeGroupListFragment;
 import org.grassroot.android.models.Group;
 import org.grassroot.android.services.ApplicationLoader;
-import org.grassroot.android.utils.image.LocalImageUtils;
 import org.grassroot.android.utils.RealmUtils;
+import org.grassroot.android.utils.image.LocalImageUtils;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -32,12 +32,16 @@ import java.util.Locale;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
-import rx.Observable;
-import rx.Subscriber;
-import rx.android.schedulers.AndroidSchedulers;
-import rx.functions.Action1;
-import rx.functions.Func1;
-import rx.schedulers.Schedulers;
+import io.reactivex.Observable;
+import io.reactivex.ObservableEmitter;
+import io.reactivex.ObservableOnSubscribe;
+import io.reactivex.Observer;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.annotations.NonNull;
+import io.reactivex.disposables.Disposable;
+import io.reactivex.functions.Consumer;
+import io.reactivex.functions.Predicate;
+import io.reactivex.schedulers.Schedulers;
 
 /**
  * P
@@ -88,9 +92,9 @@ public class GroupListAdapter extends RecyclerView.Adapter<GroupListAdapter.GHP_
     }
 
     public void refreshGroupsToDB() {
-        RealmUtils.loadGroupsSorted().subscribe(new Action1<List<Group>>() {
+        RealmUtils.loadGroupsSorted().subscribe(new Consumer<List<Group>>() {
             @Override
-            public void call(List<Group> groups) {
+            public void accept(List<Group> groups) {
                 displayedGroups = new ArrayList<>(groups);
                 if (currentSort.equals(SORT_DEFAULT) || currentSort.equals(SORT_BY_DATE_CHANGED)) {
                     notifyDataSetChanged();
@@ -173,22 +177,22 @@ public class GroupListAdapter extends RecyclerView.Adapter<GroupListAdapter.GHP_
     }
 
     public void setSortType(final String sortType) {
-        Observable.create(new Observable.OnSubscribe<Boolean>() {
+        Observable.create(new ObservableOnSubscribe<Boolean>() {
             @Override
-            public void call(Subscriber<? super Boolean> subscriber) {
+            public void subscribe(ObservableEmitter<Boolean> subscriber) {
                 sortBySearchType(sortType);
                 subscriber.onNext(true);
             }
         }).subscribeOn(Schedulers.computation()).observeOn(AndroidSchedulers.mainThread())
-        .subscribe(new Action1<Boolean>() {
+        .subscribe(new Consumer<Boolean>() {
             @Override
-            public void call(Boolean aBoolean) {
+            public void accept(Boolean aBoolean) {
                 notifyDataSetChanged();
                 currentSort = sortType;
             }
-        }, new Action1<Throwable>() {
+        }, new Consumer<Throwable>() {
             @Override
-            public void call(Throwable throwable) {
+            public void accept(Throwable throwable) {
                 throwable.printStackTrace();
             }
         });
@@ -212,27 +216,30 @@ public class GroupListAdapter extends RecyclerView.Adapter<GroupListAdapter.GHP_
 
         final String lcQuery = searchText.toLowerCase();
 
-        Observable.from(fullGroupList)
+        Observable.fromIterable(fullGroupList)
             .subscribeOn(Schedulers.computation())
             .observeOn(AndroidSchedulers.mainThread())
-            .filter(new Func1<Group, Boolean>() {
+            .filter(new Predicate<Group>() {
                 @Override
-                public Boolean call(Group group) {
-                return !group.containsQueryText(lcQuery);
+                public boolean test(@NonNull Group group) throws Exception {
+                    return !group.containsQueryText(lcQuery);
                 }
-            }).subscribe(new Subscriber<Group>() {
-            @Override
-            public void onError(Throwable e) { e.printStackTrace(); }
+            }).subscribe(new Observer<Group>() {
+                @Override
+                public void onSubscribe(Disposable d) {  }
 
-            @Override
-            public void onNext(Group group) {
-                displayedGroups.remove(group);
-            }
+                @Override
+                public void onError(Throwable e) { e.printStackTrace(); }
 
-            @Override
-            public void onCompleted() {
-                notifyDataSetChanged();
-            }
+                @Override
+                public void onNext(Group group) {
+                    displayedGroups.remove(group);
+                }
+
+                @Override
+                public void onComplete() {
+                    notifyDataSetChanged();
+                }
         });
 
     }

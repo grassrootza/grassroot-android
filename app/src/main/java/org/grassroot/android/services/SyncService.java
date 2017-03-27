@@ -13,8 +13,9 @@ import org.grassroot.android.receivers.TaskManagerReceiver;
 import org.grassroot.android.utils.NetworkUtils;
 import org.grassroot.android.utils.RealmUtils;
 
-import rx.Subscriber;
-import rx.schedulers.Schedulers;
+import io.reactivex.annotations.NonNull;
+import io.reactivex.functions.Consumer;
+import io.reactivex.schedulers.Schedulers;
 
 public class SyncService extends GcmTaskService {
 
@@ -56,29 +57,26 @@ public class SyncService extends GcmTaskService {
     }
 
 	private void tryConnect() {
-		NetworkUtils.trySwitchToOnline(this, true, Schedulers.immediate())
-			.subscribe(new Subscriber<String>() {
-				@Override
-				public void onError(Throwable e) {
-					if (e instanceof ApiCallException) {
-						if (NetworkUtils.NO_NETWORK.equals(e.getMessage())) {
-							Log.d(TAG, "networkNotAvailable");
-						} else {
-							Log.d(TAG, "networkAvailableButConnectFailed");
-						}
-					}
-				}
-
-				@Override
-				public void onNext(String s) {
-					if (NetworkUtils.ONLINE_DEFAULT.equals(s)) {
-						doPeriodicTask();
-					}
-				}
-
-				@Override
-				public void onCompleted() { }
-			});
+		NetworkUtils.trySwitchToOnline(this, true, Schedulers.trampoline())
+			.subscribe(new Consumer<String>() {
+                @Override
+                public void accept(@NonNull String s) throws Exception {
+                    if (NetworkUtils.ONLINE_DEFAULT.equals(s)) {
+                        doPeriodicTask();
+                    }
+                }
+            }, new Consumer<Throwable>() {
+                @Override
+                public void accept(@NonNull Throwable e) throws Exception {
+                    if (e instanceof ApiCallException) {
+                        if (NetworkUtils.NO_NETWORK.equals(e.getMessage())) {
+                            Log.d(TAG, "networkNotAvailable");
+                        } else {
+                            Log.d(TAG, "networkAvailableButConnectFailed");
+                        }
+                    }
+                }
+            });
 	}
 
     private int doPeriodicTask() {

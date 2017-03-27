@@ -50,9 +50,10 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 import butterknife.Unbinder;
-import rx.Observable;
-import rx.android.schedulers.AndroidSchedulers;
-import rx.functions.Action1;
+import io.reactivex.Observable;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.annotations.NonNull;
+import io.reactivex.functions.Consumer;
 
 /**
  * Created by luke on 2016/05/13.
@@ -231,9 +232,9 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
             refreshTasksFromServer(false);
         } else {
             showProgress();
-            TaskService.getInstance().fetchTasks(groupUid, AndroidSchedulers.mainThread()).subscribe(new Action1<String>() {
+            TaskService.getInstance().fetchTasks(groupUid, AndroidSchedulers.mainThread()).subscribe(new Consumer<String>() {
                 @Override
-                public void call(String s) {
+                public void accept(String s) {
                     hasFetchedFromServer = NetworkUtils.FETCHED_SERVER.equals(s);
                     loadTasksFromDB(s);
                 }
@@ -258,9 +259,9 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
         if (forceShowRefreshing && swipeRefreshLayout != null) {
             swipeRefreshLayout.setRefreshing(true);
         }
-        TaskService.getInstance().fetchTasks(groupUid, null).subscribe(new Action1<String>() {
+        TaskService.getInstance().fetchTasks(groupUid, null).subscribe(new Consumer<String>() {
             @Override
-            public void call(String s) {
+            public void accept(@NonNull String s) {
                 loadTasksFromDB(s);
             }
         });
@@ -271,18 +272,18 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
         hasFetchedFromServer = fetchedFromServer || hasFetchedFromServer;
         Observable<List<TaskModel>> loadTasks = TextUtils.isEmpty(groupUid) ?
                 RealmUtils.loadUpcomingTasks() : RealmUtils.loadTasksSorted(groupUid);
-        loadTasks.subscribe(new Action1<List<TaskModel>>() {
+        loadTasks.subscribe(new Consumer<List<TaskModel>>() {
             @Override
-            public void call(List<TaskModel> taskModels) {
+            public void accept(@NonNull List<TaskModel> taskModels) {
                 if (taskModels.isEmpty()) {
                     handleNoTasksFound(latestFetchType);
                 } else if (taskView != null) { // to catch delayed call backs when user has left fragment
                     if (isInNoTaskMessageView) {
                         switchOffNoTasks();
                     }
-                    tasksAdapter.refreshTaskList(taskModels).subscribe(new Action1<Boolean>() {
+                    tasksAdapter.refreshTaskList(taskModels).subscribe(new Consumer<Boolean>() {
                         @Override
-                        public void call(Boolean aBoolean) {
+                        public void accept(@NonNull Boolean aBoolean) {
                             tasksAdapter.notifyDataSetChanged();
                             taskView.setVisibility(View.VISIBLE);
                         }
@@ -371,9 +372,9 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
             public void doConfirmClicked() {
                 progressBar.setVisibility(View.VISIBLE);
                 TaskService.getInstance().respondToTask(taskUid, response, AndroidSchedulers.mainThread())
-                        .subscribe(new Action1<String>() {
+                        .subscribe(new Consumer<String>() {
                             @Override
-                            public void call(String s) {
+                            public void accept(@NonNull String s) {
                                 // event bus & subscriber will take care of adapter updating
                                 progressBar.setVisibility(View.GONE);
                                 if (NetworkUtils.SAVED_SERVER.equals(s)) {
@@ -382,9 +383,9 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
                                     Snackbar.make(rootView, R.string.task_list_response_offline, Snackbar.LENGTH_SHORT).show();
                                 }
                             }
-                        }, new Action1<Throwable>() {
+                        }, new Consumer<Throwable>() {
                             @Override
-                            public void call(Throwable e) {
+                            public void accept(@NonNull Throwable e) {
                                 progressBar.setVisibility(View.GONE);
                                 // since we store offline, and it's a microinteraction, with a confirm dialog already, keeping to snackbar rather than heavier dialog
                                 if (NetworkUtils.CONNECT_ERROR.equals(e.getMessage())) {
@@ -482,15 +483,15 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 tasksAdapter.setToFilters(flagsChanged, AndroidSchedulers.mainThread())
-                        .subscribe(new Action1<Boolean>() {
+                        .subscribe(new Consumer<Boolean>() {
                             @Override
-                            public void call(Boolean aBoolean) {
+                            public void accept(@NonNull Boolean aBoolean) {
                                 tasksAdapter.notifyDataSetChanged();
                                 filtersChecked = flagsChanged;
                             }
-                        }, new Action1<Throwable>() {
+                        }, new Consumer<Throwable>() {
                             @Override
-                            public void call(Throwable throwable) {
+                            public void accept(@NonNull Throwable throwable) {
                                 throwable.printStackTrace();
                             }
                         });

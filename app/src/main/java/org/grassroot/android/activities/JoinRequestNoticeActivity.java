@@ -23,9 +23,10 @@ import org.grassroot.android.utils.RealmUtils;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
-import rx.Subscriber;
-import rx.android.schedulers.AndroidSchedulers;
-import rx.functions.Action1;
+import io.reactivex.Observer;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.disposables.Disposable;
+import io.reactivex.functions.Consumer;
 
 /**
  * Created by luke on 2016/08/28.
@@ -136,7 +137,9 @@ public class JoinRequestNoticeActivity extends PortraitActivity {
 	private void approveJoinRequest(String requestUid) {
 		progressBar.setVisibility(View.VISIBLE);
 		GroupService.getInstance().respondToJoinRequest(GroupConstants.APPROVE_JOIN_REQUEST,
-				requestUid, AndroidSchedulers.mainThread()).subscribe(new Subscriber<String>() {
+				requestUid, AndroidSchedulers.mainThread()).subscribe(new Observer<String>() {
+			@Override public void onSubscribe(Disposable d) { }
+
 			@Override
 			public void onNext(String s) {
 				progressBar.setVisibility(View.GONE);
@@ -154,7 +157,7 @@ public class JoinRequestNoticeActivity extends PortraitActivity {
 			}
 
 			@Override
-			public void onCompleted() {}
+			public void onComplete() {}
 		});
 	}
 
@@ -167,9 +170,9 @@ public class JoinRequestNoticeActivity extends PortraitActivity {
 
 	private void tryFetchGroupAndExit(final String groupUid) {
 		progressBar.setVisibility(View.VISIBLE);
-		GroupService.getInstance().fetchGroupList(AndroidSchedulers.mainThread()).subscribe(new Action1<String>() {
+		GroupService.getInstance().fetchGroupList(AndroidSchedulers.mainThread()).subscribe(new Consumer<String>() {
 			@Override
-			public void call(String s) {
+			public void accept(String s) {
 				progressBar.setVisibility(View.GONE);
 				if (NetworkUtils.FETCHED_SERVER.equals(s)) {
 					Group fetchedGroup = RealmUtils.loadGroupFromDB(groupUid);

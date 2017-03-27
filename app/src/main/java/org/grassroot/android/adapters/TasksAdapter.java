@@ -25,13 +25,16 @@ import java.util.Map;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
-import rx.Observable;
-import rx.Scheduler;
-import rx.Subscriber;
-import rx.android.schedulers.AndroidSchedulers;
-import rx.functions.Action1;
-import rx.functions.Func1;
-import rx.schedulers.Schedulers;
+import io.reactivex.Observable;
+import io.reactivex.ObservableEmitter;
+import io.reactivex.ObservableOnSubscribe;
+import io.reactivex.Observer;
+import io.reactivex.Scheduler;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.disposables.Disposable;
+import io.reactivex.functions.Consumer;
+import io.reactivex.functions.Predicate;
+import io.reactivex.schedulers.Schedulers;
 
 /**
  * Created by ravi on 15/4/16.
@@ -69,23 +72,23 @@ public class TasksAdapter extends RecyclerView.Adapter<TasksAdapter.TaskViewHold
   }
 
   public Observable<Boolean> refreshTaskList(final List<TaskModel> allTasks) {
-    return Observable.create(new Observable.OnSubscribe<Boolean>() {
+    return Observable.create(new ObservableOnSubscribe<Boolean>() {
       @Override
-      public void call(final Subscriber<? super Boolean> subscriber) {
+      public void subscribe(final ObservableEmitter<Boolean> subscriber) {
         viewedTasks = new ArrayList<>(allTasks);
         try {
           if (!filteringActive) {
             subscriber.onNext(true);
             resetUidPositionMap().subscribe();
-            subscriber.onCompleted();
+            subscriber.onComplete();
           } else {
             fullTaskList = new ArrayList<>(allTasks);
             // may be more elegant to hive out for loop from setToFilters into tiny helper method
-            setToFilters(storedFilters, Schedulers.immediate()).subscribe(new Action1<Boolean>() {
+            setToFilters(storedFilters, Schedulers.trampoline()).subscribe(new Consumer<Boolean>() {
               @Override
-              public void call(Boolean aBoolean) {
+              public void accept(Boolean aBoolean) {
                 subscriber.onNext(true); // this might not work entirely
-                subscriber.onCompleted();
+                subscriber.onComplete();
               }
             });
           }
@@ -129,9 +132,9 @@ public class TasksAdapter extends RecyclerView.Adapter<TasksAdapter.TaskViewHold
   }
 
   private Observable resetUidPositionMap() {
-    return Observable.create(new Observable.OnSubscribe() {
+    return Observable.create(new ObservableOnSubscribe() {
       @Override
-      public void call(Object o) {
+      public void subscribe(ObservableEmitter e) {
         uidPositionMap.clear();
         final int count = viewedTasks.size();
         for (int i = 0; i < count; i++) {
@@ -336,16 +339,19 @@ public class TasksAdapter extends RecyclerView.Adapter<TasksAdapter.TaskViewHold
     // better observable chain ... so, that in next round of optimizations
     // Log.e(TAG, "search method took ... " + (SystemClock.currentThreadTimeMillis() - startTime));
 
-    Observable.from(fullTaskList)
+    Observable.fromIterable(fullTaskList)
         .subscribeOn(Schedulers.computation())
         .observeOn(AndroidSchedulers.mainThread())
-        .filter(new Func1<TaskModel, Boolean>() {
+        .filter(new Predicate<TaskModel>() {
           @Override
-          public Boolean call(TaskModel taskModel) {
+          public boolean test(TaskModel taskModel) {
             return !taskModel.containsString(lcQuery);
           }
         })
-        .subscribe(new Subscriber<TaskModel>() {
+        .subscribe(new Observer<TaskModel>() {
+          @Override
+          public void onSubscribe(Disposable d) { }
+
           @Override
           public void onError(Throwable e) { e.printStackTrace(); }
 
@@ -355,7 +361,7 @@ public class TasksAdapter extends RecyclerView.Adapter<TasksAdapter.TaskViewHold
           }
 
           @Override
-          public void onCompleted() {
+          public void onComplete() {
             notifyDataSetChanged();
           }
         });
@@ -372,9 +378,9 @@ public class TasksAdapter extends RecyclerView.Adapter<TasksAdapter.TaskViewHold
   }
 
   public Observable<Boolean> setToFilters(final boolean filterFlags[], Scheduler observingThread) {
-    return Observable.create(new Observable.OnSubscribe<Boolean>() {
+    return Observable.create(new ObservableOnSubscribe<Boolean>() {
       @Override
-      public void call(Subscriber<? super Boolean> subscriber) {
+      public void subscribe(ObservableEmitter<Boolean> subscriber) {
         long startTime = SystemClock.currentThreadTimeMillis();
         storeFullList();
         viewedTasks.clear();
@@ -388,7 +394,7 @@ public class TasksAdapter extends RecyclerView.Adapter<TasksAdapter.TaskViewHold
         storedFilters = filterFlags;
         filteringActive = true;
         resetUidPositionMap().subscribe();
-        subscriber.onCompleted();
+        subscriber.onComplete();
       }
     }).subscribeOn(Schedulers.computation()).observeOn(observingThread);
   }

@@ -38,11 +38,12 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import io.reactivex.Observable;
+import io.reactivex.ObservableEmitter;
+import io.reactivex.ObservableOnSubscribe;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.schedulers.Schedulers;
 import io.realm.RealmList;
-import rx.Observable;
-import rx.Subscriber;
-import rx.android.schedulers.AndroidSchedulers;
-import rx.schedulers.Schedulers;
 
 import static org.grassroot.android.services.ApplicationLoader.isAppIsInBackground;
 import static org.grassroot.android.services.GcmListenerService.handleNotification;
@@ -233,9 +234,9 @@ public class MqttConnectionManager implements IMqttActionListener, MqttCallback 
     }
 
     public Observable<String> sendMessageInBackground(final Message message) {
-        return Observable.create(new Observable.OnSubscribe<String>() {
+        return Observable.create(new ObservableOnSubscribe<String>() {
             @Override
-            public void call(final Subscriber<? super String> subscriber) {
+            public void subscribe(final ObservableEmitter<String> subscriber) {
                 if (!NetworkUtils.isOnline()) {
                     throw new ApiCallException(NetworkUtils.CONNECT_ERROR);
                 } else {

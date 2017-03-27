@@ -12,6 +12,7 @@ import org.grassroot.android.events.PhoneContactsChanged;
 import org.grassroot.android.models.Contact;
 import org.grassroot.android.utils.Utilities;
 import org.greenrobot.eventbus.EventBus;
+import org.reactivestreams.Subscriber;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -20,11 +21,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import rx.Observable;
-import rx.Scheduler;
-import rx.Subscriber;
-import rx.android.schedulers.AndroidSchedulers;
-import rx.schedulers.Schedulers;
+import io.reactivex.Observable;
+import io.reactivex.ObservableEmitter;
+import io.reactivex.ObservableOnSubscribe;
+import io.reactivex.Scheduler;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.schedulers.Schedulers;
 
 /**
  * Created by luke on 2016/06/17.
@@ -84,9 +86,9 @@ public class ContactService {
 
   public Observable<Boolean> syncContactList(final List<Contact> contactsToFilter,
                                              final boolean clearSelections, Scheduler observingThread) {
-    return Observable.create(new Observable.OnSubscribe<Boolean>() {
+    return Observable.create(new ObservableOnSubscribe<Boolean>() {
       @Override
-      public void call(Subscriber<? super Boolean> subscriber) {
+      public void subscribe(ObservableEmitter<Boolean> subscriber) {
         contactsLoading = true;
         contactsFinishedLoading = false;
 
@@ -107,7 +109,7 @@ public class ContactService {
           observerRegistered = true;
         }
 
-        subscriber.onCompleted();
+        subscriber.onComplete();
       }
     }).subscribeOn(Schedulers.io()).observeOn(observingThread);
   }
@@ -134,29 +136,29 @@ public class ContactService {
 
   public Observable<Boolean> setContactSelected(final int displayedPosition,
                                                 final int selectedNumberIndex) {
-    return Observable.create(new Observable.OnSubscribe<Boolean>() {
+    return Observable.create(new ObservableOnSubscribe<Boolean>() {
       @Override
-      public void call(Subscriber<? super Boolean> subscriber) {
+      public void subscribe(ObservableEmitter<Boolean> subscriber) {
         final Contact contact = displayedContacts.get(displayedPosition);
         contact.selectedNumber = contact.numbers.get(selectedNumberIndex);
         contact.selectedMsisdn = contact.msisdns.get(selectedNumberIndex);
         contact.isSelected = true;
         phoneBookIDMap.put(contact.id, contact);
         subscriber.onNext(true);
-        subscriber.onCompleted();
+        subscriber.onComplete();
       }
     }).subscribeOn(Schedulers.computation()).observeOn(AndroidSchedulers.mainThread());
   }
 
   public Observable<Boolean> toggleContactSelected(final int displayedPosition) {
-    return Observable.create(new Observable.OnSubscribe<Boolean>() {
+    return Observable.create(new ObservableOnSubscribe<Boolean>() {
       @Override
-      public void call(Subscriber<? super Boolean> subscriber) {
+      public void subscribe(ObservableEmitter<Boolean> subscriber) {
         final Contact contact = displayedContacts.get(displayedPosition);
         contact.isSelected = !contact.isSelected;
         phoneBookIDMap.put(contact.id, contact);
         subscriber.onNext(contact.isSelected);
-        subscriber.onCompleted();
+        subscriber.onComplete();
       }
     }).subscribeOn(Schedulers.computation()).observeOn(AndroidSchedulers.mainThread());
   }

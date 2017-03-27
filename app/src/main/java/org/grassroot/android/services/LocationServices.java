@@ -25,13 +25,14 @@ import org.grassroot.android.utils.RealmUtils;
 
 import java.util.HashMap;
 
+import io.reactivex.Observable;
+import io.reactivex.ObservableEmitter;
+import io.reactivex.ObservableOnSubscribe;
+import io.reactivex.Scheduler;
+import io.reactivex.schedulers.Schedulers;
 import okhttp3.MultipartBody;
 import okhttp3.RequestBody;
 import retrofit2.Response;
-import rx.Observable;
-import rx.Scheduler;
-import rx.Subscriber;
-import rx.schedulers.Schedulers;
 
 /**
  * Created by luke on 2016/05/10.
@@ -121,7 +122,7 @@ public class LocationServices implements GoogleApiClient.ConnectionCallbacks, Go
             lastKnownLocation = location;
             storeUserLocation(location.getLatitude(),
                     location.getLongitude(),
-                    Schedulers.immediate()).subscribe();
+                    Schedulers.trampoline()).subscribe();
         }
     }
 
@@ -171,10 +172,10 @@ public class LocationServices implements GoogleApiClient.ConnectionCallbacks, Go
     }
 
     private Observable<Boolean> storeUserLocation(final double latitude, final double longitude,
-                                                 @NonNull Scheduler observingThread) {
-        return Observable.create(new Observable.OnSubscribe<Boolean>() {
+                                                  @NonNull Scheduler observingThread) {
+        return Observable.create(new ObservableOnSubscribe<Boolean>() {
             @Override
-            public void call(Subscriber<? super Boolean> subscriber) {
+            public void subscribe(ObservableEmitter<Boolean> subscriber) {
                 String mobileNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
                 String code = RealmUtils.loadPreferencesFromDB().getToken();
                 try {

@@ -16,10 +16,9 @@ import org.grassroot.android.interfaces.NavigationConstants;
 import org.grassroot.android.utils.NetworkUtils;
 import org.grassroot.android.utils.RealmUtils;
 
-import rx.Subscriber;
-import rx.android.schedulers.AndroidSchedulers;
-import rx.functions.Action1;
-import rx.observers.Subscribers;
+import io.reactivex.SingleObserver;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.functions.Consumer;
 
 /**
  * Created by paballo on 2016/06/02.
@@ -28,13 +27,13 @@ public class NetworkErrorDialogFragment extends DialogFragment {
 
 	private static final  String TAG = NetworkErrorDialogFragment.class.getCanonicalName();
 
-	Subscriber<String> subscriber;
+	SingleObserver<String> subscriber;
 	ProgressBar progressBar;
 
 	public static class NetworkDialogBuilder {
 		private int message;
 		private ProgressBar progressBar;
-		private Subscriber<String> subscriber;
+		private SingleObserver<String> subscriber;
 		private boolean syncOnConnect;
 
 		public NetworkDialogBuilder(int message) {
@@ -46,8 +45,8 @@ public class NetworkErrorDialogFragment extends DialogFragment {
 			return this;
 		}
 
-		public NetworkDialogBuilder action(Action1<String> subscriber) {
-			this.subscriber = Subscribers.create(subscriber);
+		public NetworkDialogBuilder action(SingleObserver<String> subscriber) {
+			this.subscriber = subscriber;
 			return this;
 		}
 
@@ -69,7 +68,7 @@ public class NetworkErrorDialogFragment extends DialogFragment {
 	}
 
 		public static NetworkErrorDialogFragment newInstance(int message, ProgressBar progressBar,
-																												 Subscriber<String> subscriber) {
+															 SingleObserver<String> subscriber) {
 			NetworkErrorDialogFragment frag = new NetworkErrorDialogFragment();
 			Bundle args = new Bundle();
 			args.putInt("message", message);
@@ -100,19 +99,19 @@ public class NetworkErrorDialogFragment extends DialogFragment {
 							// needs to submit first (otherwise get transaction errors on server (at some point probably need a proper call queuing system)
 
 							NetworkUtils.trySwitchToOnline(getContext(), false, AndroidSchedulers.mainThread())
-									.subscribe(new Action1<String>() {
+									.subscribe(new Consumer<String>() {
 										@Override
-										public void call(String s) {
-											subscriber.onNext(NetworkUtils.ONLINE_DEFAULT);
+										public void accept(String s) {
+											subscriber.onSuccess(NetworkUtils.ONLINE_DEFAULT);
 											if (sync) {
 												Log.e(TAG, "and now queuing up the send sync");
 												NetworkUtils.sendQueueAfterDelay();
 											}
 										}
-									}, new Action1<Throwable>() {
+									}, new Consumer<Throwable>() {
 										@Override
-										public void call(Throwable throwable) {
-											subscriber.onNext(NetworkUtils.CONNECT_ERROR);
+										public void accept(Throwable throwable) {
+											subscriber.onSuccess(NetworkUtils.CONNECT_ERROR);
 										}
 									});
 						}
@@ -123,7 +122,7 @@ public class NetworkErrorDialogFragment extends DialogFragment {
 					@Override
 					public void onClick(DialogInterface dialog, int which) {
 						NetworkUtils.setOfflineSelected();
-						subscriber.onNext(NetworkUtils.OFFLINE_SELECTED);
+						subscriber.onSuccess(NetworkUtils.OFFLINE_SELECTED);
 						NetworkErrorDialogFragment.this.dismiss();
 					}
 				});
@@ -143,7 +142,7 @@ public class NetworkErrorDialogFragment extends DialogFragment {
 	@Override
 	public void onCancel(DialogInterface dialogInterface) {
 		super.onCancel(dialogInterface);
-		subscriber.onNext(NetworkUtils.OFFLINE_SELECTED); // since this is effectively the same
+		subscriber.onSuccess(NetworkUtils.OFFLINE_SELECTED); // since this is effectively the same
 	}
 
 }

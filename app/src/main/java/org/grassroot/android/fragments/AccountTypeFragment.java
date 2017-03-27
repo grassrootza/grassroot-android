@@ -15,7 +15,7 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 import butterknife.Unbinder;
-import rx.functions.Action1;
+import io.reactivex.functions.Consumer;
 
 /**
  * Created by luke on 2017/01/13.
@@ -30,7 +30,7 @@ public class AccountTypeFragment extends Fragment {
     public static final String LIGHT = "LIGHT";
     public static final String HEAVY = "HEAVY";
 
-    private Action1<String> subscriber;
+    private Consumer<String> subscriber;
     private Unbinder unbinder;
 
     @BindView(R.id.actype_standard_radio) RadioButton stdRadio;
@@ -39,7 +39,7 @@ public class AccountTypeFragment extends Fragment {
 
     private String selectedType;
 
-    public static AccountTypeFragment newInstance(String preSelectedType, Action1<String> subscriber) {
+    public static AccountTypeFragment newInstance(String preSelectedType, Consumer<String> subscriber) {
         AccountTypeFragment fragment = new AccountTypeFragment();
         Bundle args = new Bundle();
         args.putString("PRE_SELECTED", preSelectedType);
@@ -117,7 +117,11 @@ public class AccountTypeFragment extends Fragment {
 
     @SuppressWarnings("unchecked")
     private void passToSubscriber() {
-        subscriber.call(selectedType);
+        try {
+            subscriber.accept(selectedType);
+        } catch (Exception e) {
+            e.printStackTrace();;
+        }
     }
 
 }

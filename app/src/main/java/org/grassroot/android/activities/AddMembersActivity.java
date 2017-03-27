@@ -46,10 +46,11 @@ import java.util.UUID;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
-import rx.Subscriber;
-import rx.android.schedulers.AndroidSchedulers;
-import rx.functions.Action1;
-import rx.schedulers.Schedulers;
+import io.reactivex.Observer;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.disposables.Disposable;
+import io.reactivex.functions.Consumer;
+import io.reactivex.schedulers.Schedulers;
 
 /**
  * Created by luke on 2016/05/05.
@@ -148,8 +149,8 @@ public class AddMembersActivity extends AppCompatActivity implements
         validMemberMap.put("isNumberInvalid", false);
 
         RealmUtils.loadListFromDB(Member.class, validMemberMap).subscribe(
-            new Action1<List<Member>>() {
-                @Override public void call(List<Member> members) {
+            new Consumer<List<Member>>() {
+                @Override public void accept(List<Member> members) {
                     existingMemberContacts = Contact.convertFromMembers(members);
                     if (addFragment) {
                         getSupportFragmentManager().beginTransaction()
@@ -167,18 +168,18 @@ public class AddMembersActivity extends AppCompatActivity implements
             GroupService.getInstance().numberMembersLeft(groupUid)
                     .subscribeOn(Schedulers.io())
                     .observeOn(AndroidSchedulers.mainThread())
-                    .subscribe(new Action1<Integer>() {
+                    .subscribe(new Consumer<Integer>() {
                         @Override
-                        public void call(Integer integer) {
+                        public void accept(Integer integer) {
                             membersLeftBeforeLimit = integer;
                             if (membersLeftBeforeLimit != null && membersLeftBeforeLimit < 50) {
                                 showFewMembersLeftSnackbar(getString(R.string.am_members_left_few,
                                         membersLeftBeforeLimit));
                             }
                         }
-                    }, new Action1<Throwable>() {
+                    }, new Consumer<Throwable>() {
                         @Override
-                        public void call(Throwable throwable) {
+                        public void accept(Throwable throwable) {
                             Log.e(TAG, "unhandled error fetching number of members");
                         }
                     });
@@ -261,9 +262,9 @@ public class AddMembersActivity extends AppCompatActivity implements
     private void launchContactSelectionFragment() {
         if (existingMemberContacts != null) {
             ContactService.getInstance().syncContactList(existingMemberContacts, false, AndroidSchedulers.mainThread())
-                .subscribe(new Action1<Boolean>() {
+                .subscribe(new Consumer<Boolean>() {
                     @Override
-                    public void call(Boolean aBoolean) {
+                    public void accept(Boolean aBoolean) {
                         currentScreen = CONTACT_LIST;
                         toolbarTitle.setText(R.string.cs_title);
                         saveMembersButton.setVisibility(View.GONE);
@@ -273,9 +274,9 @@ public class AddMembersActivity extends AppCompatActivity implements
                             .addToBackStack(null)
                             .commit();
                     }
-                }, new Action1<Throwable>() {
+                }, new Consumer<Throwable>() {
                     @Override
-                    public void call(Throwable throwable) {
+                    public void accept(Throwable throwable) {
                         ErrorUtils.snackBarWithAction(amRlRoot, R.string.local_error_load_contacts, R.string.snackbar_try_again,
                             new View.OnClickListener() {
                                 @Override
@@ -388,7 +389,9 @@ public class AddMembersActivity extends AppCompatActivity implements
             if (membersToAdd != null && membersToAdd.size() > 0) {
                 progressDialog.show();
                 GroupService.getInstance().addMembersToGroup(groupUid, membersToAdd, false).subscribe(
-                    new Subscriber<String>() {
+                    new Observer<String>() {
+                        @Override public void onSubscribe(Disposable d) { }
+
                         @Override
                         public void onNext(String s) {
                             if (NetworkUtils.SAVED_SERVER.equals(s)) {
@@ -433,7 +436,7 @@ public class AddMembersActivity extends AppCompatActivity implements
                         }
 
                         @Override
-                        public void onCompleted() { }
+                        public void onComplete() { }
 
                     });
             } else {
@@ -454,9 +457,9 @@ public class AddMembersActivity extends AppCompatActivity implements
                 i = IntentUtils.offlineMessageIntent(AddMembersActivity.this, R.string.am_server_error_header, body, false, false);
             } else if (ErrorUtils.GROUP_SIZE_LIMIT.equals(e.errorTag)) {
                 AccountLimitDialogFragment.showAccountLimitDialog(getSupportFragmentManager(), R.string.account_group_size_limit)
-                        .subscribe(new Action1<String>() {
+                        .subscribe(new Consumer<String>() {
                             @Override
-                            public void call(String s) {
+                            public void accept(String s) {
                                 if (AccountLimitDialogFragment.GO_TO_GR.equals(s)) {
                                     Intent internalIntent = new Intent(AddMembersActivity.this, GrassrootExtraActivity.class);
                                     startActivity(internalIntent);

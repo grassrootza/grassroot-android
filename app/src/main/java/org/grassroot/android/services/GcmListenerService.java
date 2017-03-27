@@ -38,13 +38,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import io.reactivex.Observable;
+import io.reactivex.ObservableEmitter;
+import io.reactivex.ObservableOnSubscribe;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.schedulers.Schedulers;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
-import rx.Observable;
-import rx.Subscriber;
-import rx.android.schedulers.AndroidSchedulers;
-import rx.schedulers.Schedulers;
 
 import static org.grassroot.android.interfaces.NotificationConstants.BODY;
 import static org.grassroot.android.interfaces.NotificationConstants.CHAT_LIST;
@@ -377,7 +378,7 @@ public class GcmListenerService extends com.google.android.gms.gcm.GcmListenerSe
     // logic will be messed with by a single group fetch
     private static void handleJoinRequestInDB(final String entityType, final String groupUid) {
         if (entityType.equals(GroupConstants.JREQ_APPROVED)) {
-            GroupService.getInstance().fetchGroupList(Schedulers.immediate()).subscribe();
+            GroupService.getInstance().fetchGroupList(Schedulers.trampoline()).subscribe();
             GroupService.getInstance().setHasGroups(true);
             RealmUtils.removeObjectFromDatabase(GroupJoinRequest.class, "groupUid", groupUid);
         }
@@ -387,7 +388,7 @@ public class GcmListenerService extends com.google.android.gms.gcm.GcmListenerSe
         }
 
         if (entityType.equals(GroupConstants.JREQ_RECEIVED)) {
-            GroupService.getInstance().fetchGroupJoinRequests(Schedulers.immediate()).subscribe();
+            GroupService.getInstance().fetchGroupJoinRequests(Schedulers.trampoline()).subscribe();
         }
     }
 
@@ -405,9 +406,9 @@ public class GcmListenerService extends com.google.android.gms.gcm.GcmListenerSe
     }
 
     public static Observable showNotification(final Bundle bundle) {
-        return Observable.create(new Observable.OnSubscribe<Boolean>() {
+        return Observable.create(new ObservableOnSubscribe<Boolean>() {
             @Override
-            public void call(Subscriber<? super Boolean> subscriber) {
+            public void subscribe(ObservableEmitter<Boolean> subscriber) {
                 handleNotification(bundle);
             }
         }).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread());

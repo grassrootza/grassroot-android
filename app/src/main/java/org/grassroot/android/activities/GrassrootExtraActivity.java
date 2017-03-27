@@ -39,10 +39,10 @@ import java.util.Map;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import io.reactivex.functions.Consumer;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
-import rx.functions.Action1;
 
 /**
  * Created by luke on 2017/01/11.
@@ -196,9 +196,9 @@ public class GrassrootExtraActivity extends PortraitActivity implements Navigati
             String dialogBody = getString(R.string.free_form_body);
             MultiLineTextDialog.showMultiLineDialog(getSupportFragmentManager(), R.string.free_form_title,
                     dialogBody, R.string.free_form_hint, R.string.free_form_okay)
-                    .subscribe(new Action1<String>() {
+                    .subscribe(new Consumer<String>() {
                         @Override
-                        public void call(String s) {
+                        public void accept(String s) {
                             confirmSendMessage(group.getGroupUid(), s);
                         }
                     });
@@ -343,9 +343,9 @@ public class GrassrootExtraActivity extends PortraitActivity implements Navigati
     }
 
     public void changeAccountType() {
-        typeFragment = AccountTypeFragment.newInstance(accountType, new Action1<String>() {
+        typeFragment = AccountTypeFragment.newInstance(accountType, new Consumer<String>() {
             @Override
-            public void call(String s) {
+            public void accept(String s) {
                 confirmAccountTypeChange(s);
             }
         });

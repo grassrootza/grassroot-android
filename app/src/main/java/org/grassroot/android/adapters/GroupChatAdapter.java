@@ -26,7 +26,7 @@ import java.util.List;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import hani.momanii.supernova_emoji_library.Helper.EmojiconTextView;
-import rx.functions.Action1;
+import io.reactivex.functions.Consumer;
 
 
 /**
@@ -142,9 +142,9 @@ public class GroupChatAdapter extends RecyclerView.Adapter<GroupChatAdapter.GCVi
     }
 
     public void reloadFromdb(String groupUid) {
-        RealmUtils.loadMessagesFromDb(groupUid).subscribe(new Action1<List<Message>>() {
+        RealmUtils.loadMessagesFromDb(groupUid).subscribe(new Consumer<List<Message>>() {
             @Override
-            public void call(List<Message> messages) {
+            public void accept(List<Message> messages) {
                 setGroupList(messages);
             }
         });
@@ -251,9 +251,9 @@ public class GroupChatAdapter extends RecyclerView.Adapter<GroupChatAdapter.GCVi
             holder.bt_no.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    RealmUtils.deleteMessageFromDb(message.getUid()).subscribe(new Action1<String>() {
+                    RealmUtils.deleteMessageFromDb(message.getUid()).subscribe(new Consumer<String>() {
                         @Override
-                        public void call(String s) {
+                        public void accept(String s) {
                             reloadFromdb(message.getGroupUid());
                         }
                     });

@@ -2,14 +2,14 @@ package org.grassroot.android.utils;
 
 import java.util.concurrent.TimeUnit;
 
-import rx.Observable;
-import rx.functions.Func1;
+import io.reactivex.Observable;
+import io.reactivex.functions.Function;
 
 /**
  * Created by luke on 2017/03/22.
  */
 
-public class RetryWithDelay implements Func1<Observable<? extends Throwable>, Observable<?>> {
+public class RetryWithDelay implements Function<Observable<? extends Throwable>, Observable<?>> {
 
     private final int maxRetries;
     private final int retryDelayMillis;
@@ -22,11 +22,11 @@ public class RetryWithDelay implements Func1<Observable<? extends Throwable>, Ob
     }
 
     @Override
-    public Observable<?> call(Observable<? extends Throwable> attempts) {
+    public Observable<?> apply(Observable<? extends Throwable> attempts) {
         return attempts
-                .flatMap(new Func1<Throwable, Observable<?>>() {
+                .flatMap(new Function<Throwable, Observable<?>>() {
                     @Override
-                    public Observable<?> call(Throwable throwable) {
+                    public Observable<?> apply(Throwable throwable) {
                         if (++retryCount < maxRetries) {
                             return Observable.timer(retryDelayMillis,
                                     TimeUnit.MILLISECONDS);

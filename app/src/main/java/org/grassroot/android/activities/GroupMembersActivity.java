@@ -18,7 +18,6 @@ import org.grassroot.android.R;
 import org.grassroot.android.fragments.EditTaskFragment;
 import org.grassroot.android.fragments.MemberListFragment;
 import org.grassroot.android.fragments.NewTaskMenuFragment;
-import org.grassroot.android.fragments.dialogs.NetworkErrorDialogFragment;
 import org.grassroot.android.interfaces.GroupConstants;
 import org.grassroot.android.models.Group;
 import org.grassroot.android.models.Member;
@@ -34,7 +33,8 @@ import java.util.ArrayList;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
-import rx.functions.Action1;
+import io.reactivex.annotations.NonNull;
+import io.reactivex.functions.Consumer;
 
 /**
  * Created by luke on 2016/05/18.
@@ -155,18 +155,18 @@ public class GroupMembersActivity extends PortraitActivity implements NewTaskMen
     }
 
     private void refreshMembers() {
-        GroupService.getInstance().refreshGroupMembers(groupUid).subscribe(new Action1<String>() {
+        GroupService.getInstance().refreshGroupMembers(groupUid).subscribe(new Consumer<String>() {
             @Override
-            public void call(String s) {
+            public void accept(@NonNull String s) {
                 Log.e(TAG, "got a response back! looks like: " + s);
                 memberListContainer.setRefreshing(false);
                 if (NetworkUtils.FETCHED_SERVER.equals(s)) {
                     memberListFragment.refreshMembersToDb();
                 }
             }
-        }, new Action1<Throwable>() {
+        }, new Consumer<Throwable>() {
             @Override
-            public void call(Throwable e) {
+            public void accept(@NonNull Throwable e) {
                 memberListContainer.setRefreshing(false);
                 if (NetworkUtils.SERVER_ERROR.equals(e.getMessage())) {
                     Snackbar.make(memberListContainer, ErrorUtils.serverErrorText(e), Snackbar.LENGTH_SHORT).show();

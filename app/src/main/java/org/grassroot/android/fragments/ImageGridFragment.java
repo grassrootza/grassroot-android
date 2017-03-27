@@ -21,7 +21,9 @@ import java.util.List;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.Unbinder;
-import rx.functions.Action1;
+import io.reactivex.Observer;
+import io.reactivex.annotations.NonNull;
+import io.reactivex.functions.Consumer;
 
 /**
  * Created by luke on 2017/02/27.
@@ -42,10 +44,10 @@ public class ImageGridFragment extends Fragment {
     private String taskUid;
 
     private List<ImageRecord> imageRecords;
-    private Action1<ImageRecord> imageClickObserver;
+    private Observer<ImageRecord> imageClickObserver;
 
     public static ImageGridFragment newInstance(final String taskType, final String taskUid,
-                                                Action1<ImageRecord> imageClickObserver) {
+                                                Observer<ImageRecord> imageClickObserver) {
         ImageGridFragment fragment = new ImageGridFragment();
         Bundle args = new Bundle();
         args.putString("TYPE", taskType);
@@ -55,7 +57,7 @@ public class ImageGridFragment extends Fragment {
         return fragment;
     }
 
-    public void setImageClickObserver(Action1<ImageRecord> imageClickObserver) {
+    public void setImageClickObserver(Observer<ImageRecord> imageClickObserver) {
         this.imageClickObserver = imageClickObserver;
     }
 
@@ -81,9 +83,9 @@ public class ImageGridFragment extends Fragment {
         unbinder = ButterKnife.bind(this, v);
 
         TaskService.getInstance().fetchTaskImages(taskType, taskUid)
-                .subscribe(new Action1<List<ImageRecord>>() {
+                .subscribe(new Consumer<List<ImageRecord>>() {
                     @Override
-                    public void call(List<ImageRecord> imageRecords) {
+                    public void accept(@NonNull List<ImageRecord> imageRecords) {
                         Log.e(TAG, "fetched image records, this many: " + imageRecords.size());
                         if (!imageRecords.isEmpty()) {
                             loadImageGrid(imageRecords);
@@ -114,7 +116,7 @@ public class ImageGridFragment extends Fragment {
         taskPhotoGrid.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-                imageClickObserver.call(imageRecords.get(i));
+                imageClickObserver.onNext(imageRecords.get(i));
             }
         });
         photoGridAdapter.notifyDataSetChanged();

@@ -31,7 +31,7 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 import butterknife.Unbinder;
-import rx.functions.Action1;
+import io.reactivex.functions.Consumer;
 
 public class GroupSearchResultsFragment extends Fragment {
 
@@ -144,9 +144,9 @@ public class GroupSearchResultsFragment extends Fragment {
 					getString(R.string.group_description_prefix, group.getDescription());
 
 			MultiLineTextDialog.showMultiLineDialog(getFragmentManager(), R.string.gs_dialog_title, description,
-					R.string.gs_dialog_message_hint, R.string.gs_dialog_send).subscribe(new Action1<String>() {
+					R.string.gs_dialog_message_hint, R.string.gs_dialog_send).subscribe(new Consumer<String>() {
 				@Override
-				public void call(String s) {
+				public void accept(String s) {
 					group.setDescription(s);
 					listener.sendJoinRequest(group);
 					resultsAdapter.toggleRequestSent(adapterViewPosition, true);
