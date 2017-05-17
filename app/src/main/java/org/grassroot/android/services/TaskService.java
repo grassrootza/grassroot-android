@@ -1,10 +1,17 @@
 package org.grassroot.android.services;
 
+import android.app.Activity;
+import android.content.Context;
+import android.content.Intent;
+import android.location.Location;
 import android.text.TextUtils;
 import android.util.Log;
 
+import org.grassroot.android.R;
+import org.grassroot.android.activities.ActionCompleteActivity;
 import org.grassroot.android.events.TaskUpdatedEvent;
 import org.grassroot.android.events.TasksRefreshedEvent;
+import org.grassroot.android.interfaces.GroupConstants;
 import org.grassroot.android.interfaces.TaskConstants;
 import org.grassroot.android.models.Group;
 import org.grassroot.android.models.ImageRecord;
@@ -23,7 +30,6 @@ import org.grassroot.android.utils.NetworkUtils;
 import org.grassroot.android.utils.RealmUtils;
 import org.grassroot.android.utils.Utilities;
 import org.greenrobot.eventbus.EventBus;
-import org.reactivestreams.Subscriber;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -272,6 +278,57 @@ public class TaskService {
       default:
         throw new UnsupportedOperationException("Error! Missing task type in call");
     }
+  }
+
+  public Observable<TaskModel> setMeetingPublic(final String meetingUid) {
+    return Observable.create(new ObservableOnSubscribe<TaskModel>() {
+      @Override
+      public void subscribe(ObservableEmitter<TaskModel> e) throws Exception {
+        final String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
+        final String code = RealmUtils.loadPreferencesFromDB().getToken();
+
+        Location lastLocation = LocationServices.getInstance().getLastKnownLocation();
+        Double latitude = lastLocation != null ? lastLocation.getLatitude() : null;
+        Double longitude = lastLocation != null ? lastLocation.getLongitude() : null;
+
+        try {
+          Response<RestResponse<TaskModel>> response = GrassrootRestService.getInstance().getApi()
+                  .updateMeetingPublic(phoneNumber, code, meetingUid, true, latitude, longitude).execute();
+          if (response.isSuccessful()) {
+            e.onNext(response.body().getData());
+            e.onComplete();
+          } else {
+            e.onError(new ApiCallException(NetworkUtils.SERVER_ERROR, ErrorUtils.getRestMessage(response.errorBody())));
+          }
+        } catch (IOException error) {
+          e.onError(new ApiCallException(NetworkUtils.CONNECT_ERROR));
+        }
+      }
+    });
+  }
+
+  public Intent generateTaskDoneIntent(Context context, final TaskModel model, final String bodyText) {
+    Intent i = new Intent(context, ActionCompleteActivity.class);
+    if (model.isLocal()) {
+      i.putExtra(ActionCompleteActivity.BODY_FIELD, context.getString(R.string.ac_body_task_create_local,
+              model.getType().toLowerCase()));
+      i.putExtra(ActionCompleteActivity.HEADER_FIELD, R.string.ac_header_task_create_local);
+    } else {
+      i.putExtra(ActionCompleteActivity.HEADER_FIELD, R.string.ac_header_task_create);
+      i.putExtra(ActionCompleteActivity.BODY_FIELD, bodyText);
+    }
+
+    i.putExtra(ActionCompleteActivity.SHARE_BUTTON, true);
+    i.putExtra(ActionCompleteActivity.TASK_BUTTONS, false);
+    i.putExtra(ActionCompleteActivity.ACTION_INTENT, ActionCompleteActivity.GROUP_SCREEN);
+
+    i.putExtra(TaskConstants.TASK_ENTITY_FIELD, model);
+    Group taskGroup = RealmUtils.loadObjectFromDB(Group.class, "groupUid", model.getParentUid());
+    i.putExtra(GroupConstants.OBJECT_FIELD, taskGroup); // note : this seems heavy ... likely better to send UID and load in activity .. to optimize in future
+
+    i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+
+    return i;
   }
 
   /*

@@ -24,6 +24,7 @@ import org.grassroot.android.R;
 import org.grassroot.android.events.GroupCreatedEvent;
 import org.grassroot.android.fragments.ContactSelectionFragment;
 import org.grassroot.android.fragments.MemberListFragment;
+import org.grassroot.android.fragments.dialogs.TokenExpiredDialogFragment;
 import org.grassroot.android.interfaces.GroupConstants;
 import org.grassroot.android.interfaces.NavigationConstants;
 import org.grassroot.android.models.Contact;
@@ -52,6 +53,7 @@ import butterknife.ButterKnife;
 import butterknife.OnClick;
 import butterknife.OnFocusChange;
 import butterknife.OnTextChanged;
+import io.reactivex.Observable;
 import io.reactivex.Observer;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
@@ -350,51 +352,58 @@ public class CreateGroupActivity extends PortraitActivity implements ContactSele
     cacheWipGroup();
     progressDialog.show();
     progressDialog.setCancelable(false);
-    GroupService.getInstance().sendNewGroupToServer(groupUid, AndroidSchedulers.mainThread())
-        .subscribe(new Observer<String>() {
-          @Override
-          public void onSubscribe(Disposable d) { }
 
-          @Override
-          public void onError(Throwable e) {
-            progressDialog.dismiss();
-            switch (e.getMessage()) {
-              case NetworkUtils.SERVER_ERROR:
-                save.setEnabled(true);
-                handleServerError((ApiCallException) e);
-                break;
-              case NetworkUtils.CONNECT_ERROR:
-                Group wipGroup = RealmUtils.loadGroupFromDB(groupUid);
-                handleGroupCreationAndExit(wipGroup, true);
-                break;
-              default:
-                break;
-            }
+    final Observable<String> sendGroup =  GroupService.getInstance()
+            .sendNewGroupToServer(groupUid, AndroidSchedulers.mainThread());
+
+    final Consumer<String> successConsumer = new Consumer<String>() {
+      @Override
+      public void accept(@io.reactivex.annotations.NonNull String s) throws Exception {
+        Log.d(TAG, "string received : " + s);
+        progressDialog.dismiss();
+        Group finalGroup;
+        if (NetworkUtils.SAVED_OFFLINE_MODE.equals(s)) {
+          finalGroup = RealmUtils.loadGroupFromDB(groupUid);
+          handleGroupCreationAndExit(finalGroup, false);
+        } else {
+          final String serverUid = s.substring("OK-".length());
+          finalGroup = RealmUtils.loadGroupFromDB(serverUid);
+          Log.d(TAG, "here is the saved group = " + finalGroup.toString());
+          if ("OK".equals(s.substring(0, 2))) {
+            handleGroupCreationAndExit(finalGroup, false);
+          } else {
+            handleSavedButSomeInvalid(serverUid);
           }
+        }
+      }
+    };
 
-          @Override
-          public void onNext(String s) {
-            Log.d(TAG, "string received : " + s);
-            progressDialog.dismiss();
-            Group finalGroup;
-            if (NetworkUtils.SAVED_OFFLINE_MODE.equals(s)) {
-              finalGroup = RealmUtils.loadGroupFromDB(groupUid);
-              handleGroupCreationAndExit(finalGroup, false);
+    final Consumer<Throwable> errorConsumer = new Consumer<Throwable>() {
+      @Override
+      public void accept(@io.reactivex.annotations.NonNull Throwable e) throws Exception {
+        progressDialog.dismiss();
+        switch (e.getMessage()) {
+          case NetworkUtils.SERVER_ERROR:
+            save.setEnabled(true);
+            ApiCallException apiE = (ApiCallException) e;
+            if (ErrorUtils.isTokenError(apiE)) {
+              TokenExpiredDialogFragment.showTokenExpiredDialogs(getSupportFragmentManager(), null,
+                      sendGroup, successConsumer, this).subscribe();
             } else {
-              final String serverUid = s.substring("OK-".length());
-              finalGroup = RealmUtils.loadGroupFromDB(serverUid);
-              Log.d(TAG, "here is the saved group = " + finalGroup.toString());
-              if ("OK".equals(s.substring(0, 2))) {
-                handleGroupCreationAndExit(finalGroup, false);
-              } else {
-                handleSavedButSomeInvalid(serverUid);
-              }
+              handleServerError((ApiCallException) e);
             }
-          }
+            break;
+          case NetworkUtils.CONNECT_ERROR:
+            Group wipGroup = RealmUtils.loadGroupFromDB(groupUid);
+            handleGroupCreationAndExit(wipGroup, true);
+            break;
+          default:
+            break;
+        }
+      }
+    };
 
-          @Override
-          public void onComplete() { }
-        });
+    sendGroup.subscribe(successConsumer, errorConsumer);
   }
 
   private void handleServerError(ApiCallException e) {

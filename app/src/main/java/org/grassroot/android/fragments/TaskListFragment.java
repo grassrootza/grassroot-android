@@ -29,6 +29,7 @@ import org.grassroot.android.events.TaskAddedEvent;
 import org.grassroot.android.events.TaskCancelledEvent;
 import org.grassroot.android.events.TaskUpdatedEvent;
 import org.grassroot.android.fragments.dialogs.ConfirmCancelDialogFragment;
+import org.grassroot.android.fragments.dialogs.TokenExpiredDialogFragment;
 import org.grassroot.android.interfaces.TaskConstants;
 import org.grassroot.android.models.Group;
 import org.grassroot.android.models.TaskModel;
@@ -73,19 +74,13 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
 
     private Unbinder unbinder;
 
-    @BindView(R.id.rl_task_list_root)
-    ViewGroup rootView;
-    @BindView(R.id.tl_swipe_refresh)
-    SwipeRefreshLayout swipeRefreshLayout;
-    @BindView(R.id.tl_recycler_view)
-    RecyclerView taskView;
-    @BindView(R.id.tl_fab)
-    FloatingActionButton floatingActionButton;
+    @BindView(R.id.rl_task_list_root) ViewGroup rootView;
+    @BindView(R.id.tl_swipe_refresh) SwipeRefreshLayout swipeRefreshLayout;
+    @BindView(R.id.tl_recycler_view) RecyclerView taskView;
+    @BindView(R.id.tl_fab) FloatingActionButton floatingActionButton;
 
-    @BindView(R.id.tl_no_task_message)
-    RelativeLayout noTaskMessageLayout;
-    @BindView(R.id.tl_no_task_text)
-    TextView noTaskMessageText;
+    @BindView(R.id.tl_no_task_message) RelativeLayout noTaskMessageLayout;
+    @BindView(R.id.tl_no_task_text) TextView noTaskMessageText;
 
     // sequence meeting -> vote -> to-do must match string array
     final CharSequence[] filterOptions = ApplicationLoader.applicationContext
@@ -139,7 +134,6 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
         taskView.setLayoutManager(new LinearLayoutManager(getActivity()));
         taskView.setHasFixedSize(true);
         taskView.setDrawingCacheEnabled(true);
-
 
         loadTasksOnCreateView();
         return viewToReturn;
@@ -259,10 +253,17 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
         if (forceShowRefreshing && swipeRefreshLayout != null) {
             swipeRefreshLayout.setRefreshing(true);
         }
-        TaskService.getInstance().fetchTasks(groupUid, null).subscribe(new Consumer<String>() {
+        final Observable<String> fetchTasks = TaskService.getInstance().fetchTasks(groupUid, null);
+        fetchTasks.subscribe(new Consumer<String>() {
             @Override
             public void accept(@NonNull String s) {
-                loadTasksFromDB(s);
+                hideProgress();
+                if (ErrorUtils.TOKEN_EXPIRED.equals(s) || ErrorUtils.INVALID_TOKEN.equals(s)) {
+                    TokenExpiredDialogFragment.showTokenExpiredDialogs(getFragmentManager(), fetchTasks)
+                            .subscribe();
+                } else {
+                    loadTasksFromDB(s);
+                }
             }
         });
     }
@@ -289,7 +290,6 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
                         }
                     });
                 }
-                hideProgress();
             }
         });
     }

@@ -5,6 +5,7 @@ import android.util.Log;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonParseException;
 import com.google.gson.JsonSyntaxException;
 import com.google.gson.reflect.TypeToken;
 
@@ -314,8 +315,8 @@ public class MqttConnectionManager implements IMqttActionListener, MqttCallback 
                         EventBus.getDefault().post(new GroupChatEvent(message.getGroupUid(), bundle, message));
                     }
             }
-        } catch (JsonSyntaxException e) {
-            Log.e(TAG, "syntax exception! " + e.getMessage());
+        } catch (JsonParseException e) {
+            Log.e(TAG, "JSON parse error! " + e.getMessage());
         } catch (Exception e) {
             e.printStackTrace();
         }

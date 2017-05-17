@@ -52,8 +52,6 @@ import io.reactivex.ObservableEmitter;
 import io.reactivex.ObservableOnSubscribe;
 import io.reactivex.Scheduler;
 import io.reactivex.Single;
-import io.reactivex.SingleEmitter;
-import io.reactivex.SingleOnSubscribe;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.annotations.NonNull;
 import io.reactivex.functions.Consumer;
@@ -113,7 +111,7 @@ public class GroupService {
               subscriber.onNext(NetworkUtils.FETCHED_SERVER);
             } else {
               Log.e(TAG, response.message());
-              subscriber.onNext(NetworkUtils.SERVER_ERROR); // use these so calling class can decide whether to handle errors or just subscribe
+              subscriber.onNext(ErrorUtils.getRestMessage(response.errorBody())); // use these so calling class can decide whether to handle errors or just subscribe
             }
             EventBus.getDefault().post(new GroupsRefreshedEvent());
           } catch (IOException e) {
@@ -196,12 +194,11 @@ public class GroupService {
             Response<GroupChatSettingResponse> response = GrassrootRestService.getInstance().getApi().fetchGroupMessengerSettings(phoneNumber,code,groupUid, userUid).execute();
             if(response.isSuccessful()){
               subscriber.onNext(response.body());
-            }else {
-              throw new ApiCallException(NetworkUtils.SERVER_ERROR);
+            } else {
+              subscriber.onError(new ApiCallException(NetworkUtils.SERVER_ERROR));
             }
           } catch (IOException e) {
-            subscriber.onError(e);
-            throw  new ApiCallException(NetworkUtils.CONNECT_ERROR);
+            subscriber.onError(new ApiCallException(NetworkUtils.CONNECT_ERROR));
           }
         }
 
@@ -616,7 +613,6 @@ public class GroupService {
               if (errorModel == null) {
                 throw new ApiCallException(NetworkUtils.SERVER_ERROR);
               }
-
               final String restMessage = errorModel.getMessage();
 
               if (ErrorUtils.GROUP_MEMBER_INVALID_PHONE.equals(restMessage)) {

@@ -20,6 +20,7 @@ import org.grassroot.android.models.Group;
 import org.grassroot.android.models.PreferenceObject;
 import org.grassroot.android.models.TaskModel;
 import org.grassroot.android.services.SharingService;
+import org.grassroot.android.services.TaskService;
 import org.grassroot.android.utils.Constant;
 import org.grassroot.android.utils.IntentUtils;
 import org.grassroot.android.utils.NetworkUtils;
@@ -28,7 +29,10 @@ import org.grassroot.android.utils.RealmUtils;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.annotations.NonNull;
 import io.reactivex.functions.Consumer;
+import io.reactivex.schedulers.Schedulers;
 
 /**
  * Created by luke on 2016/07/12.
@@ -45,6 +49,7 @@ public class ActionCompleteActivity extends PortraitActivity implements NewTaskM
     public static final String TASK_BUTTONS = "task_buttons";
     public static final String OFFLINE_BUTTONS = "offline_buttons";
     public static final String SHARE_BUTTON = "share_button";
+    public static final String MEETING_PUBLIC_BUTTONS = "meeting_public_buttons";
 
     public static final String ACTION_INTENT = "action_intent";
     public static final String HOME_SCREEN = "home_screen";
@@ -52,6 +57,7 @@ public class ActionCompleteActivity extends PortraitActivity implements NewTaskM
 
     private boolean customValues;
     private boolean showTaskButtons;
+    private boolean showMeetingPublicOptions;
 
     private String actionIntent;
     private Group groupToPass;
@@ -59,11 +65,16 @@ public class ActionCompleteActivity extends PortraitActivity implements NewTaskM
 
     @BindView(R.id.ac_header) TextView header;
     @BindView(R.id.ac_body) TextView body;
+
     @BindView(R.id.ac_bt_done) Button done;
     @BindView(R.id.bt_avatar) Button pickAvatar;
     @BindView(R.id.ac_bt_share) Button share;
+
+    @BindView(R.id.bt_stay_offline) Button twoButtonTop;
+    @BindView(R.id.bt_keep_trying) Button twoButtonBottom;
+
     @BindView(R.id.ac_btn_tasks) RelativeLayout taskButtons;
-    @BindView(R.id.ac_btn_offline) LinearLayout offlineButtons;
+    @BindView(R.id.ac_two_btn_options) LinearLayout twoButtonActions;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -105,35 +116,125 @@ public class ActionCompleteActivity extends PortraitActivity implements NewTaskM
     }
 
     private void setUpButtons(Bundle args) {
-        // note : cases: either (a) all is fine and we show task buttons
+        // todo: change this to a proper structure of using a flag and a switch statement
+        // note : cases: either (a) all is fine and we show task buttons, depending on task
         // or : (b) there was a server error or something and need to show options to go offline
         // or : (c) it's uncertain, and we're showing just the done button
-        showTaskButtons = args.getBoolean(TASK_BUTTONS, false);
-        final boolean showOfflineButtons = args.getBoolean(OFFLINE_BUTTONS, false);
-        final boolean showShareButton = args.getBoolean(SHARE_BUTTON, false);
+        showMeetingPublicOptions = args.getBoolean(MEETING_PUBLIC_BUTTONS, false);
+        showTaskButtons = !showMeetingPublicOptions && args.getBoolean(TASK_BUTTONS, false);
+        final boolean showOfflineButtons = !showMeetingPublicOptions && !showTaskButtons && args.getBoolean(OFFLINE_BUTTONS, false);
 
-        if (showTaskButtons) {
-            done.setVisibility(View.GONE);
-            share.setVisibility(View.GONE);
-            offlineButtons.setVisibility(View.GONE);
-            taskButtons.setVisibility(View.VISIBLE);
-            if (!NetworkUtils.ONLINE_DEFAULT.equals(RealmUtils.loadPreferencesFromDB().getOnlineStatus())) {
-                pickAvatar.setVisibility(View.GONE);
-            }
+        if (showMeetingPublicOptions) {
+            setForMeeting();
+        } else if (showTaskButtons) {
+            setForTask();
         } else if (showOfflineButtons) {
-            done.setVisibility(View.GONE);
-            share.setVisibility(View.GONE);
-            taskButtons.setVisibility(View.GONE);
-            offlineButtons.setVisibility(View.VISIBLE);
+            setForOffline();
         } else {
-            share.setVisibility(showShareButton && taskToPass != null ?
-                View.VISIBLE : View.GONE);
-            final int buttonInt = args.getInt(BTN_FIELD, R.string.ac_btn_done);
-            done.setText(buttonInt);
-            done.setVisibility(View.VISIBLE);
-            taskButtons.setVisibility(View.GONE);
-            offlineButtons.setVisibility(View.GONE);
+            setForGeneric(args.getBoolean(SHARE_BUTTON, false), args.getInt(BTN_FIELD, R.string.ac_btn_done));
         }
+    }
+
+    private void setForMeeting() {
+        share.setVisibility(View.GONE);
+        done.setVisibility(View.GONE);
+
+        twoButtonActions.setVisibility(View.VISIBLE);
+        twoButtonTop.setText(R.string.ctsk_meeting_public_btn);
+        twoButtonTop.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                setMeetingPublic();
+            }
+        });
+
+        twoButtonBottom.setText(R.string.ctsk_meeting_private_btn);
+        twoButtonBottom.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                recreateForTask(R.string.ctsk_meeting_private_done);
+            }
+        });
+    }
+
+    private void setMeetingPublic() {
+        TaskService.getInstance().setMeetingPublic(taskToPass.getTaskUid())
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Consumer<TaskModel>() {
+                    @Override
+                    public void accept(@NonNull TaskModel taskModel) throws Exception {
+                        recreateForTask(R.string.ctsk_meeting_public_done);
+                    }
+                }, new Consumer<Throwable>() {
+                    @Override
+                    public void accept(@NonNull Throwable throwable) throws Exception {
+                        recreateForTask(R.string.ctsk_meeting_public_error);
+                    }
+                });
+    }
+
+    private void recreateForTask(final int bodyMessageRes) {
+        // note: we want the animation, hence not using recreate
+        Intent intent = TaskService.getInstance().generateTaskDoneIntent(this, taskToPass,
+                getString(bodyMessageRes));
+        finish();
+        startActivity(intent);
+    }
+
+    private void setForTask() {
+        done.setVisibility(View.GONE);
+        share.setVisibility(View.GONE);
+        twoButtonActions.setVisibility(View.GONE);
+        taskButtons.setVisibility(View.VISIBLE);
+        if (!NetworkUtils.ONLINE_DEFAULT.equals(RealmUtils.loadPreferencesFromDB().getOnlineStatus())) {
+            pickAvatar.setVisibility(View.GONE);
+        }
+    }
+
+    private void setForOffline() {
+        done.setVisibility(View.GONE);
+        share.setVisibility(View.GONE);
+        taskButtons.setVisibility(View.GONE);
+        twoButtonActions.setVisibility(View.VISIBLE);
+
+        twoButtonTop.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                NetworkUtils.switchToOfflineMode(null).subscribe(new Consumer<String>() {
+                    @Override
+                    public void accept(String s) {
+                        startActivity(doneIntent());
+                        finish();
+                    }
+                });
+            }
+        });
+
+        twoButtonBottom.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                AlertDialog.Builder builder = new AlertDialog.Builder(ActionCompleteActivity.this);
+                builder.setMessage(R.string.ac_msg_try_again)
+                        .setPositiveButton(R.string.okay_button, new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                startActivity(doneIntent());
+                                finish();
+                            }
+                        });
+                builder.create().show();
+            }
+        });
+    }
+
+    private void setForGeneric(boolean showShareButton, int doneButtonRes) {
+        share.setVisibility(showShareButton && taskToPass != null ?
+                View.VISIBLE : View.GONE);
+        done.setText(doneButtonRes);
+        done.setVisibility(View.VISIBLE);
+        taskButtons.setVisibility(View.GONE);
+        twoButtonActions.setVisibility(View.GONE);
     }
 
     @OnClick(R.id.ac_bt_done)
@@ -166,31 +267,6 @@ public class ActionCompleteActivity extends PortraitActivity implements NewTaskM
     @OnClick(R.id.bt_home)
     public void goHome() {
         startActivity(homeIntent());
-    }
-
-    @OnClick(R.id.bt_stay_offline)
-    public void setOfflineDelib() {
-        NetworkUtils.switchToOfflineMode(null).subscribe(new Consumer<String>() {
-            @Override
-            public void accept(String s) {
-                startActivity(doneIntent());
-                finish();
-            }
-        });
-    }
-
-    @OnClick(R.id.bt_keep_trying)
-    public void setKeepRetrying() {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setMessage(R.string.ac_msg_try_again)
-            .setPositiveButton(R.string.okay_button, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        startActivity(doneIntent());
-                        finish();
-                    }
-                });
-        builder.create().show();
     }
 
     @OnClick(R.id.ac_bt_share)

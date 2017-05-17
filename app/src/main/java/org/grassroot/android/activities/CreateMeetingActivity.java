@@ -22,10 +22,7 @@ public class CreateMeetingActivity extends PortraitActivity {
     private boolean isGroupLocal;
     private String groupUid;
 
-    @BindView(R.id.cmtg_tlb)
-    Toolbar toolbar;
-
-    private CreateTaskFragment ctskFragment;
+    @BindView(R.id.cmtg_tlb) Toolbar toolbar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -57,7 +54,7 @@ public class CreateMeetingActivity extends PortraitActivity {
     }
 
     private void launchFragment() {
-        ctskFragment = new CreateTaskFragment();
+        CreateTaskFragment ctskFragment = new CreateTaskFragment();
         Bundle args = new Bundle();
         args.putString(TaskConstants.TASK_TYPE_FIELD, TaskConstants.MEETING);
         args.putString(GroupConstants.UID_FIELD, groupUid);

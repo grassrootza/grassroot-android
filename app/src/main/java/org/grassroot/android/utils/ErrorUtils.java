@@ -42,6 +42,9 @@ public class ErrorUtils {
 
     private static final String TAG = ErrorUtils.class.getSimpleName();
 
+    public static final String TOKEN_EXPIRED = "TOKEN_EXPIRED";
+    public static final String INVALID_TOKEN = "INVALID_TOKEN";
+
     // server errors
     private static final String GENERIC_ERROR = "BAD_REQUEST";
     private static final String USER_INVALID_MSISDN = "INVALID_MSISDN";
@@ -49,8 +52,6 @@ public class ErrorUtils {
     public static final String USER_DOESNT_EXIST = "USER_DOES_NOT_EXIST";
     public static final String WRONG_OTP = "INVALID_OTP";
     private static final String OTP_EARLY_REQ = "OTP_REQ_BEFORE_ADD";
-    private static final String TOKEN_EXPIRED = "TOKEN_EXPIRED";
-    private static final String INVALID_TOKEN = "INVALID_TOKEN";
 
     private static final String GROUP_CREATE_ERROR = "GROUP_NOT_CREATED";
     public static final String PERMISSION_DENIED = "PERMISSION_DENIED";
@@ -243,6 +244,18 @@ public class ErrorUtils {
         List<ResolveInfo> list = ApplicationLoader.applicationContext.getPackageManager()
             .queryIntentActivities(intent, PackageManager.MATCH_DEFAULT_ONLY);
         return !list.isEmpty();
+    }
+
+    /*
+    Convenience method to work out if error is from token problems
+     */
+    public static boolean isTokenError(Throwable throwable) {
+        if (throwable instanceof ApiCallException) {
+            ApiCallException e = (ApiCallException) throwable;
+            return TOKEN_EXPIRED.equals(e.errorTag) || INVALID_TOKEN.equals(e.errorTag);
+        } else {
+            return false;
+        }
     }
 
     /*

@@ -35,10 +35,10 @@ import org.grassroot.android.events.TaskAddedEvent;
 import org.grassroot.android.fragments.dialogs.AccountLimitDialogFragment;
 import org.grassroot.android.fragments.dialogs.DatePickerFragment;
 import org.grassroot.android.fragments.dialogs.TimePickerFragment;
+import org.grassroot.android.fragments.dialogs.TokenExpiredDialogFragment;
 import org.grassroot.android.interfaces.GroupConstants;
 import org.grassroot.android.interfaces.NavigationConstants;
 import org.grassroot.android.interfaces.TaskConstants;
-import org.grassroot.android.models.Group;
 import org.grassroot.android.models.Member;
 import org.grassroot.android.models.TaskModel;
 import org.grassroot.android.models.exceptions.ApiCallException;
@@ -68,6 +68,8 @@ import butterknife.OnCheckedChanged;
 import butterknife.OnClick;
 import butterknife.OnTextChanged;
 import butterknife.Unbinder;
+import io.reactivex.Observable;
+import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.annotations.NonNull;
 import io.reactivex.functions.Consumer;
 import io.realm.RealmList;
@@ -282,48 +284,46 @@ public class CreateTaskFragment extends Fragment {
     public void createTask() {
         progressDialog.show();
         final TaskModel model = generateTaskObject();
-        TaskService.getInstance().sendTaskToServer(model, null).subscribe(new Consumer<TaskModel>() {
+        final Observable<TaskModel> sendToServer = TaskService.getInstance()
+                .sendTaskToServer(model, AndroidSchedulers.mainThread());
+        final Consumer<TaskModel> onNext = new Consumer<TaskModel>() {
             @Override
             public void accept(@NonNull TaskModel taskModel) throws Exception {
                 progressDialog.dismiss();
                 finishAndLaunchDoneFragment(taskModel);
             }
-        }, new Consumer<Throwable>() {
+        };
+        final Consumer<Throwable> onError = new Consumer<Throwable>() {
             @Override
-            public void accept(@NonNull Throwable e) throws Exception {
-                if (e instanceof ApiCallException) {
-                    handleError((ApiCallException) e, model);
+            public void accept(@NonNull Throwable throwable) throws Exception {
+                progressDialog.dismiss();
+                if (ErrorUtils.isTokenError(throwable)) {
+                    TokenExpiredDialogFragment.showTokenExpiredDialogs(getFragmentManager(),
+                            null,
+                            sendToServer,
+                            onNext,
+                            this).subscribe();
+                } else if (throwable instanceof ApiCallException) {
+                    handleError((ApiCallException) throwable, model);
                 }
             }
-        });
+        };
 
+        sendToServer.subscribe(onNext, onError);
     }
 
     private void finishAndLaunchDoneFragment(TaskModel model) {
-        Intent i = new Intent(getActivity(), ActionCompleteActivity.class);
-        if (model.isLocal()) {
-            i.putExtra(ActionCompleteActivity.BODY_FIELD, getString(R.string.ac_body_task_create_local, taskType.toLowerCase()));
-            i.putExtra(ActionCompleteActivity.HEADER_FIELD, R.string.ac_header_task_create_local);
-        } else {
-            i.putExtra(ActionCompleteActivity.HEADER_FIELD, R.string.ac_header_task_create);
-            i.putExtra(ActionCompleteActivity.BODY_FIELD, generateSuccessString());
+        final String successString = generateSuccessString();
+        Intent i = TaskService.getInstance().generateTaskDoneIntent(getContext(), model, successString);
+        if (TaskConstants.MEETING.equals(model.getType()) && NetworkUtils.isOnline()) {
+            i.putExtra(ActionCompleteActivity.MEETING_PUBLIC_BUTTONS, true);
         }
-        i.putExtra(ActionCompleteActivity.SHARE_BUTTON, true);
-        i.putExtra(ActionCompleteActivity.TASK_BUTTONS, false);
-        i.putExtra(ActionCompleteActivity.ACTION_INTENT, ActionCompleteActivity.GROUP_SCREEN);
-
-        i.putExtra(TaskConstants.TASK_ENTITY_FIELD, model);
-        Group taskGroup = RealmUtils.loadObjectFromDB(Group.class, "groupUid", model.getParentUid());
-        i.putExtra(GroupConstants.OBJECT_FIELD, taskGroup); // note : this seems heavy ... likely better to send UID and load in activity .. to optimize in future
-
-        i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
-        EventBus.getDefault().post(new TaskAddedEvent(model, generateSuccessString()));
+        EventBus.getDefault().post(new TaskAddedEvent(model, successString));
         startActivity(i);
         getActivity().finish();
     }
 
     private void handleError(ApiCallException e, TaskModel model) {
-        progressDialog.dismiss();
         final String type = e.getMessage();
         if (NetworkUtils.CONNECT_ERROR.equals(type)) {
             finishAndLaunchDoneFragment(model);
@@ -409,9 +409,9 @@ public class CreateTaskFragment extends Fragment {
     private String generateSuccessString() {
         switch (taskType) {
             case TaskConstants.MEETING:
-                return includeWholeGroup ? getActivity().getString(R.string.ctsk_meeting_all_success)
-                        : String.format(getActivity().getString(R.string.ctsk_meeting_assigned_success),
-                        assignedMembers.size());
+                return NetworkUtils.isOnline() ? getActivity().getString(R.string.ctsk_meeting_success_ask_public)
+                        : (includeWholeGroup ? getActivity().getString(R.string.ctsk_meeting_all_success)
+                        : String.format(getActivity().getString(R.string.ctsk_meeting_assigned_success), assignedMembers.size()));
             case TaskConstants.VOTE:
                 return includeWholeGroup ? getActivity().getString(R.string.ctsk_vote_all_success)
                         : String.format(getActivity().getString(R.string.ctsk_vote_assigned_success),

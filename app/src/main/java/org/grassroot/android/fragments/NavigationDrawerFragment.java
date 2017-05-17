@@ -22,7 +22,6 @@ import org.grassroot.android.R;
 import org.grassroot.android.activities.GrassrootExtraActivity;
 import org.grassroot.android.activities.GroupSearchActivity;
 import org.grassroot.android.activities.ProfileSettingsActivity;
-import org.grassroot.android.activities.StartActivity;
 import org.grassroot.android.adapters.NavigationDrawerAdapter;
 import org.grassroot.android.events.GroupCreatedEvent;
 import org.grassroot.android.events.GroupsRefreshedEvent;
@@ -34,18 +33,13 @@ import org.grassroot.android.events.OnlineOfflineToggledEvent;
 import org.grassroot.android.events.TaskAddedEvent;
 import org.grassroot.android.events.TaskCancelledEvent;
 import org.grassroot.android.events.TasksRefreshedEvent;
-import org.grassroot.android.events.UserLoggedOutEvent;
 import org.grassroot.android.fragments.dialogs.ConfirmCancelDialogFragment;
 import org.grassroot.android.interfaces.NavigationConstants;
-import org.grassroot.android.interfaces.NotificationConstants;
 import org.grassroot.android.models.Group;
 import org.grassroot.android.models.GroupJoinRequest;
 import org.grassroot.android.models.exceptions.ApiCallException;
 import org.grassroot.android.models.helpers.NavDrawerItem;
 import org.grassroot.android.services.ApplicationLoader;
-import org.grassroot.android.services.GcmRegistrationService;
-import org.grassroot.android.services.MqttConnectionManager;
-import org.grassroot.android.utils.Constant;
 import org.grassroot.android.utils.LoginRegUtils;
 import org.grassroot.android.utils.NetworkUtils;
 import org.grassroot.android.utils.RealmUtils;
@@ -434,33 +428,13 @@ public class NavigationDrawerFragment extends Fragment implements NavigationDraw
     }
 
     private void logout() {
-        ConfirmCancelDialogFragment confirmDialog = ConfirmCancelDialogFragment.newInstance(R.string.logout_message, new ConfirmCancelDialogFragment.ConfirmDialogListener() {
+        ConfirmCancelDialogFragment.newInstance(R.string.logout_message, new ConfirmCancelDialogFragment.ConfirmDialogListener() {
                     @Override
                     public void doConfirmClicked() {
-                        final String mobileNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
-                        final String code = RealmUtils.loadPreferencesFromDB().getToken();
-                        Log.e(TAG, "unsubscribing from everything ...");
-                        MqttConnectionManager.getInstance()
-                                .unsubscribeAllAndDisconnect(RealmUtils.loadGroupUidsSync());
-                        Log.e(TAG, "mqtt cleaned up, proceeding ...");
-                        unregisterGcm(); // maybe do preference switch off in log out?
-                        LoginRegUtils.logOutUser(mobileNumber, code).subscribe();
-                        EventBus.getDefault().post(new UserLoggedOutEvent());
-                        LoginRegUtils.wipeAllButMessagesAndMsisdn();
-                        Intent open = new Intent(getActivity(), StartActivity.class);
-                        startActivity(open);
+                   LoginRegUtils.logout(getActivity());
                     }
-                });
-
-        confirmDialog.show(getFragmentManager(), "logout");
-    }
-
-    private void unregisterGcm() {
-        Intent gcmUnregister = new Intent(getActivity(), GcmRegistrationService.class);
-        gcmUnregister.putExtra(NotificationConstants.ACTION, NotificationConstants.GCM_UNREGISTER);
-        gcmUnregister.putExtra(NotificationConstants.PHONE_NUMBER, RealmUtils.loadPreferencesFromDB().getMobileNumber());
-        gcmUnregister.putExtra(Constant.USER_TOKEN, RealmUtils.loadPreferencesFromDB().getToken());
-        getActivity().startService(gcmUnregister);
+                })
+                .show(getFragmentManager(), "logout");
     }
 
     private void refreshCounts() {

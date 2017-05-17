@@ -21,6 +21,7 @@ import org.grassroot.android.R;
 import org.grassroot.android.fragments.ContactSelectionFragment;
 import org.grassroot.android.fragments.MemberListFragment;
 import org.grassroot.android.fragments.dialogs.AccountLimitDialogFragment;
+import org.grassroot.android.fragments.dialogs.TokenExpiredDialogFragment;
 import org.grassroot.android.interfaces.GroupConstants;
 import org.grassroot.android.interfaces.NavigationConstants;
 import org.grassroot.android.models.Contact;
@@ -46,9 +47,9 @@ import java.util.UUID;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
-import io.reactivex.Observer;
+import io.reactivex.Observable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
-import io.reactivex.disposables.Disposable;
+import io.reactivex.annotations.NonNull;
 import io.reactivex.functions.Consumer;
 import io.reactivex.schedulers.Schedulers;
 
@@ -384,65 +385,75 @@ public class AddMembersActivity extends AppCompatActivity implements
 
     @OnClick(R.id.am_bt_save)
     public void commitResultsAndExit() {
-        if (newMemberListFragment != null) {
-            final List<Member> membersToAdd = newMemberListFragment.getSelectedMembers();
-            if (membersToAdd != null && membersToAdd.size() > 0) {
-                progressDialog.show();
-                GroupService.getInstance().addMembersToGroup(groupUid, membersToAdd, false).subscribe(
-                    new Observer<String>() {
-                        @Override public void onSubscribe(Disposable d) { }
+        if (newMemberListFragment == null) {
+            return;
+        }
 
-                        @Override
-                        public void onNext(String s) {
-                            if (NetworkUtils.SAVED_SERVER.equals(s)) {
-                                Intent i = new Intent();
-                                i.putExtra(GroupConstants.UID_FIELD, groupUid);
-                                i.putExtra(Constant.INDEX_FIELD, groupPosition);
-                                setResult(RESULT_OK, i);
-                                progressDialog.dismiss();
-                                finish();
-                            } else if (NetworkUtils.SAVED_OFFLINE_MODE.equals(s)) {
-                                Intent i = IntentUtils.offlineMessageIntent(AddMembersActivity.this, R.string.am_offline_header, getString(R.string.am_offline_body_delib), true, false);
-                                progressDialog.dismiss();
-                                startActivity(i);
-                                finish();
-                            } else {
-                                // means some numbers were returned as incorrect
-                                handleInvalidNumbers(s);
-                                loadMembersIntoExistingMemberFragment(false);
-                                progressDialog.dismiss();
-                            }
-                        }
-
-                        @Override
-                        public void onError(Throwable e) {
-                            Intent i = null;
-                            switch (e.getMessage()) {
-                                case NetworkUtils.SERVER_ERROR:
-                                    i = handleServerError(((ApiCallException) e));
-                                    break;
-                                case NetworkUtils.CONNECT_ERROR:
-                                    i = IntentUtils.offlineMessageIntent(AddMembersActivity.this, R.string.am_offline_header, getString(R.string.am_offline_body_error), false, true);
-                                    break;
-                                default:
-                                    Log.e(TAG, "received strange error : " + e.toString());
-                                    i = IntentUtils.offlineMessageIntent(AddMembersActivity.this, R.string.am_server_error_header, getString(R.string.am_server_other), false, true);
-                            }
-                            progressDialog.dismiss();
-                            if (i != null) {
-                                startActivity(i);
-                                finish();
-                            }
-                        }
-
-                        @Override
-                        public void onComplete() { }
-
-                    });
-            } else {
-                Log.d(TAG, "Exited with no members to add!");
-                finish();
+        final List<Member> membersToAdd = newMemberListFragment.getSelectedMembers();
+        final Observable<String> sendMembers = GroupService.getInstance().addMembersToGroup(groupUid,
+                membersToAdd, false);
+        final Consumer<String> onNext = new Consumer<String>() {
+            @Override
+            public void accept(@NonNull String s) throws Exception {
+                if (NetworkUtils.SAVED_SERVER.equals(s)) {
+                    Intent i = new Intent();
+                    i.putExtra(GroupConstants.UID_FIELD, groupUid);
+                    i.putExtra(Constant.INDEX_FIELD, groupPosition);
+                    setResult(RESULT_OK, i);
+                    progressDialog.dismiss();
+                    finish();
+                } else if (NetworkUtils.SAVED_OFFLINE_MODE.equals(s)) {
+                    Intent i = IntentUtils.offlineMessageIntent(AddMembersActivity.this, R.string.am_offline_header, getString(R.string.am_offline_body_delib), true, false);
+                    progressDialog.dismiss();
+                    startActivity(i);
+                    finish();
+                } else {
+                    // means some numbers were returned as incorrect
+                    handleInvalidNumbers(s);
+                    loadMembersIntoExistingMemberFragment(false);
+                    progressDialog.dismiss();
+                }
             }
+        };
+
+        Consumer<Throwable> onError = new Consumer<Throwable>() {
+            @Override
+            public void accept(@NonNull Throwable e) throws Exception {
+                Intent i;
+                Log.e(TAG, "error! type: " + e.getMessage());
+                switch (e.getMessage()) {
+                    case NetworkUtils.SERVER_ERROR:
+                        ApiCallException apiE = (ApiCallException) e;
+                        Log.e(TAG, "adding members, got an error! rest messsage: " + apiE.errorTag);
+                        if (ErrorUtils.isTokenError(apiE)) {
+                            TokenExpiredDialogFragment.showTokenExpiredDialogs(getSupportFragmentManager(), null,
+                                    sendMembers, onNext, this).subscribe();
+                            i = null;
+                        } else {
+                            i = handleServerError(apiE);
+                        }
+                        break;
+                    case NetworkUtils.CONNECT_ERROR:
+                        i = IntentUtils.offlineMessageIntent(AddMembersActivity.this, R.string.am_offline_header, getString(R.string.am_offline_body_error), false, true);
+                        break;
+                    default:
+                        Log.e(TAG, "received strange error : " + e.toString());
+                        i = IntentUtils.offlineMessageIntent(AddMembersActivity.this, R.string.am_server_error_header, getString(R.string.am_server_other), false, true);
+                }
+                progressDialog.dismiss();
+                if (i != null) {
+                    startActivity(i);
+                    finish();
+                }
+            }
+        };
+
+        if (membersToAdd != null && membersToAdd.size() > 0) {
+            progressDialog.show();
+            sendMembers.subscribe(onNext, onError);
+        } else {
+            Log.d(TAG, "Exited with no members to add!");
+            finish();
         }
     }
 

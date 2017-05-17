@@ -53,8 +53,8 @@ public class Constant {
     public static final String gcmSenderId = BuildConfig.BUILD_TYPE.equals("debug") ? stagingGcmSender
             : BuildConfig.FLAVOR.equals(PROD) ? prodGcmSender : stagingGcmSender;
 
-    public static final double testLatitude = 31.215263;
-    public static final double testLongitude = 121.476291;
+    public static final double testLatitude = -26.277636;
+    public static final double testLongitude = 27.889045;
 
 	/**
 	 * CONSTANTS FOR INTENT PASSING

@@ -22,6 +22,7 @@ import org.grassroot.android.models.Member;
 import org.grassroot.android.models.Permission;
 import org.grassroot.android.models.ResponseTotalsModel;
 import org.grassroot.android.models.RsvpListModel;
+import org.grassroot.android.models.TaskModel;
 import org.grassroot.android.models.helpers.RealmString;
 import org.grassroot.android.models.responses.GenericResponse;
 import org.grassroot.android.models.responses.GroupChatSettingResponse;
@@ -95,12 +96,13 @@ public class GrassrootRestService {
 
     HttpLoggingInterceptor logging = new HttpLoggingInterceptor();
     logging.setLevel(BuildConfig.BUILD_TYPE.equals("debug") ?
-        HttpLoggingInterceptor.Level.HEADERS : HttpLoggingInterceptor.Level.BASIC);
+        HttpLoggingInterceptor.Level.BODY : HttpLoggingInterceptor.Level.BASIC);
 
     OkHttpClient client = new OkHttpClient.Builder()
         .addInterceptor(logging)
         .addNetworkInterceptor(new HeaderInterceptor())
         .build();
+
     Type token = new TypeToken<RealmList<RealmString>>() {
     }.getType();
 
@@ -183,6 +185,13 @@ public class GrassrootRestService {
     //refresh token if about to expire
     @GET("user/auth/extend/{phoneNumber}/{code}")
     Call<GenericResponse> extendToken(@Path("phoneNumber") String phoneNumber, @Path("code") String code);
+
+    //request a new token because of mismatch
+    @GET("user/auth/refresh/initiate/{phoneNumber}")
+    Call<RestResponse<String>> requestNewOtp(@Path("phoneNumber") String phoneNumber);
+
+    @GET("user/auth/refresh/verify/{phoneNumber}")
+    Call<RestResponse<String>> obtainNewToken(@Path("phoneNumber") String phoneNumber, @Query("otp") String otp);
 
     @POST("gcm/register/{phoneNumber}/{code}")
     Call<GenericResponse> pushRegistration(@Path("phoneNumber") String phoneNumber,
@@ -447,6 +456,11 @@ public class GrassrootRestService {
         @Query("location") String location,
         @Query("members") Set<String> memberUids);
 
+    // set a meeting public (often called right after create)
+    @POST("meeting/public/{phoneNumber}/{code}/{meetingUid}")
+    Call<RestResponse<TaskModel>> updateMeetingPublic(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
+                                                      @Path("meetingUid") String meetingUid, @Query("setPublic") boolean setPublic,
+                                                      @Query("latitude") Double latitude, @Query("longitude") Double longitude);
 
     // create to-do
     @POST("todo/create/{phoneNumber}/{code}/{parentUid}")

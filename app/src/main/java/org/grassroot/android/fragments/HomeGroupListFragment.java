@@ -41,6 +41,7 @@ import org.grassroot.android.events.GroupsRefreshedEvent;
 import org.grassroot.android.events.LocalGroupToServerEvent;
 import org.grassroot.android.events.TaskAddedEvent;
 import org.grassroot.android.events.UserLoggedOutEvent;
+import org.grassroot.android.fragments.dialogs.TokenExpiredDialogFragment;
 import org.grassroot.android.interfaces.GroupConstants;
 import org.grassroot.android.interfaces.GroupPickCallbacks;
 import org.grassroot.android.interfaces.TaskConstants;
@@ -258,6 +259,7 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
 
             @Override
             public void onNext(String s) {
+                Log.e(TAG, "returning from group list retrieval, return code: " + s);
                 switch (s) {
                     case NetworkUtils.FETCHED_SERVER:
                         groupListRowAdapter.refreshGroupsToDB();
@@ -267,6 +269,12 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
                         break;
                     case NetworkUtils.OFFLINE_SELECTED:
                         Snackbar.make(rlGhpRoot, R.string.connect_error_offline_home, Snackbar.LENGTH_SHORT).show();
+                        break;
+                    case ErrorUtils.TOKEN_EXPIRED:
+                    case ErrorUtils.INVALID_TOKEN:
+                        TokenExpiredDialogFragment.showTokenExpiredDialogs(getFragmentManager()
+                                , GroupService.getInstance().fetchGroupList(AndroidSchedulers.mainThread()))
+                                .subscribe();
                         break;
                     default:
                         final String errorMsg = ErrorUtils.serverErrorText(s);

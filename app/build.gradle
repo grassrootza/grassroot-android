@@ -2,7 +2,7 @@ buildscript {
     repositories {
         maven { url 'https://maven.fabric.io/public' }
         maven { url "https://jitpack.io" }
-        maven { url "https://repo.eclipse.org/content/repositories/paho-snapshots/" }
+        maven { url "https://repo.eclipse.org/content/repositories/paho-releases/" }
     }
 
     dependencies {
@@ -14,7 +14,7 @@ repositories {
     maven { url 'https://maven.fabric.io/public' }
     maven { url "https://dl.bintray.com/hani-momanii/maven"}
     maven { url "https://jitpack.io" }
-    maven { url "https://repo.eclipse.org/content/repositories/paho-snapshots/" }
+    maven { url "https://repo.eclipse.org/content/repositories/paho-releases/" }
 }
 
 apply plugin: 'com.android.application'
@@ -29,8 +29,8 @@ android {
         applicationId "org.grassroot.android"
         minSdkVersion 9
         targetSdkVersion 23
-        versionCode 36
-        versionName "1.6"
+        versionCode 37
+        versionName "1.7a"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
     buildTypes {
@@ -43,11 +43,11 @@ android {
     productFlavors {
         staging {
             applicationId "org.grassroot.android"
-            versionName "1.5-staging"
+            versionName "1.6-staging"
         }
         production {
             applicationId 'za.org.grassroot.android'
-            versionName "1.5"
+            versionName "1.6"
         }
     }
     splits {
@@ -97,8 +97,10 @@ dependencies {
     compile 'org.greenrobot:eventbus:3.0.0'
     compile 'com.squareup.retrofit2:retrofit:2.2.0'
     compile 'com.squareup.retrofit2:converter-gson:2.2.0'
-    compile 'com.squareup.okhttp3:logging-interceptor:3.3.1'
+
+    compile 'com.squareup.okhttp3:logging-interceptor:3.6.0'
     compile 'com.squareup.okhttp3:okhttp:3.6.0'
+
     compile 'com.google.android.gms:play-services-gcm:7.5.0'
     compile 'com.google.android.gms:play-services-location:7.5.0'
     compile 'com.squareup.picasso:picasso:2.5.2'

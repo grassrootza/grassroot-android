@@ -1,17 +1,28 @@
 package org.grassroot.android.utils;
 
+import android.app.Activity;
+import android.content.Context;
+import android.content.Intent;
 import android.support.annotation.NonNull;
 import android.text.TextUtils;
 import android.util.Log;
 
 import org.grassroot.android.BuildConfig;
+import org.grassroot.android.activities.StartActivity;
+import org.grassroot.android.events.UserLoggedOutEvent;
+import org.grassroot.android.interfaces.NotificationConstants;
 import org.grassroot.android.models.PreferenceObject;
 import org.grassroot.android.models.exceptions.ApiCallException;
 import org.grassroot.android.models.responses.GenericResponse;
+import org.grassroot.android.models.responses.RestResponse;
 import org.grassroot.android.models.responses.TokenResponse;
+import org.grassroot.android.services.GcmRegistrationService;
 import org.grassroot.android.services.GrassrootRestService;
+import org.grassroot.android.services.MqttConnectionManager;
+import org.greenrobot.eventbus.EventBus;
 
 import java.io.IOException;
+import java.util.concurrent.Callable;
 
 import io.reactivex.Observable;
 import io.reactivex.ObservableEmitter;
@@ -31,6 +42,7 @@ public class LoginRegUtils {
 	public static final String OTP_PROD_SENT = "otp_sent_prod";
 	public static final String AUTH_HAS_GROUPS = "authenticated";
 	public static final String AUTH_NO_GROUPS = "authenticated_no_groups";
+	public static final String AUTH_REFRESHED = "authenticated_refreshed";
 
 	public static Observable<String> reqLogin(final String mobileNumber) {
 		return Observable.create(new ObservableOnSubscribe<String>() {
@@ -173,9 +185,33 @@ public class LoginRegUtils {
 		}
 	}
 
+	public static void logout(Activity activity) {
+		final String mobileNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
+		final String code = RealmUtils.loadPreferencesFromDB().getToken();
+		Log.e(TAG, "unsubscribing from everything ...");
+		MqttConnectionManager.getInstance().unsubscribeAllAndDisconnect(RealmUtils.loadGroupUidsSync());
+		Log.e(TAG, "mqtt cleaned up, proceeding ...");
+		unregisterGcm(activity); // maybe do preference switch off in log out?
+		LoginRegUtils.logoutUserRestCall(mobileNumber, code).subscribe();
+		EventBus.getDefault().post(new UserLoggedOutEvent());
+		LoginRegUtils.wipeAllButMessagesAndMsisdn();
+		Intent i = new Intent(activity, StartActivity.class);
+		i.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+		activity.startActivity(i);
+		activity.finish();
+	}
+
+	private static void unregisterGcm(Context context) {
+		Intent gcmUnregister = new Intent(context, GcmRegistrationService.class);
+		gcmUnregister.putExtra(NotificationConstants.ACTION, NotificationConstants.GCM_UNREGISTER);
+		gcmUnregister.putExtra(NotificationConstants.PHONE_NUMBER, RealmUtils.loadPreferencesFromDB().getMobileNumber());
+		gcmUnregister.putExtra(Constant.USER_TOKEN, RealmUtils.loadPreferencesFromDB().getToken());
+		context.startService(gcmUnregister);
+	}
+
 	// note: (a) auth code may be wiped from Realm by the time this executes, so passing it makes more thread safe
 	// (b) need to pass auth code to make sure user can't be logged out by impersonation
-	public static Observable<String> logOutUser(final String msisdn, final String currentAuthCode) {
+	private static Observable<String> logoutUserRestCall(final String msisdn, final String currentAuthCode) {
 		return Observable.create(new ObservableOnSubscribe<String>() {
 			@Override
 			public void subscribe(ObservableEmitter<String> subscriber) {
@@ -196,11 +232,59 @@ public class LoginRegUtils {
 		}).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread());
 	}
 
-	public static void wipeAllButMessagesAndMsisdn() {
+	private static void wipeAllButMessagesAndMsisdn() {
 		final String phoneNumber = RealmUtils.deleteAllExceptMessagesAndPhone();
 		PreferenceObject storedMsisdn = new PreferenceObject();
 		storedMsisdn.setMobileNumber(phoneNumber);
 		RealmUtils.saveDataToRealmSync(storedMsisdn);
+	}
+
+	// Helper methods to handle refreshing token code via OTP
+
+	public static Observable<String> requestTokenRefreshOTP() {
+		return Observable.create(new ObservableOnSubscribe<String>() {
+			@Override
+			public void subscribe(ObservableEmitter<String> e) throws Exception {
+				try {
+					final String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
+					Response<RestResponse<String>> requestNewOtp = GrassrootRestService.getInstance().getApi()
+							.requestNewOtp(phoneNumber).execute();
+					if (requestNewOtp.isSuccessful()) {
+						final String returnTag = BuildConfig.FLAVOR.equals(Constant.STAGING) ?
+								requestNewOtp.body().getData() : OTP_PROD_SENT;
+						e.onNext(returnTag);
+					} else {
+						e.onNext(NetworkUtils.SERVER_ERROR);
+					}
+				} catch (IOException|NullPointerException error) { // adding the null pointer catch because Android
+					e.onNext(NetworkUtils.CONNECT_ERROR);
+				}
+			}
+		});
+	}
+
+	public static Observable<String> verifyOtpForNewToken(final String enteredOtp) {
+		return Observable.fromCallable(new Callable<String>() {
+			@Override
+			public String call() throws Exception {
+				try {
+					final String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
+					Response<RestResponse<String>> response = GrassrootRestService.getInstance().getApi()
+							.obtainNewToken(phoneNumber, enteredOtp).execute();
+					if (response.isSuccessful()) {
+						final String token = response.body().getData();
+						PreferenceObject prefs = RealmUtils.loadPreferencesFromDB();
+						prefs.setToken(token);
+						RealmUtils.saveDataToRealmSync(prefs);
+						return AUTH_REFRESHED;
+					} else {
+						return NetworkUtils.CONNECT_ERROR;
+					}
+				} catch (IOException|NullPointerException e) {
+					return NetworkUtils.CONNECT_ERROR;
+				}
+			}
+		});
 	}
 
 }

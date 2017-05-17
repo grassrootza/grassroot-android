@@ -139,6 +139,20 @@
     <string name="alert_go_online">Try go online</string>
     <string name="work_offline">Continue offline</string>
     <string name="action_logout">Logout</string>
+    <string name="request_new_otp">SMS code</string>
+
+    <!-- Token code expiry strings -->
+    <string name="token_expired_dialog">Sorry, for security reasons, your login has expired. You can
+        authenticate again with an SMS OTP, or log out and log in.</string>
+    <string name="token_expired_sms_otp">SMS OTP</string>
+    <string name="token_expired_enter_otp_title">Enter OTP</string>
+    <string name="token_expired_enter_otp">Please enter the code sent by SMS:</string>
+    <string name="token_expired_connect_error">Sorry, there was a problem connecting to the server. Please
+    try again or logout and login.</string>
+    <string name="token_expired_otp_error">Sorry, the OTP entered was incorrect. Please enter it again.</string>
+    <string name="token_expired_otp_error_expired">Sorry, you have exceeded the number of attempts allowed. Please
+    log out and login</string>
+    <string name="token_refreshed_success">Done! Login refreshed</string>
 
     <!-- Navigation drawer items -->
     <string name="drawer_group_list">Your groups</string>
@@ -661,12 +675,25 @@
     <string name="ctodo_invite_all">Assigned to whole group</string>
     <string name="ctodo_button">Send</string>
 
+    <!-- todo: work on wording, obviously -->
+    <string name="ctsk_meeting_success_ask_public">Meeting called! Do you want to make the meeting
+    public? If yes, non-members will be able to find it by searching</string>
     <string name="ctsk_meeting_assigned_success">Done! Meeting called of %d members</string>
     <string name="ctsk_meeting_all_success">Done! Meeting called of whole group</string>
     <string name="ctsk_vote_assigned_success">Done! Vote called of %d members</string>
     <string name="ctsk_vote_all_success">Done! Vote called of whole group</string>
     <string name="ctsk_todo_assigned_success">Done! Action assigned to %d members</string>
     <string name="ctsk_todo_all_success">Done! Action assigned to whole group</string>
+
+    <!-- Set things public menus -->
+    <string name="ctsk_meeting_public_btn">Make public</string>
+    <string name="ctsk_meeting_private_btn">Keep private</string>
+
+    <string name="ctsk_meeting_public_done">Okay! The meeting is public so people will find it
+    if they are looking for meetings nearby</string>
+    <string name="ctsk_meeting_public_error">Sorry, there was an error making the meeting public. For
+    security it has been kept private. You can try again later.</string>
+    <string name="ctsk_meeting_private_done">Okay! The meeting will be kept private</string>
 
     <!--Select members button & reminder options -->
     <string name="bt_done">Done</string>

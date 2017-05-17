@@ -80,7 +80,7 @@
     </RelativeLayout>
 
     <LinearLayout
-        android:id="@+id/ac_btn_offline"
+        android:id="@+id/ac_two_btn_options"
         android:orientation="vertical"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
