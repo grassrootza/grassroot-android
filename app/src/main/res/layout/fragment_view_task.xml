@@ -101,10 +101,19 @@
                         android:textStyle="bold"
                         tools:text="@string/vt_mtg_responseq" />
 
+                    <Spinner
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:id="@+id/vt_vote_options"
+                        android:layout_below="@id/vt_response_header"
+                        android:layout_margin="@dimen/padding"
+                        android:visibility="gone">
+                    </Spinner>
+
                     <RelativeLayout
                         android:id="@+id/td_rl_response_icon"
                         android:layout_width="match_parent"
-                        android:layout_below="@+id/vt_response_header"
+                        android:layout_below="@+id/vt_vote_options"
                         android:layout_height="wrap_content"
                         android:visibility="gone">
 

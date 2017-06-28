@@ -84,8 +84,53 @@
 
                 <android.support.v7.widget.CardView
                     style="@style/FormCardView"
+                    android:id="@+id/ctsk_cv_voteoptions"
+                    android:layout_below="@id/ctsk_location_count"
+                    android:visibility="visible">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical">
+                        <RadioGroup
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content">
+                            <RadioButton
+                                android:id="@+id/cvote_yes_no"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:padding="@dimen/padding_half"
+                                android:text="Yes/no vote"/>
+                            <RadioButton
+                                android:id="@+id/cvote_multi_option"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:padding="@dimen/padding_half"
+                                android:text="Add my own options"/>
+                        </RadioGroup>
+                        <EditText
+                            android:id="@+id/cvote_options_input"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:visibility="gone"
+                            android:imeOptions="actionDone"
+                            android:textSize="@dimen/txt_medium"
+                            android:hint="Enter vote options one by one"/>
+                        <TextView
+                            android:id="@+id/cvote_options_list"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:visibility="gone"
+                            android:padding="@dimen/padding_half"
+                            tools:text="Vote Option 1\nVote Option 2"/>
+                    </LinearLayout>
+
+                </android.support.v7.widget.CardView>
+
+                <android.support.v7.widget.CardView
+                    style="@style/FormCardView"
                     android:id="@+id/ctsk_cv_datepicker"
-                    android:layout_below="@+id/ctsk_location_count"
+                    android:layout_below="@+id/ctsk_cv_voteoptions"
 
                     card_view:cardCornerRadius="3dp"
                     card_view:cardElevation="3dp"
@@ -156,10 +201,43 @@
                     </RelativeLayout>
                 </android.support.v7.widget.CardView>
 
+                <LinearLayout
+                    android:id="@+id/ctsk_ll_photo"
+                    android:layout_below="@id/ctsk_cv_timepicker"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginTop="@dimen/margin_xlarge"
+                    android:gravity="center"
+                    android:background="@drawable/button_white_bg_border_green"
+                    android:clickable="true">
+
+                    <ImageView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:clickable="false"
+                        android:src="@drawable/ic_add_a_photo_green_24dp"/>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:clickable="false"
+                        android:text="@string/ctsk_incl_photo"
+                        android:textSize="@dimen/txt_medium"
+                        android:textStyle="normal"
+                        android:textColor="@color/primaryColor"
+                        android:paddingTop="@dimen/padding_card_left"
+                        android:paddingBottom="@dimen/padding_card_left"
+                        android:layout_marginLeft="@dimen/margin_small"
+                        android:layout_marginRight="@dimen/margin_small"
+                        android:textAllCaps="true"/>
+
+                </LinearLayout>
+
                 <!-- todo : turn this into a fragment and include it, plus flatten it -->
                 <android.support.v7.widget.CardView
                     android:id="@+id/ctsk_cv_reminder"
-                    android:layout_below="@id/ctsk_cv_timepicker"
+                    android:layout_below="@id/ctsk_ll_photo"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     card_view:cardBackgroundColor="@color/light_background"

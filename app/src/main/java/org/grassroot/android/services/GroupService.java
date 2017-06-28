@@ -230,35 +230,6 @@ public class GroupService {
     }).subscribeOn(Schedulers.io()).observeOn(observingThread);
   }
 
-  public Observable<String>  markMessagesAsRead(final String groupUid, Scheduler observingThread){
-    return Observable.create(new ObservableOnSubscribe<String>(){
-      @Override
-      public void subscribe(ObservableEmitter<String> subscriber) {
-        if(!NetworkUtils.isOnline()){
-          subscriber.onNext(NetworkUtils.CONNECT_ERROR);
-        }else{
-          final String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
-          final String code = RealmUtils.loadPreferencesFromDB().getToken();
-          final Set<String> messageUids = RealmUtils.loadUnreadMessages(groupUid);
-          if(!messageUids.isEmpty()) {
-            try {
-              Response<GenericResponse> response = GrassrootRestService.getInstance().getApi()
-                      .markAsRead(phoneNumber, code, groupUid, messageUids).execute();
-              if (response.isSuccessful()) {
-                subscriber.onNext(NetworkUtils.ONLINE_DEFAULT);
-              } else {
-                subscriber.onNext(NetworkUtils.SERVER_ERROR);
-              }
-            } catch (IOException e) {
-              subscriber.onNext(NetworkUtils.CONNECT_ERROR);
-            }
-          }
-      }
-    }}).subscribeOn(Schedulers.io()).observeOn(observingThread);
-  }
-
-
-
   private void persistGroupsAddedUpdated(GroupsChangedResponse responseBody) {
     if (Looper.myLooper() == Looper.getMainLooper()) {
       throw new IllegalStateException("Must not persist group list on main thread");
@@ -281,15 +252,9 @@ public class GroupService {
       RealmUtils.removeObjectsByUid(Group.class, "groupUid",
           RealmUtils.convertListOfRealmStringInListOfString(
               responseBody.getRemovedUids()));
-      for(String uid: RealmUtils.convertListOfRealmStringInListOfString(
-              responseBody.getRemovedUids())){
-        MqttConnectionManager.getInstance().unsubscribeFromTopic(uid);
-      }
-
     }
 
     RealmUtils.saveDataToRealmSync(responseBody.getAddedAndUpdated());
-    MqttConnectionManager.getInstance().subscribeToGroups(responseBody.getAddedAndUpdated());
 
     List<Member> composedMembers = new ArrayList<>();
     for (Group g : responseBody.getAddedAndUpdated()) {

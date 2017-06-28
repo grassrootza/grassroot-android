@@ -32,7 +32,6 @@ import org.grassroot.android.activities.GroupAvatarActivity;
 import org.grassroot.android.activities.GroupSearchActivity;
 import org.grassroot.android.activities.GroupTasksActivity;
 import org.grassroot.android.adapters.GroupListAdapter;
-import org.grassroot.android.events.GroupChatEvent;
 import org.grassroot.android.events.GroupCreatedEvent;
 import org.grassroot.android.events.GroupDeletedEvent;
 import org.grassroot.android.events.GroupEditedEvent;
@@ -573,13 +572,6 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
         // finish on main activity seems to not clear this
         if (groupListRowAdapter != null) {
             groupListRowAdapter.setGroupList(new ArrayList<Group>());
-        }
-    }
-
-    @Subscribe(threadMode = ThreadMode.MAIN)
-    public void onEvent(GroupChatEvent e) {
-        if (groupListRowAdapter != null) {
-            groupListRowAdapter.refreshSingleGroup(e.getGroupUid());
         }
     }
 

@@ -5,28 +5,41 @@ import android.app.DatePickerDialog;
 import android.app.ProgressDialog;
 import android.app.TimePickerDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
+import android.net.Uri;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.support.design.widget.Snackbar;
 import android.support.design.widget.TextInputEditText;
 import android.support.design.widget.TextInputLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.content.FileProvider;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.SwitchCompat;
+import android.text.TextUtils;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
+import android.widget.CompoundButton;
 import android.widget.DatePicker;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.RadioButton;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.TimePicker;
+import android.widget.Toast;
 
 import org.grassroot.android.R;
 import org.grassroot.android.activities.ActionCompleteActivity;
@@ -51,8 +64,12 @@ import org.grassroot.android.utils.IntentUtils;
 import org.grassroot.android.utils.NetworkUtils;
 import org.grassroot.android.utils.RealmUtils;
 import org.grassroot.android.utils.Utilities;
+import org.grassroot.android.utils.image.LocalImageUtils;
 import org.greenrobot.eventbus.EventBus;
 
+import java.io.File;
+import java.io.IOException;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
@@ -66,6 +83,7 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnCheckedChanged;
 import butterknife.OnClick;
+import butterknife.OnEditorAction;
 import butterknife.OnTextChanged;
 import butterknife.Unbinder;
 import io.reactivex.Observable;
@@ -73,6 +91,8 @@ import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.annotations.NonNull;
 import io.reactivex.functions.Consumer;
 import io.realm.RealmList;
+
+import static android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
 
 /**
  * Created by luke on 2016/06/01.
@@ -102,6 +122,13 @@ public class CreateTaskFragment extends Fragment {
     @BindView(R.id.ctsk_et_title) TextInputEditText etTitleInput;
     @BindView(R.id.ctsk_et_location) TextInputEditText etLocationInput;
     @BindView(R.id.ctsk_et_description) TextInputEditText etDescriptionInput;
+
+    @BindView(R.id.ctsk_ll_photo) ViewGroup addImageButton;
+
+    @BindView(R.id.ctsk_cv_voteoptions) CardView voteOptionsInputCard;
+    @BindView(R.id.cvote_options_input) EditText voteOptionsInputField;
+    @BindView(R.id.cvote_options_list) TextView voteOptionsList;
+    @BindView(R.id.cvote_yes_no) RadioButton voteYesNoButton;
 
     private DatePickerFragment datePicker;
     private TimePickerFragment timePicker;
@@ -236,8 +263,19 @@ public class CreateTaskFragment extends Fragment {
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (resultCode == Activity.RESULT_OK && requestCode == NavigationConstants.SELECT_MEMBERS) {
-            setAssignedMembers(data);
+        if (resultCode == Activity.RESULT_OK) {
+            if (requestCode == NavigationConstants.SELECT_MEMBERS) {
+                setAssignedMembers(data);
+            } else if (requestCode == GALLERY_RESULT_INT) {
+                if (data != null) {
+                    Uri selectedImage = data.getData();
+                    final String localImagePath = LocalImageUtils.getLocalFileNameFromURI(selectedImage);
+                    checkImageSizeAndConfirmInclusion(localImagePath, LocalImageUtils.getMimeType(selectedImage));
+                }
+            } else if (requestCode == CAMERA_RESULT_INT) {
+                LocalImageUtils.addImageToGallery(pathOfImageToInclude);
+                checkImageSizeAndConfirmInclusion(pathOfImageToInclude, "image/jpeg");
+            }
         }
     }
 
@@ -266,6 +304,7 @@ public class CreateTaskFragment extends Fragment {
         }
     }
 
+    // todo : validate vote options non-empty
     @OnClick(R.id.ctsk_btn_create_task)
     public void validateFormAndCreateTask() {
         if (etTitleInput.getText().toString().trim().isEmpty()) {
@@ -305,6 +344,8 @@ public class CreateTaskFragment extends Fragment {
                             this).subscribe();
                 } else if (throwable instanceof ApiCallException) {
                     handleError((ApiCallException) throwable, model);
+                } else {
+                    throwable.printStackTrace();
                 }
             }
         };
@@ -382,9 +423,17 @@ public class CreateTaskFragment extends Fragment {
         model.setCanAction(true);
         model.setReply(TaskConstants.TODO_PENDING);
         model.setHasResponded(false);
+        model.setImageLocalUrl(pathOfImageToInclude);
+        model.setImageMimeType(mimeTypeOfImage);
 
         final RealmList<RealmString> realmMemberUids = RealmUtils.convertListOfStringInRealmListOfString(new ArrayList<>(memberUids));
         model.setMemberUIDS(realmMemberUids);
+
+        if (TaskConstants.VOTE.equals(taskType) && !voteYesNoButton.isChecked()) {
+            model.setTags(RealmUtils.convertListOfStringInRealmListOfString(voteOptions));
+        }
+
+        Log.e(TAG, "generated task model, returning it");
 
         return model;
     }
@@ -426,6 +475,103 @@ public class CreateTaskFragment extends Fragment {
     }
 
     /*
+    /*
+    SECTION : METHODS FOR TRIGGERING PHOTO/MODIFY/CANCEL
+     */
+    private String pathOfImageToInclude;
+    private String mimeTypeOfImage;
+    private static final int GALLERY_RESULT_INT = 1001;
+    private static final int CAMERA_RESULT_INT = 1002;
+
+    @OnClick(R.id.ctsk_ll_photo)
+    public void taskPhoto() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+        builder.setItems(R.array.vt_add_photo_options, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+                if (i == 0) {
+                    try {
+                        startActivityForResult(generateCameraIntent(), CAMERA_RESULT_INT);
+                    } catch (IOException e) {
+                        // show a toast
+                        Toast.makeText(getContext(), "Sorry, error loading camera", Toast.LENGTH_SHORT).show();
+                    } catch (IllegalArgumentException e) {
+                        Log.e(TAG, e.getMessage());
+                        Toast.makeText(getContext(), "Illegal argument exception!", Toast.LENGTH_SHORT).show();
+                    }
+                } else if (i == 1) {
+                    startActivityForResult(generateGalleryIntent(), GALLERY_RESULT_INT);
+                }
+                dialogInterface.dismiss();
+            }
+        }).setCancelable(true);
+        builder.show();
+    }
+
+    private Intent generateGalleryIntent() {
+        return new Intent(Intent.ACTION_PICK, EXTERNAL_CONTENT_URI);
+    }
+
+    private Intent generateCameraIntent() throws IllegalArgumentException, IOException {
+        Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        if (takePictureIntent.resolveActivity(getActivity().getPackageManager()) != null) {
+            File photoFile = LocalImageUtils.createImageFileForCamera();
+            // Android Studio says this null check is unnecessary, but can't fully trust, so keeping it
+            if (photoFile != null) {
+                Uri currentPhotoUri = FileProvider.getUriForFile(getContext(),
+                        "org.grassroot.android.fileprovider",
+                        photoFile);
+                pathOfImageToInclude = photoFile.getAbsolutePath();
+                takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, currentPhotoUri);
+
+                List<ResolveInfo> resInfoList = getContext().getPackageManager().queryIntentActivities(takePictureIntent,
+                        PackageManager.MATCH_DEFAULT_ONLY);
+                for (ResolveInfo resolveInfo : resInfoList) {
+                    String packageName = resolveInfo.activityInfo.packageName;
+                    getContext().grantUriPermission(packageName, currentPhotoUri, Intent.FLAG_GRANT_WRITE_URI_PERMISSION | Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                }
+            } else {
+                throw new IOException("Error! File came back null");
+            }
+        }
+        return takePictureIntent;
+    }
+
+    private void checkImageSizeAndConfirmInclusion(final String localImagePath, final String mimeType) {
+        double imageSizeMb = (double) LocalImageUtils.getImageFileSize(localImagePath) / (1024 * 1024);
+        Log.e(TAG, "image size on disk: " + LocalImageUtils.getImageFileSize(localImagePath));
+        final DecimalFormat df = new DecimalFormat("#.##");
+        final String message = getString(R.string.vt_photo_size, df.format(imageSizeMb));
+        AlertDialog.Builder builder = new AlertDialog.Builder(getContext())
+                .setMessage(message)
+                .setPositiveButton(R.string.vt_photo_upload_full, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        pathOfImageToInclude = localImagePath;
+                        mimeTypeOfImage = mimeType;
+                        Log.e(TAG, "okay, we are going to upload it as is");
+                    }
+                })
+                .setNeutralButton(R.string.vt_photo_upload_small, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        pathOfImageToInclude = LocalImageUtils.getCompressedFileFromImage(localImagePath, false);
+                        mimeTypeOfImage = mimeType;
+                    }
+                })
+                .setNegativeButton(R.string.vt_photo_upload_later, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        pathOfImageToInclude = null;
+                        mimeTypeOfImage = null;
+                        dialogInterface.cancel();
+                    }
+                })
+                .setCancelable(true);
+        builder.show();
+    }
+
+    /*
     Substantive stuff over, remainder of code just sets up labels, animators & toggles
      */
 
@@ -455,7 +601,8 @@ public class CreateTaskFragment extends Fragment {
             case TaskConstants.MEETING:
                 // since meeting is most complex, and most commonly used, fragment is pre-set for it
                 // hence just making explicit remind logic here
-
+                addImageButton.setVisibility(View.VISIBLE);
+                voteOptionsInputCard.setVisibility(View.GONE);
                 textRemindOption0.setText(TaskConstants.meetingReminderDesc[0]);
                 textRemindOption1.setText(TaskConstants.meetingReminderDesc[1]);
                 textRemindOption2.setText(TaskConstants.meetingReminderDesc[2]);
@@ -465,6 +612,9 @@ public class CreateTaskFragment extends Fragment {
 
                 break;
             case TaskConstants.VOTE:
+                addImageButton.setVisibility(View.GONE);
+                voteOptionsInputCard.setVisibility(View.VISIBLE);
+                voteYesNoButton.setChecked(true);
                 subjectInput.setHint(getContext().getString(R.string.cvote_subject));
                 dateTitle.setText(R.string.cvote_date);
                 timeTitle.setText(R.string.cvote_time);
@@ -478,6 +628,8 @@ public class CreateTaskFragment extends Fragment {
 
                 break;
             case TaskConstants.TODO:
+                addImageButton.setVisibility(View.GONE);
+                voteOptionsInputCard.setVisibility(View.GONE);
                 subjectInput.setHint(getContext().getString(R.string.ctodo_subject));
                 dateTitle.setText(R.string.ctodo_date);
                 timeTitle.setText(R.string.ctodo_time);
@@ -492,10 +644,35 @@ public class CreateTaskFragment extends Fragment {
                 switchReminderOption1.setChecked(true);
                 toggleSwitches(switchReminderOption1);
 
+
                 break;
             default:
                 throw new UnsupportedOperationException("Error! Fragment must have valid task type");
         }
+    }
+
+    List<String> voteOptions = new ArrayList<>();
+
+    @OnCheckedChanged(R.id.cvote_multi_option)
+    public void onMultiOptionSelected(CompoundButton button, boolean checked) {
+        voteOptionsInputField.setVisibility(checked ? View.VISIBLE : View.GONE);
+        voteOptionsList.setVisibility(checked ? View.VISIBLE : View.GONE);
+    }
+
+    @OnEditorAction(R.id.cvote_options_input)
+    public boolean onVoteInputDone(int actionId, KeyEvent event) {
+        if (actionId == EditorInfo.IME_ACTION_DONE || (event.getAction() == KeyEvent.ACTION_DOWN &&
+                event.getKeyCode() == KeyEvent.KEYCODE_ENTER)) {
+            handleEnterOfVoteOption();
+            return true;
+        }
+        return false;
+    }
+
+    private void handleEnterOfVoteOption() {
+        voteOptions.add(voteOptionsInputField.getText().toString());
+        voteOptionsList.setText(TextUtils.join("\n", voteOptions));
+        voteOptionsInputField.setText("");
     }
 
     @BindView(R.id.ctsk_iv_expand_alert)

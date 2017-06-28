@@ -229,6 +229,7 @@ public class TaskListFragment extends Fragment implements TasksAdapter.TaskListL
             TaskService.getInstance().fetchTasks(groupUid, AndroidSchedulers.mainThread()).subscribe(new Consumer<String>() {
                 @Override
                 public void accept(String s) {
+                    hideProgress();
                     hasFetchedFromServer = NetworkUtils.FETCHED_SERVER.equals(s);
                     loadTasksFromDB(s);
                 }

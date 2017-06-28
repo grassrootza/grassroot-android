@@ -279,15 +279,9 @@ public class GroupListAdapter extends RecyclerView.Adapter<GroupListAdapter.GHP_
     private void setUpTextDescriptions(GHP_ViewHolder holder, final Group group) {
         holder.txtGroupname.setText(group.getGroupName());
 
-        if (!RealmUtils.hasUnreadChats(group.getGroupUid())) {
-            final String groupOrganizerDescription =
-                    String.format(context.getString(R.string.group_organizer_prefix), group.getGroupCreator());
-            holder.txtGroupownername.setText(groupOrganizerDescription);
-            holder.txtGroupownername.setTextColor(Color.BLACK);
-        } else {
-            holder.txtGroupownername.setText(context.getString(R.string.group_unread_chats));
-            holder.txtGroupownername.setTextColor(ContextCompat.getColor(context, R.color.primaryColor));
-        }
+        final String groupOrganizerDescription = String.format(context.getString(R.string.group_organizer_prefix), group.getGroupCreator());
+        holder.txtGroupownername.setText(groupOrganizerDescription);
+        holder.txtGroupownername.setTextColor(Color.BLACK);
 
         if (group.hasJoinCode()) {
             final String tokenCode = context.getString(R.string.join_code_prefix) + group.getJoinCode() + "#";

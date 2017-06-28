@@ -440,21 +440,36 @@ public class GrassrootRestService {
     //create vote
     @POST("vote/create/{id}/{phoneNumber}/{code}")
     Call<TaskResponse> createVote(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
-        @Path("id") String groupId, @Query("title") String title,
-        @Query("description") String description,
-        @Query("closingTime") String closingTime,
-        @Query("reminderMins") int minutes,
-        @Query("members") Set<String> members, @Query("notifyGroup") boolean relayable);
+                                  @Path("id") String groupId,
+                                  @Query("title") String title,
+                                  @Query("description") String description,
+                                  @Query("closingTime") String closingTime,
+                                  @Query("reminderMins") int minutes,
+                                  @Query("members") Set<String> members,
+                                  @Query("options") List<String> options);
 
-    // create meeting
+    // create meeting, with/without image -- Retrofit can't do null image / optional image, hence two
     @POST("meeting/create/{phoneNumber}/{code}/{parentUid}")
     Call<TaskResponse> createMeeting(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
+                                     @Path("parentUid") String parentUid, @Query("title") String title,
+                                     @Query("description") String description,
+                                     @Query("eventStartDateTime") String dateTimeISO,
+                                     @Query("reminderMinutes") int reminderMinutes,
+                                     @Query("location") String location,
+                                     @Query("members") Set<String> memberUids);
+
+    @Multipart
+    @POST("meeting/create/{phoneNumber}/{code}/{parentUid}")
+    Call<TaskResponse> createMeetingWithImage(@Path("phoneNumber") String phoneNumber, @Path("code") String code,
         @Path("parentUid") String parentUid, @Query("title") String title,
         @Query("description") String description,
         @Query("eventStartDateTime") String dateTimeISO,
         @Query("reminderMinutes") int reminderMinutes,
         @Query("location") String location,
-        @Query("members") Set<String> memberUids);
+        @Query("members") Set<String> memberUids,
+                                     @Part MultipartBody.Part image);
+
+
 
     // set a meeting public (often called right after create)
     @POST("meeting/public/{phoneNumber}/{code}/{meetingUid}")

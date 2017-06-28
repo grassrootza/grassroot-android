@@ -1,6 +1,5 @@
 package org.grassroot.android.services;
 
-import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.location.Location;
@@ -29,13 +28,16 @@ import org.grassroot.android.utils.ErrorUtils;
 import org.grassroot.android.utils.NetworkUtils;
 import org.grassroot.android.utils.RealmUtils;
 import org.grassroot.android.utils.Utilities;
+import org.grassroot.android.utils.image.LocalImageUtils;
 import org.greenrobot.eventbus.EventBus;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import io.reactivex.Observable;
 import io.reactivex.ObservableEmitter;
@@ -45,6 +47,8 @@ import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.functions.Consumer;
 import io.reactivex.schedulers.Schedulers;
 import io.realm.RealmList;
+import okhttp3.MultipartBody;
+import okhttp3.RequestBody;
 import retrofit2.Call;
 import retrofit2.Response;
 
@@ -253,28 +257,44 @@ public class TaskService {
   private Call<TaskResponse> newTaskApiCall(TaskModel task) {
     final String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
     final String code = RealmUtils.loadPreferencesFromDB().getToken();
+    final Set<String> memberUids = new HashSet<>(RealmUtils.convertListOfRealmStringInListOfString(task.getMemberUIDS()));
 
     switch (task.getType()) {
       case TaskConstants.MEETING:
         final String location = task.getLocation();
-        return GrassrootRestService.getInstance()
-            .getApi()
-            .createMeeting(phoneNumber, code, task.getParentUid(), task.getTitle(),
-                task.getDescription(), task.getDeadlineISO(), task.getMinutes(), location,
-                new HashSet<>(RealmUtils.convertListOfRealmStringInListOfString(task.getMemberUIDS())));
+        if (TextUtils.isEmpty(task.getImageLocalUrl())) {
+          return GrassrootRestService.getInstance()
+                  .getApi()
+                  .createMeeting(phoneNumber, code,
+                          task.getParentUid(),
+                          task.getTitle(),
+                          task.getDescription(),
+                          task.getDeadlineISO(),
+                          task.getMinutes(),
+                          location, memberUids);
+        } else {
+          final MultipartBody.Part image = LocalImageUtils.getImageFromPath(task.getImageLocalUrl(), task.getImageMimeType());
+          return GrassrootRestService.getInstance().getApi()
+                  .createMeetingWithImage(phoneNumber, code, task.getParentUid(),
+                          task.getTitle(), task.getDescription(), task.getDeadlineISO(), task.getMinutes(),
+                          location, memberUids, image);
+        }
       case TaskConstants.VOTE:
-        return GrassrootRestService.getInstance()
-            .getApi()
-            .createVote(phoneNumber, code, task.getParentUid(), task.getTitle(),
-                task.getDescription(), task.getDeadlineISO(), task.getMinutes(), new HashSet<>(
-                    RealmUtils.convertListOfRealmStringInListOfString(task.getMemberUIDS())),
-                false);
+        return GrassrootRestService.getInstance().getApi()
+            .createVote(phoneNumber,
+                    code,
+                    task.getParentUid(),
+                    task.getTitle(),
+                    task.getDescription(),
+                    task.getDeadlineISO(),
+                    task.getMinutes(), memberUids,
+                    RealmUtils.convertListOfRealmStringInListOfString(task.getTags()));
       case TaskConstants.TODO:
         return GrassrootRestService.getInstance()
             .getApi()
             .createTodo(phoneNumber, code, task.getParentUid(), task.getTitle(),
                 task.getDescription(), task.getDeadlineISO(), task.getMinutes(),
-                new HashSet<>(RealmUtils.convertListOfRealmStringInListOfString(task.getMemberUIDS())));
+                memberUids);
       default:
         throw new UnsupportedOperationException("Error! Missing task type in call");
     }

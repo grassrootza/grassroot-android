@@ -7,14 +7,11 @@ import android.view.Menu;
 import android.view.MenuItem;
 
 import org.grassroot.android.R;
-import org.grassroot.android.fragments.GroupChatFragment;
 import org.grassroot.android.fragments.JoinRequestListFragment;
-import org.grassroot.android.fragments.MultiGroupChatFragment;
 import org.grassroot.android.fragments.NotificationCenterFragment;
 import org.grassroot.android.interfaces.GroupConstants;
 import org.grassroot.android.interfaces.NotificationConstants;
 import org.grassroot.android.models.GroupJoinRequest;
-import org.grassroot.android.services.GcmListenerService;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -46,13 +43,6 @@ public class MultiMessageNotificationActivity extends PortraitActivity {
         clickAction = getIntent().getStringExtra(NotificationConstants.CLICK_ACTION);
 
         switch (clickAction) {
-            case NotificationConstants.CHAT_MESSAGE:
-                GcmListenerService.clearChatNotifications(this);
-                fragment = createGroupChatFragment(groupUid, groupName);
-                break;
-            case NotificationConstants.CHAT_LIST:
-                fragment = createGroupChatListFragment();
-                break;
             case NotificationConstants.NOTIFICATION_LIST:
                 fragment = createNotificationCenterFragment();
                 break;
@@ -104,17 +94,6 @@ public class MultiMessageNotificationActivity extends PortraitActivity {
         setSupportActionBar(toolbar);
         getSupportActionBar().setHomeButtonEnabled(true);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-    }
-
-    private Fragment createGroupChatFragment(String groupUid, String groupName) {
-        this.setTitle(groupName);
-        toolbar.setNavigationIcon(R.drawable.btn_close_white);
-        return GroupChatFragment.newInstance(groupUid, groupName);
-    }
-
-    private Fragment createGroupChatListFragment() {
-        toolbar.setNavigationIcon(R.drawable.btn_back_wt);
-        return MultiGroupChatFragment.newInstance();
     }
 
     private Fragment createJoinRequestListFragment(){

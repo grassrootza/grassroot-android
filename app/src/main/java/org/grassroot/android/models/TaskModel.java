@@ -7,10 +7,13 @@ import android.util.Log;
 import org.grassroot.android.interfaces.TaskConstants;
 import org.grassroot.android.models.helpers.RealmString;
 import org.grassroot.android.utils.Constant;
+import org.grassroot.android.utils.RealmUtils;
 
 import java.text.ParseException;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.List;
 
 import io.realm.RealmList;
 import io.realm.RealmObject;
@@ -62,6 +65,10 @@ public class TaskModel extends RealmObject implements Parcelable, Comparable<Tas
   private boolean isActionLocal;
 
   private RealmList<RealmString> memberUIDS;
+  private RealmList<RealmString> tags;
+
+  private String imageLocalUrl;
+  private String imageMimeType;
 
   public TaskModel() {
   }
@@ -141,6 +148,9 @@ public class TaskModel extends RealmObject implements Parcelable, Comparable<Tas
     dest.writeInt(this.isLocal ? 1 : 0);
     dest.writeInt(this.isEdited ? 1 : 0);
     dest.writeInt(this.isParentLocal ? 1 : 0);
+    dest.writeString(this.imageLocalUrl);
+    dest.writeString(this.imageMimeType);
+    dest.writeStringList(RealmUtils.convertListOfRealmStringInListOfString(tags));
   }
 
   protected TaskModel(Parcel in) {
@@ -167,6 +177,11 @@ public class TaskModel extends RealmObject implements Parcelable, Comparable<Tas
     this.isLocal = in.readInt() != 0;
     this.isEdited = in.readInt() != 0;
     this.isParentLocal = in.readInt() != 0;
+    this.imageLocalUrl = in.readString();
+    this.imageMimeType = in.readString();
+    ArrayList<String> tagsTemp = new ArrayList<>();
+    in.readStringList(tagsTemp);
+    this.tags = RealmUtils.convertListOfStringInRealmListOfString(tagsTemp);
     resetResponseFlags();
   }
 
@@ -194,7 +209,8 @@ public class TaskModel extends RealmObject implements Parcelable, Comparable<Tas
         || createdByUserName.toLowerCase().contains(searchTerm)
         || parentName.toLowerCase().contains(searchTerm)
         || (description != null && description.toLowerCase().contains(searchTerm))
-        || (location != null && location.toLowerCase().contains(searchTerm));
+        || (location != null && location.toLowerCase().contains(searchTerm))
+        || (tags != null && RealmUtils.realmListContains(searchTerm, tags));
   }
 
   public RealmList<RealmString> getMemberUIDS() {
@@ -203,6 +219,18 @@ public class TaskModel extends RealmObject implements Parcelable, Comparable<Tas
 
   public void setMemberUIDS(RealmList<RealmString> memberUIDS) {
     this.memberUIDS = memberUIDS;
+  }
+
+  public RealmList<RealmString> getTags() {
+    return tags == null ? new RealmList<RealmString>() : tags;
+  }
+
+  public List<String> getTagStrings() {
+    return RealmUtils.convertListOfRealmStringInListOfString(getTags());
+  }
+
+  public void setTags(RealmList<RealmString> tags) {
+    this.tags = tags;
   }
 
   public boolean isEdited() {
@@ -462,5 +490,21 @@ public class TaskModel extends RealmObject implements Parcelable, Comparable<Tas
 
   public void setCanMarkCompleted(boolean canMarkCompleted) {
     this.canMarkCompleted = canMarkCompleted;
+  }
+
+  public String getImageLocalUrl() {
+    return imageLocalUrl;
+  }
+
+  public void setImageLocalUrl(String imageLocalUrl) {
+    this.imageLocalUrl = imageLocalUrl;
+  }
+
+  public String getImageMimeType() {
+    return imageMimeType;
+  }
+
+  public void setImageMimeType(String imageMimeType) {
+    this.imageMimeType = imageMimeType;
   }
 }

@@ -4,6 +4,7 @@ import android.util.Log;
 
 import io.realm.DynamicRealm;
 import io.realm.FieldAttribute;
+import io.realm.RealmList;
 import io.realm.RealmMigration;
 import io.realm.RealmSchema;
 
@@ -88,6 +89,20 @@ public class GrassrootRealmMigration implements RealmMigration {
                     .addField("userPhoneNumber", String.class)
                     .addField("countModified", boolean.class)
                     .addField("revisedFaces", Integer.class);
+            oldVersion++;
+        }
+
+        if (oldVersion == 8) {
+            schema.get("TaskModel")
+                    .addRealmListField("tags", schema.get("RealmString"));
+            oldVersion++;
+        }
+
+        if (oldVersion == 9) {
+            Log.e(TAG, "doing an upward migration");
+            schema.get("TaskModel")
+                    .addField("imageLocalUrl", String.class)
+                    .addField("imageMimeType", String.class);
             oldVersion++;
         }
 

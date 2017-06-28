@@ -49,8 +49,8 @@ public class ApplicationLoader extends Application {
         RealmConfiguration.Builder realmConfigBuilder =
                 new RealmConfiguration.Builder();
 
-        Log.e("GRASSROOT", "setting schema to version 8");
-        realmConfigBuilder.schemaVersion(8)
+        Log.e("GRASSROOT", "setting schema to version 10");
+        realmConfigBuilder.schemaVersion(10)
                 .migration(new GrassrootRealmMigration());
         Realm.setDefaultConfiguration(realmConfigBuilder.build());
 
@@ -61,7 +61,7 @@ public class ApplicationLoader extends Application {
         } catch (RealmMigrationNeededException|IllegalArgumentException e) {
             Log.e("GRASSROOT", "Error! Realm migration failed");
             e.printStackTrace();
-            // Realm.deleteRealm(realmConfigBuilder.build());
+            Realm.deleteRealm(realmConfigBuilder.build());
         }
 
         //create a custom okhttp client for picasso and instantiate singleton

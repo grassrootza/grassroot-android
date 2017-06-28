@@ -18,7 +18,6 @@ import org.grassroot.android.models.responses.RestResponse;
 import org.grassroot.android.models.responses.TokenResponse;
 import org.grassroot.android.services.GcmRegistrationService;
 import org.grassroot.android.services.GrassrootRestService;
-import org.grassroot.android.services.MqttConnectionManager;
 import org.greenrobot.eventbus.EventBus;
 
 import java.io.IOException;
@@ -188,9 +187,6 @@ public class LoginRegUtils {
 	public static void logout(Activity activity) {
 		final String mobileNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
 		final String code = RealmUtils.loadPreferencesFromDB().getToken();
-		Log.e(TAG, "unsubscribing from everything ...");
-		MqttConnectionManager.getInstance().unsubscribeAllAndDisconnect(RealmUtils.loadGroupUidsSync());
-		Log.e(TAG, "mqtt cleaned up, proceeding ...");
 		unregisterGcm(activity); // maybe do preference switch off in log out?
 		LoginRegUtils.logoutUserRestCall(mobileNumber, code).subscribe();
 		EventBus.getDefault().post(new UserLoggedOutEvent());

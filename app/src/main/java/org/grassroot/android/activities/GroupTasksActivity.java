@@ -19,7 +19,6 @@ import android.widget.Toast;
 
 import org.grassroot.android.R;
 import org.grassroot.android.events.TaskCancelledEvent;
-import org.grassroot.android.fragments.GroupTaskMasterFragment;
 import org.grassroot.android.fragments.ImageGridFragment;
 import org.grassroot.android.fragments.JoinCodeFragment;
 import org.grassroot.android.fragments.NewTaskMenuFragment;
@@ -32,7 +31,6 @@ import org.grassroot.android.interfaces.GroupConstants;
 import org.grassroot.android.models.Group;
 import org.grassroot.android.services.ApplicationLoader;
 import org.grassroot.android.services.GroupService;
-import org.grassroot.android.services.MqttConnectionManager;
 import org.grassroot.android.utils.Constant;
 import org.grassroot.android.utils.ErrorUtils;
 import org.grassroot.android.utils.IntentUtils;
@@ -57,11 +55,11 @@ public class GroupTasksActivity extends PortraitActivity implements NewTaskMenuF
     private Group groupMembership;
     private JoinCodeFragment joinCodeFragment;
     private NewTaskMenuFragment newTaskMenuFragment;
-    private GroupTaskMasterFragment groupTaskMasterFragment;
+
+    private TaskListFragment taskListFragment;
 
     private boolean showDescOption;
     private int descOptionText;
-    private int openingPage;
 
     @BindView(R.id.gta_root_layout) ViewGroup rootLayout;
     @BindView(R.id.gta_toolbar) Toolbar toolbar;
@@ -73,10 +71,6 @@ public class GroupTasksActivity extends PortraitActivity implements NewTaskMenuF
         setContentView(R.layout.activity_group_tasks);
         ButterKnife.bind(this);
         EventBus.getDefault().register(this);
-        if(!MqttConnectionManager.getInstance().isConnected()){
-            Log.e(TAG, "not connected to MQTT, trying to connect ....");
-            MqttConnectionManager.getInstance().connect();
-        }
 
         final Bundle extras = getIntent().getExtras();
 
@@ -99,18 +93,14 @@ public class GroupTasksActivity extends PortraitActivity implements NewTaskMenuF
             }
         }
 
-        openingPage = extras.getInt(GroupConstants.GROUP_OPEN_PAGE, GroupConstants.OPEN_ON_USER_PREF);
-        requestPing(groupMembership.getGroupUid());
-
         setUpViews();
         setUpFragment();
-        // registerMqttReceiver();
     }
 
     private void setUpFragment() {
-        groupTaskMasterFragment = GroupTaskMasterFragment.newInstance(groupMembership, openingPage);
+        taskListFragment = TaskListFragment.newInstance(groupMembership.getGroupUid(), this);
         getSupportFragmentManager().beginTransaction()
-                .add(R.id.gta_fragment_holder, groupTaskMasterFragment)
+                .add(R.id.gta_fragment_holder, taskListFragment)
                 .commit();
     }
 
@@ -140,13 +130,13 @@ public class GroupTasksActivity extends PortraitActivity implements NewTaskMenuF
             searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
                 @Override
                 public boolean onQueryTextSubmit(String query) {
-                    groupTaskMasterFragment.getTaskListFragment().searchStringChanged(query);
+                    taskListFragment.searchStringChanged(query);
                     return true;
                 }
 
                 @Override
                 public boolean onQueryTextChange(String newText) {
-                    groupTaskMasterFragment.getTaskListFragment().searchStringChanged(newText);
+                    taskListFragment.searchStringChanged(newText);
                     return true;
                 }
             });
@@ -192,7 +182,7 @@ public class GroupTasksActivity extends PortraitActivity implements NewTaskMenuF
                 handleUpButton();
                 return true;
             case R.id.mi_icon_filter:
-                groupTaskMasterFragment.getTaskListFragment().filter();
+                taskListFragment.filter();
                 return true;
             case R.id.mi_change_desc:
                 viewOrChangeDescription();
@@ -227,11 +217,7 @@ public class GroupTasksActivity extends PortraitActivity implements NewTaskMenuF
     @Override
     public void onBackPressed() {
         if (!closeViewTaskFragment()) {
-            if (groupTaskMasterFragment.isOnChatView()) {
-                groupTaskMasterFragment.transitionToPage(0);
-            } else {
-                super.onBackPressed();
-            }
+            super.onBackPressed();
         }
     }
 
@@ -324,7 +310,7 @@ public class GroupTasksActivity extends PortraitActivity implements NewTaskMenuF
                     } else {
                         final int dialogMsg = NetworkUtils.OFFLINE_SELECTED.equals(e.getMessage()) ?
                             R.string.connect_error_unsub_offline : R.string.connect_error_group_unsubscribe;
-                        NetworkErrorDialogFragment.newInstance(dialogMsg, progressBar, new SingleObserverFromConsumer<String>(new Consumer<String>() {
+                        NetworkErrorDialogFragment.newInstance(dialogMsg, progressBar, new SingleObserverFromConsumer<>(new Consumer<String>() {
                                 @Override
                                 public void accept(String s) {
                                     progressBar.setVisibility(View.GONE);
@@ -426,11 +412,6 @@ public class GroupTasksActivity extends PortraitActivity implements NewTaskMenuF
             closedSubFrag = true;
         }
         return closedSubFrag;
-    }
-
-    private void requestPing(String groupUid){
-        GroupService.getInstance().requestPing(groupUid, AndroidSchedulers.mainThread())
-            .subscribe();
     }
 
 

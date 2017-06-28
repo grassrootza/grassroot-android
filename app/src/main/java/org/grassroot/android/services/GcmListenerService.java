@@ -24,7 +24,6 @@ import org.grassroot.android.events.NotificationCountChangedEvent;
 import org.grassroot.android.events.NotificationEvent;
 import org.grassroot.android.interfaces.GroupConstants;
 import org.grassroot.android.models.GroupJoinRequest;
-import org.grassroot.android.models.Message;
 import org.grassroot.android.models.PreferenceObject;
 import org.grassroot.android.models.responses.GenericResponse;
 import org.grassroot.android.utils.Constant;
@@ -36,7 +35,6 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 import io.reactivex.Observable;
 import io.reactivex.ObservableEmitter;
@@ -57,7 +55,6 @@ import static org.grassroot.android.interfaces.NotificationConstants.JOIN_REQUES
 import static org.grassroot.android.interfaces.NotificationConstants.JOIN_REQUEST_LIST;
 import static org.grassroot.android.interfaces.NotificationConstants.NOTIFICATION_LIST;
 import static org.grassroot.android.interfaces.NotificationConstants.NOTIFICATION_UID;
-import static org.grassroot.android.interfaces.NotificationConstants.TASK_CREATED;
 
 /**
  * Created by paballo on 2016/05/09.
@@ -83,14 +80,9 @@ public class GcmListenerService extends com.google.android.gms.gcm.GcmListenerSe
     @Override
     public void onMessageReceived(String from, Bundle data) {
         incrementNotificationCounter();
-
         // this method is only called if app running, hence ignore chat messages
         if (!CHAT_MESSAGE.equals(data.get(ENTITY_TYPE))) {
             handleNotification(data);
-        }
-
-        if (!MqttConnectionManager.getInstance().isConnected()) {
-            MqttConnectionManager.getInstance().connect();
         }
     }
 
@@ -294,7 +286,6 @@ public class GcmListenerService extends com.google.android.gms.gcm.GcmListenerSe
     private static Intent otherNotificationIntent(Bundle msg, boolean multiple) {
         Intent resultIntent = new Intent(ApplicationLoader.applicationContext,
                 multiple ? MultiMessageNotificationActivity.class : ViewTaskActivity.class);
-        createChatMessageIfFromTask(msg);
         if (multiple) {
             resultIntent.putExtra(CLICK_ACTION, NOTIFICATION_LIST);
         } else {
@@ -389,19 +380,6 @@ public class GcmListenerService extends com.google.android.gms.gcm.GcmListenerSe
 
         if (entityType.equals(GroupConstants.JREQ_RECEIVED)) {
             GroupService.getInstance().fetchGroupJoinRequests(Schedulers.trampoline()).subscribe();
-        }
-    }
-
-    private static void createChatMessageIfFromTask(Bundle bundle) {
-        String clickAction = bundle.getString(CLICK_ACTION);
-        if (clickAction != null && clickAction.equals(TASK_CREATED)) {
-            final String groupUid = bundle.getString(GroupConstants.UID_FIELD);
-            final String text = bundle.getString(BODY);
-            Message message = new Message(groupUid, UUID.randomUUID().toString(), text, null);
-            message.setToKeep(true);
-            message.setSeen(true);
-            RealmUtils.saveDataToRealmSync(message);
-           // EventBus.getDefault().post(new GroupChatEvent(groupUid, bundle, message));
         }
     }
 

@@ -20,7 +20,6 @@ import android.widget.TextView;
 
 import org.grassroot.android.R;
 import org.grassroot.android.adapters.GroupPickAdapter;
-import org.grassroot.android.events.GroupChatEvent;
 import org.grassroot.android.events.TaskAddedEvent;
 import org.grassroot.android.events.TaskCancelledEvent;
 import org.grassroot.android.events.UserLoggedOutEvent;
@@ -39,7 +38,6 @@ import org.grassroot.android.interfaces.GroupPickCallbacks;
 import org.grassroot.android.interfaces.NavigationConstants;
 import org.grassroot.android.interfaces.TaskConstants;
 import org.grassroot.android.models.Group;
-import org.grassroot.android.services.GcmListenerService;
 import org.grassroot.android.services.SharingService;
 import org.grassroot.android.utils.NetworkUtils;
 import org.grassroot.android.utils.PermissionUtils;
@@ -525,13 +523,6 @@ public class HomeScreenActivity extends PortraitActivity implements NavigationDr
     public void onUserLoggedOut(UserLoggedOutEvent e) {
         // to make sure fragments, mobile number etc are destroyed and hence refreshed on subsequent login
         finish();
-    }
-
-    @Subscribe(threadMode = ThreadMode.MAIN)
-    public void onEvent(GroupChatEvent groupChatEvent) {
-        if (this.isVisible) {
-            GcmListenerService.showNotification(groupChatEvent.getBundle()).subscribe();
-        }
     }
 
     @Subscribe

@@ -26,11 +26,14 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -178,6 +181,8 @@ public class ViewTaskFragment extends Fragment {
             if (task == null) {
                 task = RealmUtils.loadObjectFromDB(TaskModel.class, "taskUid", taskUid);
             }
+
+            Log.e(TAG, "tags? : " + task.getTags());
 
             photoCount = 0; // until set otherwise
             canViewResponses = false;
@@ -602,6 +607,9 @@ public class ViewTaskFragment extends Fragment {
             .show();
     }
 
+    @BindView(R.id.vt_vote_options) Spinner voteOptionsSelect;
+    private boolean hasRespondedToVote = false; // because, Android -- else the spinner goes into an infinte loop (!!!) -- wtf
+
     private void setViewForVote(final TaskModel task) {
         tvTitle.setText(task.isInFuture() ? R.string.vt_vote_title : R.string.vt_vote_title_past);
         tvHeader.setText(task.getTitle());
@@ -611,14 +619,42 @@ public class ViewTaskFragment extends Fragment {
                 TaskConstants.dateDisplayFormatWithHours.format(task.getDeadlineDate())));
 
         if (task.canAction()) {
-            tvResponseHeader.setText(!task.hasResponded() ? getString(R.string.vt_vote_responseq)
-                    : textHasRespondedCanChange());
-            llResponseIcons.setVisibility(View.VISIBLE);
-            setUpResponseIconsForEvent();
+            boolean multiOption = !isYesNoVote(RealmUtils.convertListOfRealmStringInListOfString(task.getTags()));
+            if (multiOption) {
+                tvResponseHeader.setText(R.string.vt_vote_response_multi);
+                ArrayAdapter<String> adapter = new ArrayAdapter<>(getContext(),
+                        android.R.layout.simple_spinner_item, task.getTagStrings());
+                adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+                llResponseIcons.setVisibility(View.GONE);
+                voteOptionsSelect.setAdapter(adapter);
+                voteOptionsSelect.setSelection(TextUtils.isEmpty(task.getReply()) ? 0 :
+                        task.getTagStrings().indexOf(task.getReply()), false);
+                voteOptionsSelect.setVisibility(View.VISIBLE);
+                voteOptionsSelect.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                    @Override
+                    public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+                        if (!hasRespondedToVote) {
+                            hasRespondedToVote = true;
+                            respondToTask(task.getTagStrings().get(i));
+                        }
+                    }
+
+                    @Override
+                    public void onNothingSelected(AdapterView<?> adapterView) {
+
+                    }
+                });
+            } else {
+                tvResponseHeader.setText(task.hasResponded() ?
+                        getString(R.string.vt_vote_responseq) : textHasRespondedCanChange());
+                llResponseIcons.setVisibility(View.VISIBLE);
+                setUpResponseIconsForEvent();
+            }
         } else {
             final String suffix = !task.hasResponded() ? getString(R.string.vt_vote_no_response)
                     : task.respondedYes() ? getString(R.string.vt_vote_voted_yes)
-                    : getString(R.string.vt_vote_voted_no);
+                    : task.respondedNo() ? getString(R.string.vt_vote_voted_no)
+                    : getString(R.string.vt_vote_voted_other, task.getReply());
             tvResponseHeader.setText(String.format(getString(R.string.vt_vote_response_past), suffix));
             llResponseIcons.setVisibility(View.GONE);
             diminishResponseCard();
@@ -634,6 +670,19 @@ public class ViewTaskFragment extends Fragment {
         }
 
         setVoteResponseView();
+    }
+
+    private boolean isYesNoVote(final List<String> tags) {
+        return !(tags != null && !tags.isEmpty()) || listContainsIgnoreCase(tags, "yes") && listContainsIgnoreCase(tags, "no");
+    }
+
+    private boolean listContainsIgnoreCase(final List<String> strings, String term) {
+        for (String string : strings) {
+            if (string.trim().equalsIgnoreCase(term.trim())) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private void setViewForToDo(final TaskModel task) {
@@ -750,6 +799,10 @@ public class ViewTaskFragment extends Fragment {
             case TaskConstants.TODO:
                 btTodoRespond.setImageResource(R.drawable.respond_confirm_active);
                 btTodoRespond.setEnabled(false);
+                break;
+            case TaskConstants.VOTE:
+                task.setCanAction(false);
+                setUpResponseIconsForEvent();
                 break;
             default:
 				setUpResponseIconsForEvent();
@@ -1130,7 +1183,7 @@ public class ViewTaskFragment extends Fragment {
                         : R.string.vt_snackbar_response_notattend;
             case TaskConstants.VOTE:
                 return response.equals(TaskConstants.RESPONSE_YES) ? R.string.vt_vote_snackbar_yes
-                        : R.string.vt_vote_snackbar_no;
+                        : R.string.vt_vote_snackbar_option;
             case TaskConstants.TODO:
                 return R.string.vt_todo_done;
         }

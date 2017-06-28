@@ -5,9 +5,6 @@ import android.content.Intent;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
 
-import org.eclipse.paho.android.service.MqttAndroidClient;
-import org.grassroot.android.utils.Constant;
-
 /**
  * Created by paballo on 2016/10/18.
  */

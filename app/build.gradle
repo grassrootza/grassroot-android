@@ -29,8 +29,8 @@ android {
         applicationId "org.grassroot.android"
         minSdkVersion 9
         targetSdkVersion 23
-        versionCode 37
-        versionName "1.7a"
+        versionCode 39
+        versionName "1.8"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
     buildTypes {
@@ -110,12 +110,8 @@ dependencies {
     compile group: 'io.reactivex.rxjava2', name: 'rxandroid', version: '2.0.1'
     compile group: 'io.reactivex.rxjava2', name: 'rxjava', version: '2.0.7'
 
-    compile 'hani.momanii.supernova_emoji_library:supernova-emoji-library:0.0.2'
     compile('com.crashlytics.sdk.android:crashlytics:2.6.2@aar') {
         transitive = true;
-    }
-    compile(project(':org.eclipse.paho.android.service')) {
-        exclude module: 'org.eclipse.paho.client.mqttv3'
     }
     compile project(':oppwa.mobile.checkout')
 }

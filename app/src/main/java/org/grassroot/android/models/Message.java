@@ -10,7 +10,6 @@ import org.grassroot.android.interfaces.GroupConstants;
 import org.grassroot.android.interfaces.NotificationConstants;
 import org.grassroot.android.models.helpers.RealmString;
 import org.grassroot.android.utils.Constant;
-import org.grassroot.android.utils.chat.JsonIgnore;
 import org.json.JSONArray;
 import org.json.JSONException;
 
@@ -28,6 +27,8 @@ import io.realm.annotations.PrimaryKey;
 
 /**
  * Created by paballo on 2016/08/30.
+ * note: keeping alive here as Realm Migration that deletes this would wipe all prior messages and may just
+ * resuscitate in future
  */
 public class Message extends RealmObject implements Serializable {
 
@@ -47,29 +48,18 @@ public class Message extends RealmObject implements Serializable {
     private String type;
     private String taskType;
 
-    @JsonIgnore
     private boolean sending;
-    @JsonIgnore
     private boolean sent;
-    @JsonIgnore
     private boolean delivered; // this is to server
-    @JsonIgnore
     private int noAttempts;
-    @JsonIgnore
     private boolean seen;
 
-    @JsonIgnore
     private boolean read;
-
-    @JsonIgnore
     private boolean server;
-    @JsonIgnore
     private boolean toKeep;
 
     private RealmList<RealmString> tokens;
 
-
-    @JsonIgnore
     @Ignore //trying everything as this is not being ignored in some versions of android
     @Expose(serialize = false, deserialize = false)
     private transient SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");

@@ -739,6 +739,7 @@
     <string name="vt_mtg_modify">Change</string>
     <string name="vt_mtg_cancel">Cancel</string>
 
+    <string name="ctsk_incl_photo">Include image</string>
     <string name="vt_mtg_add_photo">Add photo</string>
     <string-array name="vt_add_photo_options">
         <item>Camera</item>
@@ -792,15 +793,18 @@
     <string name="vt_vote_posted">Called by %s</string>
     <string name="vt_vote_datetime">Closes %s</string>
     <string name="vt_vote_responseq">Vote yes or no?</string>
+    <string name="vt_vote_response_multi">What is your vote?</string>
     <string name="vt_vote_response_past">You %1$s</string>
     <string name="vt_vote_voted_yes">voted yes</string>
     <string name="vt_vote_voted_no">voted no</string>
+    <string name="vt_vote_voted_other">voted for %s</string>
     <string name="vt_vote_no_response">did not vote</string>
     <string name="vt_vote_responded_can_action">You voted %1$s. Change?</string>
     <string name="vt_vote_yes">yes</string>
     <string name="vt_vote_no">no</string>
     <string name="vt_vote_snackbar_yes">Done! You voted yes</string>
     <string name="vt_vote_snackbar_no">Okay, we marked your vote as no</string>
+    <string name="vt_vote_snackbar_option">Done! Your vote has been recorded</string>
     <string name="vt_vote_count_closed">View vote results</string>
     <string name="vt_vote_count_open">Results so far</string>
     <string name="vt_row_yes">Voted yes</string>

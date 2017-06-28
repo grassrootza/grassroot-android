@@ -1,2 +1,2 @@
-include ':app', ':org.eclipse.paho.android.service', ':oppwa.mobile.checkout'
+include ':app', ':oppwa.mobile.checkout'
 
