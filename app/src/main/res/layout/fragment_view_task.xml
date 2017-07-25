@@ -110,6 +110,25 @@
                         android:visibility="gone">
                     </Spinner>
 
+                    <Button
+                        android:id="@+id/vt_vote_dovote"
+                        android:visibility="gone"
+                        android:layout_below="@id/vt_vote_options"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:clickable="true"
+                        android:textSize="@dimen/txt_medium"
+                        android:textStyle="bold"
+                        android:textColor="@color/primaryColor"
+                        android:paddingTop="@dimen/padding"
+                        android:paddingBottom="@dimen/padding"
+                        android:layout_marginLeft="@dimen/margin_small"
+                        android:layout_marginRight="@dimen/margin_small"
+                        android:gravity="center"
+                        android:background="@drawable/button_white_bg_border_green"
+                        android:text="@string/vt_vote_button"
+                        android:textAllCaps="true"/>
+
                     <RelativeLayout
                         android:id="@+id/td_rl_response_icon"
                         android:layout_width="match_parent"
@@ -124,6 +143,7 @@
                             android:background="?android:selectableItemBackground"
                             android:padding="@dimen/padding_half"
                             android:layout_marginRight="@dimen/margin_small"
+                            android:layout_marginEnd="@dimen/margin_small"
                             android:layout_centerHorizontal="true"
                             android:scaleType="fitCenter"
                             tools:src="@drawable/respond_confirm_active"

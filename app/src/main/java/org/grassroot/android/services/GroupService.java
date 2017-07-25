@@ -23,7 +23,6 @@ import org.grassroot.android.models.exceptions.ApiCallException;
 import org.grassroot.android.models.exceptions.InvalidNumberException;
 import org.grassroot.android.models.helpers.RealmString;
 import org.grassroot.android.models.responses.GenericResponse;
-import org.grassroot.android.models.responses.GroupChatSettingResponse;
 import org.grassroot.android.models.responses.GroupResponse;
 import org.grassroot.android.models.responses.GroupsChangedResponse;
 import org.grassroot.android.models.responses.PermissionResponse;
@@ -52,6 +51,8 @@ import io.reactivex.ObservableEmitter;
 import io.reactivex.ObservableOnSubscribe;
 import io.reactivex.Scheduler;
 import io.reactivex.Single;
+import io.reactivex.SingleEmitter;
+import io.reactivex.SingleOnSubscribe;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.annotations.NonNull;
 import io.reactivex.functions.Consumer;
@@ -116,7 +117,7 @@ public class GroupService {
             EventBus.getDefault().post(new GroupsRefreshedEvent());
           } catch (IOException e) {
             isFetchingGroups = false;
-            NetworkUtils.setConnectionFailed();
+            // NetworkUtils.setConnectionFailed();
             subscriber.onNext(NetworkUtils.CONNECT_ERROR);
           }
         } else {
@@ -155,79 +156,143 @@ public class GroupService {
     }).subscribeOn(Schedulers.io()).observeOn(observingThread);
   }
 
-  public Observable<String> updateMemberChatSetting(final String groupUid, final String userUid, final boolean userInitiated, final boolean active, @NonNull Scheduler observingThread){
-     return Observable.create(new ObservableOnSubscribe<String>() {
-       @Override
-       public void subscribe(ObservableEmitter<String> subscriber) {
-         if (!NetworkUtils.isOnline()) {
-           throw new ApiCallException(NetworkUtils.CONNECT_ERROR);
-         } else {
-           final String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
-           final String code = RealmUtils.loadPreferencesFromDB().getToken();
-           try {
-             Response<GenericResponse> response = GrassrootRestService.getInstance().getApi()
-                     .updateUserGroupChatSettings(phoneNumber, code,groupUid,userUid,active,userInitiated).execute();
-             if(response.isSuccessful()){
-               subscriber.onNext(NetworkUtils.SAVED_SERVER);
-             }else{
-               throw  new ApiCallException(NetworkUtils.SERVER_ERROR, ErrorUtils.getRestMessage(response.errorBody()));
-             }
-           } catch (IOException e) {
-             throw new ApiCallException(NetworkUtils.CONNECT_ERROR);
-           }
-
-         }
-         }
-       }).subscribeOn(Schedulers.io()).observeOn(observingThread);
-     }
-
-  public Observable<GroupChatSettingResponse> fetchGroupChatSetting(final String groupUid, Scheduler observingThread, final String userUid){
-    return Observable.create(new ObservableOnSubscribe<GroupChatSettingResponse>(){
-      @Override
-      public void subscribe(ObservableEmitter<GroupChatSettingResponse> subscriber) {
-        if(!NetworkUtils.isOnline()){
-          throw  new ApiCallException(NetworkUtils.CONNECT_ERROR);
-        }else{
-          final String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
-          final String code = RealmUtils.loadPreferencesFromDB().getToken();
-          try{
-            Response<GroupChatSettingResponse> response = GrassrootRestService.getInstance().getApi().fetchGroupMessengerSettings(phoneNumber,code,groupUid, userUid).execute();
-            if(response.isSuccessful()){
-              subscriber.onNext(response.body());
-            } else {
-              subscriber.onError(new ApiCallException(NetworkUtils.SERVER_ERROR));
-            }
-          } catch (IOException e) {
-            subscriber.onError(new ApiCallException(NetworkUtils.CONNECT_ERROR));
-          }
-        }
-
-      }
-    }).subscribeOn(Schedulers.io()).observeOn(observingThread);
+  public boolean checkUserhasAliasInGroup(final String groupUid) {
+    final String memberGroupUid = RealmUtils.loadPreferencesFromDB().getUserUid() + groupUid;
+    Log.e(TAG, "userUid=" + RealmUtils.loadPreferencesFromDB().getUserUid() + ", memberGroupUid = " + memberGroupUid);
+    Member thisMember = RealmUtils.loadObjectFromDB(Member.class, "memberGroupUid", memberGroupUid);
+    final String userNameStd = RealmUtils.loadPreferencesFromDB().getUserName();
+    Log.e(TAG, "thisMember = " + thisMember);
+    return thisMember != null && !userNameStd.equals(thisMember.getDisplayName());
   }
 
-  public Observable<String> requestPing(final String groupUid, Scheduler observingThread){
-    return Observable.create(new ObservableOnSubscribe<String>(){
+  public Single<Boolean> checkUserAlias(final String groupUid) {
+    return Single.create(new SingleOnSubscribe<Boolean>() {
       @Override
-      public void subscribe(ObservableEmitter<String> subscriber) {
-        if(!NetworkUtils.isOnline()){
-          subscriber.onNext(NetworkUtils.CONNECT_ERROR);
-        }else{
+      public void subscribe(SingleEmitter<Boolean> e) throws Exception {
+        final String userNameStd = RealmUtils.loadPreferencesFromDB().getUserName();
+        Member thisMember = loadThisMemberInGroup(groupUid);
+        Log.e(TAG, "thisMember = null ? " + (thisMember == null));
+        if (thisMember != null) {
+          e.onSuccess(!userNameStd.equals(thisMember.getDisplayName()));
+        } else {
           final String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
           final String code = RealmUtils.loadPreferencesFromDB().getToken();
           try {
-            Response<GenericResponse> response = GrassrootRestService.getInstance().getApi().requestPing(phoneNumber,code,groupUid).execute();
-            if(response.isSuccessful()){
-              subscriber.onNext(NetworkUtils.ONLINE_DEFAULT);
+            Log.e(TAG, "null member so refreshing it");
+            Response<RestResponse<Member>> response = GrassrootRestService.getInstance().getApi()
+                    .fetchSingleGroupMember(phoneNumber, code, groupUid, RealmUtils.loadPreferencesFromDB().getUserUid()).execute();
+            if (response.isSuccessful()) {
+              Member fetchedMember = response.body().getData();
+              fetchedMember.composeMemberGroupUid();
+              RealmUtils.saveDataToRealmSync(fetchedMember);
+              e.onSuccess(!userNameStd.equals(fetchedMember.getDisplayName()));
             } else {
-              subscriber.onNext(NetworkUtils.SERVER_ERROR);
+              e.onSuccess(false);
             }
-          } catch (IOException e) {
-            subscriber.onNext(NetworkUtils.CONNECT_ERROR);
+          } catch (IOException t) {
+            e.onSuccess(false);
           }
         }
       }
-    }).subscribeOn(Schedulers.io()).observeOn(observingThread);
+    });
+  }
+
+  public String getUserAliasInGroup(final String groupUid) {
+    try {
+      final String memberGroupUid = RealmUtils.loadPreferencesFromDB().getUserUid() + groupUid;
+      return ((Member) RealmUtils.loadObjectFromDB(Member.class, "memberGroupUid", memberGroupUid)).getDisplayName();
+    } catch (NullPointerException|ClassCastException e) {
+      return RealmUtils.loadPreferencesFromDB().getUserName();
+    }
+  }
+
+  public Single<String> changeGroupAlias(final String groupUid, final String newAlias) {
+    return Single.create(new SingleOnSubscribe<String>() {
+      @Override
+      public void subscribe(SingleEmitter<String> e) throws Exception {
+        if (!NetworkUtils.isOnline()) {
+          throw new ApiCallException(NetworkUtils.CONNECT_ERROR);
+        } else {
+          final String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
+          final String code = RealmUtils.loadPreferencesFromDB().getToken();
+          try {
+            Response<GenericResponse> response = GrassrootRestService.getInstance().getApi()
+                    .changeMemberAlias(phoneNumber, code, groupUid, newAlias).execute();
+            if (response.isSuccessful()) {
+              e.onSuccess(NetworkUtils.SENT_UPSTREAM);
+            } else {
+              throw new ApiCallException(NetworkUtils.SERVER_ERROR,
+                      ErrorUtils.getRestMessage(response.errorBody()));
+            }
+          } catch (IOException t) {
+            throw new ApiCallException(NetworkUtils.CONNECT_ERROR);
+          }
+        }
+      }
+    });
+  }
+
+  public Single<String> resetGroupAlias(final String groupUid) {
+    return Single.create(new SingleOnSubscribe<String>() {
+      @Override
+      public void subscribe(SingleEmitter<String> e) throws Exception {
+        if (!NetworkUtils.isOnline()) {
+          throw new ApiCallException(NetworkUtils.CONNECT_ERROR);
+        } else {
+          final String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
+          final String code = RealmUtils.loadPreferencesFromDB().getToken();
+          try {
+            Response<GenericResponse> response = GrassrootRestService.getInstance().getApi()
+                    .resetMemberAlias(phoneNumber, code, groupUid).execute();
+            if (response.isSuccessful()) {
+              e.onSuccess(NetworkUtils.SENT_UPSTREAM);
+              Member thisMember = loadThisMemberInGroup(groupUid);
+              if (thisMember != null) {
+                thisMember.setDisplayName(RealmUtils.loadPreferencesFromDB().getUserName());
+                RealmUtils.saveDataToRealmSync(thisMember);
+              }
+            } else {
+              throw new ApiCallException(NetworkUtils.SERVER_ERROR,
+                      ErrorUtils.getRestMessage(response.errorBody()));
+            }
+          } catch (IOException t) {
+            throw new ApiCallException(NetworkUtils.CONNECT_ERROR);
+          }
+        }
+      }
+    });
+  }
+
+  private Member loadThisMemberInGroup(final String groupUid) {
+    final String memberGroupUid = RealmUtils.loadPreferencesFromDB().getUserUid() + groupUid;
+    return RealmUtils.loadObjectFromDB(Member.class, "memberGroupUid", memberGroupUid);
+  }
+
+  public Single<String> changeGroupLanguage(final String groupUid, final String language) {
+      return Single.create(new SingleOnSubscribe<String>() {
+          @Override
+          public void subscribe(SingleEmitter<String> e) throws Exception {
+              if (!NetworkUtils.isOnline()) {
+                  throw new ApiCallException(NetworkUtils.CONNECT_ERROR);
+              } else {
+                  final String phoneNumber = RealmUtils.loadPreferencesFromDB().getMobileNumber();
+                  final String code = RealmUtils.loadPreferencesFromDB().getToken();
+                  try {
+                      Response<RestResponse<Group>> response = GrassrootRestService.getInstance().getApi()
+                              .changeGroupLanguage(phoneNumber, code, groupUid, language).execute();
+                      if (response.isSuccessful()) {
+                          RealmUtils.saveGroupToRealm(response.body().getData());
+                          e.onSuccess(NetworkUtils.SENT_UPSTREAM);
+                      } else {
+                          throw new ApiCallException(NetworkUtils.SERVER_ERROR,
+                                  ErrorUtils.getRestMessage(response.errorBody()));
+                      }
+                  } catch (IOException t) {
+                      throw new ApiCallException(NetworkUtils.CONNECT_ERROR);
+                  }
+              }
+          }
+      });
   }
 
   private void persistGroupsAddedUpdated(GroupsChangedResponse responseBody) {

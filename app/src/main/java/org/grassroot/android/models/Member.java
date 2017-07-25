@@ -123,6 +123,11 @@ public class Member extends RealmObject implements Parcelable {
     return displayName;
   }
 
+  // for now
+  public String getNameInGroup() {
+    return displayName == null ? "" : displayName;
+  }
+
   public void setDisplayName(String displayName) { this.displayName = displayName; }
 
   public String getGroupUid() {

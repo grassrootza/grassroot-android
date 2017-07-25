@@ -204,16 +204,6 @@ public class RealmUtils {
         }).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread());
     }
 
-    public static List<String> loadGroupUidsSync() {
-        final Realm realm = Realm.getDefaultInstance();
-        List<String> groupUids = new ArrayList<>();
-        RealmResults<Group> groups = realm.where(Group.class).findAll();
-        for (Group g : groups) {
-            groupUids.add(g.getGroupUid());
-        }
-        return groupUids;
-    }
-
     public static <T> Observable loadListFromDB(final Class<? extends RealmObject> model, Scheduler observingThread) {
         Observable<List<RealmObject>> observable = Observable.create(new ObservableOnSubscribe<List<RealmObject>>() {
             @Override
@@ -369,26 +359,6 @@ public class RealmUtils {
 
     public static Group loadGroupFromDB(final String groupUid) {
         return loadObjectFromDB(Group.class, "groupUid", groupUid);
-    }
-
-    public static boolean openGroupOnChat(final String groupUid) {
-        Realm realm = Realm.getDefaultInstance();
-        Group group = realm.where(Group.class).equalTo("groupUid", groupUid).findFirst();
-        boolean isChat = group.isOpenOnChat();
-        realm.close();
-        return isChat;
-    }
-
-    public static void setOpenGroupOnChat(final String groupUid, final boolean openOnChat) {
-        Realm realm = Realm.getDefaultInstance();
-        Group group = realm.where(Group.class).equalTo("groupUid", groupUid).findFirst();
-        if (group != null) { // since this gets called in an ondestroy view, and hence group might be null by then
-            realm.beginTransaction();
-            group.setOpenOnChat(openOnChat);
-            realm.copyToRealmOrUpdate(group);
-            realm.commitTransaction();
-            realm.close();
-        }
     }
 
     public static long countGroupsInDB() {

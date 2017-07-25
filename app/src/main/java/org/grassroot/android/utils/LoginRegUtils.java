@@ -165,6 +165,7 @@ public class LoginRegUtils {
 			preferences = RealmUtils.loadPreferencesFromDB();
 		}
 		preferences.setToken(response.getToken().getCode());
+		preferences.setUserUid(response.getUserUid());
 		preferences.setMobileNumber(msisdn);
 		preferences.setLoggedIn(true);
 		preferences.setHasGroups(response.getHasGroups());

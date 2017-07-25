@@ -6,6 +6,7 @@ public class TokenResponse extends AbstractResponse {
 
   @SerializedName("data") private Token token;
   private Boolean hasGroups;
+  private String userUid;
   private String displayName;
   private int unreadNotificationCount;
 
@@ -23,6 +24,14 @@ public class TokenResponse extends AbstractResponse {
 
   public void setHasGroups(Boolean hasGroups) {
     this.hasGroups = hasGroups;
+  }
+
+  public String getUserUid() {
+    return userUid;
+  }
+
+  public void setUserUid(String userUid) {
+    this.userUid = userUid;
   }
 
   public String getDisplayName() {

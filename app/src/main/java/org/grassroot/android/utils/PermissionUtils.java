@@ -4,12 +4,14 @@ import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.os.Build;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 
 import org.grassroot.android.interfaces.GroupConstants;
 import org.grassroot.android.interfaces.NavigationConstants;
 import org.grassroot.android.interfaces.TaskConstants;
+import org.grassroot.android.services.ApplicationLoader;
 
 /**
  * Created by luke on 2016/05/05.
@@ -36,6 +38,33 @@ public class PermissionUtils {
         return (requestCode == NavigationConstants.ASK_CONTACT_PERMISSION) &&
                 (grantResults.length > 0) &&
                 (grantResults[0] == PackageManager.PERMISSION_GRANTED);
+    }
+
+    public static boolean checkFilePermissions() {
+        return checkFileWritePermission(ApplicationLoader.applicationContext) &&
+                checkFileReadPermission(ApplicationLoader.applicationContext);
+    }
+
+    private static boolean checkFileReadPermission(Context context) {
+        return Build.VERSION.SDK_INT < 23 || genericPermissionCheck(context, Manifest.permission.READ_EXTERNAL_STORAGE);
+    }
+
+    private static boolean checkFileWritePermission(Context context) {
+        return Build.VERSION.SDK_INT < 23 || genericPermissionCheck(context, Manifest.permission.WRITE_EXTERNAL_STORAGE);
+    }
+
+    public static void requestFilePermissions(Activity callingActivity) {
+        if (Build.VERSION.SDK_INT >= 16) {
+            ActivityCompat.requestPermissions(callingActivity,
+                    new String[]{Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                    NavigationConstants.ASK_FILE_PERMISSION);
+        }
+    }
+
+    public static boolean checkFilePermissionsGranted(int requestCode, int[] grantResults) {
+        return Build.VERSION.SDK_INT < 23 || ((requestCode == NavigationConstants.ASK_FILE_PERMISSION) &&
+                (grantResults.length > 0) &&
+                (grantResults[0] == PackageManager.PERMISSION_GRANTED));
     }
 
     public static String permissionForTaskType(String taskType) {

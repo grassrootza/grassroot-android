@@ -57,11 +57,13 @@ import org.grassroot.android.models.TaskModel;
 import org.grassroot.android.models.exceptions.ApiCallException;
 import org.grassroot.android.models.helpers.RealmString;
 import org.grassroot.android.services.ApplicationLoader;
+import org.grassroot.android.services.GroupService;
 import org.grassroot.android.services.TaskService;
 import org.grassroot.android.utils.Constant;
 import org.grassroot.android.utils.ErrorUtils;
 import org.grassroot.android.utils.IntentUtils;
 import org.grassroot.android.utils.NetworkUtils;
+import org.grassroot.android.utils.PermissionUtils;
 import org.grassroot.android.utils.RealmUtils;
 import org.grassroot.android.utils.Utilities;
 import org.grassroot.android.utils.image.LocalImageUtils;
@@ -485,6 +487,22 @@ public class CreateTaskFragment extends Fragment {
 
     @OnClick(R.id.ctsk_ll_photo)
     public void taskPhoto() {
+        if (!PermissionUtils.checkFilePermissions()) {
+            PermissionUtils.requestFilePermissions(getActivity());
+        } else {
+            launchImageOptions();
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (PermissionUtils.checkContactsPermissionGranted(requestCode, grantResults)) {
+            launchImageOptions();
+        }
+    }
+
+    private void launchImageOptions() {
         AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
         builder.setItems(R.array.vt_add_photo_options, new DialogInterface.OnClickListener() {
             @Override
@@ -587,6 +605,8 @@ public class CreateTaskFragment extends Fragment {
     CardView reminderCard;
     @BindView(R.id.ctsk_tv_assign_label)
     TextView assignmentLabel;
+    @BindView(R.id.ctsk_alias_notice)
+    TextView aliasNotice;
 
     private void setUpStrings() {
 
@@ -648,6 +668,22 @@ public class CreateTaskFragment extends Fragment {
                 break;
             default:
                 throw new UnsupportedOperationException("Error! Fragment must have valid task type");
+        }
+
+        checkForAlias();
+    }
+
+    private void checkForAlias() {
+        // don't fully trust Android so just including try catch
+        try {
+            if (!TextUtils.isEmpty(groupUid) && GroupService.getInstance().checkUserhasAliasInGroup(groupUid)) {
+                aliasNotice.setText(getString(R.string.group_alias_present,
+                        GroupService.getInstance().getUserAliasInGroup(groupUid)));
+                aliasNotice.setVisibility(View.VISIBLE);
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "error checking alias");
+            e.printStackTrace();
         }
     }
 

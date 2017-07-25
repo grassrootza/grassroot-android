@@ -217,7 +217,7 @@ public class GroupSearchService {
 						}
 						subscriber.onNext(NetworkUtils.SAVED_SERVER);
 					} catch (IOException e) {
-						NetworkUtils.setConnectionFailed();
+						// NetworkUtils.setConnectionFailed();
 						subscriber.onNext(NetworkUtils.OFFLINE_ON_FAIL);
 					}
 				}

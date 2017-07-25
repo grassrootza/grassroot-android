@@ -286,6 +286,31 @@ public class GrassrootRestService {
                                                       @Path("code") String code,
                                                       @Path("groupUid") String groupUid);
 
+    @GET("group/members/fetch/{phoneNumber}/{code}")
+    Call<RestResponse<Member>> fetchSingleGroupMember(@Path("phoneNumber") String phoneNumber,
+                                                      @Path("code") String code,
+                                                      @Query("groupUid") String groupUid,
+                                                      @Query("userUid") String userUid);
+
+    // change name in group
+    @POST("group/alias/change/{phoneNumber}/{code}")
+    Call<GenericResponse> changeMemberAlias(@Path("phoneNumber") String phoneNumber,
+                                            @Path("code") String code,
+                                            @Query("groupUid") String groupUid,
+                                            @Query("alias") String alias);
+
+    // turn name in group back to default
+    @POST("group/alias/reset/{phoneNumber}/{code}")
+    Call<GenericResponse> resetMemberAlias(@Path("phoneNumber") String phoneNumber,
+                                           @Path("code") String code,
+                                           @Query("groupUid") String groupUid);
+
+    @POST("group/edit/language/{phoneNumber}/{code}")
+    Call<RestResponse<Group>> changeGroupLanguage(@Path("phoneNumber") String phoneNumber,
+                                                  @Path("code") String code,
+                                                  @Query("groupUid") String groupUid,
+                                                  @Query("language") String language);
+
     // leave a group
     @POST("group/members/unsubscribe/{phoneNumber}/{code}")
     Call<GenericResponse> unsubscribeFromGroup(@Path("phoneNumber") String phoneNumber,

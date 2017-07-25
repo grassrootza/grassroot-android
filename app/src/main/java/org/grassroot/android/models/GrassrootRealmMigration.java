@@ -106,6 +106,13 @@ public class GrassrootRealmMigration implements RealmMigration {
             oldVersion++;
         }
 
+        if (oldVersion == 10) {
+            Log.e(TAG, "another upward");
+            schema.get("Group")
+                    .addField("language", String.class);
+            oldVersion++;
+        }
+
         if (oldVersion < newVersion) {
             throw new IllegalArgumentException(String.format("Migration missing from v%d to v%d", oldVersion, newVersion));
         }

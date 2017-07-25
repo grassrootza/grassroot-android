@@ -25,5 +25,6 @@ public interface NavigationConstants {
     int SELECT_MEMBERS = 103;
     int ASK_CONTACT_PERMISSION = 104;
     int NETWORK_SETTINGS_DIALOG = 105;
+    int ASK_FILE_PERMISSION = 106;
 
 }

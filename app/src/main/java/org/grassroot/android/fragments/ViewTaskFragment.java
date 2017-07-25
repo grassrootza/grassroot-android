@@ -26,7 +26,6 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ImageView;
@@ -549,6 +548,9 @@ public class ViewTaskFragment extends Fragment {
             btCancelTask.setText(R.string.vt_mtg_cancel);
         }
 
+        sendVote.setVisibility(View.GONE);
+        voteOptionsSelect.setVisibility(View.GONE);
+
         setMeetingRsvpView();
         setViewPhotoButton();
     }
@@ -608,7 +610,7 @@ public class ViewTaskFragment extends Fragment {
     }
 
     @BindView(R.id.vt_vote_options) Spinner voteOptionsSelect;
-    private boolean hasRespondedToVote = false; // because, Android -- else the spinner goes into an infinte loop (!!!) -- wtf
+    @BindView(R.id.vt_vote_dovote) Button sendVote;
 
     private void setViewForVote(final TaskModel task) {
         tvTitle.setText(task.isInFuture() ? R.string.vt_vote_title : R.string.vt_vote_title_past);
@@ -626,24 +628,12 @@ public class ViewTaskFragment extends Fragment {
                         android.R.layout.simple_spinner_item, task.getTagStrings());
                 adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
                 llResponseIcons.setVisibility(View.GONE);
+
                 voteOptionsSelect.setAdapter(adapter);
                 voteOptionsSelect.setSelection(TextUtils.isEmpty(task.getReply()) ? 0 :
                         task.getTagStrings().indexOf(task.getReply()), false);
                 voteOptionsSelect.setVisibility(View.VISIBLE);
-                voteOptionsSelect.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-                    @Override
-                    public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
-                        if (!hasRespondedToVote) {
-                            hasRespondedToVote = true;
-                            respondToTask(task.getTagStrings().get(i));
-                        }
-                    }
-
-                    @Override
-                    public void onNothingSelected(AdapterView<?> adapterView) {
-
-                    }
-                });
+                sendVote.setVisibility(View.VISIBLE);
             } else {
                 tvResponseHeader.setText(task.hasResponded() ?
                         getString(R.string.vt_vote_responseq) : textHasRespondedCanChange());
@@ -657,6 +647,7 @@ public class ViewTaskFragment extends Fragment {
                     : getString(R.string.vt_vote_voted_other, task.getReply());
             tvResponseHeader.setText(String.format(getString(R.string.vt_vote_response_past), suffix));
             llResponseIcons.setVisibility(View.GONE);
+            sendVote.setVisibility(View.GONE);
             diminishResponseCard();
         }
 
@@ -670,6 +661,12 @@ public class ViewTaskFragment extends Fragment {
         }
 
         setVoteResponseView();
+    }
+
+    @OnClick(R.id.vt_vote_dovote)
+    public void recordVote() {
+        int votePos = (int) voteOptionsSelect.getSelectedItemId();
+        respondToTask(task.getTagStrings().get(votePos));
     }
 
     private boolean isYesNoVote(final List<String> tags) {
@@ -715,6 +712,8 @@ public class ViewTaskFragment extends Fragment {
 
         takePhotoButton.setVisibility(View.GONE); // for now
         btViewPhotos.setVisibility(View.GONE);
+        sendVote.setVisibility(View.GONE);
+        voteOptionsSelect.setVisibility(View.GONE);
 
         setUpToDoAssignedMemberView();
     }

@@ -34,7 +34,6 @@ import org.greenrobot.eventbus.EventBus;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -48,7 +47,6 @@ import io.reactivex.functions.Consumer;
 import io.reactivex.schedulers.Schedulers;
 import io.realm.RealmList;
 import okhttp3.MultipartBody;
-import okhttp3.RequestBody;
 import retrofit2.Call;
 import retrofit2.Response;
 
@@ -175,7 +173,7 @@ public class TaskService {
   }
 
   private void handleFetchConnectionError(ObservableEmitter<String> subscriber) {
-    NetworkUtils.setConnectionFailed();
+    // NetworkUtils.setConnectionFailed();
     subscriber.onNext(NetworkUtils.CONNECT_ERROR);
   }
 
@@ -246,7 +244,7 @@ public class TaskService {
             }
           } catch (IOException e) {
             RealmUtils.saveDataToRealmSync(task);
-            NetworkUtils.setConnectionFailed();
+            // NetworkUtils.setConnectionFailed();
             throw new ApiCallException(NetworkUtils.CONNECT_ERROR);
           }
         }
@@ -263,19 +261,12 @@ public class TaskService {
       case TaskConstants.MEETING:
         final String location = task.getLocation();
         if (TextUtils.isEmpty(task.getImageLocalUrl())) {
-          return GrassrootRestService.getInstance()
-                  .getApi()
-                  .createMeeting(phoneNumber, code,
-                          task.getParentUid(),
-                          task.getTitle(),
-                          task.getDescription(),
-                          task.getDeadlineISO(),
-                          task.getMinutes(),
-                          location, memberUids);
+          return nonImageMeetingCall(task, phoneNumber, code, memberUids);
         } else {
           final MultipartBody.Part image = LocalImageUtils.getImageFromPath(task.getImageLocalUrl(), task.getImageMimeType());
-          return GrassrootRestService.getInstance().getApi()
-                  .createMeetingWithImage(phoneNumber, code, task.getParentUid(),
+          return image == null ? nonImageMeetingCall(task, phoneNumber, code, memberUids) :
+                  GrassrootRestService.getInstance().getApi()
+                          .createMeetingWithImage(phoneNumber, code, task.getParentUid(),
                           task.getTitle(), task.getDescription(), task.getDeadlineISO(), task.getMinutes(),
                           location, memberUids, image);
         }
@@ -298,6 +289,18 @@ public class TaskService {
       default:
         throw new UnsupportedOperationException("Error! Missing task type in call");
     }
+  }
+
+  private Call<TaskResponse> nonImageMeetingCall(TaskModel task, String phoneNumber, String code, Set<String> memberUids) {
+    return GrassrootRestService.getInstance()
+            .getApi()
+            .createMeeting(phoneNumber, code,
+                    task.getParentUid(),
+                    task.getTitle(),
+                    task.getDescription(),
+                    task.getDeadlineISO(),
+                    task.getMinutes(),
+                    task.getLocation(), memberUids);
   }
 
   public Observable<TaskModel> setMeetingPublic(final String meetingUid) {
@@ -373,7 +376,6 @@ public class TaskService {
               subscriber.onNext(NetworkUtils.SERVER_ERROR);
             }
           } catch (IOException e) {
-            NetworkUtils.setConnectionFailed();
             subscriber.onNext(NetworkUtils.CONNECT_ERROR);
           }
         }

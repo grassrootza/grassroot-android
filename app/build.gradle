@@ -29,8 +29,8 @@ android {
         applicationId "org.grassroot.android"
         minSdkVersion 9
         targetSdkVersion 23
-        versionCode 39
-        versionName "1.8"
+        versionCode 41
+        versionName "1.9a"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
     buildTypes {
@@ -43,11 +43,11 @@ android {
     productFlavors {
         staging {
             applicationId "org.grassroot.android"
-            versionName "1.6-staging"
+            versionName "1.9a-staging"
         }
         production {
             applicationId 'za.org.grassroot.android'
-            versionName "1.6"
+            versionName "1.9a"
         }
     }
     splits {

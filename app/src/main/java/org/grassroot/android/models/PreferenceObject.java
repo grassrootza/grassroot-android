@@ -151,6 +151,14 @@ public class PreferenceObject extends RealmObject {
     this.token = token;
   }
 
+  public String getUserUid() {
+    return userUid;
+  }
+
+  public void setUserUid(String userUid) {
+    this.userUid = userUid;
+  }
+
   public String getLanguagePreference() {
     return languagePreference;
   }

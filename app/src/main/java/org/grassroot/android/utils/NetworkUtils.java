@@ -27,7 +27,6 @@ import org.grassroot.android.services.GroupService;
 import org.grassroot.android.services.LocationServices;
 import org.grassroot.android.services.TaskService;
 import org.greenrobot.eventbus.EventBus;
-import org.reactivestreams.Subscriber;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -165,10 +164,8 @@ public class NetworkUtils {
               RealmUtils.saveDataToRealmSync(prefs);
               EventBus.getDefault().post(new OnlineOfflineToggledEvent(true));
               subscriber.onNext(ONLINE_DEFAULT);
-              Log.d(TAG, "okay now sending the queue");
               if (sendQueue) {
-                Log.e(TAG, "really sending the queue ...");
-                syncLocalAndServer(context);
+                syncLocalAndServer(context, false);
               }
             } else {
               throw new ApiCallException(SERVER_ERROR);
@@ -190,7 +187,7 @@ public class NetworkUtils {
           @Override
           public void accept(Long aLong) {
             Log.d(TAG, "timer done! calling sync to server");
-            syncLocalAndServer(ApplicationLoader.applicationContext);
+            syncLocalAndServer(ApplicationLoader.applicationContext, true);
           }
         });
   }
@@ -227,7 +224,7 @@ public class NetworkUtils {
           LocationServices.getInstance().connect();
           checkForAndUpdateToken();
           if (!fetchOnly) {
-            syncLocalAndServer(context);
+            syncLocalAndServer(context, true);
           } else {
             fetchEntitiesFromServer(context);
           }
@@ -268,16 +265,16 @@ public class NetworkUtils {
     }).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread());
   }
 
-  public static void syncLocalAndServer(Context context) {
+  public static void syncLocalAndServer(Context context, boolean setOfflineIfFails) {
     Log.d(TAG, "inside network utils ... about to call sending queued entities ...");
     if (!sendingLocalQueue && isOnline(context)) {
       sendingLocalQueue = true;
-      sendLocalGroups();
-      sendLocallyAddedMembers();
-      sendLocallyEditedGroups();
-      sendNewLocalTasks();
+      sendLocalGroups(true);
+      sendLocallyAddedMembers(setOfflineIfFails);
+      sendLocallyEditedGroups(setOfflineIfFails);
+      sendNewLocalTasks(setOfflineIfFails);
       sendEditedTasks();
-      sendTaskActions();
+      sendTaskActions(setOfflineIfFails);
       sendStoredJoinRequests();
       EventBus.getDefault().post(new OfflineActionsSent());
     }
@@ -315,7 +312,7 @@ public class NetworkUtils {
     return timeNow > (lastTimeSynced + minIntervalBetweenSyncs);
   }
 
-  private static void sendLocalGroups() {
+  private static void sendLocalGroups(final boolean setOfflineIfFails) {
     RealmUtils.loadListFromDB(Group.class, "isLocal", true, Schedulers.trampoline())
         .subscribe(new Consumer<List<Group>>() {
       @Override public void accept(List<Group> realmResults) {
@@ -329,7 +326,9 @@ public class NetworkUtils {
               }, new Consumer<Throwable>() {
                 @Override
                 public void accept(@NonNull Throwable throwable) throws Exception {
-                  setConnectionFailed();
+                  if (setOfflineIfFails) {
+                    setConnectionFailed();
+                  }
                 }
               });
         }
@@ -337,7 +336,7 @@ public class NetworkUtils {
     });
   }
 
-  private static void sendLocallyAddedMembers() {
+  private static void sendLocallyAddedMembers(final boolean setOfflineIfFails) {
     RealmUtils.loadListFromDB(Group.class, "isEditedLocal", true, Schedulers.trampoline())
         .subscribe(new Consumer<List<Group>>() {
       @Override
@@ -351,7 +350,7 @@ public class NetworkUtils {
             long countLocalMembers = RealmUtils.countListInDB(Member.class, queryMap);
             if (countLocalMembers != 0L) {
               List<Member> members = RealmUtils.loadListFromDBInline(Member.class, queryMap);
-              processStoredNewMembers(g.getGroupUid(), members);
+              processStoredNewMembers(g.getGroupUid(), members, setOfflineIfFails);
             }
           }
         }
@@ -359,7 +358,7 @@ public class NetworkUtils {
     });
   }
 
-  private static void processStoredNewMembers(final String groupUid, final List<Member> members) {
+  private static void processStoredNewMembers(final String groupUid, final List<Member> members, final boolean setOfflineIfFails) {
     GroupService.getInstance().addMembersToGroup(groupUid, members, true)
         .subscribe(new Consumer<String>() {
           @Override
@@ -369,24 +368,26 @@ public class NetworkUtils {
         }, new Consumer<Throwable>() {
           @Override
           public void accept(@NonNull Throwable throwable) throws Exception {
-            setConnectionFailed(); // todo : interrupt sequence of calls
-          }
-        });
-  }
-
-  private static void sendLocallyEditedGroups() {
-    RealmUtils.loadListFromDB(LocalGroupEdits.class, Schedulers.trampoline())
-        .subscribe(new Consumer<List<LocalGroupEdits>>() {
-          @Override
-          public void accept(List<LocalGroupEdits> results) {
-            if (results != null && !results.isEmpty()) {
-              processLocalGroupEdits(results);
+            if (setOfflineIfFails) {
+              setConnectionFailed(); // todo : interrupt sequence of calls
             }
           }
         });
   }
 
-  private static void processLocalGroupEdits(List<LocalGroupEdits> edits) {
+  private static void sendLocallyEditedGroups(final boolean setOfflineIfFails) {
+    RealmUtils.loadListFromDB(LocalGroupEdits.class, Schedulers.trampoline())
+        .subscribe(new Consumer<List<LocalGroupEdits>>() {
+          @Override
+          public void accept(List<LocalGroupEdits> results) {
+            if (results != null && !results.isEmpty()) {
+              processLocalGroupEdits(results, setOfflineIfFails);
+            }
+          }
+        });
+  }
+
+  private static void processLocalGroupEdits(List<LocalGroupEdits> edits, final boolean setOfflineIfFails) {
     for (LocalGroupEdits edit : edits) {
       GroupService.getInstance().sendLocalEditsToServer(edit, Schedulers.trampoline())
           .subscribe(new Consumer<String>() {
@@ -398,14 +399,16 @@ public class NetworkUtils {
             @Override
             public void accept(@NonNull Throwable throwable) throws Exception {
               if (CONNECT_ERROR.equals(throwable.getMessage())) {
-                setConnectionFailed();
+                if (setOfflineIfFails) {
+                  setConnectionFailed();
+                }
               }
             }
           });
     }
   }
 
-  private static void sendNewLocalTasks() {
+  private static void sendNewLocalTasks(final boolean setOfflineIfFails) {
     Map<String, Object> map = new HashMap<>();
     map.put("isLocal", true);
     map.put("isEdited", false);
@@ -423,7 +426,7 @@ public class NetworkUtils {
                 }, new Consumer<Throwable>() {
                   @Override
                   public void accept(@NonNull Throwable throwable) throws Exception {
-                    if (throwable instanceof ApiCallException && NetworkUtils.CONNECT_ERROR.equals(throwable.getMessage())) {
+                    if (setOfflineIfFails && throwable instanceof ApiCallException && NetworkUtils.CONNECT_ERROR.equals(throwable.getMessage())) {
                       setConnectionFailed();
                     }
                   }
@@ -449,7 +452,7 @@ public class NetworkUtils {
     });
   }
 
-  private static void sendTaskActions(){
+  private static void sendTaskActions(final boolean setOfflineIfFails){
     Map<String, Object> map1 = new HashMap<>();
     map1.put("isActionLocal", true);
     map1.put("isLocal",false);
@@ -465,7 +468,7 @@ public class NetworkUtils {
               }, new Consumer<Throwable>() {
                     @Override
                     public void accept(@NonNull Throwable throwable) throws Exception {
-                      if (NetworkUtils.CONNECT_ERROR.equals(throwable.getMessage())) {
+                      if (setOfflineIfFails && NetworkUtils.CONNECT_ERROR.equals(throwable.getMessage())) {
                         setConnectionFailed();
                       }
                     }

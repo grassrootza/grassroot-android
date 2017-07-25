@@ -252,7 +252,21 @@
     You won\'t be able to rejoin unless added back</string>
     <string name="gta_unsub_done">Done! You\'ve left the group</string>
 
-    <string name="home_group_pick">Select group</string>
+    <string name="gta_alias_message">What do you want to be called here? Note: this will only
+        change your name in this group</string>
+    <string name="gta_alias_done">Done! Your name in this group is now %s</string>
+    <string name="gta_alias_error">Sorry! There was an error changing your name. Please try later</string>
+    <string name="group_alias_present">Your name in this group is %s</string>
+
+    <string name="gta_alias_reset">Reset</string>
+    <string name="group_alias_reset_msg">This will change your name in this group back to the same as normal. Confirmed?</string>
+    <string name="group_alias_reset_done">Done! Your name in this group is back to normal</string>
+
+    <string name="group_language">What language should messages default to?</string>
+    <string name="gta_language_done">Done! Language changed</string>
+    <string name="gta_language_error">Sorry! There was an error changing the language</string>
+
+    <string name="home_group_pick">Language for SMSs</string>
 
     <string name="group_sort_title">Sort by:</string>
 
@@ -813,6 +827,7 @@
     <string name="vt_row_no_reply">No response</string>
     <string name="vt_vote_modify">Extend</string>
     <string name="vt_vote_totals_error">Cannot fetch results</string>
+    <string name="vt_vote_button">Vote!</string>
 
     <string name="vt_todo_title">Action:</string>
     <string name="vt_todo_title_past">Past action:</string>
@@ -950,6 +965,8 @@
     <string name="gp_image_load_error">Sorry, something went wrong loading the image, showing icons instead</string>
     <string name="group_settings">Group settings</string>
     <string name="gp_unsubscribe">Leave group</string>
+    <string name="gp_alias">Change my name</string>
+    <string name="gp_language">Default language</string>
 
     <!-- Sharing strings -->
     <string name="share_ic_title">Share</string>
@@ -1183,6 +1200,7 @@
         <item>Sesotho</item>
         <item>Xitsonga</item>
         <item>North Sotho</item>
+        <item>Afrikaans</item>
     </string-array>
 
     <string-array name="language_keys">
@@ -1191,6 +1209,7 @@
         <item>st</item>
         <item>ts</item>
         <item>nso</item>
+        <item>af</item>
     </string-array>
 
     <!--notification settings -->

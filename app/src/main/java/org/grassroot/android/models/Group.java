@@ -66,6 +66,8 @@ public class Group extends RealmObject implements Parcelable, Comparable<Group> 
 
   @Ignore private List<String> invalidNumbers; // only used on group create or add member, no need to cache/persist
 
+  private String language;
+
   public Group() {
   }
 
@@ -318,6 +320,14 @@ public class Group extends RealmObject implements Parcelable, Comparable<Group> 
     return getPermissionsList().contains(GroupConstants.PERM_GROUP_SETTNGS);
   }
 
+  public String getLanguage() {
+    return language;
+  }
+
+  public void setLanguage(String language) {
+    this.language = language;
+  }
+
   private void constructDate() {
     Calendar calendar = Calendar.getInstance();
     // NB: Java 7 datetime requires these to be set in order (argh, for Joda/Java8)
@@ -380,6 +390,7 @@ public class Group extends RealmObject implements Parcelable, Comparable<Group> 
     dest.writeString(lastChangeDescription);
     dest.writeInt(openOnChat ? 1 : 0);
     dest.writeInt(paidFor ? 1 : 0);
+    dest.writeString(this.language);
   }
 
   protected Group(Parcel in) {
@@ -403,6 +414,7 @@ public class Group extends RealmObject implements Parcelable, Comparable<Group> 
     lastChangeDescription = in.readString();
     openOnChat = in.readInt() != 0;
     paidFor = in.readInt() != 0;
+    language = in.readString();
   }
 
   public static final Creator<Group> CREATOR = new Creator<Group>() {

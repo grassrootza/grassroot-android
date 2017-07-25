@@ -80,7 +80,7 @@ public class SyncService extends GcmTaskService {
 	}
 
     private int doPeriodicTask() {
-        NetworkUtils.syncLocalAndServer(this);
+        NetworkUtils.syncLocalAndServer(this, true);
         return GcmNetworkManager.RESULT_SUCCESS;
     }
 }

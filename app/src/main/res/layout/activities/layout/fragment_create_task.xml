@@ -24,8 +24,19 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent">
 
+                <TextView
+                    android:id="@+id/ctsk_alias_notice"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:textSize="@dimen/txt_medium"
+                    android:textColor="@color/primaryColor"
+                    android:padding="@dimen/padding_small"
+                    android:visibility="gone"
+                    tools:text="Hello"/>
+
                 <android.support.design.widget.TextInputLayout
                     android:id="@+id/ctsk_txt_ipl"
+                    android:layout_below="@id/ctsk_alias_notice"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:hint="@string/cmtg_title_hint">

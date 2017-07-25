@@ -62,14 +62,13 @@
         app:showAsAction="never" />
 
     <item
-        android:id="@+id/mi_group_mute"
-        android:title="@string/gp_mute"
+        android:id="@+id/mi_group_alias"
+        android:title="@string/gp_alias"
         app:showAsAction="never" />
 
     <item
-        android:id="@+id/mi_delete_messages"
-        android:title="@string/gp_delete_messages"
+        android:id="@+id/mi_group_language"
+        android:title="@string/gp_language"
         app:showAsAction="never" />
-
 
 </menu>

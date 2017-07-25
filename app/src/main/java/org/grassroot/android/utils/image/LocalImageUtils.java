@@ -90,10 +90,14 @@ public class LocalImageUtils {
     }
 
     public static MultipartBody.Part getImageFromPath(final String path, final String mimeType) {
-        final File file = new File(path);
-        Log.d(TAG, "file size : " + (file.length() / 1024));
-        RequestBody requestFile = RequestBody.create(MediaType.parse(mimeType), file);
-        return MultipartBody.Part.createFormData("image", file.getName(), requestFile);
+        try {
+            final File file = new File(path);
+            Log.d(TAG, "file size : " + (file.length() / 1024));
+            RequestBody requestFile = RequestBody.create(MediaType.parse(mimeType), file);
+            return MultipartBody.Part.createFormData("image", file.getName(), requestFile);
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     public static String getLocalFileNameFromURI(final Uri selectedImage) {
