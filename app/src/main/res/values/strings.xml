@@ -17,6 +17,7 @@
     <string name="title_activity_UserSettings">UserSettings</string>
     <string name="title_activity_grassroot_extra">Grassroot Extra</string>
     <string name="title_activity_account_signup">Sign Up For Grassroot Extra</string>
+    <string name="title_activity_correct_username">Set your name</string>
 
     <!-- Welcome, register, OTP screens -->
     <string name="wait_message">Please wait&#8230;</string>
@@ -170,7 +171,7 @@
     <string name="drawer_rate_us">Rate us</string>
     <string name="drawer_logout">Logout</string>
     <string name="drawer_share">Share app</string>
-    <string name="nav_bar_footer">Grassroot v1.5</string>
+    <string name="nav_bar_footer">Grassroot v1.9</string>
 
     <string name="online_go_offline">Switch to offline mode?</string>
     <string name="offline_go_online_failed">Try connect to server?</string>
@@ -226,6 +227,15 @@
     <string name="menu_unread">Only unread</string>
     <string name="menu_all_notis">Show all</string>
 
+    <!-- Correcting a username that is a phone number -->
+    <string name="correct_user_title">Set your name</string>
+    <string name="correct_user_explain">Your profile name is currently set to your phone number. Please
+    enter your name as people know you, so that we can use it in meeting calls, todos, responses, etc.</string>
+    <string name="correct_user_hint">Your name</string>
+    <string name="correct_user_done">Done! Your name is set</string>
+    <string name="correct_user_error_dialog">Sorry, there was an error sending your name to the server. We will try
+    again next time you log in, or dial *134*1994# and go to option 5, "My profile", then option 1.</string>
+
     <!--HomeScreen Activity & Screens-->
     <string name="joingroup">FIND GROUPS</string>
     <string name="startgroup">START A GROUP</string>
@@ -257,10 +267,15 @@
     <string name="gta_alias_done">Done! Your name in this group is now %s</string>
     <string name="gta_alias_error">Sorry! There was an error changing your name. Please try later</string>
     <string name="group_alias_present">Your name in this group is %s</string>
+    <string name="group_alias_short">Sending as %s</string>
 
     <string name="gta_alias_reset">Reset</string>
     <string name="group_alias_reset_msg">This will change your name in this group back to the same as normal. Confirmed?</string>
     <string name="group_alias_reset_done">Done! Your name in this group is back to normal</string>
+
+    <string name="gta_language_dlg">Note: Changing the default language for a group will change the
+    language that group members receive SMSs, as long as they have not set their own language
+    themselves. Continue?</string>
 
     <string name="group_language">What language should messages default to?</string>
     <string name="gta_language_done">Done! Language changed</string>
@@ -658,7 +673,7 @@
     <string name="ctsk_desc_header">Add notes</string>
     <string name="ctsk_select_date">Select date</string>
     <string name="ctsk_select_time">Select time</string>
-    
+
     <plurals name="numberMembersSelected">
         <item quantity="one">You have selected %d member</item>
         <item quantity="other">You have selected %d members</item>

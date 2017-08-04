@@ -313,12 +313,12 @@ public class LoginRegisterActivity extends AppCompatActivity implements LoginScr
         if (userHasGroups) {
             NetworkUtils.registerForGCM(this).subscribe();
             NetworkUtils.syncAndStartTasks(this, false, true).subscribe();
-            Intent homeScreenIntent = new Intent(LoginRegisterActivity.this, HomeScreenActivity.class);
+            Intent homeScreenIntent = LoginRegUtils.selectHomeScreen(this, true);
             homeScreenIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
             startActivity(homeScreenIntent);
         } else {
             NetworkUtils.registerForGCM(this).subscribe();
-            Intent welcomeScreenIntent = new Intent(LoginRegisterActivity.this, NoGroupWelcomeActivity.class);
+            Intent welcomeScreenIntent = LoginRegUtils.selectHomeScreen(this, false);
             welcomeScreenIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
             startActivity(welcomeScreenIntent);
         }

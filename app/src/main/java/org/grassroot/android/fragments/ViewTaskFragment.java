@@ -181,8 +181,6 @@ public class ViewTaskFragment extends Fragment {
                 task = RealmUtils.loadObjectFromDB(TaskModel.class, "taskUid", taskUid);
             }
 
-            Log.e(TAG, "tags? : " + task.getTags());
-
             photoCount = 0; // until set otherwise
             canViewResponses = false;
         } else {
@@ -585,8 +583,10 @@ public class ViewTaskFragment extends Fragment {
     }
 
     private void disablePhotoButton() {
-        btViewPhotos.setEnabled(false);
-        btViewPhotos.setTextColor(ContextCompat.getColor(getContext(), R.color.md_grey_400));
+        if (btViewPhotos != null) {
+            btViewPhotos.setEnabled(false);
+            btViewPhotos.setTextColor(ContextCompat.getColor(getContext(), R.color.md_grey_400));
+        }
     }
 
     private void openLocationInMaps() {

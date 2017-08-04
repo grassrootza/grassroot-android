@@ -250,7 +250,7 @@ public class GroupTasksActivity extends PortraitActivity implements NewTaskMenuF
                 changeAliasInGroup();
                 return true;
             case R.id.mi_group_language:
-                changeLanguage();
+                changeLanguageExplain();
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
@@ -455,6 +455,19 @@ public class GroupTasksActivity extends PortraitActivity implements NewTaskMenuF
                         Toast.makeText(GroupTasksActivity.this, R.string.gta_alias_error, Toast.LENGTH_SHORT).show();
                     }
                 });
+    }
+
+    private void changeLanguageExplain() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setMessage(R.string.gta_language_dlg)
+                .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        changeLanguage();
+                    }
+                });
+        builder.setCancelable(true);
+        builder.show();
     }
 
     private void changeLanguage() {

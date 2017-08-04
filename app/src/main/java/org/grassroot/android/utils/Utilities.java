@@ -87,6 +87,10 @@ public class Utilities {
         return zaPhoneE164.matcher(normalized).matches() || (zaPhoneE164Plus.matcher(normalized).matches() || nationalRegex.matcher(normalized).matches());
     }
 
+    public static boolean checkIfPhoneNumber(String userName) {
+        return nationalRegex.matcher(userName).matches();
+    }
+
     public static String stripPrefixFromNumber(String phoneNumber) {
         String normalized = PhoneNumberUtils.stripSeparators(phoneNumber);
         if (nationalRegex.matcher(normalized).find()) {

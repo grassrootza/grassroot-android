@@ -7,6 +7,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 
 import org.grassroot.android.services.NotificationService;
+import org.grassroot.android.utils.LoginRegUtils;
 import org.grassroot.android.utils.NetworkUtils;
 import org.grassroot.android.utils.RealmUtils;
 
@@ -23,6 +24,7 @@ public class StartActivity extends AppCompatActivity {
         super.onCreate(bundle);
 
         Log.d("START", "startActivity on create ... timer ... " + SystemClock.currentThreadTimeMillis());
+
         if (RealmUtils.loadPreferencesFromDB().isLoggedIn()) {
             userIsLoggedIn();
         } else {
@@ -36,13 +38,11 @@ public class StartActivity extends AppCompatActivity {
     }
 
     private void userIsLoggedIn() {
+        Log.e("START", "user name :" + RealmUtils.loadPreferencesFromDB().getUserName());
         if(!isNotificationServiceRunning())startNotificationService();
         NetworkUtils.syncAndStartTasks(this, false, false).subscribe();
-        Intent i  = RealmUtils.loadPreferencesFromDB().isHasGroups() ?
-                new Intent(StartActivity.this, HomeScreenActivity.class) :
-                new Intent(StartActivity.this, NoGroupWelcomeActivity.class);
+        Intent i  = LoginRegUtils.selectHomeScreen(this, false);
         startActivity(i);
-
     }
 
     private void startNotificationService(){

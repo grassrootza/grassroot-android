@@ -35,6 +35,7 @@ captures
 ### Private keys
 **/private_keys.xml
 **/google-services.json
+**/fabric.properties
 
 ### Ignore the entire org.eclipse folder (just using for now until next release fixes NPEs)
 org.eclipse.paho.android.service*/

@@ -91,9 +91,6 @@
             </intent-filter>
         </service>
 
-        <service android:name="org.eclipse.paho.android.service.MqttService">
-        </service>
-
         <service
             android:name=".services.NotificationUpdateService"
             android:enabled="true"
@@ -127,6 +124,11 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value=".activities.IntroActivity" />
         </activity>
+
+        <activity
+            android:name=".activities.CorrectNoUsernameActivity"
+            android:label="@string/title_activity_correct_username"
+            android:launchMode="singleTask"/>
 
         <activity
             android:name=".activities.NoGroupWelcomeActivity"
@@ -356,7 +358,7 @@
             android:name="com.oppwa.mobile.connect.checkout.dialog.CheckoutActivity"
             android:theme="@style/Theme.Checkout.Light"
             android:windowSoftInputMode="adjustPan"/>
-        
+
         <activity
             android:name=".activities.PaymentHandlingActivity"
             android:launchMode="singleTask">
@@ -369,7 +371,7 @@
             </intent-filter>
 
         </activity>
-        
+
         <provider
             android:name="android.support.v4.content.FileProvider"
             android:authorities="org.grassroot.android.fileprovider"

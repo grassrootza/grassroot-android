@@ -8,6 +8,9 @@ import android.text.TextUtils;
 import android.util.Log;
 
 import org.grassroot.android.BuildConfig;
+import org.grassroot.android.activities.CorrectNoUsernameActivity;
+import org.grassroot.android.activities.HomeScreenActivity;
+import org.grassroot.android.activities.NoGroupWelcomeActivity;
 import org.grassroot.android.activities.StartActivity;
 import org.grassroot.android.events.UserLoggedOutEvent;
 import org.grassroot.android.interfaces.NotificationConstants;
@@ -282,6 +285,15 @@ public class LoginRegUtils {
 				}
 			}
 		});
+	}
+
+	public static Intent selectHomeScreen(Context context, boolean knowHasGroups) {
+		PreferenceObject preferenceObject = RealmUtils.loadPreferencesFromDB();
+		return Utilities.checkIfLocalNumber(preferenceObject.getUserName()) ?
+				new Intent(context, CorrectNoUsernameActivity.class) :
+				knowHasGroups || RealmUtils.loadPreferencesFromDB().isHasGroups() ?
+						new Intent(context, HomeScreenActivity.class) :
+						new Intent(context, NoGroupWelcomeActivity.class);
 	}
 
 }

@@ -24,7 +24,6 @@ public class MultiMessageNotificationActivity extends PortraitActivity {
 
     private static final String TAG = MultiMessageNotificationActivity.class.getCanonicalName();
     private Unbinder unbinder;
-    private String groupUid;
     private String groupName;
     private String clickAction;
     private Fragment fragment;
@@ -38,7 +37,7 @@ public class MultiMessageNotificationActivity extends PortraitActivity {
         setContentView(R.layout.activity_notification_activtity);
         unbinder = ButterKnife.bind(this);
 
-        groupUid = getIntent().getStringExtra(GroupConstants.UID_FIELD);
+        // String groupUid = getIntent().getStringExtra(GroupConstants.UID_FIELD);
         groupName = getIntent().getStringExtra(GroupConstants.NAME_FIELD);
         clickAction = getIntent().getStringExtra(NotificationConstants.CLICK_ACTION);
 
@@ -54,7 +53,14 @@ public class MultiMessageNotificationActivity extends PortraitActivity {
                 break;
         }
         setUpToolbar();
-        getSupportFragmentManager().beginTransaction().add(R.id.gca_fragment_holder, fragment,TAG)
+
+        if (fragment == null) {
+            fragment = createNotificationCenterFragment();
+        }
+
+        getSupportFragmentManager()
+                .beginTransaction()
+                .add(R.id.gca_fragment_holder, fragment,TAG)
                 .commit();
     }
 

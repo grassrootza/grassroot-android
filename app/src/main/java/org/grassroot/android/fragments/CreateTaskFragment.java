@@ -677,7 +677,7 @@ public class CreateTaskFragment extends Fragment {
         // don't fully trust Android so just including try catch
         try {
             if (!TextUtils.isEmpty(groupUid) && GroupService.getInstance().checkUserhasAliasInGroup(groupUid)) {
-                aliasNotice.setText(getString(R.string.group_alias_present,
+                aliasNotice.setText(getString(R.string.group_alias_short,
                         GroupService.getInstance().getUserAliasInGroup(groupUid)));
                 aliasNotice.setVisibility(View.VISIBLE);
             }
