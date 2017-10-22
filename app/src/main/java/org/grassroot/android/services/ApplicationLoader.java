@@ -110,9 +110,11 @@ public class ApplicationLoader extends Application {
             }
         } else {
             List<ActivityManager.RunningTaskInfo> taskInfo = am.getRunningTasks(1);
-            ComponentName componentInfo = taskInfo.get(0).topActivity;
-            if (componentInfo.getPackageName().equals(context.getPackageName())) {
-                isInBackground = false;
+            if (taskInfo != null && !taskInfo.isEmpty()) {
+                ComponentName componentInfo = taskInfo.get(0).topActivity;
+                if (componentInfo.getPackageName().equals(context.getPackageName())) {
+                    isInBackground = false;
+                }
             }
         }
         return isInBackground;

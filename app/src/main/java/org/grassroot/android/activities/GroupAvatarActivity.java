@@ -141,6 +141,10 @@ public class GroupAvatarActivity extends PortraitActivity {
         setContentView(R.layout.activity_group_avatar);
         ButterKnife.bind(this);
         Bundle extras = getIntent().getExtras();
+        if (extras == null) {
+            startActivity(ErrorUtils.gracefulExitToHome(this));
+            finish();
+        }
         group = extras.getParcelable(GroupConstants.OBJECT_FIELD);
         if (group == null) {
             Log.e(TAG, "Error! This activity requires a group object");

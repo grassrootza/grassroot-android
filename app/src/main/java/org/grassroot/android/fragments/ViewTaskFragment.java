@@ -302,7 +302,7 @@ public class ViewTaskFragment extends Fragment {
                 // todo : show a dialogue box (network error listener thing)
             }
         } else {
-            progressBar.setVisibility(View.VISIBLE);
+            safeShowProgressBar();
             TaskService.getInstance().fetchAndStoreTask(taskUid, taskType, AndroidSchedulers.mainThread())
                 .subscribe(new Consumer<String>() {
                     @Override
@@ -310,7 +310,7 @@ public class ViewTaskFragment extends Fragment {
                         if (NetworkUtils.FETCHED_SERVER.equals(s)) {
                             task = RealmUtils.loadObjectFromDB(TaskModel.class, "taskUid", taskUid);
                             setUpViews(task);
-                            progressBar.setVisibility(View.GONE);
+                            safeHideProgressBar();
                         } else {
                             if (task != null) {
                                 setUpViews(task);
@@ -319,6 +319,13 @@ public class ViewTaskFragment extends Fragment {
                                 // todo : show an error dialogue
                             }
                         }
+                    }
+                }, new Consumer<Throwable>() {
+                    @Override
+                    public void accept(@NonNull Throwable throwable) throws Exception {
+                        throwable.printStackTrace();
+                        safeHideProgressBar();
+                        startActivity(ErrorUtils.gracefulExitToHome(getActivity()));
                     }
                 });
         }
@@ -751,12 +758,12 @@ public class ViewTaskFragment extends Fragment {
     }
 
     public void respondToTask(final String response) {
-        progressBar.setVisibility(View.VISIBLE);
+        safeShowProgressBar();
         TaskService.getInstance().respondToTask(task.getTaskUid(), response, null)
             .subscribe(new Consumer<String>() {
                 @Override
                 public void accept(@NonNull String s) throws Exception {
-                    progressBar.setVisibility(View.GONE);
+                    safeHideProgressBar();
                     task = RealmUtils.loadObjectFromDB(TaskModel.class, "taskUid", task.getTaskUid());
                     if (NetworkUtils.SAVED_SERVER.equals(s)) {
                         handleSuccessfulReply(response);
@@ -767,7 +774,7 @@ public class ViewTaskFragment extends Fragment {
             }, new Consumer<Throwable>() {
                 @Override
                 public void accept(@NonNull Throwable e) throws Exception {
-                    progressBar.setVisibility(View.GONE);
+                    safeHideProgressBar();
                     if (NetworkUtils.CONNECT_ERROR.equals(e.getMessage())) {
                         task = RealmUtils.loadObjectFromDB(TaskModel.class, "taskUid", task.getTaskUid());
                         handleSavedOffline(response);
@@ -825,7 +832,7 @@ public class ViewTaskFragment extends Fragment {
         NetworkErrorDialogFragment.newInstance(snackbarMsg, progressBar, new SingleObserverFromConsumer<>(new Consumer<String>() {
             @Override
             public void accept(@NonNull String s) throws Exception {
-                progressBar.setVisibility(View.GONE);
+                safeShowProgressBar();
                 if (s.equals(NetworkUtils.CONNECT_ERROR)) {
                     Snackbar.make(mContainer, R.string.connect_error_failed_retry, Snackbar.LENGTH_SHORT).show();
                 } else {
@@ -1126,18 +1133,18 @@ public class ViewTaskFragment extends Fragment {
     }
 
     private void cancelTask() {
-        progressBar.setVisibility(View.VISIBLE);
+        safeShowProgressBar();
         TaskService.getInstance().cancelTask(taskUid, taskType, AndroidSchedulers.mainThread())
             .subscribe(new Consumer<String>() {
                 @Override
                 public void accept(@NonNull String s) {
-                    progressBar.setVisibility(View.GONE);
+                    safeHideProgressBar();
                     EventBus.getDefault().post(new TaskCancelledEvent(taskUid));
                 }
             }, new Consumer<Throwable>() {
                 @Override
                 public void accept(@NonNull Throwable e) {
-                    progressBar.setVisibility(View.GONE);
+                    safeHideProgressBar();
                     if (NetworkUtils.CONNECT_ERROR.equals(e.getMessage())) {
                         handleRetryCancel();
                     } else {
@@ -1152,7 +1159,7 @@ public class ViewTaskFragment extends Fragment {
             new SingleObserverFromConsumer<>(new Consumer<String>() {
                 @Override
                 public void accept(@NonNull String s) throws Exception {
-                    progressBar.setVisibility(View.GONE);
+                    safeHideProgressBar();
                     if (s.equals(NetworkUtils.CONNECT_ERROR)) {
                         Snackbar.make(mContainer, R.string.connect_error_failed_retry, Snackbar.LENGTH_SHORT).show();
                     } else {
@@ -1187,6 +1194,18 @@ public class ViewTaskFragment extends Fragment {
                 return R.string.vt_todo_done;
         }
         return -1;
+    }
+
+    private void safeShowProgressBar() {
+        if (progressBar != null) {
+            progressBar.setVisibility(View.VISIBLE);
+        }
+    }
+
+    private void safeHideProgressBar() {
+        if (progressBar != null) {
+            progressBar.setVisibility(View.GONE);
+        }
     }
 
     private void showUploadProgress() {

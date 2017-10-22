@@ -14,6 +14,8 @@ import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import com.crashlytics.android.Crashlytics;
+
 import org.grassroot.android.R;
 import org.grassroot.android.fragments.EditTaskFragment;
 import org.grassroot.android.fragments.MemberListFragment;
@@ -78,7 +80,9 @@ public class GroupMembersActivity extends PortraitActivity implements NewTaskMen
 
         Bundle extras = getIntent().getExtras();
         if (extras == null) {
-            throw new UnsupportedOperationException("Group member activity attempted without necessary arguments");
+            Crashlytics.logException(new UnsupportedOperationException("Group member activity attempted without necessary arguments"));
+            startActivity(ErrorUtils.gracefulExitToHome(this));
+            finish();
         }
 
         group = extras.getParcelable(GroupConstants.OBJECT_FIELD);

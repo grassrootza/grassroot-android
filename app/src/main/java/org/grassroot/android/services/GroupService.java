@@ -722,7 +722,7 @@ public class GroupService {
         Map<String, Object> removalMap = new HashMap<>();
         removalMap.put("groupUid", groupUid);
         removalMap.put("isNumberInvalid", true);
-        Log.e(TAG, "about to try remove members ... count is : " + RealmUtils.countListInDB(Member.class, removalMap));
+        // Log.e(TAG, "about to try remove members ... count is : " + RealmUtils.countListInDB(Member.class, removalMap));
         RealmUtils.removeObjectsFromDatabase(Member.class, removalMap);
 
         // now, reset group count, if group still exists

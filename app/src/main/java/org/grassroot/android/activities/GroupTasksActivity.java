@@ -116,29 +116,31 @@ public class GroupTasksActivity extends PortraitActivity implements NewTaskMenuF
     }
 
     private void checkForAndDisplayAlias() {
-        // hand made top snackbar, because Android
-        GroupService.getInstance().checkUserAlias(groupMembership.getGroupUid())
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(new Consumer<Boolean>() {
-                    @Override
-                    public void accept(@NonNull Boolean aBoolean) throws Exception {
-                        Log.e(TAG, "returned from checking alias, result: " + aBoolean);
-                        hasAlias = aBoolean;
-                        if (aBoolean && aliasNotice != null) {
-                            aliasNotice.setText(getString(R.string.group_alias_present,
-                                    GroupService.getInstance().getUserAliasInGroup(groupMembership.getGroupUid())));
-                            aliasNotice.setVisibility(View.VISIBLE);
-                        } else if (aliasNotice != null) {
-                            aliasNotice.setVisibility(View.GONE);
+        // hand made top snackbar, and usual null checks, because Android
+        if (groupMembership != null) {
+            GroupService.getInstance().checkUserAlias(groupMembership.getGroupUid())
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe(new Consumer<Boolean>() {
+                        @Override
+                        public void accept(@NonNull Boolean aBoolean) throws Exception {
+                            Log.e(TAG, "returned from checking alias, result: " + aBoolean);
+                            hasAlias = aBoolean;
+                            if (aBoolean && aliasNotice != null) {
+                                aliasNotice.setText(getString(R.string.group_alias_present,
+                                        GroupService.getInstance().getUserAliasInGroup(groupMembership.getGroupUid())));
+                                aliasNotice.setVisibility(View.VISIBLE);
+                            } else if (aliasNotice != null) {
+                                aliasNotice.setVisibility(View.GONE);
+                            }
                         }
-                    }
-                }, new Consumer<Throwable>() {
-                    @Override
-                    public void accept(@NonNull Throwable throwable) throws Exception {
-                        throwable.printStackTrace();
-                    }
-                });
+                    }, new Consumer<Throwable>() {
+                        @Override
+                        public void accept(@NonNull Throwable throwable) throws Exception {
+                            throwable.printStackTrace();
+                        }
+                    });
+        }
     }
 
     @Override

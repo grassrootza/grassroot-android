@@ -91,18 +91,23 @@ public class AddContactManually extends PortraitActivity {
         showSnackBar(getResources().getString(R.string.input_error_cellphone_snackbar), Snackbar.LENGTH_SHORT);
         return false;
       } else {
-        if (Integer.parseInt(String.valueOf(phoneNumber.getText().toString().charAt(0)))
-            != 0) {
+        try {
+          if (Integer.parseInt(String.valueOf(phoneNumber.getText().toString().charAt(0)))
+                  != 0) {
+            showSnackBar(getResources().getString(R.string.input_error_cellphone_snackbar), Snackbar.LENGTH_SHORT);
+            return false;
+          } else if (Integer.parseInt(
+                  String.valueOf(phoneNumber.getText().toString().charAt(1))) == 0
+                  || Integer.parseInt(String.valueOf(phoneNumber.getText().toString().charAt(1)))
+                  == 9) {
+            showSnackBar(getResources().getString(R.string.input_error_cellphone_snackbar), Snackbar.LENGTH_SHORT);
+            return false;
+          } else {
+            return true;
+          }
+        } catch (NumberFormatException e) {
           showSnackBar(getResources().getString(R.string.input_error_cellphone_snackbar), Snackbar.LENGTH_SHORT);
           return false;
-        } else if (Integer.parseInt(
-            String.valueOf(phoneNumber.getText().toString().charAt(1))) == 0
-            || Integer.parseInt(String.valueOf(phoneNumber.getText().toString().charAt(1)))
-            == 9) {
-          showSnackBar(getResources().getString(R.string.input_error_cellphone_snackbar), Snackbar.LENGTH_SHORT);
-          return false;
-        } else {
-          return true;
         }
       }
     }

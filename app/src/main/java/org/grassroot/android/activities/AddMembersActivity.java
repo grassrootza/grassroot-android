@@ -25,6 +25,7 @@ import org.grassroot.android.fragments.dialogs.TokenExpiredDialogFragment;
 import org.grassroot.android.interfaces.GroupConstants;
 import org.grassroot.android.interfaces.NavigationConstants;
 import org.grassroot.android.models.Contact;
+import org.grassroot.android.models.Group;
 import org.grassroot.android.models.Member;
 import org.grassroot.android.models.exceptions.ApiCallException;
 import org.grassroot.android.models.exceptions.InvalidNumberException;
@@ -396,12 +397,7 @@ public class AddMembersActivity extends AppCompatActivity implements
             @Override
             public void accept(@NonNull String s) throws Exception {
                 if (NetworkUtils.SAVED_SERVER.equals(s)) {
-                    Intent i = new Intent();
-                    i.putExtra(GroupConstants.UID_FIELD, groupUid);
-                    i.putExtra(Constant.INDEX_FIELD, groupPosition);
-                    setResult(RESULT_OK, i);
-                    progressDialog.dismiss();
-                    finish();
+                    showDoneScreenAndExit(membersToAdd.size());
                 } else if (NetworkUtils.SAVED_OFFLINE_MODE.equals(s)) {
                     Intent i = IntentUtils.offlineMessageIntent(AddMembersActivity.this, R.string.am_offline_header, getString(R.string.am_offline_body_delib), true, false);
                     progressDialog.dismiss();
@@ -455,6 +451,21 @@ public class AddMembersActivity extends AppCompatActivity implements
             Log.d(TAG, "Exited with no members to add!");
             finish();
         }
+    }
+
+    private void showDoneScreenAndExit(int numberMembers) {
+        Intent i = new Intent(AddMembersActivity.this, ActionCompleteActivity.class);
+        i.putExtra(ActionCompleteActivity.HEADER_FIELD, R.string.am_server_done_header);
+        i.putExtra(ActionCompleteActivity.BODY_FIELD, getString(R.string.am_server_done_body, numberMembers));
+        i.putExtra(ActionCompleteActivity.SHARE_BUTTON, false);
+        i.putExtra(ActionCompleteActivity.ACTION_INTENT, ActionCompleteActivity.GROUP_SCREEN);
+        Group group = RealmUtils.loadGroupFromDB(groupUid);
+        i.putExtra(GroupConstants.OBJECT_FIELD, group); // note : this seems heavy ... likely better to send UID and load in activity .. to optimize in future
+        i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        setResult(RESULT_OK, i);
+        progressDialog.dismiss();
+        startActivity(i);
+        finish();
     }
 
     private Intent handleServerError(ApiCallException e) {

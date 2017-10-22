@@ -22,6 +22,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
+import android.widget.Toast;
 
 import org.grassroot.android.R;
 import org.grassroot.android.activities.CreateGroupActivity;
@@ -264,10 +265,10 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
                         groupListRowAdapter.refreshGroupsToDB();
                         break;
                     case NetworkUtils.CONNECT_ERROR:
-                        Snackbar.make(rlGhpRoot, R.string.connect_error_homescreen, Snackbar.LENGTH_SHORT).show();
+                        Toast.makeText(getContext(), R.string.connect_error_homescreen, Toast.LENGTH_SHORT).show();
                         break;
                     case NetworkUtils.OFFLINE_SELECTED:
-                        Snackbar.make(rlGhpRoot, R.string.connect_error_offline_home, Snackbar.LENGTH_SHORT).show();
+                        Toast.makeText(getContext(), R.string.connect_error_offline_home, Toast.LENGTH_SHORT).show();
                         break;
                     case ErrorUtils.TOKEN_EXPIRED:
                     case ErrorUtils.INVALID_TOKEN:
@@ -277,7 +278,7 @@ public class HomeGroupListFragment extends android.support.v4.app.Fragment
                         break;
                     default:
                         final String errorMsg = ErrorUtils.serverErrorText(s);
-                        Snackbar.make(rlGhpRoot, errorMsg, Snackbar.LENGTH_SHORT).show();
+                        Toast.makeText(getContext(), errorMsg, Toast.LENGTH_SHORT).show();
                 }
                 hideProgress();
                 triggeredGroupRefresh = false;

@@ -10,6 +10,8 @@ import android.support.v7.app.AlertDialog;
 import android.util.Log;
 import android.widget.Toast;
 
+import com.crashlytics.android.Crashlytics;
+
 import org.grassroot.android.R;
 import org.grassroot.android.utils.LoginRegUtils;
 import org.grassroot.android.utils.NetworkUtils;
@@ -56,7 +58,12 @@ public class TokenExpiredDialogFragment extends DialogFragment {
                 fragment.numberOtpAttempts = 0;
                 fragment.successConsumer = successConsumer;
                 fragment.errorConsumer = errorConsumer;
-                fragment.show(fragmentManager, "first_dialog");
+                try {
+                    fragment.show(fragmentManager, "first_dialog");
+                } catch (NullPointerException e) {
+                    Log.e(TAG, "error showing fragment, must have exited");
+                    Crashlytics.logException(e);
+                }
             }
         });
     }

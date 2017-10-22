@@ -18,6 +18,7 @@ import org.grassroot.android.interfaces.GroupConstants;
 import org.grassroot.android.models.exceptions.ApiCallException;
 import org.grassroot.android.services.GroupService;
 import org.grassroot.android.utils.Constant;
+import org.grassroot.android.utils.ErrorUtils;
 import org.grassroot.android.utils.IntentUtils;
 import org.grassroot.android.utils.NetworkUtils;
 
@@ -66,7 +67,7 @@ public class RemoveMembersActivity extends PortraitActivity implements MemberLis
 
         Bundle extras = getIntent().getExtras();
         if (extras == null)
-            throw new UnsupportedOperationException("Must pass extras to remove members activity");
+            startActivity(ErrorUtils.gracefulExitToHome(this));
 
         groupUid = extras.getString(GroupConstants.UID_FIELD);
         groupName = extras.getString(GroupConstants.NAME_FIELD);

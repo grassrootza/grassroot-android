@@ -222,14 +222,16 @@ public class AccountSignupActivity extends PortraitActivity implements Navigatio
 
                 @Override
                 public void onFailure(Call<RestResponse<AccountBill>> call, Throwable t) {
-                    AlertDialog.Builder builder = AccountService.showConnectionErrorDialog(AccountSignupActivity.this,
-                            new DialogInterface.OnClickListener() {
-                                @Override
-                                public void onClick(DialogInterface dialogInterface, int i) {
-                                  initiatePayment(type);
-                                }
-                            });
-                    builder.show();
+                    if (!isFinishing()) {
+                        AlertDialog.Builder builder = AccountService.showConnectionErrorDialog(AccountSignupActivity.this,
+                                new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialogInterface, int i) {
+                                        initiatePayment(type);
+                                    }
+                                });
+                        builder.show();
+                    }
                 }
             });
         }
@@ -296,14 +298,17 @@ public class AccountSignupActivity extends PortraitActivity implements Navigatio
 
                     @Override
                     public void onFailure(Call<RestResponse<String>> call, Throwable t) {
-                        progressBar.setVisibility(View.GONE);
-                        AlertDialog.Builder builder = AccountService.showConnectionErrorDialog(AccountSignupActivity.this,
-                                new DialogInterface.OnClickListener() {
-                                    @Override
-                                    public void onClick(DialogInterface dialogInterface, int i) { paymentFragmentDisabledAccount(accountUid);
-                                    }
-                        });
-                        builder.show();
+                        if (!isFinishing()) {
+                            progressBar.setVisibility(View.GONE);
+                            AlertDialog.Builder builder = AccountService.showConnectionErrorDialog(AccountSignupActivity.this,
+                                    new DialogInterface.OnClickListener() {
+                                        @Override
+                                        public void onClick(DialogInterface dialogInterface, int i) {
+                                            paymentFragmentDisabledAccount(accountUid);
+                                        }
+                                    });
+                            builder.show();
+                        }
                     }
                 });
     }
@@ -349,14 +354,16 @@ public class AccountSignupActivity extends PortraitActivity implements Navigatio
 
                     @Override
                     public void onFailure(Call<RestResponse<Account>> call, Throwable t) {
-                        AlertDialog.Builder builder = AccountService.showConnectionErrorDialog(AccountSignupActivity.this,
-                                new DialogInterface.OnClickListener() {
-                                    @Override
-                                    public void onClick(DialogInterface dialogInterface, int i) {
-                                        validateCheckoutResult(accountUid, checkoutId);
-                                    }
-                                });
-                        builder.show();
+                        if (!isFinishing()) {
+                            AlertDialog.Builder builder = AccountService.showConnectionErrorDialog(AccountSignupActivity.this,
+                                    new DialogInterface.OnClickListener() {
+                                        @Override
+                                        public void onClick(DialogInterface dialogInterface, int i) {
+                                            validateCheckoutResult(accountUid, checkoutId);
+                                        }
+                                    });
+                            builder.show();
+                        }
                     }
                 });
     }

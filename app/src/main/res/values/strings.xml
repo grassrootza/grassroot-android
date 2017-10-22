@@ -532,6 +532,9 @@
     <string name="amm_new_done">Add</string>
     <string name="amm_edit_done">Save</string>
 
+    <string name="am_server_done_header">Done</string>
+    <string name="am_server_done_body">%1$d members have been added to the group successfully</string>
+
     <string name="am_offline_header">Done</string>
     <string name="am_offline_body_delib">Since you\'re working in offline mode, we\'ve saved the members and will sync them to the
     server when you connect.</string>

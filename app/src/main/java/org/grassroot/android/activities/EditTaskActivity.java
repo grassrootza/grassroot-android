@@ -4,10 +4,13 @@ import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
 import android.view.View;
 
+import com.crashlytics.android.Crashlytics;
+
 import org.grassroot.android.R;
 import org.grassroot.android.fragments.EditTaskFragment;
 import org.grassroot.android.interfaces.TaskConstants;
 import org.grassroot.android.models.TaskModel;
+import org.grassroot.android.utils.ErrorUtils;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -28,6 +31,11 @@ public class EditTaskActivity extends PortraitActivity {
         setContentView(R.layout.activity_edit_task);
         ButterKnife.bind(this);
         Bundle b = getIntent().getExtras();
+        if (b == null) {
+            startActivity(ErrorUtils.gracefulExitToHome(this));
+            Crashlytics.logException(new IllegalArgumentException("No extras passed to activity"));
+            finish();
+        }
         TaskModel taskModel = b.getParcelable(TaskConstants.TASK_ENTITY_FIELD);
         setUpToolbar(taskModel);
         launchFragment(taskModel);

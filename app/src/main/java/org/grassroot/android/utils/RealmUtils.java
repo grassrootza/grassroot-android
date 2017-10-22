@@ -336,7 +336,7 @@ public class RealmUtils {
         for (Map.Entry<String, Object> entry : map.entrySet()) {
             if (entry.getValue() instanceof String) {
                 query.equalTo(entry.getKey(), entry.getValue().toString());
-            } else {
+            } else if (entry.getValue() != null && entry.getValue() instanceof Boolean) {
                 query.equalTo(entry.getKey(), Boolean.valueOf(entry.getValue().toString()));
             }
         }
